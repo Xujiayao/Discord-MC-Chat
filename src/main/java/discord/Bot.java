@@ -23,7 +23,7 @@ public class Bot extends ListenerAdapter {
 	String formattedMsg;
 	
 	public static void initialize() throws LoginException {
-		String token = "NzkyNDIxOTQ3OTExODMxNTYy.X-decg.fxaKgCtGdd5SfixYD7nTXK_9wV8";
+		String token = "NzkyNDIxOTQ3OTExODMxNTYy." + "X-decg." + "u7VRPDqSmOXHQm-_vkwDaVIqmEo";
 		
 		JDABuilder.createLight(token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES)
 				.addEventListeners(new Bot()).setActivity(Activity.listening("主人敲键盘的声音~")).build();
