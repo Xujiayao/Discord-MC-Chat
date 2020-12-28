@@ -1,29 +1,30 @@
 {
   "schemaVersion": 1,
-  "id": "modid",
+  "id": "mc-discord-chat-bridge",
   "version": "${version}",
 
-  "name": "McDiscordChatBridge",
-  "description": "服务器跨服聊天机器人 By Xujiayao",
+  "name": "MC Discord Chat Bridge",
+  "description": "服务器跨服聊天工具 By Xujiayao",
   "authors": [
     "Xujiayao"
   ],
   "contact": {
     "homepage": "https://xujiayao147.gitee.io/",
-    "sources": "https://github.com/Xujiayao147/McDiscordChatBridge"
+	"issues": "https://github.com/Xujiayao147/mc-discord-chat-bridge/issues",
+    "sources": "https://github.com/Xujiayao147/mc-discord-chat-bridge"
   },
 
   "license": "MIT",
-  "icon": "assets/McDiscordChatBridge/icon.jpg",
+  "icon": "assets/mc-discord-chat-bridge/icon.jpg",
 
   "environment": "*",
   "entrypoints": {
     "main": [
-      "main.Main"
+      "io.gitee.xujiayao147.mcDiscordChatBridge.Main"
     ]
   },
   "mixins": [
-    
+    "mc-discord-chat-bridge.mixins.json"
   ],
 
   "depends": {

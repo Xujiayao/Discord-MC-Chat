@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "io.gitee.xujiayao147.mcDiscordChatBridge.minecraft.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "StartMixin",
+	"GetMessage"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

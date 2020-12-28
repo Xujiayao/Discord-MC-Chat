@@ -14,6 +14,11 @@ repositories {
     jcenter()
 }
 
+configurations {
+    // configuration that holds jars to include in the jar
+    extraLibs
+}
+
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -26,7 +31,13 @@ dependencies {
 	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
 	// You may need to force-disable transitiveness on them.
 	
-	compile("net.dv8tion:JDA:4.2.0_168")
+	compile ('net.dv8tion:JDA:4.2.0_168') {
+        exclude module: 'opus-java'
+    }
+	
+	extraLibs ('net.dv8tion:JDA:4.2.0_168') {
+        exclude module: 'opus-java'
+    }
 }
 
 processResources {
@@ -61,8 +72,10 @@ java {
 }
 
 jar {
-	from("LICENSE") {
-		rename { "${it}_${project.archivesBaseName}"}
+	from "LICENSE"
+	
+	from {
+		configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
 	}
 }
 

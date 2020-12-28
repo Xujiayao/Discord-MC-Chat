@@ -1,3 +1,3 @@
-# McDiscordChatBridge
+# mc-discord-chat-bridge
 
-服务器跨服聊天机器人 - Java
+服务器跨服聊天工具 - Java
