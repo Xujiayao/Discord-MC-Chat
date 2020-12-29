@@ -1,8 +1,6 @@
 package io.gitee.xujiayao147.mcDiscordChatBridge.minecraft;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.LiteralText;
-import net.minecraft.util.Util;
 
 /**
  * @author Xujiayao
@@ -13,7 +11,7 @@ public class SendMessage {
 
 	public void sendMcMessage(String msg) {
 		mc = MinecraftClient.getInstance();
-		mc.player.sendSystemMessage(new LiteralText("[Discord] " + msg), Util.NIL_UUID);
+		mc.player.sendChatMessage("[Discord] " + msg);
 	}
 	
 	public String getPlayerName() {

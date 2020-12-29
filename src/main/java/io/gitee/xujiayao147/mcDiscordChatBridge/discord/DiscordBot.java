@@ -50,9 +50,9 @@ public class DiscordBot extends ListenerAdapter {
 		}
 	}
 
-	public void sendMessage(String text, String player) {
+	public void sendMessage(String text) {
 		channel = jda.getTextChannelById("792407823295184906");
 
-		channel.sendMessage("[Minecraft] <" + player + "> " + text).queue();
+		channel.sendMessage("[Minecraft] " + text).queue();
 	}
 }
