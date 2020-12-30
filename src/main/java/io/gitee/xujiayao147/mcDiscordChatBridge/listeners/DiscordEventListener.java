@@ -38,14 +38,15 @@ public class DiscordEventListener extends ListenerAdapter {
 			} else if (e.getMessage().getContentRaw().startsWith("!online")) {
 				List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
 				if (onlinePlayers.size() == 0) {
-					e.getChannel().sendMessage("**当前没有在线玩家！**").queue();
+					e.getChannel().sendMessage("```\n=============== 在线玩家 (" + onlinePlayers.size()
+							+ ") ===============\n\n**当前没有在线玩家！**```").queue();
 				} else {
 					StringBuilder playerList = new StringBuilder(
 							"```\n=============== 在线玩家 (" + onlinePlayers.size() + ") ===============\n");
 					for (ServerPlayerEntity player : onlinePlayers) {
 						playerList.append("\n").append(player.getEntityName());
 					}
-					
+
 					playerList.append("```");
 					e.getChannel().sendMessage(playerList.toString()).queue();
 				}

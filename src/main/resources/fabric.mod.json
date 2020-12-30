@@ -15,7 +15,6 @@
   },
 
   "license": "MIT",
-  "icon": "assets/mc-discord-chat-bridge/icon.jpg",
 
   "environment": "server",
   "entrypoints": {

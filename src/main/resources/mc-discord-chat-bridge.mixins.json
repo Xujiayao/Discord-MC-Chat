@@ -3,7 +3,6 @@
   "package": "io.gitee.xujiayao147.mcDiscordChatBridge.mixins",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "MixinLanguage",
     "MixinPlayerAdvancementTracker",
     "MixinPlayerManager",
     "MixinServerPlayerEntity",

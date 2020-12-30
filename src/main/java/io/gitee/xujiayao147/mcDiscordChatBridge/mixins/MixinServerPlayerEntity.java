@@ -20,5 +20,4 @@ public class MixinServerPlayerEntity {
 		ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) (Object) this;
 		PlayerDeathCallback.EVENT.invoker().onPlayerDeath(serverPlayerEntity, source);
 	}
-
 }
