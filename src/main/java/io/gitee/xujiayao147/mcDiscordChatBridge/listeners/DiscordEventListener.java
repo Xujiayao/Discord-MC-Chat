@@ -39,7 +39,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
 				if (onlinePlayers.size() == 0) {
 					e.getChannel().sendMessage("```\n=============== 在线玩家 (" + onlinePlayers.size()
-							+ ") ===============\n\n**当前没有在线玩家！**```").queue();
+							+ ") ===============\n\n当前没有在线玩家！```").queue();
 				} else {
 					StringBuilder playerList = new StringBuilder(
 							"```\n=============== 在线玩家 (" + onlinePlayers.size() + ") ===============\n");
