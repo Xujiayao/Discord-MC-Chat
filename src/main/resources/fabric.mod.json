@@ -4,7 +4,7 @@
   "version": "${version}",
 
   "name": "MC Discord Chat Bridge",
-  "description": "服务器跨服聊天工具 By Xujiayao",
+  "description": "A Discord <-> Minecraft chat bridge.",
   "authors": [
     "Xujiayao"
   ],
@@ -17,22 +17,18 @@
   "license": "MIT",
   "icon": "assets/mc-discord-chat-bridge/icon.jpg",
 
-  "environment": "*",
+  "environment": "server",
   "entrypoints": {
-    "main": [
+    "server": [
       "io.gitee.xujiayao147.mcDiscordChatBridge.Main"
     ]
   },
   "mixins": [
     "mc-discord-chat-bridge.mixins.json"
   ],
-
   "depends": {
-    "fabricloader": ">=0.7.4",
-    "fabric": "*",
+    "fabricloader": ">=0.8.7",
+	"fabric": "*",
     "minecraft": "1.16.x"
-  },
-  "suggests": {
-    "another-mod": "*"
   }
 }
