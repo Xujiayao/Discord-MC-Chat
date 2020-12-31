@@ -30,22 +30,22 @@ public class Main implements DedicatedServerModInitializer {
 	@Override
 	public void onInitializeServer() {
 		config = new Config();
-
+		
 		try {
 			if (config.membersIntents) {
-				Main.jda = JDABuilder.createDefault(config.botToken).setMemberCachePolicy(MemberCachePolicy.ALL)
+				jda = JDABuilder.createDefault(config.botToken).setMemberCachePolicy(MemberCachePolicy.ALL)
 						.enableIntents(GatewayIntent.GUILD_MEMBERS).addEventListeners(new DiscordEventListener())
 						.build();
 			} else {
-				Main.jda = JDABuilder.createDefault(config.botToken).addEventListeners(new DiscordEventListener())
+				jda = JDABuilder.createDefault(config.botToken).addEventListeners(new DiscordEventListener())
 						.build();
 			}
 
-			Main.jda.awaitReady();
-			Main.textChannel = Main.jda.getTextChannelById(config.channelId);
+			jda.awaitReady();
+			textChannel = jda.getTextChannelById(config.channelId);
 		} catch (Exception e) {
 			jda = null;
-			Main.logger.error(e);
+			logger.error(e);
 		}
 
 		if (jda != null) {
@@ -53,12 +53,12 @@ public class Main implements DedicatedServerModInitializer {
 				jda.getPresence().setActivity(Activity.listening(config.botListeningStatus));
 
 			ServerLifecycleEvents.SERVER_STARTED
-					.register((server) -> textChannel.sendMessage(Main.config.texts.serverStarted).queue());
+					.register((server) -> textChannel.sendMessage(config.texts.serverStarted).queue());
 			ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
-				textChannel.sendMessage(Main.config.texts.serverStopped).queue();
-				Main.jda.shutdown();
+				textChannel.sendMessage(config.texts.serverStopped).queue();
+				jda.shutdown();
 			});
-			ServerLifecycleEvents.SERVER_STOPPED.register((server) -> Main.jda.shutdownNow());
+			ServerLifecycleEvents.SERVER_STOPPED.register((server) -> jda.shutdownNow());
 
 			new MinecraftEventListener().init();
 		}

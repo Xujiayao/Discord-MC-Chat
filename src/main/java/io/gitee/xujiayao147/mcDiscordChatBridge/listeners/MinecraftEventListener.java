@@ -24,6 +24,11 @@ public class MinecraftEventListener {
 	public void init() {
 		ServerChatCallback.EVENT.register((playerEntity, rawMessage, message) -> {
 			Pair<String, String> convertedPair = Utils.convertMentionsFromNames(rawMessage);
+			
+			if (Main.config.bannedMinecraft.contains(playerEntity.getEntityName())) {
+				return Optional.empty();
+			}
+			
 			if (Main.config.isWebhookEnabled) {
 				JSONObject body = new JSONObject();
 				body.put("username", playerEntity.getEntityName());

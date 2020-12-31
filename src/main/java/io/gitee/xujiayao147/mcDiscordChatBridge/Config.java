@@ -1,5 +1,8 @@
 package io.gitee.xujiayao147.mcDiscordChatBridge;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author Xujiayao
  */
@@ -26,7 +29,7 @@ public class Config {
 	// https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-\nIf
 	// more than one, enclose each id in quotation marks separated by commas, like
 	// this:\n\"adminsIds\": [ \n\t\t\"000\",\n\t\t\"111\",\n\t\t\"222\"\n\t]
-	public String[] adminsIds = { "664857360602365990", "769470378073653269" };
+	public String[] adminsIds = { "769470378073653269" };
 
 	// Channel id in Discord
 	public String channelId = "792407823295184906";
@@ -44,7 +47,13 @@ public class Config {
 
 	// Should announce when a player die?
 	public boolean announceDeaths = true;
-
+	
+	// Banned Discord users' ID
+	public List<String> bannedDiscord = new ArrayList<String>();
+	
+	// Banned Minecraft players' name
+	public List<String> bannedMinecraft = new ArrayList<String>();
+	
 	public Texts texts = new Texts();
 
 	public static class Texts {
@@ -84,16 +93,9 @@ public class Config {
 		// placeholders:\n%playername% | Player name\n%advancement% | Advancement name
 		public String advancementGoal = "**%playername% 达成了目标 [%advancement%]**";
 
-		// Discord -> Minecraft\nColored part of the message, this part of the message
-		// will receive the same color as the role in the discord, comes before the
-		// colorless part\nAvailable placeholders:\n%discordname% | User nickname in the
+		// Discord -> Minecraft\n Chat message
+		// Available placeholders:\n%discordname% | Nickname of the user in the
 		// guild\n%message% | The message
-		public String coloredText = "[Discord] ";
-
-		// Discord -> Minecraft\nColorless (white) part of the message, I think you
-		// already know what it is by the other comment\nAvailable
-		// placeholders:\n%discordname% | Nickname of the user in the guild\n%message% |
-		// The message
-		public String colorlessText = "<%discordname%> %message%";
+		public String messageText = "[Discord] <%discordname%> %message%";
 	}
 }
