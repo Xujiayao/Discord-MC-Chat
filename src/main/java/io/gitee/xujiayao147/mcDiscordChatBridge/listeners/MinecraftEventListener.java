@@ -29,26 +29,20 @@ public class MinecraftEventListener {
 				return Optional.empty();
 			}
 			
-			if (Main.config.isWebhookEnabled) {
-				JSONObject body = new JSONObject();
-				body.put("username", playerEntity.getEntityName());
-				body.put("avatar_url", "https://mc-heads.net/avatar/" + playerEntity.getEntityName());
-				JSONObject allowed_mentions = new JSONObject();
-				allowed_mentions.put("parse", new String[] { "users", "roles" });
-				body.put("allowed_mentions", allowed_mentions);
-				body.put("content", convertedPair.getLeft());
-				try {
-					Unirest.post(Main.config.webhookURL).header("Content-Type", "application/json").body(body)
-							.asJsonAsync();
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
-			} else {
-				Main.textChannel.sendMessage(
-						Main.config.texts.playerMessage.replace("%playername%", playerEntity.getEntityName())
-								.replace("%playermessage%", convertedPair.getLeft()))
-						.queue();
+			JSONObject body = new JSONObject();
+			body.put("username", playerEntity.getEntityName().replace("_", "\\_"));
+			body.put("avatar_url", "https://mc-heads.net/avatar/" + playerEntity.getEntityName());
+			JSONObject allowed_mentions = new JSONObject();
+			allowed_mentions.put("parse", new String[] { "users", "roles" });
+			body.put("allowed_mentions", allowed_mentions);
+			body.put("content", convertedPair.getLeft().replace("_", "\\_"));
+			try {
+				Unirest.post(Main.config.webhookURL).header("Content-Type", "application/json").body(body)
+						.asJsonAsync();
+			} catch (Exception ex) {
+				ex.printStackTrace();
 			}
+			
 			if (Main.config.modifyChatMessages) {
 				String jsonString = Text.Serializer.toJson(message);
 				JSONObject newComponent = new JSONObject(jsonString);
@@ -66,19 +60,19 @@ public class MinecraftEventListener {
 				switch (advancement.getDisplay().getFrame()) {
 				case GOAL:
 					Main.textChannel.sendMessage(
-							Main.config.texts.advancementGoal.replace("%playername%", playerEntity.getEntityName())
+							Main.config.texts.advancementGoal.replace("%playername%", playerEntity.getEntityName().replace("_", "\\_"))
 									.replace("%advancement%", advancement.getDisplay().getTitle().getString()))
 							.queue();
 					break;
 				case TASK:
 					Main.textChannel.sendMessage(
-							Main.config.texts.advancementTask.replace("%playername%", playerEntity.getEntityName())
+							Main.config.texts.advancementTask.replace("%playername%", playerEntity.getEntityName().replace("_", "\\_"))
 									.replace("%advancement%", advancement.getDisplay().getTitle().getString()))
 							.queue();
 					break;
 				case CHALLENGE:
 					Main.textChannel.sendMessage(
-							Main.config.texts.advancementChallenge.replace("%playername%", playerEntity.getEntityName())
+							Main.config.texts.advancementChallenge.replace("%playername%", playerEntity.getEntityName().replace("_", "\\_"))
 									.replace("%advancement%", advancement.getDisplay().getTitle().getString()))
 							.queue();
 					break;
@@ -90,14 +84,14 @@ public class MinecraftEventListener {
 			if (Main.config.announceDeaths) {
 				Main.textChannel.sendMessage(Main.config.texts.deathMessage
 						.replace("%deathmessage%", damageSource.getDeathMessage(playerEntity).getString())
-						.replace("%playername%", playerEntity.getEntityName())).queue();
+						.replace("%playername%", playerEntity.getEntityName().replace("_", "\\_"))).queue();
 			}
 		});
 
 		PlayerJoinCallback.EVENT.register((connection, playerEntity) -> {
 			if (Main.config.announcePlayers) {
 				Main.textChannel
-						.sendMessage(Main.config.texts.joinServer.replace("%playername%", playerEntity.getEntityName()))
+						.sendMessage(Main.config.texts.joinServer.replace("%playername%", playerEntity.getEntityName().replace("_", "\\_")))
 						.queue();
 			}
 		});
@@ -105,7 +99,7 @@ public class MinecraftEventListener {
 		PlayerLeaveCallback.EVENT.register((playerEntity) -> {
 			if (Main.config.announcePlayers) {
 				Main.textChannel
-						.sendMessage(Main.config.texts.leftServer.replace("%playername%", playerEntity.getEntityName()))
+						.sendMessage(Main.config.texts.leftServer.replace("%playername%", playerEntity.getEntityName().replace("_", "\\_")))
 						.queue();
 			}
 		});

@@ -88,20 +88,20 @@ public class DiscordEventListener extends ListenerAdapter {
 						
 						if (Main.config.bannedDiscord.contains(command)) {
 							Main.config.bannedDiscord.remove(command);
-							e.getChannel().sendMessage("**已将 " + command + " 移出黑名单！**").queue();
+							e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 移出黑名单！**").queue();
 						} else {
 							Main.config.bannedDiscord.add(command);
-							e.getChannel().sendMessage("**已将 " + command + " 添加至黑名单！**").queue();
+							e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 添加至黑名单！**").queue();
 						}
 					} else if (command.startsWith("minecraft")) {
 						command = command.replace("minecraft ", "");
 						
 						if (Main.config.bannedMinecraft.contains(command)) {
 							Main.config.bannedMinecraft.remove(command);
-							e.getChannel().sendMessage("**已将 " + command + " 移出黑名单！**").queue();
+							e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 移出黑名单！**").queue();
 						} else {
 							Main.config.bannedMinecraft.add(command);
-							e.getChannel().sendMessage("**已将 " + command + " 添加至黑名单！**").queue();
+							e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 添加至黑名单！**").queue();
 						}
 					}
 				} catch (Exception e2) {

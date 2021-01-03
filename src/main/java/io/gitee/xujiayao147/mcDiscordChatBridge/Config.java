@@ -17,10 +17,6 @@ public class Config {
 	// for nothing)
 	public String botListeningStatus = "主人敲键盘的声音~";
 
-	// Enable Webhook; If enabled, player messages will be send using a webhook with
-	// the players name and head, instead of a regular message.
-	public boolean isWebhookEnabled = true;
-
 	// Webhook URL; see
 	// https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks
 	public String webhookURL = "https://discord.com/api/webhooks/793756425818079252/t-LPDAK_0R-C2aaPzgWSj3TmBKaL26Cete8hH6POGoX4ub2S6qjM85czRAch7n-ukehX";
