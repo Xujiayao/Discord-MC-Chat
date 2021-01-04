@@ -15,6 +15,7 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import okhttp3.OkHttpClient;
 
 /**
  * @author Xujiayao
@@ -27,18 +28,19 @@ public class Main implements DedicatedServerModInitializer {
 	public static JDA jda;
 	public static TextChannel textChannel;
 
+	public static boolean stop = false;
+
 	@Override
 	public void onInitializeServer() {
 		config = new Config();
-		
+
 		try {
 			if (config.membersIntents) {
 				jda = JDABuilder.createDefault(config.botToken).setMemberCachePolicy(MemberCachePolicy.ALL)
 						.enableIntents(GatewayIntent.GUILD_MEMBERS).addEventListeners(new DiscordEventListener())
 						.build();
 			} else {
-				jda = JDABuilder.createDefault(config.botToken).addEventListeners(new DiscordEventListener())
-						.build();
+				jda = JDABuilder.createDefault(config.botToken).addEventListeners(new DiscordEventListener()).build();
 			}
 
 			jda.awaitReady();
@@ -58,7 +60,14 @@ public class Main implements DedicatedServerModInitializer {
 				textChannel.sendMessage(config.texts.serverStopped).queue();
 				jda.shutdown();
 			});
-			ServerLifecycleEvents.SERVER_STOPPED.register((server) -> jda.shutdownNow());
+			ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
+				stop = true;
+				textChannel.sendMessage(config.texts.serverStopped).queue();
+				jda.shutdown();
+				OkHttpClient client = jda.getHttpClient();
+				client.connectionPool().evictAll();
+				client.dispatcher().executorService().shutdown();
+			});
 
 			new MinecraftEventListener().init();
 		}

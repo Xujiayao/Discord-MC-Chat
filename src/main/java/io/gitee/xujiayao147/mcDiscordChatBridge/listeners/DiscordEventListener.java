@@ -31,10 +31,11 @@ public class DiscordEventListener extends ListenerAdapter {
 		MinecraftServer server = getServer();
 		if (e.getAuthor() != e.getJDA().getSelfUser() && !e.getAuthor().isBot()
 				&& e.getChannel().getId().equals(Main.config.channelId) && server != null) {
-			if (Main.config.bannedDiscord.contains(e.getAuthor().getId()) && !Arrays.asList(Main.config.adminsIds).contains(e.getAuthor().getId())) {
+			if (Main.config.bannedDiscord.contains(e.getAuthor().getId())
+					&& !Arrays.asList(Main.config.adminsIds).contains(e.getAuthor().getId())) {
 				return;
 			}
-			
+
 			if (e.getMessage().getContentRaw().startsWith("!online")) {
 				List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
 				if (onlinePlayers.size() == 0) {
@@ -79,13 +80,13 @@ public class DiscordEventListener extends ListenerAdapter {
 					e.getChannel().sendMessage("**你没有权限使用此命令！**").queue();
 					return;
 				}
-				
+
 				try {
 					String command = e.getMessage().getContentRaw().replace("!ban ", "");
-					
+
 					if (command.startsWith("discord")) {
 						command = command.replace("discord ", "");
-						
+
 						if (Main.config.bannedDiscord.contains(command)) {
 							Main.config.bannedDiscord.remove(command);
 							e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 移出黑名单！**").queue();
@@ -95,7 +96,7 @@ public class DiscordEventListener extends ListenerAdapter {
 						}
 					} else if (command.startsWith("minecraft")) {
 						command = command.replace("minecraft ", "");
-						
+
 						if (Main.config.bannedMinecraft.contains(command)) {
 							Main.config.bannedMinecraft.remove(command);
 							e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 移出黑名单！**").queue();

@@ -43,13 +43,13 @@ public class Config {
 
 	// Should announce when a player die?
 	public boolean announceDeaths = true;
-	
+
 	// Banned Discord users' ID
 	public List<String> bannedDiscord = new ArrayList<String>();
-	
+
 	// Banned Minecraft players' name
 	public List<String> bannedMinecraft = new ArrayList<String>();
-	
+
 	public Texts texts = new Texts();
 
 	public static class Texts {
