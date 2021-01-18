@@ -1,39 +1,23 @@
-# gradle
+# Gradle
 
 .gradle/
 build/
 out/
 classes/
 
-# eclipse
-
-*.launch
-
-# idea
+# IDEA
 
 .idea/
 *.iml
 *.ipr
 *.iws
 
-# vscode
-
-.settings/
-.vscode/
-bin/
-.classpath
-.project
-
-# macos
+# macOS
 
 *.DS_Store
 
-# fabric
+# Fabric
 
 run/
 
-bin/
-.settings/
-.classpath
-.project
 GitPusher.bat
