@@ -2,7 +2,6 @@
   "schemaVersion": 1,
   "id": "mc-discord-chat-bridge",
   "version": "${version}",
-
   "name": "MC Discord Chat Bridge",
   "description": "A Discord <-> Minecraft chat bridge.",
   "authors": [
@@ -10,12 +9,10 @@
   ],
   "contact": {
     "homepage": "https://xujiayao147.gitee.io/",
-	"issues": "https://github.com/Xujiayao147/mc-discord-chat-bridge/issues",
+    "issues": "https://github.com/Xujiayao147/mc-discord-chat-bridge/issues",
     "sources": "https://github.com/Xujiayao147/mc-discord-chat-bridge"
   },
-
   "license": "MIT",
-
   "environment": "server",
   "entrypoints": {
     "server": [
@@ -27,7 +24,7 @@
   ],
   "depends": {
     "fabricloader": ">=0.8.7",
-	"fabric": "*",
+    "fabric": "*",
     "minecraft": "1.16.x"
   }
 }

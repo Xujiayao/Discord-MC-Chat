@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '0.5-SNAPSHOT'
+    id 'fabric-loom' version '0.6.22'
     id 'maven-publish'
 }
 
@@ -26,37 +26,33 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    include(modCompile ("net.dv8tion:JDA:4.2.0_168") {
+    include(modCompile("net.dv8tion:JDA:+") {
         exclude module: 'opus-java'
     })
-    include(modApi("me.sargunvohra.mcmods:autoconfig1u:3.2.0-unstable")) {
-        exclude group: "net.fabricmc.fabric-api", module: "fabric-api"
-    }
-    include(modApi("me.shedaniel.cloth:config-2:4.6.0")) {
-        exclude group: "net.fabricmc.fabric-api", module: "fabric-api"
-    }
-    include(modCompile("com.mashape.unirest:unirest-java:1.4.9"))
-    //include(modCompile(group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.8.1'))
 
-    include group: 'org.json', name: 'json', version: '20160212'
-    include group: 'org.apache.httpcomponents', name: 'httpmime', version: '4.5.2'
-    include group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: '4.1.1'
-    include group: 'org.apache.httpcomponents', name: 'httpcore-nio', version: '4.4.4'
-    include group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.4.4'
-    include group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.1'
-    include "com.fasterxml.jackson.core:jackson-databind:2.10.1"
-    include "net.sf.trove4j:trove4j:3.0.3"
-    include "org.apache.commons:commons-collections4:4.1"
-    include "org.jetbrains:annotations:16.0.1"
-    include "org.slf4j:slf4j-api:1.7.25"
-    include "com.neovisionaries:nv-websocket-client:2.10"
+    include(modCompile("com.mashape.unirest:unirest-java:+"))
+
+    include group: 'org.json', name: 'json', version: '+'
+    include group: 'org.apache.httpcomponents', name: 'httpmime', version: '+'
+    include group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: '+'
+    include group: 'org.apache.httpcomponents', name: 'httpcore-nio', version: '+'
+    include group: 'org.apache.httpcomponents', name: 'httpcore', version: '+'
+    include group: 'org.apache.httpcomponents', name: 'httpclient', version: '+'
+    include "net.sf.trove4j:trove4j:+"
+    include "org.apache.commons:commons-collections4:+"
+    include "org.jetbrains:annotations:+"
+    include "org.slf4j:slf4j-api:+"
+    include "com.neovisionaries:nv-websocket-client:+"
+    include "commons-logging:commons-logging:+"
+    include "commons-codec:commons-codec:+"
+    include "com.fasterxml.jackson.core:jackson-annotations:+"
+    include "com.fasterxml.jackson.core:jackson-core:+"
+    include 'com.google.code.gson:gson:+'
+
+    // Exception when the newest version is used
     include "com.squareup.okhttp3:okhttp:3.13.0"
-    include "commons-logging:commons-logging:1.2"
-    include "commons-codec:commons-codec:1.9"
-    include "com.fasterxml.jackson.core:jackson-annotations:2.10.1"
-    include "com.fasterxml.jackson.core:jackson-core:2.10.1"
     include "com.squareup.okio:okio:1.17.2"
-
+    include "com.fasterxml.jackson.core:jackson-databind:2.10.1"
 }
 
 processResources {
