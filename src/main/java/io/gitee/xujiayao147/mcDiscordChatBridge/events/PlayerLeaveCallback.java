@@ -8,12 +8,12 @@ import net.minecraft.server.network.ServerPlayerEntity;
  * @author Xujiayao
  */
 public interface PlayerLeaveCallback {
-    Event<PlayerLeaveCallback> EVENT = EventFactory.createArrayBacked(PlayerLeaveCallback.class,
-            callbacks -> playerEntity -> {
-                for (PlayerLeaveCallback callback : callbacks) {
-                    callback.onLeave(playerEntity);
-                }
-            });
+	Event<PlayerLeaveCallback> EVENT = EventFactory.createArrayBacked(PlayerLeaveCallback.class,
+		  callbacks -> playerEntity -> {
+			  for (PlayerLeaveCallback callback : callbacks) {
+				  callback.onLeave(playerEntity);
+			  }
+		  });
 
-    void onLeave(ServerPlayerEntity playerEntity);
+	void onLeave(ServerPlayerEntity playerEntity);
 }

@@ -14,9 +14,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ServerPlayerEntity.class)
 public class MixinServerPlayerEntity {
 
-    @Inject(method = "onDeath", at = @At("HEAD"))
-    private void onDeath(DamageSource source, CallbackInfo ci) {
-        ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) (Object) this;
-        PlayerDeathCallback.EVENT.invoker().onPlayerDeath(serverPlayerEntity, source);
-    }
+	@Inject(method = "onDeath", at = @At("HEAD"))
+	private void onDeath(DamageSource source, CallbackInfo ci) {
+		ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) (Object) this;
+		PlayerDeathCallback.EVENT.invoker().onPlayerDeath(serverPlayerEntity, source);
+	}
 }

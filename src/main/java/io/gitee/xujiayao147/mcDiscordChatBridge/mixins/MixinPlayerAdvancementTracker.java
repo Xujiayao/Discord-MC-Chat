@@ -16,11 +16,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(PlayerAdvancementTracker.class)
 public class MixinPlayerAdvancementTracker {
 
-    @Shadow
-    private ServerPlayerEntity owner;
+	@Shadow
+	private ServerPlayerEntity owner;
 
-    @Inject(method = "grantCriterion", at = @At("RETURN"))
-    private void grantCriterion(Advancement advancement, String criterionName, CallbackInfoReturnable<Boolean> cir) {
-        PlayerAdvancementCallback.EVENT.invoker().onPlayerAdvancement(owner, advancement);
-    }
+	@Inject(method = "grantCriterion", at = @At("RETURN"))
+	private void grantCriterion(Advancement advancement, String criterionName, CallbackInfoReturnable<Boolean> cir) {
+		PlayerAdvancementCallback.EVENT.invoker().onPlayerAdvancement(owner, advancement);
+	}
 }

@@ -11,16 +11,16 @@ import java.util.Optional;
  * @author Xujiayao
  */
 public interface ServerChatCallback {
-    Event<ServerChatCallback> EVENT = EventFactory.createArrayBacked(ServerChatCallback.class,
-            callbacks -> (playerEntity, rawMessage, message) -> {
-                Optional<Text> msg = Optional.empty();
-                for (ServerChatCallback callback : callbacks) {
-                    Optional<Text> callbackResult = callback.onServerChat(playerEntity, rawMessage, message);
-                    if (callbackResult.isPresent())
-                        msg = callbackResult;
-                }
-                return msg;
-            });
+	Event<ServerChatCallback> EVENT = EventFactory.createArrayBacked(ServerChatCallback.class,
+		  callbacks -> (playerEntity, rawMessage, message) -> {
+			  Optional<Text> msg = Optional.empty();
+			  for (ServerChatCallback callback : callbacks) {
+				  Optional<Text> callbackResult = callback.onServerChat(playerEntity, rawMessage, message);
+				  if (callbackResult.isPresent())
+					  msg = callbackResult;
+			  }
+			  return msg;
+		  });
 
-    Optional<Text> onServerChat(ServerPlayerEntity playerEntity, String rawMessage, Text message);
+	Optional<Text> onServerChat(ServerPlayerEntity playerEntity, String rawMessage, Text message);
 }

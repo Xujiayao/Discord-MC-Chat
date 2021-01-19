@@ -16,14 +16,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(PlayerManager.class)
 public class MixinPlayerManager {
 
-    @Inject(method = "onPlayerConnect", at = @At("RETURN"))
-    private void onPlayerConnect(ClientConnection connection, ServerPlayerEntity player, CallbackInfo ci) {
-        PlayerJoinCallback.EVENT.invoker().onJoin(connection, player);
-    }
+	@Inject(method = "onPlayerConnect", at = @At("RETURN"))
+	private void onPlayerConnect(ClientConnection connection, ServerPlayerEntity player, CallbackInfo ci) {
+		PlayerJoinCallback.EVENT.invoker().onJoin(connection, player);
+	}
 
-    @Inject(method = "remove", at = @At("HEAD"))
-    private void remove(ServerPlayerEntity player, CallbackInfo ci) {
-        PlayerLeaveCallback.EVENT.invoker().onLeave(player);
-    }
+	@Inject(method = "remove", at = @At("HEAD"))
+	private void remove(ServerPlayerEntity player, CallbackInfo ci) {
+		PlayerLeaveCallback.EVENT.invoker().onLeave(player);
+	}
 
 }

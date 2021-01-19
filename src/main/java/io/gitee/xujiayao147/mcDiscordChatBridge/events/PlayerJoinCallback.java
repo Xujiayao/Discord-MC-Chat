@@ -9,12 +9,12 @@ import net.minecraft.server.network.ServerPlayerEntity;
  * @author Xujiayao
  */
 public interface PlayerJoinCallback {
-    Event<PlayerJoinCallback> EVENT = EventFactory.createArrayBacked(PlayerJoinCallback.class,
-            callbacks -> (connection, playerEntity) -> {
-                for (PlayerJoinCallback callback : callbacks) {
-                    callback.onJoin(connection, playerEntity);
-                }
-            });
+	Event<PlayerJoinCallback> EVENT = EventFactory.createArrayBacked(PlayerJoinCallback.class,
+		  callbacks -> (connection, playerEntity) -> {
+			  for (PlayerJoinCallback callback : callbacks) {
+				  callback.onJoin(connection, playerEntity);
+			  }
+		  });
 
-    void onJoin(ClientConnection connection, ServerPlayerEntity playerEntity);
+	void onJoin(ClientConnection connection, ServerPlayerEntity playerEntity);
 }

@@ -19,58 +19,58 @@ import okhttp3.OkHttpClient;
  */
 public class Main implements DedicatedServerModInitializer {
 
-    public static Config config;
-    public static JDA jda;
-    public static TextChannel textChannel;
+	public static Config config;
+	public static JDA jda;
+	public static TextChannel textChannel;
 
-    public static boolean stop = false;
+	public static boolean stop = false;
 
-    @Override
-    public void onInitializeServer() {
-        config = new Config();
+	@Override
+	public void onInitializeServer() {
+		config = new Config();
 
-        try {
-            if (config.membersIntents) {
-                jda = JDABuilder.createDefault(config.botToken).setMemberCachePolicy(MemberCachePolicy.ALL)
-                        .enableIntents(GatewayIntent.GUILD_MEMBERS).addEventListeners(new DiscordEventListener())
-                        .build();
-            } else {
-                jda = JDABuilder.createDefault(config.botToken).addEventListeners(new DiscordEventListener()).build();
-            }
+		try {
+			if (config.membersIntents) {
+				jda = JDABuilder.createDefault(config.botToken).setMemberCachePolicy(MemberCachePolicy.ALL)
+					  .enableIntents(GatewayIntent.GUILD_MEMBERS).addEventListeners(new DiscordEventListener())
+					  .build();
+			} else {
+				jda = JDABuilder.createDefault(config.botToken).addEventListeners(new DiscordEventListener()).build();
+			}
 
-            jda.awaitReady();
-            textChannel = jda.getTextChannelById(config.channelId);
-        } catch (Exception e) {
-            e.printStackTrace();
-            jda = null;
-        }
+			jda.awaitReady();
+			textChannel = jda.getTextChannelById(config.channelId);
+		} catch (Exception e) {
+			e.printStackTrace();
+			jda = null;
+		}
 
-        if (jda != null) {
-            if (!config.botListeningStatus.isEmpty())
-                jda.getPresence().setActivity(Activity.listening(config.botListeningStatus));
+		if (jda != null) {
+			if (!config.botListeningStatus.isEmpty())
+				jda.getPresence().setActivity(Activity.listening(config.botListeningStatus));
 
-            ServerLifecycleEvents.SERVER_STARTED
-                    .register((server) -> textChannel.sendMessage(config.texts.serverStarted).queue());
-            ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
-                textChannel.sendMessage(config.texts.serverStopped).queue();
-                jda.shutdown();
-            });
-            ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
-                stop = true;
-                textChannel.sendMessage(config.texts.serverStopped).queue();
-                jda.shutdown();
-                OkHttpClient client = jda.getHttpClient();
-                client.connectionPool().evictAll();
-                client.dispatcher().executorService().shutdown();
-            });
+			ServerLifecycleEvents.SERVER_STARTED
+				  .register((server) -> textChannel.sendMessage(config.texts.serverStarted).queue());
+			ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
+				textChannel.sendMessage(config.texts.serverStopped).queue();
+				jda.shutdown();
+			});
+			ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
+				stop = true;
+				textChannel.sendMessage(config.texts.serverStopped).queue();
+				jda.shutdown();
+				OkHttpClient client = jda.getHttpClient();
+				client.connectionPool().evictAll();
+				client.dispatcher().executorService().shutdown();
+			});
 
-            new MinecraftEventListener().init();
-        }
+			new MinecraftEventListener().init();
+		}
 
-        CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
-            if (dedicated) {
-                ShrugCommand.register(dispatcher);
-            }
-        });
-    }
+		CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
+			if (dedicated) {
+				ShrugCommand.register(dispatcher);
+			}
+		});
+	}
 }
