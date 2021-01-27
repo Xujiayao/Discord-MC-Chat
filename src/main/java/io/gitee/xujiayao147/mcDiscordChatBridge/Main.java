@@ -49,12 +49,7 @@ public class Main implements DedicatedServerModInitializer {
 			if (!config.botListeningStatus.isEmpty())
 				jda.getPresence().setActivity(Activity.listening(config.botListeningStatus));
 
-			ServerLifecycleEvents.SERVER_STARTED
-				  .register((server) -> textChannel.sendMessage(config.texts.serverStarted).queue());
-			ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
-				textChannel.sendMessage(config.texts.serverStopped).queue();
-				jda.shutdown();
-			});
+			ServerLifecycleEvents.SERVER_STARTED.register((server) -> textChannel.sendMessage(config.texts.serverStarted).queue());
 			ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
 				stop = true;
 				textChannel.sendMessage(config.texts.serverStopped).queue();
