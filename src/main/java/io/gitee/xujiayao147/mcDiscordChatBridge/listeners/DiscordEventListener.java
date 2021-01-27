@@ -21,7 +21,12 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author Xujiayao
@@ -82,7 +87,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
 						for (Player player : Main.config.playerList)
 							if (player.getUuid().equals(file.getName().replace(".json", "")))
-								Main.config.statsList.add(new Stats(player.getName(), file.getName().replace(".json", ""), reader.readLine()));
+								Main.config.statsList.add(new Stats(player.getName(), reader.readLine()));
 					}
 
 					Main.config.scoreboardMap = new HashMap<>();

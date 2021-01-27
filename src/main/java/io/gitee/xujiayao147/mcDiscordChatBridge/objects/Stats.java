@@ -2,22 +2,16 @@ package io.gitee.xujiayao147.mcDiscordChatBridge.objects;
 
 public class Stats {
 
-	private String name;
-	private String uuid;
-	private String content;
+	private final String name;
+	private final String content;
 
-	public Stats(String name, String uuid, String content) {
+	public Stats(String name, String content) {
 		this.name = name;
-		this.uuid = uuid;
 		this.content = content;
 	}
 
 	public String getName() {
 		return name;
-	}
-
-	public String getUuid() {
-		return uuid;
 	}
 
 	public String getContent() {

@@ -5,14 +5,12 @@ package io.gitee.xujiayao147.mcDiscordChatBridge.objects;
  */
 public class Player {
 
-	private String name;
-	private String uuid;
-	private String expiresOn;
+	private final String name;
+	private final String uuid;
 
-	public Player(String name, String uuid, String expiresOn) {
+	public Player(String name, String uuid) {
 		this.name = name;
 		this.uuid = uuid;
-		this.expiresOn = expiresOn;
 	}
 
 	public String getName() {
