@@ -1,14 +1,14 @@
 {
-  "required": true,
-  "package": "top.xujiayao.mcDiscordChat.mixins",
-  "compatibilityLevel": "JAVA_8",
-  "mixins": [
-    "MixinPlayerAdvancementTracker",
-    "MixinPlayerManager",
-    "MixinServerPlayerEntity",
-    "MixinServerPlayNetworkHandler"
-  ],
-  "injectors": {
-    "defaultRequire": 1
-  }
+	"required": true,
+	"package": "top.xujiayao.mcDiscordChat.mixins",
+	"compatibilityLevel": "JAVA_8",
+	"mixins": [
+		"MixinPlayerAdvancementTracker",
+		"MixinPlayerManager",
+		"MixinServerPlayerEntity",
+		"MixinServerPlayNetworkHandler"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
 }

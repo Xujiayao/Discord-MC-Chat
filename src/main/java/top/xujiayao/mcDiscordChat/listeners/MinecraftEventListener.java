@@ -66,14 +66,17 @@ public class MinecraftEventListener {
 						Main.textChannel.sendMessage(Main.config.texts.advancementGoal
 							  .replace("%playername%", playerEntity.getEntityName().replace("_", "\\_"))
 							  .replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
+						break;
 					case TASK:
 						Main.textChannel.sendMessage(Main.config.texts.advancementTask
 							  .replace("%playername%", playerEntity.getEntityName().replace("_", "\\_"))
 							  .replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
+						break;
 					case CHALLENGE:
 						Main.textChannel.sendMessage(Main.config.texts.advancementChallenge
 							  .replace("%playername%", playerEntity.getEntityName().replace("_", "\\_"))
 							  .replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
+						break;
 				}
 			}
 		});
