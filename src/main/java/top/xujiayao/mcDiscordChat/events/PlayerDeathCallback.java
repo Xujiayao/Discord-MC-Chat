@@ -1,4 +1,4 @@
-package io.gitee.xujiayao147.mcDiscordChatBridge.events;
+package top.xujiayao.mcDiscordChat.events;
 
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;

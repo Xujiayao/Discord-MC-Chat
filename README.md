@@ -1,4 +1,4 @@
-# mc-discord-chat-bridge
+# MCDiscordChat
 
 服务器跨服聊天工具 - Java
 

@@ -1,6 +1,5 @@
-package io.gitee.xujiayao147.mcDiscordChatBridge.mixins;
+package top.xujiayao.mcDiscordChat.mixins;
 
-import io.gitee.xujiayao147.mcDiscordChatBridge.events.PlayerAdvancementCallback;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.advancement.PlayerAdvancementTracker;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -9,6 +8,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import top.xujiayao.mcDiscordChat.events.PlayerAdvancementCallback;
 
 /**
  * @author Xujiayao

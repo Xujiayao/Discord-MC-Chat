@@ -1,17 +1,17 @@
-package io.gitee.xujiayao147.mcDiscordChatBridge.listeners;
+package top.xujiayao.mcDiscordChat.listeners;
 
 import com.mashape.unirest.http.Unirest;
-import io.gitee.xujiayao147.mcDiscordChatBridge.Main;
-import io.gitee.xujiayao147.mcDiscordChatBridge.events.PlayerAdvancementCallback;
-import io.gitee.xujiayao147.mcDiscordChatBridge.events.PlayerDeathCallback;
-import io.gitee.xujiayao147.mcDiscordChatBridge.events.PlayerJoinCallback;
-import io.gitee.xujiayao147.mcDiscordChatBridge.events.PlayerLeaveCallback;
-import io.gitee.xujiayao147.mcDiscordChatBridge.events.ServerChatCallback;
-import io.gitee.xujiayao147.mcDiscordChatBridge.utils.MarkdownParser;
-import io.gitee.xujiayao147.mcDiscordChatBridge.utils.Utils;
 import net.minecraft.text.Text;
 import net.minecraft.util.Pair;
 import org.json.JSONObject;
+import top.xujiayao.mcDiscordChat.Main;
+import top.xujiayao.mcDiscordChat.events.PlayerAdvancementCallback;
+import top.xujiayao.mcDiscordChat.events.PlayerDeathCallback;
+import top.xujiayao.mcDiscordChat.events.PlayerJoinCallback;
+import top.xujiayao.mcDiscordChat.events.PlayerLeaveCallback;
+import top.xujiayao.mcDiscordChat.events.ServerChatCallback;
+import top.xujiayao.mcDiscordChat.utils.MarkdownParser;
+import top.xujiayao.mcDiscordChat.utils.Utils;
 
 import java.util.Optional;
 
@@ -31,13 +31,15 @@ public class MinecraftEventListener {
 				JSONObject body = new JSONObject();
 				body.put("username", playerEntity.getEntityName());
 				body.put("avatar_url", "https://mc-heads.net/avatar/" + playerEntity.getEntityName());
+
 				JSONObject allowed_mentions = new JSONObject();
 				allowed_mentions.put("parse", new String[]{"users", "roles"});
+
 				body.put("allowed_mentions", allowed_mentions);
 				body.put("content", convertedPair.getLeft().replace("_", "\\_"));
+
 				try {
-					Unirest.post(Main.config.webhookURL).header("Content-Type", "application/json").body(body)
-						  .asJsonAsync();
+					Unirest.post(Main.config.webhookURL).header("Content-Type", "application/json").body(body).asJsonAsync();
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
@@ -47,6 +49,7 @@ public class MinecraftEventListener {
 					JSONObject newComponent = new JSONObject(jsonString);
 					newComponent.getJSONArray("with").put(1, MarkdownParser.parseMarkdown(convertedPair.getRight()));
 					Text finalText = Text.Serializer.fromJson(newComponent.toString());
+
 					return Optional.ofNullable(finalText);
 				}
 			}
@@ -63,17 +66,14 @@ public class MinecraftEventListener {
 						Main.textChannel.sendMessage(Main.config.texts.advancementGoal
 							  .replace("%playername%", playerEntity.getEntityName().replace("_", "\\_"))
 							  .replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
-						break;
 					case TASK:
 						Main.textChannel.sendMessage(Main.config.texts.advancementTask
 							  .replace("%playername%", playerEntity.getEntityName().replace("_", "\\_"))
 							  .replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
-						break;
 					case CHALLENGE:
 						Main.textChannel.sendMessage(Main.config.texts.advancementChallenge
 							  .replace("%playername%", playerEntity.getEntityName().replace("_", "\\_"))
 							  .replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
-						break;
 				}
 			}
 		});

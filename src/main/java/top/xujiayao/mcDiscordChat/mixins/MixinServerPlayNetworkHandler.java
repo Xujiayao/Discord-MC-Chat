@@ -1,6 +1,5 @@
-package io.gitee.xujiayao147.mcDiscordChatBridge.mixins;
+package top.xujiayao.mcDiscordChat.mixins;
 
-import io.gitee.xujiayao147.mcDiscordChatBridge.events.ServerChatCallback;
 import net.minecraft.network.MessageType;
 import net.minecraft.network.Packet;
 import net.minecraft.server.MinecraftServer;
@@ -15,6 +14,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import top.xujiayao.mcDiscordChat.events.ServerChatCallback;
 
 import java.util.Optional;
 
@@ -26,9 +26,11 @@ public abstract class MixinServerPlayNetworkHandler {
 
 	@Shadow
 	public ServerPlayerEntity player;
+
 	@Final
 	@Shadow
 	private MinecraftServer server;
+
 	@Shadow
 	private int messageCooldown;
 
@@ -46,9 +48,9 @@ public abstract class MixinServerPlayNetworkHandler {
 		String message = StringUtils.normalizeSpace(string);
 		Text text = new TranslatableText("chat.type.text", this.player.getDisplayName(), message);
 		Optional<Text> eventResult = ServerChatCallback.EVENT.invoker().onServerChat(this.player, message, text);
+
 		if (eventResult.isPresent()) {
-			this.server.getPlayerManager().broadcastChatMessage(eventResult.get(), MessageType.CHAT,
-				  this.player.getUuid());
+			this.server.getPlayerManager().broadcastChatMessage(eventResult.get(), MessageType.CHAT, this.player.getUuid());
 			ci.cancel();
 		}
 	}

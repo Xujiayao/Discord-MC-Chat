@@ -1,7 +1,5 @@
-package io.gitee.xujiayao147.mcDiscordChatBridge.mixins;
+package top.xujiayao.mcDiscordChat.mixins;
 
-import io.gitee.xujiayao147.mcDiscordChatBridge.events.PlayerJoinCallback;
-import io.gitee.xujiayao147.mcDiscordChatBridge.events.PlayerLeaveCallback;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -9,6 +7,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import top.xujiayao.mcDiscordChat.events.PlayerJoinCallback;
+import top.xujiayao.mcDiscordChat.events.PlayerLeaveCallback;
 
 /**
  * @author Xujiayao
@@ -25,5 +25,4 @@ public class MixinPlayerManager {
 	private void remove(ServerPlayerEntity player, CallbackInfo ci) {
 		PlayerLeaveCallback.EVENT.invoker().onLeave(player);
 	}
-
 }

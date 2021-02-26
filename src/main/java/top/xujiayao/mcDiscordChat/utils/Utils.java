@@ -1,9 +1,9 @@
-package io.gitee.xujiayao147.mcDiscordChatBridge.utils;
+package top.xujiayao.mcDiscordChat.utils;
 
-import io.gitee.xujiayao147.mcDiscordChatBridge.Main;
 import net.dv8tion.jda.api.entities.Member;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Pair;
+import top.xujiayao.mcDiscordChat.Main;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -19,7 +19,6 @@ import java.util.regex.Pattern;
 public class Utils {
 
 	public static List<File> getFileList(File file) {
-
 		List<File> result = new ArrayList<>();
 
 		File[] directoryList = file.listFiles(file1 -> file1.isFile() && file1.getName().contains("json"));
@@ -30,10 +29,12 @@ public class Utils {
 	}
 
 	public static Pair<String, String> convertMentionsFromNames(String message) {
-		if (!message.contains("@"))
+		if (!message.contains("@")) {
 			return new Pair<>(message, message);
+		}
 
 		List<String> messageList = Arrays.asList(message.split("@[\\S]+"));
+
 		if (messageList.size() == 0) {
 			messageList = new ArrayList<>();
 			messageList.add("");
@@ -44,15 +45,18 @@ public class Utils {
 		Matcher matcher = pattern.matcher(message);
 
 		int x = 0;
+
 		while (matcher.find()) {
 			Member member = null;
+
 			for (Member m : Main.textChannel.getMembers()) {
 				String name = matcher.group().substring(1);
-				if (m.getUser().getName().equalsIgnoreCase(name)
-					  || (m.getNickname() != null && m.getNickname().equalsIgnoreCase(name))) {
+
+				if (m.getUser().getName().equalsIgnoreCase(name) || (m.getNickname() != null && m.getNickname().equalsIgnoreCase(name))) {
 					member = m;
 				}
 			}
+
 			if (member == null) {
 				discordString.append(messageList.get(x)).append(matcher.group());
 				mcString.append(messageList.get(x)).append(matcher.group());
@@ -61,12 +65,15 @@ public class Utils {
 				mcString.append(messageList.get(x)).append(Formatting.YELLOW.toString()).append("@")
 					  .append(member.getEffectiveName()).append(Formatting.WHITE.toString());
 			}
+
 			x++;
 		}
+
 		if (x < messageList.size()) {
 			discordString.append(messageList.get(x));
 			mcString.append(messageList.get(x));
 		}
+
 		return new Pair<>(discordString.toString(), mcString.toString());
 	}
 }

@@ -1,12 +1,12 @@
-package io.gitee.xujiayao147.mcDiscordChatBridge.mixins;
+package top.xujiayao.mcDiscordChat.mixins;
 
-import io.gitee.xujiayao147.mcDiscordChatBridge.events.PlayerDeathCallback;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import top.xujiayao.mcDiscordChat.events.PlayerDeathCallback;
 
 /**
  * @author Xujiayao

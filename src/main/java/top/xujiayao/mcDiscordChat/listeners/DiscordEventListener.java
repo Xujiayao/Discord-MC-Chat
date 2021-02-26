@@ -1,12 +1,7 @@
-package io.gitee.xujiayao147.mcDiscordChatBridge.listeners;
+package top.xujiayao.mcDiscordChat.listeners;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import io.gitee.xujiayao147.mcDiscordChatBridge.Main;
-import io.gitee.xujiayao147.mcDiscordChatBridge.objects.Player;
-import io.gitee.xujiayao147.mcDiscordChatBridge.objects.Stats;
-import io.gitee.xujiayao147.mcDiscordChatBridge.utils.MarkdownParser;
-import io.gitee.xujiayao147.mcDiscordChatBridge.utils.Utils;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.loader.api.FabricLoader;
@@ -16,6 +11,11 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
+import top.xujiayao.mcDiscordChat.Main;
+import top.xujiayao.mcDiscordChat.objects.Player;
+import top.xujiayao.mcDiscordChat.objects.Stats;
+import top.xujiayao.mcDiscordChat.utils.MarkdownParser;
+import top.xujiayao.mcDiscordChat.utils.Utils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -42,22 +42,24 @@ public class DiscordEventListener extends ListenerAdapter {
 				return;
 			}
 
-			if (e.getMessage().getContentRaw().startsWith("!online")) {
-				List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
-				if (onlinePlayers.size() == 0) {
-					e.getChannel().sendMessage(
-						  "```\n=============== 在线玩家 (" + onlinePlayers.size() + ") ===============\n\n当前没有在线玩家！```")
-						  .queue();
-				} else {
-					StringBuilder playerList = new StringBuilder(
-						  "```\n=============== 在线玩家 (" + onlinePlayers.size() + ") ===============\n");
-					for (ServerPlayerEntity player : onlinePlayers) {
-						playerList.append("\n").append(player.getEntityName());
-					}
+			if (e.getMessage().getContentRaw().startsWith("!info")) {
+				StringBuilder infoString = new StringBuilder("```\n=============== 运行状态 ===============\n\n");
 
-					playerList.append("```");
-					e.getChannel().sendMessage(playerList.toString()).queue();
+				List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
+				infoString.append("在线玩家 (").append(onlinePlayers.size()).append(")：");
+
+				if (onlinePlayers.size() == 0) {
+					infoString.append("\n当前没有在线玩家！");
+				} else {
+					for (ServerPlayerEntity player : onlinePlayers) {
+						infoString.append("\n").append(player.getEntityName());
+					}
 				}
+
+				infoString.append("\n\n服务器已用内存：\n").append((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024).append(" MB");
+
+				infoString.append("\n```");
+				e.getChannel().sendMessage(infoString.toString()).queue();
 			} else if (e.getMessage().getContentRaw().startsWith("!scoreboard")) {
 				BufferedReader reader = null;
 				FileReader fileReader = null;
@@ -78,7 +80,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
 					Main.config.playerList = gson.fromJson(jsonString, userListType);
 
-					Main.config.statsFileList = Utils.getFileList(new File(FabricLoader.getInstance().getGameDir().toAbsolutePath().toString() + "/" + Main.config.worldName + "/stats/"));
+					Main.config.statsFileList = Utils.getFileList(new File(FabricLoader.getInstance().getGameDir().toAbsolutePath().toString().replace(".", "") + Main.config.worldName + "/stats/"));
 					Main.config.statsList = new ArrayList<>();
 
 					for (File file : Main.config.statsFileList) {
@@ -141,29 +143,34 @@ public class DiscordEventListener extends ListenerAdapter {
 					}
 				}
 			} else if (e.getMessage().getContentRaw().startsWith("!help")) {
-				String help = "```\n" + "=============== 命令 ===============\n"
+				String help = "```\n" + "=============== 帮助 ===============\n"
 					  + "\n"
-					  + "!online: 列出服务器在线玩家\n"
+					  + "!info: 查询服务器运行状态\n"
 					  + "!scoreboard <type> <id>: 查询该统计信息的玩家排行榜\n"
 					  + "!ban <type> <id/name>: 将一名 Discord 用户或 Minecraft 玩家从黑名单中添加或移除（仅限管理员）\n"
 					  + "!banlist: 列出黑名单```";
 				e.getChannel().sendMessage(help).queue();
-
 			} else if (e.getMessage().getContentRaw().startsWith("!banlist")) {
 				StringBuilder bannedList = new StringBuilder("```\n=============== 黑名单 ===============\n\nDiscord:");
+
 				if (Main.config.bannedDiscord.size() == 0) {
 					bannedList.append("\n列表为空！");
 				}
+
 				for (String id : Main.config.bannedDiscord) {
 					bannedList.append("\n").append(id);
 				}
+
 				bannedList.append("\n\nMinecraft:");
+
 				if (Main.config.bannedMinecraft.size() == 0) {
 					bannedList.append("\n列表为空！");
 				}
+
 				for (String name : Main.config.bannedMinecraft) {
 					bannedList.append("\n").append(name);
 				}
+
 				bannedList.append("```");
 				e.getChannel().sendMessage(bannedList.toString()).queue();
 			} else if (e.getMessage().getContentRaw().startsWith("!ban")) {
@@ -217,6 +224,7 @@ public class DiscordEventListener extends ListenerAdapter {
 	private MinecraftServer getServer() {
 		@SuppressWarnings("deprecation")
 		Object gameInstance = FabricLoader.getInstance().getGameInstance();
+
 		if (gameInstance instanceof MinecraftServer) {
 			return (MinecraftServer) gameInstance;
 		} else {

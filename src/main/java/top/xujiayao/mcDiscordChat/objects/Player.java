@@ -1,4 +1,4 @@
-package io.gitee.xujiayao147.mcDiscordChatBridge.objects;
+package top.xujiayao.mcDiscordChat.objects;
 
 /**
  * @author Xujiayao

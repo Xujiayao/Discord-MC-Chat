@@ -1,7 +1,7 @@
-package io.gitee.xujiayao147.mcDiscordChatBridge;
+package top.xujiayao.mcDiscordChat;
 
-import io.gitee.xujiayao147.mcDiscordChatBridge.objects.Player;
-import io.gitee.xujiayao147.mcDiscordChatBridge.objects.Stats;
+import top.xujiayao.mcDiscordChat.objects.Player;
+import top.xujiayao.mcDiscordChat.objects.Stats;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -55,7 +55,7 @@ public class Config {
 	public List<String> bannedMinecraft = new ArrayList<>();
 
 	// Name of the world folder
-	public String worldName = "Lazy_Craft";
+	public String worldName = "world";
 
 	// List of players { Player(String name, String uuid, String expiresOn) }
 	public List<Player> playerList;
@@ -81,11 +81,11 @@ public class Config {
 
 		// Minecraft -> Discord\nJoin server\nAvailable placeholders:\n%playername% |
 		// Player name
-		public String joinServer = "**%playername% 加入了游戏**";
+		public String joinServer = "**%playername% 加入了服务器**";
 
 		// Minecraft -> Discord\nLeft server\nAvailable placeholders:\n%playername% |
 		// Player name
-		public String leftServer = "**%playername% 离开了游戏**";
+		public String leftServer = "**%playername% 离开了服务器**";
 
 		// Minecraft -> Discord\nDeath message\nAvailable placeholders:\n%playername% |
 		// Player name\n%deathmessage% | Death message

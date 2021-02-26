@@ -1,8 +1,5 @@
-package io.gitee.xujiayao147.mcDiscordChatBridge;
+package top.xujiayao.mcDiscordChat;
 
-import io.gitee.xujiayao147.mcDiscordChatBridge.commands.ShrugCommand;
-import io.gitee.xujiayao147.mcDiscordChatBridge.listeners.DiscordEventListener;
-import io.gitee.xujiayao147.mcDiscordChatBridge.listeners.MinecraftEventListener;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
@@ -13,6 +10,9 @@ import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import okhttp3.OkHttpClient;
+import top.xujiayao.mcDiscordChat.commands.ShrugCommand;
+import top.xujiayao.mcDiscordChat.listeners.DiscordEventListener;
+import top.xujiayao.mcDiscordChat.listeners.MinecraftEventListener;
 
 /**
  * @author Xujiayao
@@ -46,10 +46,12 @@ public class Main implements DedicatedServerModInitializer {
 		}
 
 		if (jda != null) {
-			if (!config.botListeningStatus.isEmpty())
+			if (!config.botListeningStatus.isEmpty()) {
 				jda.getPresence().setActivity(Activity.listening(config.botListeningStatus));
+			}
 
 			ServerLifecycleEvents.SERVER_STARTED.register((server) -> textChannel.sendMessage(config.texts.serverStarted).queue());
+
 			ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
 				stop = true;
 				textChannel.sendMessage(config.texts.serverStopped).queue();
