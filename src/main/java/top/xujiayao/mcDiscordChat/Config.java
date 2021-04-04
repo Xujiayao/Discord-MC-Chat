@@ -12,7 +12,7 @@ import java.util.List;
  * @author Xujiayao
  */
 public class Config {
-	// Sets if MC Discord Chat Bridge Should Modify In-Game Chat Messages
+	// Sets if MCDiscordChat Should Modify In-Game Chat Messages
 	public boolean modifyChatMessages = true;
 
 	// Bot Token; see https://discordpy.readthedocs.io/en/latest/discord.html

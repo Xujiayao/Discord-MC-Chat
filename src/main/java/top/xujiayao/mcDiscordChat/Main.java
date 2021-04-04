@@ -1,5 +1,6 @@
 package top.xujiayao.mcDiscordChat;
 
+import com.mashape.unirest.http.Unirest;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
@@ -10,9 +11,12 @@ import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
 import top.xujiayao.mcDiscordChat.commands.ShrugCommand;
 import top.xujiayao.mcDiscordChat.listeners.DiscordEventListener;
 import top.xujiayao.mcDiscordChat.listeners.MinecraftEventListener;
+
+import java.util.Collections;
 
 /**
  * @author Xujiayao
@@ -31,11 +35,19 @@ public class Main implements DedicatedServerModInitializer {
 
 		try {
 			if (config.membersIntents) {
-				jda = JDABuilder.createDefault(config.botToken).setMemberCachePolicy(MemberCachePolicy.ALL)
-					  .enableIntents(GatewayIntent.GUILD_MEMBERS).addEventListeners(new DiscordEventListener())
+				jda = JDABuilder.createDefault(config.botToken).setHttpClient(new OkHttpClient.Builder()
+					  .protocols(Collections.singletonList(Protocol.HTTP_1_1))
+					  .build())
+					  .setMemberCachePolicy(MemberCachePolicy.ALL)
+					  .enableIntents(GatewayIntent.GUILD_MEMBERS)
+					  .addEventListeners(new DiscordEventListener())
 					  .build();
 			} else {
-				jda = JDABuilder.createDefault(config.botToken).addEventListeners(new DiscordEventListener()).build();
+				jda = JDABuilder.createDefault(config.botToken).setHttpClient(new OkHttpClient.Builder()
+					  .protocols(Collections.singletonList(Protocol.HTTP_1_1))
+					  .build())
+					  .addEventListeners(new DiscordEventListener())
+					  .build();
 			}
 
 			jda.awaitReady();
@@ -55,10 +67,26 @@ public class Main implements DedicatedServerModInitializer {
 			ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
 				stop = true;
 				textChannel.sendMessage(config.texts.serverStopped).queue();
+
+				try {
+					Thread.sleep(250);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+
+				try {
+					Unirest.shutdown();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+
 				jda.shutdown();
-				OkHttpClient client = jda.getHttpClient();
-				client.connectionPool().evictAll();
-				client.dispatcher().executorService().shutdown();
+
+				try {
+					Thread.sleep(250);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			});
 
 			new MinecraftEventListener().init();

@@ -47,7 +47,13 @@ public class MinecraftEventListener {
 				if (Main.config.modifyChatMessages) {
 					String jsonString = Text.Serializer.toJson(message);
 					JSONObject newComponent = new JSONObject(jsonString);
-					newComponent.getJSONArray("with").put(1, MarkdownParser.parseMarkdown(convertedPair.getRight()));
+
+					if (convertedPair.getRight().startsWith("!!")) {
+						newComponent.getJSONArray("with").put(1, convertedPair.getRight());
+					} else {
+						newComponent.getJSONArray("with").put(1, MarkdownParser.parseMarkdown(convertedPair.getRight()));
+					}
+
 					Text finalText = Text.Serializer.fromJson(newComponent.toString());
 
 					return Optional.ofNullable(finalText);

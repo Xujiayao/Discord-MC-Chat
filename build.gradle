@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '0.6.48'
+    id 'fabric-loom' version '0.7.24'
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
@@ -47,6 +47,7 @@ dependencies {
     include "com.fasterxml.jackson.core:jackson-annotations:+"
     include "com.fasterxml.jackson.core:jackson-core:+"
     include 'com.google.code.gson:gson:+'
+    include "com.neovisionaries:nv-websocket-client:+"
 
     // Exception when the newest version is used
     include "com.squareup.okhttp3:okhttp:3.13.0"
