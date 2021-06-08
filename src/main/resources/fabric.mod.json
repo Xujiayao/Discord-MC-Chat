@@ -9,8 +9,8 @@
 	],
 	"contact": {
 		"homepage": "https://blog.xujiayao.top/",
-		"issues": "https://github.com/Xujiayao147/MCDiscordChat/issues",
-		"sources": "https://github.com/Xujiayao147/MCDiscordChat"
+		"issues": "https://github.com/Xujiayao/MCDiscordChat/issues",
+		"sources": "https://github.com/Xujiayao/MCDiscordChat"
 	},
 	"license": "MIT",
 	"environment": "server",
