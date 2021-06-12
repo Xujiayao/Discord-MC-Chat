@@ -87,12 +87,18 @@ public class Scoreboard {
 			entryList.sort((o1, o2) -> (o2.getValue() - o1.getValue()));
 
 			output = new StringBuilder("```\n=============== 排行榜 ===============\n");
+			int length = 0;
 
 			for (Map.Entry<String, Integer> entry : entryList) {
 				output.append(String.format("\n%-8d %-8s", entry.getValue(), entry.getKey()));
+				length++;
 			}
 
-			output.append("```");
+			if (length == 0) {
+				output.append("\n无结果");
+			}
+
+			output.append("\n```");
 
 			reader.close();
 
