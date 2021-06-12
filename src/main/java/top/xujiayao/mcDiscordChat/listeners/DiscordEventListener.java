@@ -159,28 +159,6 @@ public class DiscordEventListener extends ListenerAdapter {
 
 			server.getPlayerManager().getPlayerList().forEach(
 				  serverPlayerEntity -> serverPlayerEntity.sendMessage(new LiteralText("").append(coloredText).append(colorlessText), false));
-
-			LiteralText coloredText1 = new LiteralText(Main.config.texts.coloredText
-				  .replace("%discordname%", Objects.requireNonNull(e.getMember()).getEffectiveName())
-				  .replace("%message%", e.getMessage().getContentDisplay()
-					    .replace("§", Main.config.texts.removeVanillaFormattingFromDiscord ? "&" : "§")
-					    .replace("\n", Main.config.texts.removeLineBreakFromDiscord ? " " : "\n")
-					    + ((e.getMessage().getAttachments().size() > 0) ? " <att>" : "")
-					    + ((e.getMessage().getEmbeds().size() > 0) ? " <embed>" : "")));
-			coloredText1.setStyle(coloredText1.getStyle().withColor(TextColor.fromFormatting(Formatting.BLUE)));
-			coloredText1.setStyle(coloredText1.getStyle().withBold(true));
-
-			LiteralText colorlessText1 = new LiteralText(Main.config.texts.colorlessText
-				  .replace("%discordname%", Objects.requireNonNull(e.getMember()).getEffectiveName())
-				  .replace("%message%", MarkdownParser.parseMarkdown(e.getMessage().getContentDisplay()
-					    .replace("§", Main.config.texts.removeVanillaFormattingFromDiscord ? "&" : "§")
-					    .replace("\n", Main.config.texts.removeLineBreakFromDiscord ? " " : "\n")
-					    + ((e.getMessage().getAttachments().size() > 0) ? " <att>" : "")
-					    + ((e.getMessage().getEmbeds().size() > 0) ? " <embed>" : ""))));
-			colorlessText1.setStyle(colorlessText1.getStyle().withColor(TextColor.fromFormatting(Formatting.GRAY)));
-
-			server.getPlayerManager().getPlayerList().forEach(
-				  serverPlayerEntity -> serverPlayerEntity.sendMessage(new LiteralText("").append(coloredText1).append(colorlessText1), false));
 		}
 	}
 

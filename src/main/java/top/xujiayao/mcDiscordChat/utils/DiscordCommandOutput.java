@@ -22,7 +22,9 @@ public class DiscordCommandOutput implements CommandOutput {
 		long currentOutputMillis = System.currentTimeMillis();
 
 		if ((outputString.length() + messageString.length()) > 2000) {
+			outputString.append("```");
 			Main.textChannel.sendMessage(outputString).queue();
+			outputString = new StringBuilder("```\n");
 		} else {
 			outputString.append(messageString).append("\n");
 		}
