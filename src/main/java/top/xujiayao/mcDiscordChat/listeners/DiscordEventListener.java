@@ -14,7 +14,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
-import top.xujiayao.mcDiscordChat.Main;
+import top.xujiayao.mcDiscordChat.Config;
 import top.xujiayao.mcDiscordChat.utils.DiscordCommandOutput;
 import top.xujiayao.mcDiscordChat.utils.MarkdownParser;
 import top.xujiayao.mcDiscordChat.utils.Scoreboard;
@@ -31,9 +31,9 @@ public class DiscordEventListener extends ListenerAdapter {
 	public void onMessageReceived(@NotNull MessageReceivedEvent e) {
 		MinecraftServer server = getServer();
 		if (e.getAuthor() != e.getJDA().getSelfUser() && !e.getAuthor().isBot()
-			  && e.getChannel().getId().equals(Main.config.channelId) && server != null) {
-			if (Main.config.bannedDiscord.contains(e.getAuthor().getId())
-				  && !Arrays.asList(Main.config.adminsIds).contains(e.getAuthor().getId())) {
+			  && e.getChannel().getId().equals(Config.channelId) && server != null) {
+			if (Config.bannedDiscord.contains(e.getAuthor().getId())
+				  && !Arrays.asList(Config.adminsIds).contains(e.getAuthor().getId())) {
 				return;
 			}
 
@@ -62,7 +62,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			} else if (e.getMessage().getContentRaw().startsWith("!scoreboard")) {
 				e.getChannel().sendMessage(Scoreboard.getScoreboard(e.getMessage().getContentRaw())).queue();
 			} else if (e.getMessage().getContentRaw().startsWith("!console")) {
-				if (!Arrays.asList(Main.config.adminsIds).contains(e.getAuthor().getId())) {
+				if (!Arrays.asList(Config.adminsIds).contains(e.getAuthor().getId())) {
 					e.getChannel().sendMessage("**你没有权限使用此命令！**").queue();
 					return;
 				}
@@ -83,76 +83,72 @@ public class DiscordEventListener extends ListenerAdapter {
 			} else if (e.getMessage().getContentRaw().startsWith("!banlist")) {
 				StringBuilder bannedList = new StringBuilder("```\n=============== 黑名单 ===============\n\nDiscord:");
 
-				if (Main.config.bannedDiscord.size() == 0) {
+				if (Config.bannedDiscord.size() == 0) {
 					bannedList.append("\n列表为空！");
 				}
 
-				for (String id : Main.config.bannedDiscord) {
+				for (String id : Config.bannedDiscord) {
 					bannedList.append("\n").append(id);
 				}
 
 				bannedList.append("\n\nMinecraft:");
 
-				if (Main.config.bannedMinecraft.size() == 0) {
+				if (Config.bannedMinecraft.size() == 0) {
 					bannedList.append("\n列表为空！");
 				}
 
-				for (String name : Main.config.bannedMinecraft) {
+				for (String name : Config.bannedMinecraft) {
 					bannedList.append("\n").append(name);
 				}
 
 				bannedList.append("```");
 				e.getChannel().sendMessage(bannedList.toString()).queue();
 			} else if (e.getMessage().getContentRaw().startsWith("!ban")) {
-				if (!Arrays.asList(Main.config.adminsIds).contains(e.getAuthor().getId())) {
+				if (!Arrays.asList(Config.adminsIds).contains(e.getAuthor().getId())) {
 					e.getChannel().sendMessage("**你没有权限使用此命令！**").queue();
 					return;
 				}
 
-				try {
-					String command = e.getMessage().getContentRaw().replace("!ban ", "");
+				String command = e.getMessage().getContentRaw().replace("!ban ", "");
 
-					if (command.startsWith("discord")) {
-						command = command.replace("discord ", "");
+				if (command.startsWith("discord")) {
+					command = command.replace("discord ", "");
 
-						if (Main.config.bannedDiscord.contains(command)) {
-							Main.config.bannedDiscord.remove(command);
-							e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 移出黑名单！**").queue();
-						} else {
-							Main.config.bannedDiscord.add(command);
-							e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 添加至黑名单！**").queue();
-						}
-					} else if (command.startsWith("minecraft")) {
-						command = command.replace("minecraft ", "");
-
-						if (Main.config.bannedMinecraft.contains(command)) {
-							Main.config.bannedMinecraft.remove(command);
-							e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 移出黑名单！**").queue();
-						} else {
-							Main.config.bannedMinecraft.add(command);
-							e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 添加至黑名单！**").queue();
-						}
+					if (Config.bannedDiscord.contains(command)) {
+						Config.bannedDiscord.remove(command);
+						e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 移出黑名单！**").queue();
+					} else {
+						Config.bannedDiscord.add(command);
+						e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 添加至黑名单！**").queue();
 					}
-				} catch (Exception e2) {
-					e.getChannel().sendMessage("**命令错误！**").queue();
+				} else if (command.startsWith("minecraft")) {
+					command = command.replace("minecraft ", "");
+
+					if (Config.bannedMinecraft.contains(command)) {
+						Config.bannedMinecraft.remove(command);
+						e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 移出黑名单！**").queue();
+					} else {
+						Config.bannedMinecraft.add(command);
+						e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 添加至黑名单！**").queue();
+					}
 				}
 			}
 
-			LiteralText coloredText = new LiteralText(Main.config.texts.coloredText
+			LiteralText coloredText = new LiteralText(Config.coloredText
 				  .replace("%discordname%", Objects.requireNonNull(e.getMember()).getEffectiveName())
 				  .replace("%message%", e.getMessage().getContentDisplay()
-					    .replace("§", Main.config.texts.removeVanillaFormattingFromDiscord ? "&" : "§")
-					    .replace("\n", Main.config.texts.removeLineBreakFromDiscord ? " " : "\n")
+					    .replace("§", Config.removeVanillaFormattingFromDiscord ? "&" : "§")
+					    .replace("\n", Config.removeLineBreakFromDiscord ? " " : "\n")
 					    + ((e.getMessage().getAttachments().size() > 0) ? " <att>" : "")
 					    + ((e.getMessage().getEmbeds().size() > 0) ? " <embed>" : "")));
 			coloredText.setStyle(coloredText.getStyle().withColor(TextColor.fromFormatting(Formatting.BLUE)));
 			coloredText.setStyle(coloredText.getStyle().withBold(true));
 
-			LiteralText colorlessText = new LiteralText(Main.config.texts.colorlessText
+			LiteralText colorlessText = new LiteralText(Config.colorlessText
 				  .replace("%discordname%", Objects.requireNonNull(e.getMember()).getEffectiveName())
 				  .replace("%message%", MarkdownParser.parseMarkdown(e.getMessage().getContentDisplay()
-					    .replace("§", Main.config.texts.removeVanillaFormattingFromDiscord ? "&" : "§")
-					    .replace("\n", Main.config.texts.removeLineBreakFromDiscord ? " " : "\n")
+					    .replace("§", Config.removeVanillaFormattingFromDiscord ? "&" : "§")
+					    .replace("\n", Config.removeLineBreakFromDiscord ? " " : "\n")
 					    + ((e.getMessage().getAttachments().size() > 0) ? " <att>" : "")
 					    + ((e.getMessage().getEmbeds().size() > 0) ? " <embed>" : ""))));
 			colorlessText.setStyle(colorlessText.getStyle().withColor(TextColor.fromFormatting(Formatting.GRAY)));

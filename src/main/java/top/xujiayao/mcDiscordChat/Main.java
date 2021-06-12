@@ -1,6 +1,6 @@
 package top.xujiayao.mcDiscordChat;
 
-import com.mashape.unirest.http.Unirest;
+import kong.unirest.Unirest;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
@@ -23,7 +23,6 @@ import java.util.Collections;
  */
 public class Main implements DedicatedServerModInitializer {
 
-	public static Config config;
 	public static JDA jda;
 	public static TextChannel textChannel;
 
@@ -31,11 +30,9 @@ public class Main implements DedicatedServerModInitializer {
 
 	@Override
 	public void onInitializeServer() {
-		config = new Config();
-
 		try {
-			if (config.membersIntents) {
-				jda = JDABuilder.createDefault(config.botToken).setHttpClient(new OkHttpClient.Builder()
+			if (Config.membersIntents) {
+				jda = JDABuilder.createDefault(Config.botToken).setHttpClient(new OkHttpClient.Builder()
 					  .protocols(Collections.singletonList(Protocol.HTTP_1_1))
 					  .build())
 					  .setMemberCachePolicy(MemberCachePolicy.ALL)
@@ -43,7 +40,7 @@ public class Main implements DedicatedServerModInitializer {
 					  .addEventListeners(new DiscordEventListener())
 					  .build();
 			} else {
-				jda = JDABuilder.createDefault(config.botToken).setHttpClient(new OkHttpClient.Builder()
+				jda = JDABuilder.createDefault(Config.botToken).setHttpClient(new OkHttpClient.Builder()
 					  .protocols(Collections.singletonList(Protocol.HTTP_1_1))
 					  .build())
 					  .addEventListeners(new DiscordEventListener())
@@ -51,22 +48,22 @@ public class Main implements DedicatedServerModInitializer {
 			}
 
 			jda.awaitReady();
-			textChannel = jda.getTextChannelById(config.channelId);
+			textChannel = jda.getTextChannelById(Config.channelId);
 		} catch (Exception e) {
 			e.printStackTrace();
 			jda = null;
 		}
 
 		if (jda != null) {
-			if (!config.botListeningStatus.isEmpty()) {
-				jda.getPresence().setActivity(Activity.listening(config.botListeningStatus));
+			if (!Config.botListeningStatus.isEmpty()) {
+				jda.getPresence().setActivity(Activity.listening(Config.botListeningStatus));
 			}
 
-			ServerLifecycleEvents.SERVER_STARTED.register((server) -> textChannel.sendMessage(config.texts.serverStarted).queue());
+			ServerLifecycleEvents.SERVER_STARTED.register((server) -> textChannel.sendMessage(Config.serverStarted).queue());
 
 			ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
 				stop = true;
-				textChannel.sendMessage(config.texts.serverStopped).queue();
+				textChannel.sendMessage(Config.serverStopped).queue();
 
 				try {
 					Thread.sleep(250);
@@ -74,11 +71,7 @@ public class Main implements DedicatedServerModInitializer {
 					e.printStackTrace();
 				}
 
-				try {
-					Unirest.shutdown();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+				Unirest.shutDown();
 
 				jda.shutdown();
 

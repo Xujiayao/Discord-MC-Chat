@@ -1,9 +1,11 @@
 package top.xujiayao.mcDiscordChat.listeners;
 
-import com.mashape.unirest.http.Unirest;
+import kong.unirest.Unirest;
+import kong.unirest.json.JSONObject;
+import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.minecraft.text.Text;
 import net.minecraft.util.Pair;
-import org.json.JSONObject;
+import top.xujiayao.mcDiscordChat.Config;
 import top.xujiayao.mcDiscordChat.Main;
 import top.xujiayao.mcDiscordChat.events.PlayerAdvancementCallback;
 import top.xujiayao.mcDiscordChat.events.PlayerDeathCallback;
@@ -24,13 +26,13 @@ public class MinecraftEventListener {
 			if (!Main.stop) {
 				Pair<String, String> convertedPair = Utils.convertMentionsFromNames(rawMessage);
 
-				if (Main.config.bannedMinecraft.contains(playerEntity.getEntityName())) {
+				if (Config.bannedMinecraft.contains(playerEntity.getEntityName())) {
 					return Optional.empty();
 				}
 
 				JSONObject body = new JSONObject();
 				body.put("username", playerEntity.getEntityName());
-				body.put("avatar_url", "https://mc-heads.net/avatar/" + (Main.config.useUUIDInsteadNickname ? playerEntity.getUuid() : playerEntity.getEntityName()));
+				body.put("avatar_url", "https://mc-heads.net/avatar/" + (Config.useUUIDInsteadNickname ? playerEntity.getUuid() : playerEntity.getEntityName()));
 
 				JSONObject allowed_mentions = new JSONObject();
 				allowed_mentions.put("parse", new String[]{"users", "roles"});
@@ -39,12 +41,12 @@ public class MinecraftEventListener {
 				body.put("content", convertedPair.getLeft().replace("_", "\\_"));
 
 				try {
-					Unirest.post(Main.config.webhookURL).header("Content-Type", "application/json").body(body).asJsonAsync();
-				} catch (Exception ex) {
-					ex.printStackTrace();
+					Unirest.post(Config.webhookURL).header("Content-Type", "application/json").body(body).asJsonAsync();
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 
-				if (Main.config.modifyChatMessages) {
+				if (Config.modifyChatMessages) {
 					String jsonString = Text.Serializer.toJson(message);
 					JSONObject newComponent = new JSONObject(jsonString);
 
@@ -64,45 +66,48 @@ public class MinecraftEventListener {
 		});
 
 		PlayerAdvancementCallback.EVENT.register((playerEntity, advancement) -> {
-			if (Main.config.announceAdvancements && advancement.getDisplay() != null
+			if (Config.announceAdvancements && advancement.getDisplay() != null
 				  && advancement.getDisplay().shouldAnnounceToChat()
 				  && playerEntity.getAdvancementTracker().getProgress(advancement).isDone() && !Main.stop) {
 				switch (advancement.getDisplay().getFrame()) {
 					case GOAL:
-						Main.textChannel.sendMessage(Main.config.texts.advancementGoal
+						Main.textChannel.sendMessage(Config.advancementGoal
 							  .replace("%playername%", playerEntity.getEntityName().replace("_", "\\_"))
 							  .replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
+						break;
 					case TASK:
-						Main.textChannel.sendMessage(Main.config.texts.advancementTask
+						Main.textChannel.sendMessage(Config.advancementTask
 							  .replace("%playername%", playerEntity.getEntityName().replace("_", "\\_"))
 							  .replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
+						break;
 					case CHALLENGE:
-						Main.textChannel.sendMessage(Main.config.texts.advancementChallenge
+						Main.textChannel.sendMessage(Config.advancementChallenge
 							  .replace("%playername%", playerEntity.getEntityName().replace("_", "\\_"))
 							  .replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
+						break;
 				}
 			}
 		});
 
 		PlayerDeathCallback.EVENT.register((playerEntity, damageSource) -> {
-			if (Main.config.announceDeaths && !Main.stop) {
-				Main.textChannel.sendMessage(Main.config.texts.deathMessage
-					  .replace("%deathmessage%", damageSource.getDeathMessage(playerEntity).getString())
-					  .replace("%playername%", playerEntity.getEntityName().replace("_", "\\_"))).queue();
+			if (Config.announceDeaths && !Main.stop) {
+				Main.textChannel.sendMessage(Config.deathMessage
+					  .replace("%deathmessage%", MarkdownSanitizer.escape(damageSource.getDeathMessage(playerEntity).getString()))
+					  .replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName()).replace("_", "\\_"))).queue();
 			}
 		});
 
 		PlayerJoinCallback.EVENT.register((connection, playerEntity) -> {
-			if (Main.config.announcePlayers && !Main.stop) {
-				Main.textChannel.sendMessage(Main.config.texts.joinServer.replace("%playername%",
-					  playerEntity.getEntityName().replace("_", "\\_"))).queue();
+			if (Config.announcePlayers && !Main.stop) {
+				Main.textChannel.sendMessage(Config.joinServer.replace("%playername%",
+					  MarkdownSanitizer.escape(playerEntity.getEntityName()).replace("_", "\\_"))).queue();
 			}
 		});
 
 		PlayerLeaveCallback.EVENT.register((playerEntity) -> {
-			if (Main.config.announcePlayers && !Main.stop) {
-				Main.textChannel.sendMessage(Main.config.texts.leftServer.replace("%playername%",
-					  playerEntity.getEntityName().replace("_", "\\_"))).queue();
+			if (Config.announcePlayers && !Main.stop) {
+				Main.textChannel.sendMessage(Config.leftServer.replace("%playername%",
+					  MarkdownSanitizer.escape(playerEntity.getEntityName()).replace("_", "\\_"))).queue();
 			}
 		});
 	}
