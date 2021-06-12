@@ -1,5 +1,8 @@
 package top.xujiayao.mcDiscordChat.objects;
 
+/**
+ * @author Xujiayao
+ */
 public class Stats {
 
 	private final String name;

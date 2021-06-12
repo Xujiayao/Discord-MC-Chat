@@ -1,31 +1,26 @@
 package top.xujiayao.mcDiscordChat.listeners;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec2f;
+import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 import top.xujiayao.mcDiscordChat.Main;
-import top.xujiayao.mcDiscordChat.objects.Player;
-import top.xujiayao.mcDiscordChat.objects.Stats;
+import top.xujiayao.mcDiscordChat.utils.DiscordCommandOutput;
 import top.xujiayao.mcDiscordChat.utils.MarkdownParser;
-import top.xujiayao.mcDiscordChat.utils.Utils;
+import top.xujiayao.mcDiscordChat.utils.Scoreboard;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -56,99 +51,34 @@ public class DiscordEventListener extends ListenerAdapter {
 					}
 				}
 
+				infoString.append("\n\n服务器 TPS：\n");
+				double serverTickTime = MathHelper.average(server.lastTickLengths) * 1.0E-6D;
+				infoString.append(Math.min(1000.0 / serverTickTime, 20));
+
 				infoString.append("\n\n服务器已用内存：\n").append((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024).append(" MB");
 
 				infoString.append("\n```");
 				e.getChannel().sendMessage(infoString.toString()).queue();
 			} else if (e.getMessage().getContentRaw().startsWith("!scoreboard")) {
-				BufferedReader reader = null;
-				FileReader fileReader = null;
-
-				try {
-					String temp = e.getMessage().getContentRaw().replace("!scoreboard ", "");
-
-					String type = temp.substring(0, temp.lastIndexOf(" ") - 1);
-					String id = temp.substring(temp.indexOf(" ") + 1);
-
-					reader = new BufferedReader(new FileReader(FabricLoader.getInstance().getGameDir().toAbsolutePath().toString() + "/usercache.json"));
-
-					String jsonString = reader.readLine();
-
-					Gson gson = new Gson();
-					Type userListType = new TypeToken<ArrayList<Player>>() {
-					}.getType();
-
-					Main.config.playerList = gson.fromJson(jsonString, userListType);
-
-					Main.config.statsFileList = Utils.getFileList(new File(FabricLoader.getInstance().getGameDir().toAbsolutePath().toString().replace(".", "") + Main.config.worldName + "/stats/"));
-					Main.config.statsList = new ArrayList<>();
-
-					for (File file : Main.config.statsFileList) {
-						fileReader = new FileReader(file);
-						reader = new BufferedReader(fileReader);
-
-						for (Player player : Main.config.playerList)
-							if (player.getUuid().equals(file.getName().replace(".json", "")))
-								Main.config.statsList.add(new Stats(player.getName(), reader.readLine()));
-					}
-
-					Main.config.scoreboardMap = new HashMap<>();
-
-					for (Stats stats : Main.config.statsList) {
-						temp = stats.getContent();
-
-						if (!temp.contains("minecraft:" + type))
-							continue;
-
-						temp = temp.substring(temp.indexOf("minecraft:" + type));
-						temp = temp.substring(0, temp.indexOf("}"));
-
-						if (!temp.contains("minecraft:" + id))
-							continue;
-
-						temp = temp.substring(temp.indexOf("minecraft:" + id) + ("minecraft:" + id).length() + 2);
-
-						if (temp.contains(","))
-							temp = temp.substring(0, temp.indexOf(","));
-
-						Main.config.scoreboardMap.put(stats.getName(), Integer.valueOf(temp));
-					}
-
-					List<Map.Entry<String, Integer>> entryList = new ArrayList<>(Main.config.scoreboardMap.entrySet());
-
-					entryList.sort((o1, o2) -> (o2.getValue() - o1.getValue()));
-
-					StringBuilder output = new StringBuilder("```\n=============== 排行榜 ===============\n");
-
-					for (Map.Entry<String, Integer> entry : entryList) {
-						output.append(String.format("\n%-8d %-8s", entry.getValue(), entry.getKey()));
-					}
-
-					output.append("```");
-					e.getChannel().sendMessage(output).queue();
-
-					reader.close();
-					if (fileReader != null)
-						fileReader.close();
-				} catch (Exception e1) {
-					e1.printStackTrace();
-				} finally {
-					try {
-						if (reader != null)
-							reader.close();
-						if (fileReader != null)
-							fileReader.close();
-					} catch (Exception e1) {
-						e1.printStackTrace();
-					}
+				e.getChannel().sendMessage(Scoreboard.getScoreboard(e.getMessage().getContentRaw())).queue();
+			} else if (e.getMessage().getContentRaw().startsWith("!console")) {
+				if (!Arrays.asList(Main.config.adminsIds).contains(e.getAuthor().getId())) {
+					e.getChannel().sendMessage("**你没有权限使用此命令！**").queue();
+					return;
 				}
+
+				String command = e.getMessage().getContentRaw().replace("!console ", "");
+				server.getCommandManager().execute(getDiscordCommandSource(), command);
 			} else if (e.getMessage().getContentRaw().startsWith("!help")) {
-				String help = "```\n" + "=============== 帮助 ===============\n"
-					  + "\n"
-					  + "!info: 查询服务器运行状态\n"
-					  + "!scoreboard <type> <id>: 查询该统计信息的玩家排行榜\n"
-					  + "!ban <type> <id/name>: 将一名 Discord 用户或 Minecraft 玩家从黑名单中添加或移除（仅限管理员）\n"
-					  + "!banlist: 列出黑名单```";
+				String help = "```\n" +
+					  "=============== 帮助 ===============\n" +
+					  "\n" +
+					  "!info: 查询服务器运行状态\n" +
+					  "!scoreboard <type> <id>: 查询该统计信息的玩家排行榜\n" +
+					  "!ban <type> <id/name>: 将一名 Discord 用户或 Minecraft 玩家从黑名单中添加或移除（仅限管理员）\n" +
+					  "!banlist: 列出黑名单\n" +
+					  "!console <command>：在服务器控制台中执行指令（仅限管理员）\n" +
+					  "```\n";
 				e.getChannel().sendMessage(help).queue();
 			} else if (e.getMessage().getContentRaw().startsWith("!banlist")) {
 				StringBuilder bannedList = new StringBuilder("```\n=============== 黑名单 ===============\n\nDiscord:");
@@ -208,17 +138,56 @@ public class DiscordEventListener extends ListenerAdapter {
 				}
 			}
 
-			LiteralText msg = new LiteralText(Main.config.texts.messageText
+			LiteralText coloredText = new LiteralText(Main.config.texts.coloredText
 				  .replace("%discordname%", Objects.requireNonNull(e.getMember()).getEffectiveName())
-				  .replace("%message%",
-					    MarkdownParser.parseMarkdown(e.getMessage().getContentDisplay()
-							+ ((e.getMessage().getAttachments().size() > 0) ? " <att>" : "")
-							+ ((e.getMessage().getEmbeds().size() > 0) ? " <embed>" : ""))));
-			msg.setStyle(msg.getStyle().withColor(TextColor.fromFormatting(Formatting.GRAY)));
-			server.getPlayerManager().getPlayerList().forEach(
-				  serverPlayerEntity -> serverPlayerEntity.sendMessage(new LiteralText("").append(msg), false));
-		}
+				  .replace("%message%", e.getMessage().getContentDisplay()
+					    .replace("§", Main.config.texts.removeVanillaFormattingFromDiscord ? "&" : "§")
+					    .replace("\n", Main.config.texts.removeLineBreakFromDiscord ? " " : "\n")
+					    + ((e.getMessage().getAttachments().size() > 0) ? " <att>" : "")
+					    + ((e.getMessage().getEmbeds().size() > 0) ? " <embed>" : "")));
+			coloredText.setStyle(coloredText.getStyle().withColor(TextColor.fromFormatting(Formatting.BLUE)));
+			coloredText.setStyle(coloredText.getStyle().withBold(true));
 
+			LiteralText colorlessText = new LiteralText(Main.config.texts.colorlessText
+				  .replace("%discordname%", Objects.requireNonNull(e.getMember()).getEffectiveName())
+				  .replace("%message%", MarkdownParser.parseMarkdown(e.getMessage().getContentDisplay()
+					    .replace("§", Main.config.texts.removeVanillaFormattingFromDiscord ? "&" : "§")
+					    .replace("\n", Main.config.texts.removeLineBreakFromDiscord ? " " : "\n")
+					    + ((e.getMessage().getAttachments().size() > 0) ? " <att>" : "")
+					    + ((e.getMessage().getEmbeds().size() > 0) ? " <embed>" : ""))));
+			colorlessText.setStyle(colorlessText.getStyle().withColor(TextColor.fromFormatting(Formatting.GRAY)));
+
+			server.getPlayerManager().getPlayerList().forEach(
+				  serverPlayerEntity -> serverPlayerEntity.sendMessage(new LiteralText("").append(coloredText).append(colorlessText), false));
+
+			LiteralText coloredText1 = new LiteralText(Main.config.texts.coloredText
+				  .replace("%discordname%", Objects.requireNonNull(e.getMember()).getEffectiveName())
+				  .replace("%message%", e.getMessage().getContentDisplay()
+					    .replace("§", Main.config.texts.removeVanillaFormattingFromDiscord ? "&" : "§")
+					    .replace("\n", Main.config.texts.removeLineBreakFromDiscord ? " " : "\n")
+					    + ((e.getMessage().getAttachments().size() > 0) ? " <att>" : "")
+					    + ((e.getMessage().getEmbeds().size() > 0) ? " <embed>" : "")));
+			coloredText1.setStyle(coloredText1.getStyle().withColor(TextColor.fromFormatting(Formatting.BLUE)));
+			coloredText1.setStyle(coloredText1.getStyle().withBold(true));
+
+			LiteralText colorlessText1 = new LiteralText(Main.config.texts.colorlessText
+				  .replace("%discordname%", Objects.requireNonNull(e.getMember()).getEffectiveName())
+				  .replace("%message%", MarkdownParser.parseMarkdown(e.getMessage().getContentDisplay()
+					    .replace("§", Main.config.texts.removeVanillaFormattingFromDiscord ? "&" : "§")
+					    .replace("\n", Main.config.texts.removeLineBreakFromDiscord ? " " : "\n")
+					    + ((e.getMessage().getAttachments().size() > 0) ? " <att>" : "")
+					    + ((e.getMessage().getEmbeds().size() > 0) ? " <embed>" : ""))));
+			colorlessText1.setStyle(colorlessText1.getStyle().withColor(TextColor.fromFormatting(Formatting.GRAY)));
+
+			server.getPlayerManager().getPlayerList().forEach(
+				  serverPlayerEntity -> serverPlayerEntity.sendMessage(new LiteralText("").append(coloredText1).append(colorlessText1), false));
+		}
+	}
+
+	private ServerCommandSource getDiscordCommandSource() {
+		ServerWorld serverWorld = Objects.requireNonNull(getServer()).getOverworld();
+
+		return new ServerCommandSource(new DiscordCommandOutput(), serverWorld == null ? Vec3d.ZERO : Vec3d.of(serverWorld.getSpawnPos()), Vec2f.ZERO, serverWorld, 4, "MCDiscordChat", new LiteralText("MCDiscordChat"), getServer(), null);
 	}
 
 	private MinecraftServer getServer() {

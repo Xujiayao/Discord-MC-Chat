@@ -22,7 +22,7 @@ public class MarkdownParser {
 		translated = replaceWith(translated, "(?<!\\\\)~~", Formatting.STRIKETHROUGH.toString(), Formatting.RESET.toString());
 
 		translated = translated.replaceAll("\\*", "*").replaceAll("\\_", "_").replaceAll("\\~", "~");
-		translated = translated.replaceAll(Formatting.ITALIC.toString() + "(ツ)" + Formatting.RESET.toString(), "_(ツ)_");
+		translated = translated.replaceAll(Formatting.ITALIC + "(ツ)" + Formatting.RESET, "_(ツ)_");
 
 		return translated;
 	}

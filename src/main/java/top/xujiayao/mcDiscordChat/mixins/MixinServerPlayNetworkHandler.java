@@ -48,7 +48,6 @@ public abstract class MixinServerPlayNetworkHandler {
 		String message = StringUtils.normalizeSpace(string);
 		Text text = new TranslatableText("chat.type.text", this.player.getDisplayName(), message);
 		Optional<Text> eventResult = ServerChatCallback.EVENT.invoker().onServerChat(this.player, message, text);
-
 		if (eventResult.isPresent()) {
 			this.server.getPlayerManager().broadcastChatMessage(eventResult.get(), MessageType.CHAT, this.player.getUuid());
 			ci.cancel();

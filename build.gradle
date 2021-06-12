@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '0.7.24'
+    id 'fabric-loom' version '0.8.17'
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
@@ -13,7 +13,7 @@ repositories {
     jcenter()
     maven {
         name = "Fabric"
-        url = "http://maven.fabricmc.net/"
+        url = "https://maven.fabricmc.net/"
     }
 }
 
@@ -25,18 +25,18 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    include(modCompile("net.dv8tion:JDA:+") {
+    include(modImplementation("net.dv8tion:JDA:+") {
         exclude module: 'opus-java'
     })
 
-    include(modCompile("com.mashape.unirest:unirest-java:+"))
+    include(modImplementation("com.mashape.unirest:unirest-java:+"))
 
-    include group: 'org.json', name: 'json', version: '+'
-    include group: 'org.apache.httpcomponents', name: 'httpmime', version: '+'
-    include group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: '+'
-    include group: 'org.apache.httpcomponents', name: 'httpcore-nio', version: '+'
-    include group: 'org.apache.httpcomponents', name: 'httpcore', version: '+'
-    include group: 'org.apache.httpcomponents', name: 'httpclient', version: '+'
+    include "org.json:json:+"
+    include "org.apache.httpcomponents:httpmime:+"
+    include "org.apache.httpcomponents:httpasyncclient:+"
+    include "org.apache.httpcomponents:httpcore-nio:+"
+    include "org.apache.httpcomponents:httpcore:+"
+    include "org.apache.httpcomponents:httpclient:+"
     include "net.sf.trove4j:trove4j:+"
     include "org.apache.commons:commons-collections4:+"
     include "org.jetbrains:annotations:+"
@@ -58,18 +58,14 @@ dependencies {
 processResources {
     inputs.property "version", project.version
 
-    from(sourceSets.main.resources.srcDirs) {
-        include "fabric.mod.json"
+    filesMatching("fabric.mod.json") {
         expand "version": project.version
-    }
-
-    from(sourceSets.main.resources.srcDirs) {
-        exclude "fabric.mod.json"
     }
 }
 
 tasks.withType(JavaCompile) {
-    options.encoding = "UTF-8"
+    it.options.encoding = "UTF-8"
+    //it.options.release = 16
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
@@ -78,5 +74,7 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 }
 
 jar {
-    from "LICENSE"
+    from("LICENSE") {
+        rename { "${it}_${project.archivesBaseName}" }
+    }
 }

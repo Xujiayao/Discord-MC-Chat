@@ -30,7 +30,7 @@ public class MinecraftEventListener {
 
 				JSONObject body = new JSONObject();
 				body.put("username", playerEntity.getEntityName());
-				body.put("avatar_url", "https://mc-heads.net/avatar/" + playerEntity.getEntityName());
+				body.put("avatar_url", "https://mc-heads.net/avatar/" + (Main.config.useUUIDInsteadNickname ? playerEntity.getUuid() : playerEntity.getEntityName()));
 
 				JSONObject allowed_mentions = new JSONObject();
 				allowed_mentions.put("parse", new String[]{"users", "roles"});
@@ -72,17 +72,14 @@ public class MinecraftEventListener {
 						Main.textChannel.sendMessage(Main.config.texts.advancementGoal
 							  .replace("%playername%", playerEntity.getEntityName().replace("_", "\\_"))
 							  .replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
-						break;
 					case TASK:
 						Main.textChannel.sendMessage(Main.config.texts.advancementTask
 							  .replace("%playername%", playerEntity.getEntityName().replace("_", "\\_"))
 							  .replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
-						break;
 					case CHALLENGE:
 						Main.textChannel.sendMessage(Main.config.texts.advancementChallenge
 							  .replace("%playername%", playerEntity.getEntityName().replace("_", "\\_"))
 							  .replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
-						break;
 				}
 			}
 		});

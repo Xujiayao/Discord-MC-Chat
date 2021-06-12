@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,7 +24,7 @@ public class Utils {
 
 		File[] directoryList = file.listFiles(file1 -> file1.isFile() && file1.getName().contains("json"));
 
-		Collections.addAll(result, directoryList);
+		Collections.addAll(result, Objects.requireNonNull(directoryList));
 
 		return result;
 	}
@@ -62,8 +63,8 @@ public class Utils {
 				mcString.append(messageList.get(x)).append(matcher.group());
 			} else {
 				discordString.append(messageList.get(x)).append(member.getAsMention());
-				mcString.append(messageList.get(x)).append(Formatting.YELLOW.toString()).append("@")
-					  .append(member.getEffectiveName()).append(Formatting.WHITE.toString());
+				mcString.append(messageList.get(x)).append(Formatting.YELLOW).append("@")
+					  .append(member.getEffectiveName()).append(Formatting.WHITE);
 			}
 
 			x++;
