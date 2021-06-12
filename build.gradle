@@ -34,6 +34,7 @@ dependencies {
     include "net.sf.trove4j:trove4j:+"
     include "org.apache.commons:commons-collections4:+"
     include "org.jetbrains:annotations:+"
+    include "org.slf4j:slf4j-api:+"
     include "com.neovisionaries:nv-websocket-client:+"
     include "com.fasterxml.jackson.core:jackson-annotations:+"
     include "com.fasterxml.jackson.core:jackson-core:+"
