@@ -1,11 +1,11 @@
-package top.xujiayao.mcDiscordChat.utils;
+package top.xujiayao.mcdiscordchat.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import net.fabricmc.loader.api.FabricLoader;
-import top.xujiayao.mcDiscordChat.Config;
-import top.xujiayao.mcDiscordChat.objects.Player;
-import top.xujiayao.mcDiscordChat.objects.Stats;
+import top.xujiayao.mcdiscordchat.Main;
+import top.xujiayao.mcdiscordchat.objects.Player;
+import top.xujiayao.mcdiscordchat.objects.Stats;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -41,25 +41,25 @@ public class Scoreboard {
 			Type userListType = new TypeToken<ArrayList<Player>>() {
 			}.getType();
 
-			Config.playerList = gson.fromJson(jsonString, userListType);
+			List<Player> playerList = gson.fromJson(jsonString, userListType);
 
-			Config.statsFileList = Utils.getFileList(new File(FabricLoader.getInstance().getGameDir().toAbsolutePath().toString().replace(".", "") + Config.worldName + "/stats/"));
-			Config.statsList = new ArrayList<>();
+			List<File> statsFileList = Utils.getFileList(new File(FabricLoader.getInstance().getGameDir().toAbsolutePath().toString().replace(".", "") + Main.config.generic.worldName + "/stats/"));
+			List<Stats> statsList = new ArrayList<>();
 
-			for (File file : Config.statsFileList) {
+			for (File file : statsFileList) {
 				fileReader = new FileReader(file);
 				reader = new BufferedReader(fileReader);
 
-				for (Player player : Config.playerList) {
+				for (Player player : playerList) {
 					if (player.getUuid().equals(file.getName().replace(".json", ""))) {
-						Config.statsList.add(new Stats(player.getName(), reader.readLine()));
+						statsList.add(new Stats(player.getName(), reader.readLine()));
 					}
 				}
 			}
 
-			Config.scoreboardMap = new HashMap<>();
+			HashMap<String, Integer> scoreboardMap = new HashMap<>();
 
-			for (Stats stats : Config.statsList) {
+			for (Stats stats : statsList) {
 				temp = stats.getContent();
 
 				if (!temp.contains("minecraft:" + type)) {
@@ -79,10 +79,10 @@ public class Scoreboard {
 					temp = temp.substring(0, temp.indexOf(","));
 				}
 
-				Config.scoreboardMap.put(stats.getName(), Integer.valueOf(temp));
+				scoreboardMap.put(stats.getName(), Integer.valueOf(temp));
 			}
 
-			List<Map.Entry<String, Integer>> entryList = new ArrayList<>(Config.scoreboardMap.entrySet());
+			List<Map.Entry<String, Integer>> entryList = new ArrayList<>(scoreboardMap.entrySet());
 
 			entryList.sort((o1, o2) -> (o2.getValue() - o1.getValue()));
 

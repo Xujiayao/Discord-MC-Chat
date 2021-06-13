@@ -1,9 +1,9 @@
-package top.xujiayao.mcDiscordChat.utils;
+package top.xujiayao.mcdiscordchat.utils;
 
 import net.dv8tion.jda.api.entities.Member;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Pair;
-import top.xujiayao.mcDiscordChat.Main;
+import top.xujiayao.mcdiscordchat.Main;
 
 import java.io.File;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package top.xujiayao.mcDiscordChat.mixins;
+package top.xujiayao.mcdiscordchat.mixins;
 
 import net.minecraft.network.MessageType;
 import net.minecraft.network.Packet;
@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import top.xujiayao.mcDiscordChat.events.ServerChatCallback;
+import top.xujiayao.mcdiscordchat.events.ServerChatCallback;
 
 import java.util.Optional;
 

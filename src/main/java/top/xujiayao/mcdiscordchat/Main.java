@@ -1,4 +1,4 @@
-package top.xujiayao.mcDiscordChat;
+package top.xujiayao.mcdiscordchat;
 
 import kong.unirest.Unirest;
 import net.dv8tion.jda.api.JDA;
@@ -12,9 +12,10 @@ import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
-import top.xujiayao.mcDiscordChat.commands.ShrugCommand;
-import top.xujiayao.mcDiscordChat.listeners.DiscordEventListener;
-import top.xujiayao.mcDiscordChat.listeners.MinecraftEventListener;
+import top.xujiayao.mcdiscordchat.commands.ShrugCommand;
+import top.xujiayao.mcdiscordchat.listeners.DiscordEventListener;
+import top.xujiayao.mcdiscordchat.listeners.MinecraftEventListener;
+import top.xujiayao.mcdiscordchat.utils.ConfigManager;
 
 import java.util.Collections;
 
@@ -25,14 +26,17 @@ public class Main implements DedicatedServerModInitializer {
 
 	public static JDA jda;
 	public static TextChannel textChannel;
+	public static Config config;
 
 	public static boolean stop = false;
 
 	@Override
 	public void onInitializeServer() {
+		config = ConfigManager.initConfig();
+
 		try {
-			if (Config.membersIntents) {
-				jda = JDABuilder.createDefault(Config.botToken).setHttpClient(new OkHttpClient.Builder()
+			if (Main.config.generic.membersIntents) {
+				jda = JDABuilder.createDefault(Main.config.generic.botToken).setHttpClient(new OkHttpClient.Builder()
 					  .protocols(Collections.singletonList(Protocol.HTTP_1_1))
 					  .build())
 					  .setMemberCachePolicy(MemberCachePolicy.ALL)
@@ -40,7 +44,7 @@ public class Main implements DedicatedServerModInitializer {
 					  .addEventListeners(new DiscordEventListener())
 					  .build();
 			} else {
-				jda = JDABuilder.createDefault(Config.botToken).setHttpClient(new OkHttpClient.Builder()
+				jda = JDABuilder.createDefault(Main.config.generic.botToken).setHttpClient(new OkHttpClient.Builder()
 					  .protocols(Collections.singletonList(Protocol.HTTP_1_1))
 					  .build())
 					  .addEventListeners(new DiscordEventListener())
@@ -48,22 +52,22 @@ public class Main implements DedicatedServerModInitializer {
 			}
 
 			jda.awaitReady();
-			textChannel = jda.getTextChannelById(Config.channelId);
+			textChannel = jda.getTextChannelById(Main.config.generic.channelId);
 		} catch (Exception e) {
 			e.printStackTrace();
 			jda = null;
 		}
 
 		if (jda != null) {
-			if (!Config.botListeningStatus.isEmpty()) {
-				jda.getPresence().setActivity(Activity.listening(Config.botListeningStatus));
+			if (!Main.config.generic.botListeningStatus.isEmpty()) {
+				jda.getPresence().setActivity(Activity.listening(Main.config.generic.botListeningStatus));
 			}
 
-			ServerLifecycleEvents.SERVER_STARTED.register((server) -> textChannel.sendMessage(Config.serverStarted).queue());
+			ServerLifecycleEvents.SERVER_STARTED.register((server) -> textChannel.sendMessage(Main.config.texts.serverStarted).queue());
 
 			ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
 				stop = true;
-				textChannel.sendMessage(Config.serverStopped).queue();
+				textChannel.sendMessage(Main.config.texts.serverStopped).queue();
 
 				try {
 					Thread.sleep(250);

@@ -16,11 +16,11 @@
 	"environment": "server",
 	"entrypoints": {
 		"server": [
-			"top.xujiayao.mcDiscordChat.Main"
+			"top.xujiayao.mcdiscordchat.Main"
 		]
 	},
 	"mixins": [
-		"mcDiscordChat.mixins.json"
+		"mcdiscordchat.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.11.3",

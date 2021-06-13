@@ -1,8 +1,8 @@
-package top.xujiayao.mcDiscordChat.utils;
+package top.xujiayao.mcdiscordchat.utils;
 
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.text.Text;
-import top.xujiayao.mcDiscordChat.Main;
+import top.xujiayao.mcdiscordchat.Main;
 
 import java.util.Timer;
 import java.util.TimerTask;

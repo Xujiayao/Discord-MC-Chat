@@ -1,4 +1,4 @@
-package top.xujiayao.mcDiscordChat.utils;
+package top.xujiayao.mcdiscordchat.utils;
 
 import net.minecraft.util.Formatting;
 

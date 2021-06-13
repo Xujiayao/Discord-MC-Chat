@@ -1,4 +1,4 @@
-package top.xujiayao.mcDiscordChat.commands;
+package top.xujiayao.mcdiscordchat.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.command.argument.MessageArgumentType;

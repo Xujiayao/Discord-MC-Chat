@@ -1,4 +1,4 @@
-package top.xujiayao.mcDiscordChat.objects;
+package top.xujiayao.mcdiscordchat.objects;
 
 /**
  * @author Xujiayao

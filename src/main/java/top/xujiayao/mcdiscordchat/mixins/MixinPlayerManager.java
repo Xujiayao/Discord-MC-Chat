@@ -1,4 +1,4 @@
-package top.xujiayao.mcDiscordChat.mixins;
+package top.xujiayao.mcdiscordchat.mixins;
 
 import net.minecraft.network.ClientConnection;
 import net.minecraft.server.PlayerManager;
@@ -7,8 +7,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import top.xujiayao.mcDiscordChat.events.PlayerJoinCallback;
-import top.xujiayao.mcDiscordChat.events.PlayerLeaveCallback;
+import top.xujiayao.mcdiscordchat.events.PlayerJoinCallback;
+import top.xujiayao.mcdiscordchat.events.PlayerLeaveCallback;
 
 /**
  * @author Xujiayao
