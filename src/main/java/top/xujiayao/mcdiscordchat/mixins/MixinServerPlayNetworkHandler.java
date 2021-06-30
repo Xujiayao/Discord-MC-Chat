@@ -3,6 +3,7 @@ package top.xujiayao.mcdiscordchat.mixins;
 import net.minecraft.network.MessageType;
 import net.minecraft.network.Packet;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.filter.TextStream.Message;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -43,11 +44,13 @@ public abstract class MixinServerPlayNetworkHandler {
 	@Shadow
 	protected abstract void executeCommand(String input);
 
-	@Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/server/PlayerManager;broadcastChatMessage(Lnet/minecraft/text/Text;Lnet/minecraft/network/MessageType;Ljava/util/UUID;)V"), method = "method_31286", cancellable = true)
-	private void onGameMessage(String string, CallbackInfo ci) {
-		String message = StringUtils.normalizeSpace(string);
-		Text text = new TranslatableText("chat.type.text", this.player.getDisplayName(), message);
-		Optional<Text> eventResult = ServerChatCallback.EVENT.invoker().onServerChat(this.player, message, text);
+	@Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/server/PlayerManager;broadcast(Lnet/minecraft/text/Text;Ljava/util/function/Function;Lnet/minecraft/network/MessageType;Ljava/util/UUID;)V"), method = "handleMessage", cancellable = true)
+	private void handleMessage(Message message, CallbackInfo ci) {
+		String string = message.getRaw();
+		String msg = StringUtils.normalizeSpace(string);
+		Text text = new TranslatableText("chat.type.text", this.player.getDisplayName(), msg);
+		Optional<Text> eventResult = ServerChatCallback.EVENT.invoker().onServerChat(this.player, msg, text);
+
 		if (eventResult.isPresent()) {
 			this.server.getPlayerManager().broadcastChatMessage(eventResult.get(), MessageType.CHAT, this.player.getUuid());
 			ci.cancel();
