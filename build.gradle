@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '0.9.9'
+    id 'fabric-loom' version '0.9.31'
 }
 
 sourceCompatibility = JavaVersion.VERSION_16
@@ -35,7 +35,6 @@ dependencies {
     include "org.apache.commons:commons-collections4:+"
     include "org.apache.httpcomponents:httpclient:+"
     include "org.jetbrains:annotations:+"
-    //include "org.slf4j:slf4j-api:+"
     include "com.neovisionaries:nv-websocket-client:+"
     include "com.fasterxml.jackson.core:jackson-annotations:+"
     include "com.fasterxml.jackson.core:jackson-core:+"

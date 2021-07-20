@@ -1,1 +1,9 @@
 写Config文档
+
+优化config json
+
+添加关于功能
+
+添加admin功能
+
+增加英文翻译

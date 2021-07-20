@@ -32,11 +32,11 @@ public class ConfigManager {
 
 			System.err.println("--------------------");
 			System.err.println("错误：找不到配置文件或配置文件为空！");
-			System.err.println("Error: The config file cannot be found / is empty!");
-			System.err.println("");
+			System.err.println("Error: The config file cannot be found or is empty!");
+			System.err.println();
 			System.err.println("请在重新启动服务器前编辑 /config/mcdiscordchat.json 以配置 MCDiscordChat！");
 			System.err.println("Please edit /config/mcdiscordchat.json to configure MCDiscordChat before restarting the server!");
-			System.err.println("");
+			System.err.println();
 			System.err.println("正在停止服务器...");
 			System.err.println("Stopping the server...");
 			System.err.println("--------------------");
@@ -56,7 +56,7 @@ public class ConfigManager {
 			String temp;
 			StringBuilder jsonString = new StringBuilder();
 
-			while ((temp = reader.readLine())!= null) {
+			while ((temp = reader.readLine()) != null) {
 				jsonString.append(temp);
 			}
 
