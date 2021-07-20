@@ -1,31 +1,31 @@
 {
-  "schemaVersion": 1,
-  "id": "mcdiscordchat",
-  "version": "${version}",
-  "name": "MCDiscordChat",
-  "description": "A Discord <-> Minecraft chat bridge.",
-  "authors": [
-    "Xujiayao"
-  ],
-  "contact": {
-    "homepage": "https://blog.xujiayao.top/",
-    "issues": "https://github.com/Xujiayao/MCDiscordChat/issues",
-    "sources": "https://github.com/Xujiayao/MCDiscordChat"
-  },
-  "license": "MIT",
-  "environment": "server",
-  "entrypoints": {
-    "server": [
-      "top.xujiayao.mcdiscordchat.Main"
-    ]
-  },
-  "mixins": [
-    "mcdiscordchat.mixins.json"
-  ],
-  "depends": {
-    "fabricloader": ">=0.11.6",
-    "fabric": "*",
-    "minecraft": "1.17.x",
-    "java": ">=16"
-  }
+	"schemaVersion": 1,
+	"id": "mcdiscordchat",
+	"version": "${version}",
+	"name": "MCDiscordChat",
+	"description": "A Discord <-> Minecraft chat bridge.",
+	"authors": [
+		"Xujiayao"
+	],
+	"contact": {
+		"homepage": "https://blog.xujiayao.top/",
+		"issues": "https://github.com/Xujiayao/MCDiscordChat/issues",
+		"sources": "https://github.com/Xujiayao/MCDiscordChat"
+	},
+	"license": "MIT",
+	"environment": "server",
+	"entrypoints": {
+		"server": [
+			"top.xujiayao.mcdiscordchat.Main"
+		]
+	},
+	"mixins": [
+		"mcdiscordchat.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.11.6",
+		"fabric": "*",
+		"minecraft": "1.17.x",
+		"java": ">=16"
+	}
 }
