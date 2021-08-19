@@ -77,6 +77,9 @@ public class Config {
 		// Banned Minecraft players' name
 		@Expose
 		public List<String> bannedMinecraft = new ArrayList<>();
+		// Bot whitelist
+		@Expose
+		public List<String> botWhitelist = new ArrayList<>();
 	}
 
 	public static class Texts {
