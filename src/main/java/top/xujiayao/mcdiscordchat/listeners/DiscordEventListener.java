@@ -31,9 +31,19 @@ public class DiscordEventListener extends ListenerAdapter {
 
 	public void onMessageReceived(@NotNull MessageReceivedEvent e) {
 		MinecraftServer server = getServer();
-		if (e.getAuthor() != e.getJDA().getSelfUser() && !e.getAuthor().isBot()
+		//check if self
+		if (e.getAuthor() != e.getJDA().getSelfUser()
+			//check if bot
+			//  && !e.getAuthor().isBot()
+			//check channel id
 			  && e.getChannel().getId().equals(Main.config.generic.channelId) && server != null) {
+			//check if bot is in whitelist
+			if (e.getAuthor().isBot() && !Main.config.generic.botWhitelist.contains(e.getAuthor().getId())) {
+				return;
+			}
+			//classify if sender is from a banned account
 			if (Main.config.generic.bannedDiscord.contains(e.getAuthor().getId())
+					//class if admin or not
 				  && !Arrays.asList(Main.config.generic.adminsIds).contains(e.getAuthor().getId())) {
 				return;
 			}
