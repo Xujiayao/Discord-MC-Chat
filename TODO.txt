@@ -18,3 +18,5 @@ smp里显示cmp里的信息，他不会说来自cmp，而是直接写来自disco
 你可以写多一个子mod。
 因为这样他会判断这个信息来自discord，mc里还是有discord前缀
 https://media.discordapp.net/attachments/792407823295184906/877506119675813918/unknown.png
+
+修改Tony发的代码
