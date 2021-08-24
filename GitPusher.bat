@@ -1,6 +1,6 @@
 @echo off
 title Git Pusher By Xujiayao
-cd "C:\Users\BlissfulAlloy79\Desktop\github\MCDiscordChat"
+cd "C:\Users\Xujiayao\Desktop\Java Projects\MCDiscordChat"
 git add .
 echo Enter commit message: 
 set /p commit_message=
