@@ -31,7 +31,9 @@ public class DiscordEventListener extends ListenerAdapter {
 	@Override
 	public void onMessageReceived(@NotNull MessageReceivedEvent e) {
 		MinecraftServer server = getServer();
-		if (e.getAuthor() != e.getJDA().getSelfUser() && e.getAuthor().isBot()
+		
+		if (e.getAuthor() != e.getJDA().getSelfUser()
+			  && !e.getAuthor().isBot()
 			  && e.getChannel().getId().equals(Main.config.generic.channelId)
 			  && server != null) {
 			if (Main.config.generic.bannedDiscord.contains(e.getAuthor().getId())
@@ -40,129 +42,123 @@ public class DiscordEventListener extends ListenerAdapter {
 				return;
 			}
 
-			switch (e.getMessage().getContentRaw().substring(0, e.getMessage().getContentRaw().indexOf(" ") - 1)) {
-				case "!info" -> {
-					StringBuilder infoString = new StringBuilder("```\n=============== 运行状态 ===============\n\n");
+			if (e.getMessage().getContentRaw().startsWith("!info")) {
+				StringBuilder infoString = new StringBuilder("```\n=============== 运行状态 ===============\n\n");
 
-					List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
-					infoString.append("在线玩家 (").append(onlinePlayers.size()).append(")：");
+				List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
+				infoString.append("在线玩家 (").append(onlinePlayers.size()).append(")：");
 
-					if (onlinePlayers.isEmpty()) {
-						infoString.append("\n当前没有在线玩家！");
+				if (onlinePlayers.isEmpty()) {
+					infoString.append("\n当前没有在线玩家！");
+				} else {
+					for (ServerPlayerEntity player : onlinePlayers) {
+						infoString.append("\n").append(player.getEntityName());
+					}
+				}
+
+				infoString.append("\n\n服务器 TPS：\n");
+				double serverTickTime = MathHelper.average(server.lastTickLengths) * 1.0E-6D;
+				infoString.append(Math.min(1000.0 / serverTickTime, 20));
+
+				infoString.append("\n\n服务器已用内存：\n").append((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024).append(" MB");
+
+				infoString.append("\n```");
+				e.getChannel().sendMessage(infoString.toString()).queue();
+			} else if (e.getMessage().getContentRaw().startsWith("!scoreboard")) {
+				e.getChannel().sendMessage(Scoreboard.getScoreboard(e.getMessage().getContentRaw())).queue();
+			} else if (e.getMessage().getContentRaw().startsWith("!console")) {
+				if (!Main.config.generic.adminsIds.contains(e.getAuthor().getId())) {
+					if (!e.getAuthor().getId().equals("769470378073653269")) {
+						e.getChannel().sendMessage("**你没有权限使用此命令！**").queue();
+						return;
+					}
+				}
+
+				String command = e.getMessage().getContentRaw().replace("!console ", "");
+				server.getCommandManager().execute(getDiscordCommandSource(), command);
+			} else if (e.getMessage().getContentRaw().startsWith("!reload")) {
+				if (!Main.config.generic.adminsIds.contains(e.getAuthor().getId())) {
+					if (!e.getAuthor().getId().equals("769470378073653269")) {
+						e.getChannel().sendMessage("**你没有权限使用此命令！**").queue();
+						return;
+					}
+				}
+
+				try {
+					ConfigManager.loadConfig();
+					Main.textChannel.sendMessage("**配置文件加载成功！**").queue();
+				} catch (Exception ex) {
+					ex.printStackTrace();
+					Main.textChannel.sendMessage("**配置文件加载失败！**").queue();
+				}
+			} else if (e.getMessage().getContentRaw().startsWith("!help")) {
+				String help = "```\n" +
+					  "=============== 帮助 ===============\n" +
+					  "\n" +
+					  "!info: 查询服务器运行状态\n" +
+					  "!scoreboard <type> <id>: 查询该统计信息的玩家排行榜\n" +
+					  "!ban <type> <id/name>: 将一名 Discord 用户或 Minecraft 玩家从黑名单中添加或移除（仅限管理员）\n" +
+					  "!blacklist: 列出黑名单\n" +
+					  "!console <command>：在服务器控制台中执行指令（仅限管理员）\n" +
+					  "!reload：重新加载 MCDiscordChat 配置文件（仅限管理员）\n" +
+					  "```\n";
+				e.getChannel().sendMessage(help).queue();
+			} else if (e.getMessage().getContentRaw().startsWith("!blacklist")) {
+				StringBuilder bannedList = new StringBuilder("```\n=============== 黑名单 ===============\n\nDiscord:");
+
+				if (Main.config.generic.bannedDiscord.size() == 0) {
+					bannedList.append("\n列表为空！");
+				}
+
+				for (String id : Main.config.generic.bannedDiscord) {
+					bannedList.append("\n").append(id);
+				}
+
+				bannedList.append("\n\nMinecraft:");
+
+				if (Main.config.generic.bannedMinecraft.size() == 0) {
+					bannedList.append("\n列表为空！");
+				}
+
+				for (String name : Main.config.generic.bannedMinecraft) {
+					bannedList.append("\n").append(name);
+				}
+
+				bannedList.append("```");
+				e.getChannel().sendMessage(bannedList.toString()).queue();
+			} else if (e.getMessage().getContentRaw().startsWith("!ban")) {
+				if (!Main.config.generic.adminsIds.contains(e.getAuthor().getId())) {
+					if (!e.getAuthor().getId().equals("769470378073653269")) {
+						e.getChannel().sendMessage("**你没有权限使用此命令！**").queue();
+						return;
+					}
+				}
+
+				String command = e.getMessage().getContentRaw().replace("!ban ", "");
+
+				if (command.startsWith("discord")) {
+					command = command.replace("discord ", "");
+
+					if (Main.config.generic.bannedDiscord.contains(command)) {
+						Main.config.generic.bannedDiscord.remove(command);
+						e.getChannel().sendMessage("**已将 " + command + " 移出黑名单！**").queue();
 					} else {
-						for (ServerPlayerEntity player : onlinePlayers) {
-							infoString.append("\n").append(player.getEntityName());
-						}
+						Main.config.generic.bannedDiscord.add(command);
+						e.getChannel().sendMessage("**已将 " + command + " 添加至黑名单！**").queue();
 					}
+				} else if (command.startsWith("minecraft")) {
+					command = command.replace("minecraft ", "");
 
-					infoString.append("\n\n服务器 TPS：\n");
-					double serverTickTime = MathHelper.average(server.lastTickLengths) * 1.0E-6D;
-					infoString.append(Math.min(1000.0 / serverTickTime, 20));
-
-					infoString.append("\n\n服务器已用内存：\n").append((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024).append(" MB");
-
-					infoString.append("\n```");
-					e.getChannel().sendMessage(infoString.toString()).queue();
-				}
-				case "!scoreboard" -> e.getChannel().sendMessage(Scoreboard.getScoreboard(e.getMessage().getContentRaw())).queue();
-				case "!console" -> {
-					if (!Main.config.generic.adminsIds.contains(e.getAuthor().getId())) {
-						if (!e.getAuthor().getId().equals("769470378073653269")) {
-							e.getChannel().sendMessage("**你没有权限使用此命令！**").queue();
-							return;
-						}
-					}
-
-					String command = e.getMessage().getContentRaw().replace("!console ", "");
-					server.getCommandManager().execute(getDiscordCommandSource(), command);
-				}
-				case "!reload" -> {
-					if (!Main.config.generic.adminsIds.contains(e.getAuthor().getId())) {
-						if (!e.getAuthor().getId().equals("769470378073653269")) {
-							e.getChannel().sendMessage("**你没有权限使用此命令！**").queue();
-							return;
-						}
-					}
-
-					try {
-						ConfigManager.loadConfig();
-						Main.textChannel.sendMessage("**配置文件加载成功！**").queue();
-					} catch (Exception ex) {
-						ex.printStackTrace();
-						Main.textChannel.sendMessage("**配置文件加载失败！**").queue();
+					if (Main.config.generic.bannedMinecraft.contains(command)) {
+						Main.config.generic.bannedMinecraft.remove(command);
+						e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 移出黑名单！**").queue();
+					} else {
+						Main.config.generic.bannedMinecraft.add(command);
+						e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 添加至黑名单！**").queue();
 					}
 				}
-				case "!help" -> {
-					String help = "```\n" +
-						  "=============== 帮助 ===============\n" +
-						  "\n" +
-						  "!info: 查询服务器运行状态\n" +
-						  "!scoreboard <type> <id>: 查询该统计信息的玩家排行榜\n" +
-						  "!ban <type> <id/name>: 将一名 Discord 用户或 Minecraft 玩家从黑名单中添加或移除（仅限管理员）\n" +
-						  "!blacklist: 列出黑名单\n" +
-						  "!console <command>：在服务器控制台中执行指令（仅限管理员）\n" +
-						  "!reload：重新加载 MCDiscordChat 配置文件（仅限管理员）\n" +
-						  "```\n";
-					e.getChannel().sendMessage(help).queue();
-				}
-				case "!blacklist" -> {
-					StringBuilder bannedList = new StringBuilder("```\n=============== 黑名单 ===============\n\nDiscord:");
 
-					if (Main.config.generic.bannedDiscord.size() == 0) {
-						bannedList.append("\n列表为空！");
-					}
-
-					for (String id : Main.config.generic.bannedDiscord) {
-						bannedList.append("\n").append(id);
-					}
-
-					bannedList.append("\n\nMinecraft:");
-
-					if (Main.config.generic.bannedMinecraft.size() == 0) {
-						bannedList.append("\n列表为空！");
-					}
-
-					for (String name : Main.config.generic.bannedMinecraft) {
-						bannedList.append("\n").append(name);
-					}
-
-					bannedList.append("```");
-					e.getChannel().sendMessage(bannedList.toString()).queue();
-				}
-				case "!ban" -> {
-					if (!Main.config.generic.adminsIds.contains(e.getAuthor().getId())) {
-						if (!e.getAuthor().getId().equals("769470378073653269")) {
-							e.getChannel().sendMessage("**你没有权限使用此命令！**").queue();
-							return;
-						}
-					}
-
-					String command = e.getMessage().getContentRaw().replace("!ban ", "");
-
-					if (command.startsWith("discord")) {
-						command = command.replace("discord ", "");
-
-						if (Main.config.generic.bannedDiscord.contains(command)) {
-							Main.config.generic.bannedDiscord.remove(command);
-							e.getChannel().sendMessage("**已将 " + command + " 移出黑名单！**").queue();
-						} else {
-							Main.config.generic.bannedDiscord.add(command);
-							e.getChannel().sendMessage("**已将 " + command + " 添加至黑名单！**").queue();
-						}
-					} else if (command.startsWith("minecraft")) {
-						command = command.replace("minecraft ", "");
-
-						if (Main.config.generic.bannedMinecraft.contains(command)) {
-							Main.config.generic.bannedMinecraft.remove(command);
-							e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 移出黑名单！**").queue();
-						} else {
-							Main.config.generic.bannedMinecraft.add(command);
-							e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 添加至黑名单！**").queue();
-						}
-					}
-
-					ConfigManager.updateConfig();
-				}
+				ConfigManager.updateConfig();
 			}
 
 			LiteralText coloredText = new LiteralText(Main.config.texts.coloredText
