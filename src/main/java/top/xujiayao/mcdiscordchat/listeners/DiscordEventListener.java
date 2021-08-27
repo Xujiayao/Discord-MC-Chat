@@ -84,7 +84,13 @@ public class DiscordEventListener extends ListenerAdapter {
 						}
 					}
 
-					Main.config = ConfigManager.loadConfig();
+					try {
+						ConfigManager.loadConfig();
+						Main.textChannel.sendMessage("**配置文件加载成功！**").queue();
+					} catch (Exception ex) {
+						ex.printStackTrace();
+						Main.textChannel.sendMessage("**配置文件加载失败！**").queue();
+					}
 				}
 				case "!help" -> {
 					String help = "```\n" +

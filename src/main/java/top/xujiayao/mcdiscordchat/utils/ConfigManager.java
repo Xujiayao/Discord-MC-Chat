@@ -24,7 +24,13 @@ public class ConfigManager {
 		file = new File(FabricLoader.getInstance().getConfigDir().toFile(), "mcdiscordchat.json");
 
 		if (file.exists() && file.length() != 0) {
-			Main.config = loadConfig();
+			try {
+				loadConfig();
+			} catch (Exception e) {
+				e.printStackTrace();
+				Main.config = new Config();
+			}
+
 			updateConfig();
 		} else {
 			createConfig();
@@ -44,7 +50,7 @@ public class ConfigManager {
 		}
 	}
 
-	public static Config loadConfig() {
+	public static void loadConfig() throws Exception {
 		try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
 			String temp;
 			StringBuilder jsonString = new StringBuilder();
@@ -53,16 +59,9 @@ public class ConfigManager {
 				jsonString.append(temp);
 			}
 
-			Main.textChannel.sendMessage("**配置文件加载成功！**").queue();
-
-			return new Gson().fromJson(jsonString.toString(), new TypeToken<Config>() {
+			Main.config = new Gson().fromJson(jsonString.toString(), new TypeToken<Config>() {
 			}.getType());
-		} catch (Exception e) {
-			Main.textChannel.sendMessage("**配置文件加载失败！**").queue();
-			e.printStackTrace();
 		}
-
-		return new Config();
 	}
 
 	private static void createConfig() {
