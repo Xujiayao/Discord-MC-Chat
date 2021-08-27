@@ -20,13 +20,12 @@ public class ConfigManager {
 
 	private static File file;
 
-	public static Config initConfig() {
-		Config config = null;
-
+	public static void initConfig() {
 		file = new File(FabricLoader.getInstance().getConfigDir().toFile(), "mcdiscordchat.json");
 
 		if (file.exists() && file.length() != 0) {
-			config = loadConfig();
+			Main.config = loadConfig();
+			updateConfig();
 		} else {
 			createConfig();
 
@@ -43,8 +42,6 @@ public class ConfigManager {
 
 			System.exit(1);
 		}
-
-		return config;
 	}
 
 	private static Config loadConfig() {

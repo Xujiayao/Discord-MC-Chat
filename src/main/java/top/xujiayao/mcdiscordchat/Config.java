@@ -41,9 +41,9 @@ public class Config {
 
 		// Admins ids in Discord; see
 		// https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID
-		// If more than one, enclose each id  like this: {"000", "111", "222"}
+		// If more than one, enclose each id like this: {"000", "111", "222"}
 		@Expose
-		public String[] adminsIds = {};
+		public List<String> adminsIds = new ArrayList<>();
 
 		// Channel id in Discord
 		@Expose
@@ -70,16 +70,13 @@ public class Config {
 		@Expose
 		public String worldName = "world";
 
-		// Banned Discord users' ID
+		// Banned Discord users' id
 		@Expose
 		public List<String> bannedDiscord = new ArrayList<>();
 
 		// Banned Minecraft players' name
 		@Expose
 		public List<String> bannedMinecraft = new ArrayList<>();
-		// Bot whitelist
-		@Expose
-		public List<String> botWhitelist = new ArrayList<>();
 	}
 
 	public static class Texts {

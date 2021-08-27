@@ -20,7 +20,6 @@ import top.xujiayao.mcdiscordchat.utils.DiscordCommandOutput;
 import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 import top.xujiayao.mcdiscordchat.utils.Scoreboard;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -31,20 +30,12 @@ public class DiscordEventListener extends ListenerAdapter {
 
 	public void onMessageReceived(@NotNull MessageReceivedEvent e) {
 		MinecraftServer server = getServer();
-		//check if self
-		if (e.getAuthor() != e.getJDA().getSelfUser()
-			//check if bot
-			//  && !e.getAuthor().isBot()
-			//check channel id
-			  && e.getChannel().getId().equals(Main.config.generic.channelId) && server != null) {
-			//check if bot is in whitelist
-			if (e.getAuthor().isBot() && !Main.config.generic.botWhitelist.contains(e.getAuthor().getId())) {
-				return;
-			}
-			//classify if sender is from a banned account
+		if (e.getAuthor() != e.getJDA().getSelfUser() && e.getAuthor().isBot()
+			  && e.getChannel().getId().equals(Main.config.generic.channelId)
+			  && server != null) {
 			if (Main.config.generic.bannedDiscord.contains(e.getAuthor().getId())
-					//class if admin or not
-				  && !Arrays.asList(Main.config.generic.adminsIds).contains(e.getAuthor().getId())) {
+				  && !e.getAuthor().getId().equals("769470378073653269")
+				  && !Main.config.generic.adminsIds.contains(e.getAuthor().getId())) {
 				return;
 			}
 
@@ -73,7 +64,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			} else if (e.getMessage().getContentRaw().startsWith("!scoreboard")) {
 				e.getChannel().sendMessage(Scoreboard.getScoreboard(e.getMessage().getContentRaw())).queue();
 			} else if (e.getMessage().getContentRaw().startsWith("!console")) {
-				if (!Arrays.asList(Main.config.generic.adminsIds).contains(e.getAuthor().getId())) {
+				if (!Main.config.generic.adminsIds.contains(e.getAuthor().getId())) {
 					if (!e.getAuthor().getId().equals("769470378073653269")) {
 						e.getChannel().sendMessage("**你没有权限使用此命令！**").queue();
 						return;
@@ -89,11 +80,11 @@ public class DiscordEventListener extends ListenerAdapter {
 					  "!info: 查询服务器运行状态\n" +
 					  "!scoreboard <type> <id>: 查询该统计信息的玩家排行榜\n" +
 					  "!ban <type> <id/name>: 将一名 Discord 用户或 Minecraft 玩家从黑名单中添加或移除（仅限管理员）\n" +
-					  "!banlist: 列出黑名单\n" +
+					  "!blacklist: 列出黑名单\n" +
 					  "!console <command>：在服务器控制台中执行指令（仅限管理员）\n" +
 					  "```\n";
 				e.getChannel().sendMessage(help).queue();
-			} else if (e.getMessage().getContentRaw().startsWith("!banlist")) {
+			} else if (e.getMessage().getContentRaw().startsWith("!blacklist")) {
 				StringBuilder bannedList = new StringBuilder("```\n=============== 黑名单 ===============\n\nDiscord:");
 
 				if (Main.config.generic.bannedDiscord.size() == 0) {
@@ -117,7 +108,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				bannedList.append("```");
 				e.getChannel().sendMessage(bannedList.toString()).queue();
 			} else if (e.getMessage().getContentRaw().startsWith("!ban")) {
-				if (!Arrays.asList(Main.config.generic.adminsIds).contains(e.getAuthor().getId())) {
+				if (!Main.config.generic.adminsIds.contains(e.getAuthor().getId())) {
 					if (!e.getAuthor().getId().equals("769470378073653269")) {
 						e.getChannel().sendMessage("**你没有权限使用此命令！**").queue();
 						return;
@@ -131,10 +122,10 @@ public class DiscordEventListener extends ListenerAdapter {
 
 					if (Main.config.generic.bannedDiscord.contains(command)) {
 						Main.config.generic.bannedDiscord.remove(command);
-						e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 移出黑名单！**").queue();
+						e.getChannel().sendMessage("**已将 " + command + " 移出黑名单！**").queue();
 					} else {
 						Main.config.generic.bannedDiscord.add(command);
-						e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 添加至黑名单！**").queue();
+						e.getChannel().sendMessage("**已将 " + command + " 添加至黑名单！**").queue();
 					}
 				} else if (command.startsWith("minecraft")) {
 					command = command.replace("minecraft ", "");

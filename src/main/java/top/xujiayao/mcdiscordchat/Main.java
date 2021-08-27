@@ -32,21 +32,21 @@ public class Main implements DedicatedServerModInitializer {
 
 	@Override
 	public void onInitializeServer() {
-		config = ConfigManager.initConfig();
+		ConfigManager.initConfig();
 
 		try {
 			if (Main.config.generic.membersIntents) {
 				jda = JDABuilder.createDefault(Main.config.generic.botToken).setHttpClient(new OkHttpClient.Builder()
-					  .protocols(Collections.singletonList(Protocol.HTTP_1_1))
-					  .build())
+						    .protocols(Collections.singletonList(Protocol.HTTP_1_1))
+						    .build())
 					  .setMemberCachePolicy(MemberCachePolicy.ALL)
 					  .enableIntents(GatewayIntent.GUILD_MEMBERS)
 					  .addEventListeners(new DiscordEventListener())
 					  .build();
 			} else {
 				jda = JDABuilder.createDefault(Main.config.generic.botToken).setHttpClient(new OkHttpClient.Builder()
-					  .protocols(Collections.singletonList(Protocol.HTTP_1_1))
-					  .build())
+						    .protocols(Collections.singletonList(Protocol.HTTP_1_1))
+						    .build())
 					  .addEventListeners(new DiscordEventListener())
 					  .build();
 			}
