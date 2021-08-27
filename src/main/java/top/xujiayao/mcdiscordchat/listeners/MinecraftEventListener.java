@@ -33,10 +33,10 @@ public class MinecraftEventListener {
 				body.put("username", playerEntity.getEntityName());
 				body.put("avatar_url", "https://mc-heads.net/avatar/" + (Main.config.generic.useUUIDInsteadNickname ? playerEntity.getUuid() : playerEntity.getEntityName()));
 
-				JSONObject allowed_mentions = new JSONObject();
-				allowed_mentions.put("parse", new String[]{"users", "roles"});
+				JSONObject allowedMentions = new JSONObject();
+				allowedMentions.put("parse", new String[]{"users", "roles"});
 
-				body.put("allowed_mentions", allowed_mentions);
+				body.put("allowed_mentions", allowedMentions);
 				body.put("content", convertedPair.getLeft().replace("_", "\\_"));
 
 				try {
@@ -97,7 +97,7 @@ public class MinecraftEventListener {
 			}
 		});
 
-		PlayerLeaveCallback.EVENT.register((playerEntity) -> {
+		PlayerLeaveCallback.EVENT.register(playerEntity -> {
 			if (Main.config.generic.announcePlayers && !Main.stop) {
 				Main.textChannel.sendMessage(Main.config.texts.leftServer.replace("%playername%",
 					  MarkdownSanitizer.escape(playerEntity.getEntityName()))).queue();

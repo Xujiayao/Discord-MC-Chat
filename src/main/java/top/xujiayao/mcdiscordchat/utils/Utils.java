@@ -36,12 +36,14 @@ public class Utils {
 
 		List<String> messageList = Arrays.asList(message.split("@[\\S]+"));
 
-		if (messageList.size() == 0) {
+		if (messageList.isEmpty()) {
 			messageList = new ArrayList<>();
 			messageList.add("");
 		}
 
-		StringBuilder discordString = new StringBuilder(), mcString = new StringBuilder();
+		StringBuilder discordString = new StringBuilder();
+		StringBuilder mcString = new StringBuilder();
+
 		Pattern pattern = Pattern.compile("@[\\S]+");
 		Matcher matcher = pattern.matcher(message);
 

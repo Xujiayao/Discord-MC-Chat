@@ -22,9 +22,6 @@ import java.util.Map;
 public class Scoreboard {
 
 	public static StringBuilder getScoreboard(String message) {
-		BufferedReader reader = null;
-		FileReader fileReader = null;
-
 		StringBuilder output = null;
 
 		try {
@@ -33,9 +30,11 @@ public class Scoreboard {
 			String type = temp.substring(0, temp.lastIndexOf(" ") - 1);
 			String id = temp.substring(temp.indexOf(" ") + 1);
 
-			reader = new BufferedReader(new FileReader(FabricLoader.getInstance().getGameDir().toAbsolutePath() + "/usercache.json"));
+			String jsonString;
 
-			String jsonString = reader.readLine();
+			try (BufferedReader reader = new BufferedReader(new FileReader(FabricLoader.getInstance().getGameDir().toAbsolutePath() + "/usercache.json"))) {
+				jsonString = reader.readLine();
+			}
 
 			Gson gson = new Gson();
 			Type userListType = new TypeToken<ArrayList<Player>>() {
@@ -47,12 +46,11 @@ public class Scoreboard {
 			List<Stats> statsList = new ArrayList<>();
 
 			for (File file : statsFileList) {
-				fileReader = new FileReader(file);
-				reader = new BufferedReader(fileReader);
-
-				for (Player player : playerList) {
-					if (player.getUuid().equals(file.getName().replace(".json", ""))) {
-						statsList.add(new Stats(player.getName(), reader.readLine()));
+				try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+					for (Player player : playerList) {
+						if (player.uuid().equals(file.getName().replace(".json", ""))) {
+							statsList.add(new Stats(player.name(), reader.readLine()));
+						}
 					}
 				}
 			}
@@ -60,7 +58,7 @@ public class Scoreboard {
 			HashMap<String, Integer> scoreboardMap = new HashMap<>();
 
 			for (Stats stats : statsList) {
-				temp = stats.getContent();
+				temp = stats.content();
 
 				if (!temp.contains("minecraft:" + type)) {
 					continue;
@@ -79,7 +77,7 @@ public class Scoreboard {
 					temp = temp.substring(0, temp.indexOf(","));
 				}
 
-				scoreboardMap.put(stats.getName(), Integer.valueOf(temp));
+				scoreboardMap.put(stats.name(), Integer.valueOf(temp));
 			}
 
 			List<Map.Entry<String, Integer>> entryList = new ArrayList<>(scoreboardMap.entrySet());
@@ -99,26 +97,8 @@ public class Scoreboard {
 			}
 
 			output.append("\n```");
-
-			reader.close();
-
-			if (fileReader != null) {
-				fileReader.close();
-			}
 		} catch (Exception e) {
 			e.printStackTrace();
-		} finally {
-			try {
-				if (reader != null) {
-					reader.close();
-				}
-
-				if (fileReader != null) {
-					fileReader.close();
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
 		}
 
 		if (output == null) {

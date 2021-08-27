@@ -44,12 +44,8 @@ public class ConfigManager {
 		}
 	}
 
-	private static Config loadConfig() {
-		BufferedReader reader = null;
-
-		try {
-			reader = new BufferedReader(new FileReader(file));
-
+	public static Config loadConfig() {
+		try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
 			String temp;
 			StringBuilder jsonString = new StringBuilder();
 
@@ -57,31 +53,20 @@ public class ConfigManager {
 				jsonString.append(temp);
 			}
 
-			reader.close();
+			Main.textChannel.sendMessage("**配置文件加载成功！**").queue();
 
 			return new Gson().fromJson(jsonString.toString(), new TypeToken<Config>() {
 			}.getType());
 		} catch (Exception e) {
+			Main.textChannel.sendMessage("**配置文件加载失败！**").queue();
 			e.printStackTrace();
-		} finally {
-			try {
-				if (reader != null) {
-					reader.close();
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
 		}
 
 		return new Config();
 	}
 
 	private static void createConfig() {
-		BufferedWriter writer = null;
-
-		try {
-			writer = new BufferedWriter(new FileWriter(file));
-
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
 			String jsonString = new GsonBuilder()
 				  .setPrettyPrinting()
 				  .disableHtmlEscaping()
@@ -91,23 +76,11 @@ public class ConfigManager {
 			writer.write(jsonString);
 		} catch (Exception e) {
 			e.printStackTrace();
-		} finally {
-			try {
-				if (writer != null) {
-					writer.close();
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
 		}
 	}
 
 	public static void updateConfig() {
-		BufferedWriter writer = null;
-
-		try {
-			writer = new BufferedWriter(new FileWriter(file));
-
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
 			String jsonString = new GsonBuilder()
 				  .setPrettyPrinting()
 				  .disableHtmlEscaping()
@@ -117,14 +90,6 @@ public class ConfigManager {
 			writer.write(jsonString);
 		} catch (Exception e) {
 			e.printStackTrace();
-		} finally {
-			try {
-				if (writer != null) {
-					writer.close();
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
 		}
 	}
 }
