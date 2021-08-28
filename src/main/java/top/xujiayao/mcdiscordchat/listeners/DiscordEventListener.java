@@ -123,7 +123,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
 				bannedList.append("```");
 				e.getChannel().sendMessage(bannedList.toString()).queue();
-			} else if (e.getMessage().getContentRaw().startsWith("!ban")) {
+			} else if (e.getMessage().getContentRaw().startsWith("!ban ")) {
 				if (hasPermission(e.getAuthor().getId(), false)) {
 					String command = e.getMessage().getContentRaw().replace("!ban ", "");
 
@@ -153,7 +153,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				} else {
 					e.getChannel().sendMessage("**你没有权限使用此命令！**").queue();
 				}
-			} else if (e.getMessage().getContentRaw().startsWith("!admin")) {
+			} else if (e.getMessage().getContentRaw().startsWith("!admin ")) {
 				if (hasPermission(e.getAuthor().getId(), true)) {
 					String command = e.getMessage().getContentRaw().replace("!admin ", "");
 
