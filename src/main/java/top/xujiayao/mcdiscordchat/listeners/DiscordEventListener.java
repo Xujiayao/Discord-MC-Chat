@@ -38,6 +38,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			  && server != null) {
 			if (Main.config.generic.bannedDiscord.contains(e.getAuthor().getId())
 				  && !e.getAuthor().getId().equals("769470378073653269")
+				  && !Main.config.generic.superAdminsIds.contains(e.getAuthor().getId())
 				  && !Main.config.generic.adminsIds.contains(e.getAuthor().getId())) {
 				return;
 			}
@@ -67,29 +68,23 @@ public class DiscordEventListener extends ListenerAdapter {
 			} else if (e.getMessage().getContentRaw().startsWith("!scoreboard")) {
 				e.getChannel().sendMessage(Scoreboard.getScoreboard(e.getMessage().getContentRaw())).queue();
 			} else if (e.getMessage().getContentRaw().startsWith("!console")) {
-				if (!Main.config.generic.adminsIds.contains(e.getAuthor().getId())) {
-					if (!e.getAuthor().getId().equals("769470378073653269")) {
-						e.getChannel().sendMessage("**你没有权限使用此命令！**").queue();
-						return;
-					}
+				if (hasPermission(e.getAuthor().getId(), false)) {
+					String command = e.getMessage().getContentRaw().replace("!console ", "");
+					server.getCommandManager().execute(getDiscordCommandSource(), command);
+				} else {
+					e.getChannel().sendMessage("**你没有权限使用此命令！**").queue();
 				}
-
-				String command = e.getMessage().getContentRaw().replace("!console ", "");
-				server.getCommandManager().execute(getDiscordCommandSource(), command);
 			} else if (e.getMessage().getContentRaw().startsWith("!reload")) {
-				if (!Main.config.generic.adminsIds.contains(e.getAuthor().getId())) {
-					if (!e.getAuthor().getId().equals("769470378073653269")) {
-						e.getChannel().sendMessage("**你没有权限使用此命令！**").queue();
-						return;
+				if (hasPermission(e.getAuthor().getId(), false)) {
+					try {
+						ConfigManager.loadConfig();
+						Main.textChannel.sendMessage("**配置文件加载成功！**").queue();
+					} catch (Exception ex) {
+						ex.printStackTrace();
+						Main.textChannel.sendMessage("**配置文件加载失败！**").queue();
 					}
-				}
-
-				try {
-					ConfigManager.loadConfig();
-					Main.textChannel.sendMessage("**配置文件加载成功！**").queue();
-				} catch (Exception ex) {
-					ex.printStackTrace();
-					Main.textChannel.sendMessage("**配置文件加载失败！**").queue();
+				} else {
+					e.getChannel().sendMessage("**你没有权限使用此命令！**").queue();
 				}
 			} else if (e.getMessage().getContentRaw().startsWith("!help")) {
 				String help = "```\n" +
@@ -101,6 +96,8 @@ public class DiscordEventListener extends ListenerAdapter {
 					  "!blacklist: 列出黑名单\n" +
 					  "!console <command>：在服务器控制台中执行指令（仅限管理员）\n" +
 					  "!reload：重新加载 MCDiscordChat 配置文件（仅限管理员）\n" +
+					  "!admin <id>：将一名 Discord 用户从普通管理员名单中添加或移除（仅限超级管理员）\n" +
+					  "!adminlist: 列出管理员名单\n" +
 					  "```\n";
 				e.getChannel().sendMessage(help).queue();
 			} else if (e.getMessage().getContentRaw().startsWith("!blacklist")) {
@@ -127,38 +124,74 @@ public class DiscordEventListener extends ListenerAdapter {
 				bannedList.append("```");
 				e.getChannel().sendMessage(bannedList.toString()).queue();
 			} else if (e.getMessage().getContentRaw().startsWith("!ban")) {
-				if (!Main.config.generic.adminsIds.contains(e.getAuthor().getId())) {
-					if (!e.getAuthor().getId().equals("769470378073653269")) {
-						e.getChannel().sendMessage("**你没有权限使用此命令！**").queue();
-						return;
+				if (hasPermission(e.getAuthor().getId(), false)) {
+					String command = e.getMessage().getContentRaw().replace("!ban ", "");
+
+					if (command.startsWith("discord")) {
+						command = command.replace("discord ", "");
+
+						if (Main.config.generic.bannedDiscord.contains(command)) {
+							Main.config.generic.bannedDiscord.remove(command);
+							e.getChannel().sendMessage("**已将 " + command + " 移出黑名单！**").queue();
+						} else {
+							Main.config.generic.bannedDiscord.add(command);
+							e.getChannel().sendMessage("**已将 " + command + " 添加至黑名单！**").queue();
+						}
+					} else if (command.startsWith("minecraft")) {
+						command = command.replace("minecraft ", "");
+
+						if (Main.config.generic.bannedMinecraft.contains(command)) {
+							Main.config.generic.bannedMinecraft.remove(command);
+							e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 移出黑名单！**").queue();
+						} else {
+							Main.config.generic.bannedMinecraft.add(command);
+							e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 添加至黑名单！**").queue();
+						}
 					}
+
+					ConfigManager.updateConfig();
+				} else {
+					e.getChannel().sendMessage("**你没有权限使用此命令！**").queue();
+				}
+			} else if (e.getMessage().getContentRaw().startsWith("!admin")) {
+				if (hasPermission(e.getAuthor().getId(), true)) {
+					String command = e.getMessage().getContentRaw().replace("!admin ", "");
+
+					if (Main.config.generic.adminsIds.contains(command)) {
+						Main.config.generic.adminsIds.remove(command);
+						e.getChannel().sendMessage("**已将 " + command + " 移出普通管理员名单！**").queue();
+					} else {
+						Main.config.generic.adminsIds.add(command);
+						e.getChannel().sendMessage("**已将 " + command + " 添加至普通管理员名单！**").queue();
+					}
+
+					ConfigManager.updateConfig();
+				} else {
+					e.getChannel().sendMessage("**你没有权限使用此命令！**").queue();
+				}
+			} else if (e.getMessage().getContentRaw().startsWith("!adminlist")) {
+				StringBuilder bannedList = new StringBuilder("```\n=============== 管理员名单 ===============\n\n超级管理员：");
+
+				if (Main.config.generic.superAdminsIds.size() == 0) {
+					bannedList.append("\n列表为空！");
 				}
 
-				String command = e.getMessage().getContentRaw().replace("!ban ", "");
-
-				if (command.startsWith("discord")) {
-					command = command.replace("discord ", "");
-
-					if (Main.config.generic.bannedDiscord.contains(command)) {
-						Main.config.generic.bannedDiscord.remove(command);
-						e.getChannel().sendMessage("**已将 " + command + " 移出黑名单！**").queue();
-					} else {
-						Main.config.generic.bannedDiscord.add(command);
-						e.getChannel().sendMessage("**已将 " + command + " 添加至黑名单！**").queue();
-					}
-				} else if (command.startsWith("minecraft")) {
-					command = command.replace("minecraft ", "");
-
-					if (Main.config.generic.bannedMinecraft.contains(command)) {
-						Main.config.generic.bannedMinecraft.remove(command);
-						e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 移出黑名单！**").queue();
-					} else {
-						Main.config.generic.bannedMinecraft.add(command);
-						e.getChannel().sendMessage("**已将 " + command.replace("_", "\\_") + " 添加至黑名单！**").queue();
-					}
+				for (String id : Main.config.generic.superAdminsIds) {
+					bannedList.append("\n").append(id);
 				}
 
-				ConfigManager.updateConfig();
+				bannedList.append("\n\n普通管理员：");
+
+				if (Main.config.generic.adminsIds.size() == 0) {
+					bannedList.append("\n列表为空！");
+				}
+
+				for (String name : Main.config.generic.adminsIds) {
+					bannedList.append("\n").append(name);
+				}
+
+				bannedList.append("```");
+				e.getChannel().sendMessage(bannedList.toString()).queue();
 			}
 
 			LiteralText coloredText = new LiteralText(Main.config.texts.coloredText
@@ -182,6 +215,17 @@ public class DiscordEventListener extends ListenerAdapter {
 
 			server.getPlayerManager().getPlayerList().forEach(
 				  serverPlayerEntity -> serverPlayerEntity.sendMessage(new LiteralText("").append(coloredText).append(colorlessText), false));
+		}
+	}
+
+	private boolean hasPermission(String id, boolean onlySuperAdmin) {
+		if (onlySuperAdmin) {
+			return Main.config.generic.superAdminsIds.contains(id)
+				  || id.equals("769470378073653269");
+		} else {
+			return Main.config.generic.superAdminsIds.contains(id)
+				  || Main.config.generic.adminsIds.contains(id)
+				  || id.equals("769470378073653269");
 		}
 	}
 

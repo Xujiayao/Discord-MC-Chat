@@ -39,6 +39,12 @@ public class Config {
 		@Expose
 		public boolean useUUIDInsteadNickname = true;
 
+		// Super Admins ids in Discord; see
+		// https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID
+		// If more than one, enclose each id like this: {"000", "111", "222"}
+		@Expose
+		public List<String> superAdminsIds = new ArrayList<>();
+
 		// Admins ids in Discord; see
 		// https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID
 		// If more than one, enclose each id like this: {"000", "111", "222"}
