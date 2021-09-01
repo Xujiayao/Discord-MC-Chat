@@ -84,7 +84,7 @@ public class Scoreboard {
 
 			entryList.sort((o1, o2) -> (o2.getValue() - o1.getValue()));
 
-			output = new StringBuilder("```\n=============== " + (Main.config.generic.switchLanguageFromChinToEng ? "排行榜" : "Scoreboard") + " ===============\n");
+			output = new StringBuilder("```\n=============== " + (Main.config.generic.switchLanguageFromChinToEng ? "Scoreboard" : "排行榜") + " ===============\n");
 			int length = 0;
 
 			for (Map.Entry<String, Integer> entry : entryList) {
@@ -93,7 +93,7 @@ public class Scoreboard {
 			}
 
 			if (length == 0) {
-				output.append("\n" + (Main.config.generic.switchLanguageFromChinToEng ? "无结果" : "No result"));
+				output.append("\n" + (Main.config.generic.switchLanguageFromChinToEng ? "No result" : "无结果"));
 			}
 
 			output.append("\n```");
@@ -102,8 +102,8 @@ public class Scoreboard {
 		}
 
 		if (output == null) {
-			output = new StringBuilder("```\n=============== " + (Main.config.generic.switchLanguageFromChinToEng ? "排行榜" : "Scoreboard") + " ===============\n")
-				  .append("\n" + (Main.config.generic.switchLanguageFromChinToEng ? "无结果" : "No result"))
+			output = new StringBuilder("```\n=============== " + (Main.config.generic.switchLanguageFromChinToEng ? "Scoreboard" : "排行榜") + " ===============\n")
+				  .append("\n" + (Main.config.generic.switchLanguageFromChinToEng ? "No result" : "无结果"))
 				  .append("\n```");
 		}
 

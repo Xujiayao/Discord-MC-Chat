@@ -1,5 +1,8 @@
 package top.xujiayao.mcdiscordchat.objects;
 
+/**
+ * @author Xujiayao
+ */
 public record Texts(String serverStarted,
 			  String serverStopped,
 			  String joinServer,

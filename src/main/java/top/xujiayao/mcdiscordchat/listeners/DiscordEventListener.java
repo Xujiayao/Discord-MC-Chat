@@ -45,25 +45,25 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 
 			if (e.getMessage().getContentRaw().startsWith("!info")) {
-				StringBuilder infoString = new StringBuilder("```\n=============== " + (Main.config.generic.switchLanguageFromChinToEng ? "运行状态" : "Server Status") + " ===============\n\n");
+				StringBuilder infoString = new StringBuilder("```\n=============== " + (Main.config.generic.switchLanguageFromChinToEng ? "Server Status" : "运行状态") + " ===============\n\n");
 
 				List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
-				infoString.append((Main.config.generic.switchLanguageFromChinToEng ? "在线玩家" : "Online players") + " (").append(onlinePlayers.size()).append(")：");
+				infoString.append((Main.config.generic.switchLanguageFromChinToEng ? "Online players" : "在线玩家") + " (").append(onlinePlayers.size()).append(")：");
 
 				if (onlinePlayers.isEmpty()) {
-					infoString.append("\n" + (Main.config.generic.switchLanguageFromChinToEng ? "当前没有在线玩家！" : "No players online!"));
+					infoString.append("\n" + (Main.config.generic.switchLanguageFromChinToEng ? "No players online!" : "当前没有在线玩家！"));
 				} else {
 					for (ServerPlayerEntity player : onlinePlayers) {
 						infoString.append("\n").append(player.getEntityName());
 					}
 				}
 
-				infoString.append("\n\n" + (Main.config.generic.switchLanguageFromChinToEng ? "服务器" : "Server") + " TPS：\n");
+				infoString.append("\n\n" + (Main.config.generic.switchLanguageFromChinToEng ? "Server" : "服务器") + " TPS：\n");
 				double serverTickTime = MathHelper.average(server.lastTickLengths) * 1.0E-6D;
 				infoString.append(Math.min(1000.0 / serverTickTime, 20));
 
 				infoString.append("\n\n")
-					  .append(Main.config.generic.switchLanguageFromChinToEng ? "服务器已用内存：" : "Server used memory:")
+					  .append(Main.config.generic.switchLanguageFromChinToEng ? "Server used memory:" : "服务器已用内存：")
 					  .append("\n")
 					  .append((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024)
 					  .append(" MB / ")
@@ -79,7 +79,7 @@ public class DiscordEventListener extends ListenerAdapter {
 					String command = e.getMessage().getContentRaw().replace("!console ", "");
 					server.getCommandManager().execute(getDiscordCommandSource(), command);
 				} else {
-					e.getChannel().sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "你没有权限使用此命令！" : "You do not have permission to use this command!") + "**").queue();
+					e.getChannel().sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "You do not have permission to use this command!" : "你没有权限使用此命令！") + "**").queue();
 				}
 			} else if (e.getMessage().getContentRaw().startsWith("!reload")) {
 				if (hasPermission(e.getAuthor().getId(), false)) {
@@ -114,30 +114,17 @@ public class DiscordEventListener extends ListenerAdapter {
 								  Main.config.textsZH.removeLineBreakFromDiscord);
 						}
 
-						Main.textChannel.sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "配置文件加载成功！" : "Successfully loaded the configuration file!") + "**").queue();
+						Main.textChannel.sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "Successfully loaded the configuration file!" : "配置文件加载成功！") + "**").queue();
 					} catch (Exception ex) {
 						ex.printStackTrace();
-						Main.textChannel.sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "配置文件加载失败！" : "Failed to load the configuration file!") + "**").queue();
+						Main.textChannel.sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "Failed to load the configuration file!" : "配置文件加载失败！") + "**").queue();
 					}
 				} else {
-					e.getChannel().sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "你没有权限使用此命令！" : "You do not have permission to use this command!") + "**").queue();
+					e.getChannel().sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "You do not have permission to use this command!" : "你没有权限使用此命令！") + "**").queue();
 				}
 			} else if (e.getMessage().getContentRaw().startsWith("!help")) {
 				String help = Main.config.generic.switchLanguageFromChinToEng
 					  ?
-					  "```\n" +
-						    "=============== 帮助 ===============\n" +
-						    "\n" +
-						    "!info: 查询服务器运行状态\n" +
-						    "!scoreboard <type> <id>: 查询该统计信息的玩家排行榜\n" +
-						    "!ban <type> <id/name>: 将一名 Discord 用户或 Minecraft 玩家从黑名单中添加或移除（仅限管理员）\n" +
-						    "!blacklist: 列出黑名单\n" +
-						    "!console <command>：在服务器控制台中执行指令（仅限管理员）\n" +
-						    "!reload：重新加载 MCDiscordChat 配置文件（仅限管理员）\n" +
-						    "!admin <id>：将一名 Discord 用户从 MCDiscordChat 普通管理员名单中添加或移除（仅限超级管理员）\n" +
-						    "!adminlist: 列出管理员名单\n" +
-						    "```\n"
-					  :
 					  "```\n" +
 						    "=============== Help ===============\n" +
 						    "\n" +
@@ -149,13 +136,27 @@ public class DiscordEventListener extends ListenerAdapter {
 						    "!reload：Reload MCDiscordChat configuration file (admins only)\n" +
 						    "!admin <id>：Add or remove a Discord user from the list of MCDiscordChat admins (super admins only)\n" +
 						    "!adminlist: Query admin list\n" +
+						    "```\n"
+					  :
+					  "```\n" +
+						    "=============== 帮助 ===============\n" +
+						    "\n" +
+						    "!info: 查询服务器运行状态\n" +
+						    "!scoreboard <type> <id>: 查询该统计信息的玩家排行榜\n" +
+						    "!ban <type> <id/name>: 将一名 Discord 用户或 Minecraft 玩家从黑名单中添加或移除（仅限管理员）\n" +
+						    "!blacklist: 列出黑名单\n" +
+						    "!console <command>：在服务器控制台中执行指令（仅限管理员）\n" +
+						    "!reload：重新加载 MCDiscordChat 配置文件（仅限管理员）\n" +
+						    "!admin <id>：将一名 Discord 用户从 MCDiscordChat 普通管理员名单中添加或移除（仅限超级管理员）\n" +
+						    "!adminlist: 列出管理员名单\n" +
 						    "```\n";
+
 				e.getChannel().sendMessage(help).queue();
 			} else if (e.getMessage().getContentRaw().startsWith("!blacklist")) {
-				StringBuilder bannedList = new StringBuilder("```\n=============== " + (Main.config.generic.switchLanguageFromChinToEng ? "黑名单" : "Blacklist") + " ===============\n\nDiscord:");
+				StringBuilder bannedList = new StringBuilder("```\n=============== " + (Main.config.generic.switchLanguageFromChinToEng ? "Blacklist" : "黑名单") + " ===============\n\nDiscord:");
 
 				if (Main.config.generic.bannedDiscord.size() == 0) {
-					bannedList.append("\n" + (Main.config.generic.switchLanguageFromChinToEng ? "列表为空！" : "List is empty!"));
+					bannedList.append("\n" + (Main.config.generic.switchLanguageFromChinToEng ? "List is empty!" : "列表为空！"));
 				}
 
 				for (String id : Main.config.generic.bannedDiscord) {
@@ -165,7 +166,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				bannedList.append("\n\nMinecraft:");
 
 				if (Main.config.generic.bannedMinecraft.size() == 0) {
-					bannedList.append("\n" + (Main.config.generic.switchLanguageFromChinToEng ? "列表为空！" : "List is empty!"));
+					bannedList.append("\n" + (Main.config.generic.switchLanguageFromChinToEng ? "List is empty!" : "列表为空！"));
 				}
 
 				for (String name : Main.config.generic.bannedMinecraft) {
@@ -183,26 +184,26 @@ public class DiscordEventListener extends ListenerAdapter {
 
 						if (Main.config.generic.bannedDiscord.contains(command)) {
 							Main.config.generic.bannedDiscord.remove(command);
-							e.getChannel().sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "已将 " + command + " 移出黑名单！" : command + " has been removed from the blacklist!！") + "**").queue();
+							e.getChannel().sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? command + " has been removed from the blacklist!" : "已将 " + command + " 移出黑名单！") + "**").queue();
 						} else {
 							Main.config.generic.bannedDiscord.add(command);
-							e.getChannel().sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "已将 " + command + " 添加至黑名单！" : command + " has been added to the blacklist!！") + "**").queue();
+							e.getChannel().sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? command + " has been added to the blacklist!" : "已将 " + command + " 添加至黑名单！") + "**").queue();
 						}
 					} else if (command.startsWith("minecraft")) {
 						command = command.replace("minecraft ", "");
 
 						if (Main.config.generic.bannedMinecraft.contains(command)) {
 							Main.config.generic.bannedMinecraft.remove(command);
-							e.getChannel().sendMessage(Main.config.generic.switchLanguageFromChinToEng ? "**已将 " + command.replace("_", "\\_") + " 移出黑名单！**" : command.replace("_", "\\_") + " has been removed from the blacklist!！").queue();
+							e.getChannel().sendMessage(Main.config.generic.switchLanguageFromChinToEng ? command.replace("_", "\\_") + " has been removed from the blacklist!" : "**已将 " + command.replace("_", "\\_") + " 移出黑名单！**").queue();
 						} else {
 							Main.config.generic.bannedMinecraft.add(command);
-							e.getChannel().sendMessage(Main.config.generic.switchLanguageFromChinToEng ? "**已将 " + command.replace("_", "\\_") + " 添加至黑名单！**" : command.replace("_", "\\_") + " has been added to the blacklist!！").queue();
+							e.getChannel().sendMessage(Main.config.generic.switchLanguageFromChinToEng ? command.replace("_", "\\_") + " has been added to the blacklist!" : "**已将 " + command.replace("_", "\\_") + " 添加至黑名单！**").queue();
 						}
 					}
 
 					ConfigManager.updateConfig();
 				} else {
-					e.getChannel().sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "你没有权限使用此命令！" : "You do not have permission to use this command!") + "**").queue();
+					e.getChannel().sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "You do not have permission to use this command!" : "你没有权限使用此命令！") + "**").queue();
 				}
 			} else if (e.getMessage().getContentRaw().startsWith("!admin ")) {
 				if (hasPermission(e.getAuthor().getId(), true)) {
@@ -210,31 +211,31 @@ public class DiscordEventListener extends ListenerAdapter {
 
 					if (Main.config.generic.adminsIds.contains(command)) {
 						Main.config.generic.adminsIds.remove(command);
-						e.getChannel().sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "已将 " + command + " 移出 MCDiscordChat 普通管理员名单！" : command + " has been removed from the admin list!！") + "**").queue();
+						e.getChannel().sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? command + " has been removed from the admin list!" : "已将 " + command + " 移出 MCDiscordChat 普通管理员名单！") + "**").queue();
 					} else {
 						Main.config.generic.adminsIds.add(command);
-						e.getChannel().sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "已将 " + command + " 添加至 MCDiscordChat 普通管理员名单！" : command + " has been added to the admin list!！") + "**").queue();
+						e.getChannel().sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? command + " has been added to the admin list!" : "已将 " + command + " 添加至 MCDiscordChat 普通管理员名单！") + "**").queue();
 					}
 
 					ConfigManager.updateConfig();
 				} else {
-					e.getChannel().sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "你没有权限使用此命令！" : "You do not have permission to use this command!") + "**").queue();
+					e.getChannel().sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "You do not have permission to use this command!" : "你没有权限使用此命令！") + "**").queue();
 				}
 			} else if (e.getMessage().getContentRaw().startsWith("!adminlist")) {
-				StringBuilder adminList = new StringBuilder("```\n=============== " + (Main.config.generic.switchLanguageFromChinToEng ? "管理员名单" : "Admin List") + " ===============\n\n" + (Main.config.generic.switchLanguageFromChinToEng ? "超级管理员：" : "Super admins:"));
+				StringBuilder adminList = new StringBuilder("```\n=============== " + (Main.config.generic.switchLanguageFromChinToEng ? "Admin List" : "管理员名单") + " ===============\n\n" + (Main.config.generic.switchLanguageFromChinToEng ? "Super admins:" : "超级管理员："));
 
 				if (Main.config.generic.superAdminsIds.size() == 0) {
-					adminList.append("\n" + (Main.config.generic.switchLanguageFromChinToEng ? "列表为空！" : "List is empty!"));
+					adminList.append("\n" + (Main.config.generic.switchLanguageFromChinToEng ? "List is empty!" : "列表为空！"));
 				}
 
 				for (String id : Main.config.generic.superAdminsIds) {
 					adminList.append("\n").append(id);
 				}
 
-				adminList.append("\n\n" + (Main.config.generic.switchLanguageFromChinToEng ? "普通管理员：" : "Admins:"));
+				adminList.append("\n\n" + (Main.config.generic.switchLanguageFromChinToEng ? "Admins:" : "普通管理员："));
 
 				if (Main.config.generic.adminsIds.size() == 0) {
-					adminList.append("\n" + (Main.config.generic.switchLanguageFromChinToEng ? "列表为空！" : "List is empty!"));
+					adminList.append("\n" + (Main.config.generic.switchLanguageFromChinToEng ? "List is empty!" : "列表为空！"));
 				}
 
 				for (String name : Main.config.generic.adminsIds) {
