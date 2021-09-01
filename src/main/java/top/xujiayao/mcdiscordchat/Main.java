@@ -15,6 +15,7 @@ import okhttp3.Protocol;
 import top.xujiayao.mcdiscordchat.commands.ShrugCommand;
 import top.xujiayao.mcdiscordchat.listeners.DiscordEventListener;
 import top.xujiayao.mcdiscordchat.listeners.MinecraftEventListener;
+import top.xujiayao.mcdiscordchat.objects.Texts;
 import top.xujiayao.mcdiscordchat.utils.ConfigManager;
 
 import java.util.Collections;
@@ -27,6 +28,7 @@ public class Main implements DedicatedServerModInitializer {
 	public static JDA jda;
 	public static TextChannel textChannel;
 	public static Config config;
+	public static Texts texts;
 
 	public static boolean stop = false;
 
@@ -63,11 +65,11 @@ public class Main implements DedicatedServerModInitializer {
 				jda.getPresence().setActivity(Activity.listening(Main.config.generic.botListeningStatus));
 			}
 
-			ServerLifecycleEvents.SERVER_STARTED.register((server) -> textChannel.sendMessage(Main.config.texts.serverStarted).queue());
+			ServerLifecycleEvents.SERVER_STARTED.register((server) -> textChannel.sendMessage(Main.texts.serverStarted()).queue());
 
 			ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
 				stop = true;
-				textChannel.sendMessage(Main.config.texts.serverStopped).queue();
+				textChannel.sendMessage(Main.texts.serverStopped()).queue();
 
 				try {
 					Thread.sleep(250);

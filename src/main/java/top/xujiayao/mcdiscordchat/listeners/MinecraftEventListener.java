@@ -6,11 +6,7 @@ import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.minecraft.text.Text;
 import net.minecraft.util.Pair;
 import top.xujiayao.mcdiscordchat.Main;
-import top.xujiayao.mcdiscordchat.events.PlayerAdvancementCallback;
-import top.xujiayao.mcdiscordchat.events.PlayerDeathCallback;
-import top.xujiayao.mcdiscordchat.events.PlayerJoinCallback;
-import top.xujiayao.mcdiscordchat.events.PlayerLeaveCallback;
-import top.xujiayao.mcdiscordchat.events.ServerChatCallback;
+import top.xujiayao.mcdiscordchat.events.*;
 import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 
@@ -69,13 +65,13 @@ public class MinecraftEventListener {
 				  && advancement.getDisplay().shouldAnnounceToChat()
 				  && playerEntity.getAdvancementTracker().getProgress(advancement).isDone() && !Main.stop) {
 				switch (advancement.getDisplay().getFrame()) {
-					case GOAL -> Main.textChannel.sendMessage(Main.config.texts.advancementGoal
+					case GOAL -> Main.textChannel.sendMessage(Main.texts.advancementGoal()
 						  .replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName()))
 						  .replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
-					case TASK -> Main.textChannel.sendMessage(Main.config.texts.advancementTask
+					case TASK -> Main.textChannel.sendMessage(Main.texts.advancementTask()
 						  .replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName()))
 						  .replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
-					case CHALLENGE -> Main.textChannel.sendMessage(Main.config.texts.advancementChallenge
+					case CHALLENGE -> Main.textChannel.sendMessage(Main.texts.advancementChallenge()
 						  .replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName()))
 						  .replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
 				}
@@ -84,7 +80,7 @@ public class MinecraftEventListener {
 
 		PlayerDeathCallback.EVENT.register((playerEntity, damageSource) -> {
 			if (Main.config.generic.announceDeaths && !Main.stop) {
-				Main.textChannel.sendMessage(Main.config.texts.deathMessage
+				Main.textChannel.sendMessage(Main.texts.deathMessage()
 					  .replace("%deathmessage%", MarkdownSanitizer.escape(damageSource.getDeathMessage(playerEntity).getString()))
 					  .replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName()))).queue();
 			}
@@ -92,14 +88,14 @@ public class MinecraftEventListener {
 
 		PlayerJoinCallback.EVENT.register((connection, playerEntity) -> {
 			if (Main.config.generic.announcePlayers && !Main.stop) {
-				Main.textChannel.sendMessage(Main.config.texts.joinServer.replace("%playername%",
+				Main.textChannel.sendMessage(Main.texts.joinServer().replace("%playername%",
 					  MarkdownSanitizer.escape(playerEntity.getEntityName()))).queue();
 			}
 		});
 
 		PlayerLeaveCallback.EVENT.register(playerEntity -> {
 			if (Main.config.generic.announcePlayers && !Main.stop) {
-				Main.textChannel.sendMessage(Main.config.texts.leftServer.replace("%playername%",
+				Main.textChannel.sendMessage(Main.texts.leftServer().replace("%playername%",
 					  MarkdownSanitizer.escape(playerEntity.getEntityName()))).queue();
 			}
 		});

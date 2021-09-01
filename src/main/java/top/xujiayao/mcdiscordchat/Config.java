@@ -14,13 +14,22 @@ public class Config {
 	public Generic generic = new Generic();
 
 	@Expose
-	public Texts texts = new Texts();
+	public TextsZH textsZH = new TextsZH();
+
+	@Expose
+	public TextsEN textsEN = new TextsEN();
 
 	public static class Generic {
 
 		// Sets if MCDiscordChat Should Modify In-Game Chat Messages
 		@Expose
 		public boolean modifyChatMessages = true;
+
+		// Language MCDiscordChat uses
+		// false: Chinese
+		// true: English
+		@Expose
+		public boolean switchLanguageFromChinToEng = false;
 
 		// Bot Token; see https://discordpy.readthedocs.io/en/latest/discord.html
 		@Expose
@@ -85,7 +94,7 @@ public class Config {
 		public List<String> bannedMinecraft = new ArrayList<>();
 	}
 
-	public static class Texts {
+	public static class TextsZH {
 
 		// Minecraft -> Discord
 		// Server started message
@@ -148,6 +157,100 @@ public class Config {
 		// %advancement% | Advancement name
 		@Expose
 		public String advancementGoal = "**%playername% 达成了目标 [%advancement%]**";
+
+		// Discord -> Minecraft
+		// Colored part of the message
+		// This part of the message will receive the same color as the role in the discord, comes before the colorless part
+		// ---
+		// Available placeholders:
+		// %discordname% | User nickname in the discord server
+		// %message% | The message
+		@Expose
+		public String coloredText = "[Discord] ";
+
+		// Discord -> Minecraft
+		// Colorless (white) part of the message
+		// I think you already know what it is by the other comment
+		// ---
+		// Available placeholders:
+		// %discordname% | Nickname of the user in the discord server
+		// %message% | The message
+		@Expose
+		public String colorlessText = "<%discordname%> %message%";
+
+		// Replaces the § symbol with & in any discord message to avoid formatted messages
+		@Expose
+		public boolean removeVanillaFormattingFromDiscord = false;
+
+		// Removes line break from any discord message to avoid spam
+		@Expose
+		public boolean removeLineBreakFromDiscord = false;
+	}
+
+
+	public static class TextsEN {
+
+		// Minecraft -> Discord
+		// Server started message
+		@Expose
+		public String serverStarted = "**Server started!**";
+
+		// Minecraft -> Discord
+		// Server stopped message
+		@Expose
+		public String serverStopped = "**Server stopped!**";
+
+		// Minecraft -> Discord
+		// Join server
+		// ---
+		// Available placeholders:
+		// %playername% | Player name
+		@Expose
+		public String joinServer = "**%playername% joined the game**";
+
+		// Minecraft -> Discord
+		// Left server
+		// ---
+		// Available placeholders:
+		// %playername% | Player name
+		@Expose
+		public String leftServer = "**%playername% left the game**";
+
+		// Minecraft -> Discord
+		// Death message
+		// ---
+		// Available placeholders:
+		// %playername% | Player name
+		// %deathmessage% | Death message
+		@Expose
+		public String deathMessage = "**%deathmessage%**";
+
+		// Minecraft -> Discord
+		// Advancement type task message
+		// ---
+		// Available placeholders:
+		// %playername% | Player name
+		// %advancement% | Advancement name
+		@Expose
+		public String advancementTask = "**%playername% has made the advancement [%advancement%]**";
+
+		// Minecraft -> Discord
+		// Advancement type challenge message
+		// ---
+		// Available placeholders:
+		// %playername% | Player name
+		// %advancement% | Advancement name
+		@Expose
+		public String advancementChallenge = "**%playername% has completed the challenge [%advancement%]**";
+
+		// Minecraft -> Discord
+		// Advancement type goal message
+		// ---
+		// Available placeholders:
+		// %playername% | Player name
+		// %advancement% | Advancement name
+		@Expose
+		public String advancementGoal = "**%playername% has reached the goal [%advancement%]**";
 
 		// Discord -> Minecraft
 		// Colored part of the message
