@@ -48,7 +48,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				StringBuilder infoString = new StringBuilder("```\n=============== " + (Main.config.generic.switchLanguageFromChinToEng ? "Server Status" : "运行状态") + " ===============\n\n");
 
 				List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
-				infoString.append((Main.config.generic.switchLanguageFromChinToEng ? "Online players" : "在线玩家") + " (").append(onlinePlayers.size()).append(")：");
+				infoString.append((Main.config.generic.switchLanguageFromChinToEng ? "Online players" : "在线玩家") + " (").append(onlinePlayers.size()).append(")" + (Main.config.generic.switchLanguageFromChinToEng ? ":" : "："));
 
 				if (onlinePlayers.isEmpty()) {
 					infoString.append("\n" + (Main.config.generic.switchLanguageFromChinToEng ? "No players online!" : "当前没有在线玩家！"));
@@ -58,7 +58,7 @@ public class DiscordEventListener extends ListenerAdapter {
 					}
 				}
 
-				infoString.append("\n\n" + (Main.config.generic.switchLanguageFromChinToEng ? "Server" : "服务器") + " TPS：\n");
+				infoString.append("\n\n" + (Main.config.generic.switchLanguageFromChinToEng ? "Server TPS:\n" : "服务器 TPS：\n"));
 				double serverTickTime = MathHelper.average(server.lastTickLengths) * 1.0E-6D;
 				infoString.append(Math.min(1000.0 / serverTickTime, 20));
 
@@ -132,9 +132,9 @@ public class DiscordEventListener extends ListenerAdapter {
 						    "!scoreboard <type> <id>: Query the player scoreboard for this statistic\n" +
 						    "!ban <type> <id/name>: Add or remove a Discord user or Minecraft player from the blacklist (admins only)\n" +
 						    "!blacklist: Query blacklist\n" +
-						    "!console <command>：Executes command in the server console (admins only)\n" +
-						    "!reload：Reload MCDiscordChat configuration file (admins only)\n" +
-						    "!admin <id>：Add or remove a Discord user from the list of MCDiscordChat admins (super admins only)\n" +
+						    "!console <command>: Executes command in the server console (admins only)\n" +
+						    "!reload: Reload MCDiscordChat configuration file (admins only)\n" +
+						    "!admin <id>: Add or remove a Discord user from the list of MCDiscordChat admins (super admins only)\n" +
 						    "!adminlist: Query admin list\n" +
 						    "```\n"
 					  :
@@ -145,9 +145,9 @@ public class DiscordEventListener extends ListenerAdapter {
 						    "!scoreboard <type> <id>: 查询该统计信息的玩家排行榜\n" +
 						    "!ban <type> <id/name>: 将一名 Discord 用户或 Minecraft 玩家从黑名单中添加或移除（仅限管理员）\n" +
 						    "!blacklist: 列出黑名单\n" +
-						    "!console <command>：在服务器控制台中执行指令（仅限管理员）\n" +
-						    "!reload：重新加载 MCDiscordChat 配置文件（仅限管理员）\n" +
-						    "!admin <id>：将一名 Discord 用户从 MCDiscordChat 普通管理员名单中添加或移除（仅限超级管理员）\n" +
+						    "!console <command>: 在服务器控制台中执行指令（仅限管理员）\n" +
+						    "!reload: 重新加载 MCDiscordChat 配置文件（仅限管理员）\n" +
+						    "!admin <id>: 将一名 Discord 用户从 MCDiscordChat 普通管理员名单中添加或移除（仅限超级管理员）\n" +
 						    "!adminlist: 列出管理员名单\n" +
 						    "```\n";
 
