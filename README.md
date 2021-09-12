@@ -3,7 +3,7 @@
 ![License](https://img.shields.io/github/license/xujiayao/MCDiscordChat)
 ![Release](https://img.shields.io/github/v/release/xujiayao/MCDiscordChat)
 
-服务器跨服聊天工具 - Java
+MCDiscordChat - Java
 
 A Discord <-> Minecraft chat bridge.
 
