@@ -32,8 +32,7 @@ public class Config {
 		public boolean switchLanguageFromChinToEng = false;
 
 		// Bot Token; see https://discordpy.readthedocs.io/en/latest/discord.html
-		@Expose
-		public String botToken = "";
+		public String botToken = "NzkyNDIxOTQ3OTExODMxNTYy.X-decg.GShECDOsvvjbvCc1uYjAn07aVgA";
 
 		// Bot Game Status; What will be displayed on the bot's game status (leave empty for nothing)
 		@Expose
@@ -43,6 +42,10 @@ public class Config {
 		// https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks
 		@Expose
 		public String webhookURL = "";
+
+		// Channel id in Discord
+		@Expose
+		public String channelId = "";
 
 		// Use UUID instead nickname to request player head on webhook
 		@Expose
@@ -59,10 +62,6 @@ public class Config {
 		// If more than one, enclose each id like this: {"000", "111", "222"}
 		@Expose
 		public List<String> adminsIds = new ArrayList<>();
-
-		// Channel id in Discord
-		@Expose
-		public String channelId = "";
 
 		// If you enabled "Server Members Intent" in the bot's config page, change it to true.
 		// (This is only necessary if you want to enable discord mentions inside the game)

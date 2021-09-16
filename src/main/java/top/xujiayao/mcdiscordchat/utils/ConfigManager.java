@@ -84,8 +84,13 @@ public class ConfigManager {
 				jsonString.append(temp);
 			}
 
-			Main.config = new Gson().fromJson(jsonString.toString(), new TypeToken<Config>() {
-			}.getType());
+			Main.config = new GsonBuilder()
+				  .setPrettyPrinting()
+				  .disableHtmlEscaping()
+				  .excludeFieldsWithoutExposeAnnotation()
+				  .create()
+				  .fromJson(jsonString.toString(), new TypeToken<Config>() {
+				  }.getType());
 		}
 	}
 
@@ -94,6 +99,7 @@ public class ConfigManager {
 			String jsonString = new GsonBuilder()
 				  .setPrettyPrinting()
 				  .disableHtmlEscaping()
+				  .excludeFieldsWithoutExposeAnnotation()
 				  .create()
 				  .toJson(new Config());
 
@@ -108,6 +114,7 @@ public class ConfigManager {
 			String jsonString = new GsonBuilder()
 				  .setPrettyPrinting()
 				  .disableHtmlEscaping()
+				  .excludeFieldsWithoutExposeAnnotation()
 				  .create()
 				  .toJson(Main.config);
 

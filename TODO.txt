@@ -10,3 +10,9 @@ smp里显示cmp里的信息，他不会说来自cmp，而是直接写来自disco
 https://media.discordapp.net/attachments/792407823295184906/877506119675813918/unknown.png
 
 添加检查更新模块
+
+做bot invite link
+
+https://discord.com/api/oauth2/authorize?client_id=792421947911831562&permissions=139586956352&scope=bot
+
+远程开服
