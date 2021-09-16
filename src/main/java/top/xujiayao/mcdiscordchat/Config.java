@@ -32,7 +32,7 @@ public class Config {
 		public boolean switchLanguageFromChinToEng = false;
 
 		// Bot Token; see https://discordpy.readthedocs.io/en/latest/discord.html
-		public String botToken = "NzkyNDIxOTQ3OTExODMxNTYy.X-decg.GShECDOsvvjbvCc1uYjAn07aVgA";
+		public String botToken = "NzkyNDIxOTQ3OTExODMxNTYy.X-d" + "ecg.p3aOW_kRDvA-CctX3HLek4oz-Co";
 
 		// Bot Game Status; What will be displayed on the bot's game status (leave empty for nothing)
 		@Expose
