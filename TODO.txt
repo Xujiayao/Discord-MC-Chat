@@ -11,8 +11,6 @@ https://media.discordapp.net/attachments/792407823295184906/877506119675813918/u
 
 添加检查更新模块
 
-做bot invite link
-
-https://discord.com/api/oauth2/authorize?client_id=792421947911831562&permissions=139586956352&scope=bot
+https://discord.com/oauth2/authorize?client_id=792421947911831562&permissions=248832&scope=bot
 
 远程开服
