@@ -31,8 +31,18 @@ public class Config {
 		@Expose
 		public boolean switchLanguageFromChinToEng = false;
 
+		// Set if using more than two MCDiscordChat in one Discord server
+		@Expose
+		public boolean multiServer = false;
+
+		// Server display name
+		// e.g. SMP
+		@Expose
+		public String serverDisplayName = "";
+
 		// Bot Token; see https://discordpy.readthedocs.io/en/latest/discord.html
-		public String botToken = "NzkyNDIxOTQ3OTExODMxNTYy.X-d" + "ecg.p3aOW_kRDvA-CctX3HLek4oz-Co";
+		@Expose
+		public String botToken = "";
 
 		// Bot Game Status; What will be displayed on the bot's game status (leave empty for nothing)
 		@Expose
@@ -162,20 +172,21 @@ public class Config {
 		// This part of the message will receive the same color as the role in the discord, comes before the colorless part
 		// ---
 		// Available placeholders:
-		// %discordname% | User nickname in the discord server
+		// %servername% | 'Discord' or 'server name when using multi-server'
+		// %name% | Nickname of the user in the discord server (becomes player name when using multi-server)
 		// %message% | The message
 		@Expose
-		public String coloredText = "[Discord] ";
+		public String coloredText = "[%servername%] ";
 
 		// Discord -> Minecraft
 		// Colorless (white) part of the message
 		// I think you already know what it is by the other comment
 		// ---
 		// Available placeholders:
-		// %discordname% | Nickname of the user in the discord server
+		// %name% | Nickname of the user in the discord server (becomes player name when using multi-server)
 		// %message% | The message
 		@Expose
-		public String colorlessText = "<%discordname%> %message%";
+		public String colorlessText = "<%name%> %message%";
 
 		// Replaces the § symbol with & in any discord message to avoid formatted messages
 		@Expose
@@ -256,20 +267,21 @@ public class Config {
 		// This part of the message will receive the same color as the role in the discord, comes before the colorless part
 		// ---
 		// Available placeholders:
-		// %discordname% | User nickname in the discord server
+		// %servername% | 'Discord' or 'server name when using multi-server'
+		// %name% | Nickname of the user in the discord server (becomes player name when using multi-server)
 		// %message% | The message
 		@Expose
-		public String coloredText = "[Discord] ";
+		public String coloredText = "[%servername%] ";
 
 		// Discord -> Minecraft
 		// Colorless (white) part of the message
 		// I think you already know what it is by the other comment
 		// ---
 		// Available placeholders:
-		// %discordname% | Nickname of the user in the discord server
+		// %name% | Nickname of the user in the discord server (becomes player name when using multi-server)
 		// %message% | The message
 		@Expose
-		public String colorlessText = "<%discordname%> %message%";
+		public String colorlessText = "<%name%> %message%";
 
 		// Replaces the § symbol with & in any discord message to avoid formatted messages
 		@Expose

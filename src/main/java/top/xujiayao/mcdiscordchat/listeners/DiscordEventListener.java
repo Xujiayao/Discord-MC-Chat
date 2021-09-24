@@ -34,9 +34,18 @@ public class DiscordEventListener extends ListenerAdapter {
 		MinecraftServer server = getServer();
 
 		if (e.getAuthor() != e.getJDA().getSelfUser()
-			  && !e.getAuthor().isBot()
 			  && e.getChannel().getId().equals(Main.config.generic.channelId)
 			  && server != null) {
+			if (Main.config.generic.multiServer && e.isWebhookMessage()) {
+				if (Main.config.generic.serverDisplayName.equals(e.getAuthor().getName().substring(1, e.getAuthor().getName().indexOf("] ")))) {
+					return;
+				}
+			} else {
+				if (e.getAuthor().isBot()) {
+					return;
+				}
+			}
+
 			if (Main.config.generic.bannedDiscord.contains(e.getAuthor().getId())
 				  && !e.getAuthor().getId().equals("769470378073653269")
 				  && !Main.config.generic.superAdminsIds.contains(e.getAuthor().getId())
@@ -246,24 +255,49 @@ public class DiscordEventListener extends ListenerAdapter {
 				e.getChannel().sendMessage(adminList.toString()).queue();
 			}
 
-			LiteralText coloredText = new LiteralText(Main.texts.coloredText()
-				  .replace("%discordname%", Objects.requireNonNull(e.getMember()).getEffectiveName())
-				  .replace("%message%", e.getMessage().getContentDisplay()
-					    .replace("§", Main.texts.removeVanillaFormattingFromDiscord() ? "&" : "§")
-					    .replace("\n", Main.texts.removeLineBreakFromDiscord() ? " " : "\n")
-					    + ((!e.getMessage().getAttachments().isEmpty()) ? " <att>" : "")
-					    + ((!e.getMessage().getEmbeds().isEmpty()) ? " <embed>" : "")));
-			coloredText.setStyle(coloredText.getStyle().withColor(TextColor.fromFormatting(Formatting.BLUE)));
-			coloredText.setStyle(coloredText.getStyle().withBold(true));
+			LiteralText coloredText;
+			LiteralText colorlessText;
 
-			LiteralText colorlessText = new LiteralText(Main.texts.colorlessText()
-				  .replace("%discordname%", Objects.requireNonNull(e.getMember()).getEffectiveName())
-				  .replace("%message%", MarkdownParser.parseMarkdown(e.getMessage().getContentDisplay()
-					    .replace("§", Main.texts.removeVanillaFormattingFromDiscord() ? "&" : "§")
-					    .replace("\n", Main.texts.removeLineBreakFromDiscord() ? " " : "\n")
-					    + ((!e.getMessage().getAttachments().isEmpty()) ? " <att>" : "")
-					    + ((!e.getMessage().getEmbeds().isEmpty()) ? " <embed>" : ""))));
-			colorlessText.setStyle(colorlessText.getStyle().withColor(TextColor.fromFormatting(Formatting.GRAY)));
+			if (e.isWebhookMessage()) {
+				coloredText = new LiteralText(Main.texts.coloredText()
+					  .replace("%servername%", e.getAuthor().getName().substring(1, e.getAuthor().getName().indexOf("] ")))
+					  .replace("%message%", e.getMessage().getContentDisplay()
+						    .replace("§", Main.texts.removeVanillaFormattingFromDiscord() ? "&" : "§")
+						    .replace("\n", Main.texts.removeLineBreakFromDiscord() ? " " : "\n")
+						    + ((!e.getMessage().getAttachments().isEmpty()) ? " <att>" : "")
+						    + ((!e.getMessage().getEmbeds().isEmpty()) ? " <embed>" : "")));
+				coloredText.setStyle(coloredText.getStyle().withColor(TextColor.fromFormatting(Formatting.BLUE)));
+				coloredText.setStyle(coloredText.getStyle().withBold(true));
+
+				colorlessText = new LiteralText(Main.texts.colorlessText()
+					  .replace("%name%", e.getAuthor().getName().substring(e.getAuthor().getName().indexOf("] ") + 2))
+						    .replace("%message%", MarkdownParser.parseMarkdown(e.getMessage().getContentDisplay()
+								.replace("§", Main.texts.removeVanillaFormattingFromDiscord() ? "&" : "§")
+								.replace("\n", Main.texts.removeLineBreakFromDiscord() ? " " : "\n")
+								+ ((!e.getMessage().getAttachments().isEmpty()) ? " <att>" : "")
+								+ ((!e.getMessage().getEmbeds().isEmpty()) ? " <embed>" : ""))));
+				colorlessText.setStyle(colorlessText.getStyle().withColor(TextColor.fromFormatting(Formatting.GRAY)));
+			} else {
+				coloredText = new LiteralText(Main.texts.coloredText()
+					  .replace("%servername%", "Discord")
+					  .replace("%name%", Objects.requireNonNull(e.getMember()).getEffectiveName())
+					  .replace("%message%", e.getMessage().getContentDisplay()
+						    .replace("§", Main.texts.removeVanillaFormattingFromDiscord() ? "&" : "§")
+						    .replace("\n", Main.texts.removeLineBreakFromDiscord() ? " " : "\n")
+						    + ((!e.getMessage().getAttachments().isEmpty()) ? " <att>" : "")
+						    + ((!e.getMessage().getEmbeds().isEmpty()) ? " <embed>" : "")));
+				coloredText.setStyle(coloredText.getStyle().withColor(TextColor.fromFormatting(Formatting.BLUE)));
+				coloredText.setStyle(coloredText.getStyle().withBold(true));
+
+				colorlessText = new LiteralText(Main.texts.colorlessText()
+					  .replace("%name%", Objects.requireNonNull(e.getMember()).getEffectiveName())
+					  .replace("%message%", MarkdownParser.parseMarkdown(e.getMessage().getContentDisplay()
+						    .replace("§", Main.texts.removeVanillaFormattingFromDiscord() ? "&" : "§")
+						    .replace("\n", Main.texts.removeLineBreakFromDiscord() ? " " : "\n")
+						    + ((!e.getMessage().getAttachments().isEmpty()) ? " <att>" : "")
+						    + ((!e.getMessage().getEmbeds().isEmpty()) ? " <embed>" : ""))));
+				colorlessText.setStyle(colorlessText.getStyle().withColor(TextColor.fromFormatting(Formatting.GRAY)));
+			}
 
 			server.getPlayerManager().getPlayerList().forEach(
 				  serverPlayerEntity -> serverPlayerEntity.sendMessage(new LiteralText("").append(coloredText).append(colorlessText), false));

@@ -2,15 +2,6 @@
 
 添加关于功能
 
-smp里显示cmp里的信息，他不会说来自cmp，而是直接写来自discord。
-蛤，那要怎么搞，discord显示的用户名前面加前缀还是咋样，不然mod怎么识别。
-正版玩家能不能登录两个不同的服务器？同时登录，开两个客户端那种。
-你可以写多一个子mod。
-因为这样他会判断这个信息来自discord，mc里还是有discord前缀
-https://media.discordapp.net/attachments/792407823295184906/877506119675813918/unknown.png
-
 添加检查更新模块
-
-https://discord.com/oauth2/authorize?client_id=792421947911831562&permissions=248832&scope=bot
 
 远程开服
