@@ -14,6 +14,9 @@ public class Config {
 	public Generic generic = new Generic();
 
 	@Expose
+	public MultiServer multiServer = new MultiServer();
+
+	@Expose
 	public TextsZH textsZH = new TextsZH();
 
 	@Expose
@@ -32,13 +35,10 @@ public class Config {
 		public boolean switchLanguageFromChinToEng = false;
 
 		// Set if using more than two MCDiscordChat in one Discord server
+		// Name of the bot must be in the following format:
+		// [%serverDisplayName%] %botName%
 		@Expose
 		public boolean multiServer = false;
-
-		// Server display name
-		// e.g. SMP
-		@Expose
-		public String serverDisplayName = "";
 
 		// Bot Token; see https://discordpy.readthedocs.io/en/latest/discord.html
 		@Expose
@@ -101,6 +101,18 @@ public class Config {
 		// Banned Minecraft players' name
 		@Expose
 		public List<String> bannedMinecraft = new ArrayList<>();
+	}
+
+	public static class MultiServer {
+		// Server display name
+		// e.g. 'SMP'
+		@Expose
+		public String serverDisplayName = "";
+
+		// MCDiscordChat Bot name
+		// e.g. if name of the bot is '[SMP] MCDC Bot', set it to 'MCDC Bot'
+		@Expose
+		public String botName = "MCDC Bot";
 	}
 
 	public static class TextsZH {

@@ -26,7 +26,7 @@ public class MinecraftEventListener {
 				}
 
 				JSONObject body = new JSONObject();
-				body.put("username", (Main.config.generic.multiServer ? "[" + Main.config.generic.serverDisplayName + "] " + playerEntity.getEntityName() : playerEntity.getEntityName()));
+				body.put("username", (Main.config.generic.multiServer ? "[" + Main.config.multiServer.serverDisplayName + "] " + playerEntity.getEntityName() : playerEntity.getEntityName()));
 				body.put("avatar_url", "https://mc-heads.net/avatar/" + (Main.config.generic.useUUIDInsteadNickname ? playerEntity.getUuid() : playerEntity.getEntityName()));
 
 				JSONObject allowedMentions = new JSONObject();
