@@ -79,7 +79,7 @@ public class DiscordEventListener extends ListenerAdapter {
 					infoString.append("\n" + (Main.config.generic.switchLanguageFromChinToEng ? "No players online!" : "当前没有在线玩家！"));
 				} else {
 					for (ServerPlayerEntity player : onlinePlayers) {
-						infoString.append("\n").append(player.getEntityName());
+						infoString.append("\n[").append(player.pingMilliseconds).append("ms] ").append(player.getEntityName());
 					}
 				}
 
