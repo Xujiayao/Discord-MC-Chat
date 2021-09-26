@@ -6,7 +6,11 @@ import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.minecraft.text.Text;
 import net.minecraft.util.Pair;
 import top.xujiayao.mcdiscordchat.Main;
-import top.xujiayao.mcdiscordchat.events.*;
+import top.xujiayao.mcdiscordchat.events.PlayerAdvancementCallback;
+import top.xujiayao.mcdiscordchat.events.PlayerDeathCallback;
+import top.xujiayao.mcdiscordchat.events.PlayerJoinCallback;
+import top.xujiayao.mcdiscordchat.events.PlayerLeaveCallback;
+import top.xujiayao.mcdiscordchat.events.ServerChatCallback;
 import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 

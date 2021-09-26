@@ -7,7 +7,12 @@ import top.xujiayao.mcdiscordchat.Config;
 import top.xujiayao.mcdiscordchat.Main;
 import top.xujiayao.mcdiscordchat.objects.Texts;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 
 /**
  * @author Xujiayao
@@ -74,7 +79,7 @@ public class ConfigManager {
 		}
 	}
 
-	public static void loadConfig() throws Exception {
+	public static void loadConfig() throws IOException {
 		try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
 			String temp;
 			StringBuilder jsonString = new StringBuilder();

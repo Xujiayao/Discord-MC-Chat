@@ -15,6 +15,7 @@ repositories {
         name = "Fabric"
         url = "https://maven.fabricmc.net/"
     }
+    mavenCentral()
 }
 
 dependencies {
@@ -31,20 +32,19 @@ dependencies {
 
     include(modImplementation("com.konghq:unirest-java:+"))
 
-    include "net.sf.trove4j:trove4j:+"
-    include "org.apache.commons:commons-collections4:+"
-    include "org.apache.httpcomponents:httpclient:+"
-    include "org.jetbrains:annotations:+"
-    include "com.neovisionaries:nv-websocket-client:+"
-    include "com.fasterxml.jackson.core:jackson-annotations:+"
-    include "com.fasterxml.jackson.core:jackson-core:+"
-    include 'com.google.code.gson:gson:+'
-    include "com.neovisionaries:nv-websocket-client:+"
-
-    // Exception when the newest version is used
-    include "com.squareup.okhttp3:okhttp:3.13.0"
-    include "com.squareup.okio:okio:1.17.2"
-    include "com.fasterxml.jackson.core:jackson-databind:2.10.1"
+    include 'net.sf.trove4j:trove4j:3.0.3'
+    include 'org.apache.commons:commons-collections4:4.4'
+    include 'org.apache.httpcomponents:httpclient:4.5.13'
+    include 'org.jetbrains:annotations:22.0.0'
+    include 'org.jetbrains.kotlin:kotlin-stdlib:1.5.21'
+    include 'com.neovisionaries:nv-websocket-client:2.14'
+    include 'com.fasterxml.jackson.core:jackson-annotations:2.12.5'
+    include 'com.fasterxml.jackson.core:jackson-core:2.12.5'
+    include 'com.fasterxml.jackson.core:jackson-databind:2.12.5'
+    include 'com.google.code.gson:gson:2.8.8'
+    include 'com.neovisionaries:nv-websocket-client:2.14'
+    include 'com.squareup.okhttp3:okhttp:4.9.1'
+    include 'com.squareup.okio:okio:2.10.0'
 }
 
 processResources {
