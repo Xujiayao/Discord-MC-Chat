@@ -100,7 +100,13 @@ public class Scoreboard {
 			output.append("\n```");
 		} catch (Exception e) {
 			e.printStackTrace();
-			Main.textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
+
+			if (ExceptionUtils.getStackTrace(e).length() > 1900) {
+				Main.textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e).substring(0, 1800) + "\n```").queue();
+				Main.textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e).substring(1800) + "\n```").queue();
+			} else {
+				Main.textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
+			}
 		}
 
 		if (output == null) {

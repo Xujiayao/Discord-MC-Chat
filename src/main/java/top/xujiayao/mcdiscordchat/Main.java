@@ -76,7 +76,7 @@ public class Main implements DedicatedServerModInitializer {
 				textChannel.sendMessage(Main.texts.serverStarted()).queue();
 
 				try {
-					Version version = new Gson().fromJson(Unirest.get("https://cdn.jsdelivr.net/gh/Xujiayao/MCDiscordChat@master/update/version.json").toString(), Version.class);
+					Version version = new Gson().fromJson(Unirest.get("https://cdn.jsdelivr.net/gh/Xujiayao/MCDiscordChat@master/update/version.json").asString().getBody(), Version.class);
 					ModJson modJson = new Gson().fromJson(IOUtils.toString(new URI("jar:file:" + Main.class.getProtectionDomain().getCodeSource().getLocation().getPath() + "!/fabric.mod.json"), StandardCharsets.UTF_8), ModJson.class);
 
 					if (!version.version().equals(modJson.version)) {
