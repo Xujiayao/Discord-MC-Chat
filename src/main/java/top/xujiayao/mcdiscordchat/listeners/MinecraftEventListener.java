@@ -5,6 +5,7 @@ import kong.unirest.json.JSONObject;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.minecraft.text.Text;
 import net.minecraft.util.Pair;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import top.xujiayao.mcdiscordchat.Main;
 import top.xujiayao.mcdiscordchat.events.PlayerAdvancementCallback;
 import top.xujiayao.mcdiscordchat.events.PlayerDeathCallback;
@@ -43,6 +44,7 @@ public class MinecraftEventListener {
 					Unirest.post(Main.config.generic.webhookURL).header("Content-Type", "application/json").body(body).asJsonAsync();
 				} catch (Exception e) {
 					e.printStackTrace();
+					Main.textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
 				}
 
 				if (Main.config.generic.modifyChatMessages) {

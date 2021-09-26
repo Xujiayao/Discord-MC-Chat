@@ -13,6 +13,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jetbrains.annotations.NotNull;
 import top.xujiayao.mcdiscordchat.Main;
 import top.xujiayao.mcdiscordchat.objects.Texts;
@@ -142,6 +143,7 @@ public class DiscordEventListener extends ListenerAdapter {
 						Main.textChannel.sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "Successfully loaded the configuration file!" : "配置文件加载成功！") + "**").queue();
 					} catch (Exception ex) {
 						ex.printStackTrace();
+						Main.textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(ex) + "\n```").queue();
 						Main.textChannel.sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "Failed to load the configuration file!" : "配置文件加载失败！") + "**").queue();
 					}
 				} else {

@@ -3,6 +3,7 @@ package top.xujiayao.mcdiscordchat.utils;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import net.fabricmc.loader.api.FabricLoader;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import top.xujiayao.mcdiscordchat.Main;
 import top.xujiayao.mcdiscordchat.objects.Player;
 import top.xujiayao.mcdiscordchat.objects.Stats;
@@ -99,6 +100,7 @@ public class Scoreboard {
 			output.append("\n```");
 		} catch (Exception e) {
 			e.printStackTrace();
+			Main.textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
 		}
 
 		if (output == null) {
