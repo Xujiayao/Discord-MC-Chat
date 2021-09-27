@@ -221,10 +221,10 @@ public class DiscordEventListener extends ListenerAdapter {
 
 						if (Main.config.generic.bannedMinecraft.contains(command)) {
 							Main.config.generic.bannedMinecraft.remove(command);
-							e.getChannel().sendMessage(Main.config.generic.switchLanguageFromChinToEng ? command.replace("_", "\\_") + " has been removed from the blacklist!" : "**已将 " + command.replace("_", "\\_") + " 移出黑名单！**").queue();
+							e.getChannel().sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? command.replace("_", "\\_") + " has been removed from the blacklist!" : "**已将 " + command.replace("_", "\\_") + " 移出黑名单！**") + "**").queue();
 						} else {
 							Main.config.generic.bannedMinecraft.add(command);
-							e.getChannel().sendMessage(Main.config.generic.switchLanguageFromChinToEng ? command.replace("_", "\\_") + " has been added to the blacklist!" : "**已将 " + command.replace("_", "\\_") + " 添加至黑名单！**").queue();
+							e.getChannel().sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? command.replace("_", "\\_") + " has been added to the blacklist!" : "**已将 " + command.replace("_", "\\_") + " 添加至黑名单！**") + "**").queue();
 						}
 					}
 
