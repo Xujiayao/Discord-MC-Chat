@@ -1,5 +1,6 @@
 package top.xujiayao.mcdiscordchat.listeners;
 
+import com.vdurmont.emoji.EmojiParser;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.loader.api.FabricLoader;
@@ -279,7 +280,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			if (e.isWebhookMessage() || e.getAuthor().isBot()) {
 				coloredText = new LiteralText(Main.texts.coloredText()
 					  .replace("%servername%", e.getAuthor().getName().substring(1, e.getAuthor().getName().indexOf("] ")))
-					  .replace("%message%", e.getMessage().getContentDisplay()
+					  .replace("%message%", EmojiParser.parseToAliases(e.getMessage().getContentDisplay())
 						    .replace("§", Main.texts.removeVanillaFormattingFromDiscord() ? "&" : "§")
 						    .replace("\n", Main.texts.removeLineBreakFromDiscord() ? " " : "\n")
 						    + ((!e.getMessage().getAttachments().isEmpty()) ? " <att>" : "")
@@ -289,7 +290,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
 				colorlessText = new LiteralText(Main.texts.colorlessText()
 					  .replace("%name%", e.getAuthor().getName().substring(e.getAuthor().getName().indexOf("] ") + 2))
-					  .replace("%message%", MarkdownParser.parseMarkdown(e.getMessage().getContentDisplay()
+					  .replace("%message%", MarkdownParser.parseMarkdown(EmojiParser.parseToAliases(e.getMessage().getContentDisplay())
 						    .replace("§", Main.texts.removeVanillaFormattingFromDiscord() ? "&" : "§")
 						    .replace("\n", Main.texts.removeLineBreakFromDiscord() ? " " : "\n")
 						    + ((!e.getMessage().getAttachments().isEmpty()) ? " <att>" : "")
@@ -299,7 +300,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				coloredText = new LiteralText(Main.texts.coloredText()
 					  .replace("%servername%", "Discord")
 					  .replace("%name%", Objects.requireNonNull(e.getMember()).getEffectiveName())
-					  .replace("%message%", e.getMessage().getContentDisplay()
+					  .replace("%message%", EmojiParser.parseToAliases(e.getMessage().getContentDisplay())
 						    .replace("§", Main.texts.removeVanillaFormattingFromDiscord() ? "&" : "§")
 						    .replace("\n", Main.texts.removeLineBreakFromDiscord() ? " " : "\n")
 						    + ((!e.getMessage().getAttachments().isEmpty()) ? " <att>" : "")
@@ -309,7 +310,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
 				colorlessText = new LiteralText(Main.texts.colorlessText()
 					  .replace("%name%", Objects.requireNonNull(e.getMember()).getEffectiveName())
-					  .replace("%message%", MarkdownParser.parseMarkdown(e.getMessage().getContentDisplay()
+					  .replace("%message%", MarkdownParser.parseMarkdown(EmojiParser.parseToAliases(e.getMessage().getContentDisplay())
 						    .replace("§", Main.texts.removeVanillaFormattingFromDiscord() ? "&" : "§")
 						    .replace("\n", Main.texts.removeLineBreakFromDiscord() ? " " : "\n")
 						    + ((!e.getMessage().getAttachments().isEmpty()) ? " <att>" : "")
