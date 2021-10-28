@@ -2,9 +2,11 @@ package top.xujiayao.mcdiscordchat.listeners;
 
 import kong.unirest.Unirest;
 import kong.unirest.json.JSONObject;
+import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.minecraft.text.Text;
 import net.minecraft.util.Pair;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import top.xujiayao.mcdiscordchat.Main;
 import top.xujiayao.mcdiscordchat.events.PlayerAdvancementCallback;
@@ -15,6 +17,7 @@ import top.xujiayao.mcdiscordchat.events.ServerChatCallback;
 import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -24,6 +27,21 @@ public class MinecraftEventListener {
 	public void init() {
 		ServerChatCallback.EVENT.register((playerEntity, rawMessage, message) -> {
 			if (!Main.stop) {
+				try {
+					if (StringUtils.countMatches(rawMessage, ":") >= 2) {
+						String[] emoteNames = StringUtils.substringsBetween(rawMessage, ":", ":");
+						for (String emoteName : emoteNames) {
+							List<Emote> emotes = Main.jda.getEmotesByName(emoteName, true);
+							if (!emotes.isEmpty()) {
+								rawMessage = StringUtils.replaceFirst(rawMessage, ":" + emoteName + ":", "<:" + emoteName + ":" + emotes.get(0).getId() + ">");
+							}
+						}
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+					Main.textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
+				}
+
 				Pair<String, String> convertedPair = Utils.convertMentionsFromNames(rawMessage);
 
 				if (Main.config.generic.bannedMinecraft.contains(playerEntity.getEntityName())) {
