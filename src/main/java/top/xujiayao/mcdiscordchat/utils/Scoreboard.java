@@ -94,7 +94,7 @@ public class Scoreboard {
 			}
 
 			if (length == 0) {
-				output.append("\n" + (Main.config.generic.switchLanguageFromChinToEng ? "No result" : "无结果"));
+				output.append("\n").append(Main.config.generic.switchLanguageFromChinToEng ? "No result" : "无结果");
 			}
 
 			output.append("\n```");
@@ -110,8 +110,7 @@ public class Scoreboard {
 		}
 
 		if (output == null) {
-			output = new StringBuilder("```\n=============== " + (Main.config.generic.switchLanguageFromChinToEng ? "Scoreboard" : "排行榜") + " ===============\n")
-				  .append("\n" + (Main.config.generic.switchLanguageFromChinToEng ? "No result" : "无结果"))
+			output = new StringBuilder("```\n=============== " + (Main.config.generic.switchLanguageFromChinToEng ? "Scoreboard" : "排行榜") + " ===============\n").append("\n").append(Main.config.generic.switchLanguageFromChinToEng ? "No result" : "无结果")
 				  .append("\n```");
 		}
 

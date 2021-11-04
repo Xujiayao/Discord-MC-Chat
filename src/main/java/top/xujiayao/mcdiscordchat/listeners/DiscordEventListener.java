@@ -1,6 +1,8 @@
 package top.xujiayao.mcdiscordchat.listeners;
 
 import com.vdurmont.emoji.EmojiParser;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.loader.api.FabricLoader;
@@ -23,6 +25,7 @@ import top.xujiayao.mcdiscordchat.utils.DiscordCommandOutput;
 import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 import top.xujiayao.mcdiscordchat.utils.Scoreboard;
 
+import java.awt.Color;
 import java.util.List;
 import java.util.Objects;
 
@@ -75,17 +78,17 @@ public class DiscordEventListener extends ListenerAdapter {
 				StringBuilder infoString = new StringBuilder("```\n=============== " + (Main.config.generic.switchLanguageFromChinToEng ? "Server Status" : "运行状态") + " ===============\n\n");
 
 				List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
-				infoString.append((Main.config.generic.switchLanguageFromChinToEng ? "Online players" : "在线玩家") + " (").append(onlinePlayers.size()).append(")" + (Main.config.generic.switchLanguageFromChinToEng ? ":" : "："));
+				infoString.append(Main.config.generic.switchLanguageFromChinToEng ? "Online players" : "在线玩家").append(" (").append(onlinePlayers.size()).append(")").append(Main.config.generic.switchLanguageFromChinToEng ? ":" : "：");
 
 				if (onlinePlayers.isEmpty()) {
-					infoString.append("\n" + (Main.config.generic.switchLanguageFromChinToEng ? "No players online!" : "当前没有在线玩家！"));
+					infoString.append("\n").append(Main.config.generic.switchLanguageFromChinToEng ? "No players online!" : "当前没有在线玩家！");
 				} else {
 					for (ServerPlayerEntity player : onlinePlayers) {
 						infoString.append("\n[").append(player.pingMilliseconds).append("ms] ").append(player.getEntityName());
 					}
 				}
 
-				infoString.append("\n\n" + (Main.config.generic.switchLanguageFromChinToEng ? "Server TPS:\n" : "服务器 TPS：\n"));
+				infoString.append("\n\n").append(Main.config.generic.switchLanguageFromChinToEng ? "Server TPS:\n" : "服务器 TPS：\n");
 				double serverTickTime = MathHelper.average(server.lastTickLengths) * 1.0E-6D;
 				infoString.append(Math.min(1000.0 / serverTickTime, 20));
 
@@ -184,7 +187,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				StringBuilder bannedList = new StringBuilder("```\n=============== " + (Main.config.generic.switchLanguageFromChinToEng ? "Blacklist" : "黑名单") + " ===============\n\nDiscord:");
 
 				if (Main.config.generic.bannedDiscord.size() == 0) {
-					bannedList.append("\n" + (Main.config.generic.switchLanguageFromChinToEng ? "List is empty!" : "列表为空！"));
+					bannedList.append("\n").append(Main.config.generic.switchLanguageFromChinToEng ? "List is empty!" : "列表为空！");
 				}
 
 				for (String id : Main.config.generic.bannedDiscord) {
@@ -194,7 +197,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				bannedList.append("\n\nMinecraft:");
 
 				if (Main.config.generic.bannedMinecraft.size() == 0) {
-					bannedList.append("\n" + (Main.config.generic.switchLanguageFromChinToEng ? "List is empty!" : "列表为空！"));
+					bannedList.append("\n").append(Main.config.generic.switchLanguageFromChinToEng ? "List is empty!" : "列表为空！");
 				}
 
 				for (String name : Main.config.generic.bannedMinecraft) {
@@ -253,17 +256,17 @@ public class DiscordEventListener extends ListenerAdapter {
 				StringBuilder adminList = new StringBuilder("```\n=============== " + (Main.config.generic.switchLanguageFromChinToEng ? "Admin List" : "管理员名单") + " ===============\n\n" + (Main.config.generic.switchLanguageFromChinToEng ? "Super admins:" : "超级管理员："));
 
 				if (Main.config.generic.superAdminsIds.size() == 0) {
-					adminList.append("\n" + (Main.config.generic.switchLanguageFromChinToEng ? "List is empty!" : "列表为空！"));
+					adminList.append("\n").append(Main.config.generic.switchLanguageFromChinToEng ? "List is empty!" : "列表为空！");
 				}
 
 				for (String id : Main.config.generic.superAdminsIds) {
 					adminList.append("\n").append(id);
 				}
 
-				adminList.append("\n\n" + (Main.config.generic.switchLanguageFromChinToEng ? "Admins:" : "普通管理员："));
+				adminList.append("\n\n").append(Main.config.generic.switchLanguageFromChinToEng ? "Admins:" : "普通管理员：");
 
 				if (Main.config.generic.adminsIds.size() == 0) {
-					adminList.append("\n" + (Main.config.generic.switchLanguageFromChinToEng ? "List is empty!" : "列表为空！"));
+					adminList.append("\n").append(Main.config.generic.switchLanguageFromChinToEng ? "List is empty!" : "列表为空！");
 				}
 
 				for (String name : Main.config.generic.adminsIds) {
@@ -276,6 +279,17 @@ public class DiscordEventListener extends ListenerAdapter {
 
 			LiteralText coloredText;
 			LiteralText colorlessText;
+
+			e.getChannel().sendMessage(new EmbedBuilder()
+				  .setTitle("Test")
+				  .setColor(Color.red)
+				  .setDescription("Description")
+				  .addField("Title of field", "test of field", false)
+				  .setAuthor("name", null, "https://blog.xujiayao.top/file/avatar.jpg")
+				  .setFooter("Text", "https://github.com/zekroTJA/DiscordBot/blob/master/.websrc/zekroBot_Logo_-_round_small.png")
+				  .setImage("https://github.com/zekroTJA/DiscordBot/blob/master/.websrc/logo%20-%20title.png")
+				  .setThumbnail("https://github.com/zekroTJA/DiscordBot/blob/master/.websrc/logo%20-%20title.png")
+				  .build()).queue();
 
 			if (e.isWebhookMessage() || e.getAuthor().isBot()) {
 				coloredText = new LiteralText(Main.texts.coloredText()
@@ -295,7 +309,6 @@ public class DiscordEventListener extends ListenerAdapter {
 						    .replace("\n", Main.texts.removeLineBreakFromDiscord() ? " " : "\n")
 						    + ((!e.getMessage().getAttachments().isEmpty()) ? " <att>" : "")
 						    + ((!e.getMessage().getEmbeds().isEmpty()) ? " <embed>" : ""))));
-				colorlessText.setStyle(colorlessText.getStyle().withColor(TextColor.fromFormatting(Formatting.GRAY)));
 			} else {
 				coloredText = new LiteralText(Main.texts.coloredText()
 					  .replace("%servername%", "Discord")
@@ -315,8 +328,9 @@ public class DiscordEventListener extends ListenerAdapter {
 						    .replace("\n", Main.texts.removeLineBreakFromDiscord() ? " " : "\n")
 						    + ((!e.getMessage().getAttachments().isEmpty()) ? " <att>" : "")
 						    + ((!e.getMessage().getEmbeds().isEmpty()) ? " <embed>" : ""))));
-				colorlessText.setStyle(colorlessText.getStyle().withColor(TextColor.fromFormatting(Formatting.GRAY)));
 			}
+
+			colorlessText.setStyle(colorlessText.getStyle().withColor(TextColor.fromFormatting(Formatting.GRAY)));
 
 			server.getPlayerManager().getPlayerList().forEach(
 				  serverPlayerEntity -> serverPlayerEntity.sendMessage(new LiteralText("").append(coloredText).append(colorlessText), false));

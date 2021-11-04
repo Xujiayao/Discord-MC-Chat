@@ -11,8 +11,6 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import okhttp3.OkHttpClient;
-import okhttp3.Protocol;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import top.xujiayao.mcdiscordchat.commands.ShrugCommand;
@@ -25,7 +23,6 @@ import top.xujiayao.mcdiscordchat.utils.ConfigManager;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 
 /**
  * @author Xujiayao
@@ -45,17 +42,13 @@ public class Main implements DedicatedServerModInitializer {
 
 		try {
 			if (Main.config.generic.membersIntents) {
-				jda = JDABuilder.createDefault(Main.config.generic.botToken).setHttpClient(new OkHttpClient.Builder()
-						    .protocols(Collections.singletonList(Protocol.HTTP_1_1))
-						    .build())
+				jda = JDABuilder.createDefault(Main.config.generic.botToken)
 					  .setMemberCachePolicy(MemberCachePolicy.ALL)
 					  .enableIntents(GatewayIntent.GUILD_MEMBERS)
 					  .addEventListeners(new DiscordEventListener())
 					  .build();
 			} else {
-				jda = JDABuilder.createDefault(Main.config.generic.botToken).setHttpClient(new OkHttpClient.Builder()
-						    .protocols(Collections.singletonList(Protocol.HTTP_1_1))
-						    .build())
+				jda = JDABuilder.createDefault(Main.config.generic.botToken)
 					  .addEventListeners(new DiscordEventListener())
 					  .build();
 			}
@@ -89,11 +82,11 @@ public class Main implements DedicatedServerModInitializer {
 						}
 
 						for (String id : config.generic.superAdminsIds) {
-							text.append("<@" + id + "> ");
+							text.append("<@").append(id).append("> ");
 						}
 
 						for (String id : config.generic.adminsIds) {
-							text.append("<@" + id + "> ");
+							text.append("<@").append(id).append("> ");
 						}
 
 						textChannel.sendMessage(text).queue();
