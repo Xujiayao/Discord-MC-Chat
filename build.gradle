@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '0.10.43'
+    id 'fabric-loom' version '0.10.50'
 }
 
 sourceCompatibility = JavaVersion.VERSION_17
@@ -10,7 +10,10 @@ version = project.mod_version
 group = project.maven_group
 
 repositories {
-    jcenter()
+    maven {
+        name 'm2-dv8tion'
+        url 'https://m2.dv8tion.net/releases'
+    }
     maven {
         name = "Fabric"
         url = "https://maven.fabricmc.net/"
@@ -26,7 +29,7 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    include(modImplementation("net.dv8tion:JDA:+") {
+    include(modImplementation("net.dv8tion:JDA:4.3.0_277") {
         exclude module: 'opus-java'
     })
 
@@ -41,7 +44,7 @@ dependencies {
     include 'com.fasterxml.jackson.core:jackson-annotations:2.13.0'
     include 'com.fasterxml.jackson.core:jackson-core:2.13.0'
     include 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
-    include 'com.google.code.gson:gson:2.8.8'
+    include 'com.google.code.gson:gson:2.8.9'
     include 'com.neovisionaries:nv-websocket-client:2.14'
     include 'com.squareup.okhttp3:okhttp:4.9.2'
     include 'com.squareup.okio:okio:2.10.0'
