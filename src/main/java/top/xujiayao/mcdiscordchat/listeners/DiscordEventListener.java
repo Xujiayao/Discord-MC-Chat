@@ -1,8 +1,7 @@
 package top.xujiayao.mcdiscordchat.listeners;
 
 import com.vdurmont.emoji.EmojiParser;
-import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.loader.api.FabricLoader;
@@ -25,7 +24,6 @@ import top.xujiayao.mcdiscordchat.utils.DiscordCommandOutput;
 import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 import top.xujiayao.mcdiscordchat.utils.Scoreboard;
 
-import java.awt.Color;
 import java.util.List;
 import java.util.Objects;
 
@@ -280,54 +278,57 @@ public class DiscordEventListener extends ListenerAdapter {
 			LiteralText coloredText;
 			LiteralText colorlessText;
 
-			e.getChannel().sendMessage(new EmbedBuilder()
-				  .setTitle("Test")
-				  .setColor(Color.red)
-				  .setDescription("Description")
-				  .addField("Title of field", "test of field", false)
-				  .setAuthor("name", null, "https://blog.xujiayao.top/file/avatar.jpg")
-				  .setFooter("Text", "https://github.com/zekroTJA/DiscordBot/blob/master/.websrc/zekroBot_Logo_-_round_small.png")
-				  .setImage("https://github.com/zekroTJA/DiscordBot/blob/master/.websrc/logo%20-%20title.png")
-				  .setThumbnail("https://github.com/zekroTJA/DiscordBot/blob/master/.websrc/logo%20-%20title.png")
-				  .build()).queue();
+//			e.getChannel().sendMessage(new EmbedBuilder()
+//				  .setTitle("Test")
+//				  .setColor(Color.red)
+//				  .setDescription("Description")
+//				  .addField("Title of field", "test of field", false)
+//				  .setAuthor("name", null, "https://blog.xujiayao.top/file/avatar.jpg")
+//				  .setFooter("Text", "https://github.com/zekroTJA/DiscordBot/blob/master/.websrc/zekroBot_Logo_-_round_small.png")
+//				  .setImage("https://github.com/zekroTJA/DiscordBot/blob/master/.websrc/logo%20-%20title.png")
+//				  .setThumbnail("https://github.com/zekroTJA/DiscordBot/blob/master/.websrc/logo%20-%20title.png")
+//				  .build()).queue();
+
+			StringBuilder message = new StringBuilder(e.getMessage().getContentDisplay()
+				  .replace("§", Main.texts.removeVanillaFormattingFromDiscord() ? "&" : "§")
+				  .replace("\n", Main.texts.removeLineBreakFromDiscord() ? " " : "\n")
+				  + ((!e.getMessage().getEmbeds().isEmpty()) ? " <embed>" : ""));
+
+			if (!e.getMessage().getAttachments().isEmpty()) {
+				for (Message.Attachment attachment : e.getMessage().getAttachments()) {
+					if (attachment.isImage()) {
+						message.append(" <image>");
+					} else if (attachment.isSpoiler()) {
+						message.append(" <spoiler>");
+					} else if (attachment.isVideo()) {
+						message.append(" <video>");
+					} else {
+						message.append(" <file>");
+					}
+				}
+			}
 
 			if (e.isWebhookMessage() || e.getAuthor().isBot()) {
 				coloredText = new LiteralText(Main.texts.coloredText()
 					  .replace("%servername%", e.getAuthor().getName().substring(1, e.getAuthor().getName().indexOf("] ")))
-					  .replace("%message%", EmojiParser.parseToAliases(e.getMessage().getContentDisplay())
-						    .replace("§", Main.texts.removeVanillaFormattingFromDiscord() ? "&" : "§")
-						    .replace("\n", Main.texts.removeLineBreakFromDiscord() ? " " : "\n")
-						    + ((!e.getMessage().getAttachments().isEmpty()) ? " <att>" : "")
-						    + ((!e.getMessage().getEmbeds().isEmpty()) ? " <embed>" : "")));
+					  .replace("%message%", EmojiParser.parseToAliases(message.toString())));
 				coloredText.setStyle(coloredText.getStyle().withColor(TextColor.fromFormatting(Formatting.BLUE)));
 				coloredText.setStyle(coloredText.getStyle().withBold(true));
 
 				colorlessText = new LiteralText(Main.texts.colorlessText()
 					  .replace("%name%", e.getAuthor().getName().substring(e.getAuthor().getName().indexOf("] ") + 2))
-					  .replace("%message%", MarkdownParser.parseMarkdown(EmojiParser.parseToAliases(e.getMessage().getContentDisplay())
-						    .replace("§", Main.texts.removeVanillaFormattingFromDiscord() ? "&" : "§")
-						    .replace("\n", Main.texts.removeLineBreakFromDiscord() ? " " : "\n")
-						    + ((!e.getMessage().getAttachments().isEmpty()) ? " <att>" : "")
-						    + ((!e.getMessage().getEmbeds().isEmpty()) ? " <embed>" : ""))));
+					  .replace("%message%", MarkdownParser.parseMarkdown(EmojiParser.parseToAliases(message.toString()))));
 			} else {
 				coloredText = new LiteralText(Main.texts.coloredText()
 					  .replace("%servername%", "Discord")
 					  .replace("%name%", Objects.requireNonNull(e.getMember()).getEffectiveName())
-					  .replace("%message%", EmojiParser.parseToAliases(e.getMessage().getContentDisplay())
-						    .replace("§", Main.texts.removeVanillaFormattingFromDiscord() ? "&" : "§")
-						    .replace("\n", Main.texts.removeLineBreakFromDiscord() ? " " : "\n")
-						    + ((!e.getMessage().getAttachments().isEmpty()) ? " <att>" : "")
-						    + ((!e.getMessage().getEmbeds().isEmpty()) ? " <embed>" : "")));
+					  .replace("%message%", EmojiParser.parseToAliases(message.toString())));
 				coloredText.setStyle(coloredText.getStyle().withColor(TextColor.fromFormatting(Formatting.BLUE)));
 				coloredText.setStyle(coloredText.getStyle().withBold(true));
 
 				colorlessText = new LiteralText(Main.texts.colorlessText()
 					  .replace("%name%", Objects.requireNonNull(e.getMember()).getEffectiveName())
-					  .replace("%message%", MarkdownParser.parseMarkdown(EmojiParser.parseToAliases(e.getMessage().getContentDisplay())
-						    .replace("§", Main.texts.removeVanillaFormattingFromDiscord() ? "&" : "§")
-						    .replace("\n", Main.texts.removeLineBreakFromDiscord() ? " " : "\n")
-						    + ((!e.getMessage().getAttachments().isEmpty()) ? " <att>" : "")
-						    + ((!e.getMessage().getEmbeds().isEmpty()) ? " <embed>" : ""))));
+					  .replace("%message%", MarkdownParser.parseMarkdown(EmojiParser.parseToAliases(message.toString()))));
 			}
 
 			colorlessText.setStyle(colorlessText.getStyle().withColor(TextColor.fromFormatting(Formatting.GRAY)));
