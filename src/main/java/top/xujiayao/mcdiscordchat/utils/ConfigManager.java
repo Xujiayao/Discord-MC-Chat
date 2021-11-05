@@ -34,33 +34,7 @@ public class ConfigManager {
 
 			updateConfig();
 
-			if (Main.config.generic.switchLanguageFromChinToEng) {
-				Main.texts = new Texts(Main.config.textsEN.serverStarted,
-					  Main.config.textsEN.serverStopped,
-					  Main.config.textsEN.joinServer,
-					  Main.config.textsEN.leftServer,
-					  Main.config.textsEN.deathMessage,
-					  Main.config.textsEN.advancementTask,
-					  Main.config.textsEN.advancementChallenge,
-					  Main.config.textsEN.advancementGoal,
-					  Main.config.textsEN.coloredText,
-					  Main.config.textsEN.colorlessText,
-					  Main.config.textsEN.removeVanillaFormattingFromDiscord,
-					  Main.config.textsEN.removeLineBreakFromDiscord);
-			} else {
-				Main.texts = new Texts(Main.config.textsZH.serverStarted,
-					  Main.config.textsZH.serverStopped,
-					  Main.config.textsZH.joinServer,
-					  Main.config.textsZH.leftServer,
-					  Main.config.textsZH.deathMessage,
-					  Main.config.textsZH.advancementTask,
-					  Main.config.textsZH.advancementChallenge,
-					  Main.config.textsZH.advancementGoal,
-					  Main.config.textsZH.coloredText,
-					  Main.config.textsZH.colorlessText,
-					  Main.config.textsZH.removeVanillaFormattingFromDiscord,
-					  Main.config.textsZH.removeLineBreakFromDiscord);
-			}
+			Utils.reloadTextsConfig();
 		} else {
 			createConfig();
 

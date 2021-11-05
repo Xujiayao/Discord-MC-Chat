@@ -20,6 +20,7 @@ import top.xujiayao.mcdiscordchat.objects.ModJson;
 import top.xujiayao.mcdiscordchat.objects.Texts;
 import top.xujiayao.mcdiscordchat.objects.Version;
 import top.xujiayao.mcdiscordchat.utils.ConfigManager;
+import top.xujiayao.mcdiscordchat.utils.Utils;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -67,34 +68,7 @@ public class Main implements DedicatedServerModInitializer {
 
 			ServerLifecycleEvents.SERVER_STARTED.register((server) -> {
 				textChannel.sendMessage(Main.texts.serverStarted()).queue();
-
-				try {
-					Version version = new Gson().fromJson(Unirest.get("https://cdn.jsdelivr.net/gh/Xujiayao/MCDiscordChat@master/update/version.json").asString().getBody(), Version.class);
-					ModJson modJson = new Gson().fromJson(IOUtils.toString(new URI("jar:file:" + Main.class.getProtectionDomain().getCodeSource().getLocation().getPath() + "!/fabric.mod.json"), StandardCharsets.UTF_8), ModJson.class);
-
-					if (!version.version().equals(modJson.version)) {
-						StringBuilder text;
-
-						if (config.generic.switchLanguageFromChinToEng) {
-							text = new StringBuilder("**A new version is available!**\n\nMCDiscordChat **" + modJson.version + "** -> **" + version.version() + "**\n\nDownload link: https://github.com/Xujiayao/MCDiscordChat/releases\n\n");
-						} else {
-							text = new StringBuilder("**新版本可用！**\n\nMCDiscordChat **" + modJson.version + "** -> **" + version.version() + "**\n\n下载链接：https://github.com/Xujiayao/MCDiscordChat/releases\n\n");
-						}
-
-						for (String id : config.generic.superAdminsIds) {
-							text.append("<@").append(id).append("> ");
-						}
-
-						for (String id : config.generic.adminsIds) {
-							text.append("<@").append(id).append("> ");
-						}
-
-						textChannel.sendMessage(text).queue();
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-					textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
-				}
+				Utils.checkUpdate(false);
 			});
 
 			ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
