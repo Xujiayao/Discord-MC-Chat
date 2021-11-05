@@ -1,6 +1,5 @@
 package top.xujiayao.mcdiscordchat;
 
-import com.google.gson.Gson;
 import kong.unirest.Unirest;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -11,19 +10,12 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import top.xujiayao.mcdiscordchat.commands.ShrugCommand;
 import top.xujiayao.mcdiscordchat.listeners.DiscordEventListener;
 import top.xujiayao.mcdiscordchat.listeners.MinecraftEventListener;
-import top.xujiayao.mcdiscordchat.objects.ModJson;
 import top.xujiayao.mcdiscordchat.objects.Texts;
-import top.xujiayao.mcdiscordchat.objects.Version;
 import top.xujiayao.mcdiscordchat.utils.ConfigManager;
 import top.xujiayao.mcdiscordchat.utils.Utils;
-
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
 
 /**
  * @author Xujiayao

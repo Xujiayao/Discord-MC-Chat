@@ -53,7 +53,7 @@ public class Utils {
 				Main.textChannel.sendMessage(text).queue();
 			} else {
 				if (isManualCheck) {
-					Main.textChannel.sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "MCDiscordChat is up to date!" : "当前版本已经是最新版本！") + "**").queue();
+					Main.textChannel.sendMessage("MCDiscordChat **" + modJson.version + (Main.config.generic.switchLanguageFromChinToEng ? "**\n\n**MCDiscordChat is up to date!**" : "**\n\n**当前版本已经是最新版本！**")).queue();
 				}
 			}
 		} catch (Exception e) {

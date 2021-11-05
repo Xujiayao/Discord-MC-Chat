@@ -5,7 +5,6 @@ import com.google.gson.reflect.TypeToken;
 import net.fabricmc.loader.api.FabricLoader;
 import top.xujiayao.mcdiscordchat.Config;
 import top.xujiayao.mcdiscordchat.Main;
-import top.xujiayao.mcdiscordchat.objects.Texts;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
