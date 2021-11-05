@@ -255,17 +255,6 @@ public class DiscordEventListener extends ListenerAdapter {
 			LiteralText coloredText;
 			LiteralText colorlessText;
 
-//			e.getChannel().sendMessage(new EmbedBuilder()
-//				  .setTitle("Test")
-//				  .setColor(Color.red)
-//				  .setDescription("Description")
-//				  .addField("Title of field", "test of field", false)
-//				  .setAuthor("name", null, "https://blog.xujiayao.top/file/avatar.jpg")
-//				  .setFooter("Text", "https://github.com/zekroTJA/DiscordBot/blob/master/.websrc/zekroBot_Logo_-_round_small.png")
-//				  .setImage("https://github.com/zekroTJA/DiscordBot/blob/master/.websrc/logo%20-%20title.png")
-//				  .setThumbnail("https://github.com/zekroTJA/DiscordBot/blob/master/.websrc/logo%20-%20title.png")
-//				  .build()).queue();
-
 			StringBuilder message = new StringBuilder(e.getMessage().getContentDisplay()
 				  .replace("§", Main.texts.removeVanillaFormattingFromDiscord() ? "&" : "§")
 				  .replace("\n", Main.texts.removeLineBreakFromDiscord() ? " " : "\n")
