@@ -6,17 +6,19 @@
 
 MCDiscordChat - Java
 
----
+## Introduction 简介
 
-MCDiscordChat（简称为 MCDC），一个基于 Java 和 Fabric 的 Minecraft <-> Discord 跨服聊天工具，是 [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) 跨服聊天工具的功能补充和增强。。
+MCDiscordChat（简称为 MCDC），一个基于 Java 和 Fabric 的 Minecraft <-> Discord 跨服聊天工具，是 [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) 跨服聊天工具的功能补充和增强。
 
 MCDiscordChat (abbreviated as MCDC) is a Java and Fabric-based Minecraft <-> Discord chat bridge. It is a functional supplement and enhancement of the [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) chat bridge.
 
 ---
 
-查看更多介绍 + 使用文档：https://blog.xujiayao.top/posts/4ba0a17a/
+查看更多介绍 + 使用文档：
 
 Visit for more information and user documentation (the website is only in Chinese, please translate it by yourself):
+
+https://blog.xujiayao.top/posts/4ba0a17a/
 
 ---
 
