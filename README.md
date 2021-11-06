@@ -28,27 +28,6 @@ A big thanks to [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) fo
 
 ## 功能特色 Features
 
-- Minecraft <-> Discord cross server chat
-- Support Discord Webhook function
-- Support in-game Markdown parsing
-- Support using Discord default and server emoji in the game
-- Support in-game mentions (@) Discord users
-- Support multiple languages (Chinese / English)
-- Support multi-server operation on the same Discord channel
-- Remotely execute server console commands through Discord
-- Can query player leaderboards of a certain statistic information through Discord
-- Can Query server operating status through Discord
-- Notify when a player dies
-- Notify when a player join / leave the server
-- Notify when a player has reached a progress / achieved a goal / completed a challenge
-- Customizable in-game message display format
-- The blacklist can be used to prohibit the processing of a player or user's message
-- The admin list can be used to configure the user's authority to use certain commands
-- Support Hot Reloading of the configuration file
-- Check for updates
-
----
-
 - Minecraft <-> Discord 跨服聊天
 - 支持 Discord Webhook 功能
 - 支持游戏内 Markdown 解析
@@ -67,3 +46,24 @@ A big thanks to [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) fo
 - 可使用管理员名单配置用户使用某些命令的权限
 - 支持配置文件热重载
 - 检查更新
+
+---
+
+- Minecraft <-> Discord cross server chat
+- Support Discord Webhook function
+- Support in-game Markdown parsing
+- Support using Discord default and server emoji in the game
+- Support in-game mentions (@) Discord users
+- Support multiple languages (Chinese / English)
+- Support multi-server operation on the same Discord channel
+- Remotely execute server console commands through Discord
+- Can query player leaderboards of a certain statistic information through Discord
+- Can Query server operating status through Discord
+- Notify when a player dies
+- Notify when a player join / leave the server
+- Notify when a player has reached a progress / achieved a goal / completed a challenge
+- Customizable in-game message display format
+- The blacklist can be used to prohibit the processing of a player or user's message
+- The admin list can be used to configure the user's authority to use certain commands
+- Support Hot Reloading of the configuration file
+- Check for updates
