@@ -6,7 +6,7 @@
 
 MCDiscordChat - Java
 
-## Introduction 简介
+## 简介 Introduction
 
 MCDiscordChat（简称为 MCDC），一个基于 Java 和 Fabric 的 Minecraft <-> Discord 跨服聊天工具，是 [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) 跨服聊天工具的功能补充和增强。
 
@@ -26,7 +26,7 @@ https://blog.xujiayao.top/posts/4ba0a17a/
 
 A big thanks to [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) for the original source code, which was licensed under the Mozilla Public License 2.0 (MPL-2.0).
 
-## Features 功能特色
+## 功能特色 Features
 
 - Minecraft <-> Discord cross server chat
 - Support Discord Webhook function
