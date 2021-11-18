@@ -180,15 +180,25 @@ public class Config {
 		public String advancementGoal = "**%playername% 达成了目标 [%advancement%]**";
 
 		// Discord -> Minecraft
-		// Colored part of the message
-		// This part of the message will receive the same color as the role in the discord, comes before the colorless part
+		// Blue colored part of the message
+		// This part of the message comes before the role colored and colorless part
 		// ---
 		// Available placeholders:
 		// %servername% | 'Discord' or 'server name when using multi-server'
 		// %name% | Nickname of the user in the discord server (becomes player name when using multi-server)
 		// %message% | The message
 		@Expose
-		public String coloredText = "[%servername%] ";
+		public String blueColoredText = "[%servername%] ";
+
+		// Discord -> Minecraft
+		// Role colored part of the message
+		// This part of the message will receive the same color as the role in the discord, comes before the colorless part
+		// ---
+		// Available placeholders:
+		// %name% | Nickname of the user in the discord server (becomes player name when using multi-server)
+		// %message% | The message
+		@Expose
+		public String roleColoredText = "<%name%>";
 
 		// Discord -> Minecraft
 		// Colorless (white) part of the message
@@ -198,7 +208,7 @@ public class Config {
 		// %name% | Nickname of the user in the discord server (becomes player name when using multi-server)
 		// %message% | The message
 		@Expose
-		public String colorlessText = "<%name%> %message%";
+		public String colorlessText = " %message%";
 
 		// Replaces the § symbol with & in any discord message to avoid formatted messages
 		@Expose
@@ -275,25 +285,35 @@ public class Config {
 		public String advancementGoal = "**%playername% has reached the goal [%advancement%]**";
 
 		// Discord -> Minecraft
-		// Colored part of the message
-		// This part of the message will receive the same color as the role in the discord, comes before the colorless part
+		// Blue colored part of the message
+		// This part of the message comes before the role colored and colorless part
 		// ---
 		// Available placeholders:
 		// %servername% | 'Discord' or 'server name when using multi-server'
 		// %name% | Nickname of the user in the discord server (becomes player name when using multi-server)
 		// %message% | The message
 		@Expose
-		public String coloredText = "[%servername%] ";
+		public String blueColoredText = "[%servername%] ";
 
 		// Discord -> Minecraft
-		// Colorless (white) part of the message
+		// Role colored part of the message
+		// This part of the message will receive the same color as the role in the discord, comes before the colorless part
+		// ---
+		// Available placeholders:
+		// %name% | Nickname of the user in the discord server (becomes player name when using multi-server)
+		// %message% | The message
+		@Expose
+		public String roleColoredText = "<%name%>";
+
+		// Discord -> Minecraft
+		// Colorless (gray) part of the message
 		// I think you already know what it is by the other comment
 		// ---
 		// Available placeholders:
 		// %name% | Nickname of the user in the discord server (becomes player name when using multi-server)
 		// %message% | The message
 		@Expose
-		public String colorlessText = "<%name%> %message%";
+		public String colorlessText = " %message%";
 
 		// Replaces the § symbol with & in any discord message to avoid formatted messages
 		@Expose

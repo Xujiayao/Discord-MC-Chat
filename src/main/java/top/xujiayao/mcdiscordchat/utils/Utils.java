@@ -72,7 +72,8 @@ public class Utils {
 				  Main.config.textsEN.advancementTask,
 				  Main.config.textsEN.advancementChallenge,
 				  Main.config.textsEN.advancementGoal,
-				  Main.config.textsEN.coloredText,
+				  Main.config.textsZH.blueColoredText,
+				  Main.config.textsZH.roleColoredText,
 				  Main.config.textsEN.colorlessText,
 				  Main.config.textsEN.removeVanillaFormattingFromDiscord,
 				  Main.config.textsEN.removeLineBreakFromDiscord);
@@ -85,7 +86,8 @@ public class Utils {
 				  Main.config.textsZH.advancementTask,
 				  Main.config.textsZH.advancementChallenge,
 				  Main.config.textsZH.advancementGoal,
-				  Main.config.textsZH.coloredText,
+				  Main.config.textsZH.blueColoredText,
+				  Main.config.textsZH.roleColoredText,
 				  Main.config.textsZH.colorlessText,
 				  Main.config.textsZH.removeVanillaFormattingFromDiscord,
 				  Main.config.textsZH.removeLineBreakFromDiscord);

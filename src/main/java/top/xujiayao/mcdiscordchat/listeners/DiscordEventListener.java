@@ -252,7 +252,8 @@ public class DiscordEventListener extends ListenerAdapter {
 				Utils.checkUpdate(true);
 			}
 
-			LiteralText coloredText;
+			LiteralText blueColoredText;
+			LiteralText roleColoredText;
 			LiteralText colorlessText;
 
 			StringBuilder message = new StringBuilder(e.getMessage().getContentDisplay()
@@ -275,22 +276,32 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 
 			if (e.isWebhookMessage() || e.getAuthor().isBot()) {
-				coloredText = new LiteralText(Main.texts.coloredText()
+				blueColoredText = new LiteralText(Main.texts.blueColoredText()
 					  .replace("%servername%", e.getAuthor().getName().substring(1, e.getAuthor().getName().indexOf("] ")))
 					  .replace("%message%", EmojiParser.parseToAliases(message.toString())));
-				coloredText.setStyle(coloredText.getStyle().withColor(TextColor.fromFormatting(Formatting.BLUE)));
-				coloredText.setStyle(coloredText.getStyle().withBold(true));
+				blueColoredText.setStyle(blueColoredText.getStyle().withColor(TextColor.fromFormatting(Formatting.BLUE)));
+				blueColoredText.setStyle(blueColoredText.getStyle().withBold(true));
+
+				roleColoredText = new LiteralText(Main.texts.roleColoredText()
+					  .replace("%name%", e.getAuthor().getName().substring(e.getAuthor().getName().indexOf("] ") + 2))
+					  .replace("%message%", MarkdownParser.parseMarkdown(EmojiParser.parseToAliases(message.toString()))));
+				roleColoredText.setStyle(roleColoredText.getStyle().withColor(TextColor.fromFormatting(Formatting.GRAY)));
 
 				colorlessText = new LiteralText(Main.texts.colorlessText()
 					  .replace("%name%", e.getAuthor().getName().substring(e.getAuthor().getName().indexOf("] ") + 2))
 					  .replace("%message%", MarkdownParser.parseMarkdown(EmojiParser.parseToAliases(message.toString()))));
 			} else {
-				coloredText = new LiteralText(Main.texts.coloredText()
+				blueColoredText = new LiteralText(Main.texts.blueColoredText()
 					  .replace("%servername%", "Discord")
 					  .replace("%name%", Objects.requireNonNull(e.getMember()).getEffectiveName())
 					  .replace("%message%", EmojiParser.parseToAliases(message.toString())));
-				coloredText.setStyle(coloredText.getStyle().withColor(TextColor.fromFormatting(Formatting.BLUE)));
-				coloredText.setStyle(coloredText.getStyle().withBold(true));
+				blueColoredText.setStyle(blueColoredText.getStyle().withColor(TextColor.fromFormatting(Formatting.BLUE)));
+				blueColoredText.setStyle(blueColoredText.getStyle().withBold(true));
+
+				roleColoredText = new LiteralText(Main.texts.roleColoredText()
+					  .replace("%name%", Objects.requireNonNull(e.getMember()).getEffectiveName())
+					  .replace("%message%", MarkdownParser.parseMarkdown(EmojiParser.parseToAliases(message.toString()))));
+				roleColoredText.setStyle(roleColoredText.getStyle().withColor(TextColor.fromRgb(Objects.requireNonNull(e.getMember()).getColorRaw())));
 
 				colorlessText = new LiteralText(Main.texts.colorlessText()
 					  .replace("%name%", Objects.requireNonNull(e.getMember()).getEffectiveName())
@@ -300,7 +311,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			colorlessText.setStyle(colorlessText.getStyle().withColor(TextColor.fromFormatting(Formatting.GRAY)));
 
 			server.getPlayerManager().getPlayerList().forEach(
-				  serverPlayerEntity -> serverPlayerEntity.sendMessage(new LiteralText("").append(coloredText).append(colorlessText), false));
+				  serverPlayerEntity -> serverPlayerEntity.sendMessage(new LiteralText("").append(blueColoredText).append(roleColoredText).append(colorlessText), false));
 		}
 	}
 
