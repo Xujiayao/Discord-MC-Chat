@@ -15,6 +15,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import top.xujiayao.mcdiscordchat.events.CommandExecutionCallback;
 import top.xujiayao.mcdiscordchat.events.ServerChatCallback;
 
 import java.util.Optional;
@@ -55,5 +56,10 @@ public abstract class MixinServerPlayNetworkHandler {
 			this.server.getPlayerManager().broadcastChatMessage(eventResult.get(), MessageType.CHAT, this.player.getUuid());
 			ci.cancel();
 		}
+	}
+
+	@Inject(at = @At(value = "TAIL"), method = "executeCommand")
+	private void onCommandExecuted(String input, CallbackInfo ci) {
+		CommandExecutionCallback.EVENT.invoker().onExecuted(input, this.player.getCommandSource());
 	}
 }

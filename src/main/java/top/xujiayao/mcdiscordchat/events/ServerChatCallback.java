@@ -16,11 +16,12 @@ public interface ServerChatCallback {
 			  Optional<Text> msg = Optional.empty();
 			  for (ServerChatCallback callback : callbacks) {
 				  Optional<Text> callbackResult = callback.onServerChat(playerEntity, rawMessage, message);
-				  if (callbackResult.isPresent())
+				  if (callbackResult.isPresent()) {
 					  msg = callbackResult;
+				  }
 			  }
 			  return msg;
-		  });
+	});
 
 	Optional<Text> onServerChat(ServerPlayerEntity playerEntity, String rawMessage, Text message);
 }

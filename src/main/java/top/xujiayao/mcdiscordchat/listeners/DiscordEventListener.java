@@ -252,10 +252,6 @@ public class DiscordEventListener extends ListenerAdapter {
 				Utils.checkUpdate(true);
 			}
 
-			LiteralText blueColoredText;
-			LiteralText roleColoredText;
-			LiteralText colorlessText;
-
 			StringBuilder message = new StringBuilder(e.getMessage().getContentDisplay()
 				  .replace("§", Main.texts.removeVanillaFormattingFromDiscord() ? "&" : "§")
 				  .replace("\n", Main.texts.removeLineBreakFromDiscord() ? " " : "\n")
@@ -274,6 +270,10 @@ public class DiscordEventListener extends ListenerAdapter {
 					}
 				}
 			}
+
+			LiteralText blueColoredText;
+			LiteralText roleColoredText;
+			LiteralText colorlessText;
 
 			if (e.isWebhookMessage() || e.getAuthor().isBot()) {
 				blueColoredText = new LiteralText(Main.texts.blueColoredText()

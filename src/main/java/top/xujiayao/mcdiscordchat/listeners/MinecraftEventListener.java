@@ -9,6 +9,7 @@ import net.minecraft.util.Pair;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import top.xujiayao.mcdiscordchat.Main;
+import top.xujiayao.mcdiscordchat.events.CommandExecutionCallback;
 import top.xujiayao.mcdiscordchat.events.PlayerAdvancementCallback;
 import top.xujiayao.mcdiscordchat.events.PlayerDeathCallback;
 import top.xujiayao.mcdiscordchat.events.PlayerJoinCallback;
@@ -82,6 +83,32 @@ public class MinecraftEventListener {
 			}
 
 			return Optional.empty();
+		});
+
+		CommandExecutionCallback.EVENT.register((command, source) -> {
+			if (!Main.stop) {
+				try {
+					if (Main.config.generic.bannedMinecraft.contains(source.getPlayer().getEntityName())) {
+						return;
+					}
+
+					JSONObject body = new JSONObject();
+					body.put("username", (Main.config.generic.multiServer ? "[" + Main.config.multiServer.serverDisplayName + "] " + source.getPlayer().getEntityName() : source.getPlayer().getEntityName()));
+					body.put("avatar_url", "https://mc-heads.net/avatar/" + (Main.config.generic.useUUIDInsteadNickname ? source.getPlayer().getUuid() : source.getPlayer().getEntityName()));
+
+					JSONObject allowedMentions = new JSONObject();
+					allowedMentions.put("parse", new String[]{"users", "roles"});
+
+					body.put("allowed_mentions", allowedMentions);
+					body.put("content", command.replace("_", "\\_"));
+
+					Unirest.post(Main.config.generic.webhookURL).header("Content-Type", "application/json").body(body).asJsonAsync();
+				} catch (Exception e) {
+					e.printStackTrace();
+					Main.textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
+				}
+
+			}
 		});
 
 		PlayerAdvancementCallback.EVENT.register((playerEntity, advancement) -> {
