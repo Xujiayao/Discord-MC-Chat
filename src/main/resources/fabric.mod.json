@@ -13,7 +13,7 @@
     "sources": "https://github.com/Xujiayao/MCDiscordChat"
   },
   "license": "MIT",
-  "icon": "assets/mcdiscordchat/icon.jpg",
+  "icon": "assets/mcdiscordchat/icon.png",
   "environment": "server",
   "entrypoints": {
     "server": [
