@@ -3,6 +3,8 @@ package top.xujiayao.mcdiscordchat.utils;
 import com.google.gson.Gson;
 import kong.unirest.Unirest;
 import net.dv8tion.jda.api.entities.Member;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Pair;
 import org.apache.commons.io.IOUtils;
@@ -28,6 +30,17 @@ import java.util.regex.Pattern;
  */
 public class Utils {
 
+	public static MinecraftServer getServer() {
+		@SuppressWarnings("deprecation")
+		Object gameInstance = FabricLoader.getInstance().getGameInstance();
+
+		if (gameInstance instanceof MinecraftServer minecraftServer) {
+			return minecraftServer;
+		}
+
+		return null;
+	}
+
 	public static void checkUpdate(boolean isManualCheck) {
 		try {
 			Version version = new Gson().fromJson(Unirest.get("https://cdn.jsdelivr.net/gh/Xujiayao/MCDiscordChat@master/update/version.json").asString().getBody(), Version.class);
@@ -37,9 +50,9 @@ public class Utils {
 				StringBuilder text;
 
 				if (Main.config.generic.switchLanguageFromChinToEng) {
-					text = new StringBuilder("**A new version is available!**\n\nMCDiscordChat **" + modJson.version + "** -> **" + version.version() + "**\n\nDownload link: https://github.com/Xujiayao/MCDiscordChat/releases\n\n");
+					text = new StringBuilder("**A new version is available!**\n\nMCDiscordChat **" + modJson.version + "** -> **" + version.version() + "**\n\nDownload link: https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat\n\n");
 				} else {
-					text = new StringBuilder("**新版本可用！**\n\nMCDiscordChat **" + modJson.version + "** -> **" + version.version() + "**\n\n下载链接：https://github.com/Xujiayao/MCDiscordChat/releases\n\n");
+					text = new StringBuilder("**新版本可用！**\n\nMCDiscordChat **" + modJson.version + "** -> **" + version.version() + "**\n\n下载链接：https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat\n\n");
 				}
 
 				for (String id : Main.config.generic.superAdminsIds) {

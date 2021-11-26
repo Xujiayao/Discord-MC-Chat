@@ -4,7 +4,6 @@ import com.vdurmont.emoji.EmojiParser;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -33,7 +32,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
 	@Override
 	public void onMessageReceived(MessageReceivedEvent e) {
-		MinecraftServer server = getServer();
+		MinecraftServer server = Utils.getServer();
 
 		if (e.getAuthor() != e.getJDA().getSelfUser()
 			  && e.getChannel().getId().equals(Main.config.generic.channelId)
@@ -327,19 +326,8 @@ public class DiscordEventListener extends ListenerAdapter {
 	}
 
 	private ServerCommandSource getDiscordCommandSource() {
-		ServerWorld serverWorld = Objects.requireNonNull(getServer()).getOverworld();
+		ServerWorld serverWorld = Objects.requireNonNull(Utils.getServer()).getOverworld();
 
-		return new ServerCommandSource(new DiscordCommandOutput(), serverWorld == null ? Vec3d.ZERO : Vec3d.of(serverWorld.getSpawnPos()), Vec2f.ZERO, serverWorld, 4, "MCDiscordChat", new LiteralText("MCDiscordChat"), getServer(), null);
-	}
-
-	private MinecraftServer getServer() {
-		@SuppressWarnings("deprecation")
-		Object gameInstance = FabricLoader.getInstance().getGameInstance();
-
-		if (gameInstance instanceof MinecraftServer minecraftServer) {
-			return minecraftServer;
-		} else {
-			return null;
-		}
+		return new ServerCommandSource(new DiscordCommandOutput(), serverWorld == null ? Vec3d.ZERO : Vec3d.of(serverWorld.getSpawnPos()), Vec2f.ZERO, serverWorld, 4, "MCDiscordChat", new LiteralText("MCDiscordChat"), Utils.getServer(), null);
 	}
 }

@@ -4,6 +4,8 @@ import kong.unirest.Unirest;
 import kong.unirest.json.JSONObject;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Pair;
 import org.apache.commons.lang3.StringUtils;
@@ -18,7 +20,9 @@ import top.xujiayao.mcdiscordchat.events.ServerChatCallback;
 import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -108,6 +112,22 @@ public class MinecraftEventListener {
 					Main.textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
 				}
 
+				try {
+					List<ServerPlayerEntity> list = new ArrayList<>(Objects.requireNonNull(Utils.getServer()).getPlayerManager().getPlayerList());
+					list.remove(source.getPlayer());
+					list.forEach(
+						  serverPlayerEntity -> {
+							  try {
+								  serverPlayerEntity.sendMessage(new LiteralText("<").append(source.getPlayer().getEntityName()).append("> ").append(command), false);
+							  } catch (Exception e) {
+								  e.printStackTrace();
+								  Main.textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
+							  }
+						  });
+				} catch (Exception e) {
+					e.printStackTrace();
+					Main.textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
+				}
 			}
 		});
 
