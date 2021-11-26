@@ -1,12 +1,18 @@
+<p align="center">
+<img width=128 src="https://cdn.jsdelivr.net/gh/Xujiayao/MCDiscordChat@master/src/main/resources/assets/mcdiscordchat/icon.png">
+</p>
+
 # MCDiscordChat
 
 [![License](https://img.shields.io/github/license/xujiayao/MCDiscordChat)](https://github.com/Xujiayao/MCDiscordChat/blob/master/LICENSE)
 [![Release](https://img.shields.io/github/v/release/xujiayao/MCDiscordChat)](https://github.com/Xujiayao/MCDiscordChat/releases)
 [![GitHub Downloads](https://img.shields.io/github/downloads/xujiayao/MCDiscordChat/total)](https://github.com/Xujiayao/MCDiscordChat/releases)
 [![CurseForge Downloads](https://cf.way2muchnoise.eu/full_mcdiscordchat_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
-[![Latest Version Supported](https://cf.way2muchnoise.eu/versions/mcdiscordchat_latest.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
+[![Versions Supported](https://cf.way2muchnoise.eu/versions/mcdiscordchat.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
 
 MCDiscordChat - Java
+
+MCDC is a highly-modified Minecraft <> Discord chat bridge that complements and enhances BRForgers/DisFabric
 
 ## 简介 Introduction
 
