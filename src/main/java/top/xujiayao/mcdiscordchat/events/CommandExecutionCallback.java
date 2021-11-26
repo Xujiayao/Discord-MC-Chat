@@ -1,6 +1,5 @@
 package top.xujiayao.mcdiscordchat.events;
 
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.server.command.ServerCommandSource;
@@ -14,7 +13,7 @@ public interface CommandExecutionCallback {
 			  for (CommandExecutionCallback callback : callbacks) {
 				  callback.onExecuted(command, source);
 			  }
-	});
+		  });
 
 	void onExecuted(String command, ServerCommandSource source);
 }

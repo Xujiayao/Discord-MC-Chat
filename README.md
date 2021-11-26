@@ -16,9 +16,11 @@ MCDC is a highly-modified Minecraft <> Discord chat bridge that complements and 
 
 ## 简介 Introduction
 
-MCDiscordChat（简称为 MCDC），一个基于 Java 和 Fabric 的 Minecraft <-> Discord 跨服聊天工具，是 [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) 跨服聊天工具的功能补充和增强。
+MCDiscordChat（简称为 MCDC），一个基于 Java 和 Fabric 的 Minecraft <-> Discord
+跨服聊天工具，是 [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) 跨服聊天工具的功能补充和增强。
 
-MCDiscordChat (abbreviated as MCDC) is a Java and Fabric-based Minecraft <-> Discord chat bridge. It is a functional supplement and enhancement of the [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) chat bridge.
+MCDiscordChat (abbreviated as MCDC) is a Java and Fabric-based Minecraft <-> Discord chat bridge. It is a functional
+supplement and enhancement of the [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) chat bridge.
 
 ---
 
@@ -30,9 +32,11 @@ https://blog.xujiayao.top/posts/4ba0a17a/
 
 ---
 
-非常感谢 [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) 的原始源代码，该项目使用 Mozilla Public License 2.0 (MPL-2.0) 开源协议许可开源。
+非常感谢 [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) 的原始源代码，该项目使用 Mozilla Public License 2.0 (MPL-2.0)
+开源协议许可开源。
 
-A big thanks to [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) for the original source code, which was licensed under the Mozilla Public License 2.0 (MPL-2.0).
+A big thanks to [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) for the original source code, which was
+licensed under the Mozilla Public License 2.0 (MPL-2.0).
 
 ## 功能特色 Features
 

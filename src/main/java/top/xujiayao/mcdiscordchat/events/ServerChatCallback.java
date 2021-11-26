@@ -21,7 +21,7 @@ public interface ServerChatCallback {
 				  }
 			  }
 			  return msg;
-	});
+		  });
 
 	Optional<Text> onServerChat(ServerPlayerEntity playerEntity, String rawMessage, Text message);
 }
