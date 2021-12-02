@@ -64,13 +64,13 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 
 			if (Main.config.generic.bannedDiscord.contains(e.getAuthor().getId())
-				  && !e.getAuthor().getId().equals("769470378073653269")
+				  && !"769470378073653269".equals(e.getAuthor().getId())
 				  && !Main.config.generic.superAdminsIds.contains(e.getAuthor().getId())
 				  && !Main.config.generic.adminsIds.contains(e.getAuthor().getId())) {
 				return;
 			}
 
-			if (e.getMessage().getContentRaw().equals("!info")) {
+			if ("!info".equals(e.getMessage().getContentRaw())) {
 				StringBuilder infoString = new StringBuilder("```\n=============== " + (Main.config.generic.switchLanguageFromChinToEng ? "Server Status" : "运行状态") + " ===============\n\n");
 
 				List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
@@ -107,7 +107,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				} else {
 					e.getChannel().sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "You do not have permission to use this command!" : "你没有权限使用此命令！") + "**").queue();
 				}
-			} else if (e.getMessage().getContentRaw().equals("!reload")) {
+			} else if ("!reload".equals(e.getMessage().getContentRaw())) {
 				if (hasPermission(e.getAuthor().getId(), false)) {
 					try {
 						ConfigManager.loadConfig();
@@ -123,7 +123,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				} else {
 					e.getChannel().sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "You do not have permission to use this command!" : "你没有权限使用此命令！") + "**").queue();
 				}
-			} else if (e.getMessage().getContentRaw().equals("!help")) {
+			} else if ("!help".equals(e.getMessage().getContentRaw())) {
 				String help = Main.config.generic.switchLanguageFromChinToEng
 					  ?
 					  "```\n" +
@@ -155,7 +155,7 @@ public class DiscordEventListener extends ListenerAdapter {
 						    "```\n";
 
 				e.getChannel().sendMessage(help).queue();
-			} else if (e.getMessage().getContentRaw().equals("!blacklist")) {
+			} else if ("!blacklist".equals(e.getMessage().getContentRaw())) {
 				StringBuilder bannedList = new StringBuilder("```\n=============== " + (Main.config.generic.switchLanguageFromChinToEng ? "Blacklist" : "黑名单") + " ===============\n\nDiscord:");
 
 				if (Main.config.generic.bannedDiscord.size() == 0) {
@@ -224,7 +224,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				} else {
 					e.getChannel().sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "You do not have permission to use this command!" : "你没有权限使用此命令！") + "**").queue();
 				}
-			} else if (e.getMessage().getContentRaw().equals("!adminlist")) {
+			} else if ("!adminlist".equals(e.getMessage().getContentRaw())) {
 				StringBuilder adminList = new StringBuilder("```\n=============== " + (Main.config.generic.switchLanguageFromChinToEng ? "Admin List" : "管理员名单") + " ===============\n\n" + (Main.config.generic.switchLanguageFromChinToEng ? "Super admins:" : "超级管理员："));
 
 				if (Main.config.generic.superAdminsIds.size() == 0) {
@@ -247,7 +247,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
 				adminList.append("```");
 				e.getChannel().sendMessage(adminList.toString()).queue();
-			} else if (e.getMessage().getContentRaw().equals("!update")) {
+			} else if ("!update".equals(e.getMessage().getContentRaw())) {
 				Utils.checkUpdate(true);
 			}
 
@@ -317,11 +317,11 @@ public class DiscordEventListener extends ListenerAdapter {
 	private boolean hasPermission(String id, boolean onlySuperAdmin) {
 		if (onlySuperAdmin) {
 			return Main.config.generic.superAdminsIds.contains(id)
-				  || id.equals("769470378073653269");
+				  || "769470378073653269".equals(id);
 		} else {
 			return Main.config.generic.superAdminsIds.contains(id)
 				  || Main.config.generic.adminsIds.contains(id)
-				  || id.equals("769470378073653269");
+				  || "769470378073653269".equals(id);
 		}
 	}
 
