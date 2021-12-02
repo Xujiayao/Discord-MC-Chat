@@ -20,7 +20,7 @@ public class ShrugCommand {
 				ServerCommandSource source = context.getSource();
 
 				if (source.getPlayer() != null) {
-					source.getPlayer().networkHandler.onChatMessage(new ChatMessageC2SPacket(getMessage(context, "message").getString() + " ¯\\_(ツ)_/¯"));
+					source.getPlayer().networkHandler.onGameMessage(new ChatMessageC2SPacket(getMessage(context, "message").getString() + " ¯\\_(ツ)_/¯"));
 				}
 			}
 
@@ -32,7 +32,7 @@ public class ShrugCommand {
 				ServerCommandSource source = context.getSource();
 
 				if (source.getPlayer() != null) {
-					source.getPlayer().networkHandler.onChatMessage(new ChatMessageC2SPacket("¯\\_(ツ)_/¯"));
+					source.getPlayer().networkHandler.onGameMessage(new ChatMessageC2SPacket("¯\\_(ツ)_/¯"));
 				}
 			}
 

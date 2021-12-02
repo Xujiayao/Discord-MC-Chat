@@ -8,7 +8,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Pair;
-import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import top.xujiayao.mcdiscordchat.Main;
@@ -39,7 +38,7 @@ public class MinecraftEventListener {
 						for (String emoteName : emoteNames) {
 							List<Emote> emotes = Main.jda.getEmotesByName(emoteName, true);
 							if (!emotes.isEmpty()) {
-								rawMessage = RegExUtils.replaceFirst(rawMessage, ":" + emoteName + ":", "<:" + emoteName + ":" + emotes.get(0).getId() + ">");
+								rawMessage = StringUtils.replaceFirst(rawMessage, ":" + emoteName + ":", "<:" + emoteName + ":" + emotes.get(0).getId() + ">");
 							}
 						}
 					}

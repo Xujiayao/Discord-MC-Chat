@@ -53,7 +53,7 @@ public abstract class MixinServerPlayNetworkHandler {
 		Optional<Text> eventResult = ServerChatCallback.EVENT.invoker().onServerChat(this.player, msg, text);
 
 		if (eventResult.isPresent()) {
-			this.server.getPlayerManager().broadcast(eventResult.get(), MessageType.CHAT, this.player.getUuid());
+			this.server.getPlayerManager().broadcastChatMessage(eventResult.get(), MessageType.CHAT, this.player.getUuid());
 			ci.cancel();
 		}
 	}
