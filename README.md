@@ -20,7 +20,7 @@ More information + Docs: [MCDiscordChat Docs | Xujiayao's Blog](https://blog.xuj
 
 ## Introduction
 
-[MCDiscordChat](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat) (abbreviated as MCDC) is a Java and Fabric-based Minecraft <-> Discord chat bridge. It is a functional
+[MCDiscordChat](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat) (abbreviated as MCDC) is a Java and Fabric-based Minecraft <> Discord chat bridge. It is a functional
 supplement and enhancement of the [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) chat bridge.
 
 A big thanks to [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) for the original source code, which was
