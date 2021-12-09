@@ -28,7 +28,7 @@ licensed under the Mozilla Public License 2.0 (MPL-2.0).
 
 ## Features
 
-- [x] Minecraft <-> Discord cross server chat
+- [x] Minecraft <> Discord cross server chat
 - [x] Support Discord Webhook function
 - [x] Support in-game Markdown parsing
 - [x] Support using Discord default and server emoji in the game
