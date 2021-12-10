@@ -32,7 +32,7 @@ public class Config {
 		// false: Chinese
 		// true: English
 		@Expose
-		public boolean switchLanguageFromChinToEng = false;
+		public boolean switchLanguageFromChinToEng = true;
 
 		// Set if using more than two MCDiscordChat in one Discord server
 		// Name of the bot must be in the following format:
@@ -46,7 +46,7 @@ public class Config {
 
 		// Bot Game Status; What will be displayed on the bot's game status (leave empty for nothing)
 		@Expose
-		public String botListeningStatus = "主人敲键盘的声音";
+		public String botListeningStatus = "";
 
 		// Webhook URL; see
 		// https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks

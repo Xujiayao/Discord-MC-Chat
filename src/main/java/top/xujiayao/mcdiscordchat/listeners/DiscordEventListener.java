@@ -1,6 +1,7 @@
 package top.xujiayao.mcdiscordchat.listeners;
 
 import com.vdurmont.emoji.EmojiParser;
+import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -103,6 +104,12 @@ public class DiscordEventListener extends ListenerAdapter {
 			} else if (e.getMessage().getContentRaw().startsWith("!console ")) {
 				if (hasPermission(e.getAuthor().getId(), false)) {
 					String command = e.getMessage().getContentRaw().replace("!console ", "");
+
+					if (command.startsWith("stop") || command.startsWith("/stop")) {
+						server.stop(true);
+						return;
+					}
+
 					server.getCommandManager().execute(getDiscordCommandSource(), command);
 				} else {
 					e.getChannel().sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "You do not have permission to use this command!" : "你没有权限使用此命令！") + "**").queue();
@@ -113,6 +120,12 @@ public class DiscordEventListener extends ListenerAdapter {
 						ConfigManager.loadConfig();
 
 						Utils.reloadTextsConfig();
+
+						if (Main.config.generic.botListeningStatus.isEmpty()) {
+							Main.jda.getPresence().setActivity(null);
+						} else {
+							Main.jda.getPresence().setActivity(Activity.listening(Main.config.generic.botListeningStatus));
+						}
 
 						Main.textChannel.sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "Successfully loaded the configuration file!" : "配置文件加载成功！") + "**").queue();
 					} catch (Exception ex) {
@@ -138,6 +151,7 @@ public class DiscordEventListener extends ListenerAdapter {
 						    "!admin <id>: Add or remove a Discord user from the list of MCDiscordChat admins (super admins only)\n" +
 						    "!adminlist: Query admin list\n" +
 						    "!update: Check for update\n" +
+						    "!stop: Stop the server (admins only)\n" +
 						    "```\n"
 					  :
 					  "```\n" +
@@ -152,6 +166,7 @@ public class DiscordEventListener extends ListenerAdapter {
 						    "!admin <id>: 将一名 Discord 用户从 MCDiscordChat 普通管理员名单中添加或移除（仅限超级管理员）\n" +
 						    "!adminlist: 列出管理员名单\n" +
 						    "!update: 检查更新\n" +
+						    "!stop: 停止服务器（仅限管理员）\n" +
 						    "```\n";
 
 				e.getChannel().sendMessage(help).queue();
@@ -249,6 +264,13 @@ public class DiscordEventListener extends ListenerAdapter {
 				e.getChannel().sendMessage(adminList.toString()).queue();
 			} else if ("!update".equals(e.getMessage().getContentRaw())) {
 				Utils.checkUpdate(true);
+			} else if ("!stop".equals(e.getMessage().getContentRaw())) {
+				if (hasPermission(e.getAuthor().getId(), false)) {
+					server.stop(true);
+					return;
+				} else {
+					e.getChannel().sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "You do not have permission to use this command!" : "你没有权限使用此命令！") + "**").queue();
+				}
 			}
 
 			StringBuilder message = new StringBuilder(e.getMessage().getContentDisplay()
