@@ -36,17 +36,23 @@ licensed under the Mozilla Public License 2.0 (MPL-2.0).
 - [x] Support multiple languages (Chinese / English)
 - [x] Support multi-server operation on the same Discord channel
 - [x] Remotely execute server console commands through Discord
-- [x] Can query player leaderboards of a certain statistic information through Discord
-- [x] Can Query server operating status through Discord
+- [x] Query player leaderboards of a certain statistic information through Discord
+- [x] Query server operating status through Discord
 - [x] Notify when a player dies
 - [x] Notify when a player join / leave the server
 - [x] Notify when a player has reached a progress / achieved a goal / completed a challenge
 - [x] Customizable in-game message display format
-- [x] The blacklist can be used to prohibit the processing of a player or user's message
-- [x] The admin list can be used to configure the user's authority to use certain commands
+- [x] Blacklist can be used to prohibit the processing of a player or user's message
+- [x] Admin list can be used to configure the user's authority to use certain commands
+- [x] Broadcast player command execution
 - [x] Support Hot Reloading of the configuration file
 - [x] Check for updates
 
 ## Contributors
 
-![https://github.com/Xujiayao/mcdiscordchat/graphs/contributors](https://contrib.rocks/image?repo=xujiayao/mcdiscordchat)
+[![Contributors](https://contrib.rocks/image?repo=xujiayao/mcdiscordchat)](https://github.com/Xujiayao/mcdiscordchat/graphs/contributors)
+
+## Support
+
+If there is a bug or something you don't understand, you can [post a comment](https://blog.xujiayao.top/posts/4ba0a17a/#post-comment) on my blog or [submit an issue](https://github.com/Xujiayao/MCDiscordChat/issues/new).
+
