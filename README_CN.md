@@ -44,6 +44,7 @@ MCDC is a highly-modified Minecraft <> Discord chat bridge that complements and 
 - [x] 可自定义游戏内消息显示格式
 - [x] 可使用黑名单禁止处理某位玩家或用户的消息
 - [x] 可使用管理员名单配置用户使用某些命令的权限
+- [x] 可广播玩家指令执行
 - [x] 支持配置文件热重载
 - [x] 检查更新
 
