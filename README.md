@@ -54,5 +54,5 @@ licensed under the Mozilla Public License 2.0 (MPL-2.0).
 
 ## Support
 
-If there is a bug or something you don't understand, you can [post a comment](https://blog.xujiayao.top/posts/4ba0a17a/#post-comment) on my blog or [submit an issue](https://github.com/Xujiayao/MCDiscordChat/issues/new).
+If there is a bug or suggestion, or something you don't understand, you can [post a comment](https://blog.xujiayao.top/posts/4ba0a17a/#post-comment) on my blog or [submit an issue](https://github.com/Xujiayao/MCDiscordChat/issues/new).
 
