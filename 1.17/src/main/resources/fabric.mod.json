@@ -3,12 +3,12 @@
   "id": "mcdiscordchat",
   "version": "${version}",
   "name": "MCDiscordChat",
-  "description": "A Discord <-> Minecraft chat bridge.",
+  "description": "A highly-modified Minecraft <> Discord chat bridge.",
   "authors": [
     "Xujiayao"
   ],
   "contact": {
-    "homepage": "https://blog.xujiayao.top/posts/4ba0a17a/",
+    "homepage": "https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat",
     "issues": "https://github.com/Xujiayao/MCDiscordChat/issues",
     "sources": "https://github.com/Xujiayao/MCDiscordChat"
   },
@@ -24,7 +24,7 @@
     "mcdiscordchat.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.12.8",
+    "fabricloader": ">=0.12.11",
     "fabric": "*",
     "minecraft": "1.17.x",
     "java": ">=17"

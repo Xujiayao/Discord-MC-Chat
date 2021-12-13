@@ -29,6 +29,10 @@ import java.util.Optional;
  * @author Xujiayao
  */
 public class MinecraftEventListener {
+
+	long lastTime = System.currentTimeMillis();
+	String lastPlayer = "";
+
 	public void init() {
 		ServerChatCallback.EVENT.register((playerEntity, rawMessage, message) -> {
 			if (!Main.stop) {
@@ -90,11 +94,19 @@ public class MinecraftEventListener {
 		});
 
 		CommandExecutionCallback.EVENT.register((command, source) -> {
-			if (!Main.stop) {
+			if (!Main.stop && Main.config.generic.broadcastCommandExecution) {
 				try {
 					if (Main.config.generic.bannedMinecraft.contains(source.getPlayer().getEntityName())) {
 						return;
 					}
+
+					if (source.getPlayer().getEntityName().equals(lastPlayer)
+						  && (System.currentTimeMillis() - lastTime) < 100) {
+						return;
+					}
+
+					lastTime = System.currentTimeMillis();
+					lastPlayer = source.getPlayer().getEntityName();
 
 					JSONObject body = new JSONObject();
 					body.put("username", (Main.config.generic.multiServer ? "[" + Main.config.multiServer.serverDisplayName + "] " + source.getPlayer().getEntityName() : source.getPlayer().getEntityName()));

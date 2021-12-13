@@ -24,21 +24,11 @@ public class Config {
 
 	public static class Generic {
 
-		// Sets if MCDiscordChat Should Modify In-Game Chat Messages
-		@Expose
-		public boolean modifyChatMessages = true;
-
 		// Language MCDiscordChat uses
 		// false: Chinese
 		// true: English
 		@Expose
 		public boolean switchLanguageFromChinToEng = true;
-
-		// Set if using more than two MCDiscordChat in one Discord server
-		// Name of the bot must be in the following format:
-		// [%serverDisplayName%] %botName%
-		@Expose
-		public boolean multiServer = false;
 
 		// Bot Token; see https://discordpy.readthedocs.io/en/latest/discord.html
 		@Expose
@@ -57,21 +47,27 @@ public class Config {
 		@Expose
 		public String channelId = "";
 
+		// Name of the world folder
+		@Expose
+		public String worldName = "world";
+
+		// Set if MCDiscordChat should modify in-game chat messages
+		@Expose
+		public boolean modifyChatMessages = true;
+
+		// Set if MCDiscordChat should broadcast player command execution
+		@Expose
+		public boolean broadcastCommandExecution = true;
+
+		// Set if using more than two MCDiscordChat in one Discord server
+		// Name of the bot must be in the following format:
+		// [%serverDisplayName%] %botName%
+		@Expose
+		public boolean multiServer = false;
+
 		// Use UUID instead nickname to request player head on webhook
 		@Expose
 		public boolean useUUIDInsteadNickname = true;
-
-		// Super Admins ids in Discord; see
-		// https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID
-		// If more than one, enclose each id like this: {"000", "111", "222"}
-		@Expose
-		public List<String> superAdminsIds = new ArrayList<>();
-
-		// Admins ids in Discord; see
-		// https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID
-		// If more than one, enclose each id like this: {"000", "111", "222"}
-		@Expose
-		public List<String> adminsIds = new ArrayList<>();
 
 		// If you enabled "Server Members Intent" in the bot's config page, change it to true.
 		// (This is only necessary if you want to enable discord mentions inside the game)
@@ -90,9 +86,17 @@ public class Config {
 		@Expose
 		public boolean announceDeaths = true;
 
-		// Name of the world folder
+		// Super Admins ids in Discord; see
+		// https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID
+		// If more than one, enclose each id like this: {"000", "111", "222"}
 		@Expose
-		public String worldName = "world";
+		public List<String> superAdminsIds = new ArrayList<>();
+
+		// Admins ids in Discord; see
+		// https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID
+		// If more than one, enclose each id like this: {"000", "111", "222"}
+		@Expose
+		public List<String> adminsIds = new ArrayList<>();
 
 		// Banned Discord users' id
 		@Expose
