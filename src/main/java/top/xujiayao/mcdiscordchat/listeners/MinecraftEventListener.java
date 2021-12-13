@@ -94,57 +94,55 @@ public class MinecraftEventListener {
 			return Optional.empty();
 		});
 
-		if (Main.config.generic.broadcastCommandExecution) {
-			CommandExecutionCallback.EVENT.register((command, source) -> {
-				if (!Main.stop) {
-					try {
-						if (Main.config.generic.bannedMinecraft.contains(source.getPlayer().getEntityName())) {
-							return;
-						}
-
-						if (source.getPlayer().getEntityName().equals(lastPlayer)
-							  && (System.currentTimeMillis() - lastTime) < 100) {
-							return;
-						}
-
-						lastTime = System.currentTimeMillis();
-						lastPlayer = source.getPlayer().getEntityName();
-
-						JSONObject body = new JSONObject();
-						body.put("username", (Main.config.generic.multiServer ? "[" + Main.config.multiServer.serverDisplayName + "] " + source.getPlayer().getEntityName() : source.getPlayer().getEntityName()));
-						body.put("avatar_url", "https://mc-heads.net/avatar/" + (Main.config.generic.useUUIDInsteadNickname ? source.getPlayer().getUuid() : source.getPlayer().getEntityName()));
-
-						JSONObject allowedMentions = new JSONObject();
-						allowedMentions.put("parse", new String[]{"users", "roles"});
-
-						body.put("allowed_mentions", allowedMentions);
-						body.put("content", command.replace("_", "\\_"));
-
-						Unirest.post(Main.config.generic.webhookURL).header("Content-Type", "application/json").body(body).asJsonAsync();
-					} catch (Exception e) {
-						e.printStackTrace();
-						Main.textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
+		CommandExecutionCallback.EVENT.register((command, source) -> {
+			if (!Main.stop && Main.config.generic.broadcastCommandExecution) {
+				try {
+					if (Main.config.generic.bannedMinecraft.contains(source.getPlayer().getEntityName())) {
+						return;
 					}
 
-					try {
-						List<ServerPlayerEntity> list = new ArrayList<>(Objects.requireNonNull(Utils.getServer()).getPlayerManager().getPlayerList());
-						list.remove(source.getPlayer());
-						list.forEach(
-							  serverPlayerEntity -> {
-								  try {
-									  serverPlayerEntity.sendMessage(new LiteralText("<").append(source.getPlayer().getEntityName()).append("> ").append(command), false);
-								  } catch (Exception e) {
-									  e.printStackTrace();
-									  Main.textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
-								  }
-							  });
-					} catch (Exception e) {
-						e.printStackTrace();
-						Main.textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
+					if (source.getPlayer().getEntityName().equals(lastPlayer)
+						  && (System.currentTimeMillis() - lastTime) < 100) {
+						return;
 					}
+
+					lastTime = System.currentTimeMillis();
+					lastPlayer = source.getPlayer().getEntityName();
+
+					JSONObject body = new JSONObject();
+					body.put("username", (Main.config.generic.multiServer ? "[" + Main.config.multiServer.serverDisplayName + "] " + source.getPlayer().getEntityName() : source.getPlayer().getEntityName()));
+					body.put("avatar_url", "https://mc-heads.net/avatar/" + (Main.config.generic.useUUIDInsteadNickname ? source.getPlayer().getUuid() : source.getPlayer().getEntityName()));
+
+					JSONObject allowedMentions = new JSONObject();
+					allowedMentions.put("parse", new String[]{"users", "roles"});
+
+					body.put("allowed_mentions", allowedMentions);
+					body.put("content", command.replace("_", "\\_"));
+
+					Unirest.post(Main.config.generic.webhookURL).header("Content-Type", "application/json").body(body).asJsonAsync();
+				} catch (Exception e) {
+					e.printStackTrace();
+					Main.textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
 				}
-			});
-		}
+
+				try {
+					List<ServerPlayerEntity> list = new ArrayList<>(Objects.requireNonNull(Utils.getServer()).getPlayerManager().getPlayerList());
+					list.remove(source.getPlayer());
+					list.forEach(
+						  serverPlayerEntity -> {
+							  try {
+								  serverPlayerEntity.sendMessage(new LiteralText("<").append(source.getPlayer().getEntityName()).append("> ").append(command), false);
+							  } catch (Exception e) {
+								  e.printStackTrace();
+								  Main.textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
+							  }
+						  });
+				} catch (Exception e) {
+					e.printStackTrace();
+					Main.textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
+				}
+			}
+		});
 
 		PlayerAdvancementCallback.EVENT.register((playerEntity, advancement) -> {
 			if (Main.config.generic.announceAdvancements && advancement.getDisplay() != null
