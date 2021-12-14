@@ -14,17 +14,20 @@ Language: English <a href="/README_CN.md">中文</a>
 [![CurseForge Downloads](https://cf.way2muchnoise.eu/full_mcdiscordchat_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
 [![Versions Supported](https://cf.way2muchnoise.eu/versions/mcdiscordchat.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
 
-MCDC is a highly-modified Minecraft <> Discord chat bridge that complements and enhances BRForgers/DisFabric
+MCDC is the most practical and powerful Fabric Minecraft <> Discord chat bridge
 
 More information + Docs: [MCDiscordChat Docs | Xujiayao's Blog](https://blog.xujiayao.top/posts/4ba0a17a/)
 
 ## Introduction
 
-[MCDiscordChat](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat) (abbreviated as MCDC) is a Java and Fabric-based Minecraft <> Discord chat bridge. It is a functional
-supplement and enhancement of the [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) chat bridge.
+[MCDiscordChat](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat) (abbreviated as MCDC) is the most practical and powerful Fabric Minecraft <> Discord chat bridge.
 
 A big thanks to [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) for the original source code, which was
 licensed under the Mozilla Public License 2.0 (MPL-2.0).
+
+## Support
+
+If there is a bug or suggestion, or something you don't understand, you can [submit an issue](https://github.com/Xujiayao/MCDiscordChat/issues/new).
 
 ## Features
 
@@ -51,8 +54,3 @@ licensed under the Mozilla Public License 2.0 (MPL-2.0).
 ## Contributors
 
 [![Contributors](https://contrib.rocks/image?repo=xujiayao/mcdiscordchat)](https://github.com/Xujiayao/mcdiscordchat/graphs/contributors)
-
-## Support
-
-If there is a bug or suggestion, or something you don't understand, you can [post a comment](https://blog.xujiayao.top/posts/4ba0a17a/#post-comment) on my blog or [submit an issue](https://github.com/Xujiayao/MCDiscordChat/issues/new).
-
