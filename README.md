@@ -8,12 +8,12 @@ Language: English <a href="/README_CN.md">中文</a>
 
 # MCDiscordChat
 
-[![License](https://img.shields.io/github/license/xujiayao/MCDiscordChat?style=for-the-badge)](https://github.com/Xujiayao/MCDiscordChat/blob/master/LICENSE)
-[![Release](https://img.shields.io/github/v/release/xujiayao/MCDiscordChat?style=for-the-badge)](https://github.com/Xujiayao/MCDiscordChat/releases)
-[![GitHub Downloads](https://img.shields.io/github/downloads/xujiayao/MCDiscordChat/total?style=for-the-badge)](https://github.com/Xujiayao/MCDiscordChat/releases)
-[![Modrinth Downloads](https://img.shields.io/modrinth/dt/mcdiscordchat?style=for-the-badge)](https://modrinth.com/mod/mcdiscordchat)
-[![CurseForge Downloads](https://cf.way2muchnoise.eu/full_mcdiscordchat_downloads.svg?badge_style=for_the_badge)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
-[![Versions Supported](https://cf.way2muchnoise.eu/versions/mcdiscordchat.svg?badge_style=for_the_badge)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
+[![License](https://img.shields.io/github/license/xujiayao/MCDiscordChat?logo=github)](https://github.com/Xujiayao/MCDiscordChat/blob/master/LICENSE)
+[![Release](https://img.shields.io/github/v/release/xujiayao/MCDiscordChat?logo=github)](https://github.com/Xujiayao/MCDiscordChat/releases)
+[![GitHub Downloads](https://img.shields.io/github/downloads/xujiayao/MCDiscordChat/total?logo=github)](https://github.com/Xujiayao/MCDiscordChat/releases)
+[![Modrinth Downloads](https://img.shields.io/modrinth/dt/mcdiscordchat?label=modrinth%20downloads)](https://modrinth.com/mod/mcdiscordchat)
+[![CurseForge Downloads](https://cf.way2muchnoise.eu/full_mcdiscordchat_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
+[![Versions Supported](https://cf.way2muchnoise.eu/versions/mcdiscordchat.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
 
 MCDiscordChat (MCDC), the most practical and powerful Fabric Minecraft <> Discord chat bridge
 
