@@ -20,10 +20,18 @@ MCDiscordChat (MCDC), the most practical and powerful Fabric Minecraft <> Discor
 
 ## 简介
 
-[MCDiscordChat](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat) （简称为 MCDC），最实用、最强大的 Fabric Minecraft <> Discord 跨服聊天工具。
+[MCDiscordChat](https://github.com/Xujiayao/MCDiscordChat) （简称为 MCDC），最实用、最强大的 Fabric Minecraft <> Discord 跨服聊天工具。
 
 非常感谢 [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) 的原始源代码，该项目使用 Mozilla Public License 2.0 (MPL-2.0)
 开源协议许可开源。
+
+## 下载
+
+所有发行版均可以在以下站点下载：
+
+- [CurseForge](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat/files)
+- [Modrinth](https://modrinth.com/mod/mcdiscordchat/versions)
+- [GitHub](https://github.com/Xujiayao/MCDiscordChat/releases)
 
 ## 帮助
 
@@ -31,25 +39,25 @@ MCDiscordChat (MCDC), the most practical and powerful Fabric Minecraft <> Discor
 
 ## 功能特色
 
-- [x] Minecraft <> Discord 跨服聊天
-- [x] 支持 Discord Webhook 功能
-- [x] 支持游戏内 Markdown 解析
-- [x] 支持在游戏内使用 Discord 默认和服务器表情符号
-- [x] 支持游戏内提及 (@) Discord 用户
-- [x] 支持多语言（中文 / 英文）
-- [x] 支持同 Discord 频道多服务器运行
-- [x] 可通过 Discord 远程执行服务器控制台指令
-- [x] 可通过 Discord 查询某项统计信息的玩家排行榜
-- [x] 可通过 Discord 查询服务器运行状态
-- [x] 在玩家死亡时发出通知
-- [x] 在玩家加入 / 离开服务器时发出通知
-- [x] 在玩家达成进度 / 达成目标 / 完成挑战时发出通知
-- [x] 可自定义游戏内消息显示格式
-- [x] 可使用黑名单禁止处理某位玩家或用户的消息
-- [x] 可使用管理员名单配置用户使用某些命令的权限
-- [x] 可广播玩家指令执行
-- [x] 支持配置文件热重载
-- [x] 检查更新
+- Minecraft <> Discord 跨服聊天
+- 支持 Discord Webhook 功能
+- 支持游戏内 Markdown 解析
+- 支持在游戏内使用 Discord 默认和服务器表情符号
+- 支持游戏内提及 (@) Discord 用户
+- 支持多语言（中文 / 英文）
+- 支持同 Discord 频道多服务器运行
+- 可通过 Discord 远程执行服务器控制台指令
+- 可通过 Discord 查询某项统计信息的玩家排行榜
+- 可通过 Discord 查询服务器运行状态
+- 在玩家死亡时发出通知
+- 在玩家加入 / 离开服务器时发出通知
+- 在玩家达成进度 / 达成目标 / 完成挑战时发出通知
+- 可自定义游戏内消息显示格式
+- 可使用黑名单禁止处理某位玩家或用户的消息
+- 可使用管理员名单配置用户使用某些命令的权限
+- 可广播玩家指令执行
+- 支持配置文件热重载
+- 检查更新
 
 ## 贡献者
 

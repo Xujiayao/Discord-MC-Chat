@@ -8,11 +8,12 @@ Language: English <a href="/README_CN.md">中文</a>
 
 # MCDiscordChat
 
-[![License](https://img.shields.io/github/license/xujiayao/MCDiscordChat)](https://github.com/Xujiayao/MCDiscordChat/blob/master/LICENSE)
-[![Release](https://img.shields.io/github/v/release/xujiayao/MCDiscordChat)](https://github.com/Xujiayao/MCDiscordChat/releases)
-[![GitHub Downloads](https://img.shields.io/github/downloads/xujiayao/MCDiscordChat/total)](https://github.com/Xujiayao/MCDiscordChat/releases)
-[![CurseForge Downloads](https://cf.way2muchnoise.eu/full_mcdiscordchat_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
-[![Versions Supported](https://cf.way2muchnoise.eu/versions/mcdiscordchat.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
+[![License](https://img.shields.io/github/license/xujiayao/MCDiscordChat?style=for-the-badge)](https://github.com/Xujiayao/MCDiscordChat/blob/master/LICENSE)
+[![Release](https://img.shields.io/github/v/release/xujiayao/MCDiscordChat?style=for-the-badge)](https://github.com/Xujiayao/MCDiscordChat/releases)
+[![GitHub Downloads](https://img.shields.io/github/downloads/xujiayao/MCDiscordChat/total?style=for-the-badge)](https://github.com/Xujiayao/MCDiscordChat/releases)
+[![Modrinth Downloads](https://img.shields.io/modrinth/dt/mcdiscordchat?style=for-the-badge)](https://modrinth.com/mod/mcdiscordchat)
+[![CurseForge Downloads](https://cf.way2muchnoise.eu/full_mcdiscordchat_downloads.svg?badge_style=for_the_badge)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
+[![Versions Supported](https://cf.way2muchnoise.eu/versions/mcdiscordchat.svg?badge_style=for_the_badge)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
 
 MCDiscordChat (MCDC), the most practical and powerful Fabric Minecraft <> Discord chat bridge
 
@@ -20,10 +21,18 @@ More information + Docs: [MCDiscordChat Docs | Xujiayao's Blog](https://blog.xuj
 
 ## Introduction
 
-[MCDiscordChat](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat) (abbreviated as MCDC), the most practical and powerful Fabric Minecraft <> Discord chat bridge.
+[MCDiscordChat](https://github.com/Xujiayao/MCDiscordChat) (abbreviated as MCDC), the most practical and powerful Fabric Minecraft <> Discord chat bridge.
 
 A big thanks to [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) for the original source code, which was
 licensed under the Mozilla Public License 2.0 (MPL-2.0).
+
+## Download
+
+All releases can be downloaded at the following sites:
+
+- [CurseForge](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat/files)
+- [Modrinth](https://modrinth.com/mod/mcdiscordchat/versions)
+- [GitHub](https://github.com/Xujiayao/MCDiscordChat/releases)
 
 ## Support
 
@@ -31,25 +40,25 @@ If there is a bug or suggestion, or something you don't understand, you can [sub
 
 ## Features
 
-- [x] Minecraft <> Discord cross server chat
-- [x] Support Discord Webhook function
-- [x] Support in-game Markdown parsing
-- [x] Support using Discord default and server emoji in the game
-- [x] Support in-game mentions (@) Discord users
-- [x] Support multiple languages (Chinese / English)
-- [x] Support multi-server operation on the same Discord channel
-- [x] Remotely execute server console commands through Discord
-- [x] Query player leaderboards of a certain statistic information through Discord
-- [x] Query server operating status through Discord
-- [x] Notify when a player dies
-- [x] Notify when a player join / leave the server
-- [x] Notify when a player has reached a progress / achieved a goal / completed a challenge
-- [x] Customizable in-game message display format
-- [x] Blacklist can be used to prohibit the processing of a player or user's message
-- [x] Admin list can be used to configure the user's authority to use certain commands
-- [x] Broadcast player command execution
-- [x] Support Hot Reloading of the configuration file
-- [x] Check for updates
+- Minecraft <> Discord cross server chat
+- Support Discord Webhook function
+- Support in-game Markdown parsing
+- Support using Discord default and server emoji in the game
+- Support in-game mentions (@) Discord users
+- Support multiple languages (Chinese / English)
+- Support multi-server operation on the same Discord channel
+- Remotely execute server console commands through Discord
+- Query player scoreboards of a certain statistic information through Discord
+- Query server operating status through Discord
+- Announce when a player dies
+- Announce when a player join / leave the server
+- Announce when a player reached a progress / achieved a goal / completed a challenge
+- Customizable in-game message display format
+- Blacklist can be used to prohibit the processing of a player or user's message
+- Admin list can be used to configure the user's authority to use certain commands
+- Broadcast player command execution
+- Support Hot Reloading of the configuration file
+- Check for updates
 
 ## Contributors
 
