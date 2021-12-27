@@ -86,6 +86,14 @@ public class Config {
 		@Expose
 		public boolean announceDeaths = true;
 
+		// Should announce when MSPT is above MSPT Limit?
+		@Expose
+		public boolean announceHighMSPT = true;
+
+		// MSPT Limit for announceHighMSPT
+		@Expose
+		public int msptLimit = 50;
+
 		// Super Admins ids in Discord; see
 		// https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID
 		// If more than one, enclose each id like this: {"000", "111", "222"}
@@ -182,6 +190,16 @@ public class Config {
 		// %advancement% | Advancement name
 		@Expose
 		public String advancementGoal = "**%playername% 达成了目标 [%advancement%]**";
+
+		// Minecraft -> Discord
+		// High MSPT message
+		// ---
+		// Available placeholders:
+		// %mspt% | Server MSPT
+		// %msptLimit% | MSPT Limit
+		// %mentionAllAdmins% | Mention all MCDiscordChat admins
+		@Expose
+		public String highMSPT = "**%mentionAllAdmins% 服务器 MSPT (%mspt%) 高于 %msptLimit%！**";
 
 		// Discord -> Minecraft
 		// Blue colored part of the message
@@ -287,6 +305,16 @@ public class Config {
 		// %advancement% | Advancement name
 		@Expose
 		public String advancementGoal = "**%playername% has reached the goal [%advancement%]**";
+
+		// Minecraft -> Discord
+		// High MSPT message
+		// ---
+		// Available placeholders:
+		// %mspt% | Server MSPT
+		// %msptLimit% | MSPT Limit
+		// %mentionAllAdmins% | Mention all MCDiscordChat admins
+		@Expose
+		public String highMSPT = "**%mentionAllAdmins% Server MSPT (%mspt%) is above %msptLimit%!**";
 
 		// Discord -> Minecraft
 		// Blue colored part of the message

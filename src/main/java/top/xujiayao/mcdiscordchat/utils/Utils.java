@@ -7,6 +7,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Pair;
+import net.minecraft.util.math.MathHelper;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import top.xujiayao.mcdiscordchat.Main;
@@ -22,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,6 +31,20 @@ import java.util.regex.Pattern;
  * @author Xujiayao
  */
 public class Utils {
+
+	public static String adminsMentionString() {
+		StringBuilder text = new StringBuilder();
+
+		for (String id : Main.config.generic.superAdminsIds) {
+			text.append("<@").append(id).append("> ");
+		}
+
+		for (String id : Main.config.generic.adminsIds) {
+			text.append("<@").append(id).append("> ");
+		}
+
+		return text.toString();
+	}
 
 	public static MinecraftServer getServer() {
 		@SuppressWarnings("deprecation")
@@ -39,6 +55,22 @@ public class Utils {
 		}
 
 		return null;
+	}
+
+	public static void monitorMSPT() {
+		Main.msptMonitorTimer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				double mspt = MathHelper.average(Objects.requireNonNull(getServer()).lastTickLengths) * 1.0E-6D;
+
+				if (mspt > Main.config.generic.msptLimit) {
+					Main.textChannel.sendMessage(Main.texts.highMSPT()
+						  .replace("%mspt%", Double.toString(mspt))
+						  .replace("%msptLimit%", Integer.toString(Main.config.generic.msptLimit))
+						  .replace("%mentionAllAdmins%", adminsMentionString())).queue();
+				}
+			}
+		}, 0, 5000);
 	}
 
 	public static void checkUpdate(boolean isManualCheck) {
@@ -55,13 +87,7 @@ public class Utils {
 					text = new StringBuilder("**新版本可用！**\n\nMCDiscordChat **" + modJson.version.substring(modJson.version.indexOf("-") + 1) + "** -> **" + version.version() + "**\n\n下载链接：https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat\n\n");
 				}
 
-				for (String id : Main.config.generic.superAdminsIds) {
-					text.append("<@").append(id).append("> ");
-				}
-
-				for (String id : Main.config.generic.adminsIds) {
-					text.append("<@").append(id).append("> ");
-				}
+				text.append(adminsMentionString());
 
 				Main.textChannel.sendMessage(text).queue();
 			} else {
@@ -85,8 +111,9 @@ public class Utils {
 				  Main.config.textsEN.advancementTask,
 				  Main.config.textsEN.advancementChallenge,
 				  Main.config.textsEN.advancementGoal,
-				  Main.config.textsZH.blueColoredText,
-				  Main.config.textsZH.roleColoredText,
+				  Main.config.textsEN.highMSPT,
+				  Main.config.textsEN.blueColoredText,
+				  Main.config.textsEN.roleColoredText,
 				  Main.config.textsEN.colorlessText,
 				  Main.config.textsEN.removeVanillaFormattingFromDiscord,
 				  Main.config.textsEN.removeLineBreakFromDiscord);
@@ -99,6 +126,7 @@ public class Utils {
 				  Main.config.textsZH.advancementTask,
 				  Main.config.textsZH.advancementChallenge,
 				  Main.config.textsZH.advancementGoal,
+				  Main.config.textsZH.highMSPT,
 				  Main.config.textsZH.blueColoredText,
 				  Main.config.textsZH.roleColoredText,
 				  Main.config.textsZH.colorlessText,

@@ -15,6 +15,8 @@ import top.xujiayao.mcdiscordchat.objects.Texts;
 import top.xujiayao.mcdiscordchat.utils.ConfigManager;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 
+import java.util.Timer;
+
 /**
  * @author Xujiayao
  */
@@ -26,6 +28,8 @@ public class Main implements DedicatedServerModInitializer {
 	public static Texts texts;
 
 	public static boolean stop = false;
+
+	public static Timer msptMonitorTimer;
 
 	@Override
 	public void onInitializeServer() {
@@ -59,11 +63,20 @@ public class Main implements DedicatedServerModInitializer {
 			ServerLifecycleEvents.SERVER_STARTED.register((server) -> {
 				textChannel.sendMessage(Main.texts.serverStarted()).queue();
 				Utils.checkUpdate(false);
+
+				if (config.generic.announceHighMSPT) {
+					msptMonitorTimer = new Timer();
+					Utils.monitorMSPT();
+				}
 			});
 
 			ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
 				stop = true;
 				textChannel.sendMessage(Main.texts.serverStopped()).queue();
+
+				if (config.generic.announceHighMSPT) {
+					msptMonitorTimer.cancel();
+				}
 
 				try {
 					Thread.sleep(250);

@@ -21,7 +21,8 @@ More information + Docs: [MCDiscordChat Docs | Xujiayao's Blog](https://blog.xuj
 
 ## Introduction
 
-[MCDiscordChat](https://github.com/Xujiayao/MCDiscordChat) (abbreviated as MCDC), the most practical and powerful Fabric Minecraft <> Discord chat bridge.
+[MCDiscordChat](https://github.com/Xujiayao/MCDiscordChat) (abbreviated as MCDC), the most practical and powerful Fabric
+Minecraft <> Discord chat bridge.
 
 A big thanks to [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) for the original source code, which was
 licensed under the Mozilla Public License 2.0 (MPL-2.0).
@@ -36,7 +37,8 @@ All releases can be downloaded at the following sites:
 
 ## Support
 
-If there is a bug or suggestion, or something you don't understand, you can [submit an issue](https://github.com/Xujiayao/MCDiscordChat/issues/new).
+If there is a bug or suggestion, or something you don't understand, you
+can [submit an issue](https://github.com/Xujiayao/MCDiscordChat/issues/new).
 
 ## Features
 
