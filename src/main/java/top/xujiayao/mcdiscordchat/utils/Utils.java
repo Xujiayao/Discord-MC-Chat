@@ -86,9 +86,9 @@ public class Utils {
 				StringBuilder text;
 
 				if (Main.config.generic.switchLanguageFromChinToEng) {
-					text = new StringBuilder("**A new version is available!**\n\nMCDiscordChat **" + modJson.version().substring(modJson.version().indexOf("-") + 1) + "** -> **" + version.version() + "**\n\nDownload link: https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat\n\n");
+					text = new StringBuilder("**A new version is available!**\n\nMCDiscordChat **" + modJson.version().substring(modJson.version().indexOf("-") + 1) + "** -> **" + version.version() + "**\n\nDownload link: https://github.com/Xujiayao/MCDiscordChat/blob/master/README.md#Download\n\n");
 				} else {
-					text = new StringBuilder("**新版本可用！**\n\nMCDiscordChat **" + modJson.version().substring(modJson.version().indexOf("-") + 1) + "** -> **" + version.version() + "**\n\n下载链接：https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat\n\n");
+					text = new StringBuilder("**新版本可用！**\n\nMCDiscordChat **" + modJson.version().substring(modJson.version().indexOf("-") + 1) + "** -> **" + version.version() + "**\n\n下载链接：https://github.com/Xujiayao/MCDiscordChat/blob/master/README_CN.md#%E4%B8%8B%E8%BD%BD\n\n");
 				}
 
 				text.append(adminsMentionString());

@@ -8,14 +8,14 @@ import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.fabricmc.api.DedicatedServerModInitializer;
-import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import top.xujiayao.mcdiscordchat.commands.ShrugCommand;
 import top.xujiayao.mcdiscordchat.listeners.DiscordEventListener;
 import top.xujiayao.mcdiscordchat.listeners.MinecraftEventListener;
 import top.xujiayao.mcdiscordchat.objects.Texts;
 import top.xujiayao.mcdiscordchat.utils.ConfigManager;
 import top.xujiayao.mcdiscordchat.utils.Utils;
+
+import java.util.Timer;
 
 /**
  * @author Xujiayao
@@ -28,6 +28,8 @@ public class Main implements DedicatedServerModInitializer {
 	public static Texts texts;
 
 	public static boolean stop = false;
+
+	public static Timer msptMonitorTimer;
 
 	@Override
 	public void onInitializeServer() {
@@ -51,6 +53,7 @@ public class Main implements DedicatedServerModInitializer {
 		} catch (Exception e) {
 			e.printStackTrace();
 			jda = null;
+			Thread.currentThread().interrupt();
 		}
 
 		if (jda != null) {
@@ -58,19 +61,29 @@ public class Main implements DedicatedServerModInitializer {
 				jda.getPresence().setActivity(Activity.listening(Main.config.generic.botListeningStatus));
 			}
 
-			ServerLifecycleEvents.SERVER_STARTED.register((server) -> {
+			ServerLifecycleEvents.SERVER_STARTED.register(server -> {
 				textChannel.sendMessage(Main.texts.serverStarted()).queue();
 				Utils.checkUpdate(false);
+
+				if (config.generic.announceHighMSPT) {
+					msptMonitorTimer = new Timer();
+					Utils.monitorMSPT();
+				}
 			});
 
-			ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
+			ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
 				stop = true;
 				textChannel.sendMessage(Main.texts.serverStopped()).queue();
 
+				if (config.generic.announceHighMSPT) {
+					msptMonitorTimer.cancel();
+				}
+
 				try {
 					Thread.sleep(250);
-				} catch (InterruptedException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
+					Thread.currentThread().interrupt();
 				}
 
 				Unirest.shutDown();
@@ -79,18 +92,13 @@ public class Main implements DedicatedServerModInitializer {
 
 				try {
 					Thread.sleep(250);
-				} catch (InterruptedException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
+					Thread.currentThread().interrupt();
 				}
 			});
 
 			new MinecraftEventListener().init();
 		}
-
-		CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
-			if (dedicated) {
-				ShrugCommand.register(dispatcher);
-			}
-		});
 	}
 }

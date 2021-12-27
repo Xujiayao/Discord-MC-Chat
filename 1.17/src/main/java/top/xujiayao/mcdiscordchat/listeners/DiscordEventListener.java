@@ -25,6 +25,7 @@ import top.xujiayao.mcdiscordchat.utils.Utils;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Timer;
 
 /**
  * @author Xujiayao
@@ -89,6 +90,9 @@ public class DiscordEventListener extends ListenerAdapter {
 				double serverTickTime = MathHelper.average(server.lastTickLengths) * 1.0E-6D;
 				infoString.append(Math.min(1000.0 / serverTickTime, 20));
 
+				infoString.append("\n\n").append(Main.config.generic.switchLanguageFromChinToEng ? "Server MSPT:\n" : "服务器 MSPT：\n");
+				infoString.append(MathHelper.average(server.lastTickLengths) * 1.0E-6D);
+
 				infoString.append("\n\n")
 					  .append(Main.config.generic.switchLanguageFromChinToEng ? "Server used memory:" : "服务器已用内存：")
 					  .append("\n")
@@ -125,6 +129,14 @@ public class DiscordEventListener extends ListenerAdapter {
 							Main.jda.getPresence().setActivity(null);
 						} else {
 							Main.jda.getPresence().setActivity(Activity.listening(Main.config.generic.botListeningStatus));
+						}
+
+						if (Main.config.generic.announceHighMSPT) {
+							Main.msptMonitorTimer.cancel();
+							Main.msptMonitorTimer = new Timer();
+							Utils.monitorMSPT();
+						} else {
+							Main.msptMonitorTimer.cancel();
 						}
 
 						Main.textChannel.sendMessage("**" + (Main.config.generic.switchLanguageFromChinToEng ? "Successfully loaded the configuration file!" : "配置文件加载成功！") + "**").queue();

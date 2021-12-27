@@ -8,6 +8,7 @@ import net.minecraft.server.command.ServerCommandSource;
  * @author Xujiayao
  */
 public interface CommandExecutionCallback {
+
 	Event<CommandExecutionCallback> EVENT = EventFactory.createArrayBacked(CommandExecutionCallback.class,
 		  callbacks -> (command, source) -> {
 			  for (CommandExecutionCallback callback : callbacks) {

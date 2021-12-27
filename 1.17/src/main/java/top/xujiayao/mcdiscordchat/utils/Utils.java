@@ -7,6 +7,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Pair;
+import net.minecraft.util.math.MathHelper;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import top.xujiayao.mcdiscordchat.Main;
@@ -22,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,6 +31,24 @@ import java.util.regex.Pattern;
  * @author Xujiayao
  */
 public class Utils {
+
+	private Utils() {
+		throw new IllegalStateException("Utility class");
+	}
+
+	public static String adminsMentionString() {
+		StringBuilder text = new StringBuilder();
+
+		for (String id : Main.config.generic.superAdminsIds) {
+			text.append("<@").append(id).append("> ");
+		}
+
+		for (String id : Main.config.generic.adminsIds) {
+			text.append("<@").append(id).append("> ");
+		}
+
+		return text.toString();
+	}
 
 	public static MinecraftServer getServer() {
 		@SuppressWarnings("deprecation")
@@ -41,32 +61,42 @@ public class Utils {
 		return null;
 	}
 
+	public static void monitorMSPT() {
+		Main.msptMonitorTimer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				double mspt = MathHelper.average(Objects.requireNonNull(getServer()).lastTickLengths) * 1.0E-6D;
+
+				if (mspt > Main.config.generic.msptLimit) {
+					Main.textChannel.sendMessage(Main.texts.highMSPT()
+						  .replace("%mspt%", Double.toString(mspt))
+						  .replace("%msptLimit%", Integer.toString(Main.config.generic.msptLimit))
+						  .replace("%mentionAllAdmins%", adminsMentionString())).queue();
+				}
+			}
+		}, 0, 5000);
+	}
+
 	public static void checkUpdate(boolean isManualCheck) {
 		try {
 			Version version = new Gson().fromJson(Unirest.get("https://cdn.jsdelivr.net/gh/Xujiayao/MCDiscordChat@master/update/version.json").asString().getBody(), Version.class);
 			ModJson modJson = new Gson().fromJson(IOUtils.toString(new URI("jar:file:" + Main.class.getProtectionDomain().getCodeSource().getLocation().getPath() + "!/fabric.mod.json"), StandardCharsets.UTF_8), ModJson.class);
 
-			if (!version.version().equals(modJson.version.substring(modJson.version.indexOf("-") + 1))) {
+			if (!version.version().equals(modJson.version().substring(modJson.version().indexOf("-") + 1))) {
 				StringBuilder text;
 
 				if (Main.config.generic.switchLanguageFromChinToEng) {
-					text = new StringBuilder("**A new version is available!**\n\nMCDiscordChat **" + modJson.version.substring(modJson.version.indexOf("-") + 1) + "** -> **" + version.version() + "**\n\nDownload link: https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat\n\n");
+					text = new StringBuilder("**A new version is available!**\n\nMCDiscordChat **" + modJson.version().substring(modJson.version().indexOf("-") + 1) + "** -> **" + version.version() + "**\n\nDownload link: https://github.com/Xujiayao/MCDiscordChat/blob/master/README.md#Download\n\n");
 				} else {
-					text = new StringBuilder("**新版本可用！**\n\nMCDiscordChat **" + modJson.version.substring(modJson.version.indexOf("-") + 1) + "** -> **" + version.version() + "**\n\n下载链接：https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat\n\n");
+					text = new StringBuilder("**新版本可用！**\n\nMCDiscordChat **" + modJson.version().substring(modJson.version().indexOf("-") + 1) + "** -> **" + version.version() + "**\n\n下载链接：https://github.com/Xujiayao/MCDiscordChat/blob/master/README_CN.md#%E4%B8%8B%E8%BD%BD\n\n");
 				}
 
-				for (String id : Main.config.generic.superAdminsIds) {
-					text.append("<@").append(id).append("> ");
-				}
-
-				for (String id : Main.config.generic.adminsIds) {
-					text.append("<@").append(id).append("> ");
-				}
+				text.append(adminsMentionString());
 
 				Main.textChannel.sendMessage(text).queue();
 			} else {
 				if (isManualCheck) {
-					Main.textChannel.sendMessage("MCDiscordChat **" + modJson.version.substring(modJson.version.indexOf("-") + 1) + (Main.config.generic.switchLanguageFromChinToEng ? "**\n\n**MCDiscordChat is up to date!**" : "**\n\n**当前版本已经是最新版本！**")).queue();
+					Main.textChannel.sendMessage("MCDiscordChat **" + modJson.version().substring(modJson.version().indexOf("-") + 1) + (Main.config.generic.switchLanguageFromChinToEng ? "**\n\n**MCDiscordChat is up to date!**" : "**\n\n**当前版本已经是最新版本！**")).queue();
 				}
 			}
 		} catch (Exception e) {
@@ -85,8 +115,9 @@ public class Utils {
 				  Main.config.textsEN.advancementTask,
 				  Main.config.textsEN.advancementChallenge,
 				  Main.config.textsEN.advancementGoal,
-				  Main.config.textsZH.blueColoredText,
-				  Main.config.textsZH.roleColoredText,
+				  Main.config.textsEN.highMSPT,
+				  Main.config.textsEN.blueColoredText,
+				  Main.config.textsEN.roleColoredText,
 				  Main.config.textsEN.colorlessText,
 				  Main.config.textsEN.removeVanillaFormattingFromDiscord,
 				  Main.config.textsEN.removeLineBreakFromDiscord);
@@ -99,6 +130,7 @@ public class Utils {
 				  Main.config.textsZH.advancementTask,
 				  Main.config.textsZH.advancementChallenge,
 				  Main.config.textsZH.advancementGoal,
+				  Main.config.textsZH.highMSPT,
 				  Main.config.textsZH.blueColoredText,
 				  Main.config.textsZH.roleColoredText,
 				  Main.config.textsZH.colorlessText,

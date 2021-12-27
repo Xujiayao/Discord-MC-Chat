@@ -5,8 +5,14 @@ package top.xujiayao.mcdiscordchat.objects;
  */
 public class ModJson {
 
-	public int schemaVersion;
-	public String id;
-	public String version;
+	private final String version;
+
+	public ModJson(String version) {
+		this.version = version;
+	}
+
+	public String version() {
+		return version;
+	}
 }
 

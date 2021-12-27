@@ -37,11 +37,10 @@ public class Scoreboard {
 				jsonString = reader.readLine();
 			}
 
-			Gson gson = new Gson();
 			Type userListType = new TypeToken<ArrayList<Player>>() {
 			}.getType();
 
-			List<Player> playerList = gson.fromJson(jsonString, userListType);
+			List<Player> playerList = new Gson().fromJson(jsonString, userListType);
 
 			List<File> statsFileList = Utils.getFileList(new File((FabricLoader.getInstance().getGameDir().toAbsolutePath().toString() + Main.config.generic.worldName + "/stats/").replace(("." + Main.config.generic.worldName), Main.config.generic.worldName)));
 			List<Stats> statsList = new ArrayList<>();
