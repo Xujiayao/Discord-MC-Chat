@@ -53,6 +53,7 @@ MCDiscordChat (MCDC), the most practical and powerful Fabric Minecraft <> Discor
 - 在玩家死亡时发出通知
 - 在玩家加入 / 离开服务器时发出通知
 - 在玩家达成进度 / 达成目标 / 完成挑战时发出通知
+- 在服务器 MSPT 高于一定值时发出通知
 - 可自定义游戏内消息显示格式
 - 可使用黑名单禁止处理某位玩家或用户的消息
 - 可使用管理员名单配置用户使用某些命令的权限

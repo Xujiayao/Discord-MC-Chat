@@ -55,6 +55,7 @@ can [submit an issue](https://github.com/Xujiayao/MCDiscordChat/issues/new).
 - Announce when a player dies
 - Announce when a player join / leave the server
 - Announce when a player reached a progress / achieved a goal / completed a challenge
+- Announce when Server MSPT is higher than a certain value
 - Customizable in-game message display format
 - Blacklist can be used to prohibit the processing of a player or user's message
 - Admin list can be used to configure the user's authority to use certain commands
