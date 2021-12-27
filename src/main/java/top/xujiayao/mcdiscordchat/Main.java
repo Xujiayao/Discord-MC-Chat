@@ -53,6 +53,7 @@ public class Main implements DedicatedServerModInitializer {
 		} catch (Exception e) {
 			e.printStackTrace();
 			jda = null;
+			Thread.currentThread().interrupt();
 		}
 
 		if (jda != null) {
@@ -60,7 +61,7 @@ public class Main implements DedicatedServerModInitializer {
 				jda.getPresence().setActivity(Activity.listening(Main.config.generic.botListeningStatus));
 			}
 
-			ServerLifecycleEvents.SERVER_STARTED.register((server) -> {
+			ServerLifecycleEvents.SERVER_STARTED.register(server -> {
 				textChannel.sendMessage(Main.texts.serverStarted()).queue();
 				Utils.checkUpdate(false);
 
@@ -70,7 +71,7 @@ public class Main implements DedicatedServerModInitializer {
 				}
 			});
 
-			ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
+			ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
 				stop = true;
 				textChannel.sendMessage(Main.texts.serverStopped()).queue();
 
@@ -80,8 +81,9 @@ public class Main implements DedicatedServerModInitializer {
 
 				try {
 					Thread.sleep(250);
-				} catch (InterruptedException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
+					Thread.currentThread().interrupt();
 				}
 
 				Unirest.shutDown();
@@ -90,8 +92,9 @@ public class Main implements DedicatedServerModInitializer {
 
 				try {
 					Thread.sleep(250);
-				} catch (InterruptedException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
+					Thread.currentThread().interrupt();
 				}
 			});
 

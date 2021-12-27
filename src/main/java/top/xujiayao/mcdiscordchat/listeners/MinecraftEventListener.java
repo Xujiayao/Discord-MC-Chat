@@ -26,6 +26,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import static top.xujiayao.mcdiscordchat.utils.Placeholders.PLAYERNAME;
+import static top.xujiayao.mcdiscordchat.utils.Placeholders.ADVANCEMENT;
+
 /**
  * @author Xujiayao
  */
@@ -150,14 +153,14 @@ public class MinecraftEventListener {
 				  && playerEntity.getAdvancementTracker().getProgress(advancement).isDone() && !Main.stop) {
 				switch (advancement.getDisplay().getFrame()) {
 					case GOAL -> Main.textChannel.sendMessage(Main.texts.advancementGoal()
-						  .replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName()))
-						  .replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
+						  .replace(PLAYERNAME, MarkdownSanitizer.escape(playerEntity.getEntityName()))
+						  .replace(ADVANCEMENT, advancement.getDisplay().getTitle().getString())).queue();
 					case TASK -> Main.textChannel.sendMessage(Main.texts.advancementTask()
-						  .replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName()))
-						  .replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
+						  .replace(PLAYERNAME, MarkdownSanitizer.escape(playerEntity.getEntityName()))
+						  .replace(ADVANCEMENT, advancement.getDisplay().getTitle().getString())).queue();
 					case CHALLENGE -> Main.textChannel.sendMessage(Main.texts.advancementChallenge()
-						  .replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName()))
-						  .replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
+						  .replace(PLAYERNAME, MarkdownSanitizer.escape(playerEntity.getEntityName()))
+						  .replace(ADVANCEMENT, advancement.getDisplay().getTitle().getString())).queue();
 				}
 			}
 		});
@@ -166,20 +169,20 @@ public class MinecraftEventListener {
 			if (Main.config.generic.announceDeaths && !Main.stop) {
 				Main.textChannel.sendMessage(Main.texts.deathMessage()
 					  .replace("%deathmessage%", MarkdownSanitizer.escape(damageSource.getDeathMessage(playerEntity).getString()))
-					  .replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName()))).queue();
+					  .replace(PLAYERNAME, MarkdownSanitizer.escape(playerEntity.getEntityName()))).queue();
 			}
 		});
 
 		PlayerJoinCallback.EVENT.register((connection, playerEntity) -> {
 			if (Main.config.generic.announcePlayers && !Main.stop) {
-				Main.textChannel.sendMessage(Main.texts.joinServer().replace("%playername%",
+				Main.textChannel.sendMessage(Main.texts.joinServer().replace(PLAYERNAME,
 					  MarkdownSanitizer.escape(playerEntity.getEntityName()))).queue();
 			}
 		});
 
 		PlayerLeaveCallback.EVENT.register(playerEntity -> {
 			if (Main.config.generic.announcePlayers && !Main.stop) {
-				Main.textChannel.sendMessage(Main.texts.leftServer().replace("%playername%",
+				Main.textChannel.sendMessage(Main.texts.leftServer().replace(PLAYERNAME,
 					  MarkdownSanitizer.escape(playerEntity.getEntityName()))).queue();
 			}
 		});

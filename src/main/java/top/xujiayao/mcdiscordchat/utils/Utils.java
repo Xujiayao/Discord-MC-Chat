@@ -32,6 +32,10 @@ import java.util.regex.Pattern;
  */
 public class Utils {
 
+	private Utils() {
+		throw new IllegalStateException("Utility class");
+	}
+
 	public static String adminsMentionString() {
 		StringBuilder text = new StringBuilder();
 
@@ -78,13 +82,13 @@ public class Utils {
 			Version version = new Gson().fromJson(Unirest.get("https://cdn.jsdelivr.net/gh/Xujiayao/MCDiscordChat@master/update/version.json").asString().getBody(), Version.class);
 			ModJson modJson = new Gson().fromJson(IOUtils.toString(new URI("jar:file:" + Main.class.getProtectionDomain().getCodeSource().getLocation().getPath() + "!/fabric.mod.json"), StandardCharsets.UTF_8), ModJson.class);
 
-			if (!version.version().equals(modJson.version.substring(modJson.version.indexOf("-") + 1))) {
+			if (!version.version().equals(modJson.version().substring(modJson.version().indexOf("-") + 1))) {
 				StringBuilder text;
 
 				if (Main.config.generic.switchLanguageFromChinToEng) {
-					text = new StringBuilder("**A new version is available!**\n\nMCDiscordChat **" + modJson.version.substring(modJson.version.indexOf("-") + 1) + "** -> **" + version.version() + "**\n\nDownload link: https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat\n\n");
+					text = new StringBuilder("**A new version is available!**\n\nMCDiscordChat **" + modJson.version().substring(modJson.version().indexOf("-") + 1) + "** -> **" + version.version() + "**\n\nDownload link: https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat\n\n");
 				} else {
-					text = new StringBuilder("**新版本可用！**\n\nMCDiscordChat **" + modJson.version.substring(modJson.version.indexOf("-") + 1) + "** -> **" + version.version() + "**\n\n下载链接：https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat\n\n");
+					text = new StringBuilder("**新版本可用！**\n\nMCDiscordChat **" + modJson.version().substring(modJson.version().indexOf("-") + 1) + "** -> **" + version.version() + "**\n\n下载链接：https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat\n\n");
 				}
 
 				text.append(adminsMentionString());
@@ -92,7 +96,7 @@ public class Utils {
 				Main.textChannel.sendMessage(text).queue();
 			} else {
 				if (isManualCheck) {
-					Main.textChannel.sendMessage("MCDiscordChat **" + modJson.version.substring(modJson.version.indexOf("-") + 1) + (Main.config.generic.switchLanguageFromChinToEng ? "**\n\n**MCDiscordChat is up to date!**" : "**\n\n**当前版本已经是最新版本！**")).queue();
+					Main.textChannel.sendMessage("MCDiscordChat **" + modJson.version().substring(modJson.version().indexOf("-") + 1) + (Main.config.generic.switchLanguageFromChinToEng ? "**\n\n**MCDiscordChat is up to date!**" : "**\n\n**当前版本已经是最新版本！**")).queue();
 				}
 			}
 		} catch (Exception e) {

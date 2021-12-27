@@ -11,6 +11,7 @@ import java.util.Optional;
  * @author Xujiayao
  */
 public interface ServerChatCallback {
+
 	Event<ServerChatCallback> EVENT = EventFactory.createArrayBacked(ServerChatCallback.class,
 		  callbacks -> (playerEntity, rawMessage, message) -> {
 			  Optional<Text> msg = Optional.empty();

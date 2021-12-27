@@ -18,6 +18,10 @@ import java.io.IOException;
  */
 public class ConfigManager {
 
+	private ConfigManager() {
+		throw new IllegalStateException("Utility class");
+	}
+
 	private static File file;
 
 	public static void initConfig() {
@@ -64,7 +68,6 @@ public class ConfigManager {
 			Main.config = new GsonBuilder()
 				  .setPrettyPrinting()
 				  .disableHtmlEscaping()
-				  .excludeFieldsWithoutExposeAnnotation()
 				  .create()
 				  .fromJson(jsonString.toString(), new TypeToken<Config>() {
 				  }.getType());
@@ -76,7 +79,6 @@ public class ConfigManager {
 			String jsonString = new GsonBuilder()
 				  .setPrettyPrinting()
 				  .disableHtmlEscaping()
-				  .excludeFieldsWithoutExposeAnnotation()
 				  .create()
 				  .toJson(new Config());
 
@@ -91,7 +93,6 @@ public class ConfigManager {
 			String jsonString = new GsonBuilder()
 				  .setPrettyPrinting()
 				  .disableHtmlEscaping()
-				  .excludeFieldsWithoutExposeAnnotation()
 				  .create()
 				  .toJson(Main.config);
 
