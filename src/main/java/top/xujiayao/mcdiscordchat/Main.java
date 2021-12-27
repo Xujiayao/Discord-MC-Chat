@@ -8,9 +8,7 @@ import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.fabricmc.api.DedicatedServerModInitializer;
-import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import top.xujiayao.mcdiscordchat.commands.ShrugCommand;
 import top.xujiayao.mcdiscordchat.listeners.DiscordEventListener;
 import top.xujiayao.mcdiscordchat.listeners.MinecraftEventListener;
 import top.xujiayao.mcdiscordchat.objects.Texts;
@@ -86,11 +84,5 @@ public class Main implements DedicatedServerModInitializer {
 
 			new MinecraftEventListener().init();
 		}
-
-		CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
-			if (dedicated) {
-				ShrugCommand.register(dispatcher);
-			}
-		});
 	}
 }

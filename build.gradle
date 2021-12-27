@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '0.10.64'
+    id 'fabric-loom' version '0.10.65'
 }
 
 sourceCompatibility = JavaVersion.VERSION_17
@@ -42,11 +42,11 @@ dependencies {
     include "net.sf.trove4j:trove4j:3.0.3"
     include 'org.apache.commons:commons-collections4:4.4'
     include 'com.neovisionaries:nv-websocket-client:2.14'
-    include "com.squareup.okhttp3:okhttp:3.13.0"
-    include "com.fasterxml.jackson.core:jackson-annotations:2.13.0"
-    include "com.fasterxml.jackson.core:jackson-core:2.13.0"
-    include "com.fasterxml.jackson.core:jackson-databind:2.13.0"
-    include "com.squareup.okio:okio:1.17.2"
+    include "com.squareup.okhttp3:okhttp:3.14.9"
+    include 'com.fasterxml.jackson.core:jackson-annotations:2.13.1'
+    include 'com.fasterxml.jackson.core:jackson-core:2.13.1'
+    include 'com.fasterxml.jackson.core:jackson-databind:2.13.1'
+    include "com.squareup.okio:okio:1.17.5"
     include "com.neovisionaries:nv-websocket-client:2.14"
 
     include(modImplementation("com.vdurmont:emoji-java:5.1.1"))
@@ -63,7 +63,7 @@ processResources {
 
 tasks.withType(JavaCompile) {
     it.options.encoding = "UTF-8"
-    it.options.release = 16
+    it.options.release = 17
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
