@@ -36,6 +36,19 @@ public class Config {
 		// Name of the world folder
 		public String worldName = "world";
 
+		/*  URL of the skin API to use. Include "%PLAYER%" where to put either the player UUID or username. 
+		 *	Keep in mind that not all skin APIs work with UUIDs or usernames, so know what you're doing first.
+		 *	By default this uses visage.surgeplay.com, but the original author Xujiayao used mc-heads.net.
+		 *  If you want to use mc-heads.net, change this value to "https://mc-heads.net/avatar/%PLAYER%"
+		 * 	If you want to use visage, change this value to "https://visage.surgeplay.com/bust/%PLAYER%"
+		 * 
+		 * 	Contributed by FireNH
+		 */
+		public String skinAPI = "https://mc-heads.net/avatar/%PLAYER%";
+		
+		// The regex of the string to replace in the skinAPI.
+		public String regexTargetSkinAPI = "(%PLAYER%)";
+
 		// Set if MCDiscordChat should modify in-game chat messages
 		public boolean modifyChatMessages = true;
 
