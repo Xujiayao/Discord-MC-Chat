@@ -6,7 +6,8 @@
     "MixinPlayerAdvancementTracker",
     "MixinPlayerManager",
     "MixinServerPlayerEntity",
-    "MixinServerPlayNetworkHandler"
+    "MixinServerPlayNetworkHandler",
+    "MixinReloadCommand"
   ],
   "injectors": {
     "defaultRequire": 1

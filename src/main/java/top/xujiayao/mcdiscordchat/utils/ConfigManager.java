@@ -2,6 +2,10 @@ package top.xujiayao.mcdiscordchat.utils;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import net.fabricmc.loader.api.FabricLoader;
 import top.xujiayao.mcdiscordchat.Config;
 import top.xujiayao.mcdiscordchat.Main;
