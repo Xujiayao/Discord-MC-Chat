@@ -4,6 +4,7 @@ import kong.unirest.Unirest;
 import kong.unirest.json.JSONObject;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
@@ -60,7 +61,7 @@ public class MinecraftEventListener {
 
 				JSONObject body = new JSONObject();
 				body.put("username", (Main.config.generic.multiServer ? "[" + Main.config.multiServer.serverDisplayName + "] " + playerEntity.getEntityName() : playerEntity.getEntityName()));
-				body.put("avatar_url", "https://mc-heads.net/avatar/" + (Main.config.generic.useUUIDInsteadNickname ? playerEntity.getUuid() : playerEntity.getEntityName()));
+				body.put("avatar_url", formatSkinApi(playerEntity));
 
 				JSONObject allowedMentions = new JSONObject();
 				allowedMentions.put("parse", new String[]{"users", "roles"});
@@ -111,7 +112,7 @@ public class MinecraftEventListener {
 
 					JSONObject body = new JSONObject();
 					body.put("username", (Main.config.generic.multiServer ? "[" + Main.config.multiServer.serverDisplayName + "] " + source.getPlayer().getEntityName() : source.getPlayer().getEntityName()));
-					body.put("avatar_url", "https://mc-heads.net/avatar/" + (Main.config.generic.useUUIDInsteadNickname ? source.getPlayer().getUuid() : source.getPlayer().getEntityName()));
+					body.put("avatar_url", formatSkinApi(source.getPlayer()));
 
 					JSONObject allowedMentions = new JSONObject();
 					allowedMentions.put("parse", new String[]{"users", "roles"});
@@ -183,5 +184,12 @@ public class MinecraftEventListener {
 					  MarkdownSanitizer.escape(playerEntity.getEntityName()))).queue();
 			}
 		});
+	}
+
+	private String formatSkinApi(PlayerEntity playerEntity) {
+		return Main.config.generic.skinAPI.replaceAll(
+			Main.config.generic.regexTargetSkinAPI, 
+			Main.config.generic.useUUIDInsteadNickname ? playerEntity.getUuid().toString() : playerEntity.getEntityName()
+		);
 	}
 }
