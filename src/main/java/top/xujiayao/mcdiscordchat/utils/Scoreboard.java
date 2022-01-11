@@ -42,7 +42,7 @@ public class Scoreboard {
 
 			List<Player> playerList = new Gson().fromJson(jsonString, userListType);
 
-			List<File> statsFileList = Utils.getFileList(new File((FabricLoader.getInstance().getGameDir().toAbsolutePath().toString() + Main.config.generic.worldName + "/stats/").replace(("." + Main.config.generic.worldName), Main.config.generic.worldName)));
+			List<File> statsFileList = Utils.getFileList(new File((FabricLoader.getInstance().getGameDir().toAbsolutePath() + Main.config.generic.worldName + "/stats/").replace(("." + Main.config.generic.worldName), Main.config.generic.worldName)));
 			List<Stats> statsList = new ArrayList<>();
 
 			for (File file : statsFileList) {
@@ -110,7 +110,7 @@ public class Scoreboard {
 
 		if (output == null) {
 			output = new StringBuilder("```\n=============== " + (Main.config.generic.switchLanguageFromChinToEng ? "Scoreboard" : "排行榜") + " ===============\n").append("\n").append(Main.config.generic.switchLanguageFromChinToEng ? "No result" : "无结果")
-				  .append("\n```");
+					.append("\n```");
 		}
 
 		return output;

@@ -37,8 +37,8 @@ public class DiscordEventListener extends ListenerAdapter {
 		MinecraftServer server = Utils.getServer();
 
 		if (e.getAuthor() != e.getJDA().getSelfUser()
-			  && e.getChannel().getId().equals(Main.config.generic.channelId)
-			  && server != null) {
+				&& e.getChannel().getId().equals(Main.config.generic.channelId)
+				&& server != null) {
 			if (Main.config.generic.multiServer) {
 				if (e.isWebhookMessage()) {
 					if (Main.config.multiServer.serverDisplayName.equals(e.getAuthor().getName().substring(1, e.getAuthor().getName().indexOf("] ")))) {
@@ -66,9 +66,9 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 
 			if (Main.config.generic.bannedDiscord.contains(e.getAuthor().getId())
-				  && !"769470378073653269".equals(e.getAuthor().getId())
-				  && !Main.config.generic.superAdminsIds.contains(e.getAuthor().getId())
-				  && !Main.config.generic.adminsIds.contains(e.getAuthor().getId())) {
+					&& !"769470378073653269".equals(e.getAuthor().getId())
+					&& !Main.config.generic.superAdminsIds.contains(e.getAuthor().getId())
+					&& !Main.config.generic.adminsIds.contains(e.getAuthor().getId())) {
 				return;
 			}
 
@@ -94,12 +94,12 @@ public class DiscordEventListener extends ListenerAdapter {
 				infoString.append(MathHelper.average(server.lastTickLengths) * 1.0E-6D);
 
 				infoString.append("\n\n")
-					  .append(Main.config.generic.switchLanguageFromChinToEng ? "Server used memory:" : "服务器已用内存：")
-					  .append("\n")
-					  .append((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024)
-					  .append(" MB / ")
-					  .append(Runtime.getRuntime().totalMemory() / 1024 / 1024)
-					  .append(" MB");
+						.append(Main.config.generic.switchLanguageFromChinToEng ? "Server used memory:" : "服务器已用内存：")
+						.append("\n")
+						.append((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024)
+						.append(" MB / ")
+						.append(Runtime.getRuntime().totalMemory() / 1024 / 1024)
+						.append(" MB");
 
 				infoString.append("\n```");
 				e.getChannel().sendMessage(infoString.toString()).queue();
@@ -150,36 +150,36 @@ public class DiscordEventListener extends ListenerAdapter {
 				}
 			} else if ("!help".equals(e.getMessage().getContentRaw())) {
 				String help = Main.config.generic.switchLanguageFromChinToEng
-					  ?
-					  "```\n" +
-						    "=============== Help ===============\n" +
-						    "\n" +
-						    "!info: Query server running status\n" +
-						    "!scoreboard <type> <id>: Query the player scoreboard for this statistic\n" +
-						    "!ban <type> <id/name>: Add or remove a Discord user or Minecraft player from the blacklist (admins only)\n" +
-						    "!blacklist: Query blacklist\n" +
-						    "!console <command>: Executes command in the server console (admins only)\n" +
-						    "!reload: Reload MCDiscordChat configuration file (admins only)\n" +
-						    "!admin <id>: Add or remove a Discord user from the list of MCDiscordChat admins (super admins only)\n" +
-						    "!adminlist: Query admin list\n" +
-						    "!update: Check for update\n" +
-						    "!stop: Stop the server (admins only)\n" +
-						    "```\n"
-					  :
-					  "```\n" +
-						    "=============== 帮助 ===============\n" +
-						    "\n" +
-						    "!info: 查询服务器运行状态\n" +
-						    "!scoreboard <type> <id>: 查询该统计信息的玩家排行榜\n" +
-						    "!ban <type> <id/name>: 将一名 Discord 用户或 Minecraft 玩家从黑名单中添加或移除（仅限管理员）\n" +
-						    "!blacklist: 列出黑名单\n" +
-						    "!console <command>: 在服务器控制台中执行指令（仅限管理员）\n" +
-						    "!reload: 重新加载 MCDiscordChat 配置文件（仅限管理员）\n" +
-						    "!admin <id>: 将一名 Discord 用户从 MCDiscordChat 普通管理员名单中添加或移除（仅限超级管理员）\n" +
-						    "!adminlist: 列出管理员名单\n" +
-						    "!update: 检查更新\n" +
-						    "!stop: 停止服务器（仅限管理员）\n" +
-						    "```\n";
+						?
+						"```\n" +
+								"=============== Help ===============\n" +
+								"\n" +
+								"!info: Query server running status\n" +
+								"!scoreboard <type> <id>: Query the player scoreboard for this statistic\n" +
+								"!ban <type> <id/name>: Add or remove a Discord user or Minecraft player from the blacklist (admins only)\n" +
+								"!blacklist: Query blacklist\n" +
+								"!console <command>: Executes command in the server console (admins only)\n" +
+								"!reload: Reload MCDiscordChat configuration file (admins only)\n" +
+								"!admin <id>: Add or remove a Discord user from the list of MCDiscordChat admins (super admins only)\n" +
+								"!adminlist: Query admin list\n" +
+								"!update: Check for update\n" +
+								"!stop: Stop the server (admins only)\n" +
+								"```\n"
+						:
+						"```\n" +
+								"=============== 帮助 ===============\n" +
+								"\n" +
+								"!info: 查询服务器运行状态\n" +
+								"!scoreboard <type> <id>: 查询该统计信息的玩家排行榜\n" +
+								"!ban <type> <id/name>: 将一名 Discord 用户或 Minecraft 玩家从黑名单中添加或移除（仅限管理员）\n" +
+								"!blacklist: 列出黑名单\n" +
+								"!console <command>: 在服务器控制台中执行指令（仅限管理员）\n" +
+								"!reload: 重新加载 MCDiscordChat 配置文件（仅限管理员）\n" +
+								"!admin <id>: 将一名 Discord 用户从 MCDiscordChat 普通管理员名单中添加或移除（仅限超级管理员）\n" +
+								"!adminlist: 列出管理员名单\n" +
+								"!update: 检查更新\n" +
+								"!stop: 停止服务器（仅限管理员）\n" +
+								"```\n";
 
 				e.getChannel().sendMessage(help).queue();
 			} else if ("!blacklist".equals(e.getMessage().getContentRaw())) {
@@ -286,9 +286,9 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 
 			StringBuilder message = new StringBuilder(e.getMessage().getContentDisplay()
-				  .replace("§", Main.config.generic.removeVanillaFormattingFromDiscord ? "&" : "§")
-				  .replace("\n", Main.config.generic.removeLineBreakFromDiscord ? " " : "\n")
-				  + ((!e.getMessage().getEmbeds().isEmpty()) ? " <embed>" : ""));
+					.replace("§", Main.config.generic.removeVanillaFormattingFromDiscord ? "&" : "§")
+					.replace("\n", Main.config.generic.removeLineBreakFromDiscord ? " " : "\n")
+					+ ((!e.getMessage().getEmbeds().isEmpty()) ? " <embed>" : ""));
 
 			if (!e.getMessage().getAttachments().isEmpty()) {
 				for (Message.Attachment attachment : e.getMessage().getAttachments()) {
@@ -310,52 +310,52 @@ public class DiscordEventListener extends ListenerAdapter {
 
 			if (e.isWebhookMessage() || e.getAuthor().isBot()) {
 				blueColoredText = new LiteralText(Main.texts.blueColoredText()
-					  .replace("%servername%", e.getAuthor().getName().substring(1, e.getAuthor().getName().indexOf("] ")))
-					  .replace("%message%", EmojiParser.parseToAliases(message.toString())));
+						.replace("%servername%", e.getAuthor().getName().substring(1, e.getAuthor().getName().indexOf("] ")))
+						.replace("%message%", EmojiParser.parseToAliases(message.toString())));
 				blueColoredText.setStyle(blueColoredText.getStyle().withColor(TextColor.fromFormatting(Formatting.BLUE)));
 				blueColoredText.setStyle(blueColoredText.getStyle().withBold(true));
 
 				roleColoredText = new LiteralText(Main.texts.roleColoredText()
-					  .replace("%name%", e.getAuthor().getName().substring(e.getAuthor().getName().indexOf("] ") + 2))
-					  .replace("%message%", MarkdownParser.parseMarkdown(EmojiParser.parseToAliases(message.toString()))));
+						.replace("%name%", e.getAuthor().getName().substring(e.getAuthor().getName().indexOf("] ") + 2))
+						.replace("%message%", MarkdownParser.parseMarkdown(EmojiParser.parseToAliases(message.toString()))));
 				roleColoredText.setStyle(roleColoredText.getStyle().withColor(TextColor.fromFormatting(Formatting.GRAY)));
 
 				colorlessText = new LiteralText(Main.texts.colorlessText()
-					  .replace("%name%", e.getAuthor().getName().substring(e.getAuthor().getName().indexOf("] ") + 2))
-					  .replace("%message%", MarkdownParser.parseMarkdown(EmojiParser.parseToAliases(message.toString()))));
+						.replace("%name%", e.getAuthor().getName().substring(e.getAuthor().getName().indexOf("] ") + 2))
+						.replace("%message%", MarkdownParser.parseMarkdown(EmojiParser.parseToAliases(message.toString()))));
 			} else {
 				blueColoredText = new LiteralText(Main.texts.blueColoredText()
-					  .replace("%servername%", "Discord")
-					  .replace("%name%", Objects.requireNonNull(e.getMember()).getEffectiveName())
-					  .replace("%message%", EmojiParser.parseToAliases(message.toString())));
+						.replace("%servername%", "Discord")
+						.replace("%name%", Objects.requireNonNull(e.getMember()).getEffectiveName())
+						.replace("%message%", EmojiParser.parseToAliases(message.toString())));
 				blueColoredText.setStyle(blueColoredText.getStyle().withColor(TextColor.fromFormatting(Formatting.BLUE)));
 				blueColoredText.setStyle(blueColoredText.getStyle().withBold(true));
 
 				roleColoredText = new LiteralText(Main.texts.roleColoredText()
-					  .replace("%name%", Objects.requireNonNull(e.getMember()).getEffectiveName())
-					  .replace("%message%", MarkdownParser.parseMarkdown(EmojiParser.parseToAliases(message.toString()))));
+						.replace("%name%", Objects.requireNonNull(e.getMember()).getEffectiveName())
+						.replace("%message%", MarkdownParser.parseMarkdown(EmojiParser.parseToAliases(message.toString()))));
 				roleColoredText.setStyle(roleColoredText.getStyle().withColor(TextColor.fromRgb(Objects.requireNonNull(e.getMember()).getColorRaw())));
 
 				colorlessText = new LiteralText(Main.texts.colorlessText()
-					  .replace("%name%", Objects.requireNonNull(e.getMember()).getEffectiveName())
-					  .replace("%message%", MarkdownParser.parseMarkdown(EmojiParser.parseToAliases(message.toString()))));
+						.replace("%name%", Objects.requireNonNull(e.getMember()).getEffectiveName())
+						.replace("%message%", MarkdownParser.parseMarkdown(EmojiParser.parseToAliases(message.toString()))));
 			}
 
 			colorlessText.setStyle(colorlessText.getStyle().withColor(TextColor.fromFormatting(Formatting.GRAY)));
 
 			server.getPlayerManager().getPlayerList().forEach(
-				  serverPlayerEntity -> serverPlayerEntity.sendMessage(new LiteralText("").append(blueColoredText).append(roleColoredText).append(colorlessText), false));
+					serverPlayerEntity -> serverPlayerEntity.sendMessage(new LiteralText("").append(blueColoredText).append(roleColoredText).append(colorlessText), false));
 		}
 	}
 
 	private boolean hasPermission(String id, boolean onlySuperAdmin) {
 		if (onlySuperAdmin) {
 			return Main.config.generic.superAdminsIds.contains(id)
-				  || "769470378073653269".equals(id);
+					|| "769470378073653269".equals(id);
 		} else {
 			return Main.config.generic.superAdminsIds.contains(id)
-				  || Main.config.generic.adminsIds.contains(id)
-				  || "769470378073653269".equals(id);
+					|| Main.config.generic.adminsIds.contains(id)
+					|| "769470378073653269".equals(id);
 		}
 	}
 

@@ -10,11 +10,11 @@ import net.minecraft.server.command.ServerCommandSource;
 public interface CommandExecutionCallback {
 
 	Event<CommandExecutionCallback> EVENT = EventFactory.createArrayBacked(CommandExecutionCallback.class,
-		  callbacks -> (command, source) -> {
-			  for (CommandExecutionCallback callback : callbacks) {
-				  callback.onExecuted(command, source);
-			  }
-		  });
+			callbacks -> (command, source) -> {
+				for (CommandExecutionCallback callback : callbacks) {
+					callback.onExecuted(command, source);
+				}
+			});
 
 	void onExecuted(String command, ServerCommandSource source);
 }

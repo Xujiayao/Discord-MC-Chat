@@ -38,14 +38,14 @@ public class Main implements DedicatedServerModInitializer {
 		try {
 			if (Main.config.generic.membersIntents) {
 				jda = JDABuilder.createDefault(Main.config.generic.botToken)
-					  .setMemberCachePolicy(MemberCachePolicy.ALL)
-					  .enableIntents(GatewayIntent.GUILD_MEMBERS)
-					  .addEventListeners(new DiscordEventListener())
-					  .build();
+						.setMemberCachePolicy(MemberCachePolicy.ALL)
+						.enableIntents(GatewayIntent.GUILD_MEMBERS)
+						.addEventListeners(new DiscordEventListener())
+						.build();
 			} else {
 				jda = JDABuilder.createDefault(Main.config.generic.botToken)
-					  .addEventListeners(new DiscordEventListener())
-					  .build();
+						.addEventListeners(new DiscordEventListener())
+						.build();
 			}
 
 			jda.awaitReady();
