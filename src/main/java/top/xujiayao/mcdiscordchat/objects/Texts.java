@@ -14,7 +14,5 @@ public record Texts(String serverStarted,
                     String highMSPT,
                     String blueColoredText,
                     String roleColoredText,
-                    String colorlessText,
-                    boolean removeVanillaFormattingFromDiscord,
-                    boolean removeLineBreakFromDiscord) {
+                    String colorlessText) {
 }

@@ -286,8 +286,8 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 
 			StringBuilder message = new StringBuilder(e.getMessage().getContentDisplay()
-				  .replace("§", Main.texts.removeVanillaFormattingFromDiscord() ? "&" : "§")
-				  .replace("\n", Main.texts.removeLineBreakFromDiscord() ? " " : "\n")
+				  .replace("§", Main.config.generic.removeVanillaFormattingFromDiscord ? "&" : "§")
+				  .replace("\n", Main.config.generic.removeLineBreakFromDiscord ? " " : "\n")
 				  + ((!e.getMessage().getEmbeds().isEmpty()) ? " <embed>" : ""));
 
 			if (!e.getMessage().getAttachments().isEmpty()) {
