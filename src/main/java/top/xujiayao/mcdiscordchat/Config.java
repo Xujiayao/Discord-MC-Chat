@@ -19,7 +19,7 @@ public class Config {
 		public boolean switchLanguageFromChinToEng = true;
 
 		// [Required] Discord bot token
-		public String botToken = "";
+		public String botToken = "MCDiscordChat Docs: https://blog.xujiayao.top/posts/4ba0a17a/";
 
 		// [Optional] Discord bot activity status
 		// (null when empty)
@@ -29,16 +29,15 @@ public class Config {
 		public String webhookURL = "";
 
 		// [Required] Discord Channel ID
-		// (Right click the channel to copy the ID, you have to turn on developer mode in Discord settings)
+		// (right-click the channel to copy the ID, you have to turn on developer mode in Discord settings)
 		public String channelId = "";
 
 		// [Required] Server world name
 		public String worldName = "world";
 
 		// [Required] URL of the Avatar API for Webhook
-		// (Example: MCHeads https://mc-heads.net/avatar/%player% / Visage https://visage.surgeplay.com/bust/%player%)
-		// Contributed by FireNH
-		public String avatarAPI = "https://mc-heads.net/avatar/%player%";
+		// (example: 2D: https://mc-heads.net/avatar/%player%.png 3D: https://visage.surgeplay.com/bust/%player%.png)
+		public String avatarAPI = "https://visage.surgeplay.com/bust/%player%.png";
 
 		// [Required] Modify in-game chat messages
 		// (not enable or disable MCDiscordChat)
@@ -78,6 +77,10 @@ public class Config {
 		// [Required] Removes line break from any discord message to avoid spam
 		public boolean removeLineBreakFromDiscord = false;
 
+		// [Optional] MCDiscordChat Excluded Commands List, do not process and send specified commands
+		// (can have more than one)
+		public List<String> excludedCommands = List.of("/tell");
+
 		// [Required] MCDiscordChat Super Admin ID List, has permission to add and remove admins, and have all permissions admins have
 		// (can have more than one)
 		public List<String> superAdminsIds = new ArrayList<>();
@@ -100,7 +103,7 @@ public class Config {
 		public String serverDisplayName = "SMP";
 
 		// [Required] Discord bot name
-		// (Example: When the name of the bot is '[SMP] MCDC Bot', set it to 'MCDC Bot')
+		// (example: when the name of the bot is '[SMP] MCDC Bot', set it to 'MCDC Bot')
 		public String botName = "MCDC Bot";
 	}
 
@@ -115,7 +118,6 @@ public class Config {
 		// %message%	      Content of message
 		// %mspt%               Server MSPT
 		// %msptLimit%          Server MSPT Limit
-		// %mentionAllAdmins%	String used to mention all MCDiscordChat admins
 
 		public String serverStarted = "**服务器已启动！**";
 		public String serverStopped = "**服务器已关闭！**";
@@ -129,7 +131,7 @@ public class Config {
 		public String advancementChallenge = "**%playername% 完成了挑战 [%advancement%]**";
 		public String advancementGoal = "**%playername% 达成了目标 [%advancement%]**";
 
-		public String highMSPT = "**%mentionAllAdmins% 服务器 MSPT (%mspt%) 高于 %msptLimit%！**";
+		public String highMSPT = "**服务器 MSPT (%mspt%) 高于 %msptLimit%！**";
 
 		public String blueColoredText = "[%servername%] ";
 		public String roleColoredText = "<%name%>";
@@ -148,7 +150,6 @@ public class Config {
 		// %message%	      Content of message
 		// %mspt%               Server MSPT
 		// %msptLimit%          Server MSPT Limit
-		// %mentionAllAdmins%	String used to mention all MCDiscordChat admins
 
 		public String serverStarted = "**Server started!**";
 		public String serverStopped = "**Server stopped!**";
@@ -162,7 +163,7 @@ public class Config {
 		public String advancementChallenge = "**%playername% has completed the challenge [%advancement%]**";
 		public String advancementGoal = "**%playername% has reached the goal [%advancement%]**";
 
-		public String highMSPT = "**%mentionAllAdmins% Server MSPT (%mspt%) is above %msptLimit%!**";
+		public String highMSPT = "**Server MSPT (%mspt%) is above %msptLimit%!**";
 
 		public String blueColoredText = "[%servername%] ";
 		public String roleColoredText = "<%name%>";

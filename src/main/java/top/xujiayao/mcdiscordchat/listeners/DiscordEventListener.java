@@ -122,7 +122,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				if (hasPermission(e.getAuthor().getId(), false)) {
 					try {
 						ConfigManager.loadConfig();
-
+						ConfigManager.updateConfig();
 						Utils.reloadTextsConfig();
 
 						if (Main.config.generic.botListeningStatus.isEmpty()) {

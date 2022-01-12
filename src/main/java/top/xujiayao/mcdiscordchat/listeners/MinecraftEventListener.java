@@ -97,6 +97,16 @@ public class MinecraftEventListener {
 		CommandExecutionCallback.EVENT.register((command, source) -> {
 			if (!Main.stop && Main.config.generic.broadcastCommandExecution) {
 				try {
+					String temp = "";
+
+					if (command.contains(" ")) {
+						temp = command.substring(0, command.indexOf(" "));
+					}
+
+					if (Main.config.generic.excludedCommands.contains(temp)) {
+						return;
+					}
+
 					if (Main.config.generic.bannedMinecraft.contains(source.getPlayer().getEntityName())) {
 						return;
 					}
