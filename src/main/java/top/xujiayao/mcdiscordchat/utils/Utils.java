@@ -70,8 +70,7 @@ public class Utils {
 				if (mspt > Main.config.generic.msptLimit) {
 					Main.textChannel.sendMessage(Main.texts.highMSPT()
 							.replace("%mspt%", Double.toString(mspt))
-							.replace("%msptLimit%", Integer.toString(Main.config.generic.msptLimit))
-							.replace("%mentionAllAdmins%", adminsMentionString())).queue();
+							.replace("%msptLimit%", Integer.toString(Main.config.generic.msptLimit))).queue();
 				}
 			}
 		}, 0, 5000);
