@@ -14,286 +14,159 @@ public class Config {
 	public TextsEN textsEN = new TextsEN();
 
 	public static class Generic {
-
-		// Language MCDiscordChat uses
-		// false: Chinese
-		// true: English
+		// [Required] Language MCDiscordChat uses
+		// (Chinese if true, English if false)
 		public boolean switchLanguageFromChinToEng = true;
 
-		// Bot Token; see https://discordpy.readthedocs.io/en/latest/discord.html
-		public String botToken = "";
+		// [Required] Discord bot token
+		public String botToken = "MCDiscordChat Docs: https://blog.xujiayao.top/posts/4ba0a17a/";
 
-		// Bot Game Status; What will be displayed on the bot's game status (leave empty for nothing)
+		// [Optional] Discord bot activity status
+		// (null when empty)
 		public String botListeningStatus = "";
 
-		// Webhook URL; see
-		// https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks
+		// [Required] Webhook URL
 		public String webhookURL = "";
 
-		// Channel id in Discord
+		// [Required] Discord Channel ID
+		// (right-click the channel to copy the ID, you have to turn on developer mode in Discord settings)
 		public String channelId = "";
 
-		// Name of the world folder
+		// [Required] Server world name
 		public String worldName = "world";
 
-		// Set if MCDiscordChat should modify in-game chat messages
+		// [Required] URL of the Avatar API for Webhook
+		// (example: 2D: https://mc-heads.net/avatar/%player%.png 3D: https://visage.surgeplay.com/bust/%player%.png)
+		public String avatarAPI = "https://visage.surgeplay.com/bust/%player%.png";
+
+		// [Required] Modify in-game chat messages
+		// (not enable or disable MCDiscordChat)
 		public boolean modifyChatMessages = true;
 
-		// Set if MCDiscordChat should broadcast player command execution
+		// [Required] Broadcast player command execution
 		public boolean broadcastCommandExecution = true;
 
-		// Set if using more than two MCDiscordChat in one Discord server
-		// Name of the bot must be in the following format:
-		// [%serverDisplayName%] %botName%
+		// [Required] Use more than two MCDiscordChat in one Discord channel
+		// (name of the bot must be in the following format: [%serverDisplayName%] %botName%)
 		public boolean multiServer = false;
 
-		// Use UUID instead nickname to request player head on webhook
+		// [Required] Use UUID instead nickname to request player head on Webhook
 		public boolean useUUIDInsteadNickname = true;
 
-		// If you enabled "Server Members Intent" in the bot's config page, change it to true.
-		// (This is only necessary if you want to enable discord mentions inside the game)
+		// [Required] Enable in-game mentions (@) Discord users
 		public boolean membersIntents = true;
 
-		// Should announce when a players join/leave the server?
+		// [Required] Announce when a player join / leave the server
 		public boolean announcePlayers = true;
 
-		// Should announce when a players get an advancement?
+		// [Required] Announce when a player reached a progress / achieved a goal / completed a challenge
 		public boolean announceAdvancements = true;
 
-		// Should announce when a player die?
+		// [Required] Announce when a player die
 		public boolean announceDeaths = true;
 
-		// Should announce when MSPT is above MSPT Limit?
+		// [Required] Announce when Server MSPT is above MSPT Limit
 		public boolean announceHighMSPT = true;
 
-		// MSPT Limit for announceHighMSPT
+		// [Required] Server MSPT Limit
 		public int msptLimit = 50;
 
-		// Super Admins ids in Discord; see
-		// https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID
-		// If more than one, enclose each id like this: ["000", "111", "222"]
+		// [Required] Replaces the § symbol with & in any discord message to avoid formatted messages
+		public boolean removeVanillaFormattingFromDiscord = false;
+
+		// [Required] Removes line break from any discord message to avoid spam
+		public boolean removeLineBreakFromDiscord = false;
+
+		// [Optional] MCDiscordChat Excluded Commands List, do not process and send specified commands
+		// (can have more than one)
+		public List<String> excludedCommands = List.of("/tell");
+
+		// [Required] MCDiscordChat Super Admin ID List, has permission to add and remove admins, and have all permissions admins have
+		// (can have more than one)
 		public List<String> superAdminsIds = new ArrayList<>();
 
-		// Admins ids in Discord; see
-		// https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID
-		// If more than one, enclose each id like this: ["000", "111", "222"]
+		// [Optional] MCDiscordChat Admin ID List, has permission to modify blacklist, etc.
+		// (can have more than one)
 		public List<String> adminsIds = new ArrayList<>();
 
-		// Banned Discord users' id
+		// [Optional] MCDiscordChat Discord ID Blacklist, disallow processing of messages from a Discord user
+		// (can have more than one)
 		public List<String> bannedDiscord = new ArrayList<>();
 
-		// Banned Minecraft players' name
+		// [Optional] MCDiscordChat Player Name Blacklist, disallow processing of messages from a Minecraft player
+		// (can have more than one)
 		public List<String> bannedMinecraft = new ArrayList<>();
 	}
 
 	public static class MultiServer {
-		// Server display name
-		// e.g. 'SMP'
-		public String serverDisplayName = "";
+		// [Required] Server display name
+		public String serverDisplayName = "SMP";
 
-		// MCDiscordChat Bot name
-		// e.g. if name of the bot is '[SMP] MCDC Bot', set it to 'MCDC Bot'
+		// [Required] Discord bot name
+		// (example: when the name of the bot is '[SMP] MCDC Bot', set it to 'MCDC Bot')
 		public String botName = "MCDC Bot";
 	}
 
 	public static class TextsZH {
+		// Placeholders         Description
+		// ------------------------------
+		// %playername%         Name of a Minecraft player
+		// %deathmessage%       Death message
+		// %advancement%        Progress / goal / challenge name
+		// %servername%         'Discord' (becomes server name when using multi-server mode)
+		// %name%               Nickname of a user in Discord (becomes player name when using multi-server mode)
+		// %message%	      Content of message
+		// %mspt%               Server MSPT
+		// %msptLimit%          Server MSPT Limit
 
-		// Minecraft -> Discord
-		// Server started message
 		public String serverStarted = "**服务器已启动！**";
-
-		// Minecraft -> Discord
-		// Server stopped message
 		public String serverStopped = "**服务器已关闭！**";
 
-		// Minecraft -> Discord
-		// Join server
-		// ---
-		// Available placeholders:
-		// %playername% | Player name
 		public String joinServer = "**%playername% 加入了服务器**";
-
-		// Minecraft -> Discord
-		// Left server
-		// ---
-		// Available placeholders:
-		// %playername% | Player name
 		public String leftServer = "**%playername% 离开了服务器**";
 
-		// Minecraft -> Discord
-		// Death message
-		// ---
-		// Available placeholders:
-		// %playername% | Player name
-		// %deathmessage% | Death message
 		public String deathMessage = "**%deathmessage%**";
 
-		// Minecraft -> Discord
-		// Advancement type task message
-		// ---
-		// Available placeholders:
-		// %playername% | Player name
-		// %advancement% | Advancement name
 		public String advancementTask = "**%playername% 达成了进度 [%advancement%]**";
-
-		// Minecraft -> Discord
-		// Advancement type challenge message
-		// ---
-		// Available placeholders:
-		// %playername% | Player name
-		// %advancement% | Advancement name
 		public String advancementChallenge = "**%playername% 完成了挑战 [%advancement%]**";
-
-		// Minecraft -> Discord
-		// Advancement type goal message
-		// ---
-		// Available placeholders:
-		// %playername% | Player name
-		// %advancement% | Advancement name
 		public String advancementGoal = "**%playername% 达成了目标 [%advancement%]**";
 
-		// Minecraft -> Discord
-		// High MSPT message
-		// ---
-		// Available placeholders:
-		// %mspt% | Server MSPT
-		// %msptLimit% | MSPT Limit
-		// %mentionAllAdmins% | Mention all MCDiscordChat admins
-		public String highMSPT = "**%mentionAllAdmins% 服务器 MSPT (%mspt%) 高于 %msptLimit%！**";
+		public String highMSPT = "**服务器 MSPT (%mspt%) 高于 %msptLimit%！**";
 
-		// Discord -> Minecraft
-		// Blue colored part of the message
-		// This part of the message comes before the role colored and colorless part
-		// ---
-		// Available placeholders:
-		// %servername% | 'Discord' or 'server name when using multi-server'
-		// %name% | Nickname of the user in the discord server (becomes player name when using multi-server)
-		// %message% | The message
 		public String blueColoredText = "[%servername%] ";
-
-		// Discord -> Minecraft
-		// Role colored part of the message
-		// This part of the message will receive the same color as the role in the discord, comes before the colorless part
-		// ---
-		// Available placeholders:
-		// %name% | Nickname of the user in the discord server (becomes player name when using multi-server)
-		// %message% | The message
 		public String roleColoredText = "<%name%>";
-
-		// Discord -> Minecraft
-		// Colorless (white) part of the message
-		// I think you already know what it is by the other comment
-		// ---
-		// Available placeholders:
-		// %name% | Nickname of the user in the discord server (becomes player name when using multi-server)
-		// %message% | The message
 		public String colorlessText = " %message%";
-
-		// Replaces the § symbol with & in any discord message to avoid formatted messages
-		public boolean removeVanillaFormattingFromDiscord = false;
-
-		// Removes line break from any discord message to avoid spam
-		public boolean removeLineBreakFromDiscord = false;
 	}
 
 
 	public static class TextsEN {
+		// Placeholders         Description
+		// ------------------------------
+		// %playername%         Name of a Minecraft player
+		// %deathmessage%       Death message
+		// %advancement%        Progress / goal / challenge name
+		// %servername%         'Discord' (becomes server name when using multi-server mode)
+		// %name%               Nickname of a user in Discord (becomes player name when using multi-server mode)
+		// %message%	      Content of message
+		// %mspt%               Server MSPT
+		// %msptLimit%          Server MSPT Limit
 
-		// Minecraft -> Discord
-		// Server started message
 		public String serverStarted = "**Server started!**";
-
-		// Minecraft -> Discord
-		// Server stopped message
 		public String serverStopped = "**Server stopped!**";
 
-		// Minecraft -> Discord
-		// Join server
-		// ---
-		// Available placeholders:
-		// %playername% | Player name
 		public String joinServer = "**%playername% joined the game**";
-
-		// Minecraft -> Discord
-		// Left server
-		// ---
-		// Available placeholders:
-		// %playername% | Player name
 		public String leftServer = "**%playername% left the game**";
 
-		// Minecraft -> Discord
-		// Death message
-		// ---
-		// Available placeholders:
-		// %playername% | Player name
-		// %deathmessage% | Death message
 		public String deathMessage = "**%deathmessage%**";
 
-		// Minecraft -> Discord
-		// Advancement type task message
-		// ---
-		// Available placeholders:
-		// %playername% | Player name
-		// %advancement% | Advancement name
 		public String advancementTask = "**%playername% has made the advancement [%advancement%]**";
-
-		// Minecraft -> Discord
-		// Advancement type challenge message
-		// ---
-		// Available placeholders:
-		// %playername% | Player name
-		// %advancement% | Advancement name
 		public String advancementChallenge = "**%playername% has completed the challenge [%advancement%]**";
-
-		// Minecraft -> Discord
-		// Advancement type goal message
-		// ---
-		// Available placeholders:
-		// %playername% | Player name
-		// %advancement% | Advancement name
 		public String advancementGoal = "**%playername% has reached the goal [%advancement%]**";
 
-		// Minecraft -> Discord
-		// High MSPT message
-		// ---
-		// Available placeholders:
-		// %mspt% | Server MSPT
-		// %msptLimit% | MSPT Limit
-		// %mentionAllAdmins% | Mention all MCDiscordChat admins
-		public String highMSPT = "**%mentionAllAdmins% Server MSPT (%mspt%) is above %msptLimit%!**";
+		public String highMSPT = "**Server MSPT (%mspt%) is above %msptLimit%!**";
 
-		// Discord -> Minecraft
-		// Blue colored part of the message
-		// This part of the message comes before the role colored and colorless part
-		// ---
-		// Available placeholders:
-		// %servername% | 'Discord' or 'server name when using multi-server'
-		// %name% | Nickname of the user in the discord server (becomes player name when using multi-server)
-		// %message% | The message
 		public String blueColoredText = "[%servername%] ";
-
-		// Discord -> Minecraft
-		// Role colored part of the message
-		// This part of the message will receive the same color as the role in the discord, comes before the colorless part
-		// ---
-		// Available placeholders:
-		// %name% | Nickname of the user in the discord server (becomes player name when using multi-server)
-		// %message% | The message
 		public String roleColoredText = "<%name%>";
-
-		// Discord -> Minecraft
-		// Colorless (gray) part of the message
-		// I think you already know what it is by the other comment
-		// ---
-		// Available placeholders:
-		// %name% | Nickname of the user in the discord server (becomes player name when using multi-server)
-		// %message% | The message
 		public String colorlessText = " %message%";
-
-		// Replaces the § symbol with & in any discord message to avoid formatted messages
-		public boolean removeVanillaFormattingFromDiscord = false;
-
-		// Removes line break from any discord message to avoid spam
-		public boolean removeLineBreakFromDiscord = false;
 	}
 }

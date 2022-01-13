@@ -3,12 +3,12 @@
   "id": "mcdiscordchat",
   "version": "${version}",
   "name": "MCDiscordChat",
-  "description": "MCDC is the most practical and powerful Fabric Minecraft <> Discord chat bridge",
+  "description": "MCDiscordChat (MCDC), a practical and powerful Fabric Minecraft <> Discord chat bridge",
   "authors": [
     "Xujiayao"
   ],
   "contact": {
-    "homepage": "https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat",
+    "homepage": "https://blog.xujiayao.top/posts/4ba0a17a/",
     "issues": "https://github.com/Xujiayao/MCDiscordChat/issues",
     "sources": "https://github.com/Xujiayao/MCDiscordChat"
   },

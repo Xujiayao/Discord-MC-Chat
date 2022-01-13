@@ -22,6 +22,10 @@ import java.util.Map;
  */
 public class Scoreboard {
 
+	private Scoreboard() {
+		throw new IllegalStateException("Utility class");
+	}
+
 	public static StringBuilder getScoreboard(String message) {
 		StringBuilder output = null;
 
@@ -42,7 +46,7 @@ public class Scoreboard {
 
 			List<Player> playerList = new Gson().fromJson(jsonString, userListType);
 
-			List<File> statsFileList = Utils.getFileList(new File((FabricLoader.getInstance().getGameDir().toAbsolutePath().toString() + Main.config.generic.worldName + "/stats/").replace(("." + Main.config.generic.worldName), Main.config.generic.worldName)));
+			List<File> statsFileList = Utils.getFileList(new File((FabricLoader.getInstance().getGameDir().toAbsolutePath() + Main.config.generic.worldName + "/stats/").replace(("." + Main.config.generic.worldName), Main.config.generic.worldName)));
 			List<Stats> statsList = new ArrayList<>();
 
 			for (File file : statsFileList) {

@@ -70,8 +70,7 @@ public class Utils {
 				if (mspt > Main.config.generic.msptLimit) {
 					Main.textChannel.sendMessage(Main.texts.highMSPT()
 							.replace("%mspt%", Double.toString(mspt))
-							.replace("%msptLimit%", Integer.toString(Main.config.generic.msptLimit))
-							.replace("%mentionAllAdmins%", adminsMentionString())).queue();
+							.replace("%msptLimit%", Integer.toString(Main.config.generic.msptLimit))).queue();
 				}
 			}
 		}, 0, 5000);
@@ -118,9 +117,7 @@ public class Utils {
 					Main.config.textsEN.highMSPT,
 					Main.config.textsEN.blueColoredText,
 					Main.config.textsEN.roleColoredText,
-					Main.config.textsEN.colorlessText,
-					Main.config.textsEN.removeVanillaFormattingFromDiscord,
-					Main.config.textsEN.removeLineBreakFromDiscord);
+					Main.config.textsEN.colorlessText);
 		} else {
 			Main.texts = new Texts(Main.config.textsZH.serverStarted,
 					Main.config.textsZH.serverStopped,
@@ -133,9 +130,7 @@ public class Utils {
 					Main.config.textsZH.highMSPT,
 					Main.config.textsZH.blueColoredText,
 					Main.config.textsZH.roleColoredText,
-					Main.config.textsZH.colorlessText,
-					Main.config.textsZH.removeVanillaFormattingFromDiscord,
-					Main.config.textsZH.removeLineBreakFromDiscord);
+					Main.config.textsZH.colorlessText);
 		}
 	}
 
