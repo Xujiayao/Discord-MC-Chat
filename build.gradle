@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '0.10.65'
+    id 'fabric-loom' version '0.10.66'
 }
 
 sourceCompatibility = JavaVersion.VERSION_17
@@ -11,10 +11,6 @@ group = project.maven_group
 
 repositories {
     maven {
-        name 'm2-dv8tion'
-        url 'https://m2.dv8tion.net/releases'
-    }
-    maven {
         name = "Fabric"
         url = "https://maven.fabricmc.net/"
     }
@@ -22,14 +18,13 @@ repositories {
 }
 
 dependencies {
-
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    include(modImplementation("net.dv8tion:JDA:5.0.0-alpha.1") {
+    include(modImplementation("net.dv8tion:JDA:5.0.0-alpha.4") {
         exclude module: 'opus-java'
     })
 

@@ -97,10 +97,10 @@ public class MinecraftEventListener {
 		CommandExecutionCallback.EVENT.register((command, source) -> {
 			if (!Main.stop && Main.config.generic.broadcastCommandExecution) {
 				try {
-					String temp = "";
+					String temp = command;
 
-					if (command.contains(" ")) {
-						temp = command.substring(0, command.indexOf(" "));
+					if (temp.contains(" ")) {
+						temp = temp.substring(0, temp.indexOf(" "));
 					}
 
 					if (Main.config.generic.excludedCommands.contains(temp)) {
