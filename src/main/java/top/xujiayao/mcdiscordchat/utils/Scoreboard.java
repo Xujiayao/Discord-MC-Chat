@@ -22,6 +22,10 @@ import java.util.Map;
  */
 public class Scoreboard {
 
+	private Scoreboard() {
+		throw new IllegalStateException("Utility class");
+	}
+
 	public static StringBuilder getScoreboard(String message) {
 		StringBuilder output = null;
 

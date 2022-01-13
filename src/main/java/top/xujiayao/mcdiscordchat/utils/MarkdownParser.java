@@ -12,6 +12,10 @@ import java.util.regex.Pattern;
  */
 public class MarkdownParser {
 
+	private MarkdownParser() {
+		throw new IllegalStateException("Utility class");
+	}
+
 	public static String parseMarkdown(String message) {
 		String translated = message;
 
