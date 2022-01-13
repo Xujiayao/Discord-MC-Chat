@@ -15,13 +15,13 @@ Language: English <a href="/README_CN.md">中文</a>
 [![CurseForge Downloads](https://cf.way2muchnoise.eu/full_mcdiscordchat_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
 [![Versions Supported](https://cf.way2muchnoise.eu/versions/mcdiscordchat.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
 
-MCDiscordChat (MCDC), the most practical and powerful Fabric Minecraft <> Discord chat bridge
+MCDiscordChat (MCDC), a practical and powerful Fabric Minecraft <> Discord chat bridge
 
 More information + Docs: [MCDiscordChat Docs | Xujiayao's Blog](https://blog.xujiayao.top/posts/4ba0a17a/)
 
 ## Introduction
 
-[MCDiscordChat](https://github.com/Xujiayao/MCDiscordChat) (abbreviated as MCDC), a highly-modified Fabric Minecraft <> Discord chat bridge that complements and enhances BRForgers/DisFabric.
+[MCDiscordChat](https://github.com/Xujiayao/MCDiscordChat) (abbreviated as MCDC), a practical and powerful Fabric Minecraft <> Discord chat bridge that complements and enhances BRForgers/DisFabric.
 
 A big thanks to [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) for the original source code, which was
 licensed under the Mozilla Public License 2.0 (MPL-2.0).

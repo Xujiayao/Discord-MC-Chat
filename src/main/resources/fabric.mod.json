@@ -3,7 +3,7 @@
   "id": "mcdiscordchat",
   "version": "${version}",
   "name": "MCDiscordChat",
-  "description": "MCDiscordChat (MCDC), the most practical and powerful Fabric Minecraft <> Discord chat bridge",
+  "description": "MCDiscordChat (MCDC), a practical and powerful Fabric Minecraft <> Discord chat bridge",
   "authors": [
     "Xujiayao"
   ],
