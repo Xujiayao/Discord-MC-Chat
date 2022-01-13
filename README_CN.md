@@ -21,7 +21,7 @@ MCDiscordChat (MCDC), a practical and powerful Fabric Minecraft <> Discord chat 
 
 ## 简介
 
-[MCDiscordChat](https://github.com/Xujiayao/MCDiscordChat) （简称为 MCDC），一个实用且功能强大的 Fabric Minecraft <> Discord 跨服聊天工具，是
+[MCDiscordChat](https://github.com/Xujiayao/MCDiscordChat)（简称为 MCDC），一个实用且功能强大的 Fabric Minecraft <> Discord 跨服聊天工具，是
 BRForgers/DisFabric 的功能补充和增强。
 
 非常感谢 [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) 的原始源代码，该项目使用 Mozilla Public License 2.0 (MPL-2.0)
