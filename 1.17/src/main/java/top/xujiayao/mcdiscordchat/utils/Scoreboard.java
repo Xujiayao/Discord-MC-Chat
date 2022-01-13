@@ -110,7 +110,7 @@ public class Scoreboard {
 
 		if (output == null) {
 			output = new StringBuilder("```\n=============== " + (Main.config.generic.switchLanguageFromChinToEng ? "Scoreboard" : "排行榜") + " ===============\n").append("\n").append(Main.config.generic.switchLanguageFromChinToEng ? "No result" : "无结果")
-				  .append("\n```");
+					.append("\n```");
 		}
 
 		return output;

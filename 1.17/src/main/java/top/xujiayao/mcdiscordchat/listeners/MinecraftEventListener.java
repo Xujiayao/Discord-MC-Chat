@@ -101,7 +101,7 @@ public class MinecraftEventListener {
 					}
 
 					if (source.getPlayer().getEntityName().equals(lastPlayer)
-						  && (System.currentTimeMillis() - lastTime) < 100) {
+							&& (System.currentTimeMillis() - lastTime) < 100) {
 						return;
 					}
 
@@ -128,14 +128,14 @@ public class MinecraftEventListener {
 					List<ServerPlayerEntity> list = new ArrayList<>(Objects.requireNonNull(Utils.getServer()).getPlayerManager().getPlayerList());
 					list.remove(source.getPlayer());
 					list.forEach(
-						  serverPlayerEntity -> {
-							  try {
-								  serverPlayerEntity.sendMessage(new LiteralText("<").append(source.getPlayer().getEntityName()).append("> ").append(command), false);
-							  } catch (Exception e) {
-								  e.printStackTrace();
-								  Main.textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
-							  }
-						  });
+							serverPlayerEntity -> {
+								try {
+									serverPlayerEntity.sendMessage(new LiteralText("<").append(source.getPlayer().getEntityName()).append("> ").append(command), false);
+								} catch (Exception e) {
+									e.printStackTrace();
+									Main.textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
+								}
+							});
 				} catch (Exception e) {
 					e.printStackTrace();
 					Main.textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
@@ -145,18 +145,18 @@ public class MinecraftEventListener {
 
 		PlayerAdvancementCallback.EVENT.register((playerEntity, advancement) -> {
 			if (Main.config.generic.announceAdvancements && advancement.getDisplay() != null
-				  && advancement.getDisplay().shouldAnnounceToChat()
-				  && playerEntity.getAdvancementTracker().getProgress(advancement).isDone() && !Main.stop) {
+					&& advancement.getDisplay().shouldAnnounceToChat()
+					&& playerEntity.getAdvancementTracker().getProgress(advancement).isDone() && !Main.stop) {
 				switch (advancement.getDisplay().getFrame()) {
 					case GOAL -> Main.textChannel.sendMessage(Main.texts.advancementGoal()
-						  .replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName()))
-						  .replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
+							.replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName()))
+							.replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
 					case TASK -> Main.textChannel.sendMessage(Main.texts.advancementTask()
-						  .replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName()))
-						  .replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
+							.replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName()))
+							.replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
 					case CHALLENGE -> Main.textChannel.sendMessage(Main.texts.advancementChallenge()
-						  .replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName()))
-						  .replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
+							.replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName()))
+							.replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
 				}
 			}
 		});
@@ -164,22 +164,22 @@ public class MinecraftEventListener {
 		PlayerDeathCallback.EVENT.register((playerEntity, damageSource) -> {
 			if (Main.config.generic.announceDeaths && !Main.stop) {
 				Main.textChannel.sendMessage(Main.texts.deathMessage()
-					  .replace("%deathmessage%", MarkdownSanitizer.escape(damageSource.getDeathMessage(playerEntity).getString()))
-					  .replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName()))).queue();
+						.replace("%deathmessage%", MarkdownSanitizer.escape(damageSource.getDeathMessage(playerEntity).getString()))
+						.replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName()))).queue();
 			}
 		});
 
 		PlayerJoinCallback.EVENT.register((connection, playerEntity) -> {
 			if (Main.config.generic.announcePlayers && !Main.stop) {
 				Main.textChannel.sendMessage(Main.texts.joinServer().replace("%playername%",
-					  MarkdownSanitizer.escape(playerEntity.getEntityName()))).queue();
+						MarkdownSanitizer.escape(playerEntity.getEntityName()))).queue();
 			}
 		});
 
 		PlayerLeaveCallback.EVENT.register(playerEntity -> {
 			if (Main.config.generic.announcePlayers && !Main.stop) {
 				Main.textChannel.sendMessage(Main.texts.leftServer().replace("%playername%",
-					  MarkdownSanitizer.escape(playerEntity.getEntityName()))).queue();
+						MarkdownSanitizer.escape(playerEntity.getEntityName()))).queue();
 			}
 		});
 	}

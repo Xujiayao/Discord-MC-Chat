@@ -21,7 +21,7 @@ MCDiscordChat (MCDC), the most practical and powerful Fabric Minecraft <> Discor
 
 ## 简介
 
-[MCDiscordChat](https://github.com/Xujiayao/MCDiscordChat) （简称为 MCDC），最实用、最强大的 Fabric Minecraft <> Discord 跨服聊天工具。
+[MCDiscordChat](https://github.com/Xujiayao/MCDiscordChat) （简称为 MCDC），一个高度修改的 Fabric Minecraft <> Discord 跨服聊天工具，是 BRForgers/DisFabric 的功能补充和增强。
 
 非常感谢 [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) 的原始源代码，该项目使用 Mozilla Public License 2.0 (MPL-2.0)
 开源协议许可开源。
@@ -55,6 +55,7 @@ MCDiscordChat (MCDC), the most practical and powerful Fabric Minecraft <> Discor
 - 在玩家达成进度 / 达成目标 / 完成挑战时发出通知
 - 在服务器 MSPT 高于一定值时发出通知
 - 可自定义游戏内消息显示格式
+- 可自定义 Webhook 头像 API
 - 可使用黑名单禁止处理某位玩家或用户的消息
 - 可使用管理员名单配置用户使用某些命令的权限
 - 可广播玩家指令执行

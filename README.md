@@ -21,8 +21,7 @@ More information + Docs: [MCDiscordChat Docs | Xujiayao's Blog](https://blog.xuj
 
 ## Introduction
 
-[MCDiscordChat](https://github.com/Xujiayao/MCDiscordChat) (abbreviated as MCDC), the most practical and powerful Fabric
-Minecraft <> Discord chat bridge.
+[MCDiscordChat](https://github.com/Xujiayao/MCDiscordChat) (abbreviated as MCDC), a highly-modified Fabric Minecraft <> Discord chat bridge that complements and enhances BRForgers/DisFabric.
 
 A big thanks to [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) for the original source code, which was
 licensed under the Mozilla Public License 2.0 (MPL-2.0).
@@ -56,6 +55,7 @@ can [submit an issue](https://github.com/Xujiayao/MCDiscordChat/issues/new).
 - Announce when a player join / leave the server
 - Announce when a player reached a progress / achieved a goal / completed a challenge
 - Announce when Server MSPT is higher than a certain value
+- Customizable Webhook Avatar API
 - Customizable in-game message display format
 - Blacklist can be used to prohibit the processing of a player or user's message
 - Admin list can be used to configure the user's authority to use certain commands

@@ -18,11 +18,11 @@ import java.io.IOException;
  */
 public class ConfigManager {
 
+	private static File file;
+
 	private ConfigManager() {
 		throw new IllegalStateException("Utility class");
 	}
-
-	private static File file;
 
 	public static void initConfig() {
 		file = new File(FabricLoader.getInstance().getConfigDir().toFile(), "mcdiscordchat.json");
@@ -66,21 +66,21 @@ public class ConfigManager {
 			}
 
 			Main.config = new GsonBuilder()
-				  .setPrettyPrinting()
-				  .disableHtmlEscaping()
-				  .create()
-				  .fromJson(jsonString.toString(), new TypeToken<Config>() {
-				  }.getType());
+					.setPrettyPrinting()
+					.disableHtmlEscaping()
+					.create()
+					.fromJson(jsonString.toString(), new TypeToken<Config>() {
+					}.getType());
 		}
 	}
 
 	private static void createConfig() {
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
 			String jsonString = new GsonBuilder()
-				  .setPrettyPrinting()
-				  .disableHtmlEscaping()
-				  .create()
-				  .toJson(new Config());
+					.setPrettyPrinting()
+					.disableHtmlEscaping()
+					.create()
+					.toJson(new Config());
 
 			writer.write(jsonString);
 		} catch (Exception e) {
@@ -91,10 +91,10 @@ public class ConfigManager {
 	public static void updateConfig() {
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
 			String jsonString = new GsonBuilder()
-				  .setPrettyPrinting()
-				  .disableHtmlEscaping()
-				  .create()
-				  .toJson(Main.config);
+					.setPrettyPrinting()
+					.disableHtmlEscaping()
+					.create()
+					.toJson(Main.config);
 
 			writer.write(jsonString);
 		} catch (Exception e) {

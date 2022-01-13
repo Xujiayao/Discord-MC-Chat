@@ -11,11 +11,11 @@ import net.minecraft.server.network.ServerPlayerEntity;
 public interface PlayerDeathCallback {
 
 	Event<PlayerDeathCallback> EVENT = EventFactory.createArrayBacked(PlayerDeathCallback.class,
-		  callbacks -> (playerEntity, damageSource) -> {
-			  for (PlayerDeathCallback callback : callbacks) {
-				  callback.onPlayerDeath(playerEntity, damageSource);
-			  }
-		  });
+			callbacks -> (playerEntity, damageSource) -> {
+				for (PlayerDeathCallback callback : callbacks) {
+					callback.onPlayerDeath(playerEntity, damageSource);
+				}
+			});
 
 	void onPlayerDeath(ServerPlayerEntity playerEntity, DamageSource damageSource);
 }
