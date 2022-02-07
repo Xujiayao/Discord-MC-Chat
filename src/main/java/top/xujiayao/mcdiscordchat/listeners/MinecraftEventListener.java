@@ -77,7 +77,7 @@ public class MinecraftEventListener {
 				try {
 					Request request = new Request.Builder()
 							.url(config.generic.webhookURL)
-							.post(RequestBody.create(MediaType.get("application/json"), body.toString()))
+							.post(RequestBody.create(body.toString(), MediaType.get("application/json")))
 							.build();
 
 					client.newCall(request).execute();
@@ -142,7 +142,7 @@ public class MinecraftEventListener {
 
 					Request request = new Request.Builder()
 							.url(config.generic.webhookURL)
-							.post(RequestBody.create(MediaType.get("application/json"), body.toString()))
+							.post(RequestBody.create(body.toString(), MediaType.get("application/json")))
 							.build();
 
 					client.newCall(request).execute();
