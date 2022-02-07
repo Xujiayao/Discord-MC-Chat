@@ -77,6 +77,9 @@ public class Config {
 		// [Required] Removes line break from any discord message to avoid spam
 		public boolean removeLineBreakFromDiscord = false;
 
+		// [Required] Discord bot command prefix
+		public String botCommandPrefix = "!";
+
 		// [Optional] MCDiscordChat Excluded Commands List, do not process and send specified commands
 		// (can have more than one)
 		public List<String> excludedCommands = List.of("/tell");
