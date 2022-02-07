@@ -20,20 +20,14 @@ dependencies {
         exclude module: 'opus-java'
     })
 
-    include(modImplementation("com.konghq:unirest-java:3.13.6:standalone")) {
-        exclude group: "com.google.code.gson", module: "gson"
-        exclude group: "org.apache.httpcomponents", module: "httpclient"
-        exclude group: "commons-logging", module: "commons-logging"
-    }
-
     include "net.sf.trove4j:trove4j:3.0.3"
     include 'org.apache.commons:commons-collections4:4.4'
     include 'com.neovisionaries:nv-websocket-client:2.14'
-    include "com.squareup.okhttp3:okhttp:3.14.9"
+    include 'com.squareup.okhttp3:okhttp:4.9.3'
     include 'com.fasterxml.jackson.core:jackson-annotations:2.13.1'
     include 'com.fasterxml.jackson.core:jackson-core:2.13.1'
     include 'com.fasterxml.jackson.core:jackson-databind:2.13.1'
-    include "com.squareup.okio:okio:1.17.5"
+    include 'com.squareup.okio:okio:3.0.0'
 
     include(modImplementation("com.vdurmont:emoji-java:5.1.1"))
     include(modImplementation("org.json:json:20211205"))

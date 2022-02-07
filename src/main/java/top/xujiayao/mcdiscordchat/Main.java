@@ -1,6 +1,5 @@
 package top.xujiayao.mcdiscordchat;
 
-import kong.unirest.Unirest;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
@@ -9,6 +8,7 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import okhttp3.OkHttpClient;
 import top.xujiayao.mcdiscordchat.listeners.DiscordEventListener;
 import top.xujiayao.mcdiscordchat.listeners.MinecraftEventListener;
 import top.xujiayao.mcdiscordchat.objects.Texts;
@@ -21,6 +21,8 @@ import java.util.Timer;
  * @author Xujiayao
  */
 public class Main implements DedicatedServerModInitializer {
+
+	public static final OkHttpClient client = new OkHttpClient();
 
 	public static JDA jda;
 	public static TextChannel textChannel;
@@ -85,8 +87,6 @@ public class Main implements DedicatedServerModInitializer {
 					e.printStackTrace();
 					Thread.currentThread().interrupt();
 				}
-
-				Unirest.shutDown();
 
 				jda.shutdown();
 

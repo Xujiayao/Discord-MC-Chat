@@ -1,16 +1,18 @@
 package top.xujiayao.mcdiscordchat.listeners;
 
-import kong.unirest.Unirest;
-import kong.unirest.json.JSONObject;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Pair;
+import okhttp3.MediaType;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.json.JSONObject;
 import top.xujiayao.mcdiscordchat.Main;
 import top.xujiayao.mcdiscordchat.events.CommandExecutionCallback;
 import top.xujiayao.mcdiscordchat.events.PlayerAdvancementCallback;
@@ -26,6 +28,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import static top.xujiayao.mcdiscordchat.Main.client;
 import static top.xujiayao.mcdiscordchat.Main.config;
 import static top.xujiayao.mcdiscordchat.Main.textChannel;
 
@@ -72,7 +75,12 @@ public class MinecraftEventListener {
 				body.put("content", convertedPair.getLeft().replace("_", "\\_"));
 
 				try {
-					Unirest.post(config.generic.webhookURL).header("Content-Type", "application/json").body(body).asJsonAsync();
+					Request request = new Request.Builder()
+							.url(config.generic.webhookURL)
+							.post(RequestBody.create(MediaType.get("application/json"), body.toString()))
+							.build();
+
+					client.newCall(request).execute();
 				} catch (Exception e) {
 					e.printStackTrace();
 					textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
@@ -132,7 +140,12 @@ public class MinecraftEventListener {
 					body.put("allowed_mentions", allowedMentions);
 					body.put("content", command.replace("_", "\\_"));
 
-					Unirest.post(config.generic.webhookURL).header("Content-Type", "application/json").body(body).asJsonAsync();
+					Request request = new Request.Builder()
+							.url(config.generic.webhookURL)
+							.post(RequestBody.create(MediaType.get("application/json"), body.toString()))
+							.build();
+
+					client.newCall(request).execute();
 				} catch (Exception e) {
 					e.printStackTrace();
 					textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
