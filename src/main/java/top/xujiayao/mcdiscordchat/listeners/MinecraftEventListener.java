@@ -20,6 +20,7 @@ import top.xujiayao.mcdiscordchat.events.PlayerDeathCallback;
 import top.xujiayao.mcdiscordchat.events.PlayerJoinCallback;
 import top.xujiayao.mcdiscordchat.events.PlayerLeaveCallback;
 import top.xujiayao.mcdiscordchat.events.ServerChatCallback;
+import top.xujiayao.mcdiscordchat.events.SystemMessageCallback;
 import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 
@@ -163,6 +164,17 @@ public class MinecraftEventListener {
 									textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
 								}
 							});
+				} catch (Exception e) {
+					e.printStackTrace();
+					textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
+				}
+			}
+		});
+
+		SystemMessageCallback.EVENT.register((message) -> {
+			if (!Main.stop && config.generic.broadcastCommandExecution) {
+				try {
+					textChannel.sendMessage("**[INFO]:** " + message).queue();
 				} catch (Exception e) {
 					e.printStackTrace();
 					textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
