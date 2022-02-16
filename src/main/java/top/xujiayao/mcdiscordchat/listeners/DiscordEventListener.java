@@ -26,8 +26,11 @@ import top.xujiayao.mcdiscordchat.utils.Utils;
 import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
+import java.util.TimerTask;
 
 import static top.xujiayao.mcdiscordchat.Main.config;
+import static top.xujiayao.mcdiscordchat.Main.consoleLogTextChannel;
+import static top.xujiayao.mcdiscordchat.Main.consoleLogTimer;
 import static top.xujiayao.mcdiscordchat.Main.textChannel;
 
 /**
@@ -126,12 +129,28 @@ public class DiscordEventListener extends ListenerAdapter {
 							Main.jda.getPresence().setActivity(Activity.listening(config.generic.botListeningStatus));
 						}
 
+						textChannel = Main.jda.getTextChannelById(Main.config.generic.channelId);
+						consoleLogTextChannel = Main.jda.getTextChannelById(Main.config.generic.consoleLogChannelId);
+
 						if (config.generic.announceHighMSPT) {
 							Main.msptMonitorTimer.cancel();
 							Main.msptMonitorTimer = new Timer();
 							Utils.monitorMSPT();
 						} else {
 							Main.msptMonitorTimer.cancel();
+						}
+
+						if (!config.generic.consoleLogChannelId.isEmpty()) {
+							Main.consoleLogTimer.cancel();
+							Main.consoleLogTimer = new Timer();
+							consoleLogTimer.schedule(new TimerTask() {
+								@Override
+								public void run() {
+									MinecraftEventListener.consoleLogSentTimes = 0;
+								}
+							}, 0, 30000);
+						} else {
+							Main.consoleLogTimer.cancel();
 						}
 
 						Main.textChannel.sendMessage("**" + (config.generic.switchLanguageFromChinToEng ? "Successfully loaded the configuration file!" : "配置文件加载成功！") + "**").queue();
@@ -145,36 +164,36 @@ public class DiscordEventListener extends ListenerAdapter {
 				}
 			} else if ("help".equals(command)) {
 				String help = config.generic.switchLanguageFromChinToEng ? """
-					```
-					=============== Help ===============
-					        
-					!info: Query server running status
-					!scoreboard <type> <id>: Query the player scoreboard for this statistic
-					!ban <type> <id/name>: Add or remove a Discord user or Minecraft player from the blacklist (admins only)
-					!blacklist: Query blacklist
-					!console <command>: Executes command in the server console (admins only)
-					!reload: Reload MCDiscordChat configuration file (admins only)
-					!admin <id>: Add or remove a Discord user from the list of MCDiscordChat admins (super admins only)
-					!adminlist: Query admin list
-					!update: Check for update
-					!stop: Stop the server (admins only)
-					```
-					""" : """
-					```
-					=============== 帮助 ===============
-					        
-					!info: 查询服务器运行状态
-					!scoreboard <type> <id>: 查询该统计信息的玩家排行榜
-					!ban <type> <id/name>: 将一名 Discord 用户或 Minecraft 玩家从黑名单中添加或移除（仅限管理员）
-					!blacklist: 列出黑名单
-					!console <command>: 在服务器控制台中执行指令（仅限管理员）
-					!reload: 重新加载 MCDiscordChat 配置文件（仅限管理员）
-					!admin <id>: 将一名 Discord 用户从 MCDiscordChat 普通管理员名单中添加或移除（仅限超级管理员）
-					!adminlist: 列出管理员名单
-					!update: 检查更新
-					!stop: 停止服务器（仅限管理员）
-					```
-					""";
+						```
+						=============== Help ===============
+						        
+						!info: Query server running status
+						!scoreboard <type> <id>: Query the player scoreboard for this statistic
+						!ban <type> <id/name>: Add or remove a Discord user or Minecraft player from the blacklist (admins only)
+						!blacklist: Query blacklist
+						!console <command>: Executes command in the server console (admins only)
+						!reload: Reload MCDiscordChat configuration file (admins only)
+						!admin <id>: Add or remove a Discord user from the list of MCDiscordChat admins (super admins only)
+						!adminlist: Query admin list
+						!update: Check for update
+						!stop: Stop the server (admins only)
+						```
+						""" : """
+						```
+						=============== 帮助 ===============
+						        
+						!info: 查询服务器运行状态
+						!scoreboard <type> <id>: 查询该统计信息的玩家排行榜
+						!ban <type> <id/name>: 将一名 Discord 用户或 Minecraft 玩家从黑名单中添加或移除（仅限管理员）
+						!blacklist: 列出黑名单
+						!console <command>: 在服务器控制台中执行指令（仅限管理员）
+						!reload: 重新加载 MCDiscordChat 配置文件（仅限管理员）
+						!admin <id>: 将一名 Discord 用户从 MCDiscordChat 普通管理员名单中添加或移除（仅限超级管理员）
+						!adminlist: 列出管理员名单
+						!update: 检查更新
+						!stop: 停止服务器（仅限管理员）
+						```
+						""";
 
 				textChannel.sendMessage(help).queue();
 			} else if ("blacklist".equals(command)) {

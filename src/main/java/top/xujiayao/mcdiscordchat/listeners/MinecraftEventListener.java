@@ -24,13 +24,19 @@ import top.xujiayao.mcdiscordchat.events.SystemMessageCallback;
 import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static top.xujiayao.mcdiscordchat.Main.client;
 import static top.xujiayao.mcdiscordchat.Main.config;
+import static top.xujiayao.mcdiscordchat.Main.consoleLogTextChannel;
+import static top.xujiayao.mcdiscordchat.Main.consoleLogTimer;
 import static top.xujiayao.mcdiscordchat.Main.textChannel;
 
 /**
@@ -38,6 +44,8 @@ import static top.xujiayao.mcdiscordchat.Main.textChannel;
  */
 public class MinecraftEventListener {
 
+	private static final SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+	public static int consoleLogSentTimes = 0;
 	long lastTime = System.currentTimeMillis();
 	String lastPlayer = "";
 
@@ -171,10 +179,39 @@ public class MinecraftEventListener {
 			}
 		});
 
+		if (!config.generic.consoleLogChannelId.isEmpty()) {
+			consoleLogTimer = new Timer();
+			consoleLogTimer.schedule(new TimerTask() {
+				@Override
+				public void run() {
+					consoleLogSentTimes = 0;
+				}
+			}, 0, 30000);
+		}
+
 		SystemMessageCallback.EVENT.register((message) -> {
-			if (!Main.stop && config.generic.broadcastCommandExecution) {
+			if (!Main.stop && !config.generic.consoleLogChannelId.isEmpty()) {
 				try {
-					textChannel.sendMessage("**[INFO]:** " + message).queue();
+					consoleLogSentTimes++;
+
+					if (consoleLogSentTimes > 10) {
+						return;
+					}
+
+					consoleLogTextChannel.sendMessage(Main.texts.consoleLogMessage()
+							.replace("%timestamp%", sdf.format(new Date()))
+							.replace("%message%", message)).queue();
+
+					if (consoleLogSentTimes == 10) {
+						new Timer().schedule(new TimerTask() {
+							@Override
+							public void run() {
+								consoleLogSentTimes = 0;
+							}
+						}, 20000);
+
+						consoleLogTextChannel.sendMessage("**" + (config.generic.switchLanguageFromChinToEng ? "Rate limit exceeded! Wait 20 seconds..." : "发送次数超出限制！等待 20 秒...") + "**").queue();
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 					textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();

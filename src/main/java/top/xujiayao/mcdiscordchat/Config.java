@@ -32,6 +32,11 @@ public class Config {
 		// (right-click the channel to copy the ID, you have to turn on developer mode in Discord settings)
 		public String channelId = "";
 
+		// [Required] Discord Channel ID for Console Log Broadcast
+		// (leave blank to disable this feature)
+		// (right-click the channel to copy the ID, you have to turn on developer mode in Discord settings)
+		public String consoleLogChannelId = "";
+
 		// [Required] Server world name
 		public String worldName = "world";
 
@@ -121,6 +126,7 @@ public class Config {
 		// %message%	      Content of message
 		// %mspt%               Server MSPT
 		// %msptLimit%          Server MSPT Limit
+		// %timestamp%          Current timestamp
 
 		public String serverStarted = "**服务器已启动！**";
 		public String serverStopped = "**服务器已关闭！**";
@@ -135,6 +141,8 @@ public class Config {
 		public String advancementGoal = "**%playername% 达成了目标 [%advancement%]**";
 
 		public String highMSPT = "**服务器 MSPT (%mspt%) 高于 %msptLimit%！**";
+
+		public String consoleLogMessage = "**[%timestamp%] [INFO]:** %message%";
 
 		public String blueColoredText = "[%servername%] ";
 		public String roleColoredText = "<%name%>";
@@ -153,6 +161,7 @@ public class Config {
 		// %message%	      Content of message
 		// %mspt%               Server MSPT
 		// %msptLimit%          Server MSPT Limit
+		// %timestamp%          Current timestamp
 
 		public String serverStarted = "**Server started!**";
 		public String serverStopped = "**Server stopped!**";
@@ -167,6 +176,8 @@ public class Config {
 		public String advancementGoal = "**%playername% has reached the goal [%advancement%]**";
 
 		public String highMSPT = "**Server MSPT (%mspt%) is above %msptLimit%!**";
+
+		public String consoleLogMessage = "**[%timestamp%] [INFO]:** %message%";
 
 		public String blueColoredText = "[%servername%] ";
 		public String roleColoredText = "<%name%>";

@@ -3,6 +3,8 @@ package top.xujiayao.mcdiscordchat.utils;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import net.fabricmc.loader.api.FabricLoader;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import top.xujiayao.mcdiscordchat.Config;
 import top.xujiayao.mcdiscordchat.Main;
 
@@ -41,16 +43,18 @@ public class ConfigManager {
 		} else {
 			createConfig();
 
-			System.err.println("--------------------");
-			System.err.println("错误：找不到配置文件或配置文件为空！");
-			System.err.println("Error: The config file cannot be found or is empty!");
-			System.err.println();
-			System.err.println("请在重新启动服务器前编辑 /config/mcdiscordchat.json 以配置 MCDiscordChat！");
-			System.err.println("Please edit /config/mcdiscordchat.json to configure MCDiscordChat before restarting the server!");
-			System.err.println();
-			System.err.println("正在停止服务器...");
-			System.err.println("Stopping the server...");
-			System.err.println("--------------------");
+			Logger LOGGER = LogManager.getLogger();
+
+			LOGGER.error("--------------------");
+			LOGGER.error("错误：找不到配置文件或配置文件为空！");
+			LOGGER.error("Error: The config file cannot be found or is empty!");
+			LOGGER.error("");
+			LOGGER.error("请在重新启动服务器前编辑 /config/mcdiscordchat.json 以配置 MCDiscordChat！");
+			LOGGER.error("Please edit /config/mcdiscordchat.json to configure MCDiscordChat before restarting the server!");
+			LOGGER.error("");
+			LOGGER.error("正在停止服务器...");
+			LOGGER.error("Stopping the server...");
+			LOGGER.error("--------------------");
 
 			System.exit(1);
 		}

@@ -14,7 +14,7 @@ import java.util.UUID;
  * @author Xujiayao
  */
 @Mixin(MinecraftServer.class)
-public abstract class MixinMinecraftServer {
+public class MixinMinecraftServer {
 
 	@Redirect(
 			method = "sendSystemMessage",

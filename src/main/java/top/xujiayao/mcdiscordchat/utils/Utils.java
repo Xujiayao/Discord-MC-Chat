@@ -128,6 +128,7 @@ public class Utils {
 					Main.config.textsEN.advancementChallenge,
 					Main.config.textsEN.advancementGoal,
 					Main.config.textsEN.highMSPT,
+					Main.config.textsEN.consoleLogMessage,
 					Main.config.textsEN.blueColoredText,
 					Main.config.textsEN.roleColoredText,
 					Main.config.textsEN.colorlessText);
@@ -141,6 +142,7 @@ public class Utils {
 					Main.config.textsZH.advancementChallenge,
 					Main.config.textsZH.advancementGoal,
 					Main.config.textsZH.highMSPT,
+					Main.config.textsZH.consoleLogMessage,
 					Main.config.textsZH.blueColoredText,
 					Main.config.textsZH.roleColoredText,
 					Main.config.textsZH.colorlessText);

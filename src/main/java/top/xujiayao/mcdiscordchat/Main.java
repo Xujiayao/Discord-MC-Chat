@@ -26,12 +26,14 @@ public class Main implements DedicatedServerModInitializer {
 
 	public static JDA jda;
 	public static TextChannel textChannel;
+	public static TextChannel consoleLogTextChannel;
 	public static Config config;
 	public static Texts texts;
 
 	public static boolean stop = false;
 
 	public static Timer msptMonitorTimer;
+	public static Timer consoleLogTimer;
 
 	@Override
 	public void onInitializeServer() {
@@ -52,6 +54,7 @@ public class Main implements DedicatedServerModInitializer {
 
 			jda.awaitReady();
 			textChannel = jda.getTextChannelById(Main.config.generic.channelId);
+			consoleLogTextChannel = jda.getTextChannelById(Main.config.generic.consoleLogChannelId);
 		} catch (Exception e) {
 			e.printStackTrace();
 			jda = null;
@@ -79,6 +82,10 @@ public class Main implements DedicatedServerModInitializer {
 
 				if (config.generic.announceHighMSPT) {
 					msptMonitorTimer.cancel();
+				}
+
+				if (!config.generic.consoleLogChannelId.isEmpty()) {
+					consoleLogTimer.cancel();
 				}
 
 				try {

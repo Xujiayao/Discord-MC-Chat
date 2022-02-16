@@ -58,9 +58,11 @@ can [submit an issue](https://github.com/Xujiayao/MCDiscordChat/issues/new).
 - Announce when Server MSPT is higher than a certain value
 - Customizable Webhook Avatar API
 - Customizable in-game message display format
+- Customizable Discord bot command prefix
 - Blacklist can be used to prohibit the processing of a player or user's message
 - Admin list can be used to configure the user's authority to use certain commands
 - Broadcast player command execution
+- Broadcast server console log
 - Support Hot Reloading of the configuration file
 - Check for updates
 
