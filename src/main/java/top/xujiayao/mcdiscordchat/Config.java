@@ -32,9 +32,9 @@ public class Config {
 		// (right-click the channel to copy the ID, you have to turn on developer mode in Discord settings)
 		public String channelId = "";
 
-		// [Required] Discord Channel ID for Console Log Broadcast
+		// [Optional] Discord Channel ID for Console Log Broadcast
 		// (leave blank to disable this feature)
-		// (right-click the channel to copy the ID, you have to turn on developer mode in Discord settings)
+		// (the method to get the ID is the same)
 		public String consoleLogChannelId = "";
 
 		// [Required] Server world name
