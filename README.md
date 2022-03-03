@@ -35,6 +35,8 @@ All releases can be downloaded at the following sites:
 - [Modrinth](https://modrinth.com/mod/mcdiscordchat/versions)
 - [GitHub](https://github.com/Xujiayao/MCDiscordChat/releases)
 
+You can find the latest build JAR files at [GitHub Actions](https://github.com/Xujiayao/MCDiscordChat/actions).
+
 ## Support
 
 If there is a bug or suggestion, or something you don't understand, you

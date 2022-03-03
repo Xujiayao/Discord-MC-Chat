@@ -35,6 +35,8 @@ BRForgers/DisFabric 的功能补充和增强。
 - [Modrinth](https://modrinth.com/mod/mcdiscordchat/versions)
 - [GitHub](https://github.com/Xujiayao/MCDiscordChat/releases)
 
+你可以在 [GitHub Actions](https://github.com/Xujiayao/MCDiscordChat/actions) 找到最新的构建 JAR 文件。
+
 ## 帮助
 
 如果有 bug 或建议，或者有什么不懂的，可以 [发表 issue](https://github.com/Xujiayao/MCDiscordChat/issues/new)。
