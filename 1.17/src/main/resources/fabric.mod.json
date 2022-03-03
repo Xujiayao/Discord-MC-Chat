@@ -3,7 +3,7 @@
   "id": "mcdiscordchat",
   "version": "${version}",
   "name": "MCDiscordChat",
-  "description": "MCDiscordChat (MCDC), a practical and powerful Fabric Minecraft <> Discord chat bridge",
+  "description": "MCDiscordChat (MCDC), a practical and powerful Fabric Minecraft <> Discord chat bridge that complements and enhances BRForgers/DisFabric",
   "authors": [
     "Xujiayao"
   ],
@@ -24,7 +24,7 @@
     "mcdiscordchat.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.12.11",
+    "fabricloader": ">=0.13.3",
     "fabric": "*",
     "minecraft": "1.17.x",
     "java": ">=17"

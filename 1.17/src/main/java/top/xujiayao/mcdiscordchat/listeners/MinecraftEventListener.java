@@ -1,15 +1,17 @@
 package top.xujiayao.mcdiscordchat.listeners;
 
-import kong.unirest.Unirest;
-import kong.unirest.json.JSONObject;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Pair;
+import okhttp3.MediaType;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.json.JSONObject;
 import top.xujiayao.mcdiscordchat.Main;
 import top.xujiayao.mcdiscordchat.events.CommandExecutionCallback;
 import top.xujiayao.mcdiscordchat.events.PlayerAdvancementCallback;
@@ -17,15 +19,24 @@ import top.xujiayao.mcdiscordchat.events.PlayerDeathCallback;
 import top.xujiayao.mcdiscordchat.events.PlayerJoinCallback;
 import top.xujiayao.mcdiscordchat.events.PlayerLeaveCallback;
 import top.xujiayao.mcdiscordchat.events.ServerChatCallback;
+import top.xujiayao.mcdiscordchat.events.SystemMessageCallback;
 import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Timer;
+import java.util.TimerTask;
 
+import static top.xujiayao.mcdiscordchat.Main.client;
 import static top.xujiayao.mcdiscordchat.Main.config;
+import static top.xujiayao.mcdiscordchat.Main.consoleLogTextChannel;
+import static top.xujiayao.mcdiscordchat.Main.consoleLogTimer1;
+import static top.xujiayao.mcdiscordchat.Main.consoleLogTimer2;
 import static top.xujiayao.mcdiscordchat.Main.textChannel;
 
 /**
@@ -33,6 +44,8 @@ import static top.xujiayao.mcdiscordchat.Main.textChannel;
  */
 public class MinecraftEventListener {
 
+	private static final SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+	public static int consoleLogSentTimes = 0;
 	long lastTime = System.currentTimeMillis();
 	String lastPlayer = "";
 
@@ -71,7 +84,12 @@ public class MinecraftEventListener {
 				body.put("content", convertedPair.getLeft().replace("_", "\\_"));
 
 				try {
-					Unirest.post(config.generic.webhookURL).header("Content-Type", "application/json").body(body).asJsonAsync();
+					Request request = new Request.Builder()
+							.url(config.generic.webhookURL)
+							.post(RequestBody.create(body.toString(), MediaType.get("application/json")))
+							.build();
+
+					client.newCall(request).execute();
 				} catch (Exception e) {
 					e.printStackTrace();
 					textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
@@ -131,7 +149,12 @@ public class MinecraftEventListener {
 					body.put("allowed_mentions", allowedMentions);
 					body.put("content", command.replace("_", "\\_"));
 
-					Unirest.post(config.generic.webhookURL).header("Content-Type", "application/json").body(body).asJsonAsync();
+					Request request = new Request.Builder()
+							.url(config.generic.webhookURL)
+							.post(RequestBody.create(body.toString(), MediaType.get("application/json")))
+							.build();
+
+					client.newCall(request).execute();
 				} catch (Exception e) {
 					e.printStackTrace();
 					textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
@@ -149,6 +172,47 @@ public class MinecraftEventListener {
 									textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
 								}
 							});
+				} catch (Exception e) {
+					e.printStackTrace();
+					textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();
+				}
+			}
+		});
+
+		if (!config.generic.consoleLogChannelId.isEmpty()) {
+			consoleLogTimer1 = new Timer();
+			consoleLogTimer2 = new Timer();
+			consoleLogTimer1.schedule(new TimerTask() {
+				@Override
+				public void run() {
+					consoleLogSentTimes = 0;
+				}
+			}, 0, 30000);
+		}
+
+		SystemMessageCallback.EVENT.register((message) -> {
+			if (!Main.stop && !config.generic.consoleLogChannelId.isEmpty()) {
+				try {
+					consoleLogSentTimes++;
+
+					if (consoleLogSentTimes > 10) {
+						return;
+					}
+
+					consoleLogTextChannel.sendMessage(Main.texts.consoleLogMessage()
+							.replace("%timestamp%", sdf.format(new Date()))
+							.replace("%message%", message)).queue();
+
+					if (consoleLogSentTimes == 10) {
+						consoleLogTimer2.schedule(new TimerTask() {
+							@Override
+							public void run() {
+								consoleLogSentTimes = 0;
+							}
+						}, 20000);
+
+						consoleLogTextChannel.sendMessage("**" + (config.generic.switchLanguageFromChinToEng ? "Rate limit exceeded! Wait 20 seconds..." : "发送次数超出限制！等待 20 秒...") + "**").queue();
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 					textChannel.sendMessage("```\n" + ExceptionUtils.getStackTrace(e) + "\n```").queue();

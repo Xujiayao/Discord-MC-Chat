@@ -1,13 +1,14 @@
 package top.xujiayao.mcdiscordchat.utils;
 
 import com.google.gson.Gson;
-import kong.unirest.Unirest;
 import net.dv8tion.jda.api.entities.Member;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.MathHelper;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import top.xujiayao.mcdiscordchat.Main;
@@ -26,6 +27,8 @@ import java.util.Objects;
 import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static top.xujiayao.mcdiscordchat.Main.client;
 
 /**
  * @author Xujiayao
@@ -78,7 +81,17 @@ public class Utils {
 
 	public static void checkUpdate(boolean isManualCheck) {
 		try {
-			Version version = new Gson().fromJson(Unirest.get("https://cdn.jsdelivr.net/gh/Xujiayao/MCDiscordChat@master/update/version.json").asString().getBody(), Version.class);
+			Request request = new Request.Builder()
+					.url("https://cdn.jsdelivr.net/gh/Xujiayao/MCDiscordChat@master/update/version.json")
+					.build();
+
+			String result = null;
+
+			try (Response response = client.newCall(request).execute()) {
+				result = Objects.requireNonNull(response.body()).string();
+			}
+
+			Version version = new Gson().fromJson(result, Version.class);
 			ModJson modJson = new Gson().fromJson(IOUtils.toString(new URI("jar:file:" + Main.class.getProtectionDomain().getCodeSource().getLocation().getPath() + "!/fabric.mod.json"), StandardCharsets.UTF_8), ModJson.class);
 
 			if (!version.version().equals(modJson.version().substring(modJson.version().indexOf("-") + 1))) {
@@ -115,6 +128,7 @@ public class Utils {
 					Main.config.textsEN.advancementChallenge,
 					Main.config.textsEN.advancementGoal,
 					Main.config.textsEN.highMSPT,
+					Main.config.textsEN.consoleLogMessage,
 					Main.config.textsEN.blueColoredText,
 					Main.config.textsEN.roleColoredText,
 					Main.config.textsEN.colorlessText);
@@ -128,6 +142,7 @@ public class Utils {
 					Main.config.textsZH.advancementChallenge,
 					Main.config.textsZH.advancementGoal,
 					Main.config.textsZH.highMSPT,
+					Main.config.textsZH.consoleLogMessage,
 					Main.config.textsZH.blueColoredText,
 					Main.config.textsZH.roleColoredText,
 					Main.config.textsZH.colorlessText);

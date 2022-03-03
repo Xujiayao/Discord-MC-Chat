@@ -12,6 +12,7 @@ public record Texts(String serverStarted,
                     String advancementChallenge,
                     String advancementGoal,
                     String highMSPT,
+                    String consoleLogMessage,
                     String blueColoredText,
                     String roleColoredText,
                     String colorlessText) {
