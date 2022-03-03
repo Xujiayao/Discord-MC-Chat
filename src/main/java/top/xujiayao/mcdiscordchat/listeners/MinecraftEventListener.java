@@ -36,7 +36,8 @@ import java.util.TimerTask;
 import static top.xujiayao.mcdiscordchat.Main.client;
 import static top.xujiayao.mcdiscordchat.Main.config;
 import static top.xujiayao.mcdiscordchat.Main.consoleLogTextChannel;
-import static top.xujiayao.mcdiscordchat.Main.consoleLogTimer;
+import static top.xujiayao.mcdiscordchat.Main.consoleLogTimer1;
+import static top.xujiayao.mcdiscordchat.Main.consoleLogTimer2;
 import static top.xujiayao.mcdiscordchat.Main.textChannel;
 
 /**
@@ -180,8 +181,9 @@ public class MinecraftEventListener {
 		});
 
 		if (!config.generic.consoleLogChannelId.isEmpty()) {
-			consoleLogTimer = new Timer();
-			consoleLogTimer.schedule(new TimerTask() {
+			consoleLogTimer1 = new Timer();
+			consoleLogTimer2 = new Timer();
+			consoleLogTimer1.schedule(new TimerTask() {
 				@Override
 				public void run() {
 					consoleLogSentTimes = 0;
@@ -203,7 +205,7 @@ public class MinecraftEventListener {
 							.replace("%message%", message)).queue();
 
 					if (consoleLogSentTimes == 10) {
-						new Timer().schedule(new TimerTask() {
+						consoleLogTimer2.schedule(new TimerTask() {
 							@Override
 							public void run() {
 								consoleLogSentTimes = 0;

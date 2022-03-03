@@ -33,28 +33,32 @@ public class Main implements DedicatedServerModInitializer {
 	public static boolean stop = false;
 
 	public static Timer msptMonitorTimer;
-	public static Timer consoleLogTimer;
+	public static Timer consoleLogTimer1;
+	public static Timer consoleLogTimer2;
 
 	@Override
 	public void onInitializeServer() {
 		ConfigManager.initConfig();
 
 		try {
-			if (Main.config.generic.membersIntents) {
-				jda = JDABuilder.createDefault(Main.config.generic.botToken)
+			if (config.generic.membersIntents) {
+				jda = JDABuilder.createDefault(config.generic.botToken)
 						.setMemberCachePolicy(MemberCachePolicy.ALL)
 						.enableIntents(GatewayIntent.GUILD_MEMBERS)
 						.addEventListeners(new DiscordEventListener())
 						.build();
 			} else {
-				jda = JDABuilder.createDefault(Main.config.generic.botToken)
+				jda = JDABuilder.createDefault(config.generic.botToken)
 						.addEventListeners(new DiscordEventListener())
 						.build();
 			}
 
 			jda.awaitReady();
-			textChannel = jda.getTextChannelById(Main.config.generic.channelId);
-			consoleLogTextChannel = jda.getTextChannelById(Main.config.generic.consoleLogChannelId);
+			textChannel = jda.getTextChannelById(config.generic.channelId);
+			
+			if (!config.generic.consoleLogChannelId.isEmpty()) {
+				consoleLogTextChannel = jda.getTextChannelById(config.generic.consoleLogChannelId);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			jda = null;
@@ -62,12 +66,12 @@ public class Main implements DedicatedServerModInitializer {
 		}
 
 		if (jda != null) {
-			if (!Main.config.generic.botListeningStatus.isEmpty()) {
-				jda.getPresence().setActivity(Activity.listening(Main.config.generic.botListeningStatus));
+			if (!config.generic.botListeningStatus.isEmpty()) {
+				jda.getPresence().setActivity(Activity.listening(config.generic.botListeningStatus));
 			}
 
 			ServerLifecycleEvents.SERVER_STARTED.register(server -> {
-				textChannel.sendMessage(Main.texts.serverStarted()).queue();
+				textChannel.sendMessage(texts.serverStarted()).queue();
 				Utils.checkUpdate(false);
 
 				if (config.generic.announceHighMSPT) {
@@ -78,14 +82,15 @@ public class Main implements DedicatedServerModInitializer {
 
 			ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
 				stop = true;
-				textChannel.sendMessage(Main.texts.serverStopped()).queue();
+				textChannel.sendMessage(texts.serverStopped()).queue();
 
 				if (config.generic.announceHighMSPT) {
 					msptMonitorTimer.cancel();
 				}
 
 				if (!config.generic.consoleLogChannelId.isEmpty()) {
-					consoleLogTimer.cancel();
+					consoleLogTimer1.cancel();
+					consoleLogTimer2.cancel();
 				}
 
 				try {

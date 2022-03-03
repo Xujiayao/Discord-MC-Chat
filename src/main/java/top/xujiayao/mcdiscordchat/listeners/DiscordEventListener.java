@@ -30,7 +30,7 @@ import java.util.TimerTask;
 
 import static top.xujiayao.mcdiscordchat.Main.config;
 import static top.xujiayao.mcdiscordchat.Main.consoleLogTextChannel;
-import static top.xujiayao.mcdiscordchat.Main.consoleLogTimer;
+import static top.xujiayao.mcdiscordchat.Main.consoleLogTimer1;
 import static top.xujiayao.mcdiscordchat.Main.textChannel;
 
 /**
@@ -130,10 +130,15 @@ public class DiscordEventListener extends ListenerAdapter {
 						}
 
 						textChannel = Main.jda.getTextChannelById(Main.config.generic.channelId);
-						consoleLogTextChannel = Main.jda.getTextChannelById(Main.config.generic.consoleLogChannelId);
+
+						if (!config.generic.consoleLogChannelId.isEmpty()) {
+							consoleLogTextChannel = Main.jda.getTextChannelById(Main.config.generic.consoleLogChannelId);
+						}
 
 						if (config.generic.announceHighMSPT) {
-							Main.msptMonitorTimer.cancel();
+							if (Main.msptMonitorTimer != null) {
+								Main.msptMonitorTimer.cancel();
+							}
 							Main.msptMonitorTimer = new Timer();
 							Utils.monitorMSPT();
 						} else {
@@ -141,16 +146,21 @@ public class DiscordEventListener extends ListenerAdapter {
 						}
 
 						if (!config.generic.consoleLogChannelId.isEmpty()) {
-							Main.consoleLogTimer.cancel();
-							Main.consoleLogTimer = new Timer();
-							consoleLogTimer.schedule(new TimerTask() {
+							if (Main.consoleLogTimer1 != null) {
+								Main.consoleLogTimer1.cancel();
+								Main.consoleLogTimer2.cancel();
+							}
+							Main.consoleLogTimer1 = new Timer();
+							Main.consoleLogTimer2 = new Timer();
+							consoleLogTimer1.schedule(new TimerTask() {
 								@Override
 								public void run() {
 									MinecraftEventListener.consoleLogSentTimes = 0;
 								}
 							}, 0, 30000);
 						} else {
-							Main.consoleLogTimer.cancel();
+							Main.consoleLogTimer1.cancel();
+							Main.consoleLogTimer2.cancel();
 						}
 
 						Main.textChannel.sendMessage("**" + (config.generic.switchLanguageFromChinToEng ? "Successfully loaded the configuration file!" : "配置文件加载成功！") + "**").queue();
