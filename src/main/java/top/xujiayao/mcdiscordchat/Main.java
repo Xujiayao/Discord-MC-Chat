@@ -55,7 +55,7 @@ public class Main implements DedicatedServerModInitializer {
 
 			jda.awaitReady();
 			textChannel = jda.getTextChannelById(config.generic.channelId);
-			
+
 			if (!config.generic.consoleLogChannelId.isEmpty()) {
 				consoleLogTextChannel = jda.getTextChannelById(config.generic.consoleLogChannelId);
 			}
