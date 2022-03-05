@@ -2,10 +2,10 @@ package top.xujiayao.mcdiscordchat.mixins;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.Text;
-import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import top.xujiayao.mcdiscordchat.events.SystemMessageCallback;
 
 import java.util.UUID;
@@ -16,16 +16,8 @@ import java.util.UUID;
 @Mixin(MinecraftServer.class)
 public class MixinMinecraftServer {
 
-	@Redirect(
-			method = "sendSystemMessage",
-			at = @At(
-					value = "INVOKE",
-					target = "Lorg/apache/logging/log4j/Logger;info(Ljava/lang/String;)V",
-					remap = false
-			)
-	)
-	private void onSystemMessage(Logger instance, String s, Text message, UUID senderUuid) {
-		instance.info(message.getString());
+	@Inject(method = "sendSystemMessage", at = @At("HEAD"))
+	private void onSystemMessage(Text message, UUID sender, CallbackInfo ci) {
 		SystemMessageCallback.EVENT.invoker().onSystemMessage(message.getString());
 	}
 }
