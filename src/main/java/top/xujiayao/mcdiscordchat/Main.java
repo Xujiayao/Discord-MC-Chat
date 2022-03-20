@@ -7,11 +7,13 @@ import net.dv8tion.jda.api.entities.TextChannel;
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
+import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import top.xujiayao.mcdiscordchat.utils.ConfigManager;
 import top.xujiayao.mcdiscordchat.utils.Texts;
+import top.xujiayao.mcdiscordchat.utils.Utils;
 
 import java.io.File;
 
@@ -20,6 +22,7 @@ import java.io.File;
  */
 public class Main implements DedicatedServerModInitializer {
 
+	public static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
 	public static final Logger LOGGER = LoggerFactory.getLogger("MCDiscordChat");
 	public static final File CONFIG_FILE = new File(FabricLoader.getInstance().getConfigDir().toFile(), "mcdiscordchat.json");
 	// ------------------------------------
@@ -45,11 +48,14 @@ public class Main implements DedicatedServerModInitializer {
 
 		try {
 			JDA = JDABuilder.createDefault(CONFIG.generic.botToken)
-					.setActivity(Activity.listening(CONFIG.generic.botListeningStatus))
 //					.addEventListeners(...)
 					.build();
 
 			JDA.awaitReady();
+
+			if (!CONFIG.generic.botListeningStatus.isEmpty()) {
+				JDA.getPresence().setActivity(Activity.listening(CONFIG.generic.botListeningStatus));
+			}
 
 			CHANNEL = JDA.getTextChannelById(CONFIG.generic.channelId);
 			if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
@@ -63,7 +69,7 @@ public class Main implements DedicatedServerModInitializer {
 		ServerLifecycleEvents.SERVER_STARTED.register((server) -> {
 			CHANNEL.sendMessage(TEXTS.serverStarted()).queue();
 
-//			Check Update
+			Utils.checkUpdate(false);
 		});
 
 		ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {

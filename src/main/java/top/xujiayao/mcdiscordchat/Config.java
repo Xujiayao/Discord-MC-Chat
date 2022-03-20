@@ -1,5 +1,8 @@
 package top.xujiayao.mcdiscordchat;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author Xujiayao
  */
@@ -26,6 +29,8 @@ public class Config {
 		public String worldName = "world";
 
 		public String avatarAPI = "https://mc-heads.net/avatar/%player%.png";
+
+		public List<String> adminsIds = new ArrayList<>();
 	}
 
 	public static class TextsZH {

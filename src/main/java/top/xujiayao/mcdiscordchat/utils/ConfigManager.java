@@ -42,7 +42,6 @@ public class ConfigManager {
 
 			System.exit(0);
 		}
-
 	}
 
 	private static void create() {
