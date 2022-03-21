@@ -1,4 +1,4 @@
-package top.xujiayao.mcdiscordchat.mixins;
+package top.xujiayao.mcdiscordchat.minecraft.mixins;
 
 import net.minecraft.client.gui.screen.TitleScreen;
 import org.spongepowered.asm.mixin.Mixin;

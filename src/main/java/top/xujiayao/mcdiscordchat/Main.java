@@ -25,9 +25,7 @@ public class Main implements DedicatedServerModInitializer {
 	public static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
 	public static final Logger LOGGER = LoggerFactory.getLogger("MCDiscordChat");
 	public static final File CONFIG_FILE = new File(FabricLoader.getInstance().getConfigDir().toFile(), "mcdiscordchat.json");
-	// ------------------------------------
-	public static String VERSION = "2.0.0";
-	// ------------------------------------
+	public static String VERSION;
 	public static Config CONFIG;
 	public static JDA JDA;
 	public static TextChannel CHANNEL;
@@ -37,6 +35,7 @@ public class Main implements DedicatedServerModInitializer {
 	@Override
 	public void onInitializeServer() {
 		ConfigManager.init();
+		Utils.setMcdcVersion();
 
 		LOGGER.info("-----------------------------------------");
 		LOGGER.info("MCDiscordChat (MCDC) " + VERSION);
@@ -78,6 +77,6 @@ public class Main implements DedicatedServerModInitializer {
 			JDA.shutdown();
 		});
 
-//		Init MCEventListener
+		//MinecraftEventListener.init();
 	}
 }
