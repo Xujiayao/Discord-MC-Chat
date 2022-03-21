@@ -20,12 +20,14 @@ public class MixinPlayerManager {
 
 	@Inject(method = "onPlayerConnect", at = @At("RETURN"))
 	private void onPlayerConnect(ClientConnection connection, ServerPlayerEntity player, CallbackInfo ci) {
-		CHANNEL.sendMessage(TEXTS.joinServer().replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();
+		CHANNEL.sendMessage(TEXTS.joinServer()
+				.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();
 	}
 
 	@Inject(method = "remove", at = @At("RETURN"))
 	private void remove(ServerPlayerEntity player, CallbackInfo ci) {
-		CHANNEL.sendMessage(TEXTS.leftServer().replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();
+		CHANNEL.sendMessage(TEXTS.leftServer()
+				.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();
 	}
 }
 
