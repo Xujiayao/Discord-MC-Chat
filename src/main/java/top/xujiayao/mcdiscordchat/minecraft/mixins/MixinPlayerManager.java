@@ -18,13 +18,13 @@ import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 @Mixin(PlayerManager.class)
 public class MixinPlayerManager {
 
-	@Inject(method = "onPlayerConnect", at = @At("RETURN"))
+	@Inject(method = "onPlayerConnect", at = @At("HEAD"))
 	private void onPlayerConnect(ClientConnection connection, ServerPlayerEntity player, CallbackInfo ci) {
 		CHANNEL.sendMessage(TEXTS.joinServer()
 				.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();
 	}
 
-	@Inject(method = "remove", at = @At("RETURN"))
+	@Inject(method = "remove", at = @At("HEAD"))
 	private void remove(ServerPlayerEntity player, CallbackInfo ci) {
 		CHANNEL.sendMessage(TEXTS.leftServer()
 				.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();

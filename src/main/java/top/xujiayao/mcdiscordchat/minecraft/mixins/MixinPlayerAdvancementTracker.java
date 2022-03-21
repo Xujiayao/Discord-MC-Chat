@@ -19,7 +19,7 @@ public class MixinPlayerAdvancementTracker {
 	@Shadow
 	private ServerPlayerEntity owner;
 
-	@Inject(method = "grantCriterion", at = @At("RETURN"))
+	@Inject(method = "grantCriterion", at = @At("HEAD"))
 	private void grantCriterion(Advancement advancement, String criterionName, CallbackInfoReturnable<Boolean> cir) {
 		if (advancement.getDisplay() != null && advancement.getDisplay().shouldAnnounceToChat()) {
 			switch (advancement.getDisplay().getFrame()) {
