@@ -76,7 +76,5 @@ public class Main implements DedicatedServerModInitializer {
 
 			JDA.shutdown();
 		});
-
-		//MinecraftEventListener.init();
 	}
 }

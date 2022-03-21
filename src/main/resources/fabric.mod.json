@@ -20,6 +20,9 @@
       "top.xujiayao.mcdiscordchat.Main"
     ]
   },
+  "mixins": [
+    "mcdiscordchat.mixins.json"
+  ],
   "depends": {
     "fabricloader": ">=0.13.3",
     "fabric": "*",
