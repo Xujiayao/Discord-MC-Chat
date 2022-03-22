@@ -9,7 +9,7 @@ body:
   - type: checkboxes
     id: simplest_environment_tested
     attributes:
-      label: Simplest environment tested
+      label: Simplest Environment Tested
       options:
         - label: I confirm that this problem still exists with only MCDiscordChat and Fabric API installed.
           required: true
