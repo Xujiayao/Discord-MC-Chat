@@ -13,6 +13,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 
+/**
+ * @author Xujiayao
+ */
 @Mixin(PlayerAdvancementTracker.class)
 public class MixinPlayerAdvancementTracker {
 
