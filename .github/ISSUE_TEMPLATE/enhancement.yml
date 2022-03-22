@@ -1,0 +1,16 @@
+name: Feature Request
+description: Suggest an idea for this project.
+title: "[Enhancement] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: "**Note: Please search for existing issues before reporting where possible to avoid duplicate requests.**"
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: |
+        What new feature or change do you want? What does it improve? Please tell us what the new feature or change is with a clear and detailed description, add screenshots to help explain if possible.
+    validations:
+      required: true

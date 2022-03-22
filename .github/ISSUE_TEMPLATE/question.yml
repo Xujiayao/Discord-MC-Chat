@@ -1,0 +1,16 @@
+name: Question
+description: Anything you don't understand.
+title: "[Question] "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: "**Note: Please search for existing issues before reporting where possible to avoid duplicate reporting.**"
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: |
+        Please tell us what the question is with a clear and detailed description, add screenshots to help explain if possible.
+    validations:
+      required: true
