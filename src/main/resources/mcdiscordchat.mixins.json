@@ -5,7 +5,9 @@
   "mixins": [
     "MixinPlayerManager",
     "MixinPlayerAdvancementTracker",
-    "MixinServerPlayerEntity"
+    "MixinServerPlayerEntity",
+    "MixinMinecraftServer",
+    "MixinServerPlayNetworkHandler"
   ],
   "injectors": {
     "defaultRequire": 1

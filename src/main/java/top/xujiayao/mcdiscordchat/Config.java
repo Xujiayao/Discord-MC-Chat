@@ -26,9 +26,13 @@ public class Config {
 		public String channelId = "";
 		public String consoleLogChannelId = "";
 
+		public boolean useUuidInsteadOfName = true;
+
 		public String worldName = "world";
 
 		public String avatarAPI = "https://mc-heads.net/avatar/%player%.png";
+
+		public boolean multiServerMode = false;
 
 		public List<String> adminsIds = new ArrayList<>();
 	}

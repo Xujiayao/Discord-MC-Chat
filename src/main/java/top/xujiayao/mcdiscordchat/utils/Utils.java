@@ -124,13 +124,16 @@ public class Utils {
 				"      \"top.xujiayao.mcdiscordchat.Main\"\n" +
 				"    ]\n" +
 				"  },\n" +
+				"  \"mixins\": [\n" +
+				"    \"mcdiscordchat.mixins.json\"\n" +
+				"  ],\n" +
 				"  \"depends\": {\n" +
 				"    \"fabricloader\": \">=0.13.3\",\n" +
 				"    \"fabric\": \"*\",\n" +
 				"    \"minecraft\": \"1.18.x\",\n" +
 				"    \"java\": \">=17\"\n" +
 				"  }\n" +
-				"}\n", JsonObject.class);
+				"}", JsonObject.class);
 
 		VERSION = json.get("version").getAsString();
 		VERSION = VERSION.substring(VERSION.indexOf("-") + 1);

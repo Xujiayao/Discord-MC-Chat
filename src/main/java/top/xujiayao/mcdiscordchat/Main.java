@@ -4,6 +4,9 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.ChunkingFilter;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
@@ -16,6 +19,7 @@ import top.xujiayao.mcdiscordchat.utils.Texts;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 
 /**
  * @author Xujiayao
@@ -25,6 +29,7 @@ public class Main implements DedicatedServerModInitializer {
 	public static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
 	public static final Logger LOGGER = LoggerFactory.getLogger("MCDiscordChat");
 	public static final File CONFIG_FILE = new File(FabricLoader.getInstance().getConfigDir().toFile(), "mcdiscordchat.json");
+	public static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("HH:mm:ss");
 	public static String VERSION;
 	public static Config CONFIG;
 	public static JDA JDA;
@@ -47,6 +52,9 @@ public class Main implements DedicatedServerModInitializer {
 
 		try {
 			JDA = JDABuilder.createDefault(CONFIG.generic.botToken)
+					.setChunkingFilter(ChunkingFilter.ALL)
+					.setMemberCachePolicy(MemberCachePolicy.ALL)
+					.enableIntents(GatewayIntent.GUILD_MEMBERS)
 //					.addEventListeners(...)
 					.build();
 
