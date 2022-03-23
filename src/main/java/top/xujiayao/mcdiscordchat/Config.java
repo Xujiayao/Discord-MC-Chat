@@ -17,7 +17,6 @@ public class Config {
 	public static class Generic {
 		public boolean useEngInsteadOfChin = true;
 
-		public String botName = "[SMP] MCDC Bot";
 		public String botToken = "";
 		public String botPlayingStatus = "Minecraft";
 		public String botListeningStatus = "";

@@ -85,6 +85,8 @@ public abstract class MixinServerPlayNetworkHandler {
 				String contentToDiscord = message.getRaw();
 				String contentToMinecraft = message.getRaw();
 
+				// TODO 处理Markdown（contentToMinecraft）
+
 				Text text = new TranslatableText("chat.type.text", player.getDisplayName(), contentToDiscord);
 				JsonObject json = new Gson().fromJson(Text.Serializer.toJson(text), JsonObject.class);
 				json.getAsJsonArray("with").remove(1);

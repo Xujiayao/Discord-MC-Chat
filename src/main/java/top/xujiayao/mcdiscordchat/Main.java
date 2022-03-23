@@ -14,6 +14,7 @@ import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import top.xujiayao.mcdiscordchat.discord.DiscordEventListener;
 import top.xujiayao.mcdiscordchat.utils.ConfigManager;
 import top.xujiayao.mcdiscordchat.utils.Texts;
 import top.xujiayao.mcdiscordchat.utils.Utils;
@@ -57,7 +58,7 @@ public class Main implements DedicatedServerModInitializer {
 					.setChunkingFilter(ChunkingFilter.ALL)
 					.setMemberCachePolicy(MemberCachePolicy.ALL)
 					.enableIntents(GatewayIntent.GUILD_MEMBERS)
-//					.addEventListeners(...)
+					.addEventListeners(new DiscordEventListener())
 					.build();
 
 			JDA.awaitReady();
