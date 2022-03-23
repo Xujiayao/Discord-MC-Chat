@@ -62,8 +62,12 @@ public class Main implements DedicatedServerModInitializer {
 
 			JDA.awaitReady();
 
-			if (!CONFIG.generic.botListeningStatus.isEmpty()) {
+			if (!CONFIG.generic.botPlayingStatus.isEmpty()) {
+				JDA.getPresence().setActivity(Activity.playing(CONFIG.generic.botPlayingStatus));
+			} else if (!CONFIG.generic.botListeningStatus.isEmpty()) {
 				JDA.getPresence().setActivity(Activity.listening(CONFIG.generic.botListeningStatus));
+			} else {
+				JDA.getPresence().setActivity(null);
 			}
 
 			CHANNEL = JDA.getTextChannelById(CONFIG.generic.channelId);

@@ -19,6 +19,7 @@ public class Config {
 
 		public String botName = "[SMP] MCDC Bot";
 		public String botToken = "";
+		public String botPlayingStatus = "Minecraft";
 		public String botListeningStatus = "";
 
 		public String webhookURL = "";
