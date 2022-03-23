@@ -34,6 +34,10 @@ public class Config {
 
 		public boolean multiServerMode = false;
 
+		public boolean broadcastCommandExecution = true;
+
+		public List<String> excludedCommands = List.of("/tell");
+
 		public List<String> adminsIds = new ArrayList<>();
 	}
 

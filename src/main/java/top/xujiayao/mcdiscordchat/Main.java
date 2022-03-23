@@ -36,6 +36,8 @@ public class Main implements DedicatedServerModInitializer {
 	public static TextChannel CHANNEL;
 	public static TextChannel CONSOLE_LOG_CHANNEL;
 	public static Texts TEXTS;
+	public static long MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();
+	public static int MINECRAFT_SEND_COUNT = 0;
 
 	@Override
 	public void onInitializeServer() {
