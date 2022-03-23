@@ -2,6 +2,7 @@ package top.xujiayao.mcdiscordchat.minecraft.mixins;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.vdurmont.emoji.EmojiManager;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
@@ -95,6 +96,8 @@ public abstract class MixinServerPlayNetworkHandler {
 						if (!emotes.isEmpty()) {
 							contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, (":" + emoteName + ":"), emotes.get(0).getAsMention());
 							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, (":" + emoteName + ":"), (Formatting.YELLOW + ":" + emoteName + ":" + Formatting.WHITE));
+						} else if (EmojiManager.getForAlias(emoteName) != null) {
+							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, (":" + emoteName + ":"), (Formatting.YELLOW + ":" + emoteName + ":" + Formatting.WHITE));
 						}
 					}
 				}
@@ -114,8 +117,6 @@ public abstract class MixinServerPlayNetworkHandler {
 						}
 					}
 				}
-
-				// TODO Change colour for emoji too
 
 				json.getAsJsonArray("with").add(contentToMinecraft);
 				Text finalText = Text.Serializer.fromJson(json.toString());
