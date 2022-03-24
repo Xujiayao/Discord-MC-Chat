@@ -21,16 +21,17 @@ public class Config {
 		public String botPlayingStatus = "Minecraft";
 		public String botListeningStatus = "";
 
-		public String webhookURL = "";
+		public String webhookUrl = "";
 
 		public String channelId = "";
 		public String consoleLogChannelId = "";
 
 		public boolean useUuidInsteadOfName = true;
 
+		// server.getSaveProperties().getLevelName()
 		public String worldName = "world";
 
-		public String avatarAPI = "https://mc-heads.net/avatar/%player%.png";
+		public String avatarApi = "https://mc-heads.net/avatar/%player%.png";
 
 		public boolean multiServerMode = false;
 
@@ -39,6 +40,8 @@ public class Config {
 		public List<String> excludedCommands = List.of("/tell");
 
 		public List<String> adminsIds = new ArrayList<>();
+
+		// TODO Link players to Discord accounts
 	}
 
 	public static class TextsZH {

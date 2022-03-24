@@ -168,11 +168,11 @@ public abstract class MixinServerPlayNetworkHandler {
 		// TODO MultiServer
 		//body.addProperty("username", (CONFIG.generic.multiServerMode ? ("[" + CONFIG.multiServer.serverDisplayName + "] " + playerEntity.getEntityName() : playerEntity.getEntityName()));
 		body.addProperty("username", player.getEntityName());
-		body.addProperty("avatar_url", CONFIG.generic.avatarAPI.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUuid().toString() : player.getEntityName())));
+		body.addProperty("avatar_url", CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUuid().toString() : player.getEntityName())));
 
 		try {
 			Request request = new Request.Builder()
-					.url(CONFIG.generic.webhookURL)
+					.url(CONFIG.generic.webhookUrl)
 					.post(RequestBody.create(body.toString(), MediaType.get("application/json")))
 					.build();
 
