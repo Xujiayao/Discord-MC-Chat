@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.LiteralText;
@@ -15,11 +16,19 @@ import net.minecraft.util.Formatting;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
+import static top.xujiayao.mcdiscordchat.Main.CONFIG;
+import static top.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.JDA;
+import static top.xujiayao.mcdiscordchat.Main.LOGGER;
+import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_LAST_RESET_TIME;
+import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_SEND_COUNT;
+import static top.xujiayao.mcdiscordchat.Main.SIMPLE_DATE_FORMAT;
+import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 
 public class DiscordEventListener extends ListenerAdapter {
 
@@ -41,6 +50,28 @@ public class DiscordEventListener extends ListenerAdapter {
 		}
 
 		StringBuilder message = new StringBuilder(EmojiParser.parseToAliases(e.getMessage().getContentDisplay()));
+
+		StringBuilder consoleMessage = new StringBuilder()
+				.append("[Discord] <")
+				.append(Objects.requireNonNull(e.getMember()).getEffectiveName())
+				.append("> ")
+				.append(message);
+
+		LOGGER.info(consoleMessage.toString());
+
+		if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
+			if ((System.currentTimeMillis() - MINECRAFT_LAST_RESET_TIME) > 20000) {
+				MINECRAFT_SEND_COUNT = 0;
+				MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();
+			}
+
+			MINECRAFT_SEND_COUNT++;
+			if (MINECRAFT_SEND_COUNT <= 20) {
+				CONSOLE_LOG_CHANNEL.sendMessage(TEXTS.consoleLogMessage()
+						.replace("%time%", SIMPLE_DATE_FORMAT.format(new Date()))
+						.replace("%message%", MarkdownSanitizer.escape(consoleMessage.toString()))).queue();
+			}
+		}
 
 		// TODO 处理Markdown（message）
 
@@ -86,8 +117,6 @@ public class DiscordEventListener extends ListenerAdapter {
 				}
 			}
 		}
-		
-		// TODO 控制台和ConsoleLogChannel也要输出
 
 		@SuppressWarnings("deprecation")
 		Object instance = FabricLoader.getInstance().getGameInstance();

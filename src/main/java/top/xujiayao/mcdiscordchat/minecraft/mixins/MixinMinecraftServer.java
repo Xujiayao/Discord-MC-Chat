@@ -35,7 +35,7 @@ public class MixinMinecraftServer {
 			MINECRAFT_SEND_COUNT++;
 			if (MINECRAFT_SEND_COUNT <= 20) {
 				CONSOLE_LOG_CHANNEL.sendMessage(TEXTS.consoleLogMessage()
-						.replace("%timestamp%", SIMPLE_DATE_FORMAT.format(new Date()))
+						.replace("%time%", SIMPLE_DATE_FORMAT.format(new Date()))
 						.replace("%message%", MarkdownSanitizer.escape(message.getString()))).queue();
 			}
 		}
