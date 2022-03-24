@@ -14,6 +14,7 @@ import java.util.Objects;
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
 import static top.xujiayao.mcdiscordchat.Main.HTTP_CLIENT;
+import static top.xujiayao.mcdiscordchat.Main.JDA;
 import static top.xujiayao.mcdiscordchat.Main.LOGGER;
 import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 import static top.xujiayao.mcdiscordchat.Main.VERSION;
@@ -27,7 +28,7 @@ public class Utils {
 		StringBuilder text = new StringBuilder();
 
 		for (String id : CONFIG.generic.adminsIds) {
-			text.append("<@").append(id).append("> ");
+			text.append(Objects.requireNonNull(JDA.getUserById(id)).getAsMention()).append(" ");
 		}
 
 		return text.toString();
