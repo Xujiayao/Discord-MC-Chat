@@ -68,12 +68,8 @@ public class Utils {
 					text.append("\n\n");
 					text.append(CONFIG.generic.useEngInsteadOfChin ? "Download link: https://github.com/Xujiayao/MCDiscordChat/blob/master/README.md#Download" : "下载链接：https://github.com/Xujiayao/MCDiscordChat/blob/master/README_CN.md#%E4%B8%8B%E8%BD%BD");
 					text.append("\n\n");
-					text.append("```");
-					text.append("\n");
 					text.append(latestJson.get("changelog").getAsString());
-					text.append("\n");
-					text.append("```");
-					text.append("\n");
+					text.append("\n\n");
 					text.append(adminsMentionString());
 
 					CHANNEL.sendMessage(text).queue();
