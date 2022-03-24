@@ -1,12 +1,16 @@
 # 更新日志 Changelog
 
-MCDiscordChat 2.0.0 for Minecraft 1.16.x/1.17.x/1.18.x - 2022/3/23
+MCDiscordChat 2.0.0-alpha.1 for Minecraft 1.16.x/1.17.x/1.18.x - 2022/3/24
 
-## 提醒 Reminder
+## ⚠ 提醒 Reminder
 
 此版本与之前的版本相比有重大变化，请务必备份你的旧 MCDiscordChat 配置文件 (mcdiscordchat.json)，重新阅读 [MCDiscordChat 文档](https://blog.xujiayao.top/posts/4ba0a17a/) ，并且不要直接从旧配置文件中复制和粘贴任何内容，因为这可能会导致错误！
 
+这是 MCDiscordChat 的 alpha 版本，这意味着你可能会遇到重大错误或其他问题。欢迎提交错误报告或其他建议。请在报告问题时说明你使用的确切版本。
+
 This version has a significant change compared with previous versions. Please make sure to backup your old MCDiscordChat config file (mcdiscordchat.json), re-read the [MCDiscordChat Docs](https://blog.xujiayao.top/posts/4ba0a17a/) and do not copy and paste anything directly from the old config file, as this may cause errors!
+
+This is an alpha version of MCDiscordChat, which means you may encounter significant bugs or other issues. Bug reports or other suggestions are welcome. Please state the exact version you are using when reporting an issue.
 
 ## 新特性 New Features
 
