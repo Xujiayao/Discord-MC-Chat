@@ -34,6 +34,10 @@ This is an alpha version of MCDiscordChat, which means you may encounter signifi
   Bot activity status can be switched between "playing" and "listening"
   @Xujiayao
 
+- 服务器控制台和 Discord 控制台日志频道可打印来自 Discord 的聊天消息
+  Server console and Discord console log channel can print chat messages from Discord
+  @Xujiayao
+
 ## 更改 Changes
 
 - 重写所有文件并优化代码和逻辑
@@ -46,6 +50,14 @@ This is an alpha version of MCDiscordChat, which means you may encounter signifi
 
 - 更改消息冷却的实现方式
   Change the implementation method of message cooldown
+  @Xujiayao
+
+- 更改 Discord 控制台日志频道消息的默认格式
+  Change the default format of Discord console log channel messages
+  @Xujiayao
+
+- 暂时使用临时文件检查更新
+  Temporarily use a temporary file to check for updates
   @Xujiayao
 
 ## 移除 Removed
