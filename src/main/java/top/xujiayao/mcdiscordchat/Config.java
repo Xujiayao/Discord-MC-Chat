@@ -56,7 +56,7 @@ public class Config {
 
 		public String highMspt = "**服务器 MSPT (%mspt%) 高于 %msptLimit%！**";
 
-		public String consoleLogMessage = "**[%timestamp%] [INFO]:** %message%";
+		public String consoleLogMessage = "[%timestamp%] [INFO] %message%";
 	}
 
 	public static class TextsEN {
@@ -74,7 +74,7 @@ public class Config {
 
 		public String highMspt = "**Server MSPT (%mspt%) is above %msptLimit%!**";
 
-		public String consoleLogMessage = "**[%timestamp%] [INFO]:** %message%";
+		public String consoleLogMessage = "[%timestamp%] [INFO] %message%";
 	}
 }
 
