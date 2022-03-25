@@ -2,6 +2,9 @@ package top.xujiayao.mcdiscordchat.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.apache.commons.io.IOUtils;
@@ -11,7 +14,6 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
-import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
 import static top.xujiayao.mcdiscordchat.Main.HTTP_CLIENT;
 import static top.xujiayao.mcdiscordchat.Main.JDA;
@@ -34,7 +36,7 @@ public class Utils {
 		return text.toString();
 	}
 
-	public static void checkUpdate(boolean isManualCheck) {
+	public static String checkUpdate(boolean isManualCheck) {
 		try {
 			Request request = new Request.Builder()
 					.url("https://cdn.jsdelivr.net/gh/Xujiayao/MCDiscordChat@master/update/version.json")
@@ -60,30 +62,31 @@ public class Utils {
 					latestVersion = latestJson.get("version").getAsString();
 				}
 
-				StringBuilder text = new StringBuilder();
+				StringBuilder message = new StringBuilder();
 
 				if (!latestVersion.equals(VERSION)) {
-					text.append(CONFIG.generic.useEngInsteadOfChin ? "**A new version is available!**" : "**新版本可用！**");
-					text.append("\n\n");
-					text.append("MCDiscordChat **").append(VERSION).append("** -> **").append(latestVersion).append("**");
-					text.append("\n\n");
-					text.append(CONFIG.generic.useEngInsteadOfChin ? "Download link: https://github.com/Xujiayao/MCDiscordChat/blob/master/README.md#Download" : "下载链接：https://github.com/Xujiayao/MCDiscordChat/blob/master/README_CN.md#%E4%B8%8B%E8%BD%BD");
-					text.append("\n\n");
-					text.append(latestJson.get("changelog").getAsString());
-					text.append("\n\n");
-					text.append(adminsMentionString());
+					message.append(CONFIG.generic.useEngInsteadOfChin ? "**A new version is available!**" : "**新版本可用！**");
+					message.append("\n\n");
+					message.append("MCDiscordChat **").append(VERSION).append("** -> **").append(latestVersion).append("**");
+					message.append("\n\n");
+					message.append(CONFIG.generic.useEngInsteadOfChin ? "Download link: https://github.com/Xujiayao/MCDiscordChat/blob/master/README.md#Download" : "下载链接：https://github.com/Xujiayao/MCDiscordChat/blob/master/README_CN.md#%E4%B8%8B%E8%BD%BD");
+					message.append("\n\n");
+					message.append(latestJson.get("changelog").getAsString());
+					message.append("\n\n");
+					message.append(adminsMentionString());
 
-					CHANNEL.sendMessage(text).queue();
-				} else if (isManualCheck) {
-					text.append("MCDiscordChat **").append(VERSION).append("**");
-					text.append("\n\n");
-					text.append(CONFIG.generic.useEngInsteadOfChin ? "**MCDiscordChat is up to date!**" : "**当前版本已经是最新版本！**");
+					return message.toString();
+				} else {
+					message.append("MCDiscordChat **").append(VERSION).append("**");
+					message.append("\n\n");
+					message.append(CONFIG.generic.useEngInsteadOfChin ? "**MCDiscordChat is up to date!**" : "**当前版本已经是最新版本！**");
 
-					CHANNEL.sendMessage(text).queue();
+					return isManualCheck ? message.toString() : "";
 				}
 			}
 		} catch (Exception e) {
 			LOGGER.error(ExceptionUtils.getStackTrace(e));
+			return "";
 		}
 	}
 
@@ -111,6 +114,31 @@ public class Utils {
 					CONFIG.textsZH.highMspt,
 					CONFIG.textsZH.consoleLogMessage);
 		}
+	}
+
+	public static void setBotActivity() {
+		if (!CONFIG.generic.botPlayingStatus.isEmpty()) {
+			JDA.getPresence().setActivity(Activity.playing(CONFIG.generic.botPlayingStatus));
+		} else if (!CONFIG.generic.botListeningStatus.isEmpty()) {
+			JDA.getPresence().setActivity(Activity.listening(CONFIG.generic.botListeningStatus));
+		} else {
+			JDA.getPresence().setActivity(null);
+		}
+	}
+
+	public static void updateBotCommands() {
+		JDA.updateCommands()
+				.addCommands(Commands.slash("info", CONFIG.generic.useEngInsteadOfChin ? "Query server running status" : "查询服务器运行状态"))
+				.addCommands(Commands.slash("help", CONFIG.generic.useEngInsteadOfChin ? "Get a list of available commands" : "获取可用命令列表"))
+				.addCommands(Commands.slash("update", CONFIG.generic.useEngInsteadOfChin ? "Check for update" : "检查更新"))
+				.addCommands(Commands.slash("blacklist", CONFIG.generic.useEngInsteadOfChin ? "Query MCDiscordChat blacklist" : "查询 MCDiscordChat 黑名单"))
+				.addCommands(Commands.slash("reload", CONFIG.generic.useEngInsteadOfChin ? "Reload MCDiscordChat config file (admin only)" : "重新加载 MCDiscordChat 配置文件（仅限管理员）"))
+				.addCommands(Commands.slash("console", CONFIG.generic.useEngInsteadOfChin ? "Execute a command in the server console (admin only)" : "在服务器控制台中执行指令（仅限管理员）")
+						.addOption(OptionType.STRING, "command", CONFIG.generic.useEngInsteadOfChin ? "Command to execute" : "要执行的命令", true))
+				.addCommands(Commands.slash("stop", CONFIG.generic.useEngInsteadOfChin ? "Stop the server (admin only)" : "停止服务器（仅限管理员）"))
+// TODO			!scoreboard <type> <id>: Query the player scoreboard for this statistic
+// TODO			!ban <type> <id/name>: Add or remove a Discord user or Minecraft player from the blacklist (admins only)
+				.queue();
 	}
 
 	public static void setMcdcVersion() {

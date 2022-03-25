@@ -42,6 +42,7 @@ public class Config {
 		public List<String> adminsIds = new ArrayList<>();
 
 		// TODO Link players to Discord accounts
+		// TODO Send latest log
 	}
 
 	public static class TextsZH {

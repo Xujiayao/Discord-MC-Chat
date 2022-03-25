@@ -2,7 +2,6 @@ package top.xujiayao.mcdiscordchat;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
@@ -10,6 +9,7 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.server.MinecraftServer;
 import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -39,6 +39,7 @@ public class Main implements DedicatedServerModInitializer {
 	public static Texts TEXTS;
 	public static long MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();
 	public static int MINECRAFT_SEND_COUNT = 0;
+	public static MinecraftServer SERVER;
 
 	@Override
 	public void onInitializeServer() {
@@ -63,18 +64,14 @@ public class Main implements DedicatedServerModInitializer {
 
 			JDA.awaitReady();
 
-			if (!CONFIG.generic.botPlayingStatus.isEmpty()) {
-				JDA.getPresence().setActivity(Activity.playing(CONFIG.generic.botPlayingStatus));
-			} else if (!CONFIG.generic.botListeningStatus.isEmpty()) {
-				JDA.getPresence().setActivity(Activity.listening(CONFIG.generic.botListeningStatus));
-			} else {
-				JDA.getPresence().setActivity(null);
-			}
+			Utils.setBotActivity();
 
 			CHANNEL = JDA.getTextChannelById(CONFIG.generic.channelId);
 			if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
 				CONSOLE_LOG_CHANNEL = JDA.getTextChannelById(CONFIG.generic.consoleLogChannelId);
 			}
+
+			Utils.updateBotCommands();
 		} catch (Exception e) {
 			LOGGER.error(ExceptionUtils.getStackTrace(e));
 			System.exit(1);
@@ -83,13 +80,16 @@ public class Main implements DedicatedServerModInitializer {
 		ServerLifecycleEvents.SERVER_STARTED.register((server) -> {
 			CHANNEL.sendMessage(TEXTS.serverStarted()).queue();
 
-			Utils.checkUpdate(false);
+			SERVER = server;
+
+			String message = Utils.checkUpdate(false);
+			if (!message.isEmpty()) {
+				CHANNEL.sendMessage(message).queue();
+			}
 		});
 
-		ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
-			CHANNEL.sendMessage(TEXTS.serverStopped()).queue();
-
-			JDA.shutdown();
-		});
+		ServerLifecycleEvents.SERVER_STOPPING.register((server) -> CHANNEL.sendMessage(TEXTS.serverStopped())
+				.submit()
+				.whenComplete((v, ex) -> JDA.shutdownNow()));
 	}
 }
