@@ -76,10 +76,6 @@ public abstract class MixinServerPlayNetworkHandler {
 			if (message.getRaw().startsWith("/")) {
 				executeCommand(message.getRaw());
 			} else {
-//	            	if (CONFIG.generic.bannedMinecraft.contains(playerEntity.getEntityName())) {
-//	            		return;
-//	            	}
-
 				player.updateLastActionTime();
 
 				String contentToDiscord = message.getRaw();
@@ -140,10 +136,6 @@ public abstract class MixinServerPlayNetworkHandler {
 	@Inject(method = "executeCommand", at = @At(value = "HEAD"))
 	private void executeCommand(String input, CallbackInfo ci) {
 		if (CONFIG.generic.broadcastCommandExecution && !CONFIG.generic.excludedCommands.contains(input)) {
-//			if (CONFIG.generic.bannedMinecraft.contains(player.getEntityName())) {
-//				return;
-//			}
-
 			if ((System.currentTimeMillis() - MINECRAFT_LAST_RESET_TIME) > 20000) {
 				MINECRAFT_SEND_COUNT = 0;
 				MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();

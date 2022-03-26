@@ -42,7 +42,7 @@ public class DiscordEventListener extends ListenerAdapter {
 		e.deferReply().queue();
 
 		if (!e.isFromGuild() || (e.getChannel() != CHANNEL)) {
-			e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**You can only send this command on the correct channel!**" : "**你只能在正确的频道发送此命令！**").queue();
+			e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**You can only use this command on the correct channel!**" : "**你只能在正确的频道使用此命令！**").queue();
 			return;
 		}
 
@@ -94,7 +94,6 @@ public class DiscordEventListener extends ListenerAdapter {
 					/info              | Query server running status
 					/help              | Get a list of available commands
 					/update            | Check for update
-					/blacklist         | Query MCDiscordChat blacklist
 					/reload            | Reload MCDiscordChat config file (admin only)
 					/console <command> | Execute a command in the server console (admin only)
 					/stop              | Stop the server (admin only)
@@ -104,13 +103,11 @@ public class DiscordEventListener extends ListenerAdapter {
 					/info              | 查询服务器运行状态
 					/help              | 获取可用命令列表
 					/update            | 检查更新
-					/blacklist         | 查询 MCDiscordChat 黑名单
 					/reload            | 重新加载 MCDiscordChat 配置文件（仅限管理员）
 					/console <command> | 在服务器控制台中执行命令（仅限管理员）
 					/stop              | 停止服务器（仅限管理员）
 					```""").queue();
 			case "update" -> e.getHook().sendMessage(Utils.checkUpdate(true)).queue();
-			case "blacklist" -> e.getHook().sendMessage("**Not yet implemented!**").queue();
 			case "reload" -> {
 				if (CONFIG.generic.adminsIds.contains(Objects.requireNonNull(e.getMember()).getId())) {
 					try {
@@ -165,9 +162,6 @@ public class DiscordEventListener extends ListenerAdapter {
 
 	@Override
 	public void onMessageReceived(MessageReceivedEvent e) {
-//		if (config.generic.bannedDiscord.contains(e.getAuthor().getId())
-//				&& !config.generic.adminsIds.contains(e.getAuthor().getId())) return;
-
 		if ((e.getChannel() != CHANNEL)
 				|| (e.getMessage().getAuthor() == JDA.getSelfUser())
 				|| (e.getAuthor().isBot())) {
