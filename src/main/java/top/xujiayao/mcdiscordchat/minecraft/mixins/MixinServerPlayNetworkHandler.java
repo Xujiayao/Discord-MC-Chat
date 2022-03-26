@@ -31,6 +31,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -81,8 +82,6 @@ public abstract class MixinServerPlayNetworkHandler {
 				String contentToDiscord = message.getRaw();
 				String contentToMinecraft = message.getRaw();
 
-				// TODO 处理Markdown（contentToMinecraft）
-
 				Text text = new TranslatableText("chat.type.text", player.getDisplayName(), contentToDiscord);
 				JsonObject json = new Gson().fromJson(Text.Serializer.toJson(text), JsonObject.class);
 				json.getAsJsonArray("with").remove(1);
@@ -116,7 +115,7 @@ public abstract class MixinServerPlayNetworkHandler {
 					}
 				}
 
-				json.getAsJsonArray("with").add(contentToMinecraft);
+				json.getAsJsonArray("with").add(MarkdownParser.parseMarkdown(contentToMinecraft));
 				Text finalText = Text.Serializer.fromJson(json.toString());
 				server.getPlayerManager().broadcast(finalText, MessageType.CHAT, player.getUuid());
 				ci.cancel();

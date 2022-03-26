@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TextColor;
@@ -18,8 +19,10 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import top.xujiayao.mcdiscordchat.utils.ConfigManager;
+import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 
+import java.io.File;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -96,6 +99,7 @@ public class DiscordEventListener extends ListenerAdapter {
 					/update            | Check for update
 					/reload            | Reload MCDiscordChat config file (admin only)
 					/console <command> | Execute a command in the server console (admin only)
+					/log               | Get the latest server log (admin only)
 					/stop              | Stop the server (admin only)
 					```""" : """
 					```
@@ -105,6 +109,7 @@ public class DiscordEventListener extends ListenerAdapter {
 					/update            | 检查更新
 					/reload            | 重新加载 MCDiscordChat 配置文件（仅限管理员）
 					/console <command> | 在服务器控制台中执行命令（仅限管理员）
+					/log               | 获取服务器最新日志（仅限管理员）
 					/stop              | 停止服务器（仅限管理员）
 					```""").queue();
 			case "update" -> e.getHook().sendMessage(Utils.checkUpdate(true)).queue();
@@ -144,6 +149,13 @@ public class DiscordEventListener extends ListenerAdapter {
 								.whenComplete((v, ex) -> SERVER.getCommandManager()
 										.execute(SERVER.getCommandSource().withOutput(new DiscordCommandOutput()), command));
 					}
+				} else {
+					e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**You do not have permission to use this command!**" : "**你没有权限使用此命令！**").queue();
+				}
+			}
+			case "log" -> {
+				if (CONFIG.generic.adminsIds.contains(Objects.requireNonNull(e.getMember()).getId())) {
+					e.getHook().sendFile(new File(FabricLoader.getInstance().getGameDir().toFile(), "logs/latest.log")).queue();
 				} else {
 					e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**You do not have permission to use this command!**" : "**你没有权限使用此命令！**").queue();
 				}
@@ -191,8 +203,6 @@ public class DiscordEventListener extends ListenerAdapter {
 						.replace("%message%", MarkdownSanitizer.escape(consoleMessage.toString()))).queue();
 			}
 		}
-
-		// TODO 处理Markdown（message）
 
 		if (!e.getMessage().getAttachments().isEmpty()) {
 			if (!e.getMessage().getContentDisplay().isBlank()) {
@@ -247,6 +257,6 @@ public class DiscordEventListener extends ListenerAdapter {
 				player -> player.sendMessage(new LiteralText("")
 						.append(mcdcText)
 						.append(roleText)
-						.append(Formatting.GRAY + finalMessage.toString()), false));
+						.append(Formatting.GRAY + MarkdownParser.parseMarkdown(finalMessage.toString())), false));
 	}
 }
