@@ -30,38 +30,6 @@ public class Utils {
 		}, 0, 5000);
 	}
 
-	public static void reloadTextsConfig() {
-		if (Main.config.generic.switchLanguageFromChinToEng) {
-			Main.texts = new Texts(Main.config.textsEN.serverStarted,
-					Main.config.textsEN.serverStopped,
-					Main.config.textsEN.joinServer,
-					Main.config.textsEN.leftServer,
-					Main.config.textsEN.deathMessage,
-					Main.config.textsEN.advancementTask,
-					Main.config.textsEN.advancementChallenge,
-					Main.config.textsEN.advancementGoal,
-					Main.config.textsEN.highMSPT,
-					Main.config.textsEN.consoleLogMessage,
-					Main.config.textsEN.blueColoredText,
-					Main.config.textsEN.roleColoredText,
-					Main.config.textsEN.colorlessText);
-		} else {
-			Main.texts = new Texts(Main.config.textsZH.serverStarted,
-					Main.config.textsZH.serverStopped,
-					Main.config.textsZH.joinServer,
-					Main.config.textsZH.leftServer,
-					Main.config.textsZH.deathMessage,
-					Main.config.textsZH.advancementTask,
-					Main.config.textsZH.advancementChallenge,
-					Main.config.textsZH.advancementGoal,
-					Main.config.textsZH.highMSPT,
-					Main.config.textsZH.consoleLogMessage,
-					Main.config.textsZH.blueColoredText,
-					Main.config.textsZH.roleColoredText,
-					Main.config.textsZH.colorlessText);
-		}
-	}
-
 	public static List<File> getFileList(File file) {
 		List<File> result = new ArrayList<>();
 

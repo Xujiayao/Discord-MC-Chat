@@ -52,65 +52,6 @@ public class DiscordEventListener extends ListenerAdapter {
 				&& !config.generic.superAdminsIds.contains(e.getAuthor().getId())
 				&& !config.generic.adminsIds.contains(e.getAuthor().getId())) return;
 
-		if (e.getMessage().getContentRaw().startsWith(config.generic.botCommandPrefix)) {
-			String command = e.getMessage().getContentRaw().replace(config.generic.botCommandPrefix, "");
-
-			if ("blacklist".equals(command)) {
-				StringBuilder bannedList = new StringBuilder("```\n=============== " + (config.generic.switchLanguageFromChinToEng ? "Blacklist" : "黑名单") + " ===============\n\nDiscord:");
-
-				if (config.generic.bannedDiscord.size() == 0) {
-					bannedList.append("\n").append(config.generic.switchLanguageFromChinToEng ? "List is empty!" : "列表为空！");
-				}
-
-				for (String id : config.generic.bannedDiscord) {
-					bannedList.append("\n").append(id);
-				}
-
-				bannedList.append("\n\nMinecraft:");
-
-				if (config.generic.bannedMinecraft.size() == 0) {
-					bannedList.append("\n").append(config.generic.switchLanguageFromChinToEng ? "List is empty!" : "列表为空！");
-				}
-
-				for (String name : config.generic.bannedMinecraft) {
-					bannedList.append("\n").append(name);
-				}
-
-				bannedList.append("```");
-				textChannel.sendMessage(bannedList.toString()).queue();
-			} else if (command.startsWith("ban ")) {
-				if (hasPermission(e.getAuthor().getId(), false)) {
-					String banCommand = command.replace("ban ", "");
-
-					if (banCommand.startsWith("discord ")) {
-						banCommand = banCommand.replace("discord ", "");
-
-						if (config.generic.bannedDiscord.contains(banCommand)) {
-							config.generic.bannedDiscord.remove(banCommand);
-							textChannel.sendMessage("**" + (config.generic.switchLanguageFromChinToEng ? banCommand + " has been removed from the blacklist!" : "已将 " + banCommand + " 移出黑名单！") + "**").queue();
-						} else {
-							config.generic.bannedDiscord.add(banCommand);
-							textChannel.sendMessage("**" + (config.generic.switchLanguageFromChinToEng ? banCommand + " has been added to the blacklist!" : "已将 " + banCommand + " 添加至黑名单！") + "**").queue();
-						}
-					} else if (banCommand.startsWith("minecraft ")) {
-						banCommand = banCommand.replace("minecraft ", "");
-
-						if (config.generic.bannedMinecraft.contains(banCommand)) {
-							config.generic.bannedMinecraft.remove(banCommand);
-							textChannel.sendMessage("**" + (config.generic.switchLanguageFromChinToEng ? banCommand.replace("_", "\\_") + " has been removed from the blacklist!" : "**已将 " + banCommand.replace("_", "\\_") + " 移出黑名单！**") + "**").queue();
-						} else {
-							config.generic.bannedMinecraft.add(banCommand);
-							textChannel.sendMessage("**" + (config.generic.switchLanguageFromChinToEng ? banCommand.replace("_", "\\_") + " has been added to the blacklist!" : "**已将 " + banCommand.replace("_", "\\_") + " 添加至黑名单！**") + "**").queue();
-						}
-					}
-
-					ConfigManager.updateConfig();
-				} else {
-					textChannel.sendMessage("**" + (config.generic.switchLanguageFromChinToEng ? "You do not have permission to use this command!" : "你没有权限使用此命令！") + "**").queue();
-				}
-			}
-		}
-
 		StringBuilder message = new StringBuilder(e.getMessage().getContentDisplay()
 				.replace("§", config.generic.removeVanillaFormattingFromDiscord ? "&" : "§")
 				.replace("\n", config.generic.removeLineBreakFromDiscord ? " " : "\n")
