@@ -157,7 +157,6 @@ public abstract class MixinServerPlayNetworkHandler {
 	private void sendWebhookMessage(String content, boolean escapeMarkdown) {
 		JsonObject body = new JsonObject();
 		body.addProperty("content", (escapeMarkdown ? MarkdownSanitizer.escape(content) : content));
-		// TODO MultiServer
 		//body.addProperty("username", (CONFIG.generic.multiServerMode ? ("[" + CONFIG.multiServer.serverDisplayName + "] " + playerEntity.getEntityName() : playerEntity.getEntityName()));
 		body.addProperty("username", player.getEntityName());
 		body.addProperty("avatar_url", CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUuid().toString() : player.getEntityName())));

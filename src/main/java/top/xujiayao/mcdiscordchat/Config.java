@@ -29,11 +29,8 @@ public class Config {
 		public boolean useUuidInsteadOfName = true;
 
 		// server.getSaveProperties().getLevelName()
-		public String worldName = "world";
 
 		public String avatarApi = "https://mc-heads.net/avatar/%player%.png";
-
-		public boolean multiServerMode = false;
 
 		public boolean broadcastCommandExecution = true;
 
@@ -43,6 +40,8 @@ public class Config {
 
 		// TODO Link players to Discord accounts
 		// TODO Send latest log
+		// TODO Multi Server
+		// Permissions=183296
 	}
 
 	public static class TextsZH {
@@ -58,6 +57,7 @@ public class Config {
 		public String advancementChallenge = "**%playerName% 完成了挑战 [%advancement%]**";
 		public String advancementGoal = "**%playerName% 达成了目标 [%advancement%]**";
 
+		// TODO Monitor MSPT
 		public String highMspt = "**服务器 MSPT (%mspt%) 高于 %msptLimit%！**";
 
 		public String consoleLogMessage = "[%time%] [INFO] %message%";

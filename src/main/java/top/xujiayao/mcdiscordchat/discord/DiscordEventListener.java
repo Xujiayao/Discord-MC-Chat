@@ -163,21 +163,9 @@ public class DiscordEventListener extends ListenerAdapter {
 	@Override
 	public void onMessageReceived(MessageReceivedEvent e) {
 		if ((e.getChannel() != CHANNEL)
-				|| (e.getMessage().getAuthor() == JDA.getSelfUser())
+				|| (e.getAuthor() == JDA.getSelfUser())
 				|| (e.getAuthor().isBot())) {
-			if (e.isFromGuild()) {
-				// TODO
-			} else {
-				// TODO
-			}
-
-			// TODO 如果是自家multiserver的bot该怎么办（可以用id识别）
-			if (!e.isWebhookMessage()) {
-				return;
-			} else {
-				// TODO 如果是Webhook该怎么办
-				return;
-			}
+			return;
 		}
 
 		StringBuilder message = new StringBuilder(EmojiParser.parseToAliases(e.getMessage().getContentDisplay()));
