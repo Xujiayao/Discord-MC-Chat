@@ -28,8 +28,6 @@ public class Config {
 
 		public boolean useUuidInsteadOfName = true;
 
-		// server.getSaveProperties().getLevelName()
-
 		public String avatarApi = "https://mc-heads.net/avatar/%player%.png";
 
 		public boolean broadcastCommandExecution = true;

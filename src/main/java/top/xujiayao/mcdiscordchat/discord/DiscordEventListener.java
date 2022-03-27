@@ -1,5 +1,9 @@
 package top.xujiayao.mcdiscordchat.discord;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.vdurmont.emoji.EmojiManager;
 import com.vdurmont.emoji.EmojiParser;
 import net.dv8tion.jda.api.entities.Emote;
@@ -15,6 +19,8 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.MathHelper;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -23,8 +29,12 @@ import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
@@ -94,25 +104,76 @@ public class DiscordEventListener extends ListenerAdapter {
 			case "help" -> e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? """
 					```
 					=============== Help ===============
-					/info              | Query server running status
-					/help              | Get a list of available commands
-					/update            | Check for update
-					/reload            | Reload MCDiscordChat config file (admin only)
-					/console <command> | Execute a command in the server console (admin only)
-					/log               | Get the latest server log (admin only)
-					/stop              | Stop the server (admin only)
+					/info                | Query server running status
+					/help                | Get a list of available commands
+					/update              | Check for update
+					/stats <type> <name> | Query the scoreboard of a statistic
+					/reload              | Reload MCDiscordChat config file (admin only)
+					/console <command>   | Execute a command in the server console (admin only)
+					/log                 | Get the latest server log (admin only)
+					/stop                | Stop the server (admin only)
 					```""" : """
 					```
 					=============== 帮助 ===============
-					/info              | 查询服务器运行状态
-					/help              | 获取可用命令列表
-					/update            | 检查更新
-					/reload            | 重新加载 MCDiscordChat 配置文件（仅限管理员）
-					/console <command> | 在服务器控制台中执行命令（仅限管理员）
-					/log               | 获取服务器最新日志（仅限管理员）
-					/stop              | 停止服务器（仅限管理员）
+					/info                | 查询服务器运行状态
+					/help                | 获取可用命令列表
+					/update              | 检查更新
+					/stats <type> <name> | 查询该统计信息的排行榜
+					/reload              | 重新加载 MCDiscordChat 配置文件（仅限管理员）
+					/console <command>   | 在服务器控制台中执行命令（仅限管理员）
+					/log                 | 获取服务器最新日志（仅限管理员）
+					/stop                | 停止服务器（仅限管理员）
 					```""").queue();
 			case "update" -> e.getHook().sendMessage(Utils.checkUpdate(true)).queue();
+			case "stats" -> {
+				StringBuilder message = new StringBuilder()
+						.append("```\n=============== ")
+						.append(CONFIG.generic.useEngInsteadOfChin ? "Scoreboard" : "排行榜")
+						.append(" ===============\n\n");
+
+				Map<String, Integer> stats = new HashMap<>();
+
+				try {
+					JsonArray players = new Gson().fromJson(IOUtils.toString(new File(FabricLoader.getInstance().getGameDir().toAbsolutePath() + "/usercache.json").toURI(), StandardCharsets.UTF_8), JsonArray.class);
+
+					FileUtils.listFiles(new File((SERVER.getSaveProperties().getLevelName() + "/stats/")), null, false).forEach(file -> {
+						try {
+							for (JsonElement player : players) {
+								if (player.getAsJsonObject().get("uuid").getAsString().equals(file.getName().replace(".json", ""))) {
+									JsonObject json = new Gson().fromJson(IOUtils.toString(file.toURI(), StandardCharsets.UTF_8), JsonObject.class);
+
+									try {
+										stats.put(player.getAsJsonObject().get("name").getAsString(), json
+												.getAsJsonObject("stats")
+												.getAsJsonObject("minecraft:" + Objects.requireNonNull(e.getOption("type")).getAsString())
+												.get("minecraft:" + Objects.requireNonNull(e.getOption("name")).getAsString())
+												.getAsInt());
+									} catch (NullPointerException ignored) {
+									}
+								}
+							}
+						} catch (Exception ex) {
+							LOGGER.error(ExceptionUtils.getStackTrace(ex));
+						}
+					});
+				} catch (Exception ex) {
+					LOGGER.error(ExceptionUtils.getStackTrace(ex));
+				}
+
+				if (stats.isEmpty()) {
+					message.append(CONFIG.generic.useEngInsteadOfChin ? "No result" : "无结果");
+				} else {
+					List<Map.Entry<String, Integer>> sortedlist = new ArrayList<>(stats.entrySet());
+					sortedlist.sort((c1, c2) -> c2.getValue().compareTo(c1.getValue()));
+
+					for (Map.Entry<String, Integer> entry : sortedlist) {
+						message.append(String.format("%-8d %-8s\n", entry.getValue(), entry.getKey()));
+					}
+				}
+
+				message.append("```");
+				e.getHook().sendMessage(message.toString()).queue();
+			}
 			case "reload" -> {
 				if (CONFIG.generic.adminsIds.contains(Objects.requireNonNull(e.getMember()).getId())) {
 					try {

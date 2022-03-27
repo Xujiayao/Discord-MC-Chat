@@ -131,12 +131,14 @@ public class Utils {
 				.addCommands(Commands.slash("info", CONFIG.generic.useEngInsteadOfChin ? "Query server running status" : "查询服务器运行状态"))
 				.addCommands(Commands.slash("help", CONFIG.generic.useEngInsteadOfChin ? "Get a list of available commands" : "获取可用命令列表"))
 				.addCommands(Commands.slash("update", CONFIG.generic.useEngInsteadOfChin ? "Check for update" : "检查更新"))
+				.addCommands(Commands.slash("stats", CONFIG.generic.useEngInsteadOfChin ? "Query the scoreboard for a statistic" : "查询该统计信息的排行榜")
+						.addOption(OptionType.STRING, "type", CONFIG.generic.useEngInsteadOfChin ? "Statistic type" : "统计类型", true)
+						.addOption(OptionType.STRING, "name", CONFIG.generic.useEngInsteadOfChin ? "Statistic name" : "统计名称", true))
 				.addCommands(Commands.slash("reload", CONFIG.generic.useEngInsteadOfChin ? "Reload MCDiscordChat config file (admin only)" : "重新加载 MCDiscordChat 配置文件（仅限管理员）"))
 				.addCommands(Commands.slash("console", CONFIG.generic.useEngInsteadOfChin ? "Execute a command in the server console (admin only)" : "在服务器控制台中执行指令（仅限管理员）")
 						.addOption(OptionType.STRING, "command", CONFIG.generic.useEngInsteadOfChin ? "Command to execute" : "要执行的命令", true))
 				.addCommands(Commands.slash("log", CONFIG.generic.useEngInsteadOfChin ? "Get the latest server log (admin only)" : "获取服务器最新日志（仅限管理员）"))
 				.addCommands(Commands.slash("stop", CONFIG.generic.useEngInsteadOfChin ? "Stop the server (admin only)" : "停止服务器（仅限管理员）"))
-// TODO			!scoreboard <type> <id>: Query the player scoreboard for this statistic
 				.queue();
 	}
 

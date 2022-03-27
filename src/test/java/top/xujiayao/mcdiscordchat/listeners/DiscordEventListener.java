@@ -9,14 +9,12 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
 import top.xujiayao.mcdiscordchat.Main;
-import top.xujiayao.mcdiscordchat.utils.ConfigManager;
 import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 
 import java.util.Objects;
 
 import static top.xujiayao.mcdiscordchat.Main.config;
-import static top.xujiayao.mcdiscordchat.Main.textChannel;
 
 /**
  * @author Xujiayao
