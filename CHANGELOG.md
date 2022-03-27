@@ -72,6 +72,10 @@ This is an alpha version of MCDiscordChat, which means you may encounter signifi
   Use JDA.shutdownNow() to resolve hang when stopping the server
   @Xujiayao
 
+- 修复忽略（转义）Markdown 格式时反斜杠仍然存在的问题
+  Fix backslashes still exist when ignoring (escaping) Markdown formatting
+  @Xujiayao
+
 ## 移除 Removed
 
 - 不再向 Discord 频道发送异常堆栈跟踪

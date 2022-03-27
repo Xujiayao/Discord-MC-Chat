@@ -12,8 +12,6 @@ import java.util.regex.Pattern;
  */
 public class MarkdownParser {
 
-	// TODO Rewrite MarkdownParser
-
 	public static String parseMarkdown(String message) {
 		message = replaceWith(message, "(?<!\\\\)\\*\\*", Formatting.BOLD.toString(), Formatting.RESET.toString());
 		message = replaceWith(message, "(?<!\\\\)\\*", Formatting.ITALIC.toString(), Formatting.RESET.toString());
@@ -21,7 +19,7 @@ public class MarkdownParser {
 		message = replaceWith(message, "(?<!\\\\)_", Formatting.ITALIC.toString(), Formatting.RESET.toString());
 		message = replaceWith(message, "(?<!\\\\)~~", Formatting.STRIKETHROUGH.toString(), Formatting.RESET.toString());
 
-		message = message.replaceAll("\\*", "*").replaceAll("\\_", "_").replaceAll("\\~", "~");
+		message = message.replaceAll("\\\\\\*", "*").replaceAll("\\\\_", "_").replaceAll("\\\\~", "~");
 
 		return message;
 	}
