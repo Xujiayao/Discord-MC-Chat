@@ -32,6 +32,9 @@ public class Config {
 
 		public boolean broadcastCommandExecution = true;
 
+		public boolean announceHighMspt = true;
+		public int msptLimit = 50;
+
 		public List<String> excludedCommands = List.of("/tell");
 
 		public List<String> adminsIds = new ArrayList<>();
@@ -54,7 +57,6 @@ public class Config {
 		public String advancementChallenge = "**%playerName% 完成了挑战 [%advancement%]**";
 		public String advancementGoal = "**%playerName% 达成了目标 [%advancement%]**";
 
-		// TODO Monitor MSPT
 		public String highMspt = "**服务器 MSPT (%mspt%) 高于 %msptLimit%！**";
 
 		public String consoleLogMessage = "[%time%] [INFO] %message%";

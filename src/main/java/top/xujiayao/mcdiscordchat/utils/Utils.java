@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.minecraft.util.math.MathHelper;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.apache.commons.io.IOUtils;
@@ -13,11 +14,15 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
+import java.util.TimerTask;
 
+import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
 import static top.xujiayao.mcdiscordchat.Main.HTTP_CLIENT;
 import static top.xujiayao.mcdiscordchat.Main.JDA;
 import static top.xujiayao.mcdiscordchat.Main.LOGGER;
+import static top.xujiayao.mcdiscordchat.Main.MSPT_MONITOR_TIMER;
+import static top.xujiayao.mcdiscordchat.Main.SERVER;
 import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 import static top.xujiayao.mcdiscordchat.Main.VERSION;
 
@@ -140,6 +145,21 @@ public class Utils {
 				.addCommands(Commands.slash("log", CONFIG.generic.useEngInsteadOfChin ? "Get the latest server log (admin only)" : "获取服务器最新日志（仅限管理员）"))
 				.addCommands(Commands.slash("stop", CONFIG.generic.useEngInsteadOfChin ? "Stop the server (admin only)" : "停止服务器（仅限管理员）"))
 				.queue();
+	}
+
+	public static void initMsptMonitor() {
+		MSPT_MONITOR_TIMER.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				double mspt = MathHelper.average(SERVER.lastTickLengths) * 1.0E-6D;
+
+				if (mspt > CONFIG.generic.msptLimit) {
+					CHANNEL.sendMessage(TEXTS.highMspt()
+							.replace("%mspt%", Double.toString(mspt))
+							.replace("%msptLimit%", Integer.toString(CONFIG.generic.msptLimit))).queue();
+				}
+			}
+		}, 0, 5000);
 	}
 
 	public static void setMcdcVersion() {

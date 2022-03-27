@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Timer;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
@@ -44,6 +45,7 @@ import static top.xujiayao.mcdiscordchat.Main.JDA;
 import static top.xujiayao.mcdiscordchat.Main.LOGGER;
 import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_LAST_RESET_TIME;
 import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_SEND_COUNT;
+import static top.xujiayao.mcdiscordchat.Main.MSPT_MONITOR_TIMER;
 import static top.xujiayao.mcdiscordchat.Main.SERVER;
 import static top.xujiayao.mcdiscordchat.Main.SIMPLE_DATE_FORMAT;
 import static top.xujiayao.mcdiscordchat.Main.TEXTS;
@@ -187,6 +189,12 @@ public class DiscordEventListener extends ListenerAdapter {
 						}
 
 						Utils.updateBotCommands();
+
+						MSPT_MONITOR_TIMER.cancel();
+						if (CONFIG.generic.announceHighMspt) {
+							MSPT_MONITOR_TIMER = new Timer();
+							Utils.initMsptMonitor();
+						}
 
 						e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**Config file reloaded successfully!**" : "**配置文件重新加载成功！**").queue();
 					} catch (Exception ex) {

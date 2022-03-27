@@ -21,6 +21,7 @@ import top.xujiayao.mcdiscordchat.utils.Utils;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.Timer;
 
 /**
  * @author Xujiayao
@@ -40,6 +41,7 @@ public class Main implements DedicatedServerModInitializer {
 	public static long MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();
 	public static int MINECRAFT_SEND_COUNT = 0;
 	public static MinecraftServer SERVER;
+	public static Timer MSPT_MONITOR_TIMER = new Timer();
 
 	@Override
 	public void onInitializeServer() {
@@ -86,10 +88,18 @@ public class Main implements DedicatedServerModInitializer {
 			if (!message.isEmpty()) {
 				CHANNEL.sendMessage(message).queue();
 			}
+
+			if (CONFIG.generic.announceHighMspt) {
+				Utils.initMsptMonitor();
+			}
 		});
 
-		ServerLifecycleEvents.SERVER_STOPPING.register((server) -> CHANNEL.sendMessage(TEXTS.serverStopped())
-				.submit()
-				.whenComplete((v, ex) -> JDA.shutdownNow()));
+		ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
+			MSPT_MONITOR_TIMER.cancel();
+
+			CHANNEL.sendMessage(TEXTS.serverStopped())
+					.submit()
+					.whenComplete((v, ex) -> JDA.shutdownNow());
+		});
 	}
 }
