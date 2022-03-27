@@ -38,6 +38,14 @@ This is an alpha version of MCDiscordChat, which means you may encounter signifi
   Server console and Discord console log channel can print chat messages from Discord
   @Xujiayao
 
+- 使用 Discord 应用（斜杠）命令
+  Use Discord Application (Slash) Command
+  @Xujiayao
+
+- 添加 /log 命令使管理员可直接从 Discord 获取最新的服务器日志
+  Add /log command which allows admins to get the latest server logs directly from Discord
+  @Xujiayao
+
 ## 更改 Changes
 
 - 重写所有文件并优化代码和逻辑
@@ -56,14 +64,26 @@ This is an alpha version of MCDiscordChat, which means you may encounter signifi
   Change the default format of Discord console log channel messages
   @Xujiayao
 
-- 暂时使用临时文件检查更新
-  Temporarily use a temporary file to check for updates
+- 使用临时文件检查更新以兼容 v1 版本
+  Check for updates using temporary files for v1 compatibility
+  @Xujiayao
+
+- 使用 JDA.shutdownNow() 解决停止服务器时的挂起问题
+  Use JDA.shutdownNow() to resolve hang when stopping the server
   @Xujiayao
 
 ## 移除 Removed
 
 - 不再向 Discord 频道发送异常堆栈跟踪
   Exception stack traces are no longer sent to Discord channel
+  @Xujiayao
+
+- 移除在 Discord 修改管理员列表的功能
+  Remove the function of modifying the admin list in Discord
+  @Xujiayao
+
+- 移除超级管理员列表
+  Remove super admin list
   @Xujiayao
 
 ## 详细信息 Detailed Information
