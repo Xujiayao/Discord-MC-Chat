@@ -1,95 +1,99 @@
-# 更新日志 Changelog
+# Changelog 更新日志 | 🥳 Welcome to MCDC v2!
 
-MCDiscordChat 2.0.0-alpha.1 for Minecraft 1.16.x/1.17.x/1.18.x - 2022/3/24
+## MCDiscordChat 2.0.0-alpha.1 for Minecraft 1.16.x/1.17.x/1.18.x - 2022/3/28
 
-## ⚠ 提醒 Reminder
+I highly recommend you update MCDC and take advantage of the new features! Bug reports or other suggestions are welcome!
 
-此版本与之前的版本相比有重大变化，请务必备份你的旧 MCDiscordChat 配置文件 (mcdiscordchat.json)，重新阅读 [MCDiscordChat 文档](https://blog.xujiayao.top/posts/4ba0a17a/) ，并且不要直接从旧配置文件中复制和粘贴任何内容，因为这可能会导致错误！
+MCDC is completely rewritten, so there may be some bugs. Please state the exact version you are using when reporting an issue.
 
-这是 MCDiscordChat 的 alpha 版本，这意味着你可能会遇到重大错误或其他问题。欢迎提交错误报告或其他建议。请在报告问题时说明你使用的确切版本。
+我强烈推荐你更新 MCDC 并使用新功能！欢迎提交错误报告或其他建议！
 
-This version has a significant change compared with previous versions. Please make sure to backup your old MCDiscordChat config file (mcdiscordchat.json), re-read the [MCDiscordChat Docs](https://blog.xujiayao.top/posts/4ba0a17a/) and do not copy and paste anything directly from the old config file, as this may cause errors!
+MCDC 已完全重写，因此可能存在一些错误。请在报告问题时说明你使用的确切版本。
 
-This is an alpha version of MCDiscordChat, which means you may encounter significant bugs or other issues. Bug reports or other suggestions are welcome. Please state the exact version you are using when reporting an issue.
+## ⚠ Reminder 提醒
 
-## 新特性 New Features
+This version has a significant change compared with previous versions. Please make sure to backup your old MCDC config file (mcdiscordchat.json), re-read the [MCDiscordChat Docs](https://blog.xujiayao.top/posts/4ba0a17a/) and do not copy and paste anything directly from the old config file, as this may cause errors!
 
-- 启动服务器时打印 MCDC 介绍
-  Print MCDC introduction when starting the server
+此版本与之前的版本相比有重大变化，请务必备份你的旧 MCDC 配置文件 (mcdiscordchat.json)，重新阅读 [MCDiscordChat 文档](https://blog.xujiayao.top/posts/4ba0a17a/) ，并且不要直接从旧配置文件中复制和粘贴任何内容，因为这可能会导致错误！
+
+## New Features 新特性
+
+- Print MCDC introduction when starting the server
+  启动服务器时打印 MCDC 介绍
   @Xujiayao
 
-- 新版本可用时显示更新日志
-  Show changelog when a new version is available
+- Show changelog when a new version is available
+  新版本可用时显示更新日志
   @Xujiayao
 
-- 添加 GitHub 议题模板
-  Add GitHub issue templates
+- Add GitHub issue templates
+  添加 GitHub 议题模板
   @Xujiayao
 
-- Unicode 表情符号（非服务器自定义表情符号）也可以在游戏中高亮显示
-  Unicode emoji (non-server custom emoji) can also be highlighted in-game
+- Unicode emoji (non-server custom emoji) can also be highlighted in-game
+  Unicode 表情符号（非服务器自定义表情符号）也可以在游戏中高亮显示
   @Xujiayao
 
-- 机器人活动状态可以在「正在玩」和「正在听」之间切换
-  Bot activity status can be switched between "playing" and "listening"
+- Bot activity status can be switched between 'playing' and 'listening'
+  机器人活动状态可以在「正在玩」和「正在听」之间切换
   @Xujiayao
 
-- 服务器控制台和 Discord 控制台日志频道可打印来自 Discord 的聊天消息
-  Server console and Discord console log channel can print chat messages from Discord
+- Server console and Discord console log channel can print chat messages from Discord
+  服务器控制台和 Discord 控制台日志频道可打印来自 Discord 的聊天消息
   @Xujiayao
 
-- 使用 Discord 应用（斜杠）命令
-  Use Discord Application (Slash) Command
+- Use Discord Application (Slash) Command
+  使用 Discord 应用（斜杠）命令
   @Xujiayao
 
-- 添加 /log 命令使管理员可直接从 Discord 获取最新的服务器日志
-  Add /log command which allows admins to get the latest server logs directly from Discord
+- Add /log command to allow admins to get the latest server logs directly from Discord
+  添加 /log 命令使管理员可直接从 Discord 获取最新的服务器日志
   @Xujiayao
 
-## 更改 Changes
+## Changes 更改
 
-- 重写所有文件并优化代码和逻辑
-  Rewrite all files and optimize code and logic
+- Rewrite all files and optimize code and logic
+  重写所有文件并优化代码和逻辑
   @Xujiayao
 
-- 修改项目描述
-  Modify project description
+- Modify project description
+  修改项目描述
   @Xujiayao
 
-- 更改消息冷却的实现方式
-  Change the implementation method of message cooldown
+- Change the implementation method of message cooldown
+  更改消息冷却的实现方式
   @Xujiayao
 
-- 更改 Discord 控制台日志频道消息的默认格式
-  Change the default format of Discord console log channel messages
+- Change the default format of Discord console log messages
+  更改 Discord 控制台日志消息的默认格式
   @Xujiayao
 
-- 使用临时文件检查更新以兼容 v1 版本
-  Check for updates using temporary files for v1 compatibility
+- Check for updates using temporary files for v1 compatibility
+  使用临时文件检查更新以兼容 v1 版本
   @Xujiayao
 
-- 使用 JDA.shutdownNow() 解决停止服务器时的挂起问题
-  Use JDA.shutdownNow() to resolve hang when stopping the server
+- Use JDA.shutdownNow() to resolve process hangs when stopping the server
+  使用 JDA.shutdownNow() 解决停止服务器时的进程挂起问题
   @Xujiayao
 
-- 修复忽略（转义）Markdown 格式时反斜杠仍然存在的问题
-  Fix backslashes still exist when ignoring (escaping) Markdown formatting
+- Fix backslashes still exist when ignoring (escaping) Markdown formatting
+  修复忽略（转义）Markdown 格式时反斜杠仍然存在的问题
   @Xujiayao
 
-## 移除 Removed
+## Removed 移除
 
-- 不再向 Discord 频道发送异常堆栈跟踪
-  Exception stack traces are no longer sent to Discord channel
+- Exception stack traces are no longer sent to the Discord channel
+  不再向 Discord 频道发送异常堆栈跟踪
   @Xujiayao
 
-- 移除在 Discord 修改管理员列表的功能
-  Remove the function of modifying the admin list in Discord
+- Remove the function of modifying the admin list in Discord
+  移除在 Discord 修改管理员列表的功能
   @Xujiayao
 
-- 移除超级管理员列表
-  Remove super admin list
+- Remove super admin list
+  移除超级管理员列表
   @Xujiayao
 
-## 详细信息 Detailed Information
+## Detailed Information 详细信息
 
 https://github.com/Xujiayao/MCDiscordChat/compare/1.12.1...master
