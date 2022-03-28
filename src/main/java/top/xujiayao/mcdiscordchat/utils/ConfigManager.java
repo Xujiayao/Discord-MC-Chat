@@ -27,17 +27,17 @@ public class ConfigManager {
 			create();
 
 			LOGGER.error("-----------------------------------------");
-			LOGGER.error("错误：找不到配置文件或配置文件为空！");
 			LOGGER.error("Error: The config file cannot be found or is empty!");
-			LOGGER.error("");
-			LOGGER.error("请在重新启动服务器之前按照文档配置 MCDiscordChat！");
-			LOGGER.error("更多介绍 + 文档：https://blog.xujiayao.top/posts/4ba0a17a/");
+			LOGGER.error("错误：找不到配置文件或配置文件为空！");
 			LOGGER.error("");
 			LOGGER.error("Please follow the documentation to configure MCDiscordChat before restarting the server!");
 			LOGGER.error("More information + Docs: https://blog.xujiayao.top/posts/4ba0a17a/");
 			LOGGER.error("");
-			LOGGER.error("正在停止服务器...");
+			LOGGER.error("请在重新启动服务器之前按照文档配置 MCDiscordChat！");
+			LOGGER.error("更多信息 + 文档：https://blog.xujiayao.top/posts/4ba0a17a/");
+			LOGGER.error("");
 			LOGGER.error("Stopping the server...");
+			LOGGER.error("正在停止服务器...");
 			LOGGER.error("-----------------------------------------");
 
 			System.exit(0);

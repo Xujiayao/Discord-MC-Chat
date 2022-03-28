@@ -52,7 +52,7 @@ public class Main implements DedicatedServerModInitializer {
 		LOGGER.info("MCDiscordChat (MCDC) " + VERSION);
 		LOGGER.info("By Xujiayao");
 		LOGGER.info("");
-		LOGGER.info("More information + Docs:");
+		LOGGER.info(CONFIG.generic.useEngInsteadOfChin ? "More information + Docs:" : "更多信息 + 文档：");
 		LOGGER.info("https://blog.xujiayao.top/posts/4ba0a17a/");
 		LOGGER.info("-----------------------------------------");
 
