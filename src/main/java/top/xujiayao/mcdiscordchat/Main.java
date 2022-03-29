@@ -15,7 +15,9 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import top.xujiayao.mcdiscordchat.discord.DiscordEventListener;
+import top.xujiayao.mcdiscordchat.multiServer.MultiServer;
 import top.xujiayao.mcdiscordchat.utils.ConfigManager;
+import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 import top.xujiayao.mcdiscordchat.utils.Texts;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 
@@ -42,6 +44,7 @@ public class Main implements DedicatedServerModInitializer {
 	public static int MINECRAFT_SEND_COUNT = 0;
 	public static MinecraftServer SERVER;
 	public static Timer MSPT_MONITOR_TIMER = new Timer();
+	public static MultiServer MULTI_SERVER;
 
 	@Override
 	public void onInitializeServer() {
@@ -52,7 +55,7 @@ public class Main implements DedicatedServerModInitializer {
 		LOGGER.info("MCDiscordChat (MCDC) " + VERSION);
 		LOGGER.info("By Xujiayao");
 		LOGGER.info("");
-		LOGGER.info(CONFIG.generic.useEngInsteadOfChin ? "More information + Docs:" : "更多信息 + 文档：");
+		LOGGER.info("More information + Docs:");
 		LOGGER.info("https://blog.xujiayao.top/posts/4ba0a17a/");
 		LOGGER.info("-----------------------------------------");
 
@@ -79,8 +82,16 @@ public class Main implements DedicatedServerModInitializer {
 			System.exit(1);
 		}
 
+		if (CONFIG.multiServer.enable) {
+			MULTI_SERVER = new MultiServer();
+			MULTI_SERVER.start();
+		}
+
 		ServerLifecycleEvents.SERVER_STARTED.register((server) -> {
 			CHANNEL.sendMessage(TEXTS.serverStarted()).queue();
+			if (CONFIG.multiServer.enable) {
+				MULTI_SERVER.sendMessage(MarkdownParser.parseMarkdown(TEXTS.serverStarted()));
+			}
 
 			SERVER = server;
 
@@ -100,6 +111,9 @@ public class Main implements DedicatedServerModInitializer {
 			CHANNEL.sendMessage(TEXTS.serverStopped())
 					.submit()
 					.whenComplete((v, ex) -> JDA.shutdownNow());
+			if (CONFIG.multiServer.enable) {
+				MULTI_SERVER.sendMessage(MarkdownParser.parseMarkdown(TEXTS.serverStopped()));
+			}
 		});
 	}
 }

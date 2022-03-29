@@ -9,8 +9,11 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
+import static top.xujiayao.mcdiscordchat.Main.CONFIG;
+import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
 import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 
 /**
@@ -26,15 +29,36 @@ public class MixinPlayerAdvancementTracker {
 	private void grantCriterion(Advancement advancement, String criterionName, CallbackInfoReturnable<Boolean> cir) {
 		if (advancement.getDisplay() != null && advancement.getDisplay().shouldAnnounceToChat()) {
 			switch (advancement.getDisplay().getFrame()) {
-				case GOAL -> CHANNEL.sendMessage(TEXTS.advancementGoal()
-						.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
-						.replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
-				case TASK -> CHANNEL.sendMessage(TEXTS.advancementTask()
-						.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
-						.replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
-				case CHALLENGE -> CHANNEL.sendMessage(TEXTS.advancementChallenge()
-						.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
-						.replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
+				case GOAL -> {
+					CHANNEL.sendMessage(TEXTS.advancementGoal()
+							.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
+							.replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
+					if (CONFIG.multiServer.enable) {
+						MULTI_SERVER.sendMessage(MarkdownParser.parseMarkdown(TEXTS.advancementGoal()
+								.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
+								.replace("%advancement%", advancement.getDisplay().getTitle().getString())));
+					}
+				}
+				case TASK -> {
+					CHANNEL.sendMessage(TEXTS.advancementTask()
+							.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
+							.replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
+					if (CONFIG.multiServer.enable) {
+						MULTI_SERVER.sendMessage(MarkdownParser.parseMarkdown(TEXTS.advancementTask()
+								.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
+								.replace("%advancement%", advancement.getDisplay().getTitle().getString())));
+					}
+				}
+				case CHALLENGE -> {
+					CHANNEL.sendMessage(TEXTS.advancementChallenge()
+							.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
+							.replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
+					if (CONFIG.multiServer.enable) {
+						MULTI_SERVER.sendMessage(MarkdownParser.parseMarkdown(TEXTS.advancementChallenge()
+								.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
+								.replace("%advancement%", advancement.getDisplay().getTitle().getString())));
+					}
+				}
 			}
 		}
 	}

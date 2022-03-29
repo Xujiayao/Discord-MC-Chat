@@ -22,6 +22,7 @@ import static top.xujiayao.mcdiscordchat.Main.HTTP_CLIENT;
 import static top.xujiayao.mcdiscordchat.Main.JDA;
 import static top.xujiayao.mcdiscordchat.Main.LOGGER;
 import static top.xujiayao.mcdiscordchat.Main.MSPT_MONITOR_TIMER;
+import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
 import static top.xujiayao.mcdiscordchat.Main.SERVER;
 import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 import static top.xujiayao.mcdiscordchat.Main.VERSION;
@@ -157,6 +158,11 @@ public class Utils {
 					CHANNEL.sendMessage(TEXTS.highMspt()
 							.replace("%mspt%", Double.toString(mspt))
 							.replace("%msptLimit%", Integer.toString(CONFIG.generic.msptLimit))).queue();
+					if (CONFIG.multiServer.enable) {
+						MULTI_SERVER.sendMessage(MarkdownParser.parseMarkdown(TEXTS.highMspt()
+								.replace("%mspt%", Double.toString(mspt))
+								.replace("%msptLimit%", Integer.toString(CONFIG.generic.msptLimit))));
+					}
 				}
 			}
 		}, 0, 5000);

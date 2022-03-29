@@ -11,6 +11,7 @@ public class Config {
 	// More information + Docs: https://blog.xujiayao.top/posts/4ba0a17a/
 
 	public Generic generic = new Generic();
+	public MultiServer multiServer = new MultiServer();
 	public TextsZH textsZH = new TextsZH();
 	public TextsEN textsEN = new TextsEN();
 
@@ -40,8 +41,14 @@ public class Config {
 		public List<String> adminsIds = new ArrayList<>();
 
 		// TODO Link players to Discord accounts
-		// TODO Multi Server
 		// Permissions=183296
+	}
+
+	public static class MultiServer {
+		public boolean enable = true;
+		public String host = "127.0.0.1";
+		public int port = 5000;
+		public String name = "SMP";
 	}
 
 	public static class TextsZH {

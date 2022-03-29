@@ -43,6 +43,7 @@ import static top.xujiayao.mcdiscordchat.Main.JDA;
 import static top.xujiayao.mcdiscordchat.Main.LOGGER;
 import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_LAST_RESET_TIME;
 import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_SEND_COUNT;
+import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
 
 /**
  * @author Xujiayao
@@ -121,6 +122,9 @@ public abstract class MixinServerPlayNetworkHandler {
 				ci.cancel();
 
 				sendWebhookMessage(contentToDiscord, false);
+				if (CONFIG.multiServer.enable) {
+					MULTI_SERVER.sendMessage(MarkdownParser.parseMarkdown(contentToMinecraft));
+				}
 			}
 
 			messageCooldown += 20;
@@ -149,6 +153,9 @@ public abstract class MixinServerPlayNetworkHandler {
 				list.forEach(serverPlayerEntity -> serverPlayerEntity.sendMessage(text, false));
 
 				sendWebhookMessage(input, true);
+				if (CONFIG.multiServer.enable) {
+					MULTI_SERVER.sendMessage("<" + player.getEntityName() + "> " + input);
+				}
 			}
 		}
 	}
@@ -156,8 +163,7 @@ public abstract class MixinServerPlayNetworkHandler {
 	private void sendWebhookMessage(String content, boolean escapeMarkdown) {
 		JsonObject body = new JsonObject();
 		body.addProperty("content", (escapeMarkdown ? MarkdownSanitizer.escape(content) : content));
-		//body.addProperty("username", (CONFIG.generic.multiServerMode ? ("[" + CONFIG.multiServer.serverDisplayName + "] " + playerEntity.getEntityName() : playerEntity.getEntityName()));
-		body.addProperty("username", player.getEntityName());
+		body.addProperty("username", (CONFIG.multiServer.enable) ? ("[" + CONFIG.multiServer.name + "] " + player.getEntityName()) : player.getEntityName());
 		body.addProperty("avatar_url", CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUuid().toString() : player.getEntityName())));
 
 		try {
