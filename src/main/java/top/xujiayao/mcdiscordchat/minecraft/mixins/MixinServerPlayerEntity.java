@@ -11,7 +11,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
@@ -33,8 +32,8 @@ public abstract class MixinServerPlayerEntity extends PlayerEntity {
 		CHANNEL.sendMessage(TEXTS.deathMessage()
 				.replace("%deathMessage%", MarkdownSanitizer.escape(getDamageTracker().getDeathMessage().getString()))).queue();
 		if (CONFIG.multiServer.enable) {
-			MULTI_SERVER.sendMessage(MarkdownParser.parseMarkdown(TEXTS.deathMessage()
-					.replace("%deathMessage%", MarkdownSanitizer.escape(getDamageTracker().getDeathMessage().getString()))));
+			MULTI_SERVER.sendMessage(false, null, TEXTS.deathMessage()
+					.replace("%deathMessage%", MarkdownSanitizer.escape(getDamageTracker().getDeathMessage().getString())));
 		}
 	}
 }

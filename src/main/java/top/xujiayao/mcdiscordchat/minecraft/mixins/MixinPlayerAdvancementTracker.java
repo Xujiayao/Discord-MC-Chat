@@ -9,7 +9,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
@@ -34,9 +33,9 @@ public class MixinPlayerAdvancementTracker {
 							.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
 							.replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
 					if (CONFIG.multiServer.enable) {
-						MULTI_SERVER.sendMessage(MarkdownParser.parseMarkdown(TEXTS.advancementGoal()
+						MULTI_SERVER.sendMessage(false, null, TEXTS.advancementGoal()
 								.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
-								.replace("%advancement%", advancement.getDisplay().getTitle().getString())));
+								.replace("%advancement%", advancement.getDisplay().getTitle().getString()));
 					}
 				}
 				case TASK -> {
@@ -44,9 +43,9 @@ public class MixinPlayerAdvancementTracker {
 							.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
 							.replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
 					if (CONFIG.multiServer.enable) {
-						MULTI_SERVER.sendMessage(MarkdownParser.parseMarkdown(TEXTS.advancementTask()
+						MULTI_SERVER.sendMessage(false, null, TEXTS.advancementTask()
 								.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
-								.replace("%advancement%", advancement.getDisplay().getTitle().getString())));
+								.replace("%advancement%", advancement.getDisplay().getTitle().getString()));
 					}
 				}
 				case CHALLENGE -> {
@@ -54,9 +53,9 @@ public class MixinPlayerAdvancementTracker {
 							.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
 							.replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
 					if (CONFIG.multiServer.enable) {
-						MULTI_SERVER.sendMessage(MarkdownParser.parseMarkdown(TEXTS.advancementChallenge()
+						MULTI_SERVER.sendMessage(false, null, TEXTS.advancementChallenge()
 								.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
-								.replace("%advancement%", advancement.getDisplay().getTitle().getString())));
+								.replace("%advancement%", advancement.getDisplay().getTitle().getString()));
 					}
 				}
 			}

@@ -12,7 +12,6 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
@@ -24,6 +23,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import top.xujiayao.mcdiscordchat.multiServer.MultiServer;
 import top.xujiayao.mcdiscordchat.utils.ConfigManager;
 import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 import top.xujiayao.mcdiscordchat.utils.Utils;
@@ -31,7 +31,6 @@ import top.xujiayao.mcdiscordchat.utils.Utils;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,12 +42,9 @@ import static top.xujiayao.mcdiscordchat.Main.CONFIG;
 import static top.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.JDA;
 import static top.xujiayao.mcdiscordchat.Main.LOGGER;
-import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_LAST_RESET_TIME;
-import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_SEND_COUNT;
 import static top.xujiayao.mcdiscordchat.Main.MSPT_MONITOR_TIMER;
+import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
 import static top.xujiayao.mcdiscordchat.Main.SERVER;
-import static top.xujiayao.mcdiscordchat.Main.SIMPLE_DATE_FORMAT;
-import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 
 public class DiscordEventListener extends ListenerAdapter {
 
@@ -179,6 +175,11 @@ public class DiscordEventListener extends ListenerAdapter {
 			case "reload" -> {
 				if (CONFIG.generic.adminsIds.contains(Objects.requireNonNull(e.getMember()).getId())) {
 					try {
+						if (CONFIG.multiServer.enable) {
+							MULTI_SERVER.bye();
+							MULTI_SERVER.stopMultiServer();
+						}
+
 						ConfigManager.init();
 
 						Utils.setBotActivity();
@@ -194,6 +195,11 @@ public class DiscordEventListener extends ListenerAdapter {
 						if (CONFIG.generic.announceHighMspt) {
 							MSPT_MONITOR_TIMER = new Timer();
 							Utils.initMsptMonitor();
+						}
+
+						if (CONFIG.multiServer.enable) {
+							MULTI_SERVER = new MultiServer();
+							MULTI_SERVER.start();
 						}
 
 						e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**Config file reloaded successfully!**" : "**配置文件重新加载成功！**").queue();
@@ -257,21 +263,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				.append("> ")
 				.append(message);
 
-		LOGGER.info(consoleMessage.toString());
-
-		if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
-			if ((System.currentTimeMillis() - MINECRAFT_LAST_RESET_TIME) > 20000) {
-				MINECRAFT_SEND_COUNT = 0;
-				MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();
-			}
-
-			MINECRAFT_SEND_COUNT++;
-			if (MINECRAFT_SEND_COUNT <= 20) {
-				CONSOLE_LOG_CHANNEL.sendMessage(TEXTS.consoleLogMessage()
-						.replace("%time%", SIMPLE_DATE_FORMAT.format(new Date()))
-						.replace("%message%", MarkdownSanitizer.escape(consoleMessage.toString()))).queue();
-			}
-		}
+		Utils.sendConsoleMessage(consoleMessage);
 
 		if (!e.getMessage().getAttachments().isEmpty()) {
 			if (!e.getMessage().getContentDisplay().isBlank()) {

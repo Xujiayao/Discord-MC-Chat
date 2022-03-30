@@ -1,6 +1,6 @@
 package top.xujiayao.mcdiscordchat.multiServer.server;
 
-import net.minecraft.util.Formatting;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -19,7 +19,7 @@ public class UserThread extends Thread {
 	private final Socket socket;
 	private final Server server;
 	private PrintWriter writer;
-	private String name;
+	private BufferedReader reader;
 
 	public UserThread(Socket socket, Server server) {
 		this.socket = socket;
@@ -29,35 +29,42 @@ public class UserThread extends Thread {
 	@Override
 	public void run() {
 		try {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+			reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
 
 			writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
 
-			name = reader.readLine();
-			server.addUser(name);
+			while (true) {
+				String message = reader.readLine();
 
-			while (!socket.isInputShutdown()) {
-				String message = Formatting.BLUE.toString() + Formatting.BOLD + "[" + name + "] " + Formatting.RESET + reader.readLine();
+				if (message.equals("bye")) {
+					reader.close();
+					socket.close();
+					break;
+				}
+
 				server.broadcast(message, this);
 			}
 
-			server.removeUser(name, this);
-			server.broadcast(name + " has left.", this);
-
-			socket.close();
+			remove(true);
 		} catch (Exception e) {
-			try {
-				server.removeUser(name, this);
-				server.broadcast(name + " has left.", this);
-
-				socket.close();
-			} catch (Exception ex) {
-				LOGGER.error("Error: " + ex.getMessage());
-			}
+			remove(true);
 		}
 	}
 
 	public void sendMessage(String message) {
 		writer.println(message);
+	}
+
+	public void remove(boolean shouldRemoveList) {
+		try {
+			socket.close();
+			reader.close();
+
+			if (shouldRemoveList) {
+				server.removeUser(this);
+			}
+		} catch (Exception e) {
+			LOGGER.error(ExceptionUtils.getStackTrace(e));
+		}
 	}
 }

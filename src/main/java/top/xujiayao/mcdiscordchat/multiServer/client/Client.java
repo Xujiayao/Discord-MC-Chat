@@ -10,18 +10,18 @@ import static top.xujiayao.mcdiscordchat.Main.LOGGER;
  */
 public class Client {
 
-	private WriteThread writeThread;
+	public WriteThread writeThread;
+	public ReadThread readThread;
+	public Socket socket;
 
 	public void connect() throws Exception {
-		Socket socket = new Socket(CONFIG.multiServer.host, CONFIG.multiServer.port);
+		socket = new Socket(CONFIG.multiServer.host, CONFIG.multiServer.port);
 		LOGGER.info("[MultiServer] Connected to the server");
 
-		new ReadThread(socket).start();
+		readThread = new ReadThread(socket);
+		readThread.start();
+
 		writeThread = new WriteThread(socket);
 		writeThread.start();
-	}
-
-	public WriteThread getWriteThread() {
-		return writeThread;
 	}
 }

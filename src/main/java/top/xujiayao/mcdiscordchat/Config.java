@@ -41,7 +41,6 @@ public class Config {
 		public List<String> adminsIds = new ArrayList<>();
 
 		// TODO Link players to Discord accounts
-		// Permissions=183296
 	}
 
 	public static class MultiServer {

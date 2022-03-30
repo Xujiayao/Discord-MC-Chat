@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.minecraft.util.math.MathHelper;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -13,17 +14,22 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.Objects;
 import java.util.TimerTask;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
+import static top.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.HTTP_CLIENT;
 import static top.xujiayao.mcdiscordchat.Main.JDA;
 import static top.xujiayao.mcdiscordchat.Main.LOGGER;
+import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_LAST_RESET_TIME;
+import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_SEND_COUNT;
 import static top.xujiayao.mcdiscordchat.Main.MSPT_MONITOR_TIMER;
 import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
 import static top.xujiayao.mcdiscordchat.Main.SERVER;
+import static top.xujiayao.mcdiscordchat.Main.SIMPLE_DATE_FORMAT;
 import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 import static top.xujiayao.mcdiscordchat.Main.VERSION;
 
@@ -159,13 +165,31 @@ public class Utils {
 							.replace("%mspt%", Double.toString(mspt))
 							.replace("%msptLimit%", Integer.toString(CONFIG.generic.msptLimit))).queue();
 					if (CONFIG.multiServer.enable) {
-						MULTI_SERVER.sendMessage(MarkdownParser.parseMarkdown(TEXTS.highMspt()
+						MULTI_SERVER.sendMessage(false, null, MarkdownParser.parseMarkdown(TEXTS.highMspt()
 								.replace("%mspt%", Double.toString(mspt))
 								.replace("%msptLimit%", Integer.toString(CONFIG.generic.msptLimit))));
 					}
 				}
 			}
 		}, 0, 5000);
+	}
+
+	public static void sendConsoleMessage(StringBuilder consoleMessage) {
+		LOGGER.info(consoleMessage.toString());
+
+		if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
+			if ((System.currentTimeMillis() - MINECRAFT_LAST_RESET_TIME) > 20000) {
+				MINECRAFT_SEND_COUNT = 0;
+				MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();
+			}
+
+			MINECRAFT_SEND_COUNT++;
+			if (MINECRAFT_SEND_COUNT <= 20) {
+				CONSOLE_LOG_CHANNEL.sendMessage(TEXTS.consoleLogMessage()
+						.replace("%time%", SIMPLE_DATE_FORMAT.format(new Date()))
+						.replace("%message%", MarkdownSanitizer.escape(consoleMessage.toString()))).queue();
+			}
+		}
 	}
 
 	public static void setMcdcVersion() {

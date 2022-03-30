@@ -7,7 +7,6 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
-import static top.xujiayao.mcdiscordchat.Main.CONFIG;
 import static top.xujiayao.mcdiscordchat.Main.LOGGER;
 
 /**
@@ -23,11 +22,6 @@ public class WriteThread extends Thread {
 		} catch (Exception e) {
 			LOGGER.error(ExceptionUtils.getStackTrace(e));
 		}
-	}
-
-	@Override
-	public void run() {
-		writer.println(CONFIG.multiServer.name);
 	}
 
 	public void write(String text) {

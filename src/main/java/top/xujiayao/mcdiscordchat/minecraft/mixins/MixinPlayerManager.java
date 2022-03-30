@@ -8,7 +8,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
@@ -26,8 +25,8 @@ public class MixinPlayerManager {
 		CHANNEL.sendMessage(TEXTS.joinServer()
 				.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();
 		if (CONFIG.multiServer.enable) {
-			MULTI_SERVER.sendMessage(MarkdownParser.parseMarkdown(TEXTS.joinServer()
-					.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))));
+			MULTI_SERVER.sendMessage(false, null, TEXTS.joinServer()
+					.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName())));
 		}
 	}
 
@@ -36,8 +35,8 @@ public class MixinPlayerManager {
 		CHANNEL.sendMessage(TEXTS.leftServer()
 				.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();
 		if (CONFIG.multiServer.enable) {
-			MULTI_SERVER.sendMessage(MarkdownParser.parseMarkdown(TEXTS.leftServer()
-					.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))));
+			MULTI_SERVER.sendMessage(false, null, TEXTS.leftServer()
+					.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName())));
 		}
 	}
 }

@@ -1,7 +1,5 @@
 package top.xujiayao.mcdiscordchat.multiServer.server;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
-
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashSet;
@@ -15,9 +13,8 @@ import static top.xujiayao.mcdiscordchat.Main.LOGGER;
  */
 public class Server extends Thread {
 
-	private final Set<String> users = new HashSet<>();
-	private final Set<UserThread> userThreads = new HashSet<>();
-	private final ServerSocket serverSocket;
+	public final Set<UserThread> users = new HashSet<>();
+	public final ServerSocket serverSocket;
 
 	public Server() throws Exception {
 		serverSocket = new ServerSocket(CONFIG.multiServer.port);
@@ -26,41 +23,28 @@ public class Server extends Thread {
 
 	@Override
 	public void run() {
-		try {
-			while (!serverSocket.isClosed()) {
+		while (true) {
+			try {
 				Socket socket = serverSocket.accept();
 
 				UserThread newUser = new UserThread(socket, this);
-				userThreads.add(newUser);
+				users.add(newUser);
 				newUser.start();
+			} catch (Exception e) {
+				break;
 			}
-		} catch (Exception e) {
-			LOGGER.error("Error in the server: " + e.getMessage());
 		}
 	}
 
 	public void broadcast(String message, UserThread excludeUserThread) {
-		for (UserThread userThread : userThreads) {
+		users.forEach(userThread -> {
 			if (userThread != excludeUserThread) {
 				userThread.sendMessage(message);
 			}
-		}
+		});
 	}
 
-	public void addUser(String name) {
-		users.add(name);
-	}
-
-	public void removeUser(String name, UserThread userThread) {
-		users.remove(name);
-		userThreads.remove(userThread);
-
-		if (users.isEmpty()) {
-			try {
-				serverSocket.close();
-			} catch (Exception e) {
-				LOGGER.error(ExceptionUtils.getStackTrace(e));
-			}
-		}
+	public void removeUser(UserThread userThread) {
+		users.remove(userThread);
 	}
 }
