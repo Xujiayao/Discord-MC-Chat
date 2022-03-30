@@ -36,10 +36,10 @@ public class MultiServer extends Thread {
 		}
 	}
 
-	public void sendMessage(boolean sendToDiscordOnly, boolean isChat, String playerName, String message) {
+	public void sendMessage(boolean special, boolean isChat, String playerName, String message) {
 		JsonObject json = new JsonObject();
 		json.addProperty("name", CONFIG.multiServer.name);
-		json.addProperty("sendToDiscordOnly", sendToDiscordOnly);
+		json.addProperty("special", special);
 		json.addProperty("isChat", isChat);
 		json.addProperty("playerName", playerName);
 		json.addProperty("message", message);

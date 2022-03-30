@@ -13,11 +13,9 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.math.MathHelper;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -59,47 +57,8 @@ public class DiscordEventListener extends ListenerAdapter {
 
 		switch (e.getName()) {
 			case "info" -> {
-				StringBuilder message = new StringBuilder()
-						.append("```\n=============== ")
-						.append(CONFIG.generic.useEngInsteadOfChin ? "Server Status" : "运行状态")
-						.append(" ===============\n\n");
-
-				// Online players
-				List<ServerPlayerEntity> onlinePlayers = SERVER.getPlayerManager().getPlayerList();
-				message.append(CONFIG.generic.useEngInsteadOfChin ? "Online players (" : "在线玩家 (")
-						.append(onlinePlayers.size())
-						.append(")")
-						.append(CONFIG.generic.useEngInsteadOfChin ? ":" : "：")
-						.append("\n");
-
-				if (onlinePlayers.isEmpty()) {
-					message.append(CONFIG.generic.useEngInsteadOfChin ? "No players online!" : "当前没有在线玩家！");
-				} else {
-					for (ServerPlayerEntity player : onlinePlayers) {
-						message.append("[").append(player.pingMilliseconds).append("ms] ").append(player.getEntityName());
-					}
-				}
-
-				// Server TPS
-				double serverTickTime = MathHelper.average(SERVER.lastTickLengths) * 1.0E-6D;
-				message.append(CONFIG.generic.useEngInsteadOfChin ? "\n\nServer TPS:\n" : "\n\n服务器 TPS：\n")
-						.append(Math.min(1000.0 / serverTickTime, 20));
-
-				// Server MSPT
-				message.append(CONFIG.generic.useEngInsteadOfChin ? "\n\nServer MSPT:\n" : "\n\n服务器 MSPT：\n")
-						.append(serverTickTime);
-
-				// Server used memory
-				message.append(CONFIG.generic.useEngInsteadOfChin ? "\n\nServer used memory:\n" : "\n\n服务器已用内存：\n")
-						.append((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024)
-						.append(" MB / ")
-						.append(Runtime.getRuntime().totalMemory() / 1024 / 1024)
-						.append(" MB");
-
-				message.append("\n```");
-				e.getHook().sendMessage(message.toString()).queue();
-
-				MULTI_SERVER.sendMessage(true, false, null, message.toString());
+				e.getHook().sendMessage(Utils.getInfoCommandMessage()).queue();
+				MULTI_SERVER.sendMessage(true, false, null, "info");
 			}
 			case "help" -> e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? """
 					```

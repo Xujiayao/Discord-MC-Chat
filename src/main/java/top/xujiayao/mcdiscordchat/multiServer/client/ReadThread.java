@@ -41,8 +41,8 @@ public class ReadThread extends Thread {
 			try {
 				JsonObject json = new Gson().fromJson(reader.readLine(), JsonObject.class);
 
-				if (json.get("sendToDiscordOnly").getAsBoolean()) {
-					CHANNEL.sendMessage(json.get("message").getAsString()).queue();
+				if (json.get("special").getAsBoolean() && json.get("message").getAsString().equals("info")) {
+					CHANNEL.sendMessage(Utils.getInfoCommandMessage()).queue();
 					continue;
 				}
 

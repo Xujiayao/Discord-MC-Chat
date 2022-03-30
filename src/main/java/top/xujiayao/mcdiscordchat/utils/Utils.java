@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.MathHelper;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -15,6 +16,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 import java.util.TimerTask;
 
@@ -100,6 +102,49 @@ public class Utils {
 			LOGGER.error(ExceptionUtils.getStackTrace(e));
 			return "";
 		}
+	}
+
+	public static String getInfoCommandMessage() {
+		StringBuilder message = new StringBuilder()
+				.append("```\n=============== ")
+				.append(CONFIG.generic.useEngInsteadOfChin ? "Server Status" : "运行状态")
+				.append(" ===============\n\n");
+
+		// Online players
+		List<ServerPlayerEntity> onlinePlayers = SERVER.getPlayerManager().getPlayerList();
+		message.append(CONFIG.generic.useEngInsteadOfChin ? "Online players (" : "在线玩家 (")
+				.append(onlinePlayers.size())
+				.append(")")
+				.append(CONFIG.generic.useEngInsteadOfChin ? ":" : "：")
+				.append("\n");
+
+		if (onlinePlayers.isEmpty()) {
+			message.append(CONFIG.generic.useEngInsteadOfChin ? "No players online!" : "当前没有在线玩家！");
+		} else {
+			for (ServerPlayerEntity player : onlinePlayers) {
+				message.append("[").append(player.pingMilliseconds).append("ms] ").append(player.getEntityName());
+			}
+		}
+
+		// Server TPS
+		double serverTickTime = MathHelper.average(SERVER.lastTickLengths) * 1.0E-6D;
+		message.append(CONFIG.generic.useEngInsteadOfChin ? "\n\nServer TPS:\n" : "\n\n服务器 TPS：\n")
+				.append(Math.min(1000.0 / serverTickTime, 20));
+
+		// Server MSPT
+		message.append(CONFIG.generic.useEngInsteadOfChin ? "\n\nServer MSPT:\n" : "\n\n服务器 MSPT：\n")
+				.append(serverTickTime);
+
+		// Server used memory
+		message.append(CONFIG.generic.useEngInsteadOfChin ? "\n\nServer used memory:\n" : "\n\n服务器已用内存：\n")
+				.append((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024)
+				.append(" MB / ")
+				.append(Runtime.getRuntime().totalMemory() / 1024 / 1024)
+				.append(" MB");
+
+		message.append("\n```");
+
+		return message.toString();
 	}
 
 	public static void reloadTexts() {
