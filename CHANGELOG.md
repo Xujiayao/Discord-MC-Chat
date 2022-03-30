@@ -1,6 +1,6 @@
 # Changelog 更新日志 | 🥳 Welcome to MCDC v2!
 
-## MCDiscordChat 2.0.0-alpha.1 for Minecraft 1.16.x/1.17.x/1.18.x - 2022/3/28
+## MCDiscordChat 2.0.0-alpha.1 for Minecraft 1.16.x/1.17.x/1.18.x - 2022/3/31
 
 I highly recommend you update MCDC and take advantage of the new features! Bug reports or other suggestions are welcome!
 
@@ -18,7 +18,7 @@ This version has a significant change compared with previous versions. Please ma
 
 ## New Features 新特性
 
-- Print MCDC introduction when starting the server
+- Print the MCDC introduction when starting the server
   启动服务器时打印 MCDC 介绍
   @Xujiayao
 
@@ -56,7 +56,7 @@ This version has a significant change compared with previous versions. Please ma
   重写所有文件并优化代码和逻辑
   @Xujiayao
 
-- Modify project description
+- Modify the project description
   修改项目描述
   @Xujiayao
 
@@ -80,6 +80,14 @@ This version has a significant change compared with previous versions. Please ma
   修复忽略（转义）Markdown 格式时反斜杠仍然存在的问题
   @Xujiayao
 
+- Modify the format of the MCDC help menu
+  修改 MCDC 帮助菜单的格式
+  @Xujiayao
+
+- Change the implementation method of multi-server
+  更改消息冷却的实现方式
+  @Xujiayao
+
 ## Removed 移除
 
 - Exception stack traces are no longer sent to the Discord channel
@@ -90,7 +98,7 @@ This version has a significant change compared with previous versions. Please ma
   移除在 Discord 修改管理员列表的功能
   @Xujiayao
 
-- Remove super admin list
+- Remove the super admin list
   移除超级管理员列表
   @Xujiayao
 
