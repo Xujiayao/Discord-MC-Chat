@@ -85,7 +85,7 @@ This version has a significant change compared with previous versions. Please ma
   @Xujiayao
 
 - Change the implementation method of multi-server
-  更改消息冷却的实现方式
+  更改多服务器的实现方式
   @Xujiayao
 
 ## Removed 移除
