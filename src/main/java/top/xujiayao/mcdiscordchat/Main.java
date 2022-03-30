@@ -89,7 +89,7 @@ public class Main implements DedicatedServerModInitializer {
 		ServerLifecycleEvents.SERVER_STARTED.register((server) -> {
 			CHANNEL.sendMessage(TEXTS.serverStarted()).queue();
 			if (CONFIG.multiServer.enable) {
-				MULTI_SERVER.sendMessage(false, null, TEXTS.serverStarted());
+				MULTI_SERVER.sendMessage(false, false, null, TEXTS.serverStarted());
 			}
 
 			SERVER = server;
@@ -111,7 +111,7 @@ public class Main implements DedicatedServerModInitializer {
 					.submit()
 					.whenComplete((v, ex) -> JDA.shutdownNow());
 			if (CONFIG.multiServer.enable) {
-				MULTI_SERVER.sendMessage(false, null, TEXTS.serverStopped());
+				MULTI_SERVER.sendMessage(false, false, null, TEXTS.serverStopped());
 				MULTI_SERVER.bye();
 				MULTI_SERVER.stopMultiServer();
 			}

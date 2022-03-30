@@ -123,7 +123,7 @@ public abstract class MixinServerPlayNetworkHandler {
 
 				sendWebhookMessage(contentToDiscord, false);
 				if (CONFIG.multiServer.enable) {
-					MULTI_SERVER.sendMessage(true, player.getEntityName(), contentToMinecraft);
+					MULTI_SERVER.sendMessage(false, true, player.getEntityName(), contentToMinecraft);
 				}
 			}
 
@@ -154,7 +154,7 @@ public abstract class MixinServerPlayNetworkHandler {
 
 				sendWebhookMessage(input, true);
 				if (CONFIG.multiServer.enable) {
-					MULTI_SERVER.sendMessage(true, player.getEntityName(), MarkdownSanitizer.escape(input));
+					MULTI_SERVER.sendMessage(false, true, player.getEntityName(), MarkdownSanitizer.escape(input));
 				}
 			}
 		}

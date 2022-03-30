@@ -32,7 +32,7 @@ public abstract class MixinServerPlayerEntity extends PlayerEntity {
 		CHANNEL.sendMessage(TEXTS.deathMessage()
 				.replace("%deathMessage%", MarkdownSanitizer.escape(getDamageTracker().getDeathMessage().getString()))).queue();
 		if (CONFIG.multiServer.enable) {
-			MULTI_SERVER.sendMessage(false, null, TEXTS.deathMessage()
+			MULTI_SERVER.sendMessage(false, false, null, TEXTS.deathMessage()
 					.replace("%deathMessage%", MarkdownSanitizer.escape(getDamageTracker().getDeathMessage().getString())));
 		}
 	}

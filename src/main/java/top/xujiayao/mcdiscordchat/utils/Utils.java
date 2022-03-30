@@ -165,7 +165,7 @@ public class Utils {
 							.replace("%mspt%", Double.toString(mspt))
 							.replace("%msptLimit%", Integer.toString(CONFIG.generic.msptLimit))).queue();
 					if (CONFIG.multiServer.enable) {
-						MULTI_SERVER.sendMessage(false, null, MarkdownParser.parseMarkdown(TEXTS.highMspt()
+						MULTI_SERVER.sendMessage(false, false, null, MarkdownParser.parseMarkdown(TEXTS.highMspt()
 								.replace("%mspt%", Double.toString(mspt))
 								.replace("%msptLimit%", Integer.toString(CONFIG.generic.msptLimit))));
 					}

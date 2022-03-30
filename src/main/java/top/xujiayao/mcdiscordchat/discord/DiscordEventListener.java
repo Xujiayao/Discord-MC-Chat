@@ -98,6 +98,8 @@ public class DiscordEventListener extends ListenerAdapter {
 
 				message.append("\n```");
 				e.getHook().sendMessage(message.toString()).queue();
+
+				MULTI_SERVER.sendMessage(true, false, null, message.toString());
 			}
 			case "help" -> e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? """
 					```
