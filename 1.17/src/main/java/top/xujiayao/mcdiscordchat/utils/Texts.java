@@ -1,4 +1,4 @@
-package top.xujiayao.mcdiscordchat.objects;
+package top.xujiayao.mcdiscordchat.utils;
 
 /**
  * @author Xujiayao
@@ -11,9 +11,6 @@ public record Texts(String serverStarted,
                     String advancementTask,
                     String advancementChallenge,
                     String advancementGoal,
-                    String highMSPT,
-                    String consoleLogMessage,
-                    String blueColoredText,
-                    String roleColoredText,
-                    String colorlessText) {
+                    String highMspt,
+                    String consoleLogMessage) {
 }

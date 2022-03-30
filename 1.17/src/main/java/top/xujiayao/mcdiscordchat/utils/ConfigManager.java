@@ -1,108 +1,83 @@
 package top.xujiayao.mcdiscordchat.utils;
 
 import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
-import net.fabricmc.loader.api.FabricLoader;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import top.xujiayao.mcdiscordchat.Config;
-import top.xujiayao.mcdiscordchat.Main;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
+
+import static top.xujiayao.mcdiscordchat.Main.CONFIG;
+import static top.xujiayao.mcdiscordchat.Main.CONFIG_FILE;
+import static top.xujiayao.mcdiscordchat.Main.LOGGER;
 
 /**
  * @author Xujiayao
  */
 public class ConfigManager {
 
-	private static File file;
+	public static void init() {
+		if (CONFIG_FILE.length() != 0) {
+			load();
+			update();
 
-	private ConfigManager() {
-		throw new IllegalStateException("Utility class");
-	}
-
-	public static void initConfig() {
-		file = new File(FabricLoader.getInstance().getConfigDir().toFile(), "mcdiscordchat.json");
-
-		if (file.exists() && file.length() != 0) {
-			try {
-				loadConfig();
-			} catch (Exception e) {
-				e.printStackTrace();
-				Main.config = new Config();
-			}
-
-			updateConfig();
-
-			Utils.reloadTextsConfig();
+			Utils.reloadTexts();
 		} else {
-			createConfig();
+			create();
 
-			Logger LOGGER = LogManager.getLogger();
-
-			LOGGER.error("--------------------");
-			LOGGER.error("错误：找不到配置文件或配置文件为空！");
+			LOGGER.error("-----------------------------------------");
 			LOGGER.error("Error: The config file cannot be found or is empty!");
+			LOGGER.error("错误：找不到配置文件或配置文件为空！");
 			LOGGER.error("");
-			LOGGER.error("请在重新启动服务器前编辑 /config/mcdiscordchat.json 以配置 MCDiscordChat！");
-			LOGGER.error("Please edit /config/mcdiscordchat.json to configure MCDiscordChat before restarting the server!");
+			LOGGER.error("Please follow the documentation to configure MCDiscordChat before restarting the server!");
+			LOGGER.error("More information + Docs: https://blog.xujiayao.top/posts/4ba0a17a/");
 			LOGGER.error("");
-			LOGGER.error("正在停止服务器...");
+			LOGGER.error("请在重新启动服务器之前按照文档配置 MCDiscordChat！");
+			LOGGER.error("更多信息 + 文档：https://blog.xujiayao.top/posts/4ba0a17a/");
+			LOGGER.error("");
 			LOGGER.error("Stopping the server...");
-			LOGGER.error("--------------------");
+			LOGGER.error("正在停止服务器...");
+			LOGGER.error("-----------------------------------------");
 
-			System.exit(1);
+			System.exit(0);
 		}
 	}
 
-	public static void loadConfig() throws IOException {
-		try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-			String temp;
-			StringBuilder jsonString = new StringBuilder();
-
-			while ((temp = reader.readLine()) != null) {
-				jsonString.append(temp);
-			}
-
-			Main.config = new GsonBuilder()
-					.setPrettyPrinting()
-					.disableHtmlEscaping()
-					.create()
-					.fromJson(jsonString.toString(), new TypeToken<Config>() {
-					}.getType());
-		}
-	}
-
-	private static void createConfig() {
-		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+	private static void create() {
+		try (FileOutputStream outputStream = new FileOutputStream(CONFIG_FILE)) {
 			String jsonString = new GsonBuilder()
 					.setPrettyPrinting()
-					.disableHtmlEscaping()
 					.create()
 					.toJson(new Config());
 
-			writer.write(jsonString);
+			IOUtils.write(jsonString, outputStream, StandardCharsets.UTF_8);
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOGGER.error(ExceptionUtils.getStackTrace(e));
 		}
 	}
 
-	public static void updateConfig() {
-		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+	private static void load() {
+		try {
+			CONFIG = new GsonBuilder()
+					.setPrettyPrinting()
+					.create()
+					.fromJson(IOUtils.toString(CONFIG_FILE.toURI(), StandardCharsets.UTF_8), Config.class);
+		} catch (Exception e) {
+			LOGGER.error(ExceptionUtils.getStackTrace(e));
+		}
+	}
+
+	public static void update() {
+		try (FileOutputStream outputStream = new FileOutputStream(CONFIG_FILE)) {
 			String jsonString = new GsonBuilder()
 					.setPrettyPrinting()
-					.disableHtmlEscaping()
 					.create()
-					.toJson(Main.config);
+					.toJson(CONFIG);
 
-			writer.write(jsonString);
+			IOUtils.write(jsonString, outputStream, StandardCharsets.UTF_8);
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOGGER.error(ExceptionUtils.getStackTrace(e));
 		}
 	}
 }

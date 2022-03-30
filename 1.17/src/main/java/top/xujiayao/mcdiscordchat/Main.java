@@ -2,19 +2,26 @@ package top.xujiayao.mcdiscordchat;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.server.MinecraftServer;
 import okhttp3.OkHttpClient;
-import top.xujiayao.mcdiscordchat.listeners.DiscordEventListener;
-import top.xujiayao.mcdiscordchat.listeners.MinecraftEventListener;
-import top.xujiayao.mcdiscordchat.objects.Texts;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import top.xujiayao.mcdiscordchat.discord.DiscordEventListener;
+import top.xujiayao.mcdiscordchat.multiServer.MultiServer;
 import top.xujiayao.mcdiscordchat.utils.ConfigManager;
+import top.xujiayao.mcdiscordchat.utils.Texts;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.Timer;
 
 /**
@@ -22,95 +29,92 @@ import java.util.Timer;
  */
 public class Main implements DedicatedServerModInitializer {
 
-	public static final OkHttpClient client = new OkHttpClient();
-
-	public static JDA jda;
-	public static TextChannel textChannel;
-	public static TextChannel consoleLogTextChannel;
-	public static Config config;
-	public static Texts texts;
-
-	public static boolean stop = false;
-
-	public static Timer msptMonitorTimer;
-	public static Timer consoleLogTimer1;
-	public static Timer consoleLogTimer2;
+	public static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
+	public static final Logger LOGGER = LoggerFactory.getLogger("MCDiscordChat");
+	public static final File CONFIG_FILE = new File(FabricLoader.getInstance().getConfigDir().toFile(), "mcdiscordchat.json");
+	public static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("HH:mm:ss");
+	public static String VERSION;
+	public static Config CONFIG;
+	public static JDA JDA;
+	public static TextChannel CHANNEL;
+	public static TextChannel CONSOLE_LOG_CHANNEL;
+	public static Texts TEXTS;
+	public static long MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();
+	public static int MINECRAFT_SEND_COUNT = 0;
+	public static MinecraftServer SERVER;
+	public static Timer MSPT_MONITOR_TIMER = new Timer();
+	public static MultiServer MULTI_SERVER;
 
 	@Override
 	public void onInitializeServer() {
-		ConfigManager.initConfig();
+		ConfigManager.init();
+		Utils.setMcdcVersion();
+
+		LOGGER.info("-----------------------------------------");
+		LOGGER.info("MCDiscordChat (MCDC) " + VERSION);
+		LOGGER.info("By Xujiayao");
+		LOGGER.info("");
+		LOGGER.info("More information + Docs:");
+		LOGGER.info("https://blog.xujiayao.top/posts/4ba0a17a/");
+		LOGGER.info("-----------------------------------------");
 
 		try {
-			if (config.generic.membersIntents) {
-				jda = JDABuilder.createDefault(config.generic.botToken)
-						.setMemberCachePolicy(MemberCachePolicy.ALL)
-						.enableIntents(GatewayIntent.GUILD_MEMBERS)
-						.addEventListeners(new DiscordEventListener())
-						.build();
-			} else {
-				jda = JDABuilder.createDefault(config.generic.botToken)
-						.addEventListeners(new DiscordEventListener())
-						.build();
+			JDA = JDABuilder.createDefault(CONFIG.generic.botToken)
+					.setChunkingFilter(ChunkingFilter.ALL)
+					.setMemberCachePolicy(MemberCachePolicy.ALL)
+					.enableIntents(GatewayIntent.GUILD_MEMBERS)
+					.addEventListeners(new DiscordEventListener())
+					.build();
+
+			JDA.awaitReady();
+
+			Utils.setBotActivity();
+
+			CHANNEL = JDA.getTextChannelById(CONFIG.generic.channelId);
+			if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
+				CONSOLE_LOG_CHANNEL = JDA.getTextChannelById(CONFIG.generic.consoleLogChannelId);
 			}
 
-			jda.awaitReady();
-			textChannel = jda.getTextChannelById(config.generic.channelId);
-
-			if (!config.generic.consoleLogChannelId.isEmpty()) {
-				consoleLogTextChannel = jda.getTextChannelById(config.generic.consoleLogChannelId);
-			}
+			Utils.updateBotCommands();
 		} catch (Exception e) {
-			e.printStackTrace();
-			jda = null;
-			Thread.currentThread().interrupt();
+			LOGGER.error(ExceptionUtils.getStackTrace(e));
+			System.exit(1);
 		}
 
-		if (jda != null) {
-			if (!config.generic.botListeningStatus.isEmpty()) {
-				jda.getPresence().setActivity(Activity.listening(config.generic.botListeningStatus));
+		if (CONFIG.multiServer.enable) {
+			MULTI_SERVER = new MultiServer();
+			MULTI_SERVER.start();
+		}
+
+		ServerLifecycleEvents.SERVER_STARTED.register((server) -> {
+			CHANNEL.sendMessage(TEXTS.serverStarted()).queue();
+			if (CONFIG.multiServer.enable) {
+				MULTI_SERVER.sendMessage(false, false, null, TEXTS.serverStarted());
 			}
 
-			ServerLifecycleEvents.SERVER_STARTED.register(server -> {
-				textChannel.sendMessage(texts.serverStarted()).queue();
-				Utils.checkUpdate(false);
+			SERVER = server;
 
-				if (config.generic.announceHighMSPT) {
-					msptMonitorTimer = new Timer();
-					Utils.monitorMSPT();
-				}
-			});
+			String message = Utils.checkUpdate(false);
+			if (!message.isEmpty()) {
+				CHANNEL.sendMessage(message).queue();
+			}
 
-			ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
-				stop = true;
-				textChannel.sendMessage(texts.serverStopped()).queue();
+			if (CONFIG.generic.announceHighMspt) {
+				Utils.initMsptMonitor();
+			}
+		});
 
-				if (config.generic.announceHighMSPT) {
-					msptMonitorTimer.cancel();
-				}
+		ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
+			MSPT_MONITOR_TIMER.cancel();
 
-				if (!config.generic.consoleLogChannelId.isEmpty()) {
-					consoleLogTimer1.cancel();
-					consoleLogTimer2.cancel();
-				}
-
-				try {
-					Thread.sleep(250);
-				} catch (Exception e) {
-					e.printStackTrace();
-					Thread.currentThread().interrupt();
-				}
-
-				jda.shutdown();
-
-				try {
-					Thread.sleep(250);
-				} catch (Exception e) {
-					e.printStackTrace();
-					Thread.currentThread().interrupt();
-				}
-			});
-
-			new MinecraftEventListener().init();
-		}
+			CHANNEL.sendMessage(TEXTS.serverStopped())
+					.submit()
+					.whenComplete((v, ex) -> JDA.shutdownNow());
+			if (CONFIG.multiServer.enable) {
+				MULTI_SERVER.sendMessage(false, false, null, TEXTS.serverStopped());
+				MULTI_SERVER.bye();
+				MULTI_SERVER.stopMultiServer();
+			}
+		});
 	}
 }

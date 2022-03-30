@@ -1,13 +1,13 @@
 {
   "required": true,
-  "package": "top.xujiayao.mcdiscordchat.mixins",
+  "package": "top.xujiayao.mcdiscordchat.minecraft.mixins",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "MixinPlayerAdvancementTracker",
     "MixinPlayerManager",
+    "MixinPlayerAdvancementTracker",
     "MixinServerPlayerEntity",
-    "MixinServerPlayNetworkHandler",
-    "MixinMinecraftServer"
+    "MixinMinecraftServer",
+    "MixinServerPlayNetworkHandler"
   ],
   "injectors": {
     "defaultRequire": 1

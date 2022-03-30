@@ -3,7 +3,7 @@
   "id": "mcdiscordchat",
   "version": "${version}",
   "name": "MCDiscordChat",
-  "description": "MCDiscordChat (MCDC), a practical and powerful Fabric Minecraft <> Discord chat bridge that complements and enhances BRForgers/DisFabric",
+  "description": "MCDiscordChat (MCDC), a practical and powerful Fabric Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric",
   "authors": [
     "Xujiayao"
   ],

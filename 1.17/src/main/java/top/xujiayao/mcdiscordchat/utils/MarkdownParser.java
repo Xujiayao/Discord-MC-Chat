@@ -12,23 +12,16 @@ import java.util.regex.Pattern;
  */
 public class MarkdownParser {
 
-	private MarkdownParser() {
-		throw new IllegalStateException("Utility class");
-	}
-
 	public static String parseMarkdown(String message) {
-		String translated = message;
+		message = replaceWith(message, "(?<!\\\\)\\*\\*", Formatting.BOLD.toString(), Formatting.RESET.toString());
+		message = replaceWith(message, "(?<!\\\\)\\*", Formatting.ITALIC.toString(), Formatting.RESET.toString());
+		message = replaceWith(message, "(?<!\\\\)__", Formatting.UNDERLINE.toString(), Formatting.RESET.toString());
+		message = replaceWith(message, "(?<!\\\\)_", Formatting.ITALIC.toString(), Formatting.RESET.toString());
+		message = replaceWith(message, "(?<!\\\\)~~", Formatting.STRIKETHROUGH.toString(), Formatting.RESET.toString());
 
-		translated = replaceWith(translated, "(?<!\\\\)\\*\\*", Formatting.BOLD.toString(), Formatting.RESET.toString());
-		translated = replaceWith(translated, "(?<!\\\\)\\*", Formatting.ITALIC.toString(), Formatting.RESET.toString());
-		translated = replaceWith(translated, "(?<!\\\\)__", Formatting.UNDERLINE.toString(), Formatting.RESET.toString());
-		translated = replaceWith(translated, "(?<!\\\\)_", Formatting.ITALIC.toString(), Formatting.RESET.toString());
-		translated = replaceWith(translated, "(?<!\\\\)~~", Formatting.STRIKETHROUGH.toString(), Formatting.RESET.toString());
+		message = message.replaceAll("\\\\\\*", "*").replaceAll("\\\\_", "_").replaceAll("\\\\~", "~");
 
-		translated = translated.replaceAll("\\*", "*").replaceAll("\\_", "_").replaceAll("\\~", "~");
-		translated = translated.replaceAll(Formatting.ITALIC + "(ツ)" + Formatting.RESET, "_(ツ)_");
-
-		return translated;
+		return message;
 	}
 
 	private static String replaceWith(String message, String quot, String pre, String suf) {
@@ -41,7 +34,7 @@ public class MarkdownParser {
 		return part;
 	}
 
-	public static List<String> getMatches(String string, String regex) {
+	private static List<String> getMatches(String string, String regex) {
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(string);
 		List<String> matches = new ArrayList<>();

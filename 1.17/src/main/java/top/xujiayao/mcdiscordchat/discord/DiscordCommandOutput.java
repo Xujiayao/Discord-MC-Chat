@@ -1,41 +1,41 @@
-package top.xujiayao.mcdiscordchat.utils;
+package top.xujiayao.mcdiscordchat.discord;
 
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.text.Text;
-import top.xujiayao.mcdiscordchat.Main;
 
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
+
+import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 
 /**
  * @author Xujiayao
  */
 public class DiscordCommandOutput implements CommandOutput {
 
-	private StringBuilder outputString = new StringBuilder().append("```");
+	private StringBuilder output = new StringBuilder("```\n");
 	private long lastOutputMillis = 0;
 
 	@Override
-	public void sendSystemMessage(Text message, UUID senderUuid) {
-		String messageString = message.getString();
+	public void sendSystemMessage(Text message, UUID sender) {
 		long currentOutputMillis = System.currentTimeMillis();
 
-		if ((outputString.length() + messageString.length()) > 2000) {
-			outputString.append("```");
-			Main.textChannel.sendMessage(outputString).queue();
-			outputString = new StringBuilder("```\n");
+		if (output.length() > 1500) {
+			output.append("```");
+			CHANNEL.sendMessage(output.toString()).queue();
+			output = new StringBuilder("```\n");
 		} else {
-			outputString.append(messageString).append("\n");
+			output.append(message.getString()).append("\n");
 		}
 
 		if ((currentOutputMillis - lastOutputMillis) > 50) {
 			new Thread(() -> new Timer().schedule(new TimerTask() {
 				@Override
 				public void run() {
-					outputString.append("```");
-					Main.textChannel.sendMessage(outputString).queue();
-					outputString = new StringBuilder("```\n");
+					output.append("```");
+					CHANNEL.sendMessage(output.toString()).queue();
+					output = new StringBuilder("```\n");
 				}
 			}, 51)).start();
 		}
@@ -57,4 +57,5 @@ public class DiscordCommandOutput implements CommandOutput {
 	public boolean shouldBroadcastConsoleToOps() {
 		return true;
 	}
+
 }
