@@ -15,57 +15,68 @@ Language: English <a href="/README_CN.md">中文</a>
 [![CurseForge Downloads](https://cf.way2muchnoise.eu/full_mcdiscordchat_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
 [![Versions Supported](https://cf.way2muchnoise.eu/versions/mcdiscordchat.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
 
-MCDiscordChat (MCDC), a practical and powerful Fabric Minecraft <> Discord chat bridge
+MCDiscordChat (MCDC), a practical and powerful Fabric Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric
 
 More information + Docs: [MCDiscordChat Docs | Xujiayao's Blog](https://blog.xujiayao.top/posts/4ba0a17a/)
 
+## 🥳 Welcome to MCDC v2!
+
+I highly recommend you update MCDC and take advantage of the new features! Bug reports or other suggestions are welcome!
+
+MCDC is completely rewritten, so there may be some bugs. Please state the exact version you are using when reporting an issue.
+
 ## Introduction
 
-[MCDiscordChat](https://github.com/Xujiayao/MCDiscordChat) (abbreviated as MCDC), a practical and powerful Fabric
-Minecraft <> Discord chat bridge that complements and enhances BRForgers/DisFabric.
-
-A big thanks to [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) for the original source code, which was
-licensed under the Mozilla Public License 2.0 (MPL-2.0).
+[MCDiscordChat](https://github.com/Xujiayao/MCDiscordChat) (abbreviated as MCDC), a practical and powerful Fabric Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric.
 
 ## Download
 
 All releases can be downloaded at the following sites:
 
-- [CurseForge](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat/files)
 - [Modrinth](https://modrinth.com/mod/mcdiscordchat/versions)
+- [CurseForge](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat/files)
 - [GitHub](https://github.com/Xujiayao/MCDiscordChat/releases)
 
 You can find the latest build JAR files at [GitHub Actions](https://github.com/Xujiayao/MCDiscordChat/actions).
 
 ## Support
 
-If there is a bug or suggestion, or something you don't understand, you
-can [submit an issue](https://github.com/Xujiayao/MCDiscordChat/issues/new).
+If there is a bug or suggestion, or something you don't understand, you can [submit an issue](https://github.com/Xujiayao/MCDiscordChat/issues/new/choose) on GitHub.
 
 ## Features
 
+- Support multi-server mode (multi-server operation on the same Discord channel)
+- Support multiple languages (English / Chinese)
 - Minecraft <> Discord cross server chat
-- Support Discord Webhook function
-- Support in-game Markdown parsing
-- Support using Discord default and server emoji in the game
-- Support in-game mentions (@) Discord users
-- Support multiple languages (Chinese / English)
-- Support multi-server operation on the same Discord channel
-- Remotely execute server console commands through Discord
-- Query player scoreboards of a certain statistic information through Discord
-- Query server operating status through Discord
-- Announce when a player dies
-- Announce when a player join / leave the server
-- Announce when a player reached a progress / achieved a goal / completed a challenge
-- Announce when Server MSPT is higher than a certain value
-- Customizable Webhook Avatar API
-- Customizable in-game message display format
-- Customizable Discord bot command prefix
-- Blacklist can be used to prohibit the processing of a player or user's message
-- Admin list can be used to configure the user's authority to use certain commands
-- Broadcast player command execution
-- Broadcast server console log
-- Support Hot Reloading of the configuration file
+  - Support Discord Webhook feature
+    - Customizable Webhook Avatar API
+  - Support in-game Markdown parsing
+  - Support using default and server emoji in-game
+  - Support in-game mentions (@) Discord users
+  - Broadcast player command execution
+  - Broadcast server console log
+- Server Commands available
+  - Normal Commands
+    - /info                    | Query server running status
+    - /help                    | Get a list of available commands
+    - /update                  | Check for update
+    - /stats \<type\> \<name\> | Query the scoreboard of a statistic
+  - Admin Commands
+    - /reload                  | Reload MCDiscordChat config file (admin only)
+    - /console \<command\>     | Execute a command in the server console (admin only)
+    - /log                     | Get the latest server log (admin only)
+    - /stop                    | Stop the server (admin only)
+- Customizable message format
+  - Server started
+  - Server stopped
+  - Player joined server
+  - Player left server
+  - Player reached a progress / achieved a goal / completed a challenge
+  - Player died
+  - Server MSPT is higher than a certain value
+  - Server sent a console log message
+- Use admin list to configure user permissions to use special commands
+- Support Hot Reloading of the config file
 - Check for updates
 
 ## Contributors

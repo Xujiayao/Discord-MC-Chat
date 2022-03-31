@@ -12,9 +12,9 @@ MCDC 已完全重写，因此可能存在一些错误。请在报告问题时说
 
 ## ⚠ Reminder 提醒
 
-This version has a significant change compared with previous versions. Please make sure to backup your old MCDC config file (mcdiscordchat.json), re-read the [MCDiscordChat Docs](https://blog.xujiayao.top/posts/4ba0a17a/) and do not copy and paste anything directly from the old config file, as this may cause errors!
+This version has a significant change compared with previous versions. Please make sure to backup your old MCDC config file (mcdiscordchat.json), repeat the steps in the [MCDiscordChat Docs](https://blog.xujiayao.top/posts/4ba0a17a/) and do not copy and paste anything directly from the old config file, as this may cause errors!
 
-此版本与之前的版本相比有重大变化，请务必备份你的旧 MCDC 配置文件 (mcdiscordchat.json)，重新阅读 [MCDiscordChat 文档](https://blog.xujiayao.top/posts/4ba0a17a/) ，并且不要直接从旧配置文件中复制和粘贴任何内容，因为这可能会导致错误！
+此版本与之前的版本相比有重大变化，请务必备份你的旧 MCDC 配置文件 (mcdiscordchat.json)，重复 [MCDiscordChat 文档](https://blog.xujiayao.top/posts/4ba0a17a/) 中的步骤，并且不要直接从旧配置文件中复制和粘贴任何内容，因为这可能会导致错误！
 
 ## New Features 新特性
 

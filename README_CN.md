@@ -19,51 +19,63 @@ MCDiscordChat (MCDC), a practical and powerful Fabric Minecraft <> Discord chat 
 
 更多介绍 + 文档：[MCDiscordChat 文档 | Xujiayao's Blog](https://blog.xujiayao.top/posts/4ba0a17a/)
 
+## 🥳 Welcome to MCDC v2!
+
+我强烈推荐你更新 MCDC 并使用新功能！欢迎提交错误报告或其他建议！
+
+MCDC 已完全重写，因此可能存在一些错误。请在报告问题时说明你使用的确切版本。
+
 ## 简介
 
-[MCDiscordChat](https://github.com/Xujiayao/MCDiscordChat)（简称为 MCDC），一个实用且功能强大的 Fabric Minecraft <> Discord 跨服聊天工具，是
-BRForgers/DisFabric 的功能补充和增强。
-
-非常感谢 [BRForgers/DisFabric](https://github.com/BRForgers/DisFabric) 的原始源代码，该项目使用 Mozilla Public License 2.0 (MPL-2.0)
-开源协议许可开源。
+[MCDiscordChat](https://github.com/Xujiayao/MCDiscordChat)（简称为 MCDC），一个实用且功能强大的 Fabric Minecraft <> Discord 跨服聊天工具，灵感来自 BRForgers/DisFabric。
 
 ## 下载
 
 所有发行版均可以在以下站点下载：
 
-- [CurseForge](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat/files)
 - [Modrinth](https://modrinth.com/mod/mcdiscordchat/versions)
+- [CurseForge](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat/files)
 - [GitHub](https://github.com/Xujiayao/MCDiscordChat/releases)
 
 你可以在 [GitHub Actions](https://github.com/Xujiayao/MCDiscordChat/actions) 找到最新的构建 JAR 文件。
 
 ## 帮助
 
-如果有 bug 或建议，或者有什么不懂的，可以 [发表 issue](https://github.com/Xujiayao/MCDiscordChat/issues/new)。
+如果有 bug 或建议，或者有什么不懂的，可以 [发表 issue](https://github.com/Xujiayao/MCDiscordChat/issues/new/choose)。
 
 ## 功能特色
 
+- 支持多服务器模式（同 Discord 频道多服务器运行 MCDC）
+- 支持多语言（英文 / 中文）
 - Minecraft <> Discord 跨服聊天
-- 支持 Discord Webhook 功能
-- 支持游戏内 Markdown 解析
-- 支持在游戏内使用 Discord 默认和服务器表情符号
-- 支持游戏内提及 (@) Discord 用户
-- 支持多语言（中文 / 英文）
-- 支持同 Discord 频道多服务器运行
-- 可通过 Discord 远程执行服务器控制台指令
-- 可通过 Discord 查询某项统计信息的玩家排行榜
-- 可通过 Discord 查询服务器运行状态
-- 在玩家死亡时发出通知
-- 在玩家加入 / 离开服务器时发出通知
-- 在玩家达成进度 / 达成目标 / 完成挑战时发出通知
-- 在服务器 MSPT 高于一定值时发出通知
-- 可自定义游戏内消息显示格式
-- 可自定义 Webhook 头像 API
-- 可自定义 Discord 机器人命令前缀
-- 可使用黑名单禁止处理某位玩家或用户的消息
-- 可使用管理员名单配置用户使用某些命令的权限
-- 可广播玩家指令执行
-- 可广播服务器控制台日志
+  - 支持 Discord Webhook 功能
+    - 可自定义 Webhook 玩家头像 API
+  - 支持游戏内 Markdown 解析
+  - 支持游戏内使用默认和服务器表情符号
+  - 支持游戏内提及 (@) Discord 用户
+  - 可广播玩家指令执行
+  - 可广播服务器控制台日志
+- 可使用服务器命令
+  - 普通命令
+    - /info                    | 查询服务器运行状态
+    - /help                    | 获取可用命令列表
+    - /update                  | 检查更新
+    - /stats \<type\> \<name\> | 查询该统计信息的排行榜
+  - 管理员命令
+    - /reload                  | 重新加载 MCDiscordChat 配置文件（仅限管理员）
+    - /console \<command\>     | 在服务器控制台中执行命令（仅限管理员）
+    - /log                     | 获取服务器最新日志（仅限管理员）
+    - /stop                    | 停止服务器（仅限管理员）
+- 可自定义消息格式
+  - 在服务器自动时
+  - 在服务器关闭时
+  - 在玩家加入服务器时
+  - 在玩家离开服务器时
+  - 在玩家达成进度 / 达成目标 / 完成挑战时
+  - 在玩家死亡时
+  - 在服务器 MSPT 高于预警值时
+  - 在服务器发送控制台日志消息时
+- 可使用管理员名单配置用户使用特殊命令的权限
 - 支持配置文件热重载
 - 检查更新
 
