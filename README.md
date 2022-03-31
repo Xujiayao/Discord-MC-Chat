@@ -25,6 +25,10 @@ I highly recommend you update MCDC and take advantage of the new features! Bug r
 
 MCDC is completely rewritten, so there may be some bugs. Please state the exact version you are using when reporting an issue.
 
+![0001.png](https://cdn.jsdelivr.net/gh/Xujiayao/BlogSource@master/source/file/posts/4ba0a17a/0001.png)
+
+![001.png](https://cdn.jsdelivr.net/gh/Xujiayao/BlogSource@master/source/file/posts/4ba0a17a/001.png)
+
 ## Introduction
 
 [MCDiscordChat](https://github.com/Xujiayao/MCDiscordChat) (abbreviated as MCDC), a practical and powerful Fabric Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric.
@@ -53,6 +57,7 @@ If there is a bug or suggestion, or something you don't understand, you can [sub
   - Support in-game Markdown parsing
   - Support using default and server emoji in-game
   - Support in-game mentions (@) Discord users
+  - Support in-game display of Discord user role colour
   - Broadcast player command execution
   - Broadcast server console log
 - Server Commands available

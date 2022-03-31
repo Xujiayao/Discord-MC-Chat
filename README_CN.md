@@ -25,6 +25,10 @@ MCDiscordChat (MCDC), a practical and powerful Fabric Minecraft <> Discord chat 
 
 MCDC 已完全重写，因此可能存在一些错误。请在报告问题时说明你使用的确切版本。
 
+![0001.png](https://cdn.jsdelivr.net/gh/Xujiayao/BlogSource@master/source/file/posts/4ba0a17a/0001.png)
+
+![001.png](https://cdn.jsdelivr.net/gh/Xujiayao/BlogSource@master/source/file/posts/4ba0a17a/001.png)
+
 ## 简介
 
 [MCDiscordChat](https://github.com/Xujiayao/MCDiscordChat)（简称为 MCDC），一个实用且功能强大的 Fabric Minecraft <> Discord 跨服聊天工具，灵感来自 BRForgers/DisFabric。
@@ -53,6 +57,7 @@ MCDC 已完全重写，因此可能存在一些错误。请在报告问题时说
   - 支持游戏内 Markdown 解析
   - 支持游戏内使用默认和服务器表情符号
   - 支持游戏内提及 (@) Discord 用户
+  - 支持游戏内显示 Discord 用户身份组颜色
   - 可广播玩家指令执行
   - 可广播服务器控制台日志
 - 可使用服务器命令
