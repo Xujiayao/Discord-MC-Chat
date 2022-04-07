@@ -3,9 +3,13 @@ description: Anything you don't understand.
 title: "[Question] "
 labels: ["question"]
 body:
-  - type: markdown
+  - type: checkboxes
+    id: existing_issues_searched
     attributes:
-      value: "**Note: Please search for existing issues before reporting where possible to avoid duplicate reporting.**"
+      label: Existing Issues Searched
+      options:
+        - label: I confirm that I have [searched for existing issues](https://github.com/Xujiayao/MCDiscordChat/issues?q=is%3Aissue) before reporting to avoid duplicate reporting.
+          required: true
   - type: textarea
     id: description
     attributes:
