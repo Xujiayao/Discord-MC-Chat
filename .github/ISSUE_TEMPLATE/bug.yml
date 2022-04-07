@@ -3,9 +3,13 @@ description: Create a report to help us improve.
 title: "[Bug] "
 labels: ["bug"]
 body:
-  - type: markdown
+  - type: checkboxes
+    id: existing_issues_searched
     attributes:
-      value: "**Note: Please search for existing issues before reporting where possible to avoid duplicate reporting.**"
+      label: Existing Issues Searched
+      options:
+        - label: I confirm that I have [searched for existing issues](https://github.com/Xujiayao/MCDiscordChat/issues?q=is%3Aissue) before reporting to avoid duplicate reporting.
+          required: true
   - type: checkboxes
     id: simplest_environment_tested
     attributes:
@@ -13,6 +17,21 @@ body:
       options:
         - label: I confirm that this problem still exists with only MCDiscordChat and Fabric API installed.
           required: true
+  - type: checkboxes
+    id: docs_and_changelog_read
+    attributes:
+      label: Docs and Changelog Read
+      options:
+        - label: I confirm that I followed the MCDC Docs and read the Changelog, but this problem still exists.
+          required: true
+  - type: input
+    id: java_version
+    attributes:
+      label: Java Version
+      description: |
+        The version of Java you are using?
+    validations:
+      required: true
   - type: input
     id: minecraft_version
     attributes:
@@ -34,7 +53,7 @@ body:
     attributes:
       label: Description
       description: |
-        Please tell us what the bug is with a clear and detailed description, add screenshots to help explain if possible.
+        Please tell us what the bug is with a clear and detailed description, add screenshots to help explain.
     validations:
       required: true
   - type: textarea
