@@ -122,13 +122,13 @@ public class Utils {
 			message.append(CONFIG.generic.useEngInsteadOfChin ? "No players online!" : "当前没有在线玩家！");
 		} else {
 			for (ServerPlayerEntity player : onlinePlayers) {
-				message.append("[").append(player.pingMilliseconds).append("ms] ").append(player.getEntityName());
+				message.append("[").append(player.pingMilliseconds).append("ms] ").append(player.getEntityName()).append("\n");
 			}
 		}
 
 		// Server TPS
 		double serverTickTime = MathHelper.average(SERVER.lastTickLengths) * 1.0E-6D;
-		message.append(CONFIG.generic.useEngInsteadOfChin ? "\n\nServer TPS:\n" : "\n\n服务器 TPS：\n")
+		message.append(CONFIG.generic.useEngInsteadOfChin ? "\nServer TPS:\n" : "\n\n服务器 TPS：\n")
 				.append(Math.min(1000.0 / serverTickTime, 20));
 
 		// Server MSPT
