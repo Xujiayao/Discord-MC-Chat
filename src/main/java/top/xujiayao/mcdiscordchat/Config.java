@@ -36,6 +36,8 @@ public class Config {
 		public boolean announceHighMspt = true;
 		public int msptLimit = 50;
 
+		public boolean mentionAdmins = true;
+
 		public List<String> excludedCommands = List.of("/tell");
 
 		public List<String> adminsIds = new ArrayList<>();

@@ -87,7 +87,10 @@ public class Utils {
 					message.append("\n\n");
 					message.append(latestJson.get("changelog").getAsString());
 					message.append("\n\n");
-					message.append(adminsMentionString());
+
+					if (CONFIG.generic.mentionAdmins) {
+						message.append(adminsMentionString());
+					}
 
 					return message.toString();
 				} else {
