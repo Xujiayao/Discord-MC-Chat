@@ -116,10 +116,12 @@ public abstract class MixinServerPlayNetworkHandler {
 					}
 				}
 
-				json.getAsJsonArray("with").add(MarkdownParser.parseMarkdown(contentToMinecraft));
-				Text finalText = Text.Serializer.fromJson(json.toString());
-				server.getPlayerManager().broadcast(finalText, MessageType.CHAT, player.getUuid());
-				ci.cancel();
+				if (CONFIG.generic.modifyChatMessages) {
+					json.getAsJsonArray("with").add(MarkdownParser.parseMarkdown(contentToMinecraft));
+					Text finalText = Text.Serializer.fromJson(json.toString());
+					server.getPlayerManager().broadcast(finalText, MessageType.CHAT, player.getUuid());
+					ci.cancel();
+				}
 
 				sendWebhookMessage(contentToDiscord, false);
 				if (CONFIG.multiServer.enable) {
@@ -132,8 +134,6 @@ public abstract class MixinServerPlayNetworkHandler {
 				disconnect(new TranslatableText("disconnect.spam"));
 			}
 		}
-
-		ci.cancel();
 	}
 
 	@Inject(method = "executeCommand", at = @At(value = "HEAD"))

@@ -33,6 +33,8 @@ public class Config {
 
 		public boolean broadcastCommandExecution = true;
 
+		public boolean modifyChatMessages = true;
+
 		public boolean announceHighMspt = true;
 		public int msptLimit = 50;
 
