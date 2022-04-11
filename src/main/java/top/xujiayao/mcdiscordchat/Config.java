@@ -45,7 +45,6 @@ public class Config {
 		public List<String> adminsIds = new ArrayList<>();
 
 		// TODO Link players to Discord accounts
-		// TODO Display message reply
 	}
 
 	public static class MultiServer {

@@ -9,11 +9,13 @@ import com.vdurmont.emoji.EmojiParser;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
 import org.apache.commons.io.FileUtils;
@@ -216,15 +218,79 @@ public class DiscordEventListener extends ListenerAdapter {
 			return;
 		}
 
-		StringBuilder message = new StringBuilder(EmojiParser.parseToAliases(e.getMessage().getContentDisplay()));
+		Member referencedMember = null;
+		String referencedName = null;
 
-		StringBuilder consoleMessage = new StringBuilder()
+		try {
+			referencedMember = Objects.requireNonNull(Objects.requireNonNull(e.getMessage().getReferencedMessage()).getMember());
+		} catch (Exception ex) {
+			referencedName = "Webhook";
+		}
+
+		if (e.getMessage().getReferencedMessage() != null) {
+			Utils.sendConsoleMessage(new StringBuilder()
+					.append("    ┌──── <")
+					.append((referencedMember != null) ? referencedMember.getEffectiveName() : referencedName)
+					.append("> ")
+					.append(EmojiParser.parseToAliases(e.getMessage().getReferencedMessage().getContentDisplay())));
+		}
+
+		Utils.sendConsoleMessage(new StringBuilder()
 				.append("[Discord] <")
 				.append(Objects.requireNonNull(e.getMember()).getEffectiveName())
 				.append("> ")
-				.append(message);
+				.append(EmojiParser.parseToAliases(e.getMessage().getContentDisplay())));
 
-		Utils.sendConsoleMessage(consoleMessage);
+		StringBuilder referencedMessage = new StringBuilder();
+
+		if (e.getMessage().getReferencedMessage() != null) {
+			referencedMessage = new StringBuilder(EmojiParser.parseToAliases(e.getMessage().getReferencedMessage().getContentDisplay()));
+
+			if (!e.getMessage().getReferencedMessage().getAttachments().isEmpty()) {
+				if (!e.getMessage().getReferencedMessage().getContentDisplay().isBlank()) {
+					referencedMessage.append(" ");
+				}
+				for (Message.Attachment attachment : e.getMessage().getReferencedMessage().getAttachments()) {
+					referencedMessage.append(Formatting.YELLOW).append(attachment.isSpoiler() ? "<SPOILER_" : "<");
+					if (attachment.isImage()) {
+						referencedMessage.append("image>");
+					} else if (attachment.isVideo()) {
+						referencedMessage.append("video>");
+					} else {
+						referencedMessage.append("file>");
+					}
+				}
+			}
+
+			if (StringUtils.countMatches(referencedMessage, ":") >= 2) {
+				String[] emoteNames = StringUtils.substringsBetween(referencedMessage.toString(), ":", ":");
+				for (String emoteName : emoteNames) {
+					List<Emote> emotes = JDA.getEmotesByName(emoteName, true);
+					if (!emotes.isEmpty()) {
+						referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emoteName + ":"), (Formatting.YELLOW + ":" + emoteName + ":" + Formatting.DARK_GRAY)));
+					} else if (EmojiManager.getForAlias(emoteName) != null) {
+						referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emoteName + ":"), (Formatting.YELLOW + ":" + emoteName + ":" + Formatting.DARK_GRAY)));
+					}
+				}
+			}
+
+			if (referencedMessage.toString().contains("@")) {
+				String[] memberNames = StringUtils.substringsBetween(referencedMessage.toString(), "@", " ");
+				if (!StringUtils.substringAfterLast(referencedMessage.toString(), "@").contains(" ")) {
+					memberNames = ArrayUtils.add(memberNames, StringUtils.substringAfterLast(referencedMessage.toString(), "@"));
+				}
+				for (String memberName : memberNames) {
+					for (Member member : CHANNEL.getMembers()) {
+						if (member.getUser().getName().equalsIgnoreCase(memberName)
+								|| (member.getNickname() != null && member.getNickname().equalsIgnoreCase(memberName))) {
+							referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), ("@" + memberName), (Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.DARK_GRAY)));
+						}
+					}
+				}
+			}
+		}
+
+		StringBuilder message = new StringBuilder(EmojiParser.parseToAliases(e.getMessage().getContentDisplay()));
 
 		if (!e.getMessage().getAttachments().isEmpty()) {
 			if (!e.getMessage().getContentDisplay().isBlank()) {
@@ -269,16 +335,37 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 		}
 
+		String referenceText = null;
+		LiteralText referenceRoleText = null;
+
+		if (e.getMessage().getReferencedMessage() != null) {
+			referenceText = String.valueOf(Formatting.DARK_GRAY) + Formatting.BOLD + "    ┌──── " + Formatting.RESET;
+
+			referenceRoleText = new LiteralText("<" + ((referencedMember != null) ? referencedMember.getEffectiveName() : referencedName) + "> ");
+			referenceRoleText.setStyle(referenceRoleText.getStyle().withColor(TextColor.fromRgb((referencedMember != null) ? referencedMember.getColorRaw() : Role.DEFAULT_COLOR_RAW)));
+		}
+
 		String mcdcText = String.valueOf(Formatting.BLUE) + Formatting.BOLD + "[Discord] " + Formatting.RESET;
 
 		LiteralText roleText = new LiteralText("<" + Objects.requireNonNull(e.getMember()).getEffectiveName() + "> ");
 		roleText.setStyle(roleText.getStyle().withColor(TextColor.fromRgb(Objects.requireNonNull(e.getMember()).getColorRaw())));
 
-		StringBuilder finalMessage = message;
+		if (e.getMessage().getReferencedMessage() != null) {
+			MutableText referenceFinalText = new LiteralText("")
+					.append(referenceText)
+					.append(referenceRoleText)
+					.append(Formatting.DARK_GRAY + MarkdownParser.parseMarkdown(referencedMessage.toString()));
+
+			SERVER.getPlayerManager().getPlayerList().forEach(
+					player -> player.sendMessage(referenceFinalText, false));
+		}
+
+		MutableText finalText = new LiteralText("")
+				.append(mcdcText)
+				.append(roleText)
+				.append(Formatting.GRAY + MarkdownParser.parseMarkdown(message.toString()));
+
 		SERVER.getPlayerManager().getPlayerList().forEach(
-				player -> player.sendMessage(new LiteralText("")
-						.append(mcdcText)
-						.append(roleText)
-						.append(Formatting.GRAY + MarkdownParser.parseMarkdown(finalMessage.toString())), false));
+				player -> player.sendMessage(finalText, false));
 	}
 }
