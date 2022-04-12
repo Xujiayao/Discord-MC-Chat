@@ -10,6 +10,8 @@ public class Config {
 
 	// More information + Docs: https://blog.xujiayao.top/posts/4ba0a17a/
 
+	public int version = 1;
+
 	public Generic generic = new Generic();
 	public MultiServer multiServer = new MultiServer();
 	public TextsZH textsZH = new TextsZH();

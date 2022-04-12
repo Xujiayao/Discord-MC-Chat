@@ -20,9 +20,14 @@ public class ConfigManager {
 	public static void init() {
 		if (CONFIG_FILE.length() != 0) {
 			load();
-			update();
 
-			Utils.reloadTexts();
+			switch (CONFIG.version) {
+				// TODO Config无法自动修复时需要添加不同的case
+				default -> {
+					update();
+					Utils.reloadTexts();
+				}
+			}
 		} else {
 			create();
 
