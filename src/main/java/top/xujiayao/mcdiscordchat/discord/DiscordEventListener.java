@@ -230,14 +230,14 @@ public class DiscordEventListener extends ListenerAdapter {
 		if (e.getMessage().getReferencedMessage() != null) {
 			Utils.sendConsoleMessage(new StringBuilder()
 					.append("    ┌──── <")
-					.append((referencedMember != null) ? referencedMember.getEffectiveName() : referencedName)
+					.append((referencedMember != null) ? (CONFIG.generic.useEffectiveNameInsteadOfUsername ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : referencedName)
 					.append("> ")
 					.append(EmojiParser.parseToAliases(e.getMessage().getReferencedMessage().getContentDisplay())));
 		}
 
 		Utils.sendConsoleMessage(new StringBuilder()
 				.append("[Discord] <")
-				.append(Objects.requireNonNull(e.getMember()).getEffectiveName())
+				.append(CONFIG.generic.useEffectiveNameInsteadOfUsername ? Objects.requireNonNull(e.getMember()).getEffectiveName() : Objects.requireNonNull(e.getMember()).getUser().getName())
 				.append("> ")
 				.append(EmojiParser.parseToAliases(e.getMessage().getContentDisplay())));
 
@@ -341,13 +341,13 @@ public class DiscordEventListener extends ListenerAdapter {
 		if (e.getMessage().getReferencedMessage() != null) {
 			referenceText = String.valueOf(Formatting.DARK_GRAY) + Formatting.BOLD + "    ┌──── " + Formatting.RESET;
 
-			referenceRoleText = new LiteralText("<" + ((referencedMember != null) ? referencedMember.getEffectiveName() : referencedName) + "> ");
+			referenceRoleText = new LiteralText("<" + ((referencedMember != null) ? (CONFIG.generic.useEffectiveNameInsteadOfUsername ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : referencedName) + "> ");
 			referenceRoleText.setStyle(referenceRoleText.getStyle().withColor(TextColor.fromRgb((referencedMember != null) ? referencedMember.getColorRaw() : Role.DEFAULT_COLOR_RAW)));
 		}
 
 		String mcdcText = String.valueOf(Formatting.BLUE) + Formatting.BOLD + "[Discord] " + Formatting.RESET;
 
-		LiteralText roleText = new LiteralText("<" + Objects.requireNonNull(e.getMember()).getEffectiveName() + "> ");
+		LiteralText roleText = new LiteralText("<" + (CONFIG.generic.useEffectiveNameInsteadOfUsername ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()) + "> ");
 		roleText.setStyle(roleText.getStyle().withColor(TextColor.fromRgb(Objects.requireNonNull(e.getMember()).getColorRaw())));
 
 		if (e.getMessage().getReferencedMessage() != null) {

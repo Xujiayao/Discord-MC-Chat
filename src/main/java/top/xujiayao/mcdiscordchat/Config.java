@@ -37,6 +37,8 @@ public class Config {
 
 		public boolean modifyChatMessages = true;
 
+		public boolean useEffectiveNameInsteadOfUsername = true;
+
 		public boolean announceHighMspt = true;
 		public int msptLimit = 50;
 
