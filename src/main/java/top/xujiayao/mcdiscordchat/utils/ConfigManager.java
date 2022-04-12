@@ -21,6 +21,13 @@ public class ConfigManager {
 		if (CONFIG_FILE.length() != 0) {
 			load();
 
+			try {
+				Utils.testJsonValid();
+			} catch (Exception e) {
+				LOGGER.error(ExceptionUtils.getStackTrace(e));
+				LOGGER.error("Invalid JSON!");
+			}
+
 			switch (CONFIG.version) {
 				// TODO Config无法自动修复时需要添加不同的case
 				default -> {

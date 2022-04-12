@@ -2,6 +2,7 @@ package top.xujiayao.mcdiscordchat.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -252,6 +253,16 @@ public class Utils {
 						.replace("%message%", MarkdownSanitizer.escape(consoleMessage))).queue();
 			}
 		}
+	}
+
+	public static void testJsonValid() throws JsonSyntaxException {
+		new Gson().fromJson(CONFIG.textsZH.formattedReferencedMessage, Object.class);
+		new Gson().fromJson(CONFIG.textsZH.formattedChatMessage, Object.class);
+		new Gson().fromJson(CONFIG.textsZH.formattedOtherMessage, Object.class);
+
+		new Gson().fromJson(CONFIG.textsEN.formattedReferencedMessage, Object.class);
+		new Gson().fromJson(CONFIG.textsEN.formattedChatMessage, Object.class);
+		new Gson().fromJson(CONFIG.textsEN.formattedOtherMessage, Object.class);
 	}
 
 	public static void setMcdcVersion() {

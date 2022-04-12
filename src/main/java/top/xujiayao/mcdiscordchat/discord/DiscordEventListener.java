@@ -144,6 +144,8 @@ public class DiscordEventListener extends ListenerAdapter {
 
 						ConfigManager.init();
 
+						Utils.testJsonValid();
+
 						Utils.setBotActivity();
 
 						CHANNEL = JDA.getTextChannelById(CONFIG.generic.channelId);
