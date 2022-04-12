@@ -154,7 +154,13 @@ public class Utils {
 
 	public static void reloadTexts() {
 		if (CONFIG.generic.useEngInsteadOfChin) {
-			TEXTS = new Texts(CONFIG.textsEN.serverStarted,
+			TEXTS = new Texts(CONFIG.textsEN.unformattedReferencedMessage,
+					CONFIG.textsEN.unformattedChatMessage,
+					CONFIG.textsEN.unformattedOtherMessage,
+					CONFIG.textsEN.formattedReferencedMessage,
+					CONFIG.textsEN.formattedChatMessage,
+					CONFIG.textsEN.formattedOtherMessage,
+					CONFIG.textsEN.serverStarted,
 					CONFIG.textsEN.serverStopped,
 					CONFIG.textsEN.joinServer,
 					CONFIG.textsEN.leftServer,
@@ -165,7 +171,13 @@ public class Utils {
 					CONFIG.textsEN.highMspt,
 					CONFIG.textsEN.consoleLogMessage);
 		} else {
-			TEXTS = new Texts(CONFIG.textsZH.serverStarted,
+			TEXTS = new Texts(CONFIG.textsZH.unformattedReferencedMessage,
+					CONFIG.textsZH.unformattedChatMessage,
+					CONFIG.textsZH.unformattedOtherMessage,
+					CONFIG.textsZH.formattedReferencedMessage,
+					CONFIG.textsZH.formattedChatMessage,
+					CONFIG.textsZH.formattedOtherMessage,
+					CONFIG.textsZH.serverStarted,
 					CONFIG.textsZH.serverStopped,
 					CONFIG.textsZH.joinServer,
 					CONFIG.textsZH.leftServer,
@@ -224,8 +236,8 @@ public class Utils {
 		}, 0, 5000);
 	}
 
-	public static void sendConsoleMessage(StringBuilder consoleMessage) {
-		LOGGER.info(consoleMessage.toString());
+	public static void sendConsoleMessage(String consoleMessage) {
+		LOGGER.info(consoleMessage);
 
 		if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
 			if ((System.currentTimeMillis() - MINECRAFT_LAST_RESET_TIME) > 20000) {
@@ -237,7 +249,7 @@ public class Utils {
 			if (MINECRAFT_SEND_COUNT <= 20) {
 				CONSOLE_LOG_CHANNEL.sendMessage(TEXTS.consoleLogMessage()
 						.replace("%time%", SIMPLE_DATE_FORMAT.format(new Date()))
-						.replace("%message%", MarkdownSanitizer.escape(consoleMessage.toString()))).queue();
+						.replace("%message%", MarkdownSanitizer.escape(consoleMessage))).queue();
 			}
 		}
 	}

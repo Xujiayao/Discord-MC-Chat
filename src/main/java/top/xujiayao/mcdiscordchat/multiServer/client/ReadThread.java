@@ -2,8 +2,7 @@ package top.xujiayao.mcdiscordchat.multiServer.client;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import net.minecraft.text.LiteralText;
-import net.minecraft.util.Formatting;
+import net.minecraft.text.Text;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 import top.xujiayao.mcdiscordchat.utils.Utils;
@@ -16,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.LOGGER;
 import static top.xujiayao.mcdiscordchat.Main.SERVER;
+import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 
 /**
  * @author Xujiayao
@@ -46,25 +46,32 @@ public class ReadThread extends Thread {
 					continue;
 				}
 
-				StringBuilder consoleMessage = new StringBuilder()
-						.append("[").append(json.get("name").getAsString()).append("] ")
-						.append(json.get("isChat").getAsBoolean() ? "<" + json.get("playerName").getAsString() + "> " : "")
-						.append(json.get("message").getAsString());
+				if (json.get("isChat").getAsBoolean()) {
+					Utils.sendConsoleMessage(TEXTS.unformattedChatMessage()
+							.replace("%server%", json.get("name").getAsString())
+							.replace("%name%", json.get("playerName").getAsString())
+							.replace("%message%", json.get("message").getAsString()));
 
-				Utils.sendConsoleMessage(consoleMessage);
+					Text text = Text.Serializer.fromJson(TEXTS.formattedChatMessage()
+							.replace("%server%", json.get("name").getAsString())
+							.replace("%name%", json.get("playerName").getAsString())
+							.replace("%roleColor%", "white")
+							.replace("%message%", MarkdownParser.parseMarkdown(json.get("message").getAsString())));
 
-				LiteralText text = new LiteralText(Formatting.BLUE.toString() + Formatting.BOLD + "[" + json.get("name").getAsString() + "] " + Formatting.RESET
-						+ (json.get("isChat").getAsBoolean() ? "<" + json.get("playerName").getAsString() + "> " : "")
-						+ Formatting.GRAY + MarkdownParser.parseMarkdown(json.get("message").getAsString()));
+					SERVER.getPlayerManager().getPlayerList().forEach(
+							player -> player.sendMessage(text, false));
+				} else {
+					Utils.sendConsoleMessage(TEXTS.unformattedOtherMessage()
+							.replace("%server%", json.get("name").getAsString())
+							.replace("%message%", json.get("message").getAsString()));
 
-				SERVER.getPlayerManager().getPlayerList().forEach(
-						player -> {
-							try {
-								player.sendMessage(text, false);
-							} catch (Exception e) {
-								LOGGER.error(ExceptionUtils.getStackTrace(e));
-							}
-						});
+					Text text = Text.Serializer.fromJson(TEXTS.formattedOtherMessage()
+							.replace("%server%", json.get("name").getAsString())
+							.replace("%message%", MarkdownParser.parseMarkdown(json.get("message").getAsString())));
+
+					SERVER.getPlayerManager().getPlayerList().forEach(
+							player -> player.sendMessage(text, false));
+				}
 			} catch (Exception e) {
 				break;
 			}

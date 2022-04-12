@@ -3,7 +3,13 @@ package top.xujiayao.mcdiscordchat.utils;
 /**
  * @author Xujiayao
  */
-public record Texts(String serverStarted,
+public record Texts(String unformattedReferencedMessage,
+                    String unformattedChatMessage,
+                    String unformattedOtherMessage,
+                    String formattedReferencedMessage,
+                    String formattedChatMessage,
+                    String formattedOtherMessage,
+                    String serverStarted,
                     String serverStopped,
                     String joinServer,
                     String leftServer,

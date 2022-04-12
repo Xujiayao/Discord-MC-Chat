@@ -59,6 +59,14 @@ public class Config {
 	}
 
 	public static class TextsZH {
+		public String unformattedReferencedMessage = "    ┌──── <%name%> %message%";
+		public String unformattedChatMessage = "[%server%] <%name%> %message%";
+		public String unformattedOtherMessage = "[%server%] %message%";
+
+		public String formattedReferencedMessage = "[{\"text\":\"    ┌──── \",\"bold\":true,\"color\":\"dark_gray\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"dark_gray\"}]";
+		public String formattedChatMessage = "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]";
+		public String formattedOtherMessage = "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]";
+
 		public String serverStarted = "**服务器已启动！**";
 		public String serverStopped = "**服务器已关闭！**";
 
@@ -77,6 +85,14 @@ public class Config {
 	}
 
 	public static class TextsEN {
+		public String unformattedReferencedMessage = "    ┌──── <%name%> %message%";
+		public String unformattedChatMessage = "[%server%] <%name%> %message%";
+		public String unformattedOtherMessage = "[%server%] %message%";
+
+		public String formattedReferencedMessage = "[{\"text\":\"    ┌──── \",\"bold\":true,\"color\":\"dark_gray\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"dark_gray\"}]";
+		public String formattedChatMessage = "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]";
+		public String formattedOtherMessage = "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]";
+
 		public String serverStarted = "**Server started!**";
 		public String serverStopped = "**Server stopped!**";
 

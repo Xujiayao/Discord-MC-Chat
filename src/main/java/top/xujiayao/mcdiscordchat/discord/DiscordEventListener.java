@@ -14,9 +14,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.TextColor;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -45,6 +43,7 @@ import static top.xujiayao.mcdiscordchat.Main.LOGGER;
 import static top.xujiayao.mcdiscordchat.Main.MSPT_MONITOR_TIMER;
 import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
 import static top.xujiayao.mcdiscordchat.Main.SERVER;
+import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 
 public class DiscordEventListener extends ListenerAdapter {
 
@@ -219,27 +218,23 @@ public class DiscordEventListener extends ListenerAdapter {
 		}
 
 		Member referencedMember = null;
-		String referencedName = null;
 
 		try {
 			referencedMember = Objects.requireNonNull(Objects.requireNonNull(e.getMessage().getReferencedMessage()).getMember());
-		} catch (Exception ex) {
-			referencedName = "Webhook";
+		} catch (Exception ignored) {
 		}
 
 		if (e.getMessage().getReferencedMessage() != null) {
-			Utils.sendConsoleMessage(new StringBuilder()
-					.append("    ┌──── <")
-					.append((referencedMember != null) ? (CONFIG.generic.useEffectiveNameInsteadOfUsername ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : referencedName)
-					.append("> ")
-					.append(EmojiParser.parseToAliases(e.getMessage().getReferencedMessage().getContentDisplay())));
+			Utils.sendConsoleMessage(TEXTS.unformattedReferencedMessage()
+					.replace("%server%", "Discord")
+					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useEffectiveNameInsteadOfUsername ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : "Webhook")
+					.replace("%message%", EmojiParser.parseToAliases(e.getMessage().getReferencedMessage().getContentDisplay())));
 		}
 
-		Utils.sendConsoleMessage(new StringBuilder()
-				.append("[Discord] <")
-				.append(CONFIG.generic.useEffectiveNameInsteadOfUsername ? Objects.requireNonNull(e.getMember()).getEffectiveName() : Objects.requireNonNull(e.getMember()).getUser().getName())
-				.append("> ")
-				.append(EmojiParser.parseToAliases(e.getMessage().getContentDisplay())));
+		Utils.sendConsoleMessage(TEXTS.unformattedChatMessage()
+				.replace("%server%", "Discord")
+				.replace("%name%", CONFIG.generic.useEffectiveNameInsteadOfUsername ? Objects.requireNonNull(e.getMember()).getEffectiveName() : Objects.requireNonNull(e.getMember()).getUser().getName())
+				.replace("%message%", EmojiParser.parseToAliases(e.getMessage().getContentDisplay())));
 
 		StringBuilder referencedMessage = new StringBuilder();
 
@@ -335,35 +330,22 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 		}
 
-		String referenceText = null;
-		LiteralText referenceRoleText = null;
-
 		if (e.getMessage().getReferencedMessage() != null) {
-			referenceText = String.valueOf(Formatting.DARK_GRAY) + Formatting.BOLD + "    ┌──── " + Formatting.RESET;
-
-			referenceRoleText = new LiteralText("<" + ((referencedMember != null) ? (CONFIG.generic.useEffectiveNameInsteadOfUsername ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : referencedName) + "> ");
-			referenceRoleText.setStyle(referenceRoleText.getStyle().withColor(TextColor.fromRgb((referencedMember != null) ? referencedMember.getColorRaw() : Role.DEFAULT_COLOR_RAW)));
-		}
-
-		String mcdcText = String.valueOf(Formatting.BLUE) + Formatting.BOLD + "[Discord] " + Formatting.RESET;
-
-		LiteralText roleText = new LiteralText("<" + (CONFIG.generic.useEffectiveNameInsteadOfUsername ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()) + "> ");
-		roleText.setStyle(roleText.getStyle().withColor(TextColor.fromRgb(Objects.requireNonNull(e.getMember()).getColorRaw())));
-
-		if (e.getMessage().getReferencedMessage() != null) {
-			MutableText referenceFinalText = new LiteralText("")
-					.append(referenceText)
-					.append(referenceRoleText)
-					.append(Formatting.DARK_GRAY + MarkdownParser.parseMarkdown(referencedMessage.toString()));
+			Text referenceFinalText = Text.Serializer.fromJson(TEXTS.formattedReferencedMessage()
+					.replace("%server%", "Discord")
+					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useEffectiveNameInsteadOfUsername ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : "Webhook")
+					.replace("%roleColor%", "#" + Integer.toHexString((referencedMember != null) ? referencedMember.getColorRaw() : Role.DEFAULT_COLOR_RAW))
+					.replace("%message%", MarkdownParser.parseMarkdown(referencedMessage.toString())));
 
 			SERVER.getPlayerManager().getPlayerList().forEach(
 					player -> player.sendMessage(referenceFinalText, false));
 		}
 
-		MutableText finalText = new LiteralText("")
-				.append(mcdcText)
-				.append(roleText)
-				.append(Formatting.GRAY + MarkdownParser.parseMarkdown(message.toString()));
+		Text finalText = Text.Serializer.fromJson(TEXTS.formattedChatMessage()
+				.replace("%server%", "Discord")
+				.replace("%name%", CONFIG.generic.useEffectiveNameInsteadOfUsername ? e.getMember().getEffectiveName() : e.getMember().getUser().getName())
+				.replace("%roleColor%", "#" + Integer.toHexString(Objects.requireNonNull(e.getMember()).getColorRaw()))
+				.replace("%message%", MarkdownParser.parseMarkdown(message.toString())));
 
 		SERVER.getPlayerManager().getPlayerList().forEach(
 				player -> player.sendMessage(finalText, false));
