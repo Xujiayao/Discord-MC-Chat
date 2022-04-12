@@ -218,16 +218,18 @@ public class DiscordEventListener extends ListenerAdapter {
 		}
 
 		Member referencedMember = null;
-
-		try {
-			referencedMember = Objects.requireNonNull(Objects.requireNonNull(e.getMessage().getReferencedMessage()).getMember());
-		} catch (Exception ignored) {
-		}
+		String webhookName = "null";
 
 		if (e.getMessage().getReferencedMessage() != null) {
+			try {
+				referencedMember = Objects.requireNonNull(e.getMessage().getReferencedMessage().getMember());
+			} catch (Exception ex) {
+				webhookName = e.getMessage().getReferencedMessage().getAuthor().getName();
+			}
+
 			Utils.sendConsoleMessage(TEXTS.unformattedReferencedMessage()
 					.replace("%server%", "Discord")
-					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useEffectiveNameInsteadOfUsername ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : "Webhook")
+					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useEffectiveNameInsteadOfUsername ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : webhookName)
 					.replace("%message%", EmojiParser.parseToAliases(e.getMessage().getReferencedMessage().getContentDisplay())));
 		}
 
@@ -333,7 +335,7 @@ public class DiscordEventListener extends ListenerAdapter {
 		if (e.getMessage().getReferencedMessage() != null) {
 			Text referenceFinalText = Text.Serializer.fromJson(TEXTS.formattedReferencedMessage()
 					.replace("%server%", "Discord")
-					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useEffectiveNameInsteadOfUsername ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : "Webhook")
+					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useEffectiveNameInsteadOfUsername ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : webhookName)
 					.replace("%roleColor%", "#" + Integer.toHexString((referencedMember != null) ? referencedMember.getColorRaw() : Role.DEFAULT_COLOR_RAW))
 					.replace("%message%", MarkdownParser.parseMarkdown(referencedMessage.toString())));
 
