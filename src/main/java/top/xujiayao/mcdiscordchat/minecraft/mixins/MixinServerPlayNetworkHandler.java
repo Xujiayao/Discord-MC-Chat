@@ -74,12 +74,14 @@ public abstract class MixinServerPlayNetworkHandler {
 	private void handleMessage(Message message, CallbackInfo ci) {
 		if (player.getClientChatVisibility() == ChatVisibility.HIDDEN) {
 			sendPacket(new GameMessageS2CPacket((new TranslatableText("chat.disabled.options")).formatted(Formatting.RED), MessageType.SYSTEM, Util.NIL_UUID));
+			ci.cancel();
 		} else {
+			player.updateLastActionTime();
+
 			if (message.getRaw().startsWith("/")) {
 				executeCommand(message.getRaw());
+				ci.cancel();
 			} else {
-				player.updateLastActionTime();
-
 				String contentToDiscord = message.getRaw();
 				String contentToMinecraft = message.getRaw();
 
