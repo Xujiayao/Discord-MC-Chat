@@ -10,7 +10,7 @@ public class Config {
 
 	// More information + Docs: https://blog.xujiayao.top/posts/4ba0a17a/
 
-	public int version = 1;
+	public int version = 2;
 
 	public Generic generic = new Generic();
 	public MultiServer multiServer = new MultiServer();
@@ -37,7 +37,7 @@ public class Config {
 
 		public boolean modifyChatMessages = true;
 
-		public boolean useEffectiveNameInsteadOfUsername = true;
+		public boolean useServerNickname = true;
 
 		public boolean announceHighMspt = true;
 		public int msptLimit = 50;
@@ -59,11 +59,11 @@ public class Config {
 	}
 
 	public static class TextsZH {
-		public String unformattedReferencedMessage = "    ┌──── <%name%> %message%";
+		public String unformattedResponseMessage = "    ┌──── <%name%> %message%";
 		public String unformattedChatMessage = "[%server%] <%name%> %message%";
 		public String unformattedOtherMessage = "[%server%] %message%";
 
-		public String formattedReferencedMessage = "[{\"text\":\"    ┌──── \",\"bold\":true,\"color\":\"dark_gray\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"dark_gray\"}]";
+		public String formattedResponseMessage = "[{\"text\":\"    ┌──── \",\"bold\":true,\"color\":\"dark_gray\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"dark_gray\"}]";
 		public String formattedChatMessage = "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]";
 		public String formattedOtherMessage = "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]";
 
@@ -85,11 +85,11 @@ public class Config {
 	}
 
 	public static class TextsEN {
-		public String unformattedReferencedMessage = "    ┌──── <%name%> %message%";
+		public String unformattedResponseMessage = "    ┌──── <%name%> %message%";
 		public String unformattedChatMessage = "[%server%] <%name%> %message%";
 		public String unformattedOtherMessage = "[%server%] %message%";
 
-		public String formattedReferencedMessage = "[{\"text\":\"    ┌──── \",\"bold\":true,\"color\":\"dark_gray\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"dark_gray\"}]";
+		public String formattedResponseMessage = "[{\"text\":\"    ┌──── \",\"bold\":true,\"color\":\"dark_gray\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"dark_gray\"}]";
 		public String formattedChatMessage = "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]";
 		public String formattedOtherMessage = "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]";
 

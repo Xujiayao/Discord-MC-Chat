@@ -229,15 +229,15 @@ public class DiscordEventListener extends ListenerAdapter {
 				webhookName = e.getMessage().getReferencedMessage().getAuthor().getName();
 			}
 
-			Utils.sendConsoleMessage(TEXTS.unformattedReferencedMessage()
+			Utils.sendConsoleMessage(TEXTS.unformattedResponseMessage()
 					.replace("%server%", "Discord")
-					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useEffectiveNameInsteadOfUsername ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : webhookName)
+					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : webhookName)
 					.replace("%message%", EmojiParser.parseToAliases(e.getMessage().getReferencedMessage().getContentDisplay())));
 		}
 
 		Utils.sendConsoleMessage(TEXTS.unformattedChatMessage()
 				.replace("%server%", "Discord")
-				.replace("%name%", CONFIG.generic.useEffectiveNameInsteadOfUsername ? Objects.requireNonNull(e.getMember()).getEffectiveName() : Objects.requireNonNull(e.getMember()).getUser().getName())
+				.replace("%name%", CONFIG.generic.useServerNickname ? Objects.requireNonNull(e.getMember()).getEffectiveName() : Objects.requireNonNull(e.getMember()).getUser().getName())
 				.replace("%message%", EmojiParser.parseToAliases(e.getMessage().getContentDisplay())));
 
 		StringBuilder referencedMessage = new StringBuilder();
@@ -335,9 +335,9 @@ public class DiscordEventListener extends ListenerAdapter {
 		}
 
 		if (e.getMessage().getReferencedMessage() != null) {
-			Text referenceFinalText = Text.Serializer.fromJson(TEXTS.formattedReferencedMessage()
+			Text referenceFinalText = Text.Serializer.fromJson(TEXTS.formattedResponseMessage()
 					.replace("%server%", "Discord")
-					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useEffectiveNameInsteadOfUsername ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : webhookName)
+					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : webhookName)
 					.replace("%roleColor%", "#" + Integer.toHexString((referencedMember != null) ? referencedMember.getColorRaw() : Role.DEFAULT_COLOR_RAW))
 					.replace("%message%", MarkdownParser.parseMarkdown(referencedMessage.toString())));
 
@@ -347,7 +347,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
 		Text finalText = Text.Serializer.fromJson(TEXTS.formattedChatMessage()
 				.replace("%server%", "Discord")
-				.replace("%name%", CONFIG.generic.useEffectiveNameInsteadOfUsername ? e.getMember().getEffectiveName() : e.getMember().getUser().getName())
+				.replace("%name%", CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName())
 				.replace("%roleColor%", "#" + Integer.toHexString(Objects.requireNonNull(e.getMember()).getColorRaw()))
 				.replace("%message%", MarkdownParser.parseMarkdown(message.toString())));
 

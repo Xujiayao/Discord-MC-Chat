@@ -1,6 +1,7 @@
 package top.xujiayao.mcdiscordchat.utils;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import top.xujiayao.mcdiscordchat.Config;
@@ -28,13 +29,36 @@ public class ConfigManager {
 				LOGGER.error("Invalid JSON!");
 			}
 
-			switch (CONFIG.version) {
-				// TODO Config无法自动修复时需要添加不同的case
-				default -> {
-					update();
-					Utils.reloadTexts();
+			try {
+				Config newConfig = new Config();
+
+				if (CONFIG.version != newConfig.version) {
+					JsonObject oldConfig = new GsonBuilder()
+							.setPrettyPrinting()
+							.disableHtmlEscaping()
+							.create()
+							.fromJson(IOUtils.toString(CONFIG_FILE.toURI(), StandardCharsets.UTF_8), JsonObject.class);
+
+					switch (CONFIG.version) {
+						case 1 -> {
+							CONFIG.generic.useServerNickname = oldConfig.getAsJsonObject("generic").get("useEffectiveNameInsteadOfUsername").getAsBoolean();
+
+							CONFIG.textsZH.unformattedResponseMessage = oldConfig.getAsJsonObject("textsZH").get("unformattedReferencedMessage").getAsString();
+							CONFIG.textsZH.formattedResponseMessage = oldConfig.getAsJsonObject("textsZH").get("formattedReferencedMessage").getAsString();
+
+							CONFIG.textsEN.unformattedResponseMessage = oldConfig.getAsJsonObject("textsEN").get("unformattedReferencedMessage").getAsString();
+							CONFIG.textsEN.formattedResponseMessage = oldConfig.getAsJsonObject("textsEN").get("formattedReferencedMessage").getAsString();
+						}
+					}
+
+					CONFIG.version = newConfig.version;
 				}
+			} catch (Exception e) {
+				LOGGER.error(ExceptionUtils.getStackTrace(e));
 			}
+
+			update();
+			Utils.reloadTexts();
 		} else {
 			create();
 
@@ -60,6 +84,7 @@ public class ConfigManager {
 		try (FileOutputStream outputStream = new FileOutputStream(CONFIG_FILE)) {
 			String jsonString = new GsonBuilder()
 					.setPrettyPrinting()
+					.disableHtmlEscaping()
 					.create()
 					.toJson(new Config());
 
@@ -73,6 +98,7 @@ public class ConfigManager {
 		try {
 			CONFIG = new GsonBuilder()
 					.setPrettyPrinting()
+					.disableHtmlEscaping()
 					.create()
 					.fromJson(IOUtils.toString(CONFIG_FILE.toURI(), StandardCharsets.UTF_8), Config.class);
 		} catch (Exception e) {
@@ -84,6 +110,7 @@ public class ConfigManager {
 		try (FileOutputStream outputStream = new FileOutputStream(CONFIG_FILE)) {
 			String jsonString = new GsonBuilder()
 					.setPrettyPrinting()
+					.disableHtmlEscaping()
 					.create()
 					.toJson(CONFIG);
 

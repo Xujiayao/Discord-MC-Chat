@@ -3,10 +3,10 @@ package top.xujiayao.mcdiscordchat.utils;
 /**
  * @author Xujiayao
  */
-public record Texts(String unformattedReferencedMessage,
+public record Texts(String unformattedResponseMessage,
                     String unformattedChatMessage,
                     String unformattedOtherMessage,
-                    String formattedReferencedMessage,
+                    String formattedResponseMessage,
                     String formattedChatMessage,
                     String formattedOtherMessage,
                     String serverStarted,

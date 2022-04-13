@@ -155,10 +155,10 @@ public class Utils {
 
 	public static void reloadTexts() {
 		if (CONFIG.generic.useEngInsteadOfChin) {
-			TEXTS = new Texts(CONFIG.textsEN.unformattedReferencedMessage,
+			TEXTS = new Texts(CONFIG.textsEN.unformattedResponseMessage,
 					CONFIG.textsEN.unformattedChatMessage,
 					CONFIG.textsEN.unformattedOtherMessage,
-					CONFIG.textsEN.formattedReferencedMessage,
+					CONFIG.textsEN.formattedResponseMessage,
 					CONFIG.textsEN.formattedChatMessage,
 					CONFIG.textsEN.formattedOtherMessage,
 					CONFIG.textsEN.serverStarted,
@@ -172,10 +172,10 @@ public class Utils {
 					CONFIG.textsEN.highMspt,
 					CONFIG.textsEN.consoleLogMessage);
 		} else {
-			TEXTS = new Texts(CONFIG.textsZH.unformattedReferencedMessage,
+			TEXTS = new Texts(CONFIG.textsZH.unformattedResponseMessage,
 					CONFIG.textsZH.unformattedChatMessage,
 					CONFIG.textsZH.unformattedOtherMessage,
-					CONFIG.textsZH.formattedReferencedMessage,
+					CONFIG.textsZH.formattedResponseMessage,
 					CONFIG.textsZH.formattedChatMessage,
 					CONFIG.textsZH.formattedOtherMessage,
 					CONFIG.textsZH.serverStarted,
@@ -256,11 +256,11 @@ public class Utils {
 	}
 
 	public static void testJsonValid() throws JsonSyntaxException {
-		new Gson().fromJson(CONFIG.textsZH.formattedReferencedMessage, Object.class);
+		new Gson().fromJson(CONFIG.textsZH.formattedResponseMessage, Object.class);
 		new Gson().fromJson(CONFIG.textsZH.formattedChatMessage, Object.class);
 		new Gson().fromJson(CONFIG.textsZH.formattedOtherMessage, Object.class);
 
-		new Gson().fromJson(CONFIG.textsEN.formattedReferencedMessage, Object.class);
+		new Gson().fromJson(CONFIG.textsEN.formattedResponseMessage, Object.class);
 		new Gson().fromJson(CONFIG.textsEN.formattedChatMessage, Object.class);
 		new Gson().fromJson(CONFIG.textsEN.formattedOtherMessage, Object.class);
 	}
