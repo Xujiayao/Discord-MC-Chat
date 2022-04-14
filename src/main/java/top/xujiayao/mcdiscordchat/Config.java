@@ -40,9 +40,14 @@ public class Config {
 		public boolean useServerNickname = true;
 
 		public boolean announceHighMspt = true;
+// TODO
+//		public int msptCheckInterval = 5000;
 		public int msptLimit = 50;
 
 		public boolean mentionAdmins = true;
+
+		public boolean updateChannelTopic = true;
+		public int channelTopicUpdateInterval = 600000;
 
 		public List<String> excludedCommands = List.of("/tell");
 
@@ -52,7 +57,7 @@ public class Config {
 	}
 
 	public static class MultiServer {
-		public boolean enable = true;
+		public boolean enable = false;
 		public String host = "127.0.0.1";
 		public int port = 5000;
 		public String name = "SMP";
@@ -82,6 +87,10 @@ public class Config {
 		public String highMspt = "**服务器 MSPT (%mspt%) 高于 %msptLimit%！**";
 
 		public String consoleLogMessage = "[%time%] [INFO] %message%";
+
+		public String offlineChannelTopic = ":x: Server offline | Last updated: <t:%lastUpdateTime%:f>";
+		public String onlineChannelTopic = ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% player(s) online | %uniquePlayerCount% unique player(s) ever joined | Server started <t:%serverStartedTime%:R> | Last updated: <t:%lastUpdateTime%:f>";
+		public String onlineChannelTopicForMultiServer = ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% player(s) online | %uniquePlayerCount% unique player(s) ever joined | %onlineServerCount% server(s) online [%onlineServerList%] | Server started <t:%serverStartedTime%:R> | Last updated: <t:%lastUpdateTime%:f>";
 	}
 
 	public static class TextsEN {
@@ -108,6 +117,10 @@ public class Config {
 		public String highMspt = "**Server MSPT (%mspt%) is above %msptLimit%!**";
 
 		public String consoleLogMessage = "[%time%] [INFO] %message%";
+
+		public String offlineChannelTopic = ":x: Server offline | Last updated: <t:%lastUpdateTime%:f>";
+		public String onlineChannelTopic = ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% player(s) online | %uniquePlayerCount% unique player(s) ever joined | Server started <t:%serverStartedTime%:R> | Last updated: <t:%lastUpdateTime%:f>";
+		public String onlineChannelTopicForMultiServer = ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% player(s) online | %uniquePlayerCount% unique player(s) ever joined | %onlineServerCount% server(s) online [%onlineServerList%] | Server started <t:%serverStartedTime%:R> | Last updated: <t:%lastUpdateTime%:f>";
 	}
 }
 

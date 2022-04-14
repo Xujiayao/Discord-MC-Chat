@@ -18,18 +18,18 @@ import static top.xujiayao.mcdiscordchat.Main.LOGGER;
  */
 public class ConfigManager {
 
-	public static void init() {
+	public static void init(boolean throwException) throws Exception {
 		if (CONFIG_FILE.length() != 0) {
-			load();
-
 			try {
-				Utils.testJsonValid();
-			} catch (Exception e) {
-				LOGGER.error(ExceptionUtils.getStackTrace(e));
-				LOGGER.error("Invalid JSON!");
-			}
+				load();
 
-			try {
+				try {
+					Utils.testJsonValid();
+				} catch (Exception e) {
+					LOGGER.error(ExceptionUtils.getStackTrace(e));
+					LOGGER.error("Invalid JSON!");
+				}
+
 				Config newConfig = new Config();
 
 				if (CONFIG.version != newConfig.version) {
@@ -53,12 +53,16 @@ public class ConfigManager {
 
 					CONFIG.version = newConfig.version;
 				}
+
+				update();
+				Utils.reloadTexts();
 			} catch (Exception e) {
+				if (throwException) {
+					throw e;
+				}
+
 				LOGGER.error(ExceptionUtils.getStackTrace(e));
 			}
-
-			update();
-			Utils.reloadTexts();
 		} else {
 			create();
 

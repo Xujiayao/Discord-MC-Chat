@@ -11,17 +11,21 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.MathHelper;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
+import java.io.File;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.TimerTask;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
+import static top.xujiayao.mcdiscordchat.Main.CHANNEL_TOPIC_MONITOR_TIMER;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
 import static top.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.HTTP_CLIENT;
@@ -32,6 +36,7 @@ import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_SEND_COUNT;
 import static top.xujiayao.mcdiscordchat.Main.MSPT_MONITOR_TIMER;
 import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
 import static top.xujiayao.mcdiscordchat.Main.SERVER;
+import static top.xujiayao.mcdiscordchat.Main.SERVER_STARTED_TIME;
 import static top.xujiayao.mcdiscordchat.Main.SIMPLE_DATE_FORMAT;
 import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 import static top.xujiayao.mcdiscordchat.Main.VERSION;
@@ -170,7 +175,10 @@ public class Utils {
 					CONFIG.textsEN.advancementChallenge,
 					CONFIG.textsEN.advancementGoal,
 					CONFIG.textsEN.highMspt,
-					CONFIG.textsEN.consoleLogMessage);
+					CONFIG.textsEN.consoleLogMessage,
+					CONFIG.textsEN.offlineChannelTopic,
+					CONFIG.textsEN.onlineChannelTopic,
+					CONFIG.textsEN.onlineChannelTopicForMultiServer);
 		} else {
 			TEXTS = new Texts(CONFIG.textsZH.unformattedResponseMessage,
 					CONFIG.textsZH.unformattedChatMessage,
@@ -187,7 +195,10 @@ public class Utils {
 					CONFIG.textsZH.advancementChallenge,
 					CONFIG.textsZH.advancementGoal,
 					CONFIG.textsZH.highMspt,
-					CONFIG.textsZH.consoleLogMessage);
+					CONFIG.textsZH.consoleLogMessage,
+					CONFIG.textsZH.offlineChannelTopic,
+					CONFIG.textsZH.onlineChannelTopic,
+					CONFIG.textsZH.onlineChannelTopicForMultiServer);
 		}
 	}
 
@@ -235,6 +246,26 @@ public class Utils {
 				}
 			}
 		}, 0, 5000);
+	}
+
+	public static void initChannelTopicMonitor() {
+		CHANNEL_TOPIC_MONITOR_TIMER.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				String topic = TEXTS.onlineChannelTopic()
+						.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerManager().getPlayerList().size()))
+						.replace("%maxPlayerCount%", Integer.toString(SERVER.getPlayerManager().getMaxPlayerCount()))
+						.replace("%uniquePlayerCount%", Integer.toString(FileUtils.listFiles(new File((SERVER.getSaveProperties().getLevelName() + "/stats/")), null, false).size()))
+						.replace("%serverStartedTime%", SERVER_STARTED_TIME)
+						.replace("%lastUpdateTime%", Long.toString(Instant.now().getEpochSecond()));
+
+				CHANNEL.getManager().setTopic(topic).queue();
+
+				if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
+					CONSOLE_LOG_CHANNEL.getManager().setTopic(topic).queue();
+				}
+			}
+		}, 0, CONFIG.generic.channelTopicUpdateInterval);
 	}
 
 	public static void sendConsoleMessage(String consoleMessage) {

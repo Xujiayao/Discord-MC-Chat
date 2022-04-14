@@ -41,8 +41,11 @@ public class ReadThread extends Thread {
 			try {
 				JsonObject json = new Gson().fromJson(reader.readLine(), JsonObject.class);
 
-				if (json.get("special").getAsBoolean() && json.get("message").getAsString().equals("info")) {
-					CHANNEL.sendMessage(Utils.getInfoCommandMessage()).queue();
+				if (json.get("special").getAsBoolean()) {
+					JsonObject message = new Gson().fromJson(json.get("message").getAsString(), JsonObject.class);
+					if (message.get("type").getAsString().equals("info")) {
+						CHANNEL.sendMessage(Utils.getInfoCommandMessage()).queue();
+					}
 					continue;
 				}
 

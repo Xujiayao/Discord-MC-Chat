@@ -36,6 +36,7 @@ import java.util.Objects;
 import java.util.Timer;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
+import static top.xujiayao.mcdiscordchat.Main.CHANNEL_TOPIC_MONITOR_TIMER;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
 import static top.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.JDA;
@@ -59,7 +60,7 @@ public class DiscordEventListener extends ListenerAdapter {
 		switch (e.getName()) {
 			case "info" -> {
 				e.getHook().sendMessage(Utils.getInfoCommandMessage()).queue();
-				MULTI_SERVER.sendMessage(true, false, null, "info");
+				MULTI_SERVER.sendMessage(true, false, null, "{\"type\":\"info\"}");
 			}
 			case "help" -> e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? """
 					```
@@ -142,7 +143,10 @@ public class DiscordEventListener extends ListenerAdapter {
 							MULTI_SERVER.stopMultiServer();
 						}
 
-						ConfigManager.init();
+						MSPT_MONITOR_TIMER.cancel();
+						CHANNEL_TOPIC_MONITOR_TIMER.cancel();
+
+						ConfigManager.init(true);
 
 						Utils.testJsonValid();
 
@@ -155,10 +159,14 @@ public class DiscordEventListener extends ListenerAdapter {
 
 						Utils.updateBotCommands();
 
-						MSPT_MONITOR_TIMER.cancel();
 						if (CONFIG.generic.announceHighMspt) {
 							MSPT_MONITOR_TIMER = new Timer();
 							Utils.initMsptMonitor();
+						}
+
+						if (CONFIG.generic.updateChannelTopic && !CONFIG.multiServer.enable) {
+							CHANNEL_TOPIC_MONITOR_TIMER = new Timer();
+							Utils.initChannelTopicMonitor();
 						}
 
 						if (CONFIG.multiServer.enable) {

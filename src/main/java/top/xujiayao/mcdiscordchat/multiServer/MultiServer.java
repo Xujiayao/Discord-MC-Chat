@@ -47,6 +47,43 @@ public class MultiServer extends Thread {
 		client.writeThread.write(json.toString());
 	}
 
+//	int onlinePlayerCount = 0;
+//	int maxPlayerCount = 0;
+//	Set<String> uniquePlayers = new HashSet<>();
+//	int onlineServerCount = 0;
+//	List<String> onlineServerList = new ArrayList<>();
+//	List<Long> serverStartedTime = new ArrayList<>();
+//
+//				for (JsonObject json : serverInfoList) {
+//		onlineServerCount++;
+//
+//		onlinePlayerCount += json.get("onlinePlayerCount").getAsInt();
+//
+//		maxPlayerCount += json.get("maxPlayerCount").getAsInt();
+//
+//		String[] fileList = new Gson().fromJson(json.get("uniquePlayers").getAsJsonArray(), String[].class);
+//		uniquePlayers.addAll(List.of(fileList));
+//
+//		onlineServerList.add(json.get("name").getAsString());
+//
+//		serverStartedTime.add(Long.parseLong(json.get("serverStartedTime").getAsString()));
+//	}
+//
+//	String topic = TEXTS.onlineChannelTopicForMultiServer()
+//			.replace("%onlinePlayerCount%", Integer.toString(onlinePlayerCount))
+//			.replace("%maxPlayerCount%", Integer.toString(maxPlayerCount))
+//			.replace("%uniquePlayerCount%", Integer.toString(uniquePlayers.size()))
+//			.replace("%onlineServerCount%", Integer.toString(onlineServerCount))
+//			.replace("%onlineServerList%", String.join(", ", onlineServerList))
+//			.replace("%serverStartedTime%", Long.toString(Collections.min(serverStartedTime)))
+//			.replace("%lastUpdateTime%", Long.toString(Instant.now().getEpochSecond()));
+//
+//				CHANNEL.getManager().setTopic(topic).queue();
+//
+//				if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
+//		CONSOLE_LOG_CHANNEL.getManager().setTopic(topic).queue();
+//	}
+
 	public void bye() {
 		client.writeThread.write("bye");
 	}
