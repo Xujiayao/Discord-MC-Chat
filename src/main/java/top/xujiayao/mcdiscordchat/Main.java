@@ -123,7 +123,7 @@ public class Main implements DedicatedServerModInitializer {
 				MULTI_SERVER.stopMultiServer();
 			}
 
-			if (CONFIG.generic.updateChannelTopic && !CONFIG.multiServer.enable) {
+			if (CONFIG.generic.updateChannelTopic) {
 				CHANNEL.sendMessage(TEXTS.serverStopped())
 						.submit()
 						.whenComplete((v, ex) -> {

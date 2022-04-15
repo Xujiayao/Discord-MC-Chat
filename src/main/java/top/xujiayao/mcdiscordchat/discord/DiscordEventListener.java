@@ -164,7 +164,7 @@ public class DiscordEventListener extends ListenerAdapter {
 							Utils.initMsptMonitor();
 						}
 
-						if (CONFIG.generic.updateChannelTopic && !CONFIG.multiServer.enable) {
+						if (CONFIG.generic.updateChannelTopic) {
 							CHANNEL_TOPIC_MONITOR_TIMER = new Timer();
 							Utils.initChannelTopicMonitor();
 						}

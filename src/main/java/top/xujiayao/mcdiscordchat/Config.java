@@ -87,6 +87,8 @@ public class Config {
 
 		public String consoleLogMessage = "[%time%] [INFO] %message%";
 
+		// TODO Chinese translation
+
 		public String offlineChannelTopic = ":x: Server offline | Last updated: <t:%lastUpdateTime%:f>";
 		public String onlineChannelTopic = ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% player(s) online | %uniquePlayerCount% unique player(s) ever joined | Server started <t:%serverStartedTime%:R> | Last updated: <t:%lastUpdateTime%:f>";
 		public String onlineChannelTopicForMultiServer = ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% player(s) online | %uniquePlayerCount% unique player(s) ever joined | %onlineServerCount% server(s) online [%onlineServerList%] | Server started <t:%serverStartedTime%:R> | Last updated: <t:%lastUpdateTime%:f>";
