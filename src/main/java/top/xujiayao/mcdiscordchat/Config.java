@@ -40,8 +40,7 @@ public class Config {
 		public boolean useServerNickname = true;
 
 		public boolean announceHighMspt = true;
-// TODO
-//		public int msptCheckInterval = 5000;
+		public int msptCheckInterval = 5000;
 		public int msptLimit = 50;
 
 		public boolean mentionAdmins = true;

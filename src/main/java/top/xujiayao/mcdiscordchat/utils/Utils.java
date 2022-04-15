@@ -245,7 +245,7 @@ public class Utils {
 					}
 				}
 			}
-		}, 0, 5000);
+		}, 0, CONFIG.generic.msptCheckInterval);
 	}
 
 	public static void initChannelTopicMonitor() {
