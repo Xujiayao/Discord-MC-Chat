@@ -16,22 +16,22 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    modImplementation(include("net.dv8tion:JDA:5.0.0-alpha.9") {
+    modImplementation(include("net.dv8tion:JDA:5.0.0-alpha.10") {
         exclude module: 'opus-java'
     })
     modImplementation(include("net.sf.trove4j:trove4j:3.0.3"))
     modImplementation(include("org.apache.commons:commons-collections4:4.4"))
-    modImplementation(include("org.json:json:20220320"))
     modImplementation(include("com.neovisionaries:nv-websocket-client:2.14"))
     modImplementation(include("com.fasterxml.jackson.core:jackson-core:2.13.2"))
-    modImplementation(include("com.fasterxml.jackson.core:jackson-databind:2.13.2"))
+    modImplementation(include("com.fasterxml.jackson.core:jackson-databind:2.13.2.2"))
     modImplementation(include("com.fasterxml.jackson.core:jackson-annotations:2.13.2"))
 
     modImplementation(include("com.squareup.okhttp3:okhttp:4.9.3"))
     modImplementation(include("com.squareup.okio:okio:2.10.0"))
-    modImplementation(include("org.jetbrains.kotlin:kotlin-stdlib:1.6.10"))
+    modImplementation(include("org.jetbrains.kotlin:kotlin-stdlib:1.6.20"))
 
     modImplementation(include("com.vdurmont:emoji-java:5.1.1"))
+    modImplementation(include("org.json:json:20220320"))
 
     modImplementation(include("com.google.code.gson:gson:2.9.0"))
 }
