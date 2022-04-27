@@ -225,7 +225,7 @@ public class DiscordEventListener extends ListenerAdapter {
 	public void onMessageReceived(MessageReceivedEvent e) {
 		if ((e.getChannel() != CHANNEL)
 				|| (e.getAuthor() == JDA.getSelfUser())
-				|| (e.getAuthor().isBot())) {
+				|| (e.isWebhookMessage())) {
 			return;
 		}
 
