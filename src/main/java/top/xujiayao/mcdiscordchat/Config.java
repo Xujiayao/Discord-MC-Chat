@@ -35,6 +35,7 @@ public class Config {
 
 		public boolean broadcastCommandExecution = true;
 
+		public boolean allowMentions = true;
 		public boolean modifyChatMessages = true;
 
 		public boolean useServerNickname = true;

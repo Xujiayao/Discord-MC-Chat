@@ -22,6 +22,7 @@ import net.minecraft.util.Util;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import okhttp3.Response;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -102,17 +103,19 @@ public abstract class MixinServerPlayNetworkHandler {
 					}
 				}
 
-				if (contentToDiscord.contains("@")) {
-					String[] memberNames = StringUtils.substringsBetween(contentToDiscord, "@", " ");
-					if (!StringUtils.substringAfterLast(contentToDiscord, "@").contains(" ")) {
-						memberNames = ArrayUtils.add(memberNames, StringUtils.substringAfterLast(contentToDiscord, "@"));
-					}
-					for (String memberName : memberNames) {
-						for (Member member : CHANNEL.getMembers()) {
-							if (member.getUser().getName().equalsIgnoreCase(memberName)
-									|| (member.getNickname() != null && member.getNickname().equalsIgnoreCase(memberName))) {
-								contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, ("@" + memberName), member.getAsMention());
-								contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, ("@" + memberName), (Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.WHITE));
+				if (CONFIG.generic.allowMentions) {
+					if (contentToDiscord.contains("@")) {
+						String[] memberNames = StringUtils.substringsBetween(contentToDiscord, "@", " ");
+						if (!StringUtils.substringAfterLast(contentToDiscord, "@").contains(" ")) {
+							memberNames = ArrayUtils.add(memberNames, StringUtils.substringAfterLast(contentToDiscord, "@"));
+						}
+						for (String memberName : memberNames) {
+							for (Member member : CHANNEL.getMembers()) {
+								if (member.getUser().getName().equalsIgnoreCase(memberName)
+										|| (member.getNickname() != null && member.getNickname().equalsIgnoreCase(memberName))) {
+									contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, ("@" + memberName), member.getAsMention());
+									contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, ("@" + memberName), (Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.WHITE));
+								}
 							}
 						}
 					}
@@ -168,13 +171,14 @@ public abstract class MixinServerPlayNetworkHandler {
 		body.addProperty("username", (CONFIG.multiServer.enable) ? ("[" + CONFIG.multiServer.name + "] " + player.getEntityName()) : player.getEntityName());
 		body.addProperty("avatar_url", CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUuid().toString() : player.getEntityName())));
 
-		try {
-			Request request = new Request.Builder()
-					.url(CONFIG.generic.webhookUrl)
-					.post(RequestBody.create(body.toString(), MediaType.get("application/json")))
-					.build();
+		Request request = new Request.Builder()
+				.url(CONFIG.generic.webhookUrl)
+				.post(RequestBody.create(body.toString(), MediaType.get("application/json")))
+				.build();
 
-			HTTP_CLIENT.newCall(request).execute();
+		try {
+			Response response = HTTP_CLIENT.newCall(request).execute();
+			response.close();
 		} catch (Exception e) {
 			LOGGER.error(ExceptionUtils.getStackTrace(e));
 		}
