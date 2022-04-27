@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.vdurmont.emoji.EmojiManager;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.minecraft.client.option.ChatVisibility;
 import net.minecraft.network.MessageType;
@@ -105,16 +106,22 @@ public abstract class MixinServerPlayNetworkHandler {
 
 				if (CONFIG.generic.allowMentions) {
 					if (contentToDiscord.contains("@")) {
-						String[] memberNames = StringUtils.substringsBetween(contentToDiscord, "@", " ");
+						String[] names = StringUtils.substringsBetween(contentToDiscord, "@", " ");
 						if (!StringUtils.substringAfterLast(contentToDiscord, "@").contains(" ")) {
-							memberNames = ArrayUtils.add(memberNames, StringUtils.substringAfterLast(contentToDiscord, "@"));
+							names = ArrayUtils.add(names, StringUtils.substringAfterLast(contentToDiscord, "@"));
 						}
-						for (String memberName : memberNames) {
+						for (String name : names) {
 							for (Member member : CHANNEL.getMembers()) {
-								if (member.getUser().getName().equalsIgnoreCase(memberName)
-										|| (member.getNickname() != null && member.getNickname().equalsIgnoreCase(memberName))) {
-									contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, ("@" + memberName), member.getAsMention());
-									contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, ("@" + memberName), (Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.WHITE));
+								if (member.getUser().getName().equalsIgnoreCase(name)
+										|| (member.getNickname() != null && member.getNickname().equalsIgnoreCase(name))) {
+									contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, ("@" + name), member.getAsMention());
+									contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, ("@" + name), (Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.WHITE));
+								}
+							}
+							for (Role role : CHANNEL.getGuild().getRoles()) {
+								if (role.getName().equalsIgnoreCase(name)) {
+									contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, ("@" + name), role.getAsMention());
+									contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, ("@" + name), (Formatting.YELLOW + "@" + role.getName() + Formatting.WHITE));
 								}
 							}
 						}
