@@ -125,6 +125,8 @@ public abstract class MixinServerPlayNetworkHandler {
 								}
 							}
 						}
+						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, "@everyone", (Formatting.YELLOW + "@everyone" + Formatting.WHITE));
+						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, "@here", (Formatting.YELLOW + "@here" + Formatting.WHITE));
 					}
 				}
 
@@ -177,6 +179,9 @@ public abstract class MixinServerPlayNetworkHandler {
 		body.addProperty("content", (escapeMarkdown ? MarkdownSanitizer.escape(content) : content));
 		body.addProperty("username", (CONFIG.multiServer.enable) ? ("[" + CONFIG.multiServer.name + "] " + player.getEntityName()) : player.getEntityName());
 		body.addProperty("avatar_url", CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUuid().toString() : player.getEntityName())));
+		if (!CONFIG.generic.allowMentions) {
+			body.add("allowed_mentions", new Gson().fromJson("{\"parse\":[]}", JsonObject.class));
+		}
 
 		Request request = new Request.Builder()
 				.url(CONFIG.generic.webhookUrl)
