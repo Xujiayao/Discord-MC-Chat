@@ -229,6 +229,10 @@ public class DiscordEventListener extends ListenerAdapter {
 			return;
 		}
 
+		if (CONFIG.multiServer.enable && CONFIG.multiServer.botIds.contains(e.getAuthor().getId())) {
+			return;
+		}
+
 		Member referencedMember = null;
 		String memberRoleName;
 		String referencedMemberRoleName = "null";

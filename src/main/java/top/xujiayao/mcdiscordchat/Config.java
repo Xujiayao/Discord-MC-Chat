@@ -61,6 +61,7 @@ public class Config {
 		public String host = "127.0.0.1";
 		public int port = 5000;
 		public String name = "SMP";
+		public List<String> botIds = new ArrayList<>();
 	}
 
 	public static class TextsZH {
