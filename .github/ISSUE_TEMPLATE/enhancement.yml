@@ -4,9 +4,11 @@ title: "[Enhancement] "
 labels: ["enhancement"]
 body:
   - type: checkboxes
-    id: existing_issues_searched
+    id: checks
     attributes:
-      label: Existing Issues Searched
+      label: Checks
+      description: |
+        Please check that you have done the following things before submitting an issue.
       options:
         - label: I confirm that I have [searched for existing issues](https://github.com/Xujiayao/MCDiscordChat/issues?q=is%3Aissue) before reporting to avoid duplicate reporting.
           required: true

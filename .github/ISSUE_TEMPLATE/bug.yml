@@ -4,24 +4,18 @@ title: "[Bug] "
 labels: ["bug"]
 body:
   - type: checkboxes
-    id: existing_issues_searched
+    id: checks
     attributes:
-      label: Existing Issues Searched
+      label: Checks
+      description: |
+        Please check that you have done the following things before submitting an issue.
       options:
         - label: I confirm that I have [searched for existing issues](https://github.com/Xujiayao/MCDiscordChat/issues?q=is%3Aissue) before reporting to avoid duplicate reporting.
           required: true
-  - type: checkboxes
-    id: simplest_environment_tested
-    attributes:
-      label: Simplest Environment Tested
-      options:
+        - label: I confirm that this problem still exists with the [latest build version](https://github.com/Xujiayao/MCDiscordChat/actions) of MCDiscordChat.
+          required: true
         - label: I confirm that this problem still exists with only MCDiscordChat and Fabric API installed.
           required: true
-  - type: checkboxes
-    id: docs_and_changelog_read
-    attributes:
-      label: Docs and Changelog Read
-      options:
         - label: I confirm that I followed the [MCDC Docs](https://blog.xujiayao.top/posts/4ba0a17a/) and read the [Changelog](https://github.com/Xujiayao/MCDiscordChat/releases/latest), but this problem still exists.
           required: true
   - type: input
@@ -30,6 +24,7 @@ body:
       label: Java Version
       description: |
         The version of Java you are using?
+      placeholder: "Example: 17.0.3"
     validations:
       required: true
   - type: input
@@ -38,6 +33,7 @@ body:
       label: Minecraft Version
       description: |
         The version of Minecraft you are using?
+      placeholder: "Example: 1.18.2"
     validations:
       required: true
   - type: input
@@ -46,6 +42,7 @@ body:
       label: MCDiscordChat Version
       description: |
         The version of MCDiscordChat you are using?
+      placeholder: "Example: Latest build"
     validations:
       required: true
   - type: textarea
