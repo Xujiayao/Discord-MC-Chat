@@ -33,6 +33,7 @@ public class Main implements DedicatedServerModInitializer {
 	public static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
 	public static final Logger LOGGER = LoggerFactory.getLogger("MCDiscordChat");
 	public static final File CONFIG_FILE = new File(FabricLoader.getInstance().getConfigDir().toFile(), "mcdiscordchat.json");
+	public static final File CONFIG_BACKUP_FILE = new File(FabricLoader.getInstance().getConfigDir().toFile(), "mcdiscordchat-backup.json");
 	public static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("HH:mm:ss");
 	public static String VERSION;
 	public static Config CONFIG;
