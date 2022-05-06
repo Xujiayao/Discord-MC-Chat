@@ -46,6 +46,7 @@ import static top.xujiayao.mcdiscordchat.Main.LOGGER;
 import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_LAST_RESET_TIME;
 import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_SEND_COUNT;
 import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
+import static top.xujiayao.mcdiscordchat.Main.SERVER;
 
 /**
  * @author Xujiayao
@@ -165,6 +166,8 @@ public abstract class MixinServerPlayNetworkHandler {
 				List<ServerPlayerEntity> list = new ArrayList<>(server.getPlayerManager().getPlayerList());
 				list.remove(player);
 				list.forEach(serverPlayerEntity -> serverPlayerEntity.sendMessage(text, false));
+
+				SERVER.sendSystemMessage(text, player.getUuid());
 
 				sendWebhookMessage(input, true);
 				if (CONFIG.multiServer.enable) {

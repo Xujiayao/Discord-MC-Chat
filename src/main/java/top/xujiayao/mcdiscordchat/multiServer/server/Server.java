@@ -1,5 +1,7 @@
 package top.xujiayao.mcdiscordchat.multiServer.server;
 
+import top.xujiayao.mcdiscordchat.utils.Utils;
+
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashSet;
@@ -18,7 +20,9 @@ public class Server extends Thread {
 
 	public Server() throws Exception {
 		serverSocket = new ServerSocket(CONFIG.multiServer.port);
-		LOGGER.info("[MultiServer] Server has been created and is listening on port " + CONFIG.multiServer.port);
+		if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
+			Utils.sendConsoleMessage("[MultiServer] Server has been created and is listening on port " + CONFIG.multiServer.port);
+		}
 	}
 
 	@Override
