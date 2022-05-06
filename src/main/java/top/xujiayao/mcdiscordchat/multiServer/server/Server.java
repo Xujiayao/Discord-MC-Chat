@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
-import static top.xujiayao.mcdiscordchat.Main.LOGGER;
 
 /**
  * @author Xujiayao

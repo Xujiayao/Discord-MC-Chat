@@ -270,7 +270,19 @@ public class DiscordEventListener extends ListenerAdapter {
 				.replace("%roleName%", memberRoleName)
 				.replace("%message%", EmojiParser.parseToAliases(e.getMessage().getContentDisplay())));
 
-		StringBuilder referencedMessage = new StringBuilder();
+		String textBeforePlaceholder = "";
+		String textAfterPlaceholder = "";
+
+		String[] arrayParts = StringUtils.substringsBetween(TEXTS.formattedChatMessage(), "{", "}");
+		for (String arrayPart : arrayParts) {
+			if (arrayPart.contains("%message%")) {
+				textBeforePlaceholder = StringUtils.substringBefore(arrayPart, "%message%");
+				textAfterPlaceholder = StringUtils.substringAfter(arrayPart, "%message%");
+			}
+		}
+
+		StringBuilder referencedMessage;
+		String finalReferencedMessage = "";
 
 		if (e.getMessage().getReferencedMessage() != null) {
 			referencedMessage = new StringBuilder(EmojiParser.parseToAliases(e.getMessage().getReferencedMessage().getContentDisplay()));
@@ -315,6 +327,38 @@ public class DiscordEventListener extends ListenerAdapter {
 							referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), ("@" + memberName), (Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.DARK_GRAY)));
 						}
 					}
+				}
+			}
+
+			finalReferencedMessage = MarkdownParser.parseMarkdown(referencedMessage.toString());
+
+			if (finalReferencedMessage.contains("http://")) {
+				String[] links = StringUtils.substringsBetween(finalReferencedMessage, "http://", " ");
+				if (!StringUtils.substringAfterLast(finalReferencedMessage, "http://").contains(" ")) {
+					links = ArrayUtils.add(links, StringUtils.substringAfterLast(finalReferencedMessage, "http://"));
+				}
+				for (String link : links) {
+					if (link.contains("\n")) {
+						link = StringUtils.substringBefore(link, "\n");
+					}
+
+					String hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"http://" + link + "\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "http://" + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
+					finalReferencedMessage = StringUtils.replaceIgnoreCase(finalReferencedMessage, ("http://" + link), hyperlinkInsert);
+				}
+			}
+
+			if (finalReferencedMessage.contains("https://")) {
+				String[] links = StringUtils.substringsBetween(finalReferencedMessage, "https://", " ");
+				if (!StringUtils.substringAfterLast(referencedMessage.toString(), "https://").contains(" ")) {
+					links = ArrayUtils.add(links, StringUtils.substringAfterLast(referencedMessage.toString(), "https://"));
+				}
+				for (String link : links) {
+					if (link.contains("\n")) {
+						link = StringUtils.substringBefore(link, "\n");
+					}
+
+					String hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"https://" + link + "\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "https://" + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
+					finalReferencedMessage = StringUtils.replaceIgnoreCase(finalReferencedMessage, ("https://" + link), hyperlinkInsert);
 				}
 			}
 		}
@@ -364,13 +408,45 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 		}
 
+		String finalMessage = MarkdownParser.parseMarkdown(message.toString());
+
+		if (finalMessage.contains("http://")) {
+			String[] links = StringUtils.substringsBetween(finalMessage, "http://", " ");
+			if (!StringUtils.substringAfterLast(finalMessage, "http://").contains(" ")) {
+				links = ArrayUtils.add(links, StringUtils.substringAfterLast(finalMessage, "http://"));
+			}
+			for (String link : links) {
+				if (link.contains("\n")) {
+					link = StringUtils.substringBefore(link, "\n");
+				}
+
+				String hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"http://" + link + "\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "http://" + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
+				finalMessage = StringUtils.replaceIgnoreCase(finalMessage, ("http://" + link), hyperlinkInsert);
+			}
+		}
+
+		if (finalMessage.contains("https://")) {
+			String[] links = StringUtils.substringsBetween(finalMessage, "https://", " ");
+			if (!StringUtils.substringAfterLast(finalMessage, "https://").contains(" ")) {
+				links = ArrayUtils.add(links, StringUtils.substringAfterLast(finalMessage, "https://"));
+			}
+			for (String link : links) {
+				if (link.contains("\n")) {
+					link = StringUtils.substringBefore(link, "\n");
+				}
+
+				String hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"https://" + link + "\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "https://" + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
+				finalMessage = StringUtils.replaceIgnoreCase(finalMessage, ("https://" + link), hyperlinkInsert);
+			}
+		}
+
 		if (e.getMessage().getReferencedMessage() != null) {
 			Text referenceFinalText = Text.Serializer.fromJson(TEXTS.formattedResponseMessage()
 					.replace("%server%", "Discord")
 					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()).replace("\\", "\\\\") : webhookName)
 					.replace("%roleName%", referencedMemberRoleName)
 					.replace("%roleColor%", "#" + Integer.toHexString((referencedMember != null) ? referencedMember.getColorRaw() : Role.DEFAULT_COLOR_RAW))
-					.replace("%message%", MarkdownParser.parseMarkdown(referencedMessage.toString())));
+					.replace("%message%", finalReferencedMessage));
 
 			SERVER.getPlayerManager().getPlayerList().forEach(
 					player -> player.sendMessage(referenceFinalText, false));
@@ -381,7 +457,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\"))
 				.replace("%roleName%", memberRoleName)
 				.replace("%roleColor%", "#" + Integer.toHexString(Objects.requireNonNull(e.getMember()).getColorRaw()))
-				.replace("%message%", MarkdownParser.parseMarkdown(message.toString())));
+				.replace("%message%", finalMessage));
 
 		SERVER.getPlayerManager().getPlayerList().forEach(
 				player -> player.sendMessage(finalText, false));

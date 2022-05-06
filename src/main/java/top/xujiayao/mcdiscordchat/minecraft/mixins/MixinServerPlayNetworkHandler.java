@@ -1,6 +1,7 @@
 package top.xujiayao.mcdiscordchat.minecraft.mixins;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.vdurmont.emoji.EmojiManager;
 import net.dv8tion.jda.api.entities.Emote;
@@ -132,7 +133,40 @@ public abstract class MixinServerPlayNetworkHandler {
 				}
 
 				if (CONFIG.generic.modifyChatMessages) {
-					json.getAsJsonArray("with").add(MarkdownParser.parseMarkdown(contentToMinecraft));
+					contentToMinecraft = MarkdownParser.parseMarkdown(contentToMinecraft);
+
+					if (contentToMinecraft.contains("http://")) {
+						String[] links = StringUtils.substringsBetween(contentToMinecraft, "http://", " ");
+						if (!StringUtils.substringAfterLast(contentToMinecraft, "http://").contains(" ")) {
+							links = ArrayUtils.add(links, StringUtils.substringAfterLast(contentToMinecraft, "http://"));
+						}
+						for (String link : links) {
+							if (link.contains("\n")) {
+								link = StringUtils.substringBefore(link, "\n");
+							}
+
+							String hyperlinkInsert = "\"},{\"text\":\"http://" + link + "\",\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "http://" + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{\"text\":\"";
+							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, ("http://" + link), hyperlinkInsert);
+						}
+					}
+
+					if (contentToMinecraft.contains("https://")) {
+						String[] links = StringUtils.substringsBetween(contentToMinecraft, "https://", " ");
+						if (!StringUtils.substringAfterLast(contentToMinecraft, "https://").contains(" ")) {
+							links = ArrayUtils.add(links, StringUtils.substringAfterLast(contentToMinecraft, "https://"));
+						}
+
+						for (String link : links) {
+							if (link.contains("\n")) {
+								link = StringUtils.substringBefore(link, "\n");
+							}
+
+							String hyperlinkInsert = "\"},{\"text\":\"https://" + link + "\",\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "https://" + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{\"text\":\"";
+							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, ("https://" + link), hyperlinkInsert);
+						}
+					}
+
+					json.getAsJsonArray("with").add(new Gson().fromJson(("[{\"text\":\"" + contentToMinecraft + "\"}]"), JsonArray.class));
 					Text finalText = Text.Serializer.fromJson(json.toString());
 					server.getPlayerManager().broadcast(finalText, MessageType.CHAT, player.getUuid());
 					ci.cancel();

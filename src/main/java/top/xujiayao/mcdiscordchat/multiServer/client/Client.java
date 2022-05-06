@@ -5,7 +5,6 @@ import top.xujiayao.mcdiscordchat.utils.Utils;
 import java.net.Socket;
 
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
-import static top.xujiayao.mcdiscordchat.Main.LOGGER;
 
 /**
  * @author Xujiayao
