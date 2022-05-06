@@ -1,5 +1,8 @@
 package top.xujiayao.mcdiscordchat;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,8 +12,6 @@ import java.util.List;
 public class Config {
 
 	// More information + Docs: https://blog.xujiayao.top/posts/4ba0a17a/
-
-	public int version = 2;
 
 	public Generic generic = new Generic();
 	public MultiServer multiServer = new MultiServer();
@@ -69,9 +70,9 @@ public class Config {
 		public String unformattedChatMessage = "[%server%] <%name%> %message%";
 		public String unformattedOtherMessage = "[%server%] %message%";
 
-		public String formattedResponseMessage = "[{\"text\":\"    ┌──── \",\"bold\":true,\"color\":\"dark_gray\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"dark_gray\"}]";
-		public String formattedChatMessage = "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]";
-		public String formattedOtherMessage = "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]";
+		public JsonArray formattedResponseMessage = new Gson().fromJson("[{\"text\":\"    ┌──── \",\"bold\":true,\"color\":\"dark_gray\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"dark_gray\"}]", JsonArray.class);
+		public JsonArray formattedChatMessage = new Gson().fromJson("[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]", JsonArray.class);
+		public JsonArray formattedOtherMessage = new Gson().fromJson("[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]", JsonArray.class);
 
 		public String serverStarted = "**服务器已启动！**";
 		public String serverStopped = "**服务器已关闭！**";
@@ -101,9 +102,9 @@ public class Config {
 		public String unformattedChatMessage = "[%server%] <%name%> %message%";
 		public String unformattedOtherMessage = "[%server%] %message%";
 
-		public String formattedResponseMessage = "[{\"text\":\"    ┌──── \",\"bold\":true,\"color\":\"dark_gray\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"dark_gray\"}]";
-		public String formattedChatMessage = "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]";
-		public String formattedOtherMessage = "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]";
+		public JsonArray formattedResponseMessage = new Gson().fromJson("[{\"text\":\"    ┌──── \",\"bold\":true,\"color\":\"dark_gray\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"dark_gray\"}]", JsonArray.class);
+		public JsonArray formattedChatMessage = new Gson().fromJson("[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]", JsonArray.class);
+		public JsonArray formattedOtherMessage = new Gson().fromJson("[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]", JsonArray.class);
 
 		public String serverStarted = "**Server started!**";
 		public String serverStopped = "**Server stopped!**";
