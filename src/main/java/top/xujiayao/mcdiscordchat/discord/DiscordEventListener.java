@@ -367,7 +367,7 @@ public class DiscordEventListener extends ListenerAdapter {
 		if (e.getMessage().getReferencedMessage() != null) {
 			Text referenceFinalText = Text.Serializer.fromJson(TEXTS.formattedResponseMessage()
 					.replace("%server%", "Discord")
-					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : webhookName)
+					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()).replace("\\", "\\\\") : webhookName)
 					.replace("%roleName%", referencedMemberRoleName)
 					.replace("%roleColor%", "#" + Integer.toHexString((referencedMember != null) ? referencedMember.getColorRaw() : Role.DEFAULT_COLOR_RAW))
 					.replace("%message%", MarkdownParser.parseMarkdown(referencedMessage.toString())));
@@ -378,7 +378,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
 		Text finalText = Text.Serializer.fromJson(TEXTS.formattedChatMessage()
 				.replace("%server%", "Discord")
-				.replace("%name%", CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName())
+				.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\"))
 				.replace("%roleName%", memberRoleName)
 				.replace("%roleColor%", "#" + Integer.toHexString(Objects.requireNonNull(e.getMember()).getColorRaw()))
 				.replace("%message%", MarkdownParser.parseMarkdown(message.toString())));
