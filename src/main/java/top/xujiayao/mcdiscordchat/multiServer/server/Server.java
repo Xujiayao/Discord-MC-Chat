@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
+import static top.xujiayao.mcdiscordchat.Main.LOGGER;
 
 /**
  * @author Xujiayao
@@ -19,6 +20,7 @@ public class Server extends Thread {
 
 	public Server() throws Exception {
 		serverSocket = new ServerSocket(CONFIG.multiServer.port);
+		LOGGER.info("[MultiServer] Server has been created and is listening on port " + CONFIG.multiServer.port);
 		if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
 			Utils.sendConsoleMessage("[MultiServer] Server has been created and is listening on port " + CONFIG.multiServer.port);
 		}
