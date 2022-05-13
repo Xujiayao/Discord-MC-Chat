@@ -52,11 +52,10 @@ public class UserThread extends Thread {
 
 				server.broadcast(message, this);
 			}
-
-			stopUserThread();
-		} catch (Exception e) {
-			stopUserThread();
+		} catch (Exception ignored) {
 		}
+
+		stopUserThread();
 	}
 
 	public void sendMessage(String message) {
