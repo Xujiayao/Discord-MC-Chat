@@ -53,9 +53,9 @@ public class UserThread extends Thread {
 				server.broadcast(message, this);
 			}
 
-			remove(true);
+			stopUserThread();
 		} catch (Exception e) {
-			remove(true);
+			stopUserThread();
 		}
 	}
 
@@ -63,14 +63,12 @@ public class UserThread extends Thread {
 		writer.println(message);
 	}
 
-	public void remove(boolean shouldRemoveList) {
+	public void stopUserThread() {
 		try {
 			socket.close();
 			reader.close();
 
-			if (shouldRemoveList) {
-				server.removeUser(this);
-			}
+			server.users.removeIf(element -> element == this);
 		} catch (Exception e) {
 			LOGGER.error(ExceptionUtils.getStackTrace(e));
 		}

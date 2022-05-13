@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import top.xujiayao.mcdiscordchat.multiServer.client.Client;
 import top.xujiayao.mcdiscordchat.multiServer.server.Server;
+import top.xujiayao.mcdiscordchat.multiServer.server.UserThread;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -129,7 +130,7 @@ public class MultiServer extends Thread {
 			client.socket.close();
 
 			if (server != null) {
-				server.users.forEach(userThread -> userThread.remove(false));
+				server.users.forEach(UserThread::stopUserThread);
 				server.serverSocket.close();
 			}
 		} catch (Exception e) {

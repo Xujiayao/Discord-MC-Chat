@@ -142,14 +142,14 @@ public class DiscordEventListener extends ListenerAdapter {
 			case "reload" -> {
 				if (CONFIG.generic.adminsIds.contains(Objects.requireNonNull(e.getMember()).getId())) {
 					try {
+						MSPT_MONITOR_TIMER.cancel();
+						CHANNEL_TOPIC_MONITOR_TIMER.cancel();
+						CHECK_UPDATE_TIMER.cancel();
+
 						if (CONFIG.multiServer.enable) {
 							MULTI_SERVER.bye();
 							MULTI_SERVER.stopMultiServer();
 						}
-
-						MSPT_MONITOR_TIMER.cancel();
-						CHANNEL_TOPIC_MONITOR_TIMER.cancel();
-						CHECK_UPDATE_TIMER.cancel();
 
 						ConfigManager.init(true);
 
