@@ -34,7 +34,7 @@ This version has a significant change compared with previous versions. Please ma
 - Add the ability to customize the interval of timers
   添加自定义定时器间隔的功能
 
-- Add switch to disable @ mentions in game
+- Add switch to disable @ mentions in game (#31)
   添加游戏内禁用 @ 提及的开关
 
 - Add the ability to mention roles in game
@@ -63,7 +63,7 @@ This version has a significant change compared with previous versions. Please ma
 - Fix advancements does not send correctly (#30)
   修复进度发送错误的问题
 
-- Allow processing of messages sent by bots (except webhooks)
+- Allow processing of messages sent by bots (except webhooks) (#32)
   允许处理机器人发送的消息（Webhook 除外）
 
 ## Removed 移除
