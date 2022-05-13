@@ -38,6 +38,7 @@ import java.util.TimerTask;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL_TOPIC_MONITOR_TIMER;
+import static top.xujiayao.mcdiscordchat.Main.CHECK_UPDATE_TIMER;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
 import static top.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.JDA;
@@ -148,6 +149,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
 						MSPT_MONITOR_TIMER.cancel();
 						CHANNEL_TOPIC_MONITOR_TIMER.cancel();
+						CHECK_UPDATE_TIMER.cancel();
 
 						ConfigManager.init(true);
 
@@ -161,6 +163,13 @@ public class DiscordEventListener extends ListenerAdapter {
 						}
 
 						Utils.updateBotCommands();
+
+						String message = Utils.checkUpdate(false);
+						if (!message.isEmpty()) {
+							CHANNEL.sendMessage(message).queue();
+						}
+						CHECK_UPDATE_TIMER = new Timer();
+						Utils.initCheckUpdateTimer();
 
 						if (CONFIG.generic.announceHighMspt) {
 							MSPT_MONITOR_TIMER = new Timer();

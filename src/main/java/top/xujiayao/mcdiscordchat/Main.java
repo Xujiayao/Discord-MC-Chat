@@ -46,6 +46,7 @@ public class Main implements DedicatedServerModInitializer {
 	public static MinecraftServer SERVER;
 	public static Timer MSPT_MONITOR_TIMER = new Timer();
 	public static Timer CHANNEL_TOPIC_MONITOR_TIMER = new Timer();
+	public static Timer CHECK_UPDATE_TIMER = new Timer();
 	public static MultiServer MULTI_SERVER;
 	public static String SERVER_STARTED_TIME;
 
@@ -104,6 +105,7 @@ public class Main implements DedicatedServerModInitializer {
 			if (!message.isEmpty()) {
 				CHANNEL.sendMessage(message).queue();
 			}
+			Utils.initCheckUpdateTimer();
 
 			if (CONFIG.generic.announceHighMspt) {
 				Utils.initMsptMonitor();
@@ -121,6 +123,7 @@ public class Main implements DedicatedServerModInitializer {
 		ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
 			MSPT_MONITOR_TIMER.cancel();
 			CHANNEL_TOPIC_MONITOR_TIMER.cancel();
+			CHECK_UPDATE_TIMER.cancel();
 
 			if (CONFIG.multiServer.enable) {
 				MULTI_SERVER.sendMessage(false, false, null, TEXTS.serverStopped());

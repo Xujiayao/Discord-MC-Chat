@@ -26,6 +26,7 @@ import java.util.TimerTask;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL_TOPIC_MONITOR_TIMER;
+import static top.xujiayao.mcdiscordchat.Main.CHECK_UPDATE_TIMER;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
 import static top.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.HTTP_CLIENT;
@@ -266,6 +267,18 @@ public class Utils {
 				}
 			}
 		}, 0, CONFIG.generic.channelTopicUpdateInterval);
+	}
+
+	public static void initCheckUpdateTimer() {
+		CHECK_UPDATE_TIMER.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				String message = checkUpdate(false);
+				if (!message.isEmpty()) {
+					CHANNEL.sendMessage(message).queue();
+				}
+			}
+		}, 21600000, 21600000);
 	}
 
 	public static void sendConsoleMessage(String consoleMessage) {
