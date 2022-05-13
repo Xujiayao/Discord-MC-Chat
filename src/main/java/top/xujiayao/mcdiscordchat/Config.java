@@ -92,7 +92,7 @@ public class Config {
 
 		public String offlineChannelTopic = ":x: 服务器离线 | 最后更新于：<t:%lastUpdateTime%:f>";
 		public String onlineChannelTopic = ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% 位玩家在线 | 服务器玩家总数：%uniquePlayerCount% | 服务器于 <t:%serverStartedTime%:R> 启动 | 最后更新于：<t:%lastUpdateTime%:f>";
-		public String onlineChannelTopicForMultiServer = ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% 位玩家在线 | 服务器玩家总数：%uniquePlayerCount% | %onlineServerCount% 个服务器在线 [%onlineServerList%] | 服务器于 <t:%serverStartedTime%:R> 启动> | 最后更新于：<t:%lastUpdateTime%:f>";
+		public String onlineChannelTopicForMultiServer = ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% 位玩家在线 | 服务器玩家总数：%uniquePlayerCount% | %onlineServerCount% 个服务器在线 [%onlineServerList%] | 服务器于 <t:%serverStartedTime%:R> 启动 | 最后更新于：<t:%lastUpdateTime%:f>";
 	}
 
 	public static class TextsEN {

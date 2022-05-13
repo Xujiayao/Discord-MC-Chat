@@ -1,5 +1,7 @@
 package top.xujiayao.mcdiscordchat.multiServer.server;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.BufferedReader;
@@ -10,6 +12,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
 import static top.xujiayao.mcdiscordchat.Main.LOGGER;
+import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
 
 /**
  * @author Xujiayao
@@ -40,6 +43,11 @@ public class UserThread extends Thread {
 					reader.close();
 					socket.close();
 					break;
+				}
+
+				if (message.startsWith("channelTopicInfo")) {
+					MULTI_SERVER.channelTopicInfoList.add(new Gson().fromJson(message.replace("channelTopicInfo", ""), JsonObject.class));
+					continue;
 				}
 
 				server.broadcast(message, this);

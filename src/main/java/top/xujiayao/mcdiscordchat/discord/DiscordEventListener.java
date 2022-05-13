@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Timer;
+import java.util.TimerTask;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL_TOPIC_MONITOR_TIMER;
@@ -166,14 +167,23 @@ public class DiscordEventListener extends ListenerAdapter {
 							Utils.initMsptMonitor();
 						}
 
-						if (CONFIG.generic.updateChannelTopic) {
-							CHANNEL_TOPIC_MONITOR_TIMER = new Timer();
-							Utils.initChannelTopicMonitor();
-						}
-
 						if (CONFIG.multiServer.enable) {
 							MULTI_SERVER = new MultiServer();
 							MULTI_SERVER.start();
+						}
+
+						if (CONFIG.generic.updateChannelTopic) {
+							CHANNEL_TOPIC_MONITOR_TIMER = new Timer();
+							new Timer().schedule(new TimerTask() {
+								@Override
+								public void run() {
+									if (!CONFIG.multiServer.enable) {
+										Utils.initChannelTopicMonitor();
+									} else if (MULTI_SERVER.server != null) {
+										MULTI_SERVER.initMultiServerChannelTopicMonitor();
+									}
+								}
+							}, 2000);
 						}
 
 						e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**Config file reloaded successfully!**" : "**配置文件重新加载成功！**").queue();

@@ -39,6 +39,10 @@ public class Server extends Thread {
 		}
 	}
 
+	public void broadcast(String message) {
+		users.forEach(userThread -> userThread.sendMessage(message));
+	}
+
 	public void broadcast(String message, UserThread excludeUserThread) {
 		users.forEach(userThread -> {
 			if (userThread != excludeUserThread) {
