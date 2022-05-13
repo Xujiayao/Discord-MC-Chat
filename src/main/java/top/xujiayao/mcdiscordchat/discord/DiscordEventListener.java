@@ -171,8 +171,8 @@ public class DiscordEventListener extends ListenerAdapter {
 						CHECK_UPDATE_TIMER = new Timer();
 						Utils.initCheckUpdateTimer();
 
+						MSPT_MONITOR_TIMER = new Timer();
 						if (CONFIG.generic.announceHighMspt) {
-							MSPT_MONITOR_TIMER = new Timer();
 							Utils.initMsptMonitor();
 						}
 
@@ -181,8 +181,8 @@ public class DiscordEventListener extends ListenerAdapter {
 							MULTI_SERVER.start();
 						}
 
+						CHANNEL_TOPIC_MONITOR_TIMER = new Timer();
 						if (CONFIG.generic.updateChannelTopic) {
-							CHANNEL_TOPIC_MONITOR_TIMER = new Timer();
 							new Timer().schedule(new TimerTask() {
 								@Override
 								public void run() {
