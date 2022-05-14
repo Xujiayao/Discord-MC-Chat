@@ -2,6 +2,7 @@ package top.xujiayao.mcdiscordchat.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -10,17 +11,22 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.MathHelper;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
+import java.io.File;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.TimerTask;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
+import static top.xujiayao.mcdiscordchat.Main.CHANNEL_TOPIC_MONITOR_TIMER;
+import static top.xujiayao.mcdiscordchat.Main.CHECK_UPDATE_TIMER;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
 import static top.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.HTTP_CLIENT;
@@ -31,6 +37,7 @@ import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_SEND_COUNT;
 import static top.xujiayao.mcdiscordchat.Main.MSPT_MONITOR_TIMER;
 import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
 import static top.xujiayao.mcdiscordchat.Main.SERVER;
+import static top.xujiayao.mcdiscordchat.Main.SERVER_STARTED_TIME;
 import static top.xujiayao.mcdiscordchat.Main.SIMPLE_DATE_FORMAT;
 import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 import static top.xujiayao.mcdiscordchat.Main.VERSION;
@@ -87,7 +94,10 @@ public class Utils {
 					message.append("\n\n");
 					message.append(latestJson.get("changelog").getAsString());
 					message.append("\n\n");
-					message.append(adminsMentionString());
+
+					if (CONFIG.generic.mentionAdmins) {
+						message.append(adminsMentionString());
+					}
 
 					return message.toString();
 				} else {
@@ -114,21 +124,23 @@ public class Utils {
 		List<ServerPlayerEntity> onlinePlayers = SERVER.getPlayerManager().getPlayerList();
 		message.append(CONFIG.generic.useEngInsteadOfChin ? "Online players (" : "在线玩家 (")
 				.append(onlinePlayers.size())
+				.append("/")
+				.append(SERVER.getPlayerManager().getMaxPlayerCount())
 				.append(")")
 				.append(CONFIG.generic.useEngInsteadOfChin ? ":" : "：")
 				.append("\n");
 
 		if (onlinePlayers.isEmpty()) {
-			message.append(CONFIG.generic.useEngInsteadOfChin ? "No players online!" : "当前没有在线玩家！");
+			message.append(CONFIG.generic.useEngInsteadOfChin ? "No players online!\n" : "当前没有在线玩家！\n");
 		} else {
 			for (ServerPlayerEntity player : onlinePlayers) {
-				message.append("[").append(player.pingMilliseconds).append("ms] ").append(player.getEntityName());
+				message.append("[").append(player.pingMilliseconds).append("ms] ").append(player.getEntityName()).append("\n");
 			}
 		}
 
 		// Server TPS
 		double serverTickTime = MathHelper.average(SERVER.lastTickLengths) * 1.0E-6D;
-		message.append(CONFIG.generic.useEngInsteadOfChin ? "\n\nServer TPS:\n" : "\n\n服务器 TPS：\n")
+		message.append(CONFIG.generic.useEngInsteadOfChin ? "\nServer TPS:\n" : "\n服务器 TPS：\n")
 				.append(Math.min(1000.0 / serverTickTime, 20));
 
 		// Server MSPT
@@ -149,7 +161,13 @@ public class Utils {
 
 	public static void reloadTexts() {
 		if (CONFIG.generic.useEngInsteadOfChin) {
-			TEXTS = new Texts(CONFIG.textsEN.serverStarted,
+			TEXTS = new Texts(CONFIG.textsEN.unformattedResponseMessage,
+					CONFIG.textsEN.unformattedChatMessage,
+					CONFIG.textsEN.unformattedOtherMessage,
+					new Gson().toJson(CONFIG.textsEN.formattedResponseMessage),
+					new Gson().toJson(CONFIG.textsEN.formattedChatMessage),
+					new Gson().toJson(CONFIG.textsEN.formattedOtherMessage),
+					CONFIG.textsEN.serverStarted,
 					CONFIG.textsEN.serverStopped,
 					CONFIG.textsEN.joinServer,
 					CONFIG.textsEN.leftServer,
@@ -158,9 +176,18 @@ public class Utils {
 					CONFIG.textsEN.advancementChallenge,
 					CONFIG.textsEN.advancementGoal,
 					CONFIG.textsEN.highMspt,
-					CONFIG.textsEN.consoleLogMessage);
+					CONFIG.textsEN.consoleLogMessage,
+					CONFIG.textsEN.offlineChannelTopic,
+					CONFIG.textsEN.onlineChannelTopic,
+					CONFIG.textsEN.onlineChannelTopicForMultiServer);
 		} else {
-			TEXTS = new Texts(CONFIG.textsZH.serverStarted,
+			TEXTS = new Texts(CONFIG.textsZH.unformattedResponseMessage,
+					CONFIG.textsZH.unformattedChatMessage,
+					CONFIG.textsZH.unformattedOtherMessage,
+					new Gson().toJson(CONFIG.textsZH.formattedResponseMessage),
+					new Gson().toJson(CONFIG.textsZH.formattedChatMessage),
+					new Gson().toJson(CONFIG.textsZH.formattedOtherMessage),
+					CONFIG.textsZH.serverStarted,
 					CONFIG.textsZH.serverStopped,
 					CONFIG.textsZH.joinServer,
 					CONFIG.textsZH.leftServer,
@@ -169,7 +196,10 @@ public class Utils {
 					CONFIG.textsZH.advancementChallenge,
 					CONFIG.textsZH.advancementGoal,
 					CONFIG.textsZH.highMspt,
-					CONFIG.textsZH.consoleLogMessage);
+					CONFIG.textsZH.consoleLogMessage,
+					CONFIG.textsZH.offlineChannelTopic,
+					CONFIG.textsZH.onlineChannelTopic,
+					CONFIG.textsZH.onlineChannelTopicForMultiServer);
 		}
 	}
 
@@ -216,11 +246,43 @@ public class Utils {
 					}
 				}
 			}
-		}, 0, 5000);
+		}, 0, CONFIG.generic.msptCheckInterval);
 	}
 
-	public static void sendConsoleMessage(StringBuilder consoleMessage) {
-		LOGGER.info(consoleMessage.toString());
+	public static void initChannelTopicMonitor() {
+		CHANNEL_TOPIC_MONITOR_TIMER.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				String topic = TEXTS.onlineChannelTopic()
+						.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerManager().getPlayerList().size()))
+						.replace("%maxPlayerCount%", Integer.toString(SERVER.getPlayerManager().getMaxPlayerCount()))
+						.replace("%uniquePlayerCount%", Integer.toString(FileUtils.listFiles(new File((SERVER.getSaveProperties().getLevelName() + "/stats/")), null, false).size()))
+						.replace("%serverStartedTime%", SERVER_STARTED_TIME)
+						.replace("%lastUpdateTime%", Long.toString(Instant.now().getEpochSecond()));
+
+				CHANNEL.getManager().setTopic(topic).queue();
+
+				if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
+					CONSOLE_LOG_CHANNEL.getManager().setTopic(topic).queue();
+				}
+			}
+		}, 0, CONFIG.generic.channelTopicUpdateInterval);
+	}
+
+	public static void initCheckUpdateTimer() {
+		CHECK_UPDATE_TIMER.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				String message = checkUpdate(false);
+				if (!message.isEmpty()) {
+					CHANNEL.sendMessage(message).queue();
+				}
+			}
+		}, 21600000, 21600000);
+	}
+
+	public static void sendConsoleMessage(String consoleMessage) {
+		LOGGER.info(consoleMessage);
 
 		if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
 			if ((System.currentTimeMillis() - MINECRAFT_LAST_RESET_TIME) > 20000) {
@@ -232,9 +294,19 @@ public class Utils {
 			if (MINECRAFT_SEND_COUNT <= 20) {
 				CONSOLE_LOG_CHANNEL.sendMessage(TEXTS.consoleLogMessage()
 						.replace("%time%", SIMPLE_DATE_FORMAT.format(new Date()))
-						.replace("%message%", MarkdownSanitizer.escape(consoleMessage.toString()))).queue();
+						.replace("%message%", MarkdownSanitizer.escape(consoleMessage))).queue();
 			}
 		}
+	}
+
+	public static void testJsonValid() throws JsonSyntaxException {
+		new Gson().fromJson(CONFIG.textsZH.formattedResponseMessage, Object.class);
+		new Gson().fromJson(CONFIG.textsZH.formattedChatMessage, Object.class);
+		new Gson().fromJson(CONFIG.textsZH.formattedOtherMessage, Object.class);
+
+		new Gson().fromJson(CONFIG.textsEN.formattedResponseMessage, Object.class);
+		new Gson().fromJson(CONFIG.textsEN.formattedChatMessage, Object.class);
+		new Gson().fromJson(CONFIG.textsEN.formattedOtherMessage, Object.class);
 	}
 
 	public static void setMcdcVersion() {

@@ -9,13 +9,14 @@ import com.vdurmont.emoji.EmojiParser;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.LiteralText;
-import net.minecraft.text.TextColor;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
@@ -37,8 +38,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Timer;
+import java.util.TimerTask;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
+import static top.xujiayao.mcdiscordchat.Main.CHANNEL_TOPIC_MONITOR_TIMER;
+import static top.xujiayao.mcdiscordchat.Main.CHECK_UPDATE_TIMER;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
 import static top.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.JDA;
@@ -46,6 +50,7 @@ import static top.xujiayao.mcdiscordchat.Main.LOGGER;
 import static top.xujiayao.mcdiscordchat.Main.MSPT_MONITOR_TIMER;
 import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
 import static top.xujiayao.mcdiscordchat.Main.SERVER;
+import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 
 public class DiscordEventListener extends ListenerAdapter {
 
@@ -61,7 +66,9 @@ public class DiscordEventListener extends ListenerAdapter {
 		switch (e.getName()) {
 			case "info" -> {
 				e.getHook().sendMessage(Utils.getInfoCommandMessage()).queue();
-				MULTI_SERVER.sendMessage(true, false, null, "info");
+				if (CONFIG.multiServer.enable) {
+					MULTI_SERVER.sendMessage(true, false, null, "{\"type\":\"info\"}");
+				}
 			}
 			case "help" -> e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? """
 					```
@@ -139,12 +146,18 @@ public class DiscordEventListener extends ListenerAdapter {
 			case "reload" -> {
 				if (CONFIG.generic.adminsIds.contains(Objects.requireNonNull(e.getMember()).getId())) {
 					try {
+						MSPT_MONITOR_TIMER.cancel();
+						CHANNEL_TOPIC_MONITOR_TIMER.cancel();
+						CHECK_UPDATE_TIMER.cancel();
+
 						if (CONFIG.multiServer.enable) {
 							MULTI_SERVER.bye();
 							MULTI_SERVER.stopMultiServer();
 						}
 
-						ConfigManager.init();
+						ConfigManager.init(true);
+
+						Utils.testJsonValid();
 
 						Utils.setBotActivity();
 
@@ -155,15 +168,35 @@ public class DiscordEventListener extends ListenerAdapter {
 
 						Utils.updateBotCommands();
 
-						MSPT_MONITOR_TIMER.cancel();
+						String message = Utils.checkUpdate(false);
+						if (!message.isEmpty()) {
+							CHANNEL.sendMessage(message).queue();
+						}
+						CHECK_UPDATE_TIMER = new Timer();
+						Utils.initCheckUpdateTimer();
+
+						MSPT_MONITOR_TIMER = new Timer();
 						if (CONFIG.generic.announceHighMspt) {
-							MSPT_MONITOR_TIMER = new Timer();
 							Utils.initMsptMonitor();
 						}
 
 						if (CONFIG.multiServer.enable) {
 							MULTI_SERVER = new MultiServer();
 							MULTI_SERVER.start();
+						}
+
+						CHANNEL_TOPIC_MONITOR_TIMER = new Timer();
+						if (CONFIG.generic.updateChannelTopic) {
+							new Timer().schedule(new TimerTask() {
+								@Override
+								public void run() {
+									if (!CONFIG.multiServer.enable) {
+										Utils.initChannelTopicMonitor();
+									} else if (MULTI_SERVER.server != null) {
+										MULTI_SERVER.initMultiServerChannelTopicMonitor();
+									}
+								}
+							}, 2000);
 						}
 
 						e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**Config file reloaded successfully!**" : "**配置文件重新加载成功！**").queue();
@@ -215,19 +248,145 @@ public class DiscordEventListener extends ListenerAdapter {
 	public void onMessageReceived(MessageReceivedEvent e) {
 		if ((e.getChannel() != CHANNEL)
 				|| (e.getAuthor() == JDA.getSelfUser())
-				|| (e.getAuthor().isBot())) {
+				|| (e.isWebhookMessage())) {
 			return;
 		}
 
+		if (CONFIG.multiServer.enable && CONFIG.multiServer.botIds.contains(e.getAuthor().getId())) {
+			return;
+		}
+
+		Member referencedMember = null;
+		String memberRoleName;
+		String referencedMemberRoleName = "null";
+		String webhookName = "null";
+
+		if (e.getMessage().getReferencedMessage() != null) {
+			try {
+				referencedMember = Objects.requireNonNull(e.getMessage().getReferencedMessage().getMember());
+			} catch (Exception ex) {
+				webhookName = e.getMessage().getReferencedMessage().getAuthor().getName();
+			}
+
+			try {
+				referencedMemberRoleName = Objects.requireNonNull(referencedMember).getRoles().get(0).getName();
+			} catch (Exception ex) {
+				referencedMemberRoleName = "null";
+			}
+
+			Utils.sendConsoleMessage(TEXTS.unformattedResponseMessage()
+					.replace("%server%", "Discord")
+					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : webhookName)
+					.replace("%roleName%", referencedMemberRoleName)
+					.replace("%message%", EmojiParser.parseToAliases(e.getMessage().getReferencedMessage().getContentDisplay())));
+		}
+
+		try {
+			memberRoleName = Objects.requireNonNull(e.getMember()).getRoles().get(0).getName();
+		} catch (Exception ex) {
+			memberRoleName = "null";
+		}
+
+		Utils.sendConsoleMessage(TEXTS.unformattedChatMessage()
+				.replace("%server%", "Discord")
+				.replace("%name%", CONFIG.generic.useServerNickname ? Objects.requireNonNull(e.getMember()).getEffectiveName() : Objects.requireNonNull(e.getMember()).getUser().getName())
+				.replace("%roleName%", memberRoleName)
+				.replace("%message%", EmojiParser.parseToAliases(e.getMessage().getContentDisplay())));
+
+		String textBeforePlaceholder = "";
+		String textAfterPlaceholder = "";
+
+		String[] arrayParts = StringUtils.substringsBetween(TEXTS.formattedChatMessage(), "{", "}");
+		for (String arrayPart : arrayParts) {
+			if (arrayPart.contains("%message%")) {
+				textBeforePlaceholder = StringUtils.substringBefore(arrayPart, "%message%");
+				textAfterPlaceholder = StringUtils.substringAfter(arrayPart, "%message%");
+			}
+		}
+
+		StringBuilder referencedMessage;
+		String finalReferencedMessage = "";
+
+		if (e.getMessage().getReferencedMessage() != null) {
+			referencedMessage = new StringBuilder(EmojiParser.parseToAliases(e.getMessage().getReferencedMessage().getContentDisplay()));
+
+			if (!e.getMessage().getReferencedMessage().getAttachments().isEmpty()) {
+				if (!e.getMessage().getReferencedMessage().getContentDisplay().isBlank()) {
+					referencedMessage.append(" ");
+				}
+				for (Message.Attachment attachment : e.getMessage().getReferencedMessage().getAttachments()) {
+					referencedMessage.append(Formatting.YELLOW).append(attachment.isSpoiler() ? "<SPOILER_" : "<");
+					if (attachment.isImage()) {
+						referencedMessage.append("image>");
+					} else if (attachment.isVideo()) {
+						referencedMessage.append("video>");
+					} else {
+						referencedMessage.append("file>");
+					}
+				}
+			}
+
+			if (StringUtils.countMatches(referencedMessage, ":") >= 2) {
+				String[] emoteNames = StringUtils.substringsBetween(referencedMessage.toString(), ":", ":");
+				for (String emoteName : emoteNames) {
+					List<Emote> emotes = JDA.getEmotesByName(emoteName, true);
+					if (!emotes.isEmpty()) {
+						referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emoteName + ":"), (Formatting.YELLOW + ":" + emoteName + ":" + Formatting.DARK_GRAY)));
+					} else if (EmojiManager.getForAlias(emoteName) != null) {
+						referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emoteName + ":"), (Formatting.YELLOW + ":" + emoteName + ":" + Formatting.DARK_GRAY)));
+					}
+				}
+			}
+
+			if (referencedMessage.toString().contains("@")) {
+				String[] memberNames = StringUtils.substringsBetween(referencedMessage.toString(), "@", " ");
+				if (!StringUtils.substringAfterLast(referencedMessage.toString(), "@").contains(" ")) {
+					memberNames = ArrayUtils.add(memberNames, StringUtils.substringAfterLast(referencedMessage.toString(), "@"));
+				}
+				for (String memberName : memberNames) {
+					for (Member member : CHANNEL.getMembers()) {
+						if (member.getUser().getName().equalsIgnoreCase(memberName)
+								|| (member.getNickname() != null && member.getNickname().equalsIgnoreCase(memberName))) {
+							referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), ("@" + memberName), (Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.DARK_GRAY)));
+						}
+					}
+				}
+			}
+
+			finalReferencedMessage = MarkdownParser.parseMarkdown(referencedMessage.toString());
+
+			if (finalReferencedMessage.contains("http://")) {
+				String[] links = StringUtils.substringsBetween(finalReferencedMessage, "http://", " ");
+				if (!StringUtils.substringAfterLast(finalReferencedMessage, "http://").contains(" ")) {
+					links = ArrayUtils.add(links, StringUtils.substringAfterLast(finalReferencedMessage, "http://"));
+				}
+				for (String link : links) {
+					if (link.contains("\n")) {
+						link = StringUtils.substringBefore(link, "\n");
+					}
+
+					String hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"http://" + link + "\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "http://" + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
+					finalReferencedMessage = StringUtils.replaceIgnoreCase(finalReferencedMessage, ("http://" + link), hyperlinkInsert);
+				}
+			}
+
+			if (finalReferencedMessage.contains("https://")) {
+				String[] links = StringUtils.substringsBetween(finalReferencedMessage, "https://", " ");
+				if (!StringUtils.substringAfterLast(referencedMessage.toString(), "https://").contains(" ")) {
+					links = ArrayUtils.add(links, StringUtils.substringAfterLast(referencedMessage.toString(), "https://"));
+				}
+				for (String link : links) {
+					if (link.contains("\n")) {
+						link = StringUtils.substringBefore(link, "\n");
+					}
+
+					String hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"https://" + link + "\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "https://" + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
+					finalReferencedMessage = StringUtils.replaceIgnoreCase(finalReferencedMessage, ("https://" + link), hyperlinkInsert);
+				}
+			}
+		}
+
 		StringBuilder message = new StringBuilder(EmojiParser.parseToAliases(e.getMessage().getContentDisplay()));
-
-		StringBuilder consoleMessage = new StringBuilder()
-				.append("[Discord] <")
-				.append(Objects.requireNonNull(e.getMember()).getEffectiveName())
-				.append("> ")
-				.append(message);
-
-		Utils.sendConsoleMessage(consoleMessage);
 
 		if (!e.getMessage().getAttachments().isEmpty()) {
 			if (!e.getMessage().getContentDisplay().isBlank()) {
@@ -272,16 +431,58 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 		}
 
-		String mcdcText = String.valueOf(Formatting.BLUE) + Formatting.BOLD + "[Discord] " + Formatting.RESET;
+		String finalMessage = MarkdownParser.parseMarkdown(message.toString());
 
-		LiteralText roleText = new LiteralText("<" + Objects.requireNonNull(e.getMember()).getEffectiveName() + "> ");
-		roleText.setStyle(roleText.getStyle().withColor(TextColor.fromRgb(Objects.requireNonNull(e.getMember()).getColorRaw())));
+		if (finalMessage.contains("http://")) {
+			String[] links = StringUtils.substringsBetween(finalMessage, "http://", " ");
+			if (!StringUtils.substringAfterLast(finalMessage, "http://").contains(" ")) {
+				links = ArrayUtils.add(links, StringUtils.substringAfterLast(finalMessage, "http://"));
+			}
+			for (String link : links) {
+				if (link.contains("\n")) {
+					link = StringUtils.substringBefore(link, "\n");
+				}
 
-		StringBuilder finalMessage = message;
+				String hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"http://" + link + "\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "http://" + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
+				finalMessage = StringUtils.replaceIgnoreCase(finalMessage, ("http://" + link), hyperlinkInsert);
+			}
+		}
+
+		if (finalMessage.contains("https://")) {
+			String[] links = StringUtils.substringsBetween(finalMessage, "https://", " ");
+			if (!StringUtils.substringAfterLast(finalMessage, "https://").contains(" ")) {
+				links = ArrayUtils.add(links, StringUtils.substringAfterLast(finalMessage, "https://"));
+			}
+			for (String link : links) {
+				if (link.contains("\n")) {
+					link = StringUtils.substringBefore(link, "\n");
+				}
+
+				String hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"https://" + link + "\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "https://" + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
+				finalMessage = StringUtils.replaceIgnoreCase(finalMessage, ("https://" + link), hyperlinkInsert);
+			}
+		}
+
+		if (e.getMessage().getReferencedMessage() != null) {
+			Text referenceFinalText = Text.Serializer.fromJson(TEXTS.formattedResponseMessage()
+					.replace("%server%", "Discord")
+					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()).replace("\\", "\\\\") : webhookName)
+					.replace("%roleName%", referencedMemberRoleName)
+					.replace("%roleColor%", "#" + Integer.toHexString((referencedMember != null) ? referencedMember.getColorRaw() : Role.DEFAULT_COLOR_RAW))
+					.replace("%message%", finalReferencedMessage));
+
+			SERVER.getPlayerManager().getPlayerList().forEach(
+					player -> player.sendMessage(referenceFinalText, false));
+		}
+
+		Text finalText = Text.Serializer.fromJson(TEXTS.formattedChatMessage()
+				.replace("%server%", "Discord")
+				.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\"))
+				.replace("%roleName%", memberRoleName)
+				.replace("%roleColor%", "#" + Integer.toHexString(Objects.requireNonNull(e.getMember()).getColorRaw()))
+				.replace("%message%", finalMessage));
+
 		SERVER.getPlayerManager().getPlayerList().forEach(
-				player -> player.sendMessage(new LiteralText("")
-						.append(mcdcText)
-						.append(roleText)
-						.append(Formatting.GRAY + MarkdownParser.parseMarkdown(finalMessage.toString())), false));
+				player -> player.sendMessage(finalText, false));
 	}
 }
