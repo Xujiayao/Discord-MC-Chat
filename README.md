@@ -51,13 +51,17 @@ If there is a bug or suggestion, or something you don't understand, you can [sub
 
 - Support multi-server mode (multi-server operation on the same Discord channel)
 - Support multiple languages (English / Chinese)
+- Support displaying server status using Discord channel topic feature
 - Minecraft <> Discord cross server chat
   - Support Discord Webhook feature
     - Customizable Webhook Avatar API
   - Support in-game Markdown parsing
-  - Support using default and server emoji in-game
-  - Support in-game mentions (@) Discord users
+  - Support highlighting and using default and server emoji in-game
+  - Support highlighting and mentions (@) in-game
+    - Support disabling mentions (@) in-game
+  - Support highlighting and opening hyperlinks in-game
   - Support in-game display of Discord user role colour
+  - Support in-game display of response messages
   - Broadcast player command execution
   - Broadcast server console log
 - Server Commands available
@@ -71,18 +75,24 @@ If there is a bug or suggestion, or something you don't understand, you can [sub
     - /console \<command\>     | Execute a command in the server console (admin only)
     - /log                     | Get the latest server log (admin only)
     - /stop                    | Stop the server (admin only)
-- Customizable message format
-  - Server started
-  - Server stopped
-  - Player joined server
-  - Player left server
-  - Player reached a progress / achieved a goal / completed a challenge
-  - Player died
-  - Server MSPT is higher than a certain value
-  - Server sent a console log message
+- Fully customizable message format
+  - In-game
+    - Chat messages from Discord
+    - Response messages from Discord
+    - Messages from other servers
+  - Discord
+    - Server started
+    - Server stopped
+    - Player joined server
+    - Player left server
+    - Player reached a progress / achieved a goal / completed a challenge
+    - Player died
+    - Server MSPT is higher than a certain value
+    - Server sent a console log message
 - Use admin list to configure user permissions to use special commands
 - Support Hot Reloading of the config file
-- Check for updates
+- Support backup every time the config file is loaded
+- Check for updates regularly
 
 ## Contributors
 

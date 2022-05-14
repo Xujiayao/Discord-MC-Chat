@@ -1,6 +1,6 @@
 # Changelog 更新日志
 
-## MCDiscordChat 2.0.0-alpha.2 for Minecraft 1.16.x/1.17.x/1.18.x - 2022/5/13
+## MCDiscordChat 2.0.0-alpha.2 for Minecraft 1.16.x/1.17.x/1.18.x - 2022/5/14
 
 ## ⚠ Reminder 提醒
 
@@ -19,17 +19,17 @@ This version has a significant change compared with previous versions. Please ma
 - Add switch to modify in-game chat messages (#24)
   添加修改游戏内聊天消息的开关
 
-- Add switch to display response messages in game
-  添加修改游戏内聊天消息的开关
-
 - Add switch to display Discord server nickname in game
   添加游戏内显示 Discord 服务器昵称的开关
+
+- Add the ability to display response messages in game
+  添加游戏内显示回复的消息的功能
 
 - Add the ability to fully customize all in-game messages (#28)
   添加完全自定义所有游戏内消息的功能
 
 - Add the ability to update Discord channel topic (#19)
-  添加完全自定义所有游戏内消息的功能
+  添加使用 Discord 频道主题功能显示服务器状态的功能
 
 - Add the ability to customize the interval of timers
   添加自定义定时器间隔的功能
@@ -80,4 +80,4 @@ This version has a significant change compared with previous versions. Please ma
 
 ## Detailed Information 详细信息
 
-https://github.com/Xujiayao/MCDiscordChat/compare/2.0.0-alpha.1...master
+https://github.com/Xujiayao/MCDiscordChat/compare/2.0.0-alpha.1...2.0.0-alpha.2
