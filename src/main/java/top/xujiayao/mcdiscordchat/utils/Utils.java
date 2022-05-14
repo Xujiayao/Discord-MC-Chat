@@ -318,7 +318,7 @@ public class Utils {
 					{
 					  "schemaVersion": 1,
 					  "id": "mcdiscordchat",
-					  "version": "1.18-2.0.0-alpha.1",
+					  "version": "1.18-2.0.0-alpha.2",
 					  "name": "MCDiscordChat",
 					  "description": "MCDiscordChat (MCDC), a practical and powerful Fabric Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric",
 					  "authors": [
