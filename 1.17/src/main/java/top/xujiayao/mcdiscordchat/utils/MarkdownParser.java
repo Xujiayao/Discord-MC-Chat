@@ -21,6 +21,8 @@ public class MarkdownParser {
 
 		message = message.replaceAll("\\\\\\*", "*").replaceAll("\\\\_", "_").replaceAll("\\\\~", "~");
 
+		message = message.replaceAll("\"", "\\\\\"");
+
 		return message;
 	}
 

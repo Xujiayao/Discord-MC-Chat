@@ -1,6 +1,7 @@
 package top.xujiayao.mcdiscordchat.utils;
 
 import com.google.gson.GsonBuilder;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import top.xujiayao.mcdiscordchat.Config;
@@ -9,6 +10,7 @@ import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
 
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
+import static top.xujiayao.mcdiscordchat.Main.CONFIG_BACKUP_FILE;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG_FILE;
 import static top.xujiayao.mcdiscordchat.Main.LOGGER;
 
@@ -17,12 +19,29 @@ import static top.xujiayao.mcdiscordchat.Main.LOGGER;
  */
 public class ConfigManager {
 
-	public static void init() {
+	public static void init(boolean throwException) throws Exception {
 		if (CONFIG_FILE.length() != 0) {
-			load();
-			update();
+			try {
+				FileUtils.copyFile(CONFIG_FILE, CONFIG_BACKUP_FILE);
 
-			Utils.reloadTexts();
+				load();
+
+				try {
+					Utils.testJsonValid();
+				} catch (Exception e) {
+					LOGGER.error(ExceptionUtils.getStackTrace(e));
+					LOGGER.error("Invalid JSON!");
+				}
+
+				update();
+				Utils.reloadTexts();
+			} catch (Exception e) {
+				if (throwException) {
+					throw e;
+				}
+
+				LOGGER.error(ExceptionUtils.getStackTrace(e));
+			}
 		} else {
 			create();
 
@@ -48,6 +67,7 @@ public class ConfigManager {
 		try (FileOutputStream outputStream = new FileOutputStream(CONFIG_FILE)) {
 			String jsonString = new GsonBuilder()
 					.setPrettyPrinting()
+					.disableHtmlEscaping()
 					.create()
 					.toJson(new Config());
 
@@ -61,6 +81,7 @@ public class ConfigManager {
 		try {
 			CONFIG = new GsonBuilder()
 					.setPrettyPrinting()
+					.disableHtmlEscaping()
 					.create()
 					.fromJson(IOUtils.toString(CONFIG_FILE.toURI(), StandardCharsets.UTF_8), Config.class);
 		} catch (Exception e) {
@@ -72,6 +93,7 @@ public class ConfigManager {
 		try (FileOutputStream outputStream = new FileOutputStream(CONFIG_FILE)) {
 			String jsonString = new GsonBuilder()
 					.setPrettyPrinting()
+					.disableHtmlEscaping()
 					.create()
 					.toJson(CONFIG);
 

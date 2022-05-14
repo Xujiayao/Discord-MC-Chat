@@ -1,10 +1,12 @@
 package top.xujiayao.mcdiscordchat.minecraft.mixins;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.vdurmont.emoji.EmojiManager;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.minecraft.client.option.ChatVisibility;
 import net.minecraft.network.MessageType;
@@ -22,6 +24,7 @@ import net.minecraft.util.Util;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import okhttp3.Response;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -44,6 +47,7 @@ import static top.xujiayao.mcdiscordchat.Main.LOGGER;
 import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_LAST_RESET_TIME;
 import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_SEND_COUNT;
 import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
+import static top.xujiayao.mcdiscordchat.Main.SERVER;
 
 /**
  * @author Xujiayao
@@ -74,12 +78,14 @@ public abstract class MixinServerPlayNetworkHandler {
 	private void handleMessage(Message message, CallbackInfo ci) {
 		if (player.getClientChatVisibility() == ChatVisibility.HIDDEN) {
 			sendPacket(new GameMessageS2CPacket((new TranslatableText("chat.disabled.options")).formatted(Formatting.RED), MessageType.SYSTEM, Util.NIL_UUID));
+			ci.cancel();
 		} else {
+			player.updateLastActionTime();
+
 			if (message.getRaw().startsWith("/")) {
 				executeCommand(message.getRaw());
+				ci.cancel();
 			} else {
-				player.updateLastActionTime();
-
 				String contentToDiscord = message.getRaw();
 				String contentToMinecraft = message.getRaw();
 
@@ -100,26 +106,71 @@ public abstract class MixinServerPlayNetworkHandler {
 					}
 				}
 
-				if (contentToDiscord.contains("@")) {
-					String[] memberNames = StringUtils.substringsBetween(contentToDiscord, "@", " ");
-					if (!StringUtils.substringAfterLast(contentToDiscord, "@").contains(" ")) {
-						memberNames = ArrayUtils.add(memberNames, StringUtils.substringAfterLast(contentToDiscord, "@"));
-					}
-					for (String memberName : memberNames) {
-						for (Member member : CHANNEL.getMembers()) {
-							if (member.getUser().getName().equalsIgnoreCase(memberName)
-									|| (member.getNickname() != null && member.getNickname().equalsIgnoreCase(memberName))) {
-								contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, ("@" + memberName), member.getAsMention());
-								contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, ("@" + memberName), (Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.WHITE));
+				if (CONFIG.generic.allowMentions) {
+					if (contentToDiscord.contains("@")) {
+						String[] names = StringUtils.substringsBetween(contentToDiscord, "@", " ");
+						if (!StringUtils.substringAfterLast(contentToDiscord, "@").contains(" ")) {
+							names = ArrayUtils.add(names, StringUtils.substringAfterLast(contentToDiscord, "@"));
+						}
+						for (String name : names) {
+							for (Member member : CHANNEL.getMembers()) {
+								if (member.getUser().getName().equalsIgnoreCase(name)
+										|| (member.getNickname() != null && member.getNickname().equalsIgnoreCase(name))) {
+									contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, ("@" + name), member.getAsMention());
+									contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, ("@" + name), (Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.WHITE));
+								}
+							}
+							for (Role role : CHANNEL.getGuild().getRoles()) {
+								if (role.getName().equalsIgnoreCase(name)) {
+									contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, ("@" + name), role.getAsMention());
+									contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, ("@" + name), (Formatting.YELLOW + "@" + role.getName() + Formatting.WHITE));
+								}
 							}
 						}
+						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, "@everyone", (Formatting.YELLOW + "@everyone" + Formatting.WHITE));
+						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, "@here", (Formatting.YELLOW + "@here" + Formatting.WHITE));
 					}
 				}
 
-				json.getAsJsonArray("with").add(MarkdownParser.parseMarkdown(contentToMinecraft));
-				Text finalText = Text.Serializer.fromJson(json.toString());
-				server.getPlayerManager().broadcastChatMessage(finalText, MessageType.CHAT, player.getUuid());
-				ci.cancel();
+				if (CONFIG.generic.modifyChatMessages) {
+					contentToMinecraft = MarkdownParser.parseMarkdown(contentToMinecraft);
+
+					if (contentToMinecraft.contains("http://")) {
+						String[] links = StringUtils.substringsBetween(contentToMinecraft, "http://", " ");
+						if (!StringUtils.substringAfterLast(contentToMinecraft, "http://").contains(" ")) {
+							links = ArrayUtils.add(links, StringUtils.substringAfterLast(contentToMinecraft, "http://"));
+						}
+						for (String link : links) {
+							if (link.contains("\n")) {
+								link = StringUtils.substringBefore(link, "\n");
+							}
+
+							String hyperlinkInsert = "\"},{\"text\":\"http://" + link + "\",\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "http://" + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{\"text\":\"";
+							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, ("http://" + link), hyperlinkInsert);
+						}
+					}
+
+					if (contentToMinecraft.contains("https://")) {
+						String[] links = StringUtils.substringsBetween(contentToMinecraft, "https://", " ");
+						if (!StringUtils.substringAfterLast(contentToMinecraft, "https://").contains(" ")) {
+							links = ArrayUtils.add(links, StringUtils.substringAfterLast(contentToMinecraft, "https://"));
+						}
+
+						for (String link : links) {
+							if (link.contains("\n")) {
+								link = StringUtils.substringBefore(link, "\n");
+							}
+
+							String hyperlinkInsert = "\"},{\"text\":\"https://" + link + "\",\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "https://" + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{\"text\":\"";
+							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, ("https://" + link), hyperlinkInsert);
+						}
+					}
+
+					json.getAsJsonArray("with").add(new Gson().fromJson(("[{\"text\":\"" + contentToMinecraft + "\"}]"), JsonArray.class));
+					Text finalText = Text.Serializer.fromJson(json.toString());
+					server.getPlayerManager().broadcastChatMessage(finalText, MessageType.CHAT, player.getUuid());
+					ci.cancel();
+				}
 
 				sendWebhookMessage(contentToDiscord, false);
 				if (CONFIG.multiServer.enable) {
@@ -132,8 +183,6 @@ public abstract class MixinServerPlayNetworkHandler {
 				disconnect(new TranslatableText("disconnect.spam"));
 			}
 		}
-
-		ci.cancel();
 	}
 
 	@Inject(method = "executeCommand", at = @At(value = "HEAD"))
@@ -152,6 +201,8 @@ public abstract class MixinServerPlayNetworkHandler {
 				list.remove(player);
 				list.forEach(serverPlayerEntity -> serverPlayerEntity.sendMessage(text, false));
 
+				SERVER.sendSystemMessage(text, player.getUuid());
+
 				sendWebhookMessage(input, true);
 				if (CONFIG.multiServer.enable) {
 					MULTI_SERVER.sendMessage(false, true, player.getEntityName(), MarkdownSanitizer.escape(input));
@@ -165,14 +216,18 @@ public abstract class MixinServerPlayNetworkHandler {
 		body.addProperty("content", (escapeMarkdown ? MarkdownSanitizer.escape(content) : content));
 		body.addProperty("username", (CONFIG.multiServer.enable) ? ("[" + CONFIG.multiServer.name + "] " + player.getEntityName()) : player.getEntityName());
 		body.addProperty("avatar_url", CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUuid().toString() : player.getEntityName())));
+		if (!CONFIG.generic.allowMentions) {
+			body.add("allowed_mentions", new Gson().fromJson("{\"parse\":[]}", JsonObject.class));
+		}
+
+		Request request = new Request.Builder()
+				.url(CONFIG.generic.webhookUrl)
+				.post(RequestBody.create(body.toString(), MediaType.get("application/json")))
+				.build();
 
 		try {
-			Request request = new Request.Builder()
-					.url(CONFIG.generic.webhookUrl)
-					.post(RequestBody.create(body.toString(), MediaType.get("application/json")))
-					.build();
-
-			HTTP_CLIENT.newCall(request).execute();
+			Response response = HTTP_CLIENT.newCall(request).execute();
+			response.close();
 		} catch (Exception e) {
 			LOGGER.error(ExceptionUtils.getStackTrace(e));
 		}
