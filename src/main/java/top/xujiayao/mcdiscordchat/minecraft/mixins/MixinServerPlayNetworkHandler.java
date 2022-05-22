@@ -198,7 +198,6 @@ public abstract class MixinServerPlayNetworkHandler {
 				Text text = new LiteralText("<").append(player.getEntityName()).append("> ").append(input);
 
 				List<ServerPlayerEntity> list = new ArrayList<>(server.getPlayerManager().getPlayerList());
-				list.remove(player);
 				list.forEach(serverPlayerEntity -> serverPlayerEntity.sendMessage(text, false));
 
 				SERVER.sendSystemMessage(text, player.getUuid());
