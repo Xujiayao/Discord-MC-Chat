@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.encryption.PlayerPublicKey;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -23,8 +24,8 @@ import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 @Mixin(ServerPlayerEntity.class)
 public abstract class MixinServerPlayerEntity extends PlayerEntity {
 
-	private MixinServerPlayerEntity(World world, BlockPos pos, float yaw, GameProfile profile) {
-		super(world, pos, yaw, profile);
+	private MixinServerPlayerEntity(World world, BlockPos pos, float yaw, GameProfile profile, PlayerPublicKey publicKey) {
+		super(world, pos, yaw, profile, publicKey);
 	}
 
 	@Inject(method = "onDeath", at = @At("HEAD"))

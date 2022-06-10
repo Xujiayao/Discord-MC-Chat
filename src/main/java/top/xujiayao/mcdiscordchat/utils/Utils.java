@@ -318,7 +318,7 @@ public class Utils {
 					{
 					  "schemaVersion": 1,
 					  "id": "mcdiscordchat",
-					  "version": "1.18-2.0.0-alpha.2",
+					  "version": "1.19-2.0.0-alpha.2",
 					  "name": "MCDiscordChat",
 					  "description": "MCDiscordChat (MCDC), a practical and powerful Fabric Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric",
 					  "authors": [
@@ -341,9 +341,9 @@ public class Utils {
 					    "mcdiscordchat.mixins.json"
 					  ],
 					  "depends": {
-					    "fabricloader": ">=0.13.3",
+					    "fabricloader": ">=0.14.7",
 					    "fabric": "*",
-					    "minecraft": "1.18.x",
+					    "minecraft": "1.19.x",
 					    "java": ">=17"
 					  }
 					}""", JsonObject.class);

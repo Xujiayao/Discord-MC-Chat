@@ -5,7 +5,6 @@ import net.minecraft.text.Text;
 
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.UUID;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 
@@ -18,7 +17,7 @@ public class DiscordCommandOutput implements CommandOutput {
 	private long lastOutputMillis = 0;
 
 	@Override
-	public void sendSystemMessage(Text message, UUID sender) {
+	public void sendMessage(Text message) {
 		long currentOutputMillis = System.currentTimeMillis();
 
 		if (output.length() > 1500) {
