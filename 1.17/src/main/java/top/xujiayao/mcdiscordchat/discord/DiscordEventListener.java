@@ -48,6 +48,9 @@ import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
 import static top.xujiayao.mcdiscordchat.Main.SERVER;
 import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 
+/**
+ * @author Xujiayao
+ */
 public class DiscordEventListener extends ListenerAdapter {
 
 	@Override

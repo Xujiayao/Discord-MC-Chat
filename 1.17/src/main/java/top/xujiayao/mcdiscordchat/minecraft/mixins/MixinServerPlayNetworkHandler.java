@@ -172,7 +172,7 @@ public abstract class MixinServerPlayNetworkHandler {
 					ci.cancel();
 				}
 
-				sendWebhookMessage(contentToDiscord, false);
+				sendMessage(contentToDiscord, false);
 				if (CONFIG.multiServer.enable) {
 					MULTI_SERVER.sendMessage(false, true, player.getEntityName(), contentToMinecraft);
 				}
@@ -198,12 +198,11 @@ public abstract class MixinServerPlayNetworkHandler {
 				Text text = new LiteralText("<").append(player.getEntityName()).append("> ").append(input);
 
 				List<ServerPlayerEntity> list = new ArrayList<>(server.getPlayerManager().getPlayerList());
-				list.remove(player);
 				list.forEach(serverPlayerEntity -> serverPlayerEntity.sendMessage(text, false));
 
 				SERVER.sendSystemMessage(text, player.getUuid());
 
-				sendWebhookMessage(input, true);
+				sendMessage(input, true);
 				if (CONFIG.multiServer.enable) {
 					MULTI_SERVER.sendMessage(false, true, player.getEntityName(), MarkdownSanitizer.escape(input));
 				}
@@ -211,25 +210,31 @@ public abstract class MixinServerPlayNetworkHandler {
 		}
 	}
 
-	private void sendWebhookMessage(String content, boolean escapeMarkdown) {
-		JsonObject body = new JsonObject();
-		body.addProperty("content", (escapeMarkdown ? MarkdownSanitizer.escape(content) : content));
-		body.addProperty("username", (CONFIG.multiServer.enable) ? ("[" + CONFIG.multiServer.name + "] " + player.getEntityName()) : player.getEntityName());
-		body.addProperty("avatar_url", CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUuid().toString() : player.getEntityName())));
-		if (!CONFIG.generic.allowMentions) {
-			body.add("allowed_mentions", new Gson().fromJson("{\"parse\":[]}", JsonObject.class));
-		}
+	private void sendMessage(String message, boolean escapeMarkdown) {
+		String content = (escapeMarkdown ? MarkdownSanitizer.escape(message) : message);
 
-		Request request = new Request.Builder()
-				.url(CONFIG.generic.webhookUrl)
-				.post(RequestBody.create(body.toString(), MediaType.get("application/json")))
-				.build();
+		if (CONFIG.generic.webhookUrl.isBlank()) {
+			CHANNEL.sendMessage(((CONFIG.multiServer.enable) ? ("[" + CONFIG.multiServer.name + "] <") : "<") + player.getEntityName() + "> " + content).queue();
+		} else {
+			JsonObject body = new JsonObject();
+			body.addProperty("content", content);
+			body.addProperty("username", ((CONFIG.multiServer.enable) ? ("[" + CONFIG.multiServer.name + "] " + player.getEntityName()) : player.getEntityName()));
+			body.addProperty("avatar_url", CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUuid().toString() : player.getEntityName())));
+			if (!CONFIG.generic.allowMentions) {
+				body.add("allowed_mentions", new Gson().fromJson("{\"parse\":[]}", JsonObject.class));
+			}
 
-		try {
-			Response response = HTTP_CLIENT.newCall(request).execute();
-			response.close();
-		} catch (Exception e) {
-			LOGGER.error(ExceptionUtils.getStackTrace(e));
+			Request request = new Request.Builder()
+					.url(CONFIG.generic.webhookUrl)
+					.post(RequestBody.create(body.toString(), MediaType.get("application/json")))
+					.build();
+
+			try {
+				Response response = HTTP_CLIENT.newCall(request).execute();
+				response.close();
+			} catch (Exception e) {
+				LOGGER.error(ExceptionUtils.getStackTrace(e));
+			}
 		}
 	}
 }
