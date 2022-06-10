@@ -55,6 +55,7 @@ If there is a bug or suggestion, or something you don't understand, you can [sub
 - Minecraft <> Discord cross server chat
   - Support Discord Webhook feature
     - Customizable Webhook Avatar API
+	- Use the bot itself to send chat messages when Webhook URL is not filled
   - Support in-game Markdown parsing
   - Support highlighting and using default and server emoji in-game
   - Support highlighting and mentions (@) in-game
@@ -63,6 +64,7 @@ If there is a bug or suggestion, or something you don't understand, you can [sub
   - Support in-game display of Discord user role colour
   - Support in-game display of response messages
   - Broadcast player command execution
+    - Players who execute commands can also see the commands themselves
   - Broadcast server console log
 - Server Commands available
   - Normal Commands
@@ -91,7 +93,7 @@ If there is a bug or suggestion, or something you don't understand, you can [sub
     - Server sent a console log message
 - Use admin list to configure user permissions to use special commands
 - Support Hot Reloading of the config file
-- Support backup every time the config file is loaded
+  - Backup every time the config file is loaded
 - Check for updates regularly
 
 ## Contributors
