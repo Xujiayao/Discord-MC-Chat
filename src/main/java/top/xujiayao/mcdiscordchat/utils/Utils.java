@@ -69,20 +69,6 @@ public class Utils {
 				JsonObject latestJson = new Gson().fromJson(result, JsonObject.class);
 				String latestVersion = latestJson.get("version").getAsString();
 
-				// TODO 发布2.1.0后这段代码可以删除
-				if (latestJson.get("changelog") == null) {
-					Request request1 = new Request.Builder()
-							.url("https://cdn.jsdelivr.net/gh/Xujiayao/MCDiscordChat@master/update/version-temp.json")
-							.build();
-
-					try (Response response1 = HTTP_CLIENT.newCall(request1).execute()) {
-						result = Objects.requireNonNull(response1.body()).string();
-					}
-
-					latestJson = new Gson().fromJson(result, JsonObject.class);
-					latestVersion = latestJson.get("version").getAsString();
-				}
-
 				StringBuilder message = new StringBuilder();
 
 				if (!latestVersion.equals(VERSION)) {
