@@ -135,24 +135,20 @@ public class Main implements DedicatedServerModInitializer {
 				CHANNEL.sendMessage(TEXTS.serverStopped())
 						.submit()
 						.whenComplete((v, ex) -> {
-							if (MULTI_SERVER.server != null) {
-								String topic = TEXTS.offlineChannelTopic()
-										.replace("%lastUpdateTime%", Long.toString(Instant.now().getEpochSecond()));
+							String topic = TEXTS.offlineChannelTopic()
+									.replace("%lastUpdateTime%", Long.toString(Instant.now().getEpochSecond()));
 
-								CHANNEL.getManager().setTopic(topic)
-										.submit()
-										.whenComplete((v2, ex2) -> {
-											if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
-												CONSOLE_LOG_CHANNEL.getManager().setTopic(topic)
-														.submit()
-														.whenComplete((v3, ex3) -> JDA.shutdownNow());
-											} else {
-												JDA.shutdownNow();
-											}
-										});
-							} else {
-								JDA.shutdownNow();
-							}
+							CHANNEL.getManager().setTopic(topic)
+									.submit()
+									.whenComplete((v2, ex2) -> {
+										if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
+											CONSOLE_LOG_CHANNEL.getManager().setTopic(topic)
+													.submit()
+													.whenComplete((v3, ex3) -> JDA.shutdownNow());
+										} else {
+											JDA.shutdownNow();
+										}
+									});
 						});
 			} else {
 				CHANNEL.sendMessage(TEXTS.serverStopped())
