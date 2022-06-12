@@ -8,7 +8,6 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.minecraft.SharedConstants;
-import net.minecraft.network.message.MessageSender;
 import net.minecraft.network.message.MessageType;
 import net.minecraft.network.message.SignedMessage;
 import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
@@ -158,7 +157,7 @@ public abstract class MixinServerPlayNetworkHandler {
 					}
 				}
 
-				server.getPlayerManager().broadcast(SignedMessage.of(Text.of(contentToMinecraft)), MessageSender.of(Text.of(player.getEntityName())), MessageType.CHAT);
+				server.getPlayerManager().broadcast(FilteredMessage.permitted(SignedMessage.of(Text.of(contentToMinecraft))), player, MessageType.CHAT);
 			} else {
 				filterText(packet.getChatMessage(), (message) -> handleMessage(packet, message));
 			}
