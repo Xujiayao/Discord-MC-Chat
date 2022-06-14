@@ -53,8 +53,6 @@ public class Config {
 		public List<String> excludedCommands = List.of("/tell");
 
 		public List<String> adminsIds = new ArrayList<>();
-
-		// TODO Link players to Discord accounts
 	}
 
 	public static class MultiServer {
