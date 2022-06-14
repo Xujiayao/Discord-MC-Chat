@@ -3,10 +3,11 @@
   "package": "top.xujiayao.mcdiscordchat.minecraft.mixins",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "MixinPlayerManager",
-    "MixinPlayerAdvancementTracker",
-    "MixinServerPlayerEntity",
+    "MixinLanguage",
     "MixinMinecraftServer",
+    "MixinPlayerAdvancementTracker",
+    "MixinPlayerManager",
+    "MixinServerPlayerEntity",
     "MixinServerPlayNetworkHandler"
   ],
   "injectors": {
