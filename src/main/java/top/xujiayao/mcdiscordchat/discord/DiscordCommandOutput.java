@@ -1,20 +1,24 @@
 package top.xujiayao.mcdiscordchat.discord;
 
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.text.Text;
 
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
-
 /**
  * @author Xujiayao
  */
 public class DiscordCommandOutput implements CommandOutput {
 
+	private final SlashCommandInteractionEvent e;
 	private StringBuilder output = new StringBuilder("```\n");
 	private long lastOutputMillis = 0;
+
+	public DiscordCommandOutput(SlashCommandInteractionEvent e) {
+		this.e = e;
+	}
 
 	@Override
 	public void sendMessage(Text message) {
@@ -22,7 +26,7 @@ public class DiscordCommandOutput implements CommandOutput {
 
 		if (output.length() > 1500) {
 			output.append("```");
-			CHANNEL.sendMessage(output.toString()).queue();
+			e.getChannel().sendMessage(output.toString()).queue();
 			output = new StringBuilder("```\n");
 		} else {
 			output.append(message.getString()).append("\n");
@@ -33,7 +37,7 @@ public class DiscordCommandOutput implements CommandOutput {
 				@Override
 				public void run() {
 					output.append("```");
-					CHANNEL.sendMessage(output.toString()).queue();
+					e.getChannel().sendMessage(output.toString()).queue();
 					output = new StringBuilder("```\n");
 				}
 			}, 51)).start();

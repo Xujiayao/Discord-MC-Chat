@@ -66,7 +66,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			case "info" -> {
 				e.getHook().sendMessage(Utils.getInfoCommandMessage()).queue();
 				if (CONFIG.multiServer.enable) {
-					MULTI_SERVER.sendMessage(true, false, null, "{\"type\":\"info\"}");
+					MULTI_SERVER.sendMessage(true, false, null, "{\"type\":\"info\",\"channel\":\"" + e.getChannel().getId() + "\"}");
 				}
 			}
 			case "help" -> e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? """
@@ -218,7 +218,7 @@ public class DiscordEventListener extends ListenerAdapter {
 						e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**Executing the command!**" : "**正在执行命令！**")
 								.submit()
 								.whenComplete((v, ex) -> SERVER.getCommandManager()
-										.execute(SERVER.getCommandSource().withOutput(new DiscordCommandOutput()), command));
+										.execute(SERVER.getCommandSource().withOutput(new DiscordCommandOutput(e)), command));
 					}
 				} else {
 					e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**You do not have permission to use this command!**" : "**你没有权限使用此命令！**").queue();

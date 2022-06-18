@@ -3,6 +3,7 @@ package top.xujiayao.mcdiscordchat.multiServer.client;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.minecraft.text.Text;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -16,10 +17,11 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
-import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
+import static top.xujiayao.mcdiscordchat.Main.JDA;
 import static top.xujiayao.mcdiscordchat.Main.LOGGER;
 import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
 import static top.xujiayao.mcdiscordchat.Main.SERVER;
@@ -49,7 +51,8 @@ public class ReadThread extends Thread {
 					if (json.get("special").getAsBoolean()) {
 						JsonObject message = new Gson().fromJson(json.get("message").getAsString(), JsonObject.class);
 						if (message.get("type").getAsString().equals("info")) {
-							CHANNEL.sendMessage(Utils.getInfoCommandMessage()).queue();
+							TextChannel channel = JDA.getTextChannelById(message.get("channel").getAsString());
+							Objects.requireNonNull(channel).sendMessage(Utils.getInfoCommandMessage()).queue();
 						} else if (message.get("type").getAsString().equals("updateChannelTopic")) {
 							JsonObject channelTopicInfo = new JsonObject();
 							channelTopicInfo.addProperty("onlinePlayerCount", SERVER.getPlayerManager().getPlayerList().size());
