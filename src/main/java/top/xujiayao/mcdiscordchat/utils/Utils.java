@@ -12,12 +12,9 @@ import net.minecraft.util.math.MathHelper;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -293,49 +290,5 @@ public class Utils {
 		new Gson().fromJson(CONFIG.textsEN.formattedResponseMessage, Object.class);
 		new Gson().fromJson(CONFIG.textsEN.formattedChatMessage, Object.class);
 		new Gson().fromJson(CONFIG.textsEN.formattedOtherMessage, Object.class);
-	}
-
-	public static void setMcdcVersion() {
-		JsonObject json;
-		try {
-			json = new Gson().fromJson(IOUtils.toString(new URI("jar:file:" + Utils.class.getProtectionDomain().getCodeSource().getLocation().getPath() + "!/fabric.mod.json"), StandardCharsets.UTF_8), JsonObject.class);
-		} catch (Exception e) {
-			json = new Gson().fromJson("""
-					{
-					  "schemaVersion": 1,
-					  "id": "mcdiscordchat",
-					  "version": "1.19-2.0.0-alpha.3",
-					  "name": "MCDiscordChat",
-					  "description": "MCDiscordChat (MCDC), a practical and powerful Fabric Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric",
-					  "authors": [
-					    "Xujiayao"
-					  ],
-					  "contact": {
-					    "homepage": "https://blog.xujiayao.top/posts/4ba0a17a/",
-					    "issues": "https://github.com/Xujiayao/MCDiscordChat/issues",
-					    "sources": "https://github.com/Xujiayao/MCDiscordChat"
-					  },
-					  "license": "MIT",
-					  "icon": "assets/mcdiscordchat/icon.png",
-					  "environment": "server",
-					  "entrypoints": {
-					    "server": [
-					      "top.xujiayao.mcdiscordchat.Main"
-					    ]
-					  },
-					  "mixins": [
-					    "mcdiscordchat.mixins.json"
-					  ],
-					  "depends": {
-					    "fabricloader": ">=0.14.7",
-					    "fabric": "*",
-					    "minecraft": "1.19.x",
-					    "java": ">=17"
-					  }
-					}""", JsonObject.class);
-		}
-
-		VERSION = json.get("version").getAsString();
-		VERSION = VERSION.substring(VERSION.indexOf("-") + 1);
 	}
 }

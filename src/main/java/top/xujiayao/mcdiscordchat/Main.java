@@ -35,7 +35,7 @@ public class Main implements DedicatedServerModInitializer {
 	public static final File CONFIG_FILE = new File(FabricLoader.getInstance().getConfigDir().toFile(), "mcdiscordchat.json");
 	public static final File CONFIG_BACKUP_FILE = new File(FabricLoader.getInstance().getConfigDir().toFile(), "mcdiscordchat-backup.json");
 	public static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("HH:mm:ss");
-	public static String VERSION;
+	public static final String VERSION = FabricLoader.getInstance().getModContainer("mcdiscordchat").orElseThrow(RuntimeException::new).getMetadata().getVersion().getFriendlyString();
 	public static Config CONFIG;
 	public static JDA JDA;
 	public static TextChannel CHANNEL;
@@ -54,7 +54,6 @@ public class Main implements DedicatedServerModInitializer {
 	public void onInitializeServer() {
 		try {
 			ConfigManager.init(false);
-			Utils.setMcdcVersion();
 
 			LOGGER.info("-----------------------------------------");
 			LOGGER.info("MCDiscordChat (MCDC) " + VERSION);
