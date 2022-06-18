@@ -11,7 +11,11 @@ import net.fabricmc.loader.metadata.EntrypointMetadata;
 import net.fabricmc.loader.metadata.LoaderModMetadata;
 import net.minecraft.util.JsonHelper;
 import net.minecraft.util.Language;
+//#if MC >= 11800
 import org.slf4j.Logger;
+//#else
+//$$ import org.apache.logging.log4j.Logger;
+//#endif
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

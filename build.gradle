@@ -1,56 +1,37 @@
 plugins {
-    id 'fabric-loom' version '0.12-SNAPSHOT'
+    id 'fabric-loom' version '0.12-SNAPSHOT' apply false
+    id 'com.replaymod.preprocess' version 'eab6c325e4'
 }
 
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
+preprocess {
+//    def mc114 = createNode('1.14.4'  , 1_14_04, 'yarn')
+//    def mc115 = createNode('1.15.2'  , 1_15_02, 'yarn')
+    def mc116 = createNode('1.16.5'  , 1_16_05, 'yarn')
+    def mc117 = createNode('1.17.1'  , 1_17_01, 'yarn')
+    def mc118 = createNode('1.18.2', 1_18_02, 'yarn')
+    def mc119 = createNode('1.19', 1_19_00, 'yarn')
 
-archivesBaseName = project.archives_base_name
-version = project.mod_version
-group = project.maven_group
-
-dependencies {
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-
-    modImplementation(include("net.dv8tion:JDA:5.0.0-alpha.12") {
-        exclude module: 'opus-java'
-    })
-    modImplementation(include("net.sf.trove4j:trove4j:3.0.3"))
-    modImplementation(include("org.apache.commons:commons-collections4:4.4"))
-    modImplementation(include("com.neovisionaries:nv-websocket-client:2.14"))
-    modImplementation(include("com.fasterxml.jackson.core:jackson-core:2.13.3"))
-    modImplementation(include("com.fasterxml.jackson.core:jackson-databind:2.13.3"))
-    modImplementation(include("com.fasterxml.jackson.core:jackson-annotations:2.13.3"))
-
-    modImplementation(include("com.squareup.okhttp3:okhttp:4.9.3"))
-    modImplementation(include("com.squareup.okio:okio:2.10.0"))
-    modImplementation(include("org.jetbrains.kotlin:kotlin-stdlib:1.7.0"))
-
-    modImplementation(include("com.vdurmont:emoji-java:5.1.1"))
-    modImplementation(include("org.json:json:20220320"))
-
-    modImplementation(include("com.google.code.gson:gson:2.9.0"))
+//    mc114.link(mc115, null)
+//    mc115.link(mc116, null)
+    mc116.link(mc117, null)
+    mc117.link(mc118, null)
+    mc118.link(mc119, null)
 }
 
-processResources {
-    inputs.property "version", project.version
-
-    filesMatching("fabric.mod.json") {
-        expand "version": project.version
+task buildAndGather {
+    subprojects {
+        dependsOn project.name + ':build'
     }
-}
-
-tasks.withType(JavaCompile).configureEach {
-    it.options.encoding = "UTF-8"
-    it.options.release = 17
-}
-
-jar {
-    from("LICENSE") {
-        rename { "${it}_${project.archivesBaseName}" }
+    doFirst {
+        copy {
+            subprojects {
+                def libDir = project.projectDir.toPath().resolve('build/libs')
+                from(libDir) {
+                    include '*.jar'
+                }
+                into 'build/libs/'
+                duplicatesStrategy DuplicatesStrategy.INCLUDE
+            }
+        }
     }
 }

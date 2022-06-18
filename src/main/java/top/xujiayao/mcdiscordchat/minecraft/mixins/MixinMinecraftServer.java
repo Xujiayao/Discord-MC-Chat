@@ -9,6 +9,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Date;
+//#if MC <= 11802
+import java.util.UUID;
+//#endif
 
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
 import static top.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_CHANNEL;
@@ -23,8 +26,13 @@ import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 @Mixin(MinecraftServer.class)
 public class MixinMinecraftServer {
 
-	@Inject(method = "sendMessage", at = @At("HEAD"))
-	private void sendMessage(Text message, CallbackInfo ci) {
+	//#if MC >= 11900
+	//$$ @Inject(method = "sendMessage", at = @At("HEAD"))
+	//$$ private void sendMessage(Text message, CallbackInfo ci) {
+	//#else
+	@Inject(method = "sendSystemMessage", at = @At("HEAD"))
+	private void sendSystemMessage(Text message, UUID sender, CallbackInfo ci) {
+	//#endif
 		if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
 			if ((System.currentTimeMillis() - MINECRAFT_LAST_RESET_TIME) > 20000) {
 				MINECRAFT_SEND_COUNT = 0;

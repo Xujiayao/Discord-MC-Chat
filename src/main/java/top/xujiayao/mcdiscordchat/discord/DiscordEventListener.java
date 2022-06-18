@@ -14,8 +14,16 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.loader.api.FabricLoader;
+//#if MC <= 11605
+//$$ import net.minecraft.server.command.ServerCommandSource;
+//$$ import net.minecraft.text.LiteralText;
+//#endif
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+//#if MC <= 11605
+//$$ import net.minecraft.util.math.Vec2f;
+//$$ import net.minecraft.util.math.Vec3d;
+//#endif
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -218,7 +226,11 @@ public class DiscordEventListener extends ListenerAdapter {
 						e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**Executing the command!**" : "**正在执行命令！**")
 								.submit()
 								.whenComplete((v, ex) -> SERVER.getCommandManager()
+										//#if MC >= 11700
 										.execute(SERVER.getCommandSource().withOutput(new DiscordCommandOutput(e)), command));
+										//#else
+										//$$  .execute(new ServerCommandSource(new DiscordCommandOutput(e), Vec3d.ZERO, Vec2f.ZERO, SERVER.getOverworld(), 4, "MCDiscordChat", new LiteralText("MCDiscordChat"), SERVER, null), command));
+										//#endif
 					}
 				} else {
 					e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**You do not have permission to use this command!**" : "**你没有权限使用此命令！**").queue();
