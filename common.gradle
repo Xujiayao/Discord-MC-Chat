@@ -39,7 +39,6 @@ loom {
     runConfigs.all {
         ideConfigGenerated = true
         runDir '../../run'
-        vmArgs '-Dmixin.debug.export=true'
     }
 }
 
@@ -74,4 +73,8 @@ jar {
     from("../../LICENSE") {
         rename { "${it}_${project.archives_base_name}" }
     }
+}
+
+clean {
+    delete file("../../build")
 }
