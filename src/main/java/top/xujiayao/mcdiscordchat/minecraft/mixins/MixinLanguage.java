@@ -45,7 +45,7 @@ public abstract class MixinLanguage {
 	private static Pattern TOKEN_PATTERN;
 
 	@SuppressWarnings({"unchecked", "deprecation"})
-	@Redirect(method = "create", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/ImmutableMap$Builder;build()Lcom/google/common/collect/ImmutableMap;"), remap = false)
+	@Redirect(method = "create", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/ImmutableMap$Builder;build()Lcom/google/common/collect/ImmutableMap;"))
 	private static <K, V> ImmutableMap<K, V> build(Builder<K, V> builder) {
 		LinkedHashMap<String, String> map = new LinkedHashMap<>((ImmutableMap<String, String>) builder.build());
 
