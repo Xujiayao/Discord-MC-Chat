@@ -21,16 +21,10 @@ jobs:
         if: ${{ runner.os != 'Windows' }}
         run: chmod +x ./gradlew
       - name: Build
-        run: ./gradlew buildAndGather
-      - name: Find Correct JAR
-        id: findjar
-        if: ${{ runner.os == 'Linux' && matrix.java == '17' }}
-        run: |
-          output="$(find build/libs/ ! -name "*-sources.jar" -type f -printf "%f\n")"
-          echo "::set-output name=jarname::$output"
+        run: ./gradlew buildAndGather --no-daemon
       - name: Capture Build Artifacts
         if: ${{ runner.os == 'Linux' && matrix.java == '17' }}
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ steps.findjar.outputs.jarname }}
-          path: build/libs/${{ steps.findjar.outputs.jarname }}
+          name: build-artifacts
+          path: versions/*/build/libs/
