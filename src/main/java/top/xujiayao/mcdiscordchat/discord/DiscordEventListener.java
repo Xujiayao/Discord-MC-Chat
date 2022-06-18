@@ -57,7 +57,7 @@ public class DiscordEventListener extends ListenerAdapter {
 	public void onSlashCommandInteraction(SlashCommandInteractionEvent e) {
 		e.deferReply().queue();
 
-		if (!e.isFromGuild() || (e.getChannel() != CHANNEL)) {
+		if (!e.isFromGuild()) {
 			e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**You can only use this command on the correct channel!**" : "**你只能在正确的频道使用此命令！**").queue();
 			return;
 		}
