@@ -105,8 +105,6 @@ public abstract class MixinServerPlayNetworkHandler {
 				//$$ String contentToMinecraft = string;
 				//#endif
 
-
-
 				if (StringUtils.countMatches(contentToDiscord, ":") >= 2) {
 					String[] emoteNames = StringUtils.substringsBetween(contentToDiscord, ":", ":");
 					for (String emoteName : emoteNames) {

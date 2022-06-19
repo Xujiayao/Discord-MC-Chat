@@ -29,7 +29,7 @@ task buildAndGather {
                 from(libDir) {
                     include '*.jar'
                 }
-                into 'build/libs/'
+                into 'build/libs'
                 duplicatesStrategy DuplicatesStrategy.INCLUDE
             }
         }
