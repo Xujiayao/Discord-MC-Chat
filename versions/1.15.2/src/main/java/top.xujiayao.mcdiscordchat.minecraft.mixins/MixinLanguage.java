@@ -1,8 +1,5 @@
-//#if MC >= 11600
 package top.xujiayao.mcdiscordchat.minecraft.mixins;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -12,21 +9,17 @@ import net.fabricmc.loader.metadata.EntrypointMetadata;
 import net.fabricmc.loader.metadata.LoaderModMetadata;
 import net.minecraft.util.JsonHelper;
 import net.minecraft.util.Language;
-//#if MC >= 11800
-import org.slf4j.Logger;
-//#else
-//$$ import org.apache.logging.log4j.Logger;
-//#endif
+import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -43,17 +36,15 @@ public abstract class MixinLanguage {
 
 	@Final
 	@Shadow
-	private static Gson GSON;
+	private Map<String, String> translations;
 
 	@Final
 	@Shadow
-	private static Pattern TOKEN_PATTERN;
+	private static Pattern field_11489;
 
-	@SuppressWarnings({"unchecked", "deprecation", "mapping"})
-	@Redirect(method = "create", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/ImmutableMap$Builder;build()Lcom/google/common/collect/ImmutableMap;"))
-	private static <K, V> ImmutableMap<K, V> build(Builder<K, V> builder) {
-		LinkedHashMap<String, String> map = new LinkedHashMap<>((ImmutableMap<String, String>) builder.build());
-
+	@SuppressWarnings("deprecation")
+	@Inject(method = "<init>", at = @At(value = "RETURN"))
+	private void Language(CallbackInfo ci) {
 		FabricLoader.getInstance().getAllMods().forEach(modContainer -> {
 			Optional<? extends EntrypointMetadata> optional = ((LoaderModMetadata) modContainer.getMetadata()).getEntrypoints("main").stream().findFirst();
 			if (optional.isPresent()) {
@@ -63,10 +54,10 @@ public abstract class MixinLanguage {
 							return;
 						}
 
-						JsonObject json = GSON.fromJson(new InputStreamReader(inputStream, StandardCharsets.UTF_8), JsonObject.class);
+						JsonObject json = new Gson().fromJson(new InputStreamReader(inputStream, StandardCharsets.UTF_8), JsonObject.class);
 						for (Map.Entry<String, JsonElement> entry : json.entrySet()) {
-							String string = TOKEN_PATTERN.matcher(JsonHelper.asString(entry.getValue(), entry.getKey())).replaceAll("%$1s");
-							map.put(entry.getKey(), string);
+							String string = field_11489.matcher(JsonHelper.asString(entry.getValue(), entry.getKey())).replaceAll("%$1s");
+							translations.put(entry.getKey(), string);
 						}
 					}
 				} catch (ClassNotFoundException ignored) {
@@ -75,8 +66,5 @@ public abstract class MixinLanguage {
 				}
 			}
 		});
-
-		return (ImmutableMap<K, V>) ImmutableMap.builder().putAll(map).build();
 	}
 }
-//#endif

@@ -24,7 +24,7 @@ public class DiscordCommandOutput implements CommandOutput {
 	}
 
 	@Override
-	//#if MC >= 11900
+	//#if MC >= 11900 || MC <= 11502
 	//$$ public void sendMessage(Text message) {
 	//#else
 	public void sendSystemMessage(Text message, UUID sender) {

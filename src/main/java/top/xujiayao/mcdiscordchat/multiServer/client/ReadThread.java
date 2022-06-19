@@ -59,7 +59,11 @@ public class ReadThread extends Thread {
 							channelTopicInfo.addProperty("maxPlayerCount", SERVER.getPlayerManager().getMaxPlayerCount());
 
 							Set<String> uniquePlayers = new HashSet<>();
+							//#if MC >= 11600
 							FileUtils.listFiles(new File((SERVER.getSaveProperties().getLevelName() + "/stats/")), null, false).forEach(file -> uniquePlayers.add(file.getName()));
+							//#else
+							//$$ FileUtils.listFiles(new File((SERVER.getLevelName() + "/stats/")), null, false).forEach(file -> uniquePlayers.add(file.getName()));
+							//#endif
 							channelTopicInfo.add("uniquePlayers", new Gson().fromJson(Arrays.toString(uniquePlayers.toArray()), JsonArray.class));
 
 							channelTopicInfo.addProperty("serverName", CONFIG.multiServer.name);

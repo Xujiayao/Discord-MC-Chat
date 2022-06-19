@@ -24,6 +24,9 @@ import net.minecraft.util.Formatting;
 //$$ import net.minecraft.util.math.Vec2f;
 //$$ import net.minecraft.util.math.Vec3d;
 //#endif
+//#if MC <= 11502
+//$$ import net.minecraft.world.dimension.DimensionType;
+//#endif
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -112,7 +115,11 @@ public class DiscordEventListener extends ListenerAdapter {
 				try {
 					JsonArray players = new Gson().fromJson(IOUtils.toString(new File(FabricLoader.getInstance().getGameDir().toAbsolutePath() + "/usercache.json").toURI(), StandardCharsets.UTF_8), JsonArray.class);
 
+					//#if MC >= 11600
 					FileUtils.listFiles(new File((SERVER.getSaveProperties().getLevelName() + "/stats/")), null, false).forEach(file -> {
+					//#else
+					//$$ FileUtils.listFiles(new File((SERVER.getLevelName() + "/stats/")), null, false).forEach(file -> {
+					//#endif
 						try {
 							for (JsonElement player : players) {
 								if (player.getAsJsonObject().get("uuid").getAsString().equals(file.getName().replace(".json", ""))) {
@@ -228,8 +235,10 @@ public class DiscordEventListener extends ListenerAdapter {
 								.whenComplete((v, ex) -> SERVER.getCommandManager()
 										//#if MC >= 11700
 										.execute(SERVER.getCommandSource().withOutput(new DiscordCommandOutput(e)), command));
+										//#elseif MC >= 11600
+										//$$ .execute(new ServerCommandSource(new DiscordCommandOutput(e), Vec3d.ZERO, Vec2f.ZERO, SERVER.getOverworld(), 4, "MCDiscordChat", new LiteralText("MCDiscordChat"), SERVER, null), command));
 										//#else
-										//$$  .execute(new ServerCommandSource(new DiscordCommandOutput(e), Vec3d.ZERO, Vec2f.ZERO, SERVER.getOverworld(), 4, "MCDiscordChat", new LiteralText("MCDiscordChat"), SERVER, null), command));
+										//$$ .execute(new ServerCommandSource(new DiscordCommandOutput(e), Vec3d.ZERO, Vec2f.ZERO, SERVER.getWorld(DimensionType.OVERWORLD), 4, "MCDiscordChat", new LiteralText("MCDiscordChat"), SERVER, null), command));
 										//#endif
 					}
 				} else {

@@ -239,7 +239,11 @@ public class Utils {
 				String topic = TEXTS.onlineChannelTopic()
 						.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerManager().getPlayerList().size()))
 						.replace("%maxPlayerCount%", Integer.toString(SERVER.getPlayerManager().getMaxPlayerCount()))
+						//#if MC >= 11600
 						.replace("%uniquePlayerCount%", Integer.toString(FileUtils.listFiles(new File((SERVER.getSaveProperties().getLevelName() + "/stats/")), null, false).size()))
+						//#else
+						//$$ .replace("%uniquePlayerCount%", Integer.toString(FileUtils.listFiles(new File((SERVER.getLevelName() + "/stats/")), null, false).size()))
+						//#endif
 						.replace("%serverStartedTime%", SERVER_STARTED_TIME)
 						.replace("%lastUpdateTime%", Long.toString(Instant.now().getEpochSecond()));
 

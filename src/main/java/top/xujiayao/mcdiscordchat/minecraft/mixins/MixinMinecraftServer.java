@@ -26,7 +26,7 @@ import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 @Mixin(MinecraftServer.class)
 public class MixinMinecraftServer {
 
-	//#if MC >= 11900
+	//#if MC >= 11900 || MC <= 11502
 	//$$ @Inject(method = "sendMessage", at = @At("HEAD"))
 	//$$ private void sendMessage(Text message, CallbackInfo ci) {
 	//#else

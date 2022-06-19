@@ -12,8 +12,13 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
 import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+//#if MC >= 11700
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+//#else
+//$$ import org.apache.logging.log4j.Logger;
+//$$ import org.apache.logging.log4j.LogManager;
+//#endif
 import top.xujiayao.mcdiscordchat.discord.DiscordEventListener;
 import top.xujiayao.mcdiscordchat.multiServer.MultiServer;
 import top.xujiayao.mcdiscordchat.utils.ConfigManager;
@@ -31,7 +36,11 @@ import java.util.Timer;
 public class Main implements DedicatedServerModInitializer {
 
 	public static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
+	//#if MC >= 11700
 	public static final Logger LOGGER = LoggerFactory.getLogger("MCDiscordChat");
+	//#else
+	//$$ public static final Logger LOGGER = LogManager.getLogger("MCDiscordChat");
+	//#endif
 	public static final File CONFIG_FILE = new File(FabricLoader.getInstance().getConfigDir().toFile(), "mcdiscordchat.json");
 	public static final File CONFIG_BACKUP_FILE = new File(FabricLoader.getInstance().getConfigDir().toFile(), "mcdiscordchat-backup.json");
 	public static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("HH:mm:ss");

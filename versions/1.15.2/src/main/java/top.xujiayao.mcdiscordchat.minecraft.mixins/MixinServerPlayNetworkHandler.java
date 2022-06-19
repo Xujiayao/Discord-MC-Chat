@@ -1,4 +1,3 @@
-//#if MC >= 11600
 package top.xujiayao.mcdiscordchat.minecraft.mixins;
 
 import com.google.gson.Gson;
@@ -8,21 +7,20 @@ import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
-import net.minecraft.client.option.ChatVisibility;
-import net.minecraft.network.MessageType;
+import net.minecraft.SharedConstants;
+import net.minecraft.client.options.ChatVisibility;
+import net.minecraft.network.NetworkThreadUtils;
 import net.minecraft.network.Packet;
-import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
+import net.minecraft.network.listener.ServerPlayPacketListener;
+import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
+import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket;
 import net.minecraft.server.MinecraftServer;
-//#if MC >= 11700
-import net.minecraft.server.filter.TextStream.Message;
-//#endif
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Util;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -55,7 +53,7 @@ import static top.xujiayao.mcdiscordchat.Main.SERVER;
  * @author Xujiayao
  */
 @Mixin(ServerPlayNetworkHandler.class)
-public abstract class MixinServerPlayNetworkHandler {
+public abstract class MixinServerPlayNetworkHandler implements ServerPlayPacketListener {
 
 	@Shadow
 	private ServerPlayerEntity player;
@@ -76,35 +74,31 @@ public abstract class MixinServerPlayNetworkHandler {
 	@Shadow
 	public abstract void disconnect(Text reason);
 
-	//#if MC >= 11700
-	@Inject(method = "handleMessage", at = @At("HEAD"), cancellable = true)
-	private void handleMessage(Message message, CallbackInfo ci) {
-	//#else
-	//$$ @Inject(method = "method_31286", at = @At("HEAD"), cancellable = true)
-	//$$ private void handleMessage(String string, CallbackInfo ci) {
-	//#endif
+	@Inject(method = "onChatMessage", at = @At("HEAD"), cancellable = true)
+	public void onChatMessage(ChatMessageC2SPacket packet, CallbackInfo ci) {
+		NetworkThreadUtils.forceMainThread(packet, this, player.getServerWorld());
 		if (player.getClientChatVisibility() == ChatVisibility.HIDDEN) {
-			sendPacket(new GameMessageS2CPacket((new TranslatableText("chat.disabled.options")).formatted(Formatting.RED), MessageType.SYSTEM, Util.NIL_UUID));
+			sendPacket(new ChatMessageS2CPacket((new TranslatableText("chat.cannotSend")).formatted(Formatting.RED)));
 			ci.cancel();
 		} else {
 			player.updateLastActionTime();
+			String string = packet.getChatMessage();
+			string = StringUtils.normalizeSpace(string);
 
-			//#if MC >= 11700
-			if (message.getRaw().startsWith("/")) {
-				executeCommand(message.getRaw());
-			//#else
-			//$$ if (string.startsWith("/")) {
-			//$$  executeCommand(string);
-			//#endif
+			for (int i = 0; i < string.length(); ++i) {
+				if (!SharedConstants.isValidChar(string.charAt(i))) {
+					disconnect(new TranslatableText("multiplayer.disconnect.illegal_characters"));
+					ci.cancel();
+					return;
+				}
+			}
+
+			if (string.startsWith("/")) {
+				executeCommand(string);
 				ci.cancel();
 			} else {
-				//#if MC >= 11700
-				String contentToDiscord = message.getRaw();
-				String contentToMinecraft = message.getRaw();
-				//#else
-				//$$ String contentToDiscord = string;
-				//$$ String contentToMinecraft = string;
-				//#endif
+				String contentToDiscord = string;
+				String contentToMinecraft = string;
 
 				if (StringUtils.countMatches(contentToDiscord, ":") >= 2) {
 					String[] emoteNames = StringUtils.substringsBetween(contentToDiscord, ":", ":");
@@ -179,11 +173,7 @@ public abstract class MixinServerPlayNetworkHandler {
 						}
 					}
 
-					//#if MC >= 11800
-					server.getPlayerManager().broadcast(Text.of(contentToMinecraft), MessageType.CHAT, player.getUuid());
-					//#else
-					//$$ server.getPlayerManager().broadcastChatMessage(Text.of(contentToMinecraft), MessageType.CHAT, player.getUuid());
-					//#endif
+					server.getPlayerManager().broadcastChatMessage(new TranslatableText("chat.type.text", player.getDisplayName(), contentToMinecraft), false);
 					ci.cancel();
 				}
 
@@ -213,9 +203,9 @@ public abstract class MixinServerPlayNetworkHandler {
 				Text text = new LiteralText("<").append(player.getEntityName()).append("> ").append(input);
 
 				List<ServerPlayerEntity> list = new ArrayList<>(server.getPlayerManager().getPlayerList());
-				list.forEach(serverPlayerEntity -> serverPlayerEntity.sendMessage(text, false));
+				list.forEach(serverPlayerEntity -> serverPlayerEntity.sendMessage(text));
 
-				SERVER.sendSystemMessage(text, player.getUuid());
+				SERVER.sendMessage(text);
 
 				sendMessage(input, true);
 				if (CONFIG.multiServer.enable) {
@@ -253,4 +243,3 @@ public abstract class MixinServerPlayNetworkHandler {
 		}
 	}
 }
-//#endif

@@ -30,10 +30,14 @@ public abstract class MixinServerPlayerEntity extends PlayerEntity {
 	//$$ private MixinServerPlayerEntity(World world, BlockPos pos, float yaw, GameProfile profile, PlayerPublicKey publicKey) {
 	//$$ 	super(world, pos, yaw, profile, publicKey);
 	//$$ }
-	//#else
+	//#elseif MC >= 11600
 	private MixinServerPlayerEntity(World world, BlockPos pos, float yaw, GameProfile profile) {
 	 super(world, pos, yaw, profile);
 	}
+	//#else
+	//$$ private MixinServerPlayerEntity(World world, GameProfile profile) {
+	//$$  super(world, profile);
+	//$$ }
 	//#endif
 
 	@Inject(method = "onDeath", at = @At("HEAD"))
