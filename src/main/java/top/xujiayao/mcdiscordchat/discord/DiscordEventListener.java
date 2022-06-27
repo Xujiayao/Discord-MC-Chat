@@ -9,6 +9,7 @@ import com.vdurmont.emoji.EmojiParser;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageSticker;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -344,6 +345,17 @@ public class DiscordEventListener extends ListenerAdapter {
 						referencedMessage.append("file>");
 					}
 				}
+			}
+
+			if (!e.getMessage().getReferencedMessage().getStickers().isEmpty()) {
+				for (MessageSticker sticker : e.getMessage().getReferencedMessage().getStickers()) {
+					referencedMessage.append(Formatting.YELLOW).append("<sticker>");
+				}
+			}
+
+			// ignore Discord's built in gifs, can only be one
+			if (StringUtils.startsWith(referencedMessage, "https://tenor.com/view")) {
+				referencedMessage.append("<gif>");
 			}
 
 			if (StringUtils.countMatches(referencedMessage, ":") >= 2) {
