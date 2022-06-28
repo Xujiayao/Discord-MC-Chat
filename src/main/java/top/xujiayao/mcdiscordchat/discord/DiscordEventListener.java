@@ -355,7 +355,6 @@ public class DiscordEventListener extends ListenerAdapter {
 
 			// ignore Discord's built in gifs, can only be one
 			if (StringUtils.startsWith(referencedMessage, "https://")
-					&& StringUtils.endsWith(referencedMessage, ".gif")
 					&& StringUtils.contains(referencedMessage, "tenor.com")) {
 				referencedMessage.append(Formatting.YELLOW).append("<gif>");
 			}
