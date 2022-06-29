@@ -180,9 +180,9 @@ public abstract class MixinServerPlayNetworkHandler {
 					}
 
 					//#if MC >= 11800
-					server.getPlayerManager().broadcast(new TranslatableText("chat.type.text", player.getDisplayName(), contentToMinecraft), MessageType.CHAT, player.getUuid());
+					server.getPlayerManager().broadcast(new TranslatableText("chat.type.text", player.getDisplayName(), Text.Serializer.fromJson("[{\"text\":\"" + contentToMinecraft + "\"}]")), MessageType.CHAT, player.getUuid());
 					//#else
-					//$$ server.getPlayerManager().broadcastChatMessage(new TranslatableText("chat.type.text", player.getDisplayName(), contentToMinecraft), MessageType.CHAT, player.getUuid());
+					//$$ server.getPlayerManager().broadcastChatMessage(new TranslatableText("chat.type.text", player.getDisplayName(), Text.Serializer.fromJson("[{\"text\":\"" + contentToMinecraft + "\"}]")), MessageType.CHAT, player.getUuid());
 					//#endif
 					ci.cancel();
 				}
