@@ -3,9 +3,9 @@ package top.xujiayao.mcdiscordchat.minecraft.mixins;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.vdurmont.emoji.EmojiManager;
-import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.minecraft.SharedConstants;
 import net.minecraft.network.message.MessageType;
@@ -85,14 +85,14 @@ public abstract class MixinServerPlayNetworkHandler {
 			String contentToMinecraft = packet.getChatMessage();
 
 			if (StringUtils.countMatches(contentToDiscord, ":") >= 2) {
-				String[] emoteNames = StringUtils.substringsBetween(contentToDiscord, ":", ":");
-				for (String emoteName : emoteNames) {
-					List<Emote> emotes = JDA.getEmotesByName(emoteName, true);
-					if (!emotes.isEmpty()) {
-						contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, (":" + emoteName + ":"), emotes.get(0).getAsMention());
-						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, (":" + emoteName + ":"), (Formatting.YELLOW + ":" + emoteName + ":" + Formatting.WHITE));
-					} else if (EmojiManager.getForAlias(emoteName) != null) {
-						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, (":" + emoteName + ":"), (Formatting.YELLOW + ":" + emoteName + ":" + Formatting.WHITE));
+				String[] emojiNames = StringUtils.substringsBetween(contentToDiscord, ":", ":");
+				for (String emojiName : emojiNames) {
+					List<RichCustomEmoji> emojis = JDA.getEmojisByName(emojiName, true);
+					if (!emojis.isEmpty()) {
+						contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, (":" + emojiName + ":"), emojis.get(0).getAsMention());
+						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.WHITE));
+					} else if (EmojiManager.getForAlias(emojiName) != null) {
+						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.WHITE));
 					}
 				}
 			}
@@ -126,34 +126,26 @@ public abstract class MixinServerPlayNetworkHandler {
 			if (CONFIG.generic.modifyChatMessages) {
 				contentToMinecraft = MarkdownParser.parseMarkdown(contentToMinecraft);
 
-				if (contentToMinecraft.contains("http://")) {
-					String[] links = StringUtils.substringsBetween(contentToMinecraft, "http://", " ");
-					if (!StringUtils.substringAfterLast(contentToMinecraft, "http://").contains(" ")) {
-						links = ArrayUtils.add(links, StringUtils.substringAfterLast(contentToMinecraft, "http://"));
-					}
-					for (String link : links) {
-						if (link.contains("\n")) {
-							link = StringUtils.substringBefore(link, "\n");
+				for (String protocol : new String[]{"http://", "https://"}) {
+					if (contentToMinecraft.contains(protocol)) {
+						String[] links = StringUtils.substringsBetween(contentToMinecraft, protocol, " ");
+						if (!StringUtils.substringAfterLast(contentToMinecraft, protocol).contains(" ")) {
+							links = ArrayUtils.add(links, StringUtils.substringAfterLast(contentToMinecraft, protocol));
 						}
+						for (String link : links) {
+							if (link.contains("\n")) {
+								link = StringUtils.substringBefore(link, "\n");
+							}
 
-						String hyperlinkInsert = "\"},{\"text\":\"http://" + link + "\",\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "http://" + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{\"text\":\"";
-						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, ("http://" + link), hyperlinkInsert);
-					}
-				}
-
-				if (contentToMinecraft.contains("https://")) {
-					String[] links = StringUtils.substringsBetween(contentToMinecraft, "https://", " ");
-					if (!StringUtils.substringAfterLast(contentToMinecraft, "https://").contains(" ")) {
-						links = ArrayUtils.add(links, StringUtils.substringAfterLast(contentToMinecraft, "https://"));
-					}
-
-					for (String link : links) {
-						if (link.contains("\n")) {
-							link = StringUtils.substringBefore(link, "\n");
+							String hyperlinkInsert;
+							if (StringUtils.containsIgnoreCase(link, "gif")
+									&& StringUtils.containsIgnoreCase(link, "tenor.com")) {
+								hyperlinkInsert = "\"},{\"text\":\"<gif>\",\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{\"text\":\"";
+							} else {
+								hyperlinkInsert = "\"},{\"text\":\"" + protocol + link + "\",\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{\"text\":\"";
+							}
+							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, (protocol + link), hyperlinkInsert);
 						}
-
-						String hyperlinkInsert = "\"},{\"text\":\"https://" + link + "\",\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "https://" + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{\"text\":\"";
-						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, ("https://" + link), hyperlinkInsert);
 					}
 				}
 

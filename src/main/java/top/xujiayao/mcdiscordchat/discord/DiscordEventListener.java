@@ -6,11 +6,11 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.vdurmont.emoji.EmojiManager;
 import com.vdurmont.emoji.EmojiParser;
-import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageSticker;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
+import net.dv8tion.jda.api.entities.sticker.StickerItem;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -351,19 +351,19 @@ public class DiscordEventListener extends ListenerAdapter {
 				if (!e.getMessage().getReferencedMessage().getContentDisplay().isBlank()) {
 					referencedMessage.append(" ");
 				}
-				for (MessageSticker ignored : e.getMessage().getReferencedMessage().getStickers()) {
+				for (StickerItem ignored : e.getMessage().getReferencedMessage().getStickers()) {
 					referencedMessage.append(Formatting.YELLOW).append("<sticker>");
 				}
 			}
 
 			if (StringUtils.countMatches(referencedMessage, ":") >= 2) {
-				String[] emoteNames = StringUtils.substringsBetween(referencedMessage.toString(), ":", ":");
-				for (String emoteName : emoteNames) {
-					List<Emote> emotes = JDA.getEmotesByName(emoteName, true);
-					if (!emotes.isEmpty()) {
-						referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emoteName + ":"), (Formatting.YELLOW + ":" + emoteName + ":" + Formatting.DARK_GRAY)));
-					} else if (EmojiManager.getForAlias(emoteName) != null) {
-						referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emoteName + ":"), (Formatting.YELLOW + ":" + emoteName + ":" + Formatting.DARK_GRAY)));
+				String[] emojiNames = StringUtils.substringsBetween(referencedMessage.toString(), ":", ":");
+				for (String emojiName : emojiNames) {
+					List<RichCustomEmoji> emojis = JDA.getEmojisByName(emojiName, true);
+					if (!emojis.isEmpty()) {
+						referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.DARK_GRAY)));
+					} else if (EmojiManager.getForAlias(emojiName) != null) {
+						referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.DARK_GRAY)));
 					}
 				}
 			}
@@ -431,19 +431,19 @@ public class DiscordEventListener extends ListenerAdapter {
 			if (!e.getMessage().getContentDisplay().isBlank()) {
 				message.append(" ");
 			}
-			for (MessageSticker ignored : e.getMessage().getStickers()) {
+			for (StickerItem ignored : e.getMessage().getStickers()) {
 				message.append(Formatting.YELLOW).append("<sticker>");
 			}
 		}
 
 		if (StringUtils.countMatches(message, ":") >= 2) {
-			String[] emoteNames = StringUtils.substringsBetween(message.toString(), ":", ":");
-			for (String emoteName : emoteNames) {
-				List<Emote> emotes = JDA.getEmotesByName(emoteName, true);
-				if (!emotes.isEmpty()) {
-					message = new StringBuilder(StringUtils.replaceIgnoreCase(message.toString(), (":" + emoteName + ":"), (Formatting.YELLOW + ":" + emoteName + ":" + Formatting.GRAY)));
-				} else if (EmojiManager.getForAlias(emoteName) != null) {
-					message = new StringBuilder(StringUtils.replaceIgnoreCase(message.toString(), (":" + emoteName + ":"), (Formatting.YELLOW + ":" + emoteName + ":" + Formatting.GRAY)));
+			String[] emojiNames = StringUtils.substringsBetween(message.toString(), ":", ":");
+			for (String emojiName : emojiNames) {
+				List<RichCustomEmoji> emojis = JDA.getEmojisByName(emojiName, true);
+				if (!emojis.isEmpty()) {
+					message = new StringBuilder(StringUtils.replaceIgnoreCase(message.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.GRAY)));
+				} else if (EmojiManager.getForAlias(emojiName) != null) {
+					message = new StringBuilder(StringUtils.replaceIgnoreCase(message.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.GRAY)));
 				}
 			}
 		}
