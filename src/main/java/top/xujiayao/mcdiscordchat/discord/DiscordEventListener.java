@@ -348,15 +348,12 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 
 			if (!e.getMessage().getReferencedMessage().getStickers().isEmpty()) {
-				for (MessageSticker sticker : e.getMessage().getReferencedMessage().getStickers()) {
+				if (!e.getMessage().getReferencedMessage().getContentDisplay().isBlank()) {
+					referencedMessage.append(" ");
+				}
+				for (MessageSticker ignored : e.getMessage().getReferencedMessage().getStickers()) {
 					referencedMessage.append(Formatting.YELLOW).append("<sticker>");
 				}
-			}
-
-			// ignore Discord's built in gifs, can only be one
-			if (StringUtils.startsWith(referencedMessage, "https://")
-					&& StringUtils.contains(referencedMessage, "tenor.com")) {
-				referencedMessage.append(Formatting.YELLOW).append("<gif>");
 			}
 
 			if (StringUtils.countMatches(referencedMessage, ":") >= 2) {
@@ -388,33 +385,26 @@ public class DiscordEventListener extends ListenerAdapter {
 
 			finalReferencedMessage = MarkdownParser.parseMarkdown(referencedMessage.toString());
 
-			if (finalReferencedMessage.contains("http://")) {
-				String[] links = StringUtils.substringsBetween(finalReferencedMessage, "http://", " ");
-				if (!StringUtils.substringAfterLast(finalReferencedMessage, "http://").contains(" ")) {
-					links = ArrayUtils.add(links, StringUtils.substringAfterLast(finalReferencedMessage, "http://"));
-				}
-				for (String link : links) {
-					if (link.contains("\n")) {
-						link = StringUtils.substringBefore(link, "\n");
+			for (String protocol : new String[]{"http://", "https://"}) {
+				if (finalReferencedMessage.contains(protocol)) {
+					String[] links = StringUtils.substringsBetween(finalReferencedMessage, protocol, " ");
+					if (!StringUtils.substringAfterLast(finalReferencedMessage, protocol).contains(" ")) {
+						links = ArrayUtils.add(links, StringUtils.substringAfterLast(finalReferencedMessage, protocol));
 					}
+					for (String link : links) {
+						if (link.contains("\n")) {
+							link = StringUtils.substringBefore(link, "\n");
+						}
 
-					String hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"http://" + link + "\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "http://" + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
-					finalReferencedMessage = StringUtils.replaceIgnoreCase(finalReferencedMessage, ("http://" + link), hyperlinkInsert);
-				}
-			}
-
-			if (finalReferencedMessage.contains("https://")) {
-				String[] links = StringUtils.substringsBetween(finalReferencedMessage, "https://", " ");
-				if (!StringUtils.substringAfterLast(referencedMessage.toString(), "https://").contains(" ")) {
-					links = ArrayUtils.add(links, StringUtils.substringAfterLast(referencedMessage.toString(), "https://"));
-				}
-				for (String link : links) {
-					if (link.contains("\n")) {
-						link = StringUtils.substringBefore(link, "\n");
+						String hyperlinkInsert;
+						if (StringUtils.containsIgnoreCase(link, "gif")
+								&& StringUtils.containsIgnoreCase(link, "tenor.com")) {
+							hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"<gif>\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
+						} else {
+							hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"" + protocol + link + "\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
+						}
+						finalReferencedMessage = StringUtils.replaceIgnoreCase(finalReferencedMessage, (protocol + link), hyperlinkInsert);
 					}
-
-					String hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"https://" + link + "\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "https://" + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
-					finalReferencedMessage = StringUtils.replaceIgnoreCase(finalReferencedMessage, ("https://" + link), hyperlinkInsert);
 				}
 			}
 		}
@@ -434,6 +424,15 @@ public class DiscordEventListener extends ListenerAdapter {
 				} else {
 					message.append("file>");
 				}
+			}
+		}
+
+		if (!e.getMessage().getStickers().isEmpty()) {
+			if (!e.getMessage().getContentDisplay().isBlank()) {
+				message.append(" ");
+			}
+			for (MessageSticker ignored : e.getMessage().getStickers()) {
+				message.append(Formatting.YELLOW).append("<sticker>");
 			}
 		}
 
@@ -466,33 +465,26 @@ public class DiscordEventListener extends ListenerAdapter {
 
 		String finalMessage = MarkdownParser.parseMarkdown(message.toString());
 
-		if (finalMessage.contains("http://")) {
-			String[] links = StringUtils.substringsBetween(finalMessage, "http://", " ");
-			if (!StringUtils.substringAfterLast(finalMessage, "http://").contains(" ")) {
-				links = ArrayUtils.add(links, StringUtils.substringAfterLast(finalMessage, "http://"));
-			}
-			for (String link : links) {
-				if (link.contains("\n")) {
-					link = StringUtils.substringBefore(link, "\n");
+		for (String protocol : new String[]{"http://", "https://"}) {
+			if (finalMessage.contains(protocol)) {
+				String[] links = StringUtils.substringsBetween(finalMessage, protocol, " ");
+				if (!StringUtils.substringAfterLast(finalMessage, protocol).contains(" ")) {
+					links = ArrayUtils.add(links, StringUtils.substringAfterLast(finalMessage, protocol));
 				}
+				for (String link : links) {
+					if (link.contains("\n")) {
+						link = StringUtils.substringBefore(link, "\n");
+					}
 
-				String hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"http://" + link + "\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "http://" + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
-				finalMessage = StringUtils.replaceIgnoreCase(finalMessage, ("http://" + link), hyperlinkInsert);
-			}
-		}
-
-		if (finalMessage.contains("https://")) {
-			String[] links = StringUtils.substringsBetween(finalMessage, "https://", " ");
-			if (!StringUtils.substringAfterLast(finalMessage, "https://").contains(" ")) {
-				links = ArrayUtils.add(links, StringUtils.substringAfterLast(finalMessage, "https://"));
-			}
-			for (String link : links) {
-				if (link.contains("\n")) {
-					link = StringUtils.substringBefore(link, "\n");
+					String hyperlinkInsert;
+					if (StringUtils.containsIgnoreCase(link, "gif")
+							&& StringUtils.containsIgnoreCase(link, "tenor.com")) {
+						hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"<gif>\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
+					} else {
+						hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"" + protocol + link + "\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
+					}
+					finalMessage = StringUtils.replaceIgnoreCase(finalMessage, (protocol + link), hyperlinkInsert);
 				}
-
-				String hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"https://" + link + "\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "https://" + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
-				finalMessage = StringUtils.replaceIgnoreCase(finalMessage, ("https://" + link), hyperlinkInsert);
 			}
 		}
 
