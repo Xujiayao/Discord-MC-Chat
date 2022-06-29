@@ -148,34 +148,26 @@ public abstract class MixinServerPlayNetworkHandler {
 				if (CONFIG.generic.modifyChatMessages) {
 					contentToMinecraft = MarkdownParser.parseMarkdown(contentToMinecraft);
 
-					if (contentToMinecraft.contains("http://")) {
-						String[] links = StringUtils.substringsBetween(contentToMinecraft, "http://", " ");
-						if (!StringUtils.substringAfterLast(contentToMinecraft, "http://").contains(" ")) {
-							links = ArrayUtils.add(links, StringUtils.substringAfterLast(contentToMinecraft, "http://"));
-						}
-						for (String link : links) {
-							if (link.contains("\n")) {
-								link = StringUtils.substringBefore(link, "\n");
+					for (String protocol : new String[]{"http://", "https://"}) {
+						if (contentToMinecraft.contains(protocol)) {
+							String[] links = StringUtils.substringsBetween(contentToMinecraft, protocol, " ");
+							if (!StringUtils.substringAfterLast(contentToMinecraft, protocol).contains(" ")) {
+								links = ArrayUtils.add(links, StringUtils.substringAfterLast(contentToMinecraft, protocol));
 							}
+							for (String link : links) {
+								if (link.contains("\n")) {
+									link = StringUtils.substringBefore(link, "\n");
+								}
 
-							String hyperlinkInsert = "\"},{\"text\":\"http://" + link + "\",\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "http://" + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{\"text\":\"";
-							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, ("http://" + link), hyperlinkInsert);
-						}
-					}
-
-					if (contentToMinecraft.contains("https://")) {
-						String[] links = StringUtils.substringsBetween(contentToMinecraft, "https://", " ");
-						if (!StringUtils.substringAfterLast(contentToMinecraft, "https://").contains(" ")) {
-							links = ArrayUtils.add(links, StringUtils.substringAfterLast(contentToMinecraft, "https://"));
-						}
-
-						for (String link : links) {
-							if (link.contains("\n")) {
-								link = StringUtils.substringBefore(link, "\n");
+								String hyperlinkInsert;
+								if (StringUtils.containsIgnoreCase(link, "gif")
+										&& StringUtils.containsIgnoreCase(link, "tenor.com")) {
+									hyperlinkInsert = "\"},{\"text\":\"<gif>\",\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{\"text\":\"";
+								} else {
+									hyperlinkInsert = "\"},{\"text\":\"" + protocol + link + "\",\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{\"text\":\"";
+								}
+								contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, (protocol + link), hyperlinkInsert);
 							}
-
-							String hyperlinkInsert = "\"},{\"text\":\"https://" + link + "\",\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "https://" + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{\"text\":\"";
-							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, ("https://" + link), hyperlinkInsert);
 						}
 					}
 
