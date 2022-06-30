@@ -139,33 +139,33 @@ public abstract class MixinServerPlayNetworkHandler implements ServerPlayPacketL
 					}
 				}
 
-				if (CONFIG.generic.modifyChatMessages) {
-					contentToMinecraft = MarkdownParser.parseMarkdown(contentToMinecraft);
+				contentToMinecraft = MarkdownParser.parseMarkdown(contentToMinecraft);
 
-					for (String protocol : new String[]{"http://", "https://"}) {
-						if (contentToMinecraft.contains(protocol)) {
-							String[] links = StringUtils.substringsBetween(contentToMinecraft, protocol, " ");
-							if (!StringUtils.substringAfterLast(contentToMinecraft, protocol).contains(" ")) {
-								links = ArrayUtils.add(links, StringUtils.substringAfterLast(contentToMinecraft, protocol));
+				for (String protocol : new String[]{"http://", "https://"}) {
+					if (contentToMinecraft.contains(protocol)) {
+						String[] links = StringUtils.substringsBetween(contentToMinecraft, protocol, " ");
+						if (!StringUtils.substringAfterLast(contentToMinecraft, protocol).contains(" ")) {
+							links = ArrayUtils.add(links, StringUtils.substringAfterLast(contentToMinecraft, protocol));
+						}
+						for (String link : links) {
+							if (link.contains("\n")) {
+								link = StringUtils.substringBefore(link, "\n");
 							}
-							for (String link : links) {
-								if (link.contains("\n")) {
-									link = StringUtils.substringBefore(link, "\n");
-								}
 
-								String hyperlinkInsert;
-								if (StringUtils.containsIgnoreCase(link, "gif")
-										&& StringUtils.containsIgnoreCase(link, "tenor.com")) {
-									hyperlinkInsert = "\"},{\"text\":\"<gif>\",\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{\"text\":\"";
-								} else {
-									hyperlinkInsert = "\"},{\"text\":\"" + protocol + link + "\",\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{\"text\":\"";
-								}
-								contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, (protocol + link), hyperlinkInsert);
+							String hyperlinkInsert;
+							if (StringUtils.containsIgnoreCase(link, "gif")
+									&& StringUtils.containsIgnoreCase(link, "tenor.com")) {
+								hyperlinkInsert = "\"},{\"text\":\"<gif>\",\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{\"text\":\"";
+							} else {
+								hyperlinkInsert = "\"},{\"text\":\"" + protocol + link + "\",\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{\"text\":\"";
 							}
+							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, (protocol + link), hyperlinkInsert);
 						}
 					}
+				}
 
-					server.getPlayerManager().broadcastChatMessage(new TranslatableText("chat.type.text", player.getDisplayName(), contentToMinecraft), false);
+				if (CONFIG.generic.modifyChatMessages) {
+					server.getPlayerManager().broadcastChatMessage(new TranslatableText("chat.type.text", player.getDisplayName(), Text.Serializer.fromJson("[{\"text\":\"" + contentToMinecraft + "\"}]")), false);
 					ci.cancel();
 				}
 
