@@ -170,7 +170,7 @@ public abstract class MixinServerPlayNetworkHandler {
 					}
 				}
 
-				if (CONFIG.generic.modifyChatMessages) {
+				if (CONFIG.generic.formatChatMessages) {
 					//#if MC >= 11800
 					server.getPlayerManager().broadcast(new TranslatableText("chat.type.text", player.getDisplayName(), Text.Serializer.fromJson("[{\"text\":\"" + contentToMinecraft + "\"}]")), MessageType.CHAT, player.getUuid());
 					//#else
@@ -181,7 +181,11 @@ public abstract class MixinServerPlayNetworkHandler {
 
 				sendMessage(contentToDiscord, false);
 				if (CONFIG.multiServer.enable) {
-					MULTI_SERVER.sendMessage(false, true, player.getEntityName(), contentToMinecraft);
+					//#if MC >= 11700
+					MULTI_SERVER.sendMessage(false, true, player.getEntityName(), CONFIG.generic.formatChatMessages ? contentToMinecraft : message.getRaw());
+					//#else
+					//$$ MULTI_SERVER.sendMessage(false, true, player.getEntityName(), CONFIG.generic.formatChatMessages ? contentToMinecraft : string);
+					//#endif
 				}
 			}
 

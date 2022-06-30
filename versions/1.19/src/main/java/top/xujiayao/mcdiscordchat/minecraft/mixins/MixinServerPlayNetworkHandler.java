@@ -148,7 +148,7 @@ public abstract class MixinServerPlayNetworkHandler {
 				}
 			}
 
-			if (CONFIG.generic.modifyChatMessages) {
+			if (CONFIG.generic.formatChatMessages) {
 				server.getPlayerManager().broadcast(FilteredMessage.permitted(SignedMessage.of(Text.Serializer.fromJson("[{\"text\":\"" + contentToMinecraft + "\"}]"))), player, MessageType.CHAT);
 			} else {
 				filterText(packet.getChatMessage(), (message) -> handleMessage(packet, message));
@@ -156,7 +156,7 @@ public abstract class MixinServerPlayNetworkHandler {
 
 			sendMessage(contentToDiscord, false);
 			if (CONFIG.multiServer.enable) {
-				MULTI_SERVER.sendMessage(false, true, player.getEntityName(), contentToMinecraft);
+				MULTI_SERVER.sendMessage(false, true, player.getEntityName(), CONFIG.generic.formatChatMessages ? contentToMinecraft : packet.getChatMessage());
 			}
 		}
 

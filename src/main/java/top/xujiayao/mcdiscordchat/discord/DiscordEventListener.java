@@ -331,7 +331,7 @@ public class DiscordEventListener extends ListenerAdapter {
 		if (e.getMessage().getReferencedMessage() != null) {
 			referencedMessage = new StringBuilder(EmojiParser.parseToAliases(e.getMessage().getReferencedMessage().getContentDisplay()));
 
-			if (!e.getMessage().getReferencedMessage().getAttachments().isEmpty()) {
+			if (CONFIG.generic.formatChatMessages && !e.getMessage().getReferencedMessage().getAttachments().isEmpty()) {
 				if (!e.getMessage().getReferencedMessage().getContentDisplay().isBlank()) {
 					referencedMessage.append(" ");
 				}
@@ -347,7 +347,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				}
 			}
 
-			if (!e.getMessage().getReferencedMessage().getStickers().isEmpty()) {
+			if (CONFIG.generic.formatChatMessages && !e.getMessage().getReferencedMessage().getStickers().isEmpty()) {
 				if (!e.getMessage().getReferencedMessage().getContentDisplay().isBlank()) {
 					referencedMessage.append(" ");
 				}
@@ -356,19 +356,19 @@ public class DiscordEventListener extends ListenerAdapter {
 				}
 			}
 
-			if (StringUtils.countMatches(referencedMessage, ":") >= 2) {
+			if (CONFIG.generic.formatChatMessages && StringUtils.countMatches(referencedMessage, ":") >= 2) {
 				String[] emojiNames = StringUtils.substringsBetween(referencedMessage.toString(), ":", ":");
 				for (String emojiName : emojiNames) {
 					List<RichCustomEmoji> emojis = JDA.getEmojisByName(emojiName, true);
 					if (!emojis.isEmpty()) {
 						referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.DARK_GRAY)));
-					} else if (CONFIG.generic.modifyChatMessages && EmojiManager.getForAlias(emojiName) != null) {
+					} else if (EmojiManager.getForAlias(emojiName) != null) {
 						referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.DARK_GRAY)));
 					}
 				}
 			}
 
-			if (referencedMessage.toString().contains("@")) {
+			if (CONFIG.generic.formatChatMessages && referencedMessage.toString().contains("@")) {
 				String[] memberNames = StringUtils.substringsBetween(referencedMessage.toString(), "@", " ");
 				if (!StringUtils.substringAfterLast(referencedMessage.toString(), "@").contains(" ")) {
 					memberNames = ArrayUtils.add(memberNames, StringUtils.substringAfterLast(referencedMessage.toString(), "@"));
@@ -386,7 +386,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			finalReferencedMessage = MarkdownParser.parseMarkdown(referencedMessage.toString());
 
 			for (String protocol : new String[]{"http://", "https://"}) {
-				if (finalReferencedMessage.contains(protocol)) {
+				if (CONFIG.generic.formatChatMessages && finalReferencedMessage.contains(protocol)) {
 					String[] links = StringUtils.substringsBetween(finalReferencedMessage, protocol, " ");
 					if (!StringUtils.substringAfterLast(finalReferencedMessage, protocol).contains(" ")) {
 						links = ArrayUtils.add(links, StringUtils.substringAfterLast(finalReferencedMessage, protocol));
@@ -411,7 +411,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
 		StringBuilder message = new StringBuilder(EmojiParser.parseToAliases(e.getMessage().getContentDisplay()));
 
-		if (!e.getMessage().getAttachments().isEmpty()) {
+		if (CONFIG.generic.formatChatMessages && !e.getMessage().getAttachments().isEmpty()) {
 			if (!e.getMessage().getContentDisplay().isBlank()) {
 				message.append(" ");
 			}
@@ -427,7 +427,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 		}
 
-		if (!e.getMessage().getStickers().isEmpty()) {
+		if (CONFIG.generic.formatChatMessages && !e.getMessage().getStickers().isEmpty()) {
 			if (!e.getMessage().getContentDisplay().isBlank()) {
 				message.append(" ");
 			}
@@ -436,19 +436,19 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 		}
 
-		if (StringUtils.countMatches(message, ":") >= 2) {
+		if (CONFIG.generic.formatChatMessages && StringUtils.countMatches(message, ":") >= 2) {
 			String[] emojiNames = StringUtils.substringsBetween(message.toString(), ":", ":");
 			for (String emojiName : emojiNames) {
 				List<RichCustomEmoji> emojis = JDA.getEmojisByName(emojiName, true);
 				if (!emojis.isEmpty()) {
 					message = new StringBuilder(StringUtils.replaceIgnoreCase(message.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.GRAY)));
-				} else if (CONFIG.generic.modifyChatMessages && EmojiManager.getForAlias(emojiName) != null) {
+				} else if (EmojiManager.getForAlias(emojiName) != null) {
 					message = new StringBuilder(StringUtils.replaceIgnoreCase(message.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.GRAY)));
 				}
 			}
 		}
 
-		if (message.toString().contains("@")) {
+		if (CONFIG.generic.formatChatMessages && message.toString().contains("@")) {
 			String[] memberNames = StringUtils.substringsBetween(message.toString(), "@", " ");
 			if (!StringUtils.substringAfterLast(message.toString(), "@").contains(" ")) {
 				memberNames = ArrayUtils.add(memberNames, StringUtils.substringAfterLast(message.toString(), "@"));
@@ -466,7 +466,7 @@ public class DiscordEventListener extends ListenerAdapter {
 		String finalMessage = MarkdownParser.parseMarkdown(message.toString());
 
 		for (String protocol : new String[]{"http://", "https://"}) {
-			if (finalMessage.contains(protocol)) {
+			if (CONFIG.generic.formatChatMessages && finalMessage.contains(protocol)) {
 				String[] links = StringUtils.substringsBetween(finalMessage, protocol, " ");
 				if (!StringUtils.substringAfterLast(finalMessage, protocol).contains(" ")) {
 					links = ArrayUtils.add(links, StringUtils.substringAfterLast(finalMessage, protocol));
