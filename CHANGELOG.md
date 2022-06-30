@@ -1,34 +1,44 @@
 # Changelog 更新日志
 
-## MCDiscordChat 2.0.0-alpha.3 for Minecraft 1.17.x/1.18.x/1.19.x - 2022/6/10
+## MCDiscordChat 2.0.0-alpha.4 for Minecraft 1.14+ - 2022/6/30
 
 ## New Features 新特性
 
-- Version 1.19.x supported
-  支持 1.19.x 版本
+- Support all Fabric Minecraft versions (Minecraft 1.14+) (#39)
+  支持所有 Fabric 版本（Minecraft 1.14+）
 
-- Players who execute commands can also see the commands themselves
-  执行指令的玩家也可以看到自己执行的指令
+- Use Discord to manage channels that can execute MCDC commands (#44)
+  使用 Discord 管理可执行 MCDC 命令的频道
 
-- Use the bot itself to send chat messages when Webhook URL is not filled (#36)
-  未填写 Webhook URL 时使用机器人自身发送聊天消息
+- Add support for Stickers and GIFs (#49)
+  添加对贴纸和 GIF 的支持
+
+- Messages from bots or users can be excluded without enabling multi-server mode
+  不启用多服务器模式也可以排除其它机器人或者用户的消息
+
+- Unicode emoji parsing can be disabled (#50)
+  可以禁用 Unicode 表情符号解析
 
 ## Changes 更改
 
-N/A
+- Fix process not terminating when updateChannelTopic is enabled
+  修复启用更新频道主题功能时进程没有终止的问题
+
+- Fix custom advancements not translated (#35)
+  修复自定义进度不翻译的问题
+
+- Fix in-game hyperlink parsing error when sending URLs
+  修复发送网址时游戏内超链接解析错误的问题
 
 ## Removed 移除
 
-- Version 1.16.x is no longer supported
-  不再支持 1.16.x 版本
-
-- Check for updates is no longer compatible with MCDC v1 versions
-  检查更新不再兼容 MCDC v1 版本
+N/A
 
 ## Contributors 贡献者
 
 - @Xujiayao
+- @svr333
 
 ## Detailed Information 详细信息
 
-https://github.com/Xujiayao/MCDiscordChat/compare/2.0.0-alpha.2...2.0.0-alpha.3
+https://github.com/Xujiayao/MCDiscordChat/compare/2.0.0-alpha.3...2.0.0-alpha.4
