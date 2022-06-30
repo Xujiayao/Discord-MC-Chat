@@ -362,7 +362,7 @@ public class DiscordEventListener extends ListenerAdapter {
 					List<RichCustomEmoji> emojis = JDA.getEmojisByName(emojiName, true);
 					if (!emojis.isEmpty()) {
 						referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.DARK_GRAY)));
-					} else if (EmojiManager.getForAlias(emojiName) != null) {
+					} else if (CONFIG.generic.modifyChatMessages && EmojiManager.getForAlias(emojiName) != null) {
 						referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.DARK_GRAY)));
 					}
 				}
@@ -442,7 +442,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				List<RichCustomEmoji> emojis = JDA.getEmojisByName(emojiName, true);
 				if (!emojis.isEmpty()) {
 					message = new StringBuilder(StringUtils.replaceIgnoreCase(message.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.GRAY)));
-				} else if (EmojiManager.getForAlias(emojiName) != null) {
+				} else if (CONFIG.generic.modifyChatMessages && EmojiManager.getForAlias(emojiName) != null) {
 					message = new StringBuilder(StringUtils.replaceIgnoreCase(message.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.GRAY)));
 				}
 			}
