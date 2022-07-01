@@ -19,6 +19,8 @@ public class Config {
 	public TextsEN textsEN = new TextsEN();
 
 	public static class Generic {
+		public boolean checkUpdateManually = false;
+
 		public boolean useEngInsteadOfChin = true;
 
 		public String botToken = "";
