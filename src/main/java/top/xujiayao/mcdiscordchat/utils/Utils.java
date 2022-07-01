@@ -87,6 +87,8 @@ public class Utils {
 					message.append("\n\n");
 					message.append(CONFIG.generic.useEngInsteadOfChin ? "Download link: <https://github.com/Xujiayao/MCDiscordChat/blob/master/README.md#Download>" : "下载链接：<https://github.com/Xujiayao/MCDiscordChat/blob/master/README_CN.md#%E4%B8%8B%E8%BD%BD>");
 					message.append("\n\n");
+					message.append(CONFIG.generic.useEngInsteadOfChin ? "Changelog: " : "更新日志：" + latestJson.get("changelog").getAsString());
+					message.append("\n\n");
 
 					if (CONFIG.generic.mentionAdmins) {
 						message.append(adminsMentionString());

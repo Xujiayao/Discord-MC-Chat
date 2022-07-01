@@ -55,14 +55,14 @@ If there is a bug or suggestion, or something you don't understand, you can [sub
 - Minecraft <> Discord cross server chat
   - Support Discord Webhook feature
     - Customizable Webhook Avatar API
-	- Use the bot itself to send chat messages when Webhook URL is not filled
+    - Use the bot itself to send chat messages when Webhook URL is not filled
   - Support in-game Markdown parsing
   - Support highlighting and using default Unicode and server custom emoji in-game
-    - Support disabling default Unicode emoji parsing
   - Support highlighting stickers in-game
   - Support highlighting and mentions (@) in-game
     - Support disabling mentions (@) in-game
   - Support highlighting and opening hyperlinks and GIFs in-game
+  - Support disabling all parsing
   - Support in-game display of Discord user role colour
   - Support in-game display of response messages
   - Broadcast player command execution
