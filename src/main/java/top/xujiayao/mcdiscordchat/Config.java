@@ -53,6 +53,10 @@ public class Config {
 		public List<String> excludedCommands = List.of("/tell");
 
 		public List<String> adminsIds = new ArrayList<>();
+
+		// NOTE(secondfry): possible values "full", "short" and "disabled".
+		// Empty considered to be "disabled".
+		public String updateMessage = "short";
 	}
 
 	public static class MultiServer {

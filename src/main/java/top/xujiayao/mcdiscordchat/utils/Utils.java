@@ -75,8 +75,11 @@ public class Utils {
 					message.append("\n\n");
 					message.append(CONFIG.generic.useEngInsteadOfChin ? "Download link: https://github.com/Xujiayao/MCDiscordChat/blob/master/README.md#Download" : "下载链接：https://github.com/Xujiayao/MCDiscordChat/blob/master/README_CN.md#%E4%B8%8B%E8%BD%BD");
 					message.append("\n\n");
-					message.append(latestJson.get("changelog").getAsString());
-					message.append("\n\n");
+
+					if (CONFIG.generic.updateMessage.equals("full")) {
+						message.append(latestJson.get("changelog").getAsString());
+						message.append("\n\n");
+					}
 
 					if (CONFIG.generic.mentionAdmins) {
 						message.append(adminsMentionString());
@@ -257,6 +260,14 @@ public class Utils {
 	}
 
 	public static void initCheckUpdateTimer() {
+		if (CONFIG.generic.updateMessage.isEmpty()) {
+			return;
+		}
+
+		if (CONFIG.generic.updateMessage.equals("disabled")) {
+			return;
+		}
+
 		CHECK_UPDATE_TIMER.schedule(new TimerTask() {
 			@Override
 			public void run() {
