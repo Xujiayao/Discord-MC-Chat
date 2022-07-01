@@ -183,10 +183,6 @@ public class DiscordEventListener extends ListenerAdapter {
 
 						Utils.updateBotCommands();
 
-						String message = Utils.checkUpdate(false);
-						if (!message.isEmpty()) {
-							CHANNEL.sendMessage(message).queue();
-						}
 						CHECK_UPDATE_TIMER = new Timer();
 						Utils.initCheckUpdateTimer();
 

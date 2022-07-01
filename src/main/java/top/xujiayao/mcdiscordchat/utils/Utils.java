@@ -68,14 +68,24 @@ public class Utils {
 
 				StringBuilder message = new StringBuilder();
 
+				CONFIG.latestVersion = latestVersion;
+				ConfigManager.update();
+
 				if (!latestVersion.equals(VERSION)) {
+					if (CONFIG.latestVersion.equals(latestVersion)
+							&& CONFIG.latestCheckTime > (System.currentTimeMillis() - 172800000)
+							&& !isManualCheck) {
+						return "";
+					}
+
+					CONFIG.latestCheckTime = System.currentTimeMillis();
+					ConfigManager.update();
+
 					message.append(CONFIG.generic.useEngInsteadOfChin ? "**A new version is available!**" : "**新版本可用！**");
 					message.append("\n\n");
 					message.append("MCDiscordChat **").append(VERSION).append("** -> **").append(latestVersion).append("**");
 					message.append("\n\n");
-					message.append(CONFIG.generic.useEngInsteadOfChin ? "Download link: https://github.com/Xujiayao/MCDiscordChat/blob/master/README.md#Download" : "下载链接：https://github.com/Xujiayao/MCDiscordChat/blob/master/README_CN.md#%E4%B8%8B%E8%BD%BD");
-					message.append("\n\n");
-					message.append(latestJson.get("changelog").getAsString());
+					message.append(CONFIG.generic.useEngInsteadOfChin ? "Download link: <https://github.com/Xujiayao/MCDiscordChat/blob/master/README.md#Download>" : "下载链接：<https://github.com/Xujiayao/MCDiscordChat/blob/master/README_CN.md#%E4%B8%8B%E8%BD%BD>");
 					message.append("\n\n");
 
 					if (CONFIG.generic.mentionAdmins) {
@@ -260,12 +270,17 @@ public class Utils {
 		CHECK_UPDATE_TIMER.schedule(new TimerTask() {
 			@Override
 			public void run() {
+				if (CONFIG.latestCheckTime > System.currentTimeMillis()) {
+					CONFIG.latestCheckTime = System.currentTimeMillis() - 300000000;
+					ConfigManager.update();
+				}
+
 				String message = checkUpdate(false);
 				if (!message.isEmpty()) {
 					CHANNEL.sendMessage(message).queue();
 				}
 			}
-		}, 21600000, 21600000);
+		}, 3600000, 21600000);
 	}
 
 	public static void sendConsoleMessage(String consoleMessage) {

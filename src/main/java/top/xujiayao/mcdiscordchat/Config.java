@@ -6,6 +6,8 @@ import com.google.gson.JsonArray;
 import java.util.ArrayList;
 import java.util.List;
 
+import static top.xujiayao.mcdiscordchat.Main.VERSION;
+
 /**
  * @author Xujiayao
  */
@@ -122,5 +124,8 @@ public class Config {
 		public String onlineChannelTopic = ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% player(s) online | %uniquePlayerCount% unique player(s) ever joined | Server started <t:%serverStartedTime%:R> | Last updated: <t:%lastUpdateTime%:f>";
 		public String onlineChannelTopicForMultiServer = ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% player(s) online | %uniquePlayerCount% unique player(s) ever joined | %onlineServerCount% server(s) online [%onlineServerList%] | Server started <t:%serverStartedTime%:R> | Last updated: <t:%lastUpdateTime%:f>";
 	}
+
+	public String latestVersion = VERSION;
+	public long latestCheckTime = System.currentTimeMillis() - 300000000;
 }
 

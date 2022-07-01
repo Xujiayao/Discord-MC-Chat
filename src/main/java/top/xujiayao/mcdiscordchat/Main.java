@@ -109,10 +109,6 @@ public class Main implements DedicatedServerModInitializer {
 
 			SERVER = server;
 
-			String message = Utils.checkUpdate(false);
-			if (!message.isEmpty()) {
-				CHANNEL.sendMessage(message).queue();
-			}
 			Utils.initCheckUpdateTimer();
 
 			if (CONFIG.generic.announceHighMspt) {
