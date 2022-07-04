@@ -19,19 +19,23 @@ MCDiscordChat (MCDC), a practical and powerful Fabric Minecraft <> Discord chat 
 
 更多介绍 + 文档：[MCDiscordChat 文档 | Xujiayao's Blog](https://blog.xujiayao.top/posts/4ba0a17a/)
 
-## 🥳 Welcome to MCDC v2!
+## ⚠️ 提醒
 
-我强烈推荐你更新 MCDC 并使用新功能！欢迎提交错误报告或其他建议！
+MCDiscordChat 不会提供关闭自动检查更新的选项。保持最新是良好做法，尤其是对于像 MCDC 这样不稳定且经常修复错误的模组。
 
-MCDC 已完全重写，因此可能存在一些错误。请在报告问题时说明你使用的确切版本。
+如果你坚持不想更新，那么相信你有能力经常维护 MCDC 并自己修复 bug。请复刻仓库以删除检查更新的代码。但是，不要为该更改提交拉取请求 :)
 
-![0001.png](https://cdn.jsdelivr.net/gh/Xujiayao/BlogSource@master/source/file/posts/4ba0a17a/0001.png)
+请注意，复刻中的良好更改可能会通过拉取请求添加到上游仓库，恕不另行通知。
 
-![001.png](https://cdn.jsdelivr.net/gh/Xujiayao/BlogSource@master/source/file/posts/4ba0a17a/001.png)
+更多详情请查看 [#52 (comment)](https://github.com/Xujiayao/MCDiscordChat/issues/52#issuecomment-1172137781)。谢谢。
 
 ## 简介
 
 [MCDiscordChat](https://github.com/Xujiayao/MCDiscordChat)（简称为 MCDC），一个实用且功能强大的 Fabric Minecraft <> Discord 跨服聊天工具，灵感来自 BRForgers/DisFabric。
+
+![0001.png](https://cdn.jsdelivr.net/gh/Xujiayao/BlogSource@master/source/file/posts/4ba0a17a/0001.png)
+
+![001.png](https://cdn.jsdelivr.net/gh/Xujiayao/BlogSource@master/source/file/posts/4ba0a17a/001.png)
 
 ## 下载
 

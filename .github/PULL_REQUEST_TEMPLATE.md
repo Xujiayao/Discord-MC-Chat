@@ -10,6 +10,7 @@
 <!-- Set [ ] to [X] -->
 
 - [ ] I confirm that I have [searched for existing issues / pull requests](https://github.com/Xujiayao/MCDiscordChat/issues?q=) before requesting to avoid duplicate requesting.
+- [ ] I confirm that I noted that if I don't follow the instructions, the issue may be closed directly.
 
 ### Related Issues
 
