@@ -35,6 +35,7 @@ public class Config {
 		public String avatarApi = "https://mc-heads.net/avatar/%player%.png";
 
 		public boolean broadcastCommandExecution = true;
+		public boolean notifyUpdates = true;
 
 		public boolean allowMentions = true;
 		public boolean modifyChatMessages = true;

@@ -68,7 +68,7 @@ public class Utils {
 
 				StringBuilder message = new StringBuilder();
 
-				if (!latestVersion.equals(VERSION)) {
+				if (!latestVersion.equals(VERSION) && CONFIG.generic.notifyUpdates) {
 					message.append(CONFIG.generic.useEngInsteadOfChin ? "**A new version is available!**" : "**新版本可用！**");
 					message.append("\n\n");
 					message.append("MCDiscordChat **").append(VERSION).append("** -> **").append(latestVersion).append("**");
