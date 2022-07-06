@@ -7,9 +7,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.launch.common.FabricLauncherBase;
-import net.fabricmc.loader.metadata.EntrypointMetadata;
-import net.fabricmc.loader.metadata.LoaderModMetadata;
+import net.fabricmc.loader.impl.launch.FabricLauncherBase;
+import net.fabricmc.loader.impl.metadata.EntrypointMetadata;
+import net.fabricmc.loader.impl.metadata.LoaderModMetadata;
 import net.minecraft.util.JsonHelper;
 import net.minecraft.util.Language;
 //#if MC >= 11800
@@ -49,7 +49,7 @@ public abstract class MixinLanguage {
 	@Shadow
 	private static Pattern TOKEN_PATTERN;
 
-	@SuppressWarnings({"unchecked", "deprecation", "mapping"})
+	@SuppressWarnings({"unchecked", "mapping"})
 	@Redirect(method = "create", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/ImmutableMap$Builder;build()Lcom/google/common/collect/ImmutableMap;"))
 	private static <K, V> ImmutableMap<K, V> build(Builder<K, V> builder) {
 		LinkedHashMap<String, String> map = new LinkedHashMap<>((ImmutableMap<String, String>) builder.build());
