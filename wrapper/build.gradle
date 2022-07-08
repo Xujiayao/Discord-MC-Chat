@@ -76,6 +76,6 @@ processResources {
 
 loom {
     runConfigs.all {
-        runDir "../../run"
+        runDir "../run"
     }
 }
