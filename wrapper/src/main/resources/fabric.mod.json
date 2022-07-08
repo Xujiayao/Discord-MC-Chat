@@ -15,5 +15,24 @@
   "license": "MIT",
   "icon": "assets/mcdiscordchat/icon.png",
   "environment": "server",
-  "jars": ${sub_jars}
+  "jars": [
+    {
+      "file": "META-INF/jars/MCDiscordChat-1.14.x-${version}.jar"
+    },
+    {
+      "file": "META-INF/jars/MCDiscordChat-1.15.x-${version}.jar"
+    },
+    {
+      "file": "META-INF/jars/MCDiscordChat-1.16.x-${version}.jar"
+    },
+    {
+      "file": "META-INF/jars/MCDiscordChat-1.17.x-${version}.jar"
+    },
+    {
+      "file": "META-INF/jars/MCDiscordChat-1.18.x-${version}.jar"
+    },
+    {
+      "file": "META-INF/jars/MCDiscordChat-1.19.x-${version}.jar"
+    }
+  ]
 }

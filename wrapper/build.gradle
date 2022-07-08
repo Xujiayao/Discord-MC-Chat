@@ -1,6 +1,4 @@
-plugins {
-    id('java')
-}
+apply plugin: "fabric-loom"
 
 sourceCompatibility = JavaVersion.VERSION_17
 targetCompatibility = JavaVersion.VERSION_17
@@ -9,47 +7,75 @@ archivesBaseName = project.archives_base_name
 version = project.mod_version
 group = project.maven_group
 
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.parent.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.parent.yarn_mappings}:v2"
+
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    include("net.dv8tion:JDA:5.0.0-alpha.13") {
+        exclude module: "opus-java"
+    }
+    include("net.sf.trove4j:trove4j:3.0.3")
+    include("org.apache.commons:commons-collections4:4.4")
+    include("com.neovisionaries:nv-websocket-client:2.14")
+    include("com.fasterxml.jackson.core:jackson-core:2.13.3")
+    include("com.fasterxml.jackson.core:jackson-databind:2.13.3")
+    include("com.fasterxml.jackson.core:jackson-annotations:2.13.3")
+
+    include("com.squareup.okhttp3:okhttp:4.10.0")
+    include("com.squareup.okio:okio:2.10.0")
+    include("org.jetbrains.kotlin:kotlin-stdlib:1.6.21")
+
+    include("com.vdurmont:emoji-java:5.1.1")
+    include("org.json:json:20220320")
+
+    include("com.google.code.gson:gson:2.9.0")
+}
+
 def fabric_subprojects = project.parent.subprojects.findAll({
     it.name != "wrapper"
 })
 
-fabric_subprojects.collect {
-    evaluationDependsOn(":${it.name}")
-}
+remapJar {
+    outputs.upToDateWhen { false }
 
-jar {
     dependsOn(fabric_subprojects.collect {
         it.tasks.remapJar
     })
 
     doFirst {
-        delete fileTree("build/tmp/submods/META-INF/jars")
+        delete fileTree("build/tmp/versions/META-INF/jars")
         copy {
             from {
                 fabric_subprojects.collect {
                     it.remapJar.outputs.files
                 }
             }
-            into("build/tmp/submods/META-INF/jars")
+            into("build/tmp/versions/META-INF/jars")
         }
     }
 
     from("../LICENSE")
-    from("build/tmp/submods")
+    from("build/tmp/versions")
 }
 
-import groovy.json.JsonBuilder
-
 processResources {
-    var jars = []
-    fabric_subprojects.each({
-        jars.add(["file": "META-INF/jars/${project.archives_base_name}-${it.minecraft_version}-${project.mod_version}.jar"])
-    })
     filesMatching("fabric.mod.json") {
         def valueMap = [
-                "version" : project.mod_version,
-                "sub_jars": new JsonBuilder(jars).toPrettyString()
+                "version" : project.mod_version
         ]
         expand valueMap
+    }
+}
+
+loom {
+    runConfigs.all {
+        runDir "../../run"
     }
 }
