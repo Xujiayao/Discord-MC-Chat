@@ -15,7 +15,7 @@
 [![CurseForge Downloads](https://cf.way2muchnoise.eu/full_mcdiscordchat_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
 [![Versions Supported](https://cf.way2muchnoise.eu/versions/mcdiscordchat.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
 
-MCDiscordChat (MCDC), a practical and powerful Fabric Minecraft <> Discord chat bridge
+MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric
 
 更多介绍 + 文档：[MCDiscordChat 文档 | Xujiayao's Blog](https://blog.xujiayao.top/posts/4ba0a17a/)
 
@@ -31,7 +31,7 @@ MCDiscordChat 不会提供关闭自动检查更新的选项。保持最新是良
 
 ## 简介
 
-[MCDiscordChat](https://github.com/Xujiayao/MCDiscordChat)（简称为 MCDC），一个实用且功能强大的 Fabric Minecraft <> Discord 跨服聊天工具，灵感来自 BRForgers/DisFabric。
+[MCDiscordChat](https://github.com/Xujiayao/MCDiscordChat)（简称为 MCDC），一个实用且功能强大的 Fabric 和 Quilt Minecraft <> Discord 跨服聊天工具，灵感来自 BRForgers/DisFabric。
 
 ![0001.png](https://cdn.jsdelivr.net/gh/Xujiayao/BlogSource@master/source/file/posts/4ba0a17a/0001.png)
 
