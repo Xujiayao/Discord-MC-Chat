@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "mcdiscordchat-${mc_version}",
+  "id": "mcdiscordchat",
   "version": "${version}",
   "name": "MCDiscordChat",
   "description": "MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric",
@@ -15,18 +15,5 @@
   "license": "MIT",
   "icon": "assets/mcdiscordchat/icon.png",
   "environment": "server",
-  "entrypoints": {
-    "server": [
-      "top.xujiayao.mcdiscordchat.Main"
-    ]
-  },
-  "mixins": [
-    "mcdiscordchat.mixins.json"
-  ],
-  "depends": {
-    "fabricloader": ">=0.14.7",
-    "fabric": "*",
-    "minecraft": "${minecraft_dependency}",
-    "java": ">=17"
-  }
+  "jars": ${sub_jars}
 }

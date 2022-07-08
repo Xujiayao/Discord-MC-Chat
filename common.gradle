@@ -54,10 +54,9 @@ group = project.maven_group
 archivesBaseName = project.archives_base_name + '-' + project.minecraft_version
 
 processResources {
-    inputs.property "version", project.version
-
     filesMatching("fabric.mod.json") {
         def valueMap = [
+                "mc_version"          : project.minecraft_dependency.replace(".", "_"),
                 "version"             : project.version,
                 "minecraft_dependency": project.minecraft_dependency
         ]

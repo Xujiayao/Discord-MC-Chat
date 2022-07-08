@@ -1,0 +1,55 @@
+plugins {
+    id('java')
+}
+
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
+
+archivesBaseName = project.archives_base_name
+version = project.mod_version
+group = project.maven_group
+
+def fabric_subprojects = project.parent.subprojects.findAll({
+    it.name != "wrapper"
+})
+
+fabric_subprojects.collect {
+    evaluationDependsOn(":${it.name}")
+}
+
+jar {
+    dependsOn(fabric_subprojects.collect {
+        it.tasks.remapJar
+    })
+
+    doFirst {
+        delete fileTree("build/tmp/submods/META-INF/jars")
+        copy {
+            from {
+                fabric_subprojects.collect {
+                    it.remapJar.outputs.files
+                }
+            }
+            into("build/tmp/submods/META-INF/jars")
+        }
+    }
+
+    from("../LICENSE")
+    from("build/tmp/submods")
+}
+
+import groovy.json.JsonBuilder
+
+processResources {
+    var jars = []
+    fabric_subprojects.each({
+        jars.add(["file": "META-INF/jars/${project.archives_base_name}-${it.minecraft_version}-${project.mod_version}.jar"])
+    })
+    filesMatching("fabric.mod.json") {
+        def valueMap = [
+                "version" : project.mod_version,
+                "sub_jars": new JsonBuilder(jars).toPrettyString()
+        ]
+        expand valueMap
+    }
+}

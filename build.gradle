@@ -17,21 +17,3 @@ preprocess {
     mc117.link(mc118, null)
     mc118.link(mc119, null)
 }
-
-task buildAndGather {
-    subprojects {
-        dependsOn project.name + ':build'
-    }
-    doFirst {
-        copy {
-            subprojects {
-                def libDir = project.projectDir.toPath().resolve('build/libs')
-                from(libDir) {
-                    include '*.jar'
-                }
-                into 'build/libs'
-                duplicatesStrategy DuplicatesStrategy.INCLUDE
-            }
-        }
-    }
-}

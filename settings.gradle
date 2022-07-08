@@ -37,3 +37,4 @@ for (String version : versions) {
     proj.projectDir = file("versions/$version")
     proj.buildFileName = "../../common.gradle"
 }
+include(":wrapper")
