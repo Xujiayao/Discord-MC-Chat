@@ -20,6 +20,7 @@ dependencies {
     }
     modImplementation("net.sf.trove4j:trove4j:3.0.3")
     modImplementation("org.apache.commons:commons-collections4:4.4")
+    modImplementation("org.slf4j:slf4j-api:1.7.36")
     modImplementation("com.neovisionaries:nv-websocket-client:2.14")
     modImplementation("com.fasterxml.jackson.core:jackson-core:2.13.3")
     modImplementation("com.fasterxml.jackson.core:jackson-databind:2.13.3")
