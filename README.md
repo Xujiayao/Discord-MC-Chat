@@ -74,6 +74,7 @@ If there is a bug or suggestion, or something you don't understand, you can [sub
   - Broadcast server console log
 - Server Commands available
   - Use Discord to manage channels that can execute MCDC commands
+  - Notify in-game players when someone executes an MCDC command
   - Normal Commands
     - /info                    | Query server running status
     - /help                    | Get a list of available commands
