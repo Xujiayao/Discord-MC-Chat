@@ -4,7 +4,11 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+//#if MC >= 11900
+//$$ import net.minecraft.text.Texts;
+//#endif
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
@@ -15,8 +19,14 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+//#if MC >= 11900
+//$$ import java.util.ArrayList;
+//#endif
 import java.util.Arrays;
 import java.util.HashSet;
+//#if MC >= 11900
+//$$ import java.util.List;
+//#endif
 import java.util.Objects;
 import java.util.Set;
 
@@ -90,16 +100,40 @@ public class ReadThread extends Thread {
 						SERVER.getPlayerManager().getPlayerList().forEach(
 								player -> player.sendMessage(text, false));
 					} else {
-						Utils.sendConsoleMessage(TEXTS.unformattedOtherMessage()
-								.replace("%server%", json.get("serverName").getAsString())
-								.replace("%message%", json.get("message").getAsString()));
+						if (json.get("isText").getAsBoolean()) {
+							Utils.sendConsoleMessage(TEXTS.unformattedOtherMessage()
+									.replace("%server%", json.get("serverName").getAsString())
+									.replace("%message%", Objects.requireNonNull(Text.Serializer.fromJson(json.get("message").getAsString())).getString()));
 
-						Text text = Text.Serializer.fromJson(TEXTS.formattedOtherMessage()
-								.replace("%server%", json.get("serverName").getAsString())
-								.replace("%message%", MarkdownParser.parseMarkdown(json.get("message").getAsString())));
+							Text text = Text.Serializer.fromJson(TEXTS.formattedOtherMessage()
+									.replace("%server%", json.get("serverName").getAsString())
+									.replace("%message%", ""));
 
-						SERVER.getPlayerManager().getPlayerList().forEach(
-								player -> player.sendMessage(text, false));
+							//#if MC <= 11802
+							SERVER.getPlayerManager().getPlayerList().forEach(
+									player -> player.sendMessage(new LiteralText("")
+											.append(text)
+											.append(Text.Serializer.fromJson(json.get("message").getAsString())), false));
+							//#else
+							//$$ List<Text> textList = new ArrayList<>();
+							//$$ textList.add(text);
+							//$$ textList.add(Text.Serializer.fromJson(json.get("message").getAsString()));
+							//$$
+							//$$ SERVER.getPlayerManager().getPlayerList().forEach(
+							//$$ 		player -> player.sendMessage(Texts.join(textList, Text.of("")), false));
+							//#endif
+						} else {
+							Utils.sendConsoleMessage(TEXTS.unformattedOtherMessage()
+									.replace("%server%", json.get("serverName").getAsString())
+									.replace("%message%", json.get("message").getAsString()));
+
+							Text text = Text.Serializer.fromJson(TEXTS.formattedOtherMessage()
+									.replace("%server%", json.get("serverName").getAsString())
+									.replace("%message%", MarkdownParser.parseMarkdown(json.get("message").getAsString())));
+
+							SERVER.getPlayerManager().getPlayerList().forEach(
+									player -> player.sendMessage(text, false));
+						}
 					}
 				} catch (Exception e) {
 					break;

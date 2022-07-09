@@ -20,6 +20,9 @@ public class Config {
 	public TextsZH textsZH = new TextsZH();
 	public TextsEN textsEN = new TextsEN();
 
+	public String latestVersion = VERSION;
+	public long latestCheckTime = System.currentTimeMillis() - 300000000;
+
 	public static class Generic {
 		public boolean useEngInsteadOfChin = true;
 
@@ -69,10 +72,12 @@ public class Config {
 		public String unformattedResponseMessage = "    ┌──── <%name%> %message%";
 		public String unformattedChatMessage = "[%server%] <%name%> %message%";
 		public String unformattedOtherMessage = "[%server%] %message%";
+		public String unformattedCommandNotice = "%name% 执行了 %command% 命令！";
 
 		public JsonArray formattedResponseMessage = new Gson().fromJson("[{\"text\":\"    ┌──── \",\"bold\":true,\"color\":\"dark_gray\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"dark_gray\"}]", JsonArray.class);
 		public JsonArray formattedChatMessage = new Gson().fromJson("[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]", JsonArray.class);
 		public JsonArray formattedOtherMessage = new Gson().fromJson("[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]", JsonArray.class);
+		public JsonArray formattedCommandNotice = new Gson().fromJson("[{\"text\":\"%name% \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"执行了 %command% 命令！\",\"bold\":false,\"color\":\"gray\"}]", JsonArray.class);
 
 		public String serverStarted = "**服务器已启动！**";
 		public String serverStopped = "**服务器已关闭！**";
@@ -99,10 +104,12 @@ public class Config {
 		public String unformattedResponseMessage = "    ┌──── <%name%> %message%";
 		public String unformattedChatMessage = "[%server%] <%name%> %message%";
 		public String unformattedOtherMessage = "[%server%] %message%";
+		public String unformattedCommandNotice = "%name% executed %command% command!";
 
 		public JsonArray formattedResponseMessage = new Gson().fromJson("[{\"text\":\"    ┌──── \",\"bold\":true,\"color\":\"dark_gray\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"dark_gray\"}]", JsonArray.class);
 		public JsonArray formattedChatMessage = new Gson().fromJson("[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]", JsonArray.class);
 		public JsonArray formattedOtherMessage = new Gson().fromJson("[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]", JsonArray.class);
+		public JsonArray formattedCommandNotice = new Gson().fromJson("[{\"text\":\"%name% \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"executed %command% command!\",\"bold\":false,\"color\":\"gray\"}]", JsonArray.class);
 
 		public String serverStarted = "**Server started!**";
 		public String serverStopped = "**Server stopped!**";
@@ -124,8 +131,5 @@ public class Config {
 		public String onlineChannelTopic = ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% player(s) online | %uniquePlayerCount% unique player(s) ever joined | Server started <t:%serverStartedTime%:R> | Last updated: <t:%lastUpdateTime%:f>";
 		public String onlineChannelTopicForMultiServer = ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% player(s) online | %uniquePlayerCount% unique player(s) ever joined | %onlineServerCount% server(s) online [%onlineServerList%] | Server started <t:%serverStartedTime%:R> | Last updated: <t:%lastUpdateTime%:f>";
 	}
-
-	public String latestVersion = VERSION;
-	public long latestCheckTime = System.currentTimeMillis() - 300000000;
 }
 

@@ -41,7 +41,7 @@ public abstract class MixinPlayerAdvancementTracker {
 							.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
 							.replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
 					if (CONFIG.multiServer.enable) {
-						MULTI_SERVER.sendMessage(false, false, null, TEXTS.advancementGoal()
+						MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.advancementGoal()
 								.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
 								.replace("%advancement%", advancement.getDisplay().getTitle().getString()));
 					}
@@ -51,7 +51,7 @@ public abstract class MixinPlayerAdvancementTracker {
 							.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
 							.replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
 					if (CONFIG.multiServer.enable) {
-						MULTI_SERVER.sendMessage(false, false, null, TEXTS.advancementTask()
+						MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.advancementTask()
 								.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
 								.replace("%advancement%", advancement.getDisplay().getTitle().getString()));
 					}
@@ -61,7 +61,7 @@ public abstract class MixinPlayerAdvancementTracker {
 							.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
 							.replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
 					if (CONFIG.multiServer.enable) {
-						MULTI_SERVER.sendMessage(false, false, null, TEXTS.advancementChallenge()
+						MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.advancementChallenge()
 								.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
 								.replace("%advancement%", advancement.getDisplay().getTitle().getString()));
 					}

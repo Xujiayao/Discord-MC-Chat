@@ -182,9 +182,9 @@ public abstract class MixinServerPlayNetworkHandler {
 				sendMessage(contentToDiscord, false);
 				if (CONFIG.multiServer.enable) {
 					//#if MC >= 11700
-					MULTI_SERVER.sendMessage(false, true, player.getEntityName(), CONFIG.generic.formatChatMessages ? contentToMinecraft : message.getRaw());
+					MULTI_SERVER.sendMessage(false, true, false, player.getEntityName(), CONFIG.generic.formatChatMessages ? contentToMinecraft : message.getRaw());
 					//#else
-					//$$ MULTI_SERVER.sendMessage(false, true, player.getEntityName(), CONFIG.generic.formatChatMessages ? contentToMinecraft : string);
+					//$$ MULTI_SERVER.sendMessage(false, true, false, player.getEntityName(), CONFIG.generic.formatChatMessages ? contentToMinecraft : string);
 					//#endif
 				}
 			}
@@ -215,7 +215,7 @@ public abstract class MixinServerPlayNetworkHandler {
 
 				sendMessage(input, true);
 				if (CONFIG.multiServer.enable) {
-					MULTI_SERVER.sendMessage(false, true, player.getEntityName(), MarkdownSanitizer.escape(input));
+					MULTI_SERVER.sendMessage(false, true, false, player.getEntityName(), MarkdownSanitizer.escape(input));
 				}
 			}
 		}

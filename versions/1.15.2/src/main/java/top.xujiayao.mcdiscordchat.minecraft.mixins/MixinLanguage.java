@@ -36,11 +36,11 @@ public abstract class MixinLanguage {
 
 	@Final
 	@Shadow
-	private Map<String, String> translations;
+	private static Pattern field_11489;
 
 	@Final
 	@Shadow
-	private static Pattern field_11489;
+	private Map<String, String> translations;
 
 	@SuppressWarnings("deprecation")
 	@Inject(method = "<init>", at = @At(value = "RETURN"))

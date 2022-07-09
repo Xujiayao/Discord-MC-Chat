@@ -32,7 +32,7 @@ public abstract class MixinServerPlayerEntity extends PlayerEntity {
 	//$$ }
 	//#elseif MC >= 11600
 	private MixinServerPlayerEntity(World world, BlockPos pos, float yaw, GameProfile profile) {
-	 super(world, pos, yaw, profile);
+		super(world, pos, yaw, profile);
 	}
 	//#else
 	//$$ private MixinServerPlayerEntity(World world, GameProfile profile) {
@@ -45,7 +45,7 @@ public abstract class MixinServerPlayerEntity extends PlayerEntity {
 		CHANNEL.sendMessage(TEXTS.deathMessage()
 				.replace("%deathMessage%", MarkdownSanitizer.escape(getDamageTracker().getDeathMessage().getString()))).queue();
 		if (CONFIG.multiServer.enable) {
-			MULTI_SERVER.sendMessage(false, false, null, TEXTS.deathMessage()
+			MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.deathMessage()
 					.replace("%deathMessage%", MarkdownSanitizer.escape(getDamageTracker().getDeathMessage().getString())));
 		}
 	}

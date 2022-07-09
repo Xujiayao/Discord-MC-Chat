@@ -17,9 +17,14 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.loader.api.FabricLoader;
 //#if MC <= 11605
 //$$ import net.minecraft.server.command.ServerCommandSource;
-//$$ import net.minecraft.text.LiteralText;
+//#endif
+//#if MC <= 11802
+import net.minecraft.text.LiteralText;
 //#endif
 import net.minecraft.text.Text;
+//#if MC >= 11900
+//$$ import net.minecraft.text.Texts;
+//#endif
 import net.minecraft.util.Formatting;
 //#if MC <= 11605
 //$$ import net.minecraft.util.math.Vec2f;
@@ -74,11 +79,47 @@ public class DiscordEventListener extends ListenerAdapter {
 			return;
 		}
 
+		Utils.sendConsoleMessage(TEXTS.unformattedOtherMessage()
+				.replace("%server%", (CONFIG.multiServer.enable ? CONFIG.multiServer.name : "Discord"))
+				.replace("%message%", TEXTS.unformattedCommandNotice()
+						.replace("%name%", CONFIG.generic.useServerNickname ? Objects.requireNonNull(e.getMember()).getEffectiveName() : Objects.requireNonNull(e.getMember()).getUser().getName())
+						.replace("%roleName%", e.getMember().getRoles().get(0).getName())
+						.replace("%command%", e.getCommandString())));
+
+		Text commandNoticeText = Text.Serializer.fromJson(TEXTS.formattedCommandNotice()
+				.replace("%server%", (CONFIG.multiServer.enable ? CONFIG.multiServer.name : "Discord"))
+				.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\"))
+				.replace("%roleName%", e.getMember().getRoles().get(0).getName())
+				.replace("%roleColor%", "#" + Integer.toHexString(e.getMember().getColorRaw()))
+				.replace("%command%", e.getCommandString()));
+
+		//#if MC <= 11802
+		SERVER.getPlayerManager().getPlayerList().forEach(
+				player -> player.sendMessage(new LiteralText("")
+						.append(Text.Serializer.fromJson(TEXTS.formattedOtherMessage()
+								.replace("%server%", (CONFIG.multiServer.enable ? CONFIG.multiServer.name : "Discord"))
+								.replace("%message%", "")))
+						.append(commandNoticeText), false));
+		//#else
+		//$$ List<Text> commandNoticeTextList = new ArrayList<>();
+		//$$ commandNoticeTextList.add(Text.Serializer.fromJson(TEXTS.formattedOtherMessage()
+		//$$ 		.replace("%server%", (CONFIG.multiServer.enable ? CONFIG.multiServer.name : "Discord"))
+		//$$ 		.replace("%message%", "")));
+		//$$ commandNoticeTextList.add(commandNoticeText);
+		//$$
+		//$$ SERVER.getPlayerManager().getPlayerList().forEach(
+		//$$ 		player -> player.sendMessage(Texts.join(commandNoticeTextList, Text.of("")), false));
+		//#endif
+
+		if (CONFIG.multiServer.enable) {
+			MULTI_SERVER.sendMessage(false, false, true, null, Text.Serializer.toJson(commandNoticeText));
+		}
+
 		switch (e.getName()) {
 			case "info" -> {
 				e.getHook().sendMessage(Utils.getInfoCommandMessage()).queue();
 				if (CONFIG.multiServer.enable) {
-					MULTI_SERVER.sendMessage(true, false, null, "{\"type\":\"info\",\"channel\":\"" + e.getChannel().getId() + "\"}");
+					MULTI_SERVER.sendMessage(true, false, false, null, "{\"type\":\"info\",\"channel\":\"" + e.getChannel().getId() + "\"}");
 				}
 			}
 			case "help" -> e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? """

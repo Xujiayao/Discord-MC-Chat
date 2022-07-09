@@ -25,7 +25,7 @@ public class MixinPlayerManager {
 		CHANNEL.sendMessage(TEXTS.joinServer()
 				.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();
 		if (CONFIG.multiServer.enable) {
-			MULTI_SERVER.sendMessage(false, false, null, TEXTS.joinServer()
+			MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.joinServer()
 					.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName())));
 		}
 	}
@@ -35,7 +35,7 @@ public class MixinPlayerManager {
 		CHANNEL.sendMessage(TEXTS.leftServer()
 				.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();
 		if (CONFIG.multiServer.enable) {
-			MULTI_SERVER.sendMessage(false, false, null, TEXTS.leftServer()
+			MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.leftServer()
 					.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName())));
 		}
 	}

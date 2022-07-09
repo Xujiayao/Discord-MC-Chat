@@ -104,7 +104,7 @@ public class Main implements DedicatedServerModInitializer {
 
 			CHANNEL.sendMessage(TEXTS.serverStarted()).queue();
 			if (CONFIG.multiServer.enable) {
-				MULTI_SERVER.sendMessage(false, false, null, TEXTS.serverStarted());
+				MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.serverStarted());
 			}
 
 			SERVER = server;
@@ -130,7 +130,7 @@ public class Main implements DedicatedServerModInitializer {
 			CHECK_UPDATE_TIMER.cancel();
 
 			if (CONFIG.multiServer.enable) {
-				MULTI_SERVER.sendMessage(false, false, null, TEXTS.serverStopped());
+				MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.serverStopped());
 				MULTI_SERVER.bye();
 				MULTI_SERVER.stopMultiServer();
 			}

@@ -159,9 +159,11 @@ public class Utils {
 			TEXTS = new Texts(CONFIG.textsEN.unformattedResponseMessage,
 					CONFIG.textsEN.unformattedChatMessage,
 					CONFIG.textsEN.unformattedOtherMessage,
+					CONFIG.textsEN.unformattedCommandNotice,
 					new Gson().toJson(CONFIG.textsEN.formattedResponseMessage),
 					new Gson().toJson(CONFIG.textsEN.formattedChatMessage),
 					new Gson().toJson(CONFIG.textsEN.formattedOtherMessage),
+					new Gson().toJson(CONFIG.textsEN.formattedCommandNotice),
 					CONFIG.textsEN.serverStarted,
 					CONFIG.textsEN.serverStopped,
 					CONFIG.textsEN.joinServer,
@@ -179,9 +181,11 @@ public class Utils {
 			TEXTS = new Texts(CONFIG.textsZH.unformattedResponseMessage,
 					CONFIG.textsZH.unformattedChatMessage,
 					CONFIG.textsZH.unformattedOtherMessage,
+					CONFIG.textsZH.unformattedCommandNotice,
 					new Gson().toJson(CONFIG.textsZH.formattedResponseMessage),
 					new Gson().toJson(CONFIG.textsZH.formattedChatMessage),
 					new Gson().toJson(CONFIG.textsZH.formattedOtherMessage),
+					new Gson().toJson(CONFIG.textsZH.formattedCommandNotice),
 					CONFIG.textsZH.serverStarted,
 					CONFIG.textsZH.serverStopped,
 					CONFIG.textsZH.joinServer,
@@ -235,7 +239,7 @@ public class Utils {
 							.replace("%mspt%", Double.toString(mspt))
 							.replace("%msptLimit%", Integer.toString(CONFIG.generic.msptLimit))).queue();
 					if (CONFIG.multiServer.enable) {
-						MULTI_SERVER.sendMessage(false, false, null, MarkdownParser.parseMarkdown(TEXTS.highMspt()
+						MULTI_SERVER.sendMessage(false, false, false, null, MarkdownParser.parseMarkdown(TEXTS.highMspt()
 								.replace("%mspt%", Double.toString(mspt))
 								.replace("%msptLimit%", Integer.toString(CONFIG.generic.msptLimit))));
 					}

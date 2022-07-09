@@ -171,7 +171,7 @@ public abstract class MixinServerPlayNetworkHandler implements ServerPlayPacketL
 
 				sendMessage(contentToDiscord, false);
 				if (CONFIG.multiServer.enable) {
-					MULTI_SERVER.sendMessage(false, true, player.getEntityName(), CONFIG.generic.formatChatMessages ? contentToMinecraft : string);
+					MULTI_SERVER.sendMessage(false, true, false, player.getEntityName(), CONFIG.generic.formatChatMessages ? contentToMinecraft : string);
 				}
 			}
 
@@ -201,7 +201,7 @@ public abstract class MixinServerPlayNetworkHandler implements ServerPlayPacketL
 
 				sendMessage(input, true);
 				if (CONFIG.multiServer.enable) {
-					MULTI_SERVER.sendMessage(false, true, player.getEntityName(), MarkdownSanitizer.escape(input));
+					MULTI_SERVER.sendMessage(false, true, false, player.getEntityName(), MarkdownSanitizer.escape(input));
 				}
 			}
 		}
