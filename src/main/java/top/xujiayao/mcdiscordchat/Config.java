@@ -55,7 +55,7 @@ public class Config {
 		public boolean updateChannelTopic = true;
 		public int channelTopicUpdateInterval = 600000;
 
-		public List<String> excludedCommands = List.of("/tell");
+		public List<String> excludedCommands = List.of("/msg", "/tell", "/w");
 
 		public List<String> adminsIds = new ArrayList<>();
 	}
