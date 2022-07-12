@@ -49,6 +49,7 @@ public class Main implements DedicatedServerModInitializer {
 	public static JDA JDA;
 	public static TextChannel CHANNEL;
 	public static TextChannel CONSOLE_LOG_CHANNEL;
+	public static TextChannel UPDATE_NOTIFICATION_CHANNEL;
 	public static Texts TEXTS;
 	public static long MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();
 	public static int MINECRAFT_SEND_COUNT = 0;
@@ -86,6 +87,12 @@ public class Main implements DedicatedServerModInitializer {
 			CHANNEL = JDA.getTextChannelById(CONFIG.generic.channelId);
 			if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
 				CONSOLE_LOG_CHANNEL = JDA.getTextChannelById(CONFIG.generic.consoleLogChannelId);
+			}
+			if (!CONFIG.generic.updateNotificationChannelId.isEmpty()) {
+				UPDATE_NOTIFICATION_CHANNEL = JDA.getTextChannelById(CONFIG.generic.updateNotificationChannelId);
+				if (UPDATE_NOTIFICATION_CHANNEL == null) {
+					UPDATE_NOTIFICATION_CHANNEL = CHANNEL;
+				}
 			}
 
 			Utils.updateBotCommands();

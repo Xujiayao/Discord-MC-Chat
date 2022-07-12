@@ -37,6 +37,7 @@ import static top.xujiayao.mcdiscordchat.Main.SERVER;
 import static top.xujiayao.mcdiscordchat.Main.SERVER_STARTED_TIME;
 import static top.xujiayao.mcdiscordchat.Main.SIMPLE_DATE_FORMAT;
 import static top.xujiayao.mcdiscordchat.Main.TEXTS;
+import static top.xujiayao.mcdiscordchat.Main.UPDATE_NOTIFICATION_CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.VERSION;
 
 /**
@@ -90,7 +91,7 @@ public class Utils {
 					message.append(CONFIG.generic.useEngInsteadOfChin ? "Changelog: " : "更新日志：" + latestJson.get("changelog").getAsString());
 					message.append("\n\n");
 
-					if (CONFIG.generic.mentionAdmins) {
+					if (CONFIG.generic.mentionAdminsForUpdates) {
 						message.append(adminsMentionString());
 					}
 
@@ -283,7 +284,7 @@ public class Utils {
 
 				String message = checkUpdate(false);
 				if (!message.isEmpty()) {
-					CHANNEL.sendMessage(message).queue();
+					UPDATE_NOTIFICATION_CHANNEL.sendMessage(message).queue();
 				}
 			}
 		}, 3600000, 21600000);

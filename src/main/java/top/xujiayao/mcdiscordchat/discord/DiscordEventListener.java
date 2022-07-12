@@ -64,6 +64,7 @@ import static top.xujiayao.mcdiscordchat.Main.MSPT_MONITOR_TIMER;
 import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
 import static top.xujiayao.mcdiscordchat.Main.SERVER;
 import static top.xujiayao.mcdiscordchat.Main.TEXTS;
+import static top.xujiayao.mcdiscordchat.Main.UPDATE_NOTIFICATION_CHANNEL;
 
 /**
  * @author Xujiayao
@@ -220,6 +221,12 @@ public class DiscordEventListener extends ListenerAdapter {
 						CHANNEL = JDA.getTextChannelById(CONFIG.generic.channelId);
 						if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
 							CONSOLE_LOG_CHANNEL = JDA.getTextChannelById(CONFIG.generic.consoleLogChannelId);
+						}
+						if (!CONFIG.generic.updateNotificationChannelId.isEmpty()) {
+							UPDATE_NOTIFICATION_CHANNEL = JDA.getTextChannelById(CONFIG.generic.updateNotificationChannelId);
+							if (UPDATE_NOTIFICATION_CHANNEL == null) {
+								UPDATE_NOTIFICATION_CHANNEL = CHANNEL;
+							}
 						}
 
 						Utils.updateBotCommands();

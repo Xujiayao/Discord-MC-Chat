@@ -34,6 +34,7 @@ public class Config {
 
 		public String channelId = "";
 		public String consoleLogChannelId = "";
+		public String updateNotificationChannelId = "";
 
 		public boolean useUuidInsteadOfName = true;
 
@@ -50,7 +51,7 @@ public class Config {
 		public int msptCheckInterval = 5000;
 		public int msptLimit = 50;
 
-		public boolean mentionAdmins = true;
+		public boolean mentionAdminsForUpdates = true;
 
 		public boolean updateChannelTopic = true;
 		public int channelTopicUpdateInterval = 600000;
