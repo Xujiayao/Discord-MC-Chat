@@ -7,7 +7,7 @@ import net.minecraft.text.Text;
 import java.util.Timer;
 import java.util.TimerTask;
 //#if MC <= 11802
-import java.util.UUID;
+//$$ import java.util.UUID;
 //#endif
 
 /**
@@ -25,9 +25,9 @@ public class DiscordCommandOutput implements CommandOutput {
 
 	@Override
 	//#if MC >= 11900 || MC <= 11502
-	//$$ public void sendMessage(Text message) {
+	public void sendMessage(Text message) {
 	//#else
-	public void sendSystemMessage(Text message, UUID sender) {
+	//$$ public void sendSystemMessage(Text message, UUID sender) {
 	//#endif
 		long currentOutputMillis = System.currentTimeMillis();
 

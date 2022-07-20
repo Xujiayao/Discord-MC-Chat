@@ -19,11 +19,11 @@ import net.fabricmc.loader.api.FabricLoader;
 //$$ import net.minecraft.server.command.ServerCommandSource;
 //#endif
 //#if MC <= 11802
-import net.minecraft.text.LiteralText;
+//$$ import net.minecraft.text.LiteralText;
 //#endif
 import net.minecraft.text.Text;
 //#if MC >= 11900
-//$$ import net.minecraft.text.Texts;
+import net.minecraft.text.Texts;
 //#endif
 import net.minecraft.util.Formatting;
 //#if MC <= 11605
@@ -100,21 +100,21 @@ public class DiscordEventListener extends ListenerAdapter {
 				.replace("%command%", e.getCommandString()));
 
 		//#if MC <= 11802
-		SERVER.getPlayerManager().getPlayerList().forEach(
-				player -> player.sendMessage(new LiteralText("")
-						.append(Text.Serializer.fromJson(TEXTS.formattedOtherMessage()
-								.replace("%server%", (CONFIG.multiServer.enable ? CONFIG.multiServer.name : "Discord"))
-								.replace("%message%", "")))
-						.append(commandNoticeText), false));
-		//#else
-		//$$ List<Text> commandNoticeTextList = new ArrayList<>();
-		//$$ commandNoticeTextList.add(Text.Serializer.fromJson(TEXTS.formattedOtherMessage()
-		//$$ 		.replace("%server%", (CONFIG.multiServer.enable ? CONFIG.multiServer.name : "Discord"))
-		//$$ 		.replace("%message%", "")));
-		//$$ commandNoticeTextList.add(commandNoticeText);
-		//$$
 		//$$ SERVER.getPlayerManager().getPlayerList().forEach(
-		//$$ 		player -> player.sendMessage(Texts.join(commandNoticeTextList, Text.of("")), false));
+		//$$ 		player -> player.sendMessage(new LiteralText("")
+		//$$ 				.append(Text.Serializer.fromJson(TEXTS.formattedOtherMessage()
+		//$$ 						.replace("%server%", (CONFIG.multiServer.enable ? CONFIG.multiServer.name : "Discord"))
+		//$$ 						.replace("%message%", "")))
+		//$$ 				.append(commandNoticeText), false));
+		//#else
+		List<Text> commandNoticeTextList = new ArrayList<>();
+		commandNoticeTextList.add(Text.Serializer.fromJson(TEXTS.formattedOtherMessage()
+				.replace("%server%", (CONFIG.multiServer.enable ? CONFIG.multiServer.name : "Discord"))
+				.replace("%message%", "")));
+		commandNoticeTextList.add(commandNoticeText);
+
+		SERVER.getPlayerManager().getPlayerList().forEach(
+				player -> player.sendMessage(Texts.join(commandNoticeTextList, Text.of("")), false));
 		//#endif
 
 		if (CONFIG.multiServer.enable) {

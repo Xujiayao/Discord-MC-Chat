@@ -4,10 +4,12 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.dv8tion.jda.api.entities.TextChannel;
-import net.minecraft.text.LiteralText;
+//#if MC <= 11802
+//$$ import net.minecraft.text.LiteralText;
+//#endif
 import net.minecraft.text.Text;
 //#if MC >= 11900
-//$$ import net.minecraft.text.Texts;
+import net.minecraft.text.Texts;
 //#endif
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -20,12 +22,12 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 //#if MC >= 11900
-//$$ import java.util.ArrayList;
+import java.util.ArrayList;
 //#endif
 import java.util.Arrays;
 import java.util.HashSet;
 //#if MC >= 11900
-//$$ import java.util.List;
+import java.util.List;
 //#endif
 import java.util.Objects;
 import java.util.Set;
@@ -110,17 +112,17 @@ public class ReadThread extends Thread {
 									.replace("%message%", ""));
 
 							//#if MC <= 11802
-							SERVER.getPlayerManager().getPlayerList().forEach(
-									player -> player.sendMessage(new LiteralText("")
-											.append(text)
-											.append(Text.Serializer.fromJson(json.get("message").getAsString())), false));
-							//#else
-							//$$ List<Text> textList = new ArrayList<>();
-							//$$ textList.add(text);
-							//$$ textList.add(Text.Serializer.fromJson(json.get("message").getAsString()));
-							//$$
 							//$$ SERVER.getPlayerManager().getPlayerList().forEach(
-							//$$ 		player -> player.sendMessage(Texts.join(textList, Text.of("")), false));
+							//$$ 		player -> player.sendMessage(new LiteralText("")
+							//$$ 				.append(text)
+							//$$ 				.append(Text.Serializer.fromJson(json.get("message").getAsString())), false));
+							//#else
+							List<Text> textList = new ArrayList<>();
+							textList.add(text);
+							textList.add(Text.Serializer.fromJson(json.get("message").getAsString()));
+
+							SERVER.getPlayerManager().getPlayerList().forEach(
+									player -> player.sendMessage(Texts.join(textList, Text.of("")), false));
 							//#endif
 						} else {
 							Utils.sendConsoleMessage(TEXTS.unformattedOtherMessage()
