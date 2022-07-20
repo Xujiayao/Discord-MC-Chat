@@ -76,7 +76,7 @@ public class Main implements DedicatedServerModInitializer {
 			JDA = JDABuilder.createDefault(CONFIG.generic.botToken)
 					.setChunkingFilter(ChunkingFilter.ALL)
 					.setMemberCachePolicy(MemberCachePolicy.ALL)
-					.enableIntents(GatewayIntent.GUILD_MEMBERS)
+					.enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT)
 					.addEventListeners(new DiscordEventListener())
 					.build();
 
