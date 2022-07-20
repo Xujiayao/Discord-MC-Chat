@@ -75,6 +75,11 @@ public class DiscordEventListener extends ListenerAdapter {
 	public void onSlashCommandInteraction(SlashCommandInteractionEvent e) {
 		e.deferReply().queue();
 
+		if (SERVER == null) {
+			e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**You need to wait for the server to fully start!**" : "**你需要等待服务器完全启动！**").queue();
+			return;
+		}
+
 		if (!e.isFromGuild()) {
 			e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**You cannot use this command via direct message!**" : "**你不能通过私信使用此命令！**").queue();
 			return;
@@ -357,6 +362,10 @@ public class DiscordEventListener extends ListenerAdapter {
 				.replace("%name%", CONFIG.generic.useServerNickname ? Objects.requireNonNull(e.getMember()).getEffectiveName() : Objects.requireNonNull(e.getMember()).getUser().getName())
 				.replace("%roleName%", memberRoleName)
 				.replace("%message%", EmojiParser.parseToAliases(e.getMessage().getContentDisplay())));
+
+		if (SERVER == null) {
+			return;
+		}
 
 		String textBeforePlaceholder = "";
 		String textAfterPlaceholder = "";
