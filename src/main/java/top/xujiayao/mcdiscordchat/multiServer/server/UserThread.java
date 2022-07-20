@@ -6,10 +6,12 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 
 import static top.xujiayao.mcdiscordchat.Main.LOGGER;
@@ -55,7 +57,8 @@ public class UserThread extends Thread {
 
 				server.broadcast(message, this);
 			}
-		} catch (Exception e) {
+		} catch (SocketException ignored) {
+		} catch (IOException e) {
 			LOGGER.error(ExceptionUtils.getStackTrace(e));
 		}
 
