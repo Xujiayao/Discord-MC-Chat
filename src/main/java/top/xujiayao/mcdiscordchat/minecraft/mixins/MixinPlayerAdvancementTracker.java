@@ -31,7 +31,8 @@ public abstract class MixinPlayerAdvancementTracker {
 
 	@Inject(method = "grantCriterion", at = @At("RETURN"))
 	private void grantCriterion(Advancement advancement, String criterionName, CallbackInfoReturnable<Boolean> cir) {
-		if (getProgress(advancement).isDone()
+		if (CONFIG.generic.announceAdvancements
+				&& getProgress(advancement).isDone()
 				&& advancement.getDisplay() != null
 				&& advancement.getDisplay().shouldAnnounceToChat()
 				&& owner.world.getGameRules().getBoolean(GameRules.ANNOUNCE_ADVANCEMENTS)) {
