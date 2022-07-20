@@ -138,6 +138,7 @@ public class ReadThread extends Thread {
 						}
 					}
 				} catch (Exception e) {
+					LOGGER.info("[MultiServer] Disconnected from the server");
 					break;
 				}
 			}

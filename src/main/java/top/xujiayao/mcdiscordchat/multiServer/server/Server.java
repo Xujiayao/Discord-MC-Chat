@@ -20,10 +20,7 @@ public class Server extends Thread {
 
 	public Server() throws Exception {
 		serverSocket = new ServerSocket(CONFIG.multiServer.port);
-		LOGGER.info("[MultiServer] Server has been created and is listening on port " + CONFIG.multiServer.port);
-		if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
-			Utils.sendConsoleMessage("[MultiServer] Server has been created and is listening on port " + CONFIG.multiServer.port);
-		}
+		Utils.sendConsoleMessage("[MultiServer] Server has been created and is listening on port " + CONFIG.multiServer.port);
 	}
 
 	@Override
@@ -36,6 +33,7 @@ public class Server extends Thread {
 				users.add(newUser);
 				newUser.start();
 			} catch (Exception e) {
+				LOGGER.info("[MultiServer] Server has stopped");
 				break;
 			}
 		}

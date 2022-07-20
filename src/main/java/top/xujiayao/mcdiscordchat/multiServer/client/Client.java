@@ -18,10 +18,7 @@ public class Client {
 
 	public void connect() throws Exception {
 		socket = new Socket(CONFIG.multiServer.host, CONFIG.multiServer.port);
-		LOGGER.info("[MultiServer] Connected to the server");
-		if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
-			Utils.sendConsoleMessage("[MultiServer] Connected to the server");
-		}
+		Utils.sendConsoleMessage("[MultiServer] Connected to the server");
 
 		readThread = new ReadThread(socket);
 		readThread.start();
