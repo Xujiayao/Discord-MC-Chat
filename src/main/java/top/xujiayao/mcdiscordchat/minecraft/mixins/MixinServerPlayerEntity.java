@@ -42,11 +42,13 @@ public abstract class MixinServerPlayerEntity extends PlayerEntity {
 
 	@Inject(method = "onDeath", at = @At("HEAD"))
 	private void onDeath(DamageSource source, CallbackInfo ci) {
-		CHANNEL.sendMessage(TEXTS.deathMessage()
-				.replace("%deathMessage%", MarkdownSanitizer.escape(getDamageTracker().getDeathMessage().getString()))).queue();
-		if (CONFIG.multiServer.enable) {
-			MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.deathMessage()
-					.replace("%deathMessage%", MarkdownSanitizer.escape(getDamageTracker().getDeathMessage().getString())));
+		if (CONFIG.generic.announceDeathMessages) {
+			CHANNEL.sendMessage(TEXTS.deathMessage()
+					.replace("%deathMessage%", MarkdownSanitizer.escape(getDamageTracker().getDeathMessage().getString()))).queue();
+			if (CONFIG.multiServer.enable) {
+				MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.deathMessage()
+						.replace("%deathMessage%", MarkdownSanitizer.escape(getDamageTracker().getDeathMessage().getString())));
+			}
 		}
 	}
 }

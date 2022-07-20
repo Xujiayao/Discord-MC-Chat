@@ -22,21 +22,25 @@ public class MixinPlayerManager {
 
 	@Inject(method = "onPlayerConnect", at = @At("HEAD"))
 	private void onPlayerConnect(ClientConnection connection, ServerPlayerEntity player, CallbackInfo ci) {
-		CHANNEL.sendMessage(TEXTS.joinServer()
-				.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();
-		if (CONFIG.multiServer.enable) {
-			MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.joinServer()
-					.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName())));
+		if (CONFIG.generic.announcePlayerJoinLeave) {
+			CHANNEL.sendMessage(TEXTS.joinServer()
+					.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();
+			if (CONFIG.multiServer.enable) {
+				MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.joinServer()
+						.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName())));
+			}
 		}
 	}
 
 	@Inject(method = "remove", at = @At("HEAD"))
 	private void remove(ServerPlayerEntity player, CallbackInfo ci) {
-		CHANNEL.sendMessage(TEXTS.leftServer()
-				.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();
-		if (CONFIG.multiServer.enable) {
-			MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.leftServer()
-					.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName())));
+		if (CONFIG.generic.announcePlayerJoinLeave) {
+			CHANNEL.sendMessage(TEXTS.leftServer()
+					.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();
+			if (CONFIG.multiServer.enable) {
+				MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.leftServer()
+						.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName())));
+			}
 		}
 	}
 }

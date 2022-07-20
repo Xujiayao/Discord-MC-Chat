@@ -109,9 +109,11 @@ public class Main implements DedicatedServerModInitializer {
 		ServerLifecycleEvents.SERVER_STARTED.register((server) -> {
 			SERVER_STARTED_TIME = Long.toString(Instant.now().getEpochSecond());
 
-			CHANNEL.sendMessage(TEXTS.serverStarted()).queue();
-			if (CONFIG.multiServer.enable) {
-				MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.serverStarted());
+			if (CONFIG.generic.announceServerStartStop) {
+				CHANNEL.sendMessage(TEXTS.serverStarted()).queue();
+				if (CONFIG.multiServer.enable) {
+					MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.serverStarted());
+				}
 			}
 
 			SERVER = server;
@@ -137,34 +139,57 @@ public class Main implements DedicatedServerModInitializer {
 			CHECK_UPDATE_TIMER.cancel();
 
 			if (CONFIG.multiServer.enable) {
-				MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.serverStopped());
+				if (CONFIG.generic.announceServerStartStop) {
+					MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.serverStopped());
+				}
 				MULTI_SERVER.bye();
 				MULTI_SERVER.stopMultiServer();
 			}
 
 			if (CONFIG.generic.updateChannelTopic) {
-				CHANNEL.sendMessage(TEXTS.serverStopped())
-						.submit()
-						.whenComplete((v, ex) -> {
-							String topic = TEXTS.offlineChannelTopic()
-									.replace("%lastUpdateTime%", Long.toString(Instant.now().getEpochSecond()));
+				if (CONFIG.generic.announceServerStartStop) {
+					CHANNEL.sendMessage(TEXTS.serverStopped())
+							.submit()
+							.whenComplete((v, ex) -> {
+								String topic = TEXTS.offlineChannelTopic()
+										.replace("%lastUpdateTime%", Long.toString(Instant.now().getEpochSecond()));
 
-							CHANNEL.getManager().setTopic(topic)
-									.submit()
-									.whenComplete((v2, ex2) -> {
-										if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
-											CONSOLE_LOG_CHANNEL.getManager().setTopic(topic)
-													.submit()
-													.whenComplete((v3, ex3) -> JDA.shutdownNow());
-										} else {
-											JDA.shutdownNow();
-										}
-									});
-						});
+								CHANNEL.getManager().setTopic(topic)
+										.submit()
+										.whenComplete((v2, ex2) -> {
+											if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
+												CONSOLE_LOG_CHANNEL.getManager().setTopic(topic)
+														.submit()
+														.whenComplete((v3, ex3) -> JDA.shutdownNow());
+											} else {
+												JDA.shutdownNow();
+											}
+										});
+							});
+				} else {
+					String topic = TEXTS.offlineChannelTopic()
+							.replace("%lastUpdateTime%", Long.toString(Instant.now().getEpochSecond()));
+
+					CHANNEL.getManager().setTopic(topic)
+							.submit()
+							.whenComplete((v2, ex2) -> {
+								if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
+									CONSOLE_LOG_CHANNEL.getManager().setTopic(topic)
+											.submit()
+											.whenComplete((v3, ex3) -> JDA.shutdownNow());
+								} else {
+									JDA.shutdownNow();
+								}
+							});
+				}
 			} else {
-				CHANNEL.sendMessage(TEXTS.serverStopped())
-						.submit()
-						.whenComplete((v, ex) -> JDA.shutdownNow());
+				if (CONFIG.generic.announceServerStartStop) {
+					CHANNEL.sendMessage(TEXTS.serverStopped())
+							.submit()
+							.whenComplete((v, ex) -> JDA.shutdownNow());
+				} else {
+					JDA.shutdownNow();
+				}
 			}
 		});
 	}

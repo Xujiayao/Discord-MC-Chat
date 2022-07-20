@@ -42,6 +42,14 @@ public class Config {
 
 		public boolean broadcastCommandExecution = true;
 
+		public boolean announceServerStartStop = true;
+
+		public boolean announcePlayerJoinLeave = true;
+
+		public boolean announceAdvancements = true;
+
+		public boolean announceDeathMessages = true;
+
 		public boolean allowMentions = true;
 		public boolean formatChatMessages = true;
 
