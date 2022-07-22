@@ -293,19 +293,19 @@ public class Utils {
 	public static void sendConsoleMessage(String consoleMessage) {
 		LOGGER.info(consoleMessage);
 
-		if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
-			if ((System.currentTimeMillis() - MINECRAFT_LAST_RESET_TIME) > 20000) {
-				MINECRAFT_SEND_COUNT = 0;
-				MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();
-			}
-
-			MINECRAFT_SEND_COUNT++;
-			if (MINECRAFT_SEND_COUNT <= 20) {
-				CONSOLE_LOG_CHANNEL.sendMessage(TEXTS.consoleLogMessage()
-						.replace("%time%", SIMPLE_DATE_FORMAT.format(new Date()))
-						.replace("%message%", MarkdownSanitizer.escape(consoleMessage))).queue();
-			}
-		}
+//		if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
+//			if ((System.currentTimeMillis() - MINECRAFT_LAST_RESET_TIME) > 20000) {
+//				MINECRAFT_SEND_COUNT = 0;
+//				MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();
+//			}
+//
+//			MINECRAFT_SEND_COUNT++;
+//			if (MINECRAFT_SEND_COUNT <= 20) {
+//				CONSOLE_LOG_CHANNEL.sendMessage(TEXTS.consoleLogMessage()
+//						.replace("%time%", SIMPLE_DATE_FORMAT.format(new Date()))
+//						.replace("%message%", MarkdownSanitizer.escape(consoleMessage))).queue();
+//			}
+//		}
 	}
 
 	public static void testJsonValid() throws JsonSyntaxException {
