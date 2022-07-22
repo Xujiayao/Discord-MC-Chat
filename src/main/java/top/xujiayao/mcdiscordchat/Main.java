@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 import top.xujiayao.mcdiscordchat.discord.DiscordEventListener;
 import top.xujiayao.mcdiscordchat.multiServer.MultiServer;
 import top.xujiayao.mcdiscordchat.utils.ConfigManager;
-import top.xujiayao.mcdiscordchat.utils.ConsoleLogManager;
+import top.xujiayao.mcdiscordchat.utils.ConsoleLogListener;
 import top.xujiayao.mcdiscordchat.utils.Texts;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 
@@ -107,7 +107,7 @@ public class Main implements DedicatedServerModInitializer {
 			MULTI_SERVER.start();
 		}
 
-		Thread consoleLogThread = new Thread(new ConsoleLogManager());
+		Thread consoleLogThread = new Thread(new ConsoleLogListener());
 		consoleLogThread.setDaemon(true);
 		consoleLogThread.start();
 

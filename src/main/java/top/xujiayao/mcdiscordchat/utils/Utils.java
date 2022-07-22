@@ -6,7 +6,6 @@ import com.google.gson.JsonSyntaxException;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.MathHelper;
 import okhttp3.Request;
@@ -16,29 +15,11 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
 import java.time.Instant;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.TimerTask;
 
-import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
-import static top.xujiayao.mcdiscordchat.Main.CHANNEL_TOPIC_MONITOR_TIMER;
-import static top.xujiayao.mcdiscordchat.Main.CHECK_UPDATE_TIMER;
-import static top.xujiayao.mcdiscordchat.Main.CONFIG;
-import static top.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_CHANNEL;
-import static top.xujiayao.mcdiscordchat.Main.HTTP_CLIENT;
-import static top.xujiayao.mcdiscordchat.Main.JDA;
-import static top.xujiayao.mcdiscordchat.Main.LOGGER;
-import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_LAST_RESET_TIME;
-import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_SEND_COUNT;
-import static top.xujiayao.mcdiscordchat.Main.MSPT_MONITOR_TIMER;
-import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
-import static top.xujiayao.mcdiscordchat.Main.SERVER;
-import static top.xujiayao.mcdiscordchat.Main.SERVER_STARTED_TIME;
-import static top.xujiayao.mcdiscordchat.Main.SIMPLE_DATE_FORMAT;
-import static top.xujiayao.mcdiscordchat.Main.TEXTS;
-import static top.xujiayao.mcdiscordchat.Main.UPDATE_NOTIFICATION_CHANNEL;
-import static top.xujiayao.mcdiscordchat.Main.VERSION;
+import static top.xujiayao.mcdiscordchat.Main.*;
 
 /**
  * @author Xujiayao
@@ -292,20 +273,6 @@ public class Utils {
 
 	public static void sendConsoleMessage(String consoleMessage) {
 		LOGGER.info(consoleMessage);
-
-//		if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
-//			if ((System.currentTimeMillis() - MINECRAFT_LAST_RESET_TIME) > 20000) {
-//				MINECRAFT_SEND_COUNT = 0;
-//				MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();
-//			}
-//
-//			MINECRAFT_SEND_COUNT++;
-//			if (MINECRAFT_SEND_COUNT <= 20) {
-//				CONSOLE_LOG_CHANNEL.sendMessage(TEXTS.consoleLogMessage()
-//						.replace("%time%", SIMPLE_DATE_FORMAT.format(new Date()))
-//						.replace("%message%", MarkdownSanitizer.escape(consoleMessage))).queue();
-//			}
-//		}
 	}
 
 	public static void testJsonValid() throws JsonSyntaxException {
