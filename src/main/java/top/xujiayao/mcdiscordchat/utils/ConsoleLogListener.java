@@ -71,7 +71,7 @@ public class ConsoleLogListener implements Runnable {
                     LOGGER.info("Closing ConsoleLogListener");
                     break;
                 }
-            } else {
+            } else if (fileLength < byteOffset) {
                 // latest.log somehow got shorter, likely from manually deleting some contents.
                 LOGGER.warn("latest.log shrank unexpectedly. Some messages may have been missed.");
             }
