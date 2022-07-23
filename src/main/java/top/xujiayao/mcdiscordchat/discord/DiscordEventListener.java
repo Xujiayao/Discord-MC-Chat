@@ -40,6 +40,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import top.xujiayao.mcdiscordchat.multiServer.MultiServer;
 import top.xujiayao.mcdiscordchat.utils.ConfigManager;
+import top.xujiayao.mcdiscordchat.utils.ConsoleLogListener;
 import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 
@@ -65,6 +66,7 @@ import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
 import static top.xujiayao.mcdiscordchat.Main.SERVER;
 import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 import static top.xujiayao.mcdiscordchat.Main.UPDATE_NOTIFICATION_CHANNEL;
+import static top.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_THREAD;
 
 /**
  * @author Xujiayao
@@ -224,8 +226,13 @@ public class DiscordEventListener extends ListenerAdapter {
 						Utils.setBotActivity();
 
 						CHANNEL = JDA.getTextChannelById(CONFIG.generic.channelId);
+						CONSOLE_LOG_THREAD.interrupt();
 						if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
 							CONSOLE_LOG_CHANNEL = JDA.getTextChannelById(CONFIG.generic.consoleLogChannelId);
+
+							CONSOLE_LOG_THREAD = new Thread(new ConsoleLogListener(false));
+							CONSOLE_LOG_THREAD.setDaemon(true);
+							CONSOLE_LOG_THREAD.start();
 						}
 						if (!CONFIG.generic.updateNotificationChannelId.isEmpty()) {
 							UPDATE_NOTIFICATION_CHANNEL = JDA.getTextChannelById(CONFIG.generic.updateNotificationChannelId);
