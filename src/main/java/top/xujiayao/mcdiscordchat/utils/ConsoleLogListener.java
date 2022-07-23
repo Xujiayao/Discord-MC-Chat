@@ -1,6 +1,7 @@
 package top.xujiayao.mcdiscordchat.utils;
 
 import net.fabricmc.loader.api.FabricLoader;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -14,6 +15,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import static top.xujiayao.mcdiscordchat.Main.CONFIG;
 import static top.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.LOGGER;
 import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_LAST_RESET_TIME;
@@ -21,7 +23,7 @@ import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_SEND_COUNT;
 
 public class ConsoleLogListener implements Runnable {
 
-	boolean readFileHistory;
+	private final boolean readFileHistory;
 
 	public ConsoleLogListener(boolean readFileHistory) {
 		this.readFileHistory = readFileHistory;
@@ -29,9 +31,8 @@ public class ConsoleLogListener implements Runnable {
 
 	@Override
 	public void run() {
-
-		sendLogChannelMessage("**Starting new console log**");
-		LOGGER.info("Starting new ConsoleLogListener");
+		sendLogChannelMessage(CONFIG.generic.useEngInsteadOfChin ? "**Start listening to console logs!**" : "**开始监听控制台日志！**");
+		LOGGER.info("[ConsoleLog] Starting new ConsoleLogListener");
 
 		final File file = new File(FabricLoader.getInstance().getGameDir().toString() + "/logs/latest.log");
 
@@ -84,13 +85,13 @@ public class ConsoleLogListener implements Runnable {
 
 				Thread.sleep(1000);
 			}
-		} catch (InterruptedException e) {
-			LOGGER.info("Closing ConsoleLogListener");
+		} catch (InterruptedException ignored) {
 		} catch (Exception e) {
-			LOGGER.warn(e.getMessage());
-			LOGGER.info("Closing ConsoleLogListener");
+			LOGGER.error(ExceptionUtils.getStackTrace(e));
 		}
 
+		sendLogChannelMessage(CONFIG.generic.useEngInsteadOfChin ? "**Stop listening to console logs!**" : "**停止监听控制台日志！**");
+		LOGGER.info("[ConsoleLog] Closing ConsoleLogListener");
 	}
 
 	private void sendLogChannelMessage(String message) {

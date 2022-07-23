@@ -48,7 +48,7 @@ public class Main implements DedicatedServerModInitializer {
 	public static JDA JDA;
 	public static TextChannel CHANNEL;
 	public static TextChannel CONSOLE_LOG_CHANNEL;
-	public static Thread CONSOLE_LOG_THREAD;
+	public static Thread CONSOLE_LOG_THREAD = new Thread(new ConsoleLogListener(true));;
 	public static TextChannel UPDATE_NOTIFICATION_CHANNEL;
 	public static Texts TEXTS;
 	public static long MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();
@@ -87,9 +87,6 @@ public class Main implements DedicatedServerModInitializer {
 			CHANNEL = JDA.getTextChannelById(CONFIG.generic.channelId);
 			if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
 				CONSOLE_LOG_CHANNEL = JDA.getTextChannelById(CONFIG.generic.consoleLogChannelId);
-
-				CONSOLE_LOG_THREAD = new Thread(new ConsoleLogListener(true));
-				CONSOLE_LOG_THREAD.setDaemon(true);
 				CONSOLE_LOG_THREAD.start();
 			}
 			if (!CONFIG.generic.updateNotificationChannelId.isEmpty()) {
@@ -137,10 +134,17 @@ public class Main implements DedicatedServerModInitializer {
 			}
 		});
 
-		ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
+		ServerLifecycleEvents.SERVER_STOPPED.register((server) -> {
 			MSPT_MONITOR_TIMER.cancel();
 			CHANNEL_TOPIC_MONITOR_TIMER.cancel();
 			CHECK_UPDATE_TIMER.cancel();
+
+			CONSOLE_LOG_THREAD.interrupt();
+			try {
+				CONSOLE_LOG_THREAD.join(5000);
+			} catch (Exception e) {
+				LOGGER.error(ExceptionUtils.getStackTrace(e));
+			}
 
 			if (CONFIG.multiServer.enable) {
 				if (CONFIG.generic.announceServerStartStop) {
