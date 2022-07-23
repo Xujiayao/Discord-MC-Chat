@@ -87,7 +87,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			return;
 		}
 
-		Utils.sendConsoleMessage(TEXTS.unformattedOtherMessage()
+		LOGGER.info(TEXTS.unformattedOtherMessage()
 				.replace("%server%", (CONFIG.multiServer.enable ? CONFIG.multiServer.name : "Discord"))
 				.replace("%message%", TEXTS.unformattedCommandNotice()
 						.replace("%name%", CONFIG.generic.useServerNickname ? Objects.requireNonNull(e.getMember()).getEffectiveName() : Objects.requireNonNull(e.getMember()).getUser().getName())
@@ -351,7 +351,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				referencedMemberRoleName = "null";
 			}
 
-			Utils.sendConsoleMessage(TEXTS.unformattedResponseMessage()
+			LOGGER.info(TEXTS.unformattedResponseMessage()
 					.replace("%server%", "Discord")
 					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : webhookName)
 					.replace("%roleName%", referencedMemberRoleName)
@@ -364,7 +364,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			memberRoleName = "null";
 		}
 
-		Utils.sendConsoleMessage(TEXTS.unformattedChatMessage()
+		LOGGER.info(TEXTS.unformattedChatMessage()
 				.replace("%server%", "Discord")
 				.replace("%name%", CONFIG.generic.useServerNickname ? Objects.requireNonNull(e.getMember()).getEffectiveName() : Objects.requireNonNull(e.getMember()).getUser().getName())
 				.replace("%roleName%", memberRoleName)

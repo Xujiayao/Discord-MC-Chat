@@ -283,10 +283,6 @@ public class Utils {
 		}, 3600000, 21600000);
 	}
 
-	public static void sendConsoleMessage(String consoleMessage) {
-		LOGGER.info(consoleMessage);
-	}
-
 	public static void testJsonValid() throws JsonSyntaxException {
 		new Gson().fromJson(CONFIG.textsZH.formattedResponseMessage, Object.class);
 		new Gson().fromJson(CONFIG.textsZH.formattedChatMessage, Object.class);
