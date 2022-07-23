@@ -20,7 +20,6 @@ public record Texts(String unformattedResponseMessage,
                     String advancementChallenge,
                     String advancementGoal,
                     String highMspt,
-                    String consoleLogMessage,
                     String offlineChannelTopic,
                     String onlineChannelTopic,
                     String onlineChannelTopicForMultiServer) {
