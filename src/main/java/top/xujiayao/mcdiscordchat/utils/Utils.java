@@ -19,7 +19,21 @@ import java.util.List;
 import java.util.Objects;
 import java.util.TimerTask;
 
-import static top.xujiayao.mcdiscordchat.Main.*;
+import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
+import static top.xujiayao.mcdiscordchat.Main.CHANNEL_TOPIC_MONITOR_TIMER;
+import static top.xujiayao.mcdiscordchat.Main.CHECK_UPDATE_TIMER;
+import static top.xujiayao.mcdiscordchat.Main.CONFIG;
+import static top.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_CHANNEL;
+import static top.xujiayao.mcdiscordchat.Main.HTTP_CLIENT;
+import static top.xujiayao.mcdiscordchat.Main.JDA;
+import static top.xujiayao.mcdiscordchat.Main.LOGGER;
+import static top.xujiayao.mcdiscordchat.Main.MSPT_MONITOR_TIMER;
+import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
+import static top.xujiayao.mcdiscordchat.Main.SERVER;
+import static top.xujiayao.mcdiscordchat.Main.SERVER_STARTED_TIME;
+import static top.xujiayao.mcdiscordchat.Main.TEXTS;
+import static top.xujiayao.mcdiscordchat.Main.UPDATE_NOTIFICATION_CHANNEL;
+import static top.xujiayao.mcdiscordchat.Main.VERSION;
 
 /**
  * @author Xujiayao
