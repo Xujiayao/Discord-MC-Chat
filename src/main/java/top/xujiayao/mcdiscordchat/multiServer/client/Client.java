@@ -1,7 +1,5 @@
 package top.xujiayao.mcdiscordchat.multiServer.client;
 
-import top.xujiayao.mcdiscordchat.utils.Utils;
-
 import java.net.Socket;
 
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
@@ -18,7 +16,7 @@ public class Client {
 
 	public void connect() throws Exception {
 		socket = new Socket(CONFIG.multiServer.host, CONFIG.multiServer.port);
-		Utils.sendConsoleMessage("[MultiServer] Connected to the server");
+		LOGGER.info("[MultiServer] Connected to the server");
 
 		readThread = new ReadThread(socket);
 		readThread.start();

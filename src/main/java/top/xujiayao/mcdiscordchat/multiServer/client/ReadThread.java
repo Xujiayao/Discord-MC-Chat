@@ -88,7 +88,7 @@ public class ReadThread extends Thread {
 					}
 
 					if (json.get("isChat").getAsBoolean()) {
-						Utils.sendConsoleMessage(TEXTS.unformattedChatMessage()
+						LOGGER.info(TEXTS.unformattedChatMessage()
 								.replace("%server%", json.get("serverName").getAsString())
 								.replace("%name%", json.get("playerName").getAsString())
 								.replace("%message%", json.get("message").getAsString()));
@@ -103,7 +103,7 @@ public class ReadThread extends Thread {
 								player -> player.sendMessage(text, false));
 					} else {
 						if (json.get("isText").getAsBoolean()) {
-							Utils.sendConsoleMessage(TEXTS.unformattedOtherMessage()
+							LOGGER.info(TEXTS.unformattedOtherMessage()
 									.replace("%server%", json.get("serverName").getAsString())
 									.replace("%message%", Objects.requireNonNull(Text.Serializer.fromJson(json.get("message").getAsString())).getString()));
 
@@ -125,7 +125,7 @@ public class ReadThread extends Thread {
 									player -> player.sendMessage(Texts.join(textList, Text.of("")), false));
 							//#endif
 						} else {
-							Utils.sendConsoleMessage(TEXTS.unformattedOtherMessage()
+							LOGGER.info(TEXTS.unformattedOtherMessage()
 									.replace("%server%", json.get("serverName").getAsString())
 									.replace("%message%", json.get("message").getAsString()));
 

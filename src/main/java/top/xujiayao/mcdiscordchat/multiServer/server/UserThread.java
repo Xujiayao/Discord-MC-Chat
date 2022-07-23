@@ -3,7 +3,6 @@ package top.xujiayao.mcdiscordchat.multiServer.server;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import top.xujiayao.mcdiscordchat.utils.Utils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -34,7 +33,7 @@ public class UserThread extends Thread {
 
 	@Override
 	public void run() {
-		Utils.sendConsoleMessage("[MultiServer] A client is connected to the server");
+		LOGGER.info("[MultiServer] A client is connected to the server");
 
 		try {
 			reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
@@ -62,7 +61,7 @@ public class UserThread extends Thread {
 			LOGGER.error(ExceptionUtils.getStackTrace(e));
 		}
 
-		Utils.sendConsoleMessage("[MultiServer] A client has disconnected from the server");
+		LOGGER.info("[MultiServer] A client has disconnected from the server");
 
 		stopUserThread();
 	}
