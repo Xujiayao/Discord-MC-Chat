@@ -50,6 +50,7 @@ public class Main implements DedicatedServerModInitializer {
 	public static JDA JDA;
 	public static TextChannel CHANNEL;
 	public static TextChannel CONSOLE_LOG_CHANNEL;
+	public static Thread CONSOLE_LOG_THREAD;
 	public static TextChannel UPDATE_NOTIFICATION_CHANNEL;
 	public static Texts TEXTS;
 	public static long MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();
@@ -88,6 +89,10 @@ public class Main implements DedicatedServerModInitializer {
 			CHANNEL = JDA.getTextChannelById(CONFIG.generic.channelId);
 			if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
 				CONSOLE_LOG_CHANNEL = JDA.getTextChannelById(CONFIG.generic.consoleLogChannelId);
+
+				CONSOLE_LOG_THREAD = new Thread(new ConsoleLogListener(true));
+				CONSOLE_LOG_THREAD.setDaemon(true);
+				CONSOLE_LOG_THREAD.start();
 			}
 			if (!CONFIG.generic.updateNotificationChannelId.isEmpty()) {
 				UPDATE_NOTIFICATION_CHANNEL = JDA.getTextChannelById(CONFIG.generic.updateNotificationChannelId);
@@ -106,10 +111,6 @@ public class Main implements DedicatedServerModInitializer {
 			MULTI_SERVER = new MultiServer();
 			MULTI_SERVER.start();
 		}
-
-		Thread consoleLogThread = new Thread(new ConsoleLogListener());
-		consoleLogThread.setDaemon(true);
-		consoleLogThread.start();
 
 		ServerLifecycleEvents.SERVER_STARTED.register((server) -> {
 			SERVER_STARTED_TIME = Long.toString(Instant.now().getEpochSecond());
