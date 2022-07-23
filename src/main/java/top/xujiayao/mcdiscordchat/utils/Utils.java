@@ -155,7 +155,6 @@ public class Utils {
 					CONFIG.textsEN.advancementChallenge,
 					CONFIG.textsEN.advancementGoal,
 					CONFIG.textsEN.highMspt,
-					CONFIG.textsEN.consoleLogMessage,
 					CONFIG.textsEN.offlineChannelTopic,
 					CONFIG.textsEN.onlineChannelTopic,
 					CONFIG.textsEN.onlineChannelTopicForMultiServer);
@@ -177,7 +176,6 @@ public class Utils {
 					CONFIG.textsZH.advancementChallenge,
 					CONFIG.textsZH.advancementGoal,
 					CONFIG.textsZH.highMspt,
-					CONFIG.textsZH.consoleLogMessage,
 					CONFIG.textsZH.offlineChannelTopic,
 					CONFIG.textsZH.onlineChannelTopic,
 					CONFIG.textsZH.onlineChannelTopicForMultiServer);
