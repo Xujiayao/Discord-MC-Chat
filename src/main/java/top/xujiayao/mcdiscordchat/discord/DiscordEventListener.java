@@ -227,11 +227,10 @@ public class DiscordEventListener extends ListenerAdapter {
 
 						CHANNEL = JDA.getTextChannelById(CONFIG.generic.channelId);
 						CONSOLE_LOG_THREAD.interrupt();
+						CONSOLE_LOG_THREAD.join(5000);
 						if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
 							CONSOLE_LOG_CHANNEL = JDA.getTextChannelById(CONFIG.generic.consoleLogChannelId);
-
 							CONSOLE_LOG_THREAD = new Thread(new ConsoleLogListener(false));
-							CONSOLE_LOG_THREAD.setDaemon(true);
 							CONSOLE_LOG_THREAD.start();
 						}
 						if (!CONFIG.generic.updateNotificationChannelId.isEmpty()) {
