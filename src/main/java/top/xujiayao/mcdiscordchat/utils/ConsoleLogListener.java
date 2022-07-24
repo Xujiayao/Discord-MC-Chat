@@ -21,6 +21,9 @@ import static top.xujiayao.mcdiscordchat.Main.LOGGER;
 import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_LAST_RESET_TIME;
 import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_SEND_COUNT;
 
+/**
+ * @author LofiTurtle
+ */
 public class ConsoleLogListener implements Runnable {
 
 	private final boolean readFileHistory;
