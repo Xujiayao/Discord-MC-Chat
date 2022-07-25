@@ -198,13 +198,13 @@ public abstract class MixinServerPlayNetworkHandler {
 
 	@Inject(method = "executeCommand", at = @At(value = "HEAD"))
 	private void executeCommand(String input, CallbackInfo ci) {
-		for (String command : CONFIG.generic.excludedCommands) {
-			if (input.startsWith(command + " ")) {
-				return;
-			}
-		}
-
 		if (CONFIG.generic.broadcastCommandExecution) {
+			for (String command : CONFIG.generic.excludedCommands) {
+				if (input.startsWith(command + " ")) {
+					return;
+				}
+			}
+
 			if ((System.currentTimeMillis() - MINECRAFT_LAST_RESET_TIME) > 20000) {
 				MINECRAFT_SEND_COUNT = 0;
 				MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();

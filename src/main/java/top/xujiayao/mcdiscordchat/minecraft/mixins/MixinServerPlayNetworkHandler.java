@@ -8,6 +8,8 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.minecraft.SharedConstants;
+import net.minecraft.network.NetworkThreadUtils;
+import net.minecraft.network.listener.ServerPlayPacketListener;
 import net.minecraft.network.message.MessageType;
 import net.minecraft.network.message.SignedMessage;
 import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
@@ -17,6 +19,7 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.filter.FilteredMessage;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.EntityTrackingListener;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import okhttp3.MediaType;
@@ -53,7 +56,7 @@ import static top.xujiayao.mcdiscordchat.Main.SERVER;
  * @author Xujiayao
  */
 @Mixin(ServerPlayNetworkHandler.class)
-public abstract class MixinServerPlayNetworkHandler {
+public abstract class MixinServerPlayNetworkHandler implements EntityTrackingListener, ServerPlayPacketListener {
 
 	@Shadow
 	private ServerPlayerEntity player;
@@ -64,6 +67,9 @@ public abstract class MixinServerPlayNetworkHandler {
 
 	@Shadow
 	public abstract void checkForSpam();
+
+	@Shadow
+	public abstract void disconnect(Text reason);
 
 	@Shadow
 	public abstract void handleMessage(ChatMessageC2SPacket packet, FilteredMessage<String> message);
@@ -165,39 +171,48 @@ public abstract class MixinServerPlayNetworkHandler {
 
 	@Inject(method = "onCommandExecution", at = @At(value = "HEAD"), cancellable = true)
 	private void onCommandExecution(CommandExecutionC2SPacket packet, CallbackInfo ci) {
-		if (hasIllegalCharacter(packet.command())) {
-			return;
-		}
+		if (CONFIG.generic.broadcastCommandExecution) {
+			if (hasIllegalCharacter(packet.command())) {
+				disconnect(Text.translatable("multiplayer.disconnect.illegal_characters"));
+			} else {
+				NetworkThreadUtils.forceMainThread(packet, this, player.getWorld());
+				if (canAcceptMessage(packet.command(), packet.timestamp())) {
+					String input = "/" + packet.command();
 
-		if (canAcceptMessage(packet.command(), packet.timestamp())) {
-			ServerCommandSource serverCommandSource = player.getCommandSource().withSigner(packet.createArgumentsSigner(player.getUuid()));
-			server.getCommandManager().execute(serverCommandSource, packet.command());
-			checkForSpam();
-
-			if (CONFIG.generic.broadcastCommandExecution && !CONFIG.generic.excludedCommands.contains(packet.command())) {
-				if ((System.currentTimeMillis() - MINECRAFT_LAST_RESET_TIME) > 20000) {
-					MINECRAFT_SEND_COUNT = 0;
-					MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();
-				}
-
-				MINECRAFT_SEND_COUNT++;
-				if (MINECRAFT_SEND_COUNT <= 20) {
-					Text text = Text.of("<" + player.getEntityName() + "> /" + packet.command());
-
-					List<ServerPlayerEntity> list = new ArrayList<>(server.getPlayerManager().getPlayerList());
-					list.forEach(serverPlayerEntity -> serverPlayerEntity.sendMessage(text, false));
-
-					SERVER.sendMessage(text);
-
-					sendMessage("/" + packet.command(), true);
-					if (CONFIG.multiServer.enable) {
-						MULTI_SERVER.sendMessage(false, true, false, player.getEntityName(), MarkdownSanitizer.escape("/" + packet.command()));
+					for (String command : CONFIG.generic.excludedCommands) {
+						if (input.startsWith(command + " ")) {
+							return;
+						}
 					}
+
+					if ((System.currentTimeMillis() - MINECRAFT_LAST_RESET_TIME) > 20000) {
+						MINECRAFT_SEND_COUNT = 0;
+						MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();
+					}
+
+					MINECRAFT_SEND_COUNT++;
+					if (MINECRAFT_SEND_COUNT <= 20) {
+						Text text = Text.of("<" + player.getEntityName() + "> " + input);
+
+						List<ServerPlayerEntity> list = new ArrayList<>(server.getPlayerManager().getPlayerList());
+						list.forEach(serverPlayerEntity -> serverPlayerEntity.sendMessage(text, false));
+
+						SERVER.sendMessage(text);
+
+						sendMessage(input, true);
+						if (CONFIG.multiServer.enable) {
+							MULTI_SERVER.sendMessage(false, true, false, player.getEntityName(), MarkdownSanitizer.escape(input));
+						}
+					}
+
+					ServerCommandSource serverCommandSource = player.getCommandSource().withSigner(packet.createArgumentsSigner(player.getUuid()));
+					server.getCommandManager().execute(serverCommandSource, packet.command());
+					checkForSpam();
 				}
 			}
-		}
 
-		ci.cancel();
+			ci.cancel();
+		}
 	}
 
 	private void sendMessage(String message, boolean escapeMarkdown) {
