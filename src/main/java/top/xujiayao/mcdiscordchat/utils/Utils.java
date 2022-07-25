@@ -217,7 +217,8 @@ public class Utils {
 				.addCommands(Commands.slash("reload", CONFIG.generic.useEngInsteadOfChin ? "Reload MCDiscordChat config file (admin only)" : "重新加载 MCDiscordChat 配置文件（仅限管理员）"))
 				.addCommands(Commands.slash("console", CONFIG.generic.useEngInsteadOfChin ? "Execute a command in the server console (admin only)" : "在服务器控制台中执行指令（仅限管理员）")
 						.addOption(OptionType.STRING, "command", CONFIG.generic.useEngInsteadOfChin ? "Command to execute" : "要执行的命令", true))
-				.addCommands(Commands.slash("log", CONFIG.generic.useEngInsteadOfChin ? "Get the latest server log (admin only)" : "获取服务器最新日志（仅限管理员）"))
+				.addCommands(Commands.slash("log", CONFIG.generic.useEngInsteadOfChin ? "Get the specified server log (admin only)" : "获取指定的服务器日志（仅限管理员）")
+						.addOption(OptionType.STRING, "file", CONFIG.generic.useEngInsteadOfChin ? "File name" : "文件名", true, true))
 				.addCommands(Commands.slash("stop", CONFIG.generic.useEngInsteadOfChin ? "Stop the server (admin only)" : "停止服务器（仅限管理员）"))
 				.queue();
 	}

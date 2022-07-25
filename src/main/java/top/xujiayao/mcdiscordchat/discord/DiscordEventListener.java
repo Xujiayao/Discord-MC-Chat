@@ -11,9 +11,11 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
 import net.dv8tion.jda.api.entities.sticker.StickerItem;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.Command;
 import net.fabricmc.loader.api.FabricLoader;
 //#if MC <= 11605
 //$$ import net.minecraft.server.command.ServerCommandSource;
@@ -44,7 +46,10 @@ import top.xujiayao.mcdiscordchat.utils.ConsoleLogListener;
 import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,6 +58,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.zip.GZIPInputStream;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL_TOPIC_MONITOR_TIMER;
@@ -303,7 +311,28 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 			case "log" -> {
 				if (CONFIG.generic.adminsIds.contains(Objects.requireNonNull(e.getMember()).getId())) {
-					e.getHook().sendFile(new File(FabricLoader.getInstance().getGameDir().toFile(), "logs/latest.log")).queue();
+					String fileName = Objects.requireNonNull(e.getOption("file")).getAsString();
+
+					if (fileName.equals("latest.log")) {
+						e.getHook().sendFile(new File(FabricLoader.getInstance().getGameDir().toFile(), "logs/latest.log")).queue();
+					} else {
+						File source = new File(FabricLoader.getInstance().getGameDir().toFile(), ("logs/" + fileName));
+						try (GZIPInputStream gis = new GZIPInputStream(new FileInputStream(source))) {
+							byte[] buffer = new byte[1024];
+							ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+							int len;
+							while ((len = gis.read(buffer)) > 0) {
+								out.write(buffer, 0, len);
+							}
+
+							e.getHook().sendFile(out.toByteArray(), "target.log").queue();
+						} catch (FileNotFoundException ex) {
+							e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**Could not find the specified file!**" : "**找不到指定的文件！**").queue();
+						} catch (Exception ex) {
+							LOGGER.error(ExceptionUtils.getStackTrace(ex));
+						}
+					}
 				} else {
 					e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**You do not have permission to use this command!**" : "**你没有权限使用此命令！**").queue();
 				}
@@ -317,6 +346,20 @@ public class DiscordEventListener extends ListenerAdapter {
 					e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**You do not have permission to use this command!**" : "**你没有权限使用此命令！**").queue();
 				}
 			}
+		}
+	}
+
+	@Override
+	public void onCommandAutoCompleteInteraction(CommandAutoCompleteInteractionEvent e) {
+		if (e.getName().equals("log") && e.getFocusedOption().getName().equals("file")) {
+			String[] files = new File(FabricLoader.getInstance().getGameDir().toFile(), "logs").list();
+
+			List<Command.Choice> options = Stream.of(Objects.requireNonNull(files))
+					.filter(file -> file.startsWith(e.getFocusedOption().getValue()))
+					.map(file -> new Command.Choice(file, file))
+					.collect(Collectors.toList());
+
+			e.replyChoices(options).queue();
 		}
 	}
 
