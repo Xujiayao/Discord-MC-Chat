@@ -1,7 +1,9 @@
 package top.xujiayao.mcdiscordchat.utils;
 
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.entity.player.PlayerEntity;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.logging.Log;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -10,10 +12,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.time.LocalDate;
+import java.util.*;
 
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
 import static top.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_CHANNEL;
@@ -39,62 +39,89 @@ public class ConsoleLogListener implements Runnable {
 
 		final File file = new File(FabricLoader.getInstance().getGameDir().toString() + "/logs/latest.log");
 
-		try (InputStream is = Files.newInputStream(file.toPath(), StandardOpenOption.READ)) {
-			BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
-
-			if (!readFileHistory) {
-				// skip to bottom of file
-				br.lines().count();
-			}
-
-			while (!Thread.interrupted()) {
-				List<String> lines = br.lines().toList();
-				if (!lines.isEmpty()) {
-					// new messages in log file
-					ArrayList<String> newMessages = new ArrayList<>();
-					for (String line : lines) {
-						// br.lines() doesn't always split on "\n"
-						newMessages.addAll(new ArrayList<>(Arrays.asList(line.split("\n"))));
+		try {
+			while (true) {
+				for (int i = 0; i < 10; i++) {
+					// wait for latest.log to exist
+					LOGGER.info("[ConsoleLog] checking if log file exists");
+					if (file.exists()) {
+						LOGGER.info("[ConsoleLog] log file found. Initializing input stream...");
+						break;
 					}
-					// logs can get long. split into multiple messages if necessary
-					StringBuilder messageBatch = new StringBuilder();
-					Iterator<String> newMessageIterator = newMessages.iterator();
-					String currentLine = newMessageIterator.next();
-					boolean finishedSendingMessages = false;
-					while (!finishedSendingMessages) {
-
-						while (messageBatch.length() + currentLine.length() < 1900) {
-							// create the message batch
-							messageBatch.append(currentLine);
-							messageBatch.append("\n");
-							if (newMessageIterator.hasNext()) {
-								currentLine = newMessageIterator.next();
-							} else {
-								finishedSendingMessages = true;
-								break;
-							}
-						}
-
-						if (messageBatch.isEmpty()) {
-							// currentLine is somehow larger than char limit
-							messageBatch.append(currentLine);
-						}
-
-						messageBatch.deleteCharAt(messageBatch.lastIndexOf("\n"));
-						sendLogChannelMessage(messageBatch.toString());
-						messageBatch.delete(0, messageBatch.length());
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						return;
 					}
 				}
 
-				Thread.sleep(1000);
-			}
-		} catch (InterruptedException ignored) {
-		} catch (Exception e) {
-			LOGGER.error(ExceptionUtils.getStackTrace(e));
-		}
+				try (InputStream is = Files.newInputStream(file.toPath(), StandardOpenOption.READ)) {
+					BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
 
-		sendLogChannelMessage(CONFIG.generic.useEngInsteadOfChin ? "**Stop listening to console logs!**" : "**停止监听控制台日志！**");
-		LOGGER.info("[ConsoleLog] Closing ConsoleLogListener");
+					if (!readFileHistory) {
+						// skip to bottom of file
+						br.lines().count();
+					}
+
+					LocalDate dateLastUpdated = LocalDate.now();
+
+					while (true) {
+						if (!dateLastUpdated.equals(LocalDate.now())) {
+							// if the date changed, exit to get the new latest.log file
+							LOGGER.info("[ConsoleLog] date changed. getting new log file");
+							break;
+						}
+
+						List<String> lines = br.lines().toList();
+						if (!lines.isEmpty()) {
+							// new messages in log file
+							ArrayList<String> newMessages = new ArrayList<>();
+							for (String line : lines) {
+								// br.lines() doesn't always split on "\n"
+								newMessages.addAll(new ArrayList<>(Arrays.asList(line.split("\n"))));
+							}
+							// logs can get long. split into multiple messages if necessary
+							StringBuilder messageBatch = new StringBuilder();
+							Iterator<String> newMessageIterator = newMessages.iterator();
+							String currentLine = newMessageIterator.next();
+							boolean finishedSendingMessages = false;
+							while (!finishedSendingMessages) {
+
+								while (messageBatch.length() + currentLine.length() < 1900) {
+									// create the message batch
+									messageBatch.append(currentLine);
+									messageBatch.append("\n");
+									if (newMessageIterator.hasNext()) {
+										currentLine = newMessageIterator.next();
+									} else {
+										finishedSendingMessages = true;
+										break;
+									}
+								}
+
+								if (messageBatch.isEmpty()) {
+									// currentLine is somehow larger than char limit
+									messageBatch.append(currentLine);
+								}
+
+								messageBatch.deleteCharAt(messageBatch.lastIndexOf("\n"));
+								sendLogChannelMessage(messageBatch.toString());
+								messageBatch.delete(0, messageBatch.length());
+							}
+						}
+
+						Thread.sleep(1000);
+					}
+				} catch (InterruptedException e) {
+					return;
+				} catch (Exception e) {
+					LOGGER.error(ExceptionUtils.getStackTrace(e));
+				}
+			}
+		} finally {
+			sendLogChannelMessage(CONFIG.generic.useEngInsteadOfChin ? "**Stop listening to console logs!**" : "**停止监听控制台日志！**");
+			LOGGER.info("[ConsoleLog] Closing ConsoleLogListener");
+		}
 	}
 
 	private void sendLogChannelMessage(String message) {
