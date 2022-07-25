@@ -1,9 +1,7 @@
 package top.xujiayao.mcdiscordchat.utils;
 
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.entity.player.PlayerEntity;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -13,7 +11,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
 import static top.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_CHANNEL;
@@ -43,9 +44,8 @@ public class ConsoleLogListener implements Runnable {
 			while (true) {
 				for (int i = 0; i < 10; i++) {
 					// wait for latest.log to exist
-					LOGGER.info("[ConsoleLog] checking if log file exists");
 					if (file.exists()) {
-						LOGGER.info("[ConsoleLog] log file found. Initializing input stream...");
+						LOGGER.info("[ConsoleLog] Listening to new latest.log");
 						break;
 					}
 					try {
@@ -65,12 +65,8 @@ public class ConsoleLogListener implements Runnable {
 
 					LocalDate dateLastUpdated = LocalDate.now();
 
-					while (true) {
-						if (!dateLastUpdated.equals(LocalDate.now())) {
-							// if the date changed, exit to get the new latest.log file
-							LOGGER.info("[ConsoleLog] date changed. getting new log file");
-							break;
-						}
+					// if the date changed, exit to get the new latest.log file
+					while (dateLastUpdated.equals(LocalDate.now())) {
 
 						List<String> lines = br.lines().toList();
 						if (!lines.isEmpty()) {
