@@ -52,6 +52,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -353,9 +354,16 @@ public class DiscordEventListener extends ListenerAdapter {
 	public void onCommandAutoCompleteInteraction(CommandAutoCompleteInteractionEvent e) {
 		if (e.getName().equals("log") && e.getFocusedOption().getName().equals("file")) {
 			String[] files = new File(FabricLoader.getInstance().getGameDir().toFile(), "logs").list();
+			files = Arrays.stream(Objects.requireNonNull(files))
+					.filter(file -> file.contains(e.getFocusedOption().getValue()))
+					.toArray(String[]::new);
 
-			List<Command.Choice> options = Stream.of(Objects.requireNonNull(files))
-					.filter(file -> file.startsWith(e.getFocusedOption().getValue()))
+			if (files.length > 25) {
+				files = Arrays.copyOfRange(files, 0, 25);
+				files[24] = "...";
+			}
+
+			List<Command.Choice> options = Stream.of(files)
 					.map(file -> new Command.Choice(file, file))
 					.collect(Collectors.toList());
 
