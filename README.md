@@ -71,7 +71,8 @@ If there is a bug or suggestion, or something you don't understand, you can [sub
   - Support in-game display of response messages
   - Broadcast player command execution
     - Players who execute commands can also see the commands themselves
-  - Broadcast server console log
+    - Exclude broadcasts for execution of specific commands
+  - Send all console log messages to Discord
 - Server Commands available
   - Use Discord to manage channels that can execute MCDC commands
   - Notify in-game players when someone executes an MCDC command
@@ -83,9 +84,10 @@ If there is a bug or suggestion, or something you don't understand, you can [sub
   - Admin Commands
     - /reload                  | Reload MCDiscordChat config file (admin only)
     - /console \<command\>     | Execute a command in the server console (admin only)
-    - /log                     | Get the latest server log (admin only)
+    - /log                     | Get the specified server log (admin only)
     - /stop                    | Stop the server (admin only)
 - Fully customizable message format
+  - Sending specific server messages to Discord can be disabled
   - In-game
     - Chat messages from Discord
     - Response messages from Discord
@@ -98,11 +100,11 @@ If there is a bug or suggestion, or something you don't understand, you can [sub
     - Player reached a progress / achieved a goal / completed a challenge
     - Player died
     - Server MSPT is higher than a certain value
-    - Server sent a console log message
 - Use admin list to configure user permissions to use special commands
 - Support Hot Reloading of the config file
   - Backup every time the config file is loaded
 - Check for updates regularly
+  - Customizable update notification channel
 
 ## Contributors
 
