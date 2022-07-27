@@ -92,7 +92,7 @@ public class Main implements DedicatedServerModInitializer {
 			if (!CONFIG.generic.updateNotificationChannelId.isEmpty()) {
 				UPDATE_NOTIFICATION_CHANNEL = JDA.getTextChannelById(CONFIG.generic.updateNotificationChannelId);
 			}
-			if (UPDATE_NOTIFICATION_CHANNEL == null) {
+			if (UPDATE_NOTIFICATION_CHANNEL == null || !UPDATE_NOTIFICATION_CHANNEL.canTalk()) {
 				UPDATE_NOTIFICATION_CHANNEL = CHANNEL;
 			}
 
