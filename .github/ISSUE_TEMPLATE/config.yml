@@ -1,1 +1,11 @@
 blank_issues_enabled: false
+contact_links:
+  - name: Example Issue
+    url: https://github.com/Xujiayao/MCDiscordChat/issues/73
+    about: You can refer to this example issue to fill in your issue.
+  - name: MCDiscordChat Docs
+    url: https://blog.xujiayao.top/posts/4ba0a17a/
+    about: Make sure you follow the docs to configure MCDiscordChat!
+  - name: Latest Builds
+    url: https://github.com/Xujiayao/MCDiscordChat/actions
+    about: You can find the latest build JAR files at GitHub Actions.
