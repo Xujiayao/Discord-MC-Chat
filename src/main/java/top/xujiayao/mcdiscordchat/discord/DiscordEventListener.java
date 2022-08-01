@@ -298,8 +298,10 @@ public class DiscordEventListener extends ListenerAdapter {
 						e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**Executing the command!**" : "**正在执行命令！**")
 								.submit()
 								.whenComplete((v, ex) -> SERVER.getCommandManager()
-										//#if MC >= 11700
-										.execute(SERVER.getCommandSource().withOutput(new DiscordCommandOutput(e)), command));
+										//#if MC >= 11900
+										.executeWithPrefix(SERVER.getCommandSource().withOutput(new DiscordCommandOutput(e)), command));
+										//#elseif MC >= 11700
+										//$$ .execute(SERVER.getCommandSource().withOutput(new DiscordCommandOutput(e)), command));
 										//#elseif MC >= 11600
 										//$$ .execute(new ServerCommandSource(new DiscordCommandOutput(e), Vec3d.ZERO, Vec2f.ZERO, SERVER.getOverworld(), 4, "MCDiscordChat", new LiteralText("MCDiscordChat"), SERVER, null), command));
 										//#else

@@ -8,14 +8,16 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.minecraft.SharedConstants;
-import net.minecraft.network.NetworkThreadUtils;
+import net.minecraft.class_7649;
 import net.minecraft.network.listener.ServerPlayPacketListener;
+import net.minecraft.network.message.DecoratedContents;
+import net.minecraft.network.message.LastSeenMessageList;
+import net.minecraft.network.message.MessageChainTaskQueue;
 import net.minecraft.network.message.MessageType;
 import net.minecraft.network.message.SignedMessage;
 import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
 import net.minecraft.network.packet.c2s.play.CommandExecutionC2SPacket;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.filter.FilteredMessage;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -40,7 +42,7 @@ import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.concurrent.CompletableFuture;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
@@ -65,6 +67,10 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 	@Shadow
 	private MinecraftServer server;
 
+	@Final
+	@Shadow
+	private MessageChainTaskQueue messageChainTaskQueue;
+
 	@Shadow
 	public abstract void checkForSpam();
 
@@ -72,23 +78,30 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 	public abstract void disconnect(Text reason);
 
 	@Shadow
-	public abstract void handleMessage(ChatMessageC2SPacket packet, FilteredMessage<String> message);
+	public abstract CompletableFuture<FilteredMessage> filterText(String text);
 
 	@Shadow
-	public abstract void filterText(String text, Consumer<FilteredMessage<String>> consumer);
+	public abstract boolean canAcceptMessage(String string, Instant instant, LastSeenMessageList.Acknowledgment acknowledgment);
 
 	@Shadow
-	public abstract boolean canAcceptMessage(String string, Instant instant);
+	public abstract boolean canAcceptMessage(SignedMessage message);
+
+	@Shadow
+	public abstract void handleCommandExecution(CommandExecutionC2SPacket packet);
+
+	@Shadow
+	public abstract SignedMessage getSignedMessage(ChatMessageC2SPacket packet);
+
+	@Shadow
+	public abstract void handleDecoratedMessage(SignedMessage signedMessage);
 
 	@Inject(method = "onChatMessage", at = @At("HEAD"), cancellable = true)
 	private void onChatMessage(ChatMessageC2SPacket packet, CallbackInfo ci) {
-		if (hasIllegalCharacter(packet.getChatMessage())) {
-			return;
-		}
-
-		if (canAcceptMessage(packet.getChatMessage(), packet.getTimestamp())) {
-			String contentToDiscord = packet.getChatMessage();
-			String contentToMinecraft = packet.getChatMessage();
+		if (hasIllegalCharacter(packet.chatMessage())) {
+			disconnect(Text.translatable("multiplayer.disconnect.illegal_characters"));
+		} else if (canAcceptMessage(packet.chatMessage(), packet.timestamp(), packet.acknowledgment())) {
+			String contentToDiscord = packet.chatMessage();
+			String contentToMinecraft = packet.chatMessage();
 
 			if (StringUtils.countMatches(contentToDiscord, ":") >= 2) {
 				String[] emojiNames = StringUtils.substringsBetween(contentToDiscord, ":", ":");
@@ -155,14 +168,27 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 			}
 
 			if (CONFIG.generic.formatChatMessages) {
-				server.getPlayerManager().broadcast(FilteredMessage.permitted(SignedMessage.of(Text.Serializer.fromJson("[{\"text\":\"" + contentToMinecraft + "\"}]"))), player, MessageType.CHAT);
+				server.getPlayerManager().broadcast(SignedMessage.ofUnsigned(new DecoratedContents(packet.chatMessage(), Text.Serializer.fromJson("[{\"text\":\"" + contentToMinecraft + "\"}]"))), player, MessageType.params(MessageType.CHAT, player));
 			} else {
-				filterText(packet.getChatMessage(), (message) -> handleMessage(packet, message));
+				server.submit(() -> {
+					SignedMessage signedMessage1 = getSignedMessage(packet);
+					if (canAcceptMessage(signedMessage1)) {
+						messageChainTaskQueue.append(() -> {
+							CompletableFuture<FilteredMessage> completableFuture = filterText(signedMessage1.getSignedContent().plain());
+							CompletableFuture<SignedMessage> completableFuture2 = server.getMessageDecorator().decorate(player, signedMessage1);
+							return CompletableFuture.allOf(completableFuture, completableFuture2).thenAcceptAsync((void_) -> {
+								class_7649 lv = (completableFuture.join()).mask();
+								SignedMessage signedMessage2 = (completableFuture2.join()).method_45097(lv);
+								handleDecoratedMessage(signedMessage2);
+							}, server);
+						});
+					}
+				});
 			}
 
 			sendMessage(contentToDiscord, false);
 			if (CONFIG.multiServer.enable) {
-				MULTI_SERVER.sendMessage(false, true, false, player.getEntityName(), CONFIG.generic.formatChatMessages ? contentToMinecraft : packet.getChatMessage());
+				MULTI_SERVER.sendMessage(false, true, false, player.getEntityName(), CONFIG.generic.formatChatMessages ? contentToMinecraft : packet.chatMessage());
 			}
 		}
 
@@ -174,41 +200,39 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 		if (CONFIG.generic.broadcastCommandExecution) {
 			if (hasIllegalCharacter(packet.command())) {
 				disconnect(Text.translatable("multiplayer.disconnect.illegal_characters"));
-			} else {
-				NetworkThreadUtils.forceMainThread(packet, this, player.getWorld());
-				if (canAcceptMessage(packet.command(), packet.timestamp())) {
-					String input = "/" + packet.command();
+			} else if (canAcceptMessage(packet.command(), packet.timestamp(), packet.acknowledgment())) {
+				String input = "/" + packet.command();
 
-					for (String command : CONFIG.generic.excludedCommands) {
-						if (input.startsWith(command + " ")) {
-							return;
-						}
+				for (String command : CONFIG.generic.excludedCommands) {
+					if (input.startsWith(command + " ")) {
+						return;
 					}
-
-					if ((System.currentTimeMillis() - MINECRAFT_LAST_RESET_TIME) > 20000) {
-						MINECRAFT_SEND_COUNT = 0;
-						MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();
-					}
-
-					MINECRAFT_SEND_COUNT++;
-					if (MINECRAFT_SEND_COUNT <= 20) {
-						Text text = Text.of("<" + player.getEntityName() + "> " + input);
-
-						List<ServerPlayerEntity> list = new ArrayList<>(server.getPlayerManager().getPlayerList());
-						list.forEach(serverPlayerEntity -> serverPlayerEntity.sendMessage(text, false));
-
-						SERVER.sendMessage(text);
-
-						sendMessage(input, true);
-						if (CONFIG.multiServer.enable) {
-							MULTI_SERVER.sendMessage(false, true, false, player.getEntityName(), MarkdownSanitizer.escape(input));
-						}
-					}
-
-					ServerCommandSource serverCommandSource = player.getCommandSource().withSigner(packet.createArgumentsSigner(player.getUuid()));
-					server.getCommandManager().execute(serverCommandSource, packet.command());
-					checkForSpam();
 				}
+
+				if ((System.currentTimeMillis() - MINECRAFT_LAST_RESET_TIME) > 20000) {
+					MINECRAFT_SEND_COUNT = 0;
+					MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();
+				}
+
+				MINECRAFT_SEND_COUNT++;
+				if (MINECRAFT_SEND_COUNT <= 20) {
+					Text text = Text.of("<" + player.getEntityName() + "> " + input);
+
+					List<ServerPlayerEntity> list = new ArrayList<>(server.getPlayerManager().getPlayerList());
+					list.forEach(serverPlayerEntity -> serverPlayerEntity.sendMessage(text, false));
+
+					SERVER.sendMessage(text);
+
+					sendMessage(input, true);
+					if (CONFIG.multiServer.enable) {
+						MULTI_SERVER.sendMessage(false, true, false, player.getEntityName(), MarkdownSanitizer.escape(input));
+					}
+				}
+
+				server.submit(() -> {
+					handleCommandExecution(packet);
+					checkForSpam();
+				});
 			}
 
 			ci.cancel();
