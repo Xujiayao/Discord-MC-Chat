@@ -8,9 +8,9 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.minecraft.SharedConstants;
-import net.minecraft.class_7649;
 import net.minecraft.network.listener.ServerPlayPacketListener;
 import net.minecraft.network.message.DecoratedContents;
+import net.minecraft.network.message.FilterMask;
 import net.minecraft.network.message.LastSeenMessageList;
 import net.minecraft.network.message.MessageChainTaskQueue;
 import net.minecraft.network.message.MessageType;
@@ -177,8 +177,8 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 							CompletableFuture<FilteredMessage> completableFuture = filterText(signedMessage1.getSignedContent().plain());
 							CompletableFuture<SignedMessage> completableFuture2 = server.getMessageDecorator().decorate(player, signedMessage1);
 							return CompletableFuture.allOf(completableFuture, completableFuture2).thenAcceptAsync((void_) -> {
-								class_7649 lv = (completableFuture.join()).mask();
-								SignedMessage signedMessage2 = (completableFuture2.join()).method_45097(lv);
+								FilterMask filterMask = (completableFuture.join()).mask();
+								SignedMessage signedMessage2 = (completableFuture2.join()).withFilterMask(filterMask);
 								handleDecoratedMessage(signedMessage2);
 							}, server);
 						});
