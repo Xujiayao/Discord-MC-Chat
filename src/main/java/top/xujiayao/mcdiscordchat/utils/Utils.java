@@ -132,11 +132,11 @@ public class Utils {
 		// Server TPS
 		double serverTickTime = MathHelper.average(SERVER.lastTickLengths) * 1.0E-6D;
 		message.append(CONFIG.generic.useEngInsteadOfChin ? "\nServer TPS:\n" : "\n服务器 TPS：\n")
-				.append(Math.min(1000.0 / serverTickTime, 20));
+				.append(String.format("%.2f", Math.min(1000.0 / serverTickTime, 20)));
 
 		// Server MSPT
 		message.append(CONFIG.generic.useEngInsteadOfChin ? "\n\nServer MSPT:\n" : "\n\n服务器 MSPT：\n")
-				.append(serverTickTime);
+				.append(String.format("%.2f", serverTickTime));
 
 		// Server used memory
 		message.append(CONFIG.generic.useEngInsteadOfChin ? "\n\nServer used memory:\n" : "\n\n服务器已用内存：\n")
@@ -231,11 +231,11 @@ public class Utils {
 
 				if (mspt > CONFIG.generic.msptLimit) {
 					CHANNEL.sendMessage(TEXTS.highMspt()
-							.replace("%mspt%", Double.toString(mspt))
+							.replace("%mspt%", String.format("%.2f", mspt))
 							.replace("%msptLimit%", Integer.toString(CONFIG.generic.msptLimit))).queue();
 					if (CONFIG.multiServer.enable) {
 						MULTI_SERVER.sendMessage(false, false, false, null, MarkdownParser.parseMarkdown(TEXTS.highMspt()
-								.replace("%mspt%", Double.toString(mspt))
+								.replace("%mspt%", String.format("%.2f", mspt))
 								.replace("%msptLimit%", Integer.toString(CONFIG.generic.msptLimit))));
 					}
 				}
