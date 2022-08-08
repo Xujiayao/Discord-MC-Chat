@@ -267,7 +267,7 @@ public class Utils {
 		}
 
 		if (stats.isEmpty()) {
-			message.append(CONFIG.generic.useEngInsteadOfChin ? "No result" : "无结果");
+			message.append(CONFIG.generic.useEngInsteadOfChin ? "\nNo result" : "\n无结果");
 		} else {
 			List<Map.Entry<String, Integer>> sortedlist = new ArrayList<>(stats.entrySet());
 			sortedlist.sort((c1, c2) -> c2.getValue().compareTo(c1.getValue()));
