@@ -164,57 +164,9 @@ public class DiscordEventListener extends ListenerAdapter {
 					```""").queue();
 			case "update" -> e.getHook().sendMessage(Utils.checkUpdate(true)).queue();
 			case "stats" -> {
-				StringBuilder message = new StringBuilder()
-						.append("```\n=============== ")
-						.append(CONFIG.generic.useEngInsteadOfChin ? "Scoreboard" : "排行榜")
-						.append(" ===============\n\n");
-
-				Map<String, Integer> stats = new HashMap<>();
-
-				try {
-					JsonArray players = new Gson().fromJson(IOUtils.toString(new File(FabricLoader.getInstance().getGameDir().toAbsolutePath() + "/usercache.json").toURI(), StandardCharsets.UTF_8), JsonArray.class);
-
-					//#if MC >= 11600
-					FileUtils.listFiles(new File((SERVER.getSaveProperties().getLevelName() + "/stats/")), null, false).forEach(file -> {
-					//#else
-					//$$ FileUtils.listFiles(new File((SERVER.getLevelName() + "/stats/")), null, false).forEach(file -> {
-					//#endif
-						try {
-							for (JsonElement player : players) {
-								if (player.getAsJsonObject().get("uuid").getAsString().equals(file.getName().replace(".json", ""))) {
-									JsonObject json = new Gson().fromJson(IOUtils.toString(file.toURI(), StandardCharsets.UTF_8), JsonObject.class);
-
-									try {
-										stats.put(player.getAsJsonObject().get("name").getAsString(), json
-												.getAsJsonObject("stats")
-												.getAsJsonObject("minecraft:" + Objects.requireNonNull(e.getOption("type")).getAsString())
-												.get("minecraft:" + Objects.requireNonNull(e.getOption("name")).getAsString())
-												.getAsInt());
-									} catch (NullPointerException ignored) {
-									}
-								}
-							}
-						} catch (Exception ex) {
-							LOGGER.error(ExceptionUtils.getStackTrace(ex));
-						}
-					});
-				} catch (Exception ex) {
-					LOGGER.error(ExceptionUtils.getStackTrace(ex));
-				}
-
-				if (stats.isEmpty()) {
-					message.append(CONFIG.generic.useEngInsteadOfChin ? "No result" : "无结果");
-				} else {
-					List<Map.Entry<String, Integer>> sortedlist = new ArrayList<>(stats.entrySet());
-					sortedlist.sort((c1, c2) -> c2.getValue().compareTo(c1.getValue()));
-
-					for (Map.Entry<String, Integer> entry : sortedlist) {
-						message.append(String.format("%-8d %-8s\n", entry.getValue(), entry.getKey()));
-					}
-				}
-
-				message.append("```");
-				e.getHook().sendMessage(message.toString()).queue();
+				String type = Objects.requireNonNull(e.getOption("type")).getAsString();
+				String name = Objects.requireNonNull(e.getOption("name")).getAsString();
+				e.getHook().sendMessage("```\n" + Utils.getStatsCommandMessage(type, name) + "\n```").queue();
 			}
 			case "reload" -> {
 				if (CONFIG.generic.adminsIds.contains(Objects.requireNonNull(e.getMember()).getId())) {

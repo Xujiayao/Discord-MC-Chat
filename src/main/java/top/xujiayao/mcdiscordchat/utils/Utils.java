@@ -1,21 +1,29 @@
 package top.xujiayao.mcdiscordchat.utils;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.MathHelper;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.TimerTask;
 
@@ -144,6 +152,59 @@ public class Utils {
 				.append(" MB / ")
 				.append(Runtime.getRuntime().totalMemory() / 1024 / 1024)
 				.append(" MB");
+
+		return message.toString();
+	}
+
+	public static String getStatsCommandMessage(String type, String name) {
+		StringBuilder message = new StringBuilder()
+				.append("=============== ")
+				.append(CONFIG.generic.useEngInsteadOfChin ? "Scoreboard" : "排行榜")
+				.append(" ===============\n");
+
+		Map<String, Integer> stats = new HashMap<>();
+
+		try {
+			JsonArray players = new Gson().fromJson(IOUtils.toString(new File(FabricLoader.getInstance().getGameDir().toAbsolutePath() + "/usercache.json").toURI(), StandardCharsets.UTF_8), JsonArray.class);
+
+			//#if MC >= 11600
+			FileUtils.listFiles(new File((SERVER.getSaveProperties().getLevelName() + "/stats/")), null, false).forEach(file -> {
+			//#else
+			//$$ FileUtils.listFiles(new File((SERVER.getLevelName() + "/stats/")), null, false).forEach(file -> {
+			//#endif
+				try {
+					for (JsonElement player : players) {
+						if (player.getAsJsonObject().get("uuid").getAsString().equals(file.getName().replace(".json", ""))) {
+							JsonObject json = new Gson().fromJson(IOUtils.toString(file.toURI(), StandardCharsets.UTF_8), JsonObject.class);
+
+							try {
+								stats.put(player.getAsJsonObject().get("name").getAsString(), json
+										.getAsJsonObject("stats")
+										.getAsJsonObject("minecraft:" + type)
+										.get("minecraft:" + name)
+										.getAsInt());
+							} catch (NullPointerException ignored) {
+							}
+						}
+					}
+				} catch (Exception e) {
+					LOGGER.error(ExceptionUtils.getStackTrace(e));
+				}
+			});
+		} catch (Exception e) {
+			LOGGER.error(ExceptionUtils.getStackTrace(e));
+		}
+
+		if (stats.isEmpty()) {
+			message.append(CONFIG.generic.useEngInsteadOfChin ? "No result" : "无结果");
+		} else {
+			List<Map.Entry<String, Integer>> sortedlist = new ArrayList<>(stats.entrySet());
+			sortedlist.sort((c1, c2) -> c2.getValue().compareTo(c1.getValue()));
+
+			for (Map.Entry<String, Integer> entry : sortedlist) {
+				message.append(String.format("\n%-8d %-8s", entry.getValue(), entry.getKey()));
+			}
+		}
 
 		return message.toString();
 	}
