@@ -109,6 +109,17 @@ public class MinecraftCommands {
 											//#endif
 													Utils.getStatsCommandMessage(type, name)), false);
 											return 1;
-										})))));
+										}))))
+				.then(literal("reload")
+						.requires(source -> source.hasPermissionLevel(4))
+						.executes(context -> {
+							//#if MC >= 11900
+							context.getSource().sendFeedback(Text.literal(
+							//#else
+							//$$ context.getSource().sendFeedback(new LiteralText(
+							//#endif
+									MarkdownParser.parseMarkdown(Utils.reload())), false);
+							return 1;
+						})));
 	}
 }

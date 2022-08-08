@@ -34,9 +34,6 @@ import net.minecraft.util.Formatting;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import top.xujiayao.mcdiscordchat.multiServer.MultiServer;
-import top.xujiayao.mcdiscordchat.utils.ConfigManager;
-import top.xujiayao.mcdiscordchat.utils.ConsoleLogListener;
 import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 
@@ -48,25 +45,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
-import static top.xujiayao.mcdiscordchat.Main.CHANNEL_TOPIC_MONITOR_TIMER;
-import static top.xujiayao.mcdiscordchat.Main.CHECK_UPDATE_TIMER;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
-import static top.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.JDA;
 import static top.xujiayao.mcdiscordchat.Main.LOGGER;
-import static top.xujiayao.mcdiscordchat.Main.MSPT_MONITOR_TIMER;
 import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
 import static top.xujiayao.mcdiscordchat.Main.SERVER;
 import static top.xujiayao.mcdiscordchat.Main.TEXTS;
-import static top.xujiayao.mcdiscordchat.Main.UPDATE_NOTIFICATION_CHANNEL;
-import static top.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_THREAD;
 
 /**
  * @author Xujiayao
@@ -161,71 +150,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 			case "reload" -> {
 				if (CONFIG.generic.adminsIds.contains(Objects.requireNonNull(e.getMember()).getId())) {
-					try {
-						MSPT_MONITOR_TIMER.cancel();
-						CHANNEL_TOPIC_MONITOR_TIMER.cancel();
-						CHECK_UPDATE_TIMER.cancel();
-
-						if (CONFIG.multiServer.enable) {
-							MULTI_SERVER.bye();
-							MULTI_SERVER.stopMultiServer();
-						}
-
-						ConfigManager.init(true);
-
-						Utils.testJsonValid();
-
-						Utils.setBotActivity();
-
-						CHANNEL = JDA.getTextChannelById(CONFIG.generic.channelId);
-						CONSOLE_LOG_THREAD.interrupt();
-						CONSOLE_LOG_THREAD.join(5000);
-						if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
-							CONSOLE_LOG_CHANNEL = JDA.getTextChannelById(CONFIG.generic.consoleLogChannelId);
-							CONSOLE_LOG_THREAD = new Thread(new ConsoleLogListener(false));
-							CONSOLE_LOG_THREAD.start();
-						}
-						if (!CONFIG.generic.updateNotificationChannelId.isEmpty()) {
-							UPDATE_NOTIFICATION_CHANNEL = JDA.getTextChannelById(CONFIG.generic.updateNotificationChannelId);
-						}
-						if (UPDATE_NOTIFICATION_CHANNEL == null) {
-							UPDATE_NOTIFICATION_CHANNEL = CHANNEL;
-						}
-
-						Utils.updateBotCommands();
-
-						CHECK_UPDATE_TIMER = new Timer();
-						Utils.initCheckUpdateTimer();
-
-						MSPT_MONITOR_TIMER = new Timer();
-						if (CONFIG.generic.announceHighMspt) {
-							Utils.initMsptMonitor();
-						}
-
-						if (CONFIG.multiServer.enable) {
-							MULTI_SERVER = new MultiServer();
-							MULTI_SERVER.start();
-						}
-
-						CHANNEL_TOPIC_MONITOR_TIMER = new Timer();
-						if (CONFIG.generic.updateChannelTopic) {
-							new Timer().schedule(new TimerTask() {
-								@Override
-								public void run() {
-									if (!CONFIG.multiServer.enable) {
-										Utils.initChannelTopicMonitor();
-									} else if (MULTI_SERVER.server != null) {
-										MULTI_SERVER.initMultiServerChannelTopicMonitor();
-									}
-								}
-							}, 2000);
-						}
-
-						e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**Config file reloaded successfully!**" : "**配置文件重新加载成功！**").queue();
-					} catch (Exception ex) {
-						LOGGER.error(ExceptionUtils.getStackTrace(ex));
-						e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**Config file reload failed!**" : "**配置文件重新加载失败！**").queue();
-					}
+					e.getHook().sendMessage(Utils.reload()).queue();
 				} else {
 					e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**You do not have permission to use this command!**" : "**你没有权限使用此命令！**").queue();
 				}
