@@ -16,6 +16,7 @@ import okhttp3.Response;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import top.xujiayao.mcdiscordchat.multiServer.MultiServer;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -25,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Timer;
 import java.util.TimerTask;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
@@ -32,6 +34,7 @@ import static top.xujiayao.mcdiscordchat.Main.CHANNEL_TOPIC_MONITOR_TIMER;
 import static top.xujiayao.mcdiscordchat.Main.CHECK_UPDATE_TIMER;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
 import static top.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_CHANNEL;
+import static top.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_THREAD;
 import static top.xujiayao.mcdiscordchat.Main.HTTP_CLIENT;
 import static top.xujiayao.mcdiscordchat.Main.JDA;
 import static top.xujiayao.mcdiscordchat.Main.LOGGER;
@@ -110,6 +113,74 @@ public class Utils {
 		} catch (Exception e) {
 			LOGGER.error(ExceptionUtils.getStackTrace(e));
 			return "";
+		}
+	}
+
+	public static String reload() {
+		try {
+			MSPT_MONITOR_TIMER.cancel();
+			CHANNEL_TOPIC_MONITOR_TIMER.cancel();
+			CHECK_UPDATE_TIMER.cancel();
+
+			if (CONFIG.multiServer.enable) {
+				MULTI_SERVER.bye();
+				MULTI_SERVER.stopMultiServer();
+			}
+
+			ConfigManager.init(true);
+
+			Utils.testJsonValid();
+
+			Utils.setBotActivity();
+
+			CHANNEL = JDA.getTextChannelById(CONFIG.generic.channelId);
+			CONSOLE_LOG_THREAD.interrupt();
+			CONSOLE_LOG_THREAD.join(5000);
+			if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
+				CONSOLE_LOG_CHANNEL = JDA.getTextChannelById(CONFIG.generic.consoleLogChannelId);
+				CONSOLE_LOG_THREAD = new Thread(new ConsoleLogListener(false));
+				CONSOLE_LOG_THREAD.start();
+			}
+			if (!CONFIG.generic.updateNotificationChannelId.isEmpty()) {
+				UPDATE_NOTIFICATION_CHANNEL = JDA.getTextChannelById(CONFIG.generic.updateNotificationChannelId);
+			}
+			if (UPDATE_NOTIFICATION_CHANNEL == null) {
+				UPDATE_NOTIFICATION_CHANNEL = CHANNEL;
+			}
+
+			Utils.updateBotCommands();
+
+			CHECK_UPDATE_TIMER = new Timer();
+			Utils.initCheckUpdateTimer();
+
+			MSPT_MONITOR_TIMER = new Timer();
+			if (CONFIG.generic.announceHighMspt) {
+				Utils.initMsptMonitor();
+			}
+
+			if (CONFIG.multiServer.enable) {
+				MULTI_SERVER = new MultiServer();
+				MULTI_SERVER.start();
+			}
+
+			CHANNEL_TOPIC_MONITOR_TIMER = new Timer();
+			if (CONFIG.generic.updateChannelTopic) {
+				new Timer().schedule(new TimerTask() {
+					@Override
+					public void run() {
+						if (!CONFIG.multiServer.enable) {
+							Utils.initChannelTopicMonitor();
+						} else if (MULTI_SERVER.server != null) {
+							MULTI_SERVER.initMultiServerChannelTopicMonitor();
+						}
+					}
+				}, 2000);
+			}
+
+			return CONFIG.generic.useEngInsteadOfChin ? "**Config file reloaded successfully!**" : "**配置文件重新加载成功！**";
+		} catch (Exception ex) {
+			LOGGER.error(ExceptionUtils.getStackTrace(ex));
+			return CONFIG.generic.useEngInsteadOfChin ? "**Config file reload failed!**" : "**配置文件重新加载失败！**";
 		}
 	}
 
