@@ -12,6 +12,10 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      - name: Validate Gradle Wrapper
+        uses: gradle/wrapper-validation-action@v1
+      - name: Make Gradle Wrapper Executable
+        run: chmod +x ./gradlew
       - name: Build
         uses: gradle/gradle-build-action@v2
         with:
