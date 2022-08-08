@@ -28,27 +28,31 @@ public class MinecraftCommands {
 					//#endif
 							CONFIG.generic.useEngInsteadOfChin ? """
 									=============== Help ===============
-									/info                | Query server running status
-									/help                | Get a list of available commands
-									/update              | Check for update
-									/stats <type> <name> | Query the scoreboard of a statistic
-									/reload              | Reload MCDiscordChat config file (admin only)
-									~~/console <command>~~   | Execute a command in the server console (admin only)
-									~~/log~~                 | Get the specified server log (admin only)
-									~~/stop~~                | Stop the server (admin only)
+									/mcdc info                    | Query server running status
+									/mcdc help                    | Get a list of available commands
+									/mcdc update                  | Check for update
+									/mcdc stats <type> <name>     | Query the scoreboard of a statistic
+									/mcdc reload                  | Reload MCDiscordChat config file (admin only)
+									~~/mcdc console <command>~~   | Execute a command in the server console (admin only)
+									~~/mcdc log~~                 | Get the specified server log (admin only)
+									~~/mcdc stop~~                | Stop the server (admin only)
 									
-									*Strikethrough commands are not implemented because they are redundant or impossible to implement in-game.*""" : """
+									*Strikethrough commands are not implemented because they are redundant or impossible to implement in-game.*
+									
+									*Admin-only commands require a level 4 operator at minimum, i.e. players with OP permission level 4 or the server console.*""" : """
 									=============== 帮助 ===============
-									/info                | 查询服务器运行状态
-									/help                | 获取可用命令列表
-									/update              | 检查更新
-									/stats <type> <name> | 查询该统计信息的排行榜
-									/reload              | 重新加载 MCDiscordChat 配置文件（仅限管理员）
-									~~/console <command>~~   | 在服务器控制台中执行命令（仅限管理员）
-									~~/log~~                 | 获取指定的服务器日志（仅限管理员）
-									~~/stop~~                | 停止服务器（仅限管理员）
+									/mcdc info                    | 查询服务器运行状态
+									/mcdc help                    | 获取可用命令列表
+									/mcdc update                  | 检查更新
+									/mcdc stats <type> <name>     | 查询该统计信息的排行榜
+									/mcdc reload                  | 重新加载 MCDiscordChat 配置文件（仅限管理员）
+									~~/mcdc console <command>~~   | 在服务器控制台中执行命令（仅限管理员）
+									~~/mcdc log~~                 | 获取指定的服务器日志（仅限管理员）
+									~~/mcdc stop~~                | 停止服务器（仅限管理员）
 									
-									*带删除线的命令并没有实现，因为这些命令在游戏内是多余或无法实现的。*""")), false);
+									*带删除线的命令并没有实现，因为这些命令在游戏内是多余或无法实现的。*
+									
+									*仅限管理员的命令仅对 4 级管理员可用，即拥有 OP 权限等级 4 的玩家或服务器控制台。*""")), false);
 					return 1;
 				})
 				.then(literal("info").executes(context -> {
@@ -68,27 +72,31 @@ public class MinecraftCommands {
 					//#endif
 							CONFIG.generic.useEngInsteadOfChin ? """
 							=============== Help ===============
-							/info                | Query server running status
-							/help                | Get a list of available commands
-							/update              | Check for update
-							/stats <type> <name> | Query the scoreboard of a statistic
-							/reload              | Reload MCDiscordChat config file (admin only)
-							~~/console <command>~~   | Execute a command in the server console (admin only)
-							~~/log~~                 | Get the specified server log (admin only)
-							~~/stop~~                | Stop the server (admin only)
+							/mcdc info                    | Query server running status
+							/mcdc help                    | Get a list of available commands
+							/mcdc update                  | Check for update
+							/mcdc stats <type> <name>     | Query the scoreboard of a statistic
+							/mcdc reload                  | Reload MCDiscordChat config file (admin only)
+							~~/mcdc console <command>~~   | Execute a command in the server console (admin only)
+							~~/mcdc log~~                 | Get the specified server log (admin only)
+							~~/mcdc stop~~                | Stop the server (admin only)
 							
-							*Strikethrough commands are not implemented because they are redundant or impossible to implement in-game.*""" : """
+							*Strikethrough commands are not implemented because they are redundant or impossible to implement in-game.*
+							
+							*Admin-only commands require a level 4 operator at minimum, i.e. players with OP permission level 4 or the server console.*""" : """
 							=============== 帮助 ===============
-							/info                | 查询服务器运行状态
-							/help                | 获取可用命令列表
-							/update              | 检查更新
-							/stats <type> <name> | 查询该统计信息的排行榜
-							/reload              | 重新加载 MCDiscordChat 配置文件（仅限管理员）
-							~~/console <command>~~   | 在服务器控制台中执行命令（仅限管理员）
-							~~/log~~                 | 获取指定的服务器日志（仅限管理员）
-							~~/stop~~                | 停止服务器（仅限管理员）
+							/mcdc info                    | 查询服务器运行状态
+							/mcdc help                    | 获取可用命令列表
+							/mcdc update                  | 检查更新
+							/mcdc stats <type> <name>     | 查询该统计信息的排行榜
+							/mcdc reload                  | 重新加载 MCDiscordChat 配置文件（仅限管理员）
+							~~/mcdc console <command>~~   | 在服务器控制台中执行命令（仅限管理员）
+							~~/mcdc log~~                 | 获取指定的服务器日志（仅限管理员）
+							~~/mcdc stop~~                | 停止服务器（仅限管理员）
 							
-							*带删除线的命令并没有实现，因为这些命令在游戏内是多余或无法实现的。*""")), false);
+							*带删除线的命令并没有实现，因为这些命令在游戏内是多余或无法实现的。*
+							
+							*仅限管理员的命令仅对 4 级管理员可用，即拥有 OP 权限等级 4 的玩家或服务器控制台。*""")), false);
 					return 1;
 				}))
 				.then(literal("update").executes(context -> {
