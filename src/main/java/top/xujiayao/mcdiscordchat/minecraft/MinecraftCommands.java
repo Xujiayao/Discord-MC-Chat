@@ -58,10 +58,6 @@ public class MinecraftCommands {
 					//$$ context.getSource().sendFeedback(new LiteralText(
 					//#endif
 							Utils.getInfoCommandMessage()), false);
-					if (CONFIG.multiServer.enable) {
-						//TODO
-						//MULTI_SERVER.sendMessage(true, false, false, null, "{\"type\":\"info\",\"channel\":\"" + e.getChannel().getId() + "\"}");
-					}
 					return 1;
 				}))
 				.then(literal("help").executes(context -> {
