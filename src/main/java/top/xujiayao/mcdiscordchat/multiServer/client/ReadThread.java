@@ -62,7 +62,7 @@ public class ReadThread extends Thread {
 
 					if (json.get("special").getAsBoolean()) {
 						JsonObject message = new Gson().fromJson(json.get("message").getAsString(), JsonObject.class);
-						if (message.get("type").getAsString().equals("info")) {
+						if (message.get("type").getAsString().equals("discordInfoCommand")) {
 							TextChannel channel = JDA.getTextChannelById(message.get("channel").getAsString());
 							Objects.requireNonNull(channel).sendMessage("```\n" + Utils.getInfoCommandMessage() + "\n```").queue();
 						} else if (message.get("type").getAsString().equals("updateChannelTopic")) {
