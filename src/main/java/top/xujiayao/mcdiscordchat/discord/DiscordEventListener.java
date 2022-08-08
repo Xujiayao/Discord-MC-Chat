@@ -134,7 +134,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
 		switch (e.getName()) {
 			case "info" -> {
-				e.getHook().sendMessage(Utils.getInfoCommandMessage()).queue();
+				e.getHook().sendMessage("```\n" + Utils.getInfoCommandMessage() + "\n```").queue();
 				if (CONFIG.multiServer.enable) {
 					MULTI_SERVER.sendMessage(true, false, false, null, "{\"type\":\"info\",\"channel\":\"" + e.getChannel().getId() + "\"}");
 				}

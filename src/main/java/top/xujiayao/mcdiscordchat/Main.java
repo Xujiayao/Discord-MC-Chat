@@ -7,6 +7,11 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.fabricmc.api.DedicatedServerModInitializer;
+//#if MC >= 11900
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+//#else
+//$$ import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
+//#endif
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
@@ -20,6 +25,7 @@ import org.slf4j.LoggerFactory;
 //$$ import org.apache.logging.log4j.LogManager;
 //#endif
 import top.xujiayao.mcdiscordchat.discord.DiscordEventListener;
+import top.xujiayao.mcdiscordchat.minecraft.MinecraftCommands;
 import top.xujiayao.mcdiscordchat.multiServer.MultiServer;
 import top.xujiayao.mcdiscordchat.utils.ConfigManager;
 import top.xujiayao.mcdiscordchat.utils.ConsoleLogListener;
@@ -106,6 +112,12 @@ public class Main implements DedicatedServerModInitializer {
 			MULTI_SERVER = new MultiServer();
 			MULTI_SERVER.start();
 		}
+
+		//#if MC >= 11900
+		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> MinecraftCommands.register(dispatcher));
+		//#else
+		//$$ CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> MinecraftCommands.register(dispatcher));
+		//#endif
 
 		ServerLifecycleEvents.SERVER_STARTED.register((server) -> {
 			SERVER_STARTED_TIME = Long.toString(Instant.now().getEpochSecond());

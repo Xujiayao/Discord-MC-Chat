@@ -64,7 +64,7 @@ public class ReadThread extends Thread {
 						JsonObject message = new Gson().fromJson(json.get("message").getAsString(), JsonObject.class);
 						if (message.get("type").getAsString().equals("info")) {
 							TextChannel channel = JDA.getTextChannelById(message.get("channel").getAsString());
-							Objects.requireNonNull(channel).sendMessage(Utils.getInfoCommandMessage()).queue();
+							Objects.requireNonNull(channel).sendMessage("```\n" + Utils.getInfoCommandMessage() + "\n```").queue();
 						} else if (message.get("type").getAsString().equals("updateChannelTopic")) {
 							JsonObject channelTopicInfo = new JsonObject();
 							channelTopicInfo.addProperty("onlinePlayerCount", SERVER.getPlayerManager().getPlayerList().size());
