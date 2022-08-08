@@ -107,7 +107,7 @@ public class Utils {
 
 	public static String getInfoCommandMessage() {
 		StringBuilder message = new StringBuilder()
-				.append("```\n=============== ")
+				.append("=============== ")
 				.append(CONFIG.generic.useEngInsteadOfChin ? "Server Status" : "运行状态")
 				.append(" ===============\n\n");
 
@@ -144,8 +144,6 @@ public class Utils {
 				.append(" MB / ")
 				.append(Runtime.getRuntime().totalMemory() / 1024 / 1024)
 				.append(" MB");
-
-		message.append("\n```");
 
 		return message.toString();
 	}
