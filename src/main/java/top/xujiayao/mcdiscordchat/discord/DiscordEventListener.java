@@ -116,7 +116,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			case "info" -> {
 				e.getHook().sendMessage("```\n" + Utils.getInfoCommandMessage() + "\n```").queue();
 				if (CONFIG.multiServer.enable) {
-					MULTI_SERVER.sendMessage(true, false, false, null, "{\"type\":\"info\",\"channel\":\"" + e.getChannel().getId() + "\"}");
+					MULTI_SERVER.sendMessage(true, false, false, null, "{\"type\":\"discordInfoCommand\",\"channel\":\"" + e.getChannel().getId() + "\"}");
 				}
 			}
 			case "help" -> e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? """
