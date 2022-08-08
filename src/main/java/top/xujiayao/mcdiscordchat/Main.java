@@ -48,7 +48,7 @@ public class Main implements DedicatedServerModInitializer {
 	public static JDA JDA;
 	public static TextChannel CHANNEL;
 	public static TextChannel CONSOLE_LOG_CHANNEL;
-	public static Thread CONSOLE_LOG_THREAD = new Thread(new ConsoleLogListener(true));;
+	public static Thread CONSOLE_LOG_THREAD = new Thread(new ConsoleLogListener(true));
 	public static TextChannel UPDATE_NOTIFICATION_CHANNEL;
 	public static Texts TEXTS;
 	public static long MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();
