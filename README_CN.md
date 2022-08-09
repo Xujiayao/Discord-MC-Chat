@@ -21,13 +21,13 @@ MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Dis
 
 ## ⚠️ 提醒
 
-MCDiscordChat 不会提供关闭自动检查更新的选项。保持最新是良好做法，尤其是对于像 MCDC 这样不稳定且经常修复错误的模组。
+目前，MCDC 不提供关闭自动检查更新的选项，因为 MCDC 仍处于 alpha 状态。保持最新是良好做法，尤其是对于 MCDC 这种不稳定且经常修复错误的模组。MCDC 将在 alpha 状态结束后提供关闭自动检查更新的选项。
 
-如果你坚持不想更新，那么相信你有能力经常维护 MCDC 并自己修复 bug。请复刻仓库以删除检查更新的代码。但是，不要为该更改提交拉取请求 :)
+如果你坚持不想更新，而且不想等到 alpha 状态结束，那么相信你有能力经常维护 MCDC 并自己修复 bug。请复刻仓库以删除检查更新的代码。但是，不要为该更改提交拉取请求 :)
 
-请注意，复刻中的良好更改可能会通过拉取请求添加到上游仓库，恕不另行通知。
+请注意，复刻中的良好更改可能会添加到上游仓库，恕不另行通知。
 
-更多详情请查看 [#52 (comment)](https://github.com/Xujiayao/MCDiscordChat/issues/52#issuecomment-1172137781)。谢谢。
+更多详情请查看 [#52 (comment)](https://github.com/Xujiayao/MCDiscordChat/issues/52#issuecomment-1172137781)。
 
 ## 简介
 

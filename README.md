@@ -21,13 +21,13 @@ More information + Docs: [MCDiscordChat Docs | Xujiayao's Blog](https://blog.xuj
 
 ## ⚠️ Reminder
 
-MCDiscordChat Will NOT provide an option to turn off auto-checking for updates, as it is good practice to stay up to date, especially for a mod like MCDC, which is unstable and has frequent bug fixes.
+Currently, MCDC does NOT provide an option to turn off automatic checking for updates, as MCDC is still in alpha state. It is a good practice to stay up to date, especially for MCDC, which is unstable and has frequent bug fixes. MCDC will provide an option to turn off auto-checking for updates after the alpha state is over.
 
-If you insist that you do not want to update, then I believe you have the ability to maintain MCDC frequently and fix bugs yourself. Please fork the repository to delete the code of check for updates. However, Do NOT submit Pull Requests for that change :)
+If you insist that you do not want to update, and do not want to wait until the alpha state is over, then I believe you have the ability to maintain MCDC frequently and fix bugs yourself. Please fork the repository to delete the code of check for updates. However, Do NOT submit Pull Requests for that change :)
 
-Note that the good changes in the forks may be added to the upstream repository via Pull Requests without notice.
+Note that the good changes in the forks may be added to the upstream repository without notice.
 
-For more details, check out [#52 (comment)](https://github.com/Xujiayao/MCDiscordChat/issues/52#issuecomment-1172137781). Thank you.
+For more details, check out [#52 (comment)](https://github.com/Xujiayao/MCDiscordChat/issues/52#issuecomment-1172137781).
 
 ## Introduction
 
