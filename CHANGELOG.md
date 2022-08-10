@@ -6,7 +6,7 @@
 
 This update brings support for executing MCDC commands in-game and fixes update notifications not showing changelog when using the English language.
 
-This version is released first because the next version will bring breaking changes. Users who do not update in time may not see the update log and important notices, resulting in data loss.
+This version is released first because the next version will bring breaking changes. Users who do not update in time may not see the changelog and important notices, resulting in data loss.
 
 **重要通知：**
 
