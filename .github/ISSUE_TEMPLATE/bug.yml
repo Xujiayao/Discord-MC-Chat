@@ -40,7 +40,7 @@ body:
       label: MCDiscordChat Version
       description: |
         The version of MCDiscordChat you are using?
-      placeholder: "Example: 2.0.0-alpha.8"
+      placeholder: "Example: 2.0.0-alpha.9"
     validations:
       required: true
   - type: textarea

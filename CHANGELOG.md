@@ -1,33 +1,35 @@
 # Changelog 更新日志
 
-## MCDiscordChat 2.0.0-alpha.8 for Minecraft 1.14+ - 2022/8/6
+## MCDiscordChat 2.0.0-alpha.9 for Minecraft 1.14+ - 2022/8/10
 
 **Important notice:**
 
-This update brings support for versions 1.19.1 and 1.19.2. However, due to Mojang's breaking changes to `ServerPlayNetworkHandler` and version 1.19.0 being out of date, version 1.19.0 is no longer supported in this update.
+This update brings support for executing MCDC commands in-game and fixes update notifications not showing changelog when using the English language.
 
-Therefore, if you are using 1.19.0, please update to 1.19.2 as soon as possible. If you have some mods that do not support 1.19.2 yet, please temporarily update to 1.19.1 first, and update to 1.19.2 after they support 1.19.2.
+This version is released first because the next version will bring breaking changes. Users who do not update in time may not see the update log and important notices, resulting in data loss.
 
 **重要通知：**
 
-此更新带来了对 1.19.1 和 1.19.2 版本的支持。但由于 Mojang 对 `ServerPlayNetworkHandler` 的破坏性改动 (breaking changes) 再加上 1.19.0 已过时，本次更新不再支持 1.19.0 版本。
+此更新带来了在游戏中执行 MCDC 命令的支持，并修复了使用英文时更新通知不显示更新日志的问题。
 
-因此，如果你使用的是 1.19.0，请尽快更新到 1.19.2。如果你有一些模组尚未支持 1.19.2，请先暂时更新到 1.19.1，等支持 1.19.2 后再更新到 1.19.2。
+这个版本首先发布是因为下一个版本会带来破坏性改动 (breaking changes)。没有及时更新的用户可能会因看不到更新日志和重要通知而导致数据丢失。
 
 ## New Features 新特性
 
-- Compatible with versions 1.19.1 and 1.19.2
-  兼容 1.19.1 和 1.19.2 版本
+- Execute MCDC commands in-game (#80)
+  在游戏中执行 MCDC 命令
 
 ## Changes 更改
 
-- Fix incomplete logic of check for updates function
-  修复检查更新的不完整逻辑
+- Format MSPT value with 2 decimal places (#79)
+  MSPT 值取两位小数
+
+- Fix update notifications not showing changelog when using the English language
+  修复使用英文时更新通知不显示更新日志
 
 ## Removed 移除
 
-- No longer compatible with version 1.19
-  不再兼容 1.19 版本
+N/A
 
 ## Contributors 贡献者
 
@@ -35,4 +37,4 @@ Therefore, if you are using 1.19.0, please update to 1.19.2 as soon as possible.
 
 ## Detailed Information 详细信息
 
-https://github.com/Xujiayao/MCDiscordChat/compare/2.0.0-alpha.7...2.0.0-alpha.8
+https://github.com/Xujiayao/MCDiscordChat/compare/2.0.0-alpha.8...2.0.0-alpha.9

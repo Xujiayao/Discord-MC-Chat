@@ -73,7 +73,7 @@ If there is a bug or suggestion, or something you don't understand, you can [sub
     - Players who execute commands can also see the commands themselves
     - Exclude broadcasts for execution of specific commands
   - Send all console log messages to Discord
-- Server Commands available
+- Discord Commands available
   - Use Discord to manage channels that can execute MCDC commands
   - Notify in-game players when someone executes an MCDC command
   - Normal Commands
@@ -86,6 +86,15 @@ If there is a bug or suggestion, or something you don't understand, you can [sub
     - /console \<command\>     | Execute a command in the server console (admin only)
     - /log                     | Get the specified server log (admin only)
     - /stop                    | Stop the server (admin only)
+- Minecraft Commands available
+  - Admin-only commands require a level 4 operator at minimum
+  - Normal Commands
+    - /mcdc info                    | Query server running status
+    - /mcdc help                    | Get a list of available commands
+    - /mcdc update                  | Check for update
+    - /mcdc stats \<type\> \<name\> | Query the scoreboard of a statistic
+  - Admin Commands
+    - /mcdc reload                  | Reload MCDiscordChat config file (admin only)
 - Fully customizable message format
   - Sending specific server messages to Discord can be disabled
   - In-game

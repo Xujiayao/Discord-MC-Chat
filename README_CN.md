@@ -73,7 +73,7 @@ MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Dis
     - 执行指令的玩家也可以看到自己执行的指令
     - 可排除执行特定指令的广播
   - 可将所有控制台日志消息发送到 Discord
-- 可使用服务器命令
+- 可使用 Discord 命令
   - 可使用 Discord 管理可执行 MCDC 命令的频道
   - 当有人执行 MCDC 命令时通知游戏内玩家
   - 普通命令
@@ -86,6 +86,15 @@ MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Dis
     - /console \<command\>     | 在服务器控制台中执行命令（仅限管理员）
     - /log                     | 获取指定的服务器日志（仅限管理员）
     - /stop                    | 停止服务器（仅限管理员）
+- 可使用 Minecraft 命令
+  - 仅限管理员的命令仅对 4 级管理员可用
+  - 普通命令
+    - /mcdc info                    | 查询服务器运行状态
+    - /mcdc help                    | 获取可用命令列表
+    - /mcdc update                  | 检查更新
+    - /mcdc stats \<type\> \<name\> | 查询该统计信息的排行榜
+  - 管理员命令
+    - /mcdc reload                  | 重新加载 MCDiscordChat 配置文件（仅限管理员）
 - 可完全自定义所有消息格式
   - 可禁用向 Discord 频道发送特定服务器消息
   - 游戏内
