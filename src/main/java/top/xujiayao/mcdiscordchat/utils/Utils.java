@@ -11,6 +11,7 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.MathHelper;
+import okhttp3.CacheControl;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.apache.commons.io.FileUtils;
@@ -65,6 +66,7 @@ public class Utils {
 		try {
 			Request request = new Request.Builder()
 					.url("https://cdn.jsdelivr.net/gh/Xujiayao/MCDiscordChat@master/update/version.json")
+					.cacheControl(CacheControl.FORCE_NETWORK)
 					.build();
 
 			try (Response response = HTTP_CLIENT.newCall(request).execute()) {
