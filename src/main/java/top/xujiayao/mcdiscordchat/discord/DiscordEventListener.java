@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
+import net.dv8tion.jda.api.utils.FileUpload;
 import net.fabricmc.loader.api.FabricLoader;
 //#if MC <= 11605
 //$$ import net.minecraft.server.command.ServerCommandSource;
@@ -185,7 +186,7 @@ public class DiscordEventListener extends ListenerAdapter {
 					String fileName = Objects.requireNonNull(e.getOption("file")).getAsString();
 
 					if (fileName.equals("latest.log")) {
-						e.getHook().sendFile(new File(FabricLoader.getInstance().getGameDir().toFile(), "logs/latest.log")).queue();
+						e.getHook().sendFiles(FileUpload.fromData(new File(FabricLoader.getInstance().getGameDir().toFile(), "logs/latest.log"))).queue();
 					} else {
 						File source = new File(FabricLoader.getInstance().getGameDir().toFile(), ("logs/" + fileName));
 						try (GZIPInputStream gis = new GZIPInputStream(new FileInputStream(source))) {
@@ -197,7 +198,7 @@ public class DiscordEventListener extends ListenerAdapter {
 								out.write(buffer, 0, len);
 							}
 
-							e.getHook().sendFile(out.toByteArray(), "target.log").queue();
+							e.getHook().sendFiles(FileUpload.fromData(out.toByteArray(), "target.log")).queue();
 						} catch (FileNotFoundException ex) {
 							e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**Could not find the specified file!**" : "**找不到指定的文件！**").queue();
 						} catch (Exception ex) {
