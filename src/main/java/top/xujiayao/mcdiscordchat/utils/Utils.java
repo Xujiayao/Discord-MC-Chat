@@ -89,13 +89,13 @@ public class Utils {
 					CONFIG.latestCheckTime = System.currentTimeMillis();
 					ConfigManager.update();
 
-					message.append(CONFIG.generic.useEngInsteadOfChin ? "**A new version is available!**" : "**新版本可用！**");
+					message.append(Translations.translate("utils.utils.cUpdate.newVersionAvailable"));
 					message.append("\n\n");
 					message.append("MCDiscordChat **").append(VERSION).append("** -> **").append(latestVersion).append("**");
 					message.append("\n\n");
-					message.append(CONFIG.generic.useEngInsteadOfChin ? "Download link: <https://github.com/Xujiayao/MCDiscordChat/blob/master/README.md#Download>" : "下载链接：<https://github.com/Xujiayao/MCDiscordChat/blob/master/README_CN.md#%E4%B8%8B%E8%BD%BD>");
+					message.append(Translations.translate("utils.utils.cUpdate.downloadLink"));
 					message.append("\n\n");
-					message.append(CONFIG.generic.useEngInsteadOfChin ? "Changelog: " : "更新日志：").append(latestJson.get("changelog").getAsString());
+					message.append(Translations.translate("utils.utils.cUpdate.changelog")).append(latestJson.get("changelog").getAsString());
 					message.append("\n\n");
 
 					if (CONFIG.generic.mentionAdminsForUpdates) {
@@ -106,7 +106,7 @@ public class Utils {
 				} else {
 					message.append("MCDiscordChat **").append(VERSION).append("**");
 					message.append("\n\n");
-					message.append(CONFIG.generic.useEngInsteadOfChin ? "**MCDiscordChat is up to date!**" : "**当前版本已经是最新版本！**");
+					message.append(Translations.translate("utils.utils.cUpdate.upToDate"));
 
 					return isManualCheck ? message.toString() : "";
 				}
@@ -177,31 +177,25 @@ public class Utils {
 				}, 2000);
 			}
 
-			return CONFIG.generic.useEngInsteadOfChin ? "**Config file reloaded successfully!**" : "**配置文件重新加载成功！**";
+			return Translations.translate("utils.utils.reload.success");
 		} catch (Exception ex) {
 			LOGGER.error(ExceptionUtils.getStackTrace(ex));
-			return CONFIG.generic.useEngInsteadOfChin ? "**Config file reload failed!**" : "**配置文件重新加载失败！**";
+			return Translations.translate("utils.utils.reload.fail");
 		}
 	}
 
 	public static String getInfoCommandMessage() {
 		StringBuilder message = new StringBuilder()
 				.append("=============== ")
-				.append(CONFIG.generic.useEngInsteadOfChin ? "Server Status" : "运行状态")
+				.append(Translations.translate("utils.utils.gicMessage.serverStatus"))
 				.append(" ===============\n\n");
 
 		// Online players
 		List<ServerPlayerEntity> onlinePlayers = SERVER.getPlayerManager().getPlayerList();
-		message.append(CONFIG.generic.useEngInsteadOfChin ? "Online players (" : "在线玩家 (")
-				.append(onlinePlayers.size())
-				.append("/")
-				.append(SERVER.getPlayerManager().getMaxPlayerCount())
-				.append(")")
-				.append(CONFIG.generic.useEngInsteadOfChin ? ":" : "：")
-				.append("\n");
+		message.append(Translations.translate("utils.utils.gicMessage.onlinePlayers", onlinePlayers.size(), SERVER.getPlayerManager().getMaxPlayerCount()));
 
 		if (onlinePlayers.isEmpty()) {
-			message.append(CONFIG.generic.useEngInsteadOfChin ? "No players online!\n" : "当前没有在线玩家！\n");
+			message.append(Translations.translate("utils.utils.gicMessage.noPlayersOnline"));
 		} else {
 			for (ServerPlayerEntity player : onlinePlayers) {
 				message.append("[").append(player.pingMilliseconds).append("ms] ").append(player.getEntityName()).append("\n");
@@ -210,19 +204,13 @@ public class Utils {
 
 		// Server TPS
 		double serverTickTime = MathHelper.average(SERVER.lastTickLengths) * 1.0E-6D;
-		message.append(CONFIG.generic.useEngInsteadOfChin ? "\nServer TPS:\n" : "\n服务器 TPS：\n")
-				.append(String.format("%.2f", Math.min(1000.0 / serverTickTime, 20)));
+		message.append(Translations.translate("utils.utils.gicMessage.serverTps", String.format("%.2f", Math.min(1000.0 / serverTickTime, 20))));
 
 		// Server MSPT
-		message.append(CONFIG.generic.useEngInsteadOfChin ? "\n\nServer MSPT:\n" : "\n\n服务器 MSPT：\n")
-				.append(String.format("%.2f", serverTickTime));
+		message.append(Translations.translate("utils.utils.gicMessage.serverMspt", String.format("%.2f", serverTickTime)));
 
 		// Server used memory
-		message.append(CONFIG.generic.useEngInsteadOfChin ? "\n\nServer used memory:\n" : "\n\n服务器已用内存：\n")
-				.append((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024)
-				.append(" MB / ")
-				.append(Runtime.getRuntime().totalMemory() / 1024 / 1024)
-				.append(" MB");
+		message.append(Translations.translate("utils.utils.gicMessage.serverUsedMemory", (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024, Runtime.getRuntime().totalMemory() / 1024 / 1024));
 
 		return message.toString();
 	}
@@ -230,7 +218,7 @@ public class Utils {
 	public static String getStatsCommandMessage(String type, String name) {
 		StringBuilder message = new StringBuilder()
 				.append("=============== ")
-				.append(CONFIG.generic.useEngInsteadOfChin ? "Scoreboard" : "排行榜")
+				.append(Translations.translate("utils.utils.gscMessage.scoreboard"))
 				.append(" ===============\n");
 
 		Map<String, Integer> stats = new HashMap<>();
@@ -267,7 +255,7 @@ public class Utils {
 		}
 
 		if (stats.isEmpty()) {
-			message.append(CONFIG.generic.useEngInsteadOfChin ? "\nNo result" : "\n无结果");
+			message.append(Translations.translate("utils.utils.gscMessage.noResult"));
 		} else {
 			List<Map.Entry<String, Integer>> sortedlist = new ArrayList<>(stats.entrySet());
 			sortedlist.sort((c1, c2) -> c2.getValue().compareTo(c1.getValue()));
@@ -292,18 +280,18 @@ public class Utils {
 
 	public static void updateBotCommands() {
 		JDA.updateCommands()
-				.addCommands(Commands.slash("info", CONFIG.generic.useEngInsteadOfChin ? "Query server running status" : "查询服务器运行状态"))
-				.addCommands(Commands.slash("help", CONFIG.generic.useEngInsteadOfChin ? "Get a list of available commands" : "获取可用命令列表"))
-				.addCommands(Commands.slash("update", CONFIG.generic.useEngInsteadOfChin ? "Check for update" : "检查更新"))
-				.addCommands(Commands.slash("stats", CONFIG.generic.useEngInsteadOfChin ? "Query the scoreboard for a statistic" : "查询该统计信息的排行榜")
-						.addOption(OptionType.STRING, "type", CONFIG.generic.useEngInsteadOfChin ? "Statistic type" : "统计类型", true)
-						.addOption(OptionType.STRING, "name", CONFIG.generic.useEngInsteadOfChin ? "Statistic name" : "统计名称", true))
-				.addCommands(Commands.slash("reload", CONFIG.generic.useEngInsteadOfChin ? "Reload MCDiscordChat config file (admin only)" : "重新加载 MCDiscordChat 配置文件（仅限管理员）"))
-				.addCommands(Commands.slash("console", CONFIG.generic.useEngInsteadOfChin ? "Execute a command in the server console (admin only)" : "在服务器控制台中执行指令（仅限管理员）")
-						.addOption(OptionType.STRING, "command", CONFIG.generic.useEngInsteadOfChin ? "Command to execute" : "要执行的命令", true))
-				.addCommands(Commands.slash("log", CONFIG.generic.useEngInsteadOfChin ? "Get the specified server log (admin only)" : "获取指定的服务器日志（仅限管理员）")
-						.addOption(OptionType.STRING, "file", CONFIG.generic.useEngInsteadOfChin ? "File name" : "文件名", true, true))
-				.addCommands(Commands.slash("stop", CONFIG.generic.useEngInsteadOfChin ? "Stop the server (admin only)" : "停止服务器（仅限管理员）"))
+				.addCommands(Commands.slash("info", Translations.translate("utils.utils.ubCommands.info")))
+				.addCommands(Commands.slash("help", Translations.translate("utils.utils.ubCommands.help")))
+				.addCommands(Commands.slash("update", Translations.translate("utils.utils.ubCommands.update")))
+				.addCommands(Commands.slash("stats", Translations.translate("utils.utils.ubCommands.stats"))
+						.addOption(OptionType.STRING, "type", Translations.translate("utils.utils.ubCommands.stats.type"), true)
+						.addOption(OptionType.STRING, "name", Translations.translate("utils.utils.ubCommands.stats.name"), true))
+				.addCommands(Commands.slash("reload", Translations.translate("utils.utils.ubCommands.reload")))
+				.addCommands(Commands.slash("console", Translations.translate("utils.utils.ubCommands.console"))
+						.addOption(OptionType.STRING, "command", Translations.translate("utils.utils.ubCommands.console.command"), true))
+				.addCommands(Commands.slash("log", Translations.translate("utils.utils.ubCommands.log"))
+						.addOption(OptionType.STRING, "file", Translations.translate("utils.utils.ubCommands.log.file"), true, true))
+				.addCommands(Commands.slash("stop", Translations.translate("utils.utils.ubCommands.stop")))
 				.queue();
 	}
 
