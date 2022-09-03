@@ -130,6 +130,7 @@ public class Utils {
 			}
 
 			ConfigManager.init(true);
+			Translations.init();
 
 			Utils.setBotActivity();
 
