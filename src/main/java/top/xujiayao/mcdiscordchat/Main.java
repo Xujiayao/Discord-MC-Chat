@@ -49,7 +49,7 @@ public class Main implements DedicatedServerModInitializer {
 	//#endif
 	public static final File CONFIG_FILE = new File(FabricLoader.getInstance().getConfigDir().toFile(), "mcdiscordchat.json");
 	public static final File CONFIG_BACKUP_FILE = new File(FabricLoader.getInstance().getConfigDir().toFile(), "mcdiscordchat-backup.json");
-	public static final String VERSION = FabricLoader.getInstance().getModContainer("mcdiscordchat").orElseThrow(RuntimeException::new).getMetadata().getVersion().getFriendlyString();
+	public static final String VERSION = FabricLoader.getInstance().getModContainer("mcdiscordchat").orElseThrow().getMetadata().getVersion().getFriendlyString();
 	public static Config CONFIG;
 	public static JDA JDA;
 	public static TextChannel CHANNEL;
