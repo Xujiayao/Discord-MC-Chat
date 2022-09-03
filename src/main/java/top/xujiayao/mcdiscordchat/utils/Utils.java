@@ -131,8 +131,6 @@ public class Utils {
 
 			ConfigManager.init(true);
 
-			Utils.testJsonValid();
-
 			Utils.setBotActivity();
 
 			CHANNEL = JDA.getTextChannelById(CONFIG.generic.channelId);
