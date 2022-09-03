@@ -20,9 +20,6 @@ public class Config {
 	public long latestCheckTime = System.currentTimeMillis() - 300000000;
 
 	public static class Generic {
-		// TODO Temporary
-		public boolean useEngInsteadOfChin = true;
-
 		public String language = "en_us";
 
 		public String botToken = "";

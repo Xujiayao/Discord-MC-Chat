@@ -68,12 +68,12 @@ public class DiscordEventListener extends ListenerAdapter {
 		e.deferReply().queue();
 
 		if (SERVER == null) {
-			e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**You need to wait for the server to fully start!**" : "**你需要等待服务器完全启动！**").queue();
+			e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.serverNotStarted")).queue();
 			return;
 		}
 
 		if (!e.isFromGuild()) {
-			e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**You cannot use this command via direct message!**" : "**你不能通过私信使用此命令！**").queue();
+			e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.notFromGuild")).queue();
 			return;
 		}
 
@@ -120,29 +120,7 @@ public class DiscordEventListener extends ListenerAdapter {
 					MULTI_SERVER.sendMessage(true, false, false, null, "{\"type\":\"discordInfoCommand\",\"channel\":\"" + e.getChannel().getId() + "\"}");
 				}
 			}
-			case "help" -> e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? """
-					```
-					=============== Help ===============
-					/info                | Query server running status
-					/help                | Get a list of available commands
-					/update              | Check for update
-					/stats <type> <name> | Query the scoreboard of a statistic
-					/reload              | Reload MCDiscordChat config file (admin only)
-					/console <command>   | Execute a command in the server console (admin only)
-					/log                 | Get the specified server log (admin only)
-					/stop                | Stop the server (admin only)
-					```""" : """
-					```
-					=============== 帮助 ===============
-					/info                | 查询服务器运行状态
-					/help                | 获取可用命令列表
-					/update              | 检查更新
-					/stats <type> <name> | 查询该统计信息的排行榜
-					/reload              | 重新加载 MCDiscordChat 配置文件（仅限管理员）
-					/console <command>   | 在服务器控制台中执行命令（仅限管理员）
-					/log                 | 获取指定的服务器日志（仅限管理员）
-					/stop                | 停止服务器（仅限管理员）
-					```""").queue();
+			case "help" -> e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.helpMessage")).queue();
 			case "update" -> e.getHook().sendMessage(Utils.checkUpdate(true)).queue();
 			case "stats" -> {
 				String type = Objects.requireNonNull(e.getOption("type")).getAsString();
@@ -153,18 +131,18 @@ public class DiscordEventListener extends ListenerAdapter {
 				if (CONFIG.generic.adminsIds.contains(Objects.requireNonNull(e.getMember()).getId())) {
 					e.getHook().sendMessage(Utils.reload()).queue();
 				} else {
-					e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**You do not have permission to use this command!**" : "**你没有权限使用此命令！**").queue();
+					e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.noPermission")).queue();
 				}
 			}
 			case "console" -> {
 				if (CONFIG.generic.adminsIds.contains(Objects.requireNonNull(e.getMember()).getId())) {
 					String command = Objects.requireNonNull(e.getOption("command")).getAsString();
 					if (command.equals("stop") || command.equals("/stop")) {
-						e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**Stopping the server!**" : "**正在停止服务器！**")
+						e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.stoppingServer"))
 								.submit()
 								.whenComplete((v, ex) -> SERVER.stop(true));
 					} else {
-						e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**Executing the command!**" : "**正在执行命令！**")
+						e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.executingCommand"))
 								.submit()
 								.whenComplete((v, ex) -> SERVER.getCommandManager()
 										//#if MC >= 11900
@@ -178,7 +156,7 @@ public class DiscordEventListener extends ListenerAdapter {
 										//#endif
 					}
 				} else {
-					e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**You do not have permission to use this command!**" : "**你没有权限使用此命令！**").queue();
+					e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.noPermission")).queue();
 				}
 			}
 			case "log" -> {
@@ -200,22 +178,22 @@ public class DiscordEventListener extends ListenerAdapter {
 
 							e.getHook().sendFiles(FileUpload.fromData(out.toByteArray(), "target.log")).queue();
 						} catch (FileNotFoundException ex) {
-							e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**Could not find the specified file!**" : "**找不到指定的文件！**").queue();
+							e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.fileNotFound")).queue();
 						} catch (Exception ex) {
 							LOGGER.error(ExceptionUtils.getStackTrace(ex));
 						}
 					}
 				} else {
-					e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**You do not have permission to use this command!**" : "**你没有权限使用此命令！**").queue();
+					e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.noPermission")).queue();
 				}
 			}
 			case "stop" -> {
 				if (CONFIG.generic.adminsIds.contains(Objects.requireNonNull(e.getMember()).getId())) {
-					e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**Stopping the server!**" : "**正在停止服务器！**")
+					e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.stoppingServer"))
 							.submit()
 							.whenComplete((v, ex) -> SERVER.stop(true));
 				} else {
-					e.getHook().sendMessage(CONFIG.generic.useEngInsteadOfChin ? "**You do not have permission to use this command!**" : "**你没有权限使用此命令！**").queue();
+					e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.noPermission")).queue();
 				}
 			}
 		}
