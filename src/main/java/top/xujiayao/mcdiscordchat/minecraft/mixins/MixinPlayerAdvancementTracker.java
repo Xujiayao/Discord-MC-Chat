@@ -11,11 +11,11 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import top.xujiayao.mcdiscordchat.utils.Translations;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
 import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
-import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 
 /**
  * @author Xujiayao
@@ -38,31 +38,31 @@ public abstract class MixinPlayerAdvancementTracker {
 				&& owner.world.getGameRules().getBoolean(GameRules.ANNOUNCE_ADVANCEMENTS)) {
 			switch (advancement.getDisplay().getFrame()) {
 				case GOAL -> {
-					CHANNEL.sendMessage(TEXTS.advancementGoal()
+					CHANNEL.sendMessage(Translations.translateMessage("message.advancementGoal")
 							.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
 							.replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
 					if (CONFIG.multiServer.enable) {
-						MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.advancementGoal()
+						MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.advancementGoal")
 								.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
 								.replace("%advancement%", advancement.getDisplay().getTitle().getString()));
 					}
 				}
 				case TASK -> {
-					CHANNEL.sendMessage(TEXTS.advancementTask()
+					CHANNEL.sendMessage(Translations.translateMessage("message.advancementTask")
 							.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
 							.replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
 					if (CONFIG.multiServer.enable) {
-						MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.advancementTask()
+						MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.advancementTask")
 								.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
 								.replace("%advancement%", advancement.getDisplay().getTitle().getString()));
 					}
 				}
 				case CHALLENGE -> {
-					CHANNEL.sendMessage(TEXTS.advancementChallenge()
+					CHANNEL.sendMessage(Translations.translateMessage("message.advancementChallenge")
 							.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
 							.replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
 					if (CONFIG.multiServer.enable) {
-						MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.advancementChallenge()
+						MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.advancementChallenge")
 								.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
 								.replace("%advancement%", advancement.getDisplay().getTitle().getString()));
 					}

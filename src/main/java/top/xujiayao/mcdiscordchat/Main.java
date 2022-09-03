@@ -29,7 +29,6 @@ import top.xujiayao.mcdiscordchat.minecraft.MinecraftCommands;
 import top.xujiayao.mcdiscordchat.multiServer.MultiServer;
 import top.xujiayao.mcdiscordchat.utils.ConfigManager;
 import top.xujiayao.mcdiscordchat.utils.ConsoleLogListener;
-import top.xujiayao.mcdiscordchat.utils.Texts;
 import top.xujiayao.mcdiscordchat.utils.Translations;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 
@@ -57,7 +56,6 @@ public class Main implements DedicatedServerModInitializer {
 	public static TextChannel CONSOLE_LOG_CHANNEL;
 	public static Thread CONSOLE_LOG_THREAD = new Thread(new ConsoleLogListener(true));
 	public static TextChannel UPDATE_NOTIFICATION_CHANNEL;
-	public static Texts TEXTS;
 	public static long MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();
 	public static int MINECRAFT_SEND_COUNT = 0;
 	public static MinecraftServer SERVER;
@@ -125,9 +123,9 @@ public class Main implements DedicatedServerModInitializer {
 			SERVER_STARTED_TIME = Long.toString(Instant.now().getEpochSecond());
 
 			if (CONFIG.generic.announceServerStartStop) {
-				CHANNEL.sendMessage(TEXTS.serverStarted()).queue();
+				CHANNEL.sendMessage(Translations.translateMessage("message.serverStarted")).queue();
 				if (CONFIG.multiServer.enable) {
-					MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.serverStarted());
+					MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.serverStarted"));
 				}
 			}
 
@@ -162,7 +160,7 @@ public class Main implements DedicatedServerModInitializer {
 
 			if (CONFIG.multiServer.enable) {
 				if (CONFIG.generic.announceServerStartStop) {
-					MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.serverStopped());
+					MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.serverStopped"));
 				}
 				MULTI_SERVER.bye();
 				MULTI_SERVER.stopMultiServer();
@@ -170,10 +168,10 @@ public class Main implements DedicatedServerModInitializer {
 
 			if (CONFIG.generic.updateChannelTopic) {
 				if (CONFIG.generic.announceServerStartStop) {
-					CHANNEL.sendMessage(TEXTS.serverStopped())
+					CHANNEL.sendMessage(Translations.translateMessage("message.serverStopped"))
 							.submit()
 							.whenComplete((v, ex) -> {
-								String topic = TEXTS.offlineChannelTopic()
+								String topic = Translations.translateMessage("message.offlineChannelTopic")
 										.replace("%lastUpdateTime%", Long.toString(Instant.now().getEpochSecond()));
 
 								CHANNEL.getManager().setTopic(topic)
@@ -189,7 +187,7 @@ public class Main implements DedicatedServerModInitializer {
 										});
 							});
 				} else {
-					String topic = TEXTS.offlineChannelTopic()
+					String topic = Translations.translateMessage("message.offlineChannelTopic")
 							.replace("%lastUpdateTime%", Long.toString(Instant.now().getEpochSecond()));
 
 					CHANNEL.getManager().setTopic(topic)
@@ -206,7 +204,7 @@ public class Main implements DedicatedServerModInitializer {
 				}
 			} else {
 				if (CONFIG.generic.announceServerStartStop) {
-					CHANNEL.sendMessage(TEXTS.serverStopped())
+					CHANNEL.sendMessage(Translations.translateMessage("message.serverStopped"))
 							.submit()
 							.whenComplete((v, ex) -> JDA.shutdownNow());
 				} else {

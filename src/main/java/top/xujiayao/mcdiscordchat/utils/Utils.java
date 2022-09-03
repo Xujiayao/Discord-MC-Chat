@@ -43,7 +43,6 @@ import static top.xujiayao.mcdiscordchat.Main.MSPT_MONITOR_TIMER;
 import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
 import static top.xujiayao.mcdiscordchat.Main.SERVER;
 import static top.xujiayao.mcdiscordchat.Main.SERVER_STARTED_TIME;
-import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 import static top.xujiayao.mcdiscordchat.Main.UPDATE_NOTIFICATION_CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.VERSION;
 
@@ -281,52 +280,6 @@ public class Utils {
 		return message.toString();
 	}
 
-	public static void reloadTexts() {
-		if (CONFIG.generic.useEngInsteadOfChin) {
-			TEXTS = new Texts(CONFIG.textsEN.unformattedResponseMessage,
-					CONFIG.textsEN.unformattedChatMessage,
-					CONFIG.textsEN.unformattedOtherMessage,
-					CONFIG.textsEN.unformattedCommandNotice,
-					new Gson().toJson(CONFIG.textsEN.formattedResponseMessage),
-					new Gson().toJson(CONFIG.textsEN.formattedChatMessage),
-					new Gson().toJson(CONFIG.textsEN.formattedOtherMessage),
-					new Gson().toJson(CONFIG.textsEN.formattedCommandNotice),
-					CONFIG.textsEN.serverStarted,
-					CONFIG.textsEN.serverStopped,
-					CONFIG.textsEN.joinServer,
-					CONFIG.textsEN.leftServer,
-					CONFIG.textsEN.deathMessage,
-					CONFIG.textsEN.advancementTask,
-					CONFIG.textsEN.advancementChallenge,
-					CONFIG.textsEN.advancementGoal,
-					CONFIG.textsEN.highMspt,
-					CONFIG.textsEN.offlineChannelTopic,
-					CONFIG.textsEN.onlineChannelTopic,
-					CONFIG.textsEN.onlineChannelTopicForMultiServer);
-		} else {
-			TEXTS = new Texts(CONFIG.textsZH.unformattedResponseMessage,
-					CONFIG.textsZH.unformattedChatMessage,
-					CONFIG.textsZH.unformattedOtherMessage,
-					CONFIG.textsZH.unformattedCommandNotice,
-					new Gson().toJson(CONFIG.textsZH.formattedResponseMessage),
-					new Gson().toJson(CONFIG.textsZH.formattedChatMessage),
-					new Gson().toJson(CONFIG.textsZH.formattedOtherMessage),
-					new Gson().toJson(CONFIG.textsZH.formattedCommandNotice),
-					CONFIG.textsZH.serverStarted,
-					CONFIG.textsZH.serverStopped,
-					CONFIG.textsZH.joinServer,
-					CONFIG.textsZH.leftServer,
-					CONFIG.textsZH.deathMessage,
-					CONFIG.textsZH.advancementTask,
-					CONFIG.textsZH.advancementChallenge,
-					CONFIG.textsZH.advancementGoal,
-					CONFIG.textsZH.highMspt,
-					CONFIG.textsZH.offlineChannelTopic,
-					CONFIG.textsZH.onlineChannelTopic,
-					CONFIG.textsZH.onlineChannelTopicForMultiServer);
-		}
-	}
-
 	public static void setBotActivity() {
 		if (!CONFIG.generic.botPlayingStatus.isEmpty()) {
 			JDA.getPresence().setActivity(Activity.playing(CONFIG.generic.botPlayingStatus));
@@ -361,11 +314,11 @@ public class Utils {
 				double mspt = MathHelper.average(SERVER.lastTickLengths) * 1.0E-6D;
 
 				if (mspt > CONFIG.generic.msptLimit) {
-					CHANNEL.sendMessage(TEXTS.highMspt()
+					CHANNEL.sendMessage(Translations.translateMessage("message.highMspt")
 							.replace("%mspt%", String.format("%.2f", mspt))
 							.replace("%msptLimit%", Integer.toString(CONFIG.generic.msptLimit))).queue();
 					if (CONFIG.multiServer.enable) {
-						MULTI_SERVER.sendMessage(false, false, false, null, MarkdownParser.parseMarkdown(TEXTS.highMspt()
+						MULTI_SERVER.sendMessage(false, false, false, null, MarkdownParser.parseMarkdown(Translations.translateMessage("message.highMspt")
 								.replace("%mspt%", String.format("%.2f", mspt))
 								.replace("%msptLimit%", Integer.toString(CONFIG.generic.msptLimit))));
 					}
@@ -378,7 +331,7 @@ public class Utils {
 		CHANNEL_TOPIC_MONITOR_TIMER.schedule(new TimerTask() {
 			@Override
 			public void run() {
-				String topic = TEXTS.onlineChannelTopic()
+				String topic = Translations.translateMessage("message.onlineChannelTopic")
 						.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerManager().getPlayerList().size()))
 						.replace("%maxPlayerCount%", Integer.toString(SERVER.getPlayerManager().getMaxPlayerCount()))
 						//#if MC >= 11600
@@ -416,12 +369,14 @@ public class Utils {
 	}
 
 	public static void testJsonValid() throws JsonSyntaxException {
-		new Gson().fromJson(CONFIG.textsZH.formattedResponseMessage, Object.class);
-		new Gson().fromJson(CONFIG.textsZH.formattedChatMessage, Object.class);
-		new Gson().fromJson(CONFIG.textsZH.formattedOtherMessage, Object.class);
-
-		new Gson().fromJson(CONFIG.textsEN.formattedResponseMessage, Object.class);
-		new Gson().fromJson(CONFIG.textsEN.formattedChatMessage, Object.class);
-		new Gson().fromJson(CONFIG.textsEN.formattedOtherMessage, Object.class);
+		if (!CONFIG.customMessage.formattedResponseMessage.isBlank()) {
+			new Gson().fromJson(CONFIG.customMessage.formattedResponseMessage, Object.class);
+		}
+		if (!CONFIG.customMessage.formattedChatMessage.isBlank()) {
+			new Gson().fromJson(CONFIG.customMessage.formattedChatMessage, Object.class);
+		}
+		if (!CONFIG.customMessage.formattedOtherMessage.isBlank()) {
+			new Gson().fromJson(CONFIG.customMessage.formattedOtherMessage, Object.class);
+		}
 	}
 }

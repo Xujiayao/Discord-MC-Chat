@@ -8,11 +8,11 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import top.xujiayao.mcdiscordchat.utils.Translations;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
 import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
-import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 
 /**
  * @author Xujiayao
@@ -23,10 +23,10 @@ public class MixinPlayerManager {
 	@Inject(method = "onPlayerConnect", at = @At("HEAD"))
 	private void onPlayerConnect(ClientConnection connection, ServerPlayerEntity player, CallbackInfo ci) {
 		if (CONFIG.generic.announcePlayerJoinLeave) {
-			CHANNEL.sendMessage(TEXTS.joinServer()
+			CHANNEL.sendMessage(Translations.translateMessage("message.joinServer")
 					.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();
 			if (CONFIG.multiServer.enable) {
-				MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.joinServer()
+				MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.joinServer")
 						.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName())));
 			}
 		}
@@ -35,10 +35,10 @@ public class MixinPlayerManager {
 	@Inject(method = "remove", at = @At("HEAD"))
 	private void remove(ServerPlayerEntity player, CallbackInfo ci) {
 		if (CONFIG.generic.announcePlayerJoinLeave) {
-			CHANNEL.sendMessage(TEXTS.leftServer()
+			CHANNEL.sendMessage(Translations.translateMessage("message.leftServer")
 					.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();
 			if (CONFIG.multiServer.enable) {
-				MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.leftServer()
+				MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.leftServer")
 						.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName())));
 			}
 		}
