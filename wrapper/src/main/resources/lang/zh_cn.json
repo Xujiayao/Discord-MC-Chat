@@ -1,0 +1,22 @@
+{
+  "message.unformattedResponseMessage": "    ┌──── <%name%> %message%",
+  "message.unformattedChatMessage": "[%server%] <%name%> %message%",
+  "message.unformattedOtherMessage": "[%server%] %message%",
+  "message.unformattedCommandNotice": "%name% 执行了 %command% 命令！",
+  "message.formattedResponseMessage": "[{\"text\":\"    ┌──── \",\"bold\":true,\"color\":\"dark_gray\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"dark_gray\"}]",
+  "message.formattedChatMessage": "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]",
+  "message.formattedOtherMessage": "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]",
+  "message.formattedCommandNotice": "[{\"text\":\"%name% \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"执行了 %command% 命令！\",\"bold\":false,\"color\":\"gray\"}]",
+  "message.serverStarted": "**服务器已启动！**",
+  "message.serverStopped": "**服务器已关闭！**",
+  "message.joinServer": "**%playerName% 加入了服务器**",
+  "message.leftServer": "**%playerName% 离开了服务器**",
+  "message.deathMessage": "**%deathMessage%**",
+  "message.advancementTask": "**%playerName% 达成了进度 [%advancement%]**",
+  "message.advancementChallenge": "**%playerName% 完成了挑战 [%advancement%]**",
+  "message.advancementGoal": "**%playerName% 达成了目标 [%advancement%]**",
+  "message.highMspt": "**服务器 MSPT (%mspt%) 高于 %msptLimit%！**",
+  "message.offlineChannelTopic": ":x: 服务器离线 | 最后更新于：<t:%lastUpdateTime%:f>",
+  "message.onlineChannelTopic": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% 位玩家在线 | 服务器玩家总数：%uniquePlayerCount% | 服务器于 <t:%serverStartedTime%:R> 启动 | 最后更新于：<t:%lastUpdateTime%:f>",
+  "message.onlineChannelTopicForMultiServer": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% 位玩家在线 | 服务器玩家总数：%uniquePlayerCount% | %onlineServerCount% 个服务器在线 [%onlineServerList%] | 服务器于 <t:%serverStartedTime%:R> 启动 | 最后更新于：<t:%lastUpdateTime%:f>"
+}
