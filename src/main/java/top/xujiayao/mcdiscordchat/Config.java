@@ -24,7 +24,7 @@ public class Config {
 	public long latestCheckTime = System.currentTimeMillis() - 300000000;
 
 	public static class Generic {
-		public boolean useEngInsteadOfChin = true;
+		public String language = "en_us";
 
 		public String botToken = "";
 		public String botPlayingStatus = "Minecraft";

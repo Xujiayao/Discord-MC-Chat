@@ -30,6 +30,7 @@ import top.xujiayao.mcdiscordchat.multiServer.MultiServer;
 import top.xujiayao.mcdiscordchat.utils.ConfigManager;
 import top.xujiayao.mcdiscordchat.utils.ConsoleLogListener;
 import top.xujiayao.mcdiscordchat.utils.Texts;
+import top.xujiayao.mcdiscordchat.utils.Translations;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 
 import java.io.File;
@@ -70,6 +71,7 @@ public class Main implements DedicatedServerModInitializer {
 	public void onInitializeServer() {
 		try {
 			ConfigManager.init(false);
+			Translations.init();
 
 			LOGGER.info("-----------------------------------------");
 			LOGGER.info("MCDiscordChat (MCDC) " + VERSION);
