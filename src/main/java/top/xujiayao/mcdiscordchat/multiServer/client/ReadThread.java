@@ -14,6 +14,7 @@ import net.minecraft.text.Texts;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
+import top.xujiayao.mcdiscordchat.utils.Translations;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 
 import java.io.BufferedReader;
@@ -38,7 +39,6 @@ import static top.xujiayao.mcdiscordchat.Main.LOGGER;
 import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
 import static top.xujiayao.mcdiscordchat.Main.SERVER;
 import static top.xujiayao.mcdiscordchat.Main.SERVER_STARTED_TIME;
-import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 
 /**
  * @author Xujiayao
@@ -88,12 +88,12 @@ public class ReadThread extends Thread {
 					}
 
 					if (json.get("isChat").getAsBoolean()) {
-						LOGGER.info(TEXTS.unformattedChatMessage()
+						LOGGER.info(Translations.translateMessage("message.unformattedChatMessage")
 								.replace("%server%", json.get("serverName").getAsString())
 								.replace("%name%", json.get("playerName").getAsString())
 								.replace("%message%", json.get("message").getAsString()));
 
-						Text text = Text.Serializer.fromJson(TEXTS.formattedChatMessage()
+						Text text = Text.Serializer.fromJson(Translations.translateMessage("message.formattedChatMessage")
 								.replace("%server%", json.get("serverName").getAsString())
 								.replace("%name%", json.get("playerName").getAsString())
 								.replace("%roleColor%", "white")
@@ -103,11 +103,11 @@ public class ReadThread extends Thread {
 								player -> player.sendMessage(text, false));
 					} else {
 						if (json.get("isText").getAsBoolean()) {
-							LOGGER.info(TEXTS.unformattedOtherMessage()
+							LOGGER.info(Translations.translateMessage("message.unformattedOtherMessage")
 									.replace("%server%", json.get("serverName").getAsString())
 									.replace("%message%", Objects.requireNonNull(Text.Serializer.fromJson(json.get("message").getAsString())).getString()));
 
-							Text text = Text.Serializer.fromJson(TEXTS.formattedOtherMessage()
+							Text text = Text.Serializer.fromJson(Translations.translateMessage("message.formattedOtherMessage")
 									.replace("%server%", json.get("serverName").getAsString())
 									.replace("%message%", ""));
 
@@ -125,11 +125,11 @@ public class ReadThread extends Thread {
 									player -> player.sendMessage(Texts.join(textList, Text.of("")), false));
 							//#endif
 						} else {
-							LOGGER.info(TEXTS.unformattedOtherMessage()
+							LOGGER.info(Translations.translateMessage("message.unformattedOtherMessage")
 									.replace("%server%", json.get("serverName").getAsString())
 									.replace("%message%", json.get("message").getAsString()));
 
-							Text text = Text.Serializer.fromJson(TEXTS.formattedOtherMessage()
+							Text text = Text.Serializer.fromJson(Translations.translateMessage("message.formattedOtherMessage")
 									.replace("%server%", json.get("serverName").getAsString())
 									.replace("%message%", MarkdownParser.parseMarkdown(json.get("message").getAsString())));
 

@@ -34,7 +34,6 @@ public class ConfigManager {
 				}
 
 				update();
-				Utils.reloadTexts();
 			} catch (Exception e) {
 				if (throwException) {
 					throw e;

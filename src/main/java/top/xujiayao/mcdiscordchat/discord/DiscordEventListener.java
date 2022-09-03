@@ -36,6 +36,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
+import top.xujiayao.mcdiscordchat.utils.Translations;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 
 import java.io.ByteArrayOutputStream;
@@ -56,7 +57,6 @@ import static top.xujiayao.mcdiscordchat.Main.JDA;
 import static top.xujiayao.mcdiscordchat.Main.LOGGER;
 import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
 import static top.xujiayao.mcdiscordchat.Main.SERVER;
-import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 
 /**
  * @author Xujiayao
@@ -77,14 +77,14 @@ public class DiscordEventListener extends ListenerAdapter {
 			return;
 		}
 
-		LOGGER.info(TEXTS.unformattedOtherMessage()
+		LOGGER.info(Translations.translateMessage("message.unformattedOtherMessage")
 				.replace("%server%", (CONFIG.multiServer.enable ? CONFIG.multiServer.name : "Discord"))
-				.replace("%message%", TEXTS.unformattedCommandNotice()
+				.replace("%message%", Translations.translateMessage("message.unformattedCommandNotice")
 						.replace("%name%", CONFIG.generic.useServerNickname ? Objects.requireNonNull(e.getMember()).getEffectiveName() : Objects.requireNonNull(e.getMember()).getUser().getName())
 						.replace("%roleName%", e.getMember().getRoles().get(0).getName())
 						.replace("%command%", e.getCommandString())));
 
-		Text commandNoticeText = Text.Serializer.fromJson(TEXTS.formattedCommandNotice()
+		Text commandNoticeText = Text.Serializer.fromJson(Translations.translateMessage("message.formattedCommandNotice")
 				.replace("%server%", (CONFIG.multiServer.enable ? CONFIG.multiServer.name : "Discord"))
 				.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\"))
 				.replace("%roleName%", e.getMember().getRoles().get(0).getName())
@@ -94,13 +94,13 @@ public class DiscordEventListener extends ListenerAdapter {
 		//#if MC <= 11802
 		//$$ SERVER.getPlayerManager().getPlayerList().forEach(
 		//$$ 		player -> player.sendMessage(new LiteralText("")
-		//$$ 				.append(Text.Serializer.fromJson(TEXTS.formattedOtherMessage()
+		//$$ 				.append(Text.Serializer.fromJson(Translations.translateMessage("message.formattedOtherMessage")
 		//$$ 						.replace("%server%", (CONFIG.multiServer.enable ? CONFIG.multiServer.name : "Discord"))
 		//$$ 						.replace("%message%", "")))
 		//$$ 				.append(commandNoticeText), false));
 		//#else
 		List<Text> commandNoticeTextList = new ArrayList<>();
-		commandNoticeTextList.add(Text.Serializer.fromJson(TEXTS.formattedOtherMessage()
+		commandNoticeTextList.add(Text.Serializer.fromJson(Translations.translateMessage("message.formattedOtherMessage")
 				.replace("%server%", (CONFIG.multiServer.enable ? CONFIG.multiServer.name : "Discord"))
 				.replace("%message%", "")));
 		commandNoticeTextList.add(commandNoticeText);
@@ -272,7 +272,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				referencedMemberRoleName = "null";
 			}
 
-			LOGGER.info(TEXTS.unformattedResponseMessage()
+			LOGGER.info(Translations.translateMessage("message.unformattedResponseMessage")
 					.replace("%server%", "Discord")
 					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : webhookName)
 					.replace("%roleName%", referencedMemberRoleName)
@@ -285,7 +285,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			memberRoleName = "null";
 		}
 
-		LOGGER.info(TEXTS.unformattedChatMessage()
+		LOGGER.info(Translations.translateMessage("message.unformattedChatMessage")
 				.replace("%server%", "Discord")
 				.replace("%name%", CONFIG.generic.useServerNickname ? Objects.requireNonNull(e.getMember()).getEffectiveName() : Objects.requireNonNull(e.getMember()).getUser().getName())
 				.replace("%roleName%", memberRoleName)
@@ -298,7 +298,7 @@ public class DiscordEventListener extends ListenerAdapter {
 		String textBeforePlaceholder = "";
 		String textAfterPlaceholder = "";
 
-		String[] arrayParts = StringUtils.substringsBetween(TEXTS.formattedChatMessage(), "{", "}");
+		String[] arrayParts = StringUtils.substringsBetween(Translations.translateMessage("message.formattedChatMessage"), "{", "}");
 		for (String arrayPart : arrayParts) {
 			if (arrayPart.contains("%message%")) {
 				textBeforePlaceholder = StringUtils.substringBefore(arrayPart, "%message%");
@@ -470,7 +470,7 @@ public class DiscordEventListener extends ListenerAdapter {
 		}
 
 		if (e.getMessage().getReferencedMessage() != null) {
-			Text referenceFinalText = Text.Serializer.fromJson(TEXTS.formattedResponseMessage()
+			Text referenceFinalText = Text.Serializer.fromJson(Translations.translateMessage("message.formattedResponseMessage")
 					.replace("%server%", "Discord")
 					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()).replace("\\", "\\\\") : webhookName)
 					.replace("%roleName%", referencedMemberRoleName)
@@ -481,7 +481,7 @@ public class DiscordEventListener extends ListenerAdapter {
 					player -> player.sendMessage(referenceFinalText, false));
 		}
 
-		Text finalText = Text.Serializer.fromJson(TEXTS.formattedChatMessage()
+		Text finalText = Text.Serializer.fromJson(Translations.translateMessage("message.formattedChatMessage")
 				.replace("%server%", "Discord")
 				.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\"))
 				.replace("%roleName%", memberRoleName)

@@ -14,11 +14,11 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import top.xujiayao.mcdiscordchat.utils.Translations;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
 import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
-import static top.xujiayao.mcdiscordchat.Main.TEXTS;
 
 /**
  * @author Xujiayao
@@ -43,10 +43,10 @@ public abstract class MixinServerPlayerEntity extends PlayerEntity {
 	@Inject(method = "onDeath", at = @At("HEAD"))
 	private void onDeath(DamageSource source, CallbackInfo ci) {
 		if (CONFIG.generic.announceDeathMessages) {
-			CHANNEL.sendMessage(TEXTS.deathMessage()
+			CHANNEL.sendMessage(Translations.translateMessage("message.deathMessage")
 					.replace("%deathMessage%", MarkdownSanitizer.escape(getDamageTracker().getDeathMessage().getString()))).queue();
 			if (CONFIG.multiServer.enable) {
-				MULTI_SERVER.sendMessage(false, false, false, null, TEXTS.deathMessage()
+				MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.deathMessage")
 						.replace("%deathMessage%", MarkdownSanitizer.escape(getDamageTracker().getDeathMessage().getString())));
 			}
 		}
