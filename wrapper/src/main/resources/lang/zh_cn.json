@@ -21,7 +21,7 @@
   "utils.utils.reload.fail": "**配置文件重新加载失败！**",
 
   "utils.utils.gicMessage.serverStatus": "运行状态",
-  "utils.utils.gicMessage.onlinePlayers": "在线玩家 (%s/%s)：",
+  "utils.utils.gicMessage.onlinePlayers": "在线玩家 (%s/%s)：\n",
   "utils.utils.gicMessage.noPlayersOnline": "当前没有在线玩家！\n",
   "utils.utils.gicMessage.serverTps": "\n服务器 TPS：\n%s",
   "utils.utils.gicMessage.serverMspt": "\n\n服务器 MSPT：\n%s",
