@@ -59,7 +59,7 @@ public class Translations {
 	public static String translateMessage(String key) {
 		try {
 			Field field = Config.CustomMessage.class.getField(key.substring(8));
-			String configValue = (String) field.get(new Config.CustomMessage());
+			String configValue = (String) field.get(CONFIG.customMessage);
 
 			return configValue.isBlank() ? translations.get(key) : configValue;
 		} catch (Exception e) {
