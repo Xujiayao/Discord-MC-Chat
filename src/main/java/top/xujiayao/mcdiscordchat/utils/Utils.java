@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -354,17 +353,5 @@ public class Utils {
 				}
 			}
 		}, 3600000, 21600000);
-	}
-
-	public static void testJsonValid() throws JsonSyntaxException {
-		if (!CONFIG.customMessage.formattedResponseMessage.isBlank()) {
-			new Gson().fromJson(CONFIG.customMessage.formattedResponseMessage, Object.class);
-		}
-		if (!CONFIG.customMessage.formattedChatMessage.isBlank()) {
-			new Gson().fromJson(CONFIG.customMessage.formattedChatMessage, Object.class);
-		}
-		if (!CONFIG.customMessage.formattedOtherMessage.isBlank()) {
-			new Gson().fromJson(CONFIG.customMessage.formattedOtherMessage, Object.class);
-		}
 	}
 }

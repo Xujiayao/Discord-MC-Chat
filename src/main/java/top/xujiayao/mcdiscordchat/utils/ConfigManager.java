@@ -1,6 +1,8 @@
 package top.xujiayao.mcdiscordchat.utils;
 
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -27,8 +29,16 @@ public class ConfigManager {
 				load();
 
 				try {
-					Utils.testJsonValid();
-				} catch (Exception e) {
+					if (!CONFIG.customMessage.formattedResponseMessage.isBlank()) {
+						new Gson().fromJson(CONFIG.customMessage.formattedResponseMessage, Object.class);
+					}
+					if (!CONFIG.customMessage.formattedChatMessage.isBlank()) {
+						new Gson().fromJson(CONFIG.customMessage.formattedChatMessage, Object.class);
+					}
+					if (!CONFIG.customMessage.formattedOtherMessage.isBlank()) {
+						new Gson().fromJson(CONFIG.customMessage.formattedOtherMessage, Object.class);
+					}
+				} catch (JsonSyntaxException e) {
 					LOGGER.error(ExceptionUtils.getStackTrace(e));
 					LOGGER.error("Invalid JSON!");
 				}
