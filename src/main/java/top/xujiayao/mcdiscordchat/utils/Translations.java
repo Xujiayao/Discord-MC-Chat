@@ -5,7 +5,6 @@ import com.google.gson.reflect.TypeToken;
 import net.fabricmc.loader.api.FabricLoader;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import top.xujiayao.mcdiscordchat.Config;
 
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
@@ -58,7 +57,7 @@ public class Translations {
 
 	public static String translateMessage(String key) {
 		try {
-			Field field = Config.CustomMessage.class.getField(key.substring(8));
+			Field field = CONFIG.customMessage.getClass().getField(key.substring(8));
 			String configValue = (String) field.get(CONFIG.customMessage);
 
 			return configValue.isBlank() ? translations.get(key) : configValue;
