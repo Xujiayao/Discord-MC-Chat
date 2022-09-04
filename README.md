@@ -52,10 +52,20 @@ You can find the latest build JAR files at [GitHub Actions](https://github.com/X
 
 If there is a bug or suggestion, or something you don't understand, you can [submit an issue](https://github.com/Xujiayao/MCDiscordChat/issues/new/choose) on GitHub.
 
+## Contributing
+
+**You are welcome to contribute to MCDC!**
+
+If you are interested in contributing to MCDC, you can submit a pull request on GitHub.
+
+For code contributions, the build file is located in the `/wrapper/build/libs/` folder.
+
+For translation contributions, language files are located in the `/wrapper/src/main/resources/lang/` folder. Copy `en_us.json` and rename the new one to your language code to get started. Please provide a translation of the entire file.
+
 ## Features
 
+- Full multi-language support
 - Support multi-server mode (multi-server operation on the same Discord channel)
-- Support multiple languages (English / Chinese)
 - Support displaying server status using Discord channel topic feature
 - Minecraft <> Discord cross server chat
   - Support Discord Webhook feature

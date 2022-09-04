@@ -52,10 +52,20 @@ MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Dis
 
 如果有 bug 或建议，或者有什么不懂的，可以 [发表 issue](https://github.com/Xujiayao/MCDiscordChat/issues/new/choose)。
 
+## 贡献
+
+**欢迎你为 MCDC 做出贡献！**
+
+如果你有兴趣为 MCDC 做出贡献，你可以在 GitHub 上提交拉取请求。
+
+对于代码贡献，构建文件位于 `/wrapper/build/libs/` 文件夹中。
+
+对于翻译贡献，语言文件位于 `/wrapper/src/main/resources/lang/` 文件夹中。复制 `en_us.json` 并将新的文件重命名为您的语言代码以开始翻译。请提供整个文件的翻译。
+
 ## 功能特色
 
+- 全面的多语言支持
 - 支持多服务器模式（同 Discord 频道多服务器运行 MCDC）
-- 支持多语言（英文 / 中文）
 - 支持使用 Discord 频道主题功能显示服务器状态
 - Minecraft <> Discord 跨服聊天
   - 支持 Discord Webhook 功能
