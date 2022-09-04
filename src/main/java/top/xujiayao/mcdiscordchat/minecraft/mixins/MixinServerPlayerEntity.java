@@ -8,16 +8,27 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.encryption.PlayerPublicKey;
 //#endif
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.TranslatableTextContent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+//#if MC < 11900
+//$$ import org.apache.commons.lang3.exception.ExceptionUtils;
+//#endif
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import top.xujiayao.mcdiscordchat.utils.Translations;
 
+//#if MC < 11900
+//$$ import java.lang.reflect.Method;
+//#endif
+
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
+//#if MC < 11900
+//$$ import static top.xujiayao.mcdiscordchat.Main.LOGGER;
+//#endif
 import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
 
 /**
@@ -43,11 +54,33 @@ public abstract class MixinServerPlayerEntity extends PlayerEntity {
 	@Inject(method = "onDeath", at = @At("HEAD"))
 	private void onDeath(DamageSource source, CallbackInfo ci) {
 		if (CONFIG.generic.announceDeathMessages) {
+			//#if MC >= 11900
+			TranslatableTextContent deathMessage = (TranslatableTextContent) getDamageTracker().getDeathMessage().getContent();
+			String key = deathMessage.getKey();
+			Object[] args = new String[deathMessage.getArgs().length];
+			for (int i = 0; i < deathMessage.getArgs().length; i++) {
+				args[i] = deathMessage.getArg(i).getString();
+			}
+			//#else
+			//$$ TranslatableText deathMessage = (TranslatableText) getDamageTracker().getDeathMessage();
+			//$$ String key = deathMessage.getKey();
+			//$$ Object[] args = new String[deathMessage.getArgs().length];
+			//$$ for (int i = 0; i < deathMessage.getArgs().length; i++) {
+			//$$  try {
+			//$$  	Method method = TranslatableText.class.getDeclaredMethod("getArg", int.class);
+			//$$  	method.setAccessible(true);
+			//$$  	method.invoke(deathMessage, i);
+			//$$  } catch (Exception e) {
+			//$$  	LOGGER.error(ExceptionUtils.getStackTrace(e));
+			//$$  }
+			//$$ }
+			//#endif
+
 			CHANNEL.sendMessage(Translations.translateMessage("message.deathMessage")
-					.replace("%deathMessage%", MarkdownSanitizer.escape(getDamageTracker().getDeathMessage().getString()))).queue();
+					.replace("%deathMessage%", MarkdownSanitizer.escape(Translations.translate(key, args)))).queue();
 			if (CONFIG.multiServer.enable) {
 				MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.deathMessage")
-						.replace("%deathMessage%", MarkdownSanitizer.escape(getDamageTracker().getDeathMessage().getString())));
+						.replace("%deathMessage%", MarkdownSanitizer.escape(Translations.translate(key, args))));
 			}
 		}
 	}
