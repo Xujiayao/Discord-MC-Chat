@@ -6,7 +6,7 @@
 
 This update adds full multi-language support and therefore simplifies the config file.
 
-**You should back up your config file and read the changelog before updating to this version!**
+**You should back up your config file before updating to this version!**
 
 Use option `language` to set the language, and class `CustomMessage` to customize the messages.
 
