@@ -18,12 +18,12 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    include("net.dv8tion:JDA:5.0.0-alpha.19") {
+    include("net.dv8tion:JDA:5.0.0-alpha.20") {
         exclude module: "opus-java"
     }
     include("net.sf.trove4j:trove4j:3.0.3")
     include("org.apache.commons:commons-collections4:4.4")
-    include("org.slf4j:slf4j-api:2.0.0")
+    include("org.slf4j:slf4j-api:2.0.1")
     include("com.neovisionaries:nv-websocket-client:2.14")
     include("com.fasterxml.jackson.core:jackson-core:2.13.4")
     include("com.fasterxml.jackson.core:jackson-databind:2.13.4")
