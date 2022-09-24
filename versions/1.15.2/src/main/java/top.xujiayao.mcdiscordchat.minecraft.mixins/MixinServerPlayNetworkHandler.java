@@ -159,7 +159,7 @@ public abstract class MixinServerPlayNetworkHandler implements ServerPlayPacketL
 					contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, "@here", Formatting.YELLOW + "@here" + Formatting.WHITE);
 				}
 
-				contentToMinecraft = MarkdownParser.parseMarkdown(contentToMinecraft);
+				contentToMinecraft = MarkdownParser.parseMarkdown(contentToMinecraft.replace("\\", "\\\\"));
 
 				for (String protocol : new String[]{"http://", "https://"}) {
 					if (contentToMinecraft.contains(protocol)) {
