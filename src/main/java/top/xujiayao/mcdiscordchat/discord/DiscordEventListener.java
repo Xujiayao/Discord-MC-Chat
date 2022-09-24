@@ -380,8 +380,8 @@ public class DiscordEventListener extends ListenerAdapter {
 		}
 
 		StringBuilder message = new StringBuilder(EmojiParser.parseToAliases(e.getMessage().getContentDisplay())
-				.replace("\\", "\\\\")
-				.replace("\n", "\\n"));
+				.replace("\n", "\\n")
+				.replace("\\", "\\\\"));
 
 		if (CONFIG.generic.formatChatMessages && !e.getMessage().getAttachments().isEmpty()) {
 			if (!e.getMessage().getContentDisplay().isBlank()) {
