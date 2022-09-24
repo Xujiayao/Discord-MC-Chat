@@ -38,6 +38,8 @@ import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
@@ -113,30 +115,48 @@ public abstract class MixinServerPlayNetworkHandler implements ServerPlayPacketL
 					}
 				}
 
-				if (CONFIG.generic.allowMentions) {
-					if (contentToDiscord.contains("@")) {
-						String[] names = StringUtils.substringsBetween(contentToDiscord, "@", " ");
-						if (!StringUtils.substringAfterLast(contentToDiscord, "@").contains(" ")) {
-							names = ArrayUtils.add(names, StringUtils.substringAfterLast(contentToDiscord, "@"));
+				if (CONFIG.generic.allowMentions && contentToDiscord.contains("@")) {
+					List<String> parsedList = new ArrayList<>();
+					Pattern pattern = Pattern.compile("@[^@]*?#\\d{4}");
+					Matcher matcher = pattern.matcher(contentToDiscord);
+					while (matcher.find()) {
+						String tagMention = matcher.group();
+						Member member = CHANNEL.getGuild().getMemberByTag(tagMention.substring(1));
+						if (member != null) {
+							parsedList.add(member.getUser().getName());
+							parsedList.add(member.getEffectiveName());
+
+							String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.WHITE;
+							contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, tagMention, member.getAsMention());
+							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, tagMention, formattedMention);
 						}
-						for (String name : names) {
-							for (Member member : CHANNEL.getMembers()) {
-								if (member.getUser().getName().equalsIgnoreCase(name)
-										|| (member.getNickname() != null && member.getNickname().equalsIgnoreCase(name))) {
-									contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, ("@" + name), member.getAsMention());
-									contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, ("@" + name), (Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.WHITE));
-								}
-							}
-							for (Role role : CHANNEL.getGuild().getRoles()) {
-								if (role.getName().equalsIgnoreCase(name)) {
-									contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, ("@" + name), role.getAsMention());
-									contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, ("@" + name), (Formatting.YELLOW + "@" + role.getName() + Formatting.WHITE));
-								}
-							}
-						}
-						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, "@everyone", (Formatting.YELLOW + "@everyone" + Formatting.WHITE));
-						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, "@here", (Formatting.YELLOW + "@here" + Formatting.WHITE));
 					}
+
+					for (Member member : CHANNEL.getMembers()) {
+						if (parsedList.contains(member.getUser().getName()) || parsedList.contains(member.getEffectiveName())) {
+							continue;
+						}
+
+						String usernameMention = "@" + member.getUser().getName();
+						String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.WHITE;
+
+						contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, usernameMention, member.getAsMention());
+						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, usernameMention, formattedMention);
+
+						if (member.getNickname() != null) {
+							String nicknameMention = "@" + member.getNickname();
+							contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, nicknameMention, member.getAsMention());
+							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, nicknameMention, formattedMention);
+						}
+					}
+					for (Role role : CHANNEL.getGuild().getRoles()) {
+						String roleMention = "@" + role.getName();
+						String formattedMention = Formatting.YELLOW + "@" + role.getName() + Formatting.WHITE;
+						contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, roleMention, role.getAsMention());
+						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, roleMention, formattedMention);
+					}
+					contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, "@everyone", Formatting.YELLOW + "@everyone" + Formatting.WHITE);
+					contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, "@here", Formatting.YELLOW + "@here" + Formatting.WHITE);
 				}
 
 				contentToMinecraft = MarkdownParser.parseMarkdown(contentToMinecraft);

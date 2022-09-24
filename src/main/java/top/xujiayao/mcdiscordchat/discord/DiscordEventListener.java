@@ -328,18 +328,27 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 
 			if (CONFIG.generic.formatChatMessages && referencedMessage.toString().contains("@")) {
-				String[] memberNames = StringUtils.substringsBetween(referencedMessage.toString(), "@", " ");
-				if (!StringUtils.substringAfterLast(referencedMessage.toString(), "@").contains(" ")) {
-					memberNames = ArrayUtils.add(memberNames, StringUtils.substringAfterLast(referencedMessage.toString(), "@"));
-				}
-				for (String memberName : memberNames) {
-					for (Member member : CHANNEL.getMembers()) {
-						if (member.getUser().getName().equalsIgnoreCase(memberName)
-								|| (member.getNickname() != null && member.getNickname().equalsIgnoreCase(memberName))) {
-							referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), ("@" + memberName), (Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.DARK_GRAY)));
-						}
+				String temp = referencedMessage.toString();
+
+				for (Member member : CHANNEL.getMembers()) {
+					String usernameMention = "@" + member.getUser().getName();
+					String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.DARK_GRAY;
+					temp = StringUtils.replaceIgnoreCase(temp, usernameMention, formattedMention);
+
+					if (member.getNickname() != null) {
+						String nicknameMention = "@" + member.getNickname();
+						temp = StringUtils.replaceIgnoreCase(temp, nicknameMention, formattedMention);
 					}
 				}
+				for (Role role : CHANNEL.getGuild().getRoles()) {
+					String roleMention = "@" + role.getName();
+					String formattedMention = Formatting.YELLOW + "@" + role.getName() + Formatting.DARK_GRAY;
+					temp = StringUtils.replaceIgnoreCase(temp, roleMention, formattedMention);
+				}
+				temp = StringUtils.replaceIgnoreCase(temp, "@everyone", Formatting.YELLOW + "@everyone" + Formatting.DARK_GRAY);
+				temp = StringUtils.replaceIgnoreCase(temp, "@here", Formatting.YELLOW + "@here" + Formatting.DARK_GRAY);
+
+				referencedMessage = new StringBuilder(temp);
 			}
 
 			finalReferencedMessage = MarkdownParser.parseMarkdown(referencedMessage.toString());
@@ -408,18 +417,27 @@ public class DiscordEventListener extends ListenerAdapter {
 		}
 
 		if (CONFIG.generic.formatChatMessages && message.toString().contains("@")) {
-			String[] memberNames = StringUtils.substringsBetween(message.toString(), "@", " ");
-			if (!StringUtils.substringAfterLast(message.toString(), "@").contains(" ")) {
-				memberNames = ArrayUtils.add(memberNames, StringUtils.substringAfterLast(message.toString(), "@"));
-			}
-			for (String memberName : memberNames) {
-				for (Member member : CHANNEL.getMembers()) {
-					if (member.getUser().getName().equalsIgnoreCase(memberName)
-							|| (member.getNickname() != null && member.getNickname().equalsIgnoreCase(memberName))) {
-						message = new StringBuilder(StringUtils.replaceIgnoreCase(message.toString(), ("@" + memberName), (Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.GRAY)));
-					}
+			String temp = message.toString();
+
+			for (Member member : CHANNEL.getMembers()) {
+				String usernameMention = "@" + member.getUser().getName();
+				String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.GRAY;
+				temp = StringUtils.replaceIgnoreCase(temp, usernameMention, formattedMention);
+
+				if (member.getNickname() != null) {
+					String nicknameMention = "@" + member.getNickname();
+					temp = StringUtils.replaceIgnoreCase(temp, nicknameMention, formattedMention);
 				}
 			}
+			for (Role role : CHANNEL.getGuild().getRoles()) {
+				String roleMention = "@" + role.getName();
+				String formattedMention = Formatting.YELLOW + "@" + role.getName() + Formatting.GRAY;
+				temp = StringUtils.replaceIgnoreCase(temp, roleMention, formattedMention);
+			}
+			temp = StringUtils.replaceIgnoreCase(temp, "@everyone", Formatting.YELLOW + "@everyone" + Formatting.GRAY);
+			temp = StringUtils.replaceIgnoreCase(temp, "@here", Formatting.YELLOW + "@here" + Formatting.GRAY);
+
+			message = new StringBuilder(temp);
 		}
 
 		String finalMessage = MarkdownParser.parseMarkdown(message.toString());
