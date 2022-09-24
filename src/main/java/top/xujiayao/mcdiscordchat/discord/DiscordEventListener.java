@@ -254,7 +254,7 @@ public class DiscordEventListener extends ListenerAdapter {
 					.replace("%server%", "Discord")
 					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : webhookName)
 					.replace("%roleName%", referencedMemberRoleName)
-					.replace("%message%", EmojiParser.parseToAliases(e.getMessage().getReferencedMessage().getContentDisplay())));
+					.replace("%message%", EmojiParser.parseToAliases(e.getMessage().getReferencedMessage().getContentDisplay().replace("\n", "\\n"))));
 		}
 
 		try {
@@ -267,7 +267,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				.replace("%server%", "Discord")
 				.replace("%name%", CONFIG.generic.useServerNickname ? Objects.requireNonNull(e.getMember()).getEffectiveName() : Objects.requireNonNull(e.getMember()).getUser().getName())
 				.replace("%roleName%", memberRoleName)
-				.replace("%message%", EmojiParser.parseToAliases(e.getMessage().getContentDisplay())));
+				.replace("%message%", EmojiParser.parseToAliases(e.getMessage().getContentDisplay().replace("\n", "\\n"))));
 
 		if (SERVER == null) {
 			return;
@@ -288,7 +288,9 @@ public class DiscordEventListener extends ListenerAdapter {
 		String finalReferencedMessage = "";
 
 		if (e.getMessage().getReferencedMessage() != null) {
-			referencedMessage = new StringBuilder(EmojiParser.parseToAliases(e.getMessage().getReferencedMessage().getContentDisplay()));
+			referencedMessage = new StringBuilder(EmojiParser.parseToAliases(e.getMessage().getReferencedMessage().getContentDisplay())
+					.replace("\\", "\\\\")
+					.replace("\n", "\\n"));
 
 			if (CONFIG.generic.formatChatMessages && !e.getMessage().getReferencedMessage().getAttachments().isEmpty()) {
 				if (!e.getMessage().getReferencedMessage().getContentDisplay().isBlank()) {
@@ -333,17 +335,17 @@ public class DiscordEventListener extends ListenerAdapter {
 				for (Member member : CHANNEL.getMembers()) {
 					String usernameMention = "@" + member.getUser().getName();
 					String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.DARK_GRAY;
-					temp = StringUtils.replaceIgnoreCase(temp, usernameMention, formattedMention);
+					temp = StringUtils.replaceIgnoreCase(temp, usernameMention, formattedMention.replace("\\", "\\\\"));
 
 					if (member.getNickname() != null) {
 						String nicknameMention = "@" + member.getNickname();
-						temp = StringUtils.replaceIgnoreCase(temp, nicknameMention, formattedMention);
+						temp = StringUtils.replaceIgnoreCase(temp, nicknameMention, formattedMention.replace("\\", "\\\\"));
 					}
 				}
 				for (Role role : CHANNEL.getGuild().getRoles()) {
 					String roleMention = "@" + role.getName();
 					String formattedMention = Formatting.YELLOW + "@" + role.getName() + Formatting.DARK_GRAY;
-					temp = StringUtils.replaceIgnoreCase(temp, roleMention, formattedMention);
+					temp = StringUtils.replaceIgnoreCase(temp, roleMention, formattedMention.replace("\\", "\\\\"));
 				}
 				temp = StringUtils.replaceIgnoreCase(temp, "@everyone", Formatting.YELLOW + "@everyone" + Formatting.DARK_GRAY);
 				temp = StringUtils.replaceIgnoreCase(temp, "@here", Formatting.YELLOW + "@here" + Formatting.DARK_GRAY);
@@ -377,7 +379,9 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 		}
 
-		StringBuilder message = new StringBuilder(EmojiParser.parseToAliases(e.getMessage().getContentDisplay()));
+		StringBuilder message = new StringBuilder(EmojiParser.parseToAliases(e.getMessage().getContentDisplay())
+				.replace("\\", "\\\\")
+				.replace("\n", "\\n"));
 
 		if (CONFIG.generic.formatChatMessages && !e.getMessage().getAttachments().isEmpty()) {
 			if (!e.getMessage().getContentDisplay().isBlank()) {
@@ -422,17 +426,17 @@ public class DiscordEventListener extends ListenerAdapter {
 			for (Member member : CHANNEL.getMembers()) {
 				String usernameMention = "@" + member.getUser().getName();
 				String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.GRAY;
-				temp = StringUtils.replaceIgnoreCase(temp, usernameMention, formattedMention);
+				temp = StringUtils.replaceIgnoreCase(temp, usernameMention, formattedMention.replace("\\", "\\\\"));
 
 				if (member.getNickname() != null) {
 					String nicknameMention = "@" + member.getNickname();
-					temp = StringUtils.replaceIgnoreCase(temp, nicknameMention, formattedMention);
+					temp = StringUtils.replaceIgnoreCase(temp, nicknameMention, formattedMention.replace("\\", "\\\\"));
 				}
 			}
 			for (Role role : CHANNEL.getGuild().getRoles()) {
 				String roleMention = "@" + role.getName();
 				String formattedMention = Formatting.YELLOW + "@" + role.getName() + Formatting.GRAY;
-				temp = StringUtils.replaceIgnoreCase(temp, roleMention, formattedMention);
+				temp = StringUtils.replaceIgnoreCase(temp, roleMention, formattedMention.replace("\\", "\\\\"));
 			}
 			temp = StringUtils.replaceIgnoreCase(temp, "@everyone", Formatting.YELLOW + "@everyone" + Formatting.GRAY);
 			temp = StringUtils.replaceIgnoreCase(temp, "@here", Formatting.YELLOW + "@here" + Formatting.GRAY);
