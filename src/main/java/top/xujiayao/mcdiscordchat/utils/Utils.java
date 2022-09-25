@@ -71,17 +71,14 @@ public class Utils {
 				String result = Objects.requireNonNull(response.body()).string();
 
 				JsonObject latestJson = new Gson().fromJson(result, JsonObject.class);
-				String latestVersion = latestJson.get("version").getAsString();
+
+				CONFIG.latestVersion = latestJson.get("version").getAsString();
+				ConfigManager.update();
 
 				StringBuilder message = new StringBuilder();
 
-				CONFIG.latestVersion = latestVersion;
-				ConfigManager.update();
-
-				if (!latestVersion.equals(VERSION)) {
-					if (CONFIG.latestVersion.equals(latestVersion)
-							&& CONFIG.latestCheckTime > (System.currentTimeMillis() - 172800000)
-							&& !isManualCheck) {
+				if (!CONFIG.latestVersion.equals(VERSION)) {
+					if (CONFIG.latestCheckTime > (System.currentTimeMillis() - 172800000) && !isManualCheck) {
 						return "";
 					}
 
@@ -90,7 +87,7 @@ public class Utils {
 
 					message.append(Translations.translate("utils.utils.cUpdate.newVersionAvailable"));
 					message.append("\n\n");
-					message.append("MCDiscordChat **").append(VERSION).append("** -> **").append(latestVersion).append("**");
+					message.append("MCDiscordChat **").append(VERSION).append("** -> **").append(CONFIG.latestVersion).append("**");
 					message.append("\n\n");
 					message.append(Translations.translate("utils.utils.cUpdate.downloadLink"));
 					message.append("\n\n");
@@ -349,6 +346,7 @@ public class Utils {
 
 				String message = checkUpdate(false);
 				if (!message.isEmpty()) {
+				// TODO if (!message.isEmpty() && CONFIG.generic.notifyUpdates) {
 					UPDATE_NOTIFICATION_CHANNEL.sendMessage(message).queue();
 				}
 			}

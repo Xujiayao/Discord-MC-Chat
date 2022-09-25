@@ -52,6 +52,8 @@ public class Config {
 		public int msptCheckInterval = 5000;
 		public int msptLimit = 50;
 
+		@SuppressWarnings("unused")
+		public boolean notifyUpdates = true;
 		public boolean mentionAdminsForUpdates = true;
 
 		public boolean updateChannelTopic = true;
