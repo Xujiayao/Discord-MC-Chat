@@ -237,7 +237,16 @@ public class DiscordEventListener extends ListenerAdapter {
 		String referencedMemberRoleName = "null";
 		String webhookName = "null";
 
+		String referencedMessageTemp = "null";
+		String messageTemp = e.getMessage().getContentDisplay();
+
 		if (e.getMessage().getReferencedMessage() != null) {
+			referencedMessageTemp = e.getMessage().getReferencedMessage().getContentDisplay();
+
+			if (StringUtils.countMatches(referencedMessageTemp, "\n") > CONFIG.generic.discordNewlineLimit) {
+				referencedMessageTemp = referencedMessageTemp.replace("\n", "\\n");
+			}
+
 			try {
 				referencedMember = Objects.requireNonNull(e.getMessage().getReferencedMessage().getMember());
 			} catch (Exception ex) {
@@ -254,7 +263,11 @@ public class DiscordEventListener extends ListenerAdapter {
 					.replace("%server%", "Discord")
 					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : webhookName)
 					.replace("%roleName%", referencedMemberRoleName)
-					.replace("%message%", EmojiParser.parseToAliases(e.getMessage().getReferencedMessage().getContentDisplay().replace("\n", "\\n"))));
+					.replace("%message%", EmojiParser.parseToAliases(referencedMessageTemp)));
+		}
+
+		if (StringUtils.countMatches(messageTemp, "\n") > CONFIG.generic.discordNewlineLimit) {
+			messageTemp = messageTemp.replace("\n", "\\n");
 		}
 
 		try {
@@ -267,7 +280,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				.replace("%server%", "Discord")
 				.replace("%name%", CONFIG.generic.useServerNickname ? Objects.requireNonNull(e.getMember()).getEffectiveName() : Objects.requireNonNull(e.getMember()).getUser().getName())
 				.replace("%roleName%", memberRoleName)
-				.replace("%message%", EmojiParser.parseToAliases(e.getMessage().getContentDisplay().replace("\n", "\\n"))));
+				.replace("%message%", EmojiParser.parseToAliases(messageTemp)));
 
 		if (SERVER == null) {
 			return;
@@ -288,12 +301,12 @@ public class DiscordEventListener extends ListenerAdapter {
 		String finalReferencedMessage = "";
 
 		if (e.getMessage().getReferencedMessage() != null) {
-			referencedMessage = new StringBuilder(EmojiParser.parseToAliases(e.getMessage().getReferencedMessage().getContentDisplay())
-					.replace("\n", "\\n")
-					.replace("\\", "\\\\"));
+			referencedMessage = new StringBuilder(EmojiParser.parseToAliases(referencedMessageTemp)
+						.replace("\\", "\\\\"));
+
 
 			if (CONFIG.generic.formatChatMessages && !e.getMessage().getReferencedMessage().getAttachments().isEmpty()) {
-				if (!e.getMessage().getReferencedMessage().getContentDisplay().isBlank()) {
+				if (!referencedMessageTemp.isBlank()) {
 					referencedMessage.append(" ");
 				}
 				for (Message.Attachment attachment : e.getMessage().getReferencedMessage().getAttachments()) {
@@ -309,7 +322,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 
 			if (CONFIG.generic.formatChatMessages && !e.getMessage().getReferencedMessage().getStickers().isEmpty()) {
-				if (!e.getMessage().getReferencedMessage().getContentDisplay().isBlank()) {
+				if (!referencedMessageTemp.isBlank()) {
 					referencedMessage.append(" ");
 				}
 				for (StickerItem ignored : e.getMessage().getReferencedMessage().getStickers()) {
@@ -379,12 +392,12 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 		}
 
-		StringBuilder message = new StringBuilder(EmojiParser.parseToAliases(e.getMessage().getContentDisplay())
-				.replace("\n", "\\n")
-				.replace("\\", "\\\\"));
+		StringBuilder message = new StringBuilder(EmojiParser.parseToAliases(messageTemp)
+					.replace("\\", "\\\\"));
+
 
 		if (CONFIG.generic.formatChatMessages && !e.getMessage().getAttachments().isEmpty()) {
-			if (!e.getMessage().getContentDisplay().isBlank()) {
+			if (!messageTemp.isBlank()) {
 				message.append(" ");
 			}
 			for (Message.Attachment attachment : e.getMessage().getAttachments()) {
@@ -400,7 +413,7 @@ public class DiscordEventListener extends ListenerAdapter {
 		}
 
 		if (CONFIG.generic.formatChatMessages && !e.getMessage().getStickers().isEmpty()) {
-			if (!e.getMessage().getContentDisplay().isBlank()) {
+			if (!messageTemp.isBlank()) {
 				message.append(" ");
 			}
 			for (StickerItem ignored : e.getMessage().getStickers()) {
