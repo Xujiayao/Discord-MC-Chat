@@ -80,6 +80,7 @@ MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Dis
   - 支持禁用所有解析
   - 支持游戏内显示 Discord 用户身份组颜色
   - 支持游戏内显示回复的消息
+  - 支持限制 Discord 消息的换行次数
   - 可广播玩家指令执行
     - 执行指令的玩家也可以看到自己执行的指令
     - 可排除执行特定指令的广播

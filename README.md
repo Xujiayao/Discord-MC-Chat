@@ -80,6 +80,7 @@ For translation contributions, language files are located in the `/wrapper/src/m
   - Support disabling all parsing
   - Support in-game display of Discord user role colour
   - Support in-game display of response messages
+  - Support limiting the number of newlines for Discord messages
   - Broadcast player command execution
     - Players who execute commands can also see the commands themselves
     - Exclude broadcasts for execution of specific commands
