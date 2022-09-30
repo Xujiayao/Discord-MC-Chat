@@ -128,14 +128,14 @@ public class DiscordEventListener extends ListenerAdapter {
 				e.getHook().sendMessage("```\n" + Utils.getStatsCommandMessage(type, name) + "\n```").queue();
 			}
 			case "reload" -> {
-				if (CONFIG.generic.adminsIds.contains(Objects.requireNonNull(e.getMember()).getId())) {
+				if (Utils.isAdmin(e.getMember())) {
 					e.getHook().sendMessage(Utils.reload()).queue();
 				} else {
 					e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.noPermission")).queue();
 				}
 			}
 			case "console" -> {
-				if (CONFIG.generic.adminsIds.contains(Objects.requireNonNull(e.getMember()).getId())) {
+				if (Utils.isAdmin(e.getMember())) {
 					String command = Objects.requireNonNull(e.getOption("command")).getAsString();
 					if (command.equals("stop") || command.equals("/stop")) {
 						e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.stoppingServer"))
@@ -160,7 +160,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				}
 			}
 			case "log" -> {
-				if (CONFIG.generic.adminsIds.contains(Objects.requireNonNull(e.getMember()).getId())) {
+				if (Utils.isAdmin(e.getMember())) {
 					String fileName = Objects.requireNonNull(e.getOption("file")).getAsString();
 
 					if (fileName.equals("latest.log")) {
@@ -188,7 +188,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				}
 			}
 			case "stop" -> {
-				if (CONFIG.generic.adminsIds.contains(Objects.requireNonNull(e.getMember()).getId())) {
+				if (Utils.isAdmin(e.getMember())) {
 					e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.stoppingServer"))
 							.submit()
 							.whenComplete((v, ex) -> SERVER.stop(true));

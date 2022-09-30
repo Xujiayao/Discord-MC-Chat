@@ -5,6 +5,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.fabricmc.loader.api.FabricLoader;
@@ -50,11 +53,33 @@ import static top.xujiayao.mcdiscordchat.Main.VERSION;
  */
 public class Utils {
 
+	public static boolean isAdmin(Member member) {
+		if (CONFIG.generic.adminsIds.contains(member.getId())) {
+			return true;
+		}
+
+		for (Role role : member.getRoles()) {
+			if (CONFIG.generic.adminsIds.contains(role.getId())) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public static String adminsMentionString() {
 		StringBuilder text = new StringBuilder();
 
 		for (String id : CONFIG.generic.adminsIds) {
-			text.append(Objects.requireNonNull(JDA.getUserById(id)).getAsMention()).append(" ");
+			User user = JDA.getUserById(id);
+			Role role = JDA.getRoleById(id);
+			if (user != null) {
+				text.append(user.getAsMention()).append(" ");
+			} else if (role != null) {
+				text.append(role.getAsMention()).append(" ");
+			} else {
+				throw new NullPointerException("User or role not found for target ID");
+			}
 		}
 
 		return text.toString();
