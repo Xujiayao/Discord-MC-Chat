@@ -218,7 +218,7 @@ public abstract class MixinServerPlayNetworkHandler {
 
 	@Inject(method = "executeCommand", at = @At(value = "HEAD"))
 	private void executeCommand(String input, CallbackInfo ci) {
-		if (CONFIG.generic.broadcastCommandExecution) {
+		if (CONFIG.generic.broadcastPlayerCommandExecution) {
 			for (String command : CONFIG.generic.excludedCommands) {
 				if (input.startsWith(command + " ")) {
 					return;

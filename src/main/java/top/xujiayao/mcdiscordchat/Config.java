@@ -36,7 +36,8 @@ public class Config {
 
 		public String avatarApi = "https://mc-heads.net/avatar/%player%.png";
 
-		public boolean broadcastCommandExecution = true;
+		public boolean broadcastPlayerCommandExecution = true;
+		public boolean broadcastSlashCommandExecution = true;
 
 		public boolean announceServerStartStop = true;
 		public boolean announcePlayerJoinLeave = true;
@@ -44,6 +45,7 @@ public class Config {
 		public boolean announceAdvancements = true;
 
 		public boolean allowMentions = true;
+
 		public boolean formatChatMessages = true;
 
 		public boolean useServerNickname = true;

@@ -217,7 +217,7 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 
 	@Inject(method = "onCommandExecution", at = @At(value = "HEAD"), cancellable = true)
 	private void onCommandExecution(CommandExecutionC2SPacket packet, CallbackInfo ci) {
-		if (CONFIG.generic.broadcastCommandExecution) {
+		if (CONFIG.generic.broadcastPlayerCommandExecution) {
 			if (hasIllegalCharacter(packet.command())) {
 				disconnect(Text.translatable("multiplayer.disconnect.illegal_characters"));
 			} else if (canAcceptMessage(packet.command(), packet.timestamp(), packet.acknowledgment())) {
