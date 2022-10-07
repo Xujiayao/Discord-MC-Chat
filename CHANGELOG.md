@@ -1,19 +1,25 @@
-# Changelog 更新日志
+# Changelog 更新日志 | 🥳 MCDC v2 Stable Release
 
-## MCDiscordChat 2.0.0-rc.1 for Minecraft 1.14+ - 2022/9/28
+## MCDiscordChat 2.0.0 for Minecraft 1.14+ - 2022/10/8
+
+This is the first stable release of MCDC v2.
+
+You are strongly recommended to update to this version if you are using any of the alpha or release candidate versions.
 
 ## New Features 新特性
 
-- Add newline limit for Discord messages (#86)
-  为 Discord 消息添加换行次数限制
+- Add role support for admin checks (#88)
+  为管理员检查添加身份组支持
+
+- Add option to disable slash command broadcast (#89)
+  添加禁用斜线命令广播的选项
+
+- Check for updates can be disabled
+  可禁用检查更新
 
 ## Changes 更改
 
-- Completely rewrite the parsing of mentions (@) (#87)
-  完全重写提及 (@) 的解析
-
-- Add appropriate spaces to Chinese death messages
-  中文的死亡消息添加适当空格
+N/A
 
 ## Removed 移除
 
@@ -25,4 +31,4 @@ N/A
 
 ## Detailed Information 详细信息
 
-https://github.com/Xujiayao/MCDiscordChat/compare/2.0.0-alpha.10...2.0.0-rc.1
+https://github.com/Xujiayao/MCDiscordChat/compare/2.0.0-rc.1...2.0.0
