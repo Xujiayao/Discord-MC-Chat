@@ -370,8 +370,7 @@ public class Utils {
 				}
 
 				String message = checkUpdate(false);
-				if (!message.isEmpty()) {
-				// TODO if (!message.isEmpty() && CONFIG.generic.notifyUpdates) {
+				if (!message.isEmpty() && CONFIG.generic.notifyUpdates) {
 					UPDATE_NOTIFICATION_CHANNEL.sendMessage(message).queue();
 				}
 			}
