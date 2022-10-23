@@ -23,6 +23,7 @@ import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_SEND_COUNT;
 
 /**
  * @author LofiTurtle
+ * @author Xujiayao
  */
 public class ConsoleLogListener implements Runnable {
 

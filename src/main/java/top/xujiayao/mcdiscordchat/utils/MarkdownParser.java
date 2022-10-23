@@ -1,3 +1,10 @@
+/*
+This file was obtained from BRForgers/DisFabric, licensed under the Mozilla Public License 2.0 (MPL-2.0).
+Author: allanf181 (Allan Fernando)
+Link to the original source: https://github.com/BRForgers/DisFabric (/src/main/java/br/com/brforgers/mods/disfabric/utils/MarkdownParser.java)
+Link to the license: https://raw.githubusercontent.com/BRForgers/DisFabric/master/LICENSE
+ */
+
 package top.xujiayao.mcdiscordchat.utils;
 
 import net.minecraft.util.Formatting;
@@ -8,6 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * @author allanf181
  * @author Xujiayao
  */
 public class MarkdownParser {
