@@ -88,8 +88,6 @@ public class Main implements DedicatedServerModInitializer {
 
 			JDA.awaitReady();
 
-			Utils.setBotActivity();
-
 			CHANNEL = JDA.getTextChannelById(CONFIG.generic.channelId);
 			if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
 				CONSOLE_LOG_CHANNEL = JDA.getTextChannelById(CONFIG.generic.consoleLogChannelId);
@@ -130,6 +128,8 @@ public class Main implements DedicatedServerModInitializer {
 			}
 
 			SERVER = server;
+
+			Utils.setBotActivity();
 
 			Utils.initCheckUpdateTimer();
 

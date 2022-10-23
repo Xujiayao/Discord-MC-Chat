@@ -291,9 +291,13 @@ public class Utils {
 
 	public static void setBotActivity() {
 		if (!CONFIG.generic.botPlayingStatus.isEmpty()) {
-			JDA.getPresence().setActivity(Activity.playing(CONFIG.generic.botPlayingStatus));
+			JDA.getPresence().setActivity(Activity.playing(CONFIG.generic.botPlayingStatus
+					.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerManager().getPlayerList().size()))
+					.replace("%maxPlayerCount%", Integer.toString(SERVER.getPlayerManager().getMaxPlayerCount()))));
 		} else if (!CONFIG.generic.botListeningStatus.isEmpty()) {
-			JDA.getPresence().setActivity(Activity.listening(CONFIG.generic.botListeningStatus));
+			JDA.getPresence().setActivity(Activity.listening(CONFIG.generic.botListeningStatus
+					.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerManager().getPlayerList().size()))
+					.replace("%maxPlayerCount%", Integer.toString(SERVER.getPlayerManager().getMaxPlayerCount()))));
 		} else {
 			JDA.getPresence().setActivity(null);
 		}
