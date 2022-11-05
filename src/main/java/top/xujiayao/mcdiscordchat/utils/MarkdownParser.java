@@ -27,9 +27,9 @@ public class MarkdownParser {
 		message = replaceWith(message, "(?<!\\\\)_", Formatting.ITALIC.toString(), Formatting.RESET.toString());
 		message = replaceWith(message, "(?<!\\\\)~~", Formatting.STRIKETHROUGH.toString(), Formatting.RESET.toString());
 
-		message = message.replaceAll("\\\\\\*", "*").replaceAll("\\\\_", "_").replaceAll("\\\\~", "~");
+		message = message.replace("\\\\*", "*").replace("\\\\_", "_").replace("\\\\~", "~");
 
-		message = message.replaceAll("\"", "\\\\\"");
+		message = message.replace("\"", "\\\"");
 
 		return message;
 	}
