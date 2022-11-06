@@ -313,7 +313,7 @@ public class Utils {
 						.addOption(OptionType.STRING, "name", Translations.translate("utils.utils.ubCommands.stats.name"), true))
 				.addCommands(Commands.slash("reload", Translations.translate("utils.utils.ubCommands.reload")))
 				.addCommands(Commands.slash("console", Translations.translate("utils.utils.ubCommands.console"))
-						.addOption(OptionType.STRING, "command", Translations.translate("utils.utils.ubCommands.console.command"), true))
+						.addOption(OptionType.STRING, "command", Translations.translate("utils.utils.ubCommands.console.command"), true, true))
 				.addCommands(Commands.slash("log", Translations.translate("utils.utils.ubCommands.log"))
 						.addOption(OptionType.STRING, "file", Translations.translate("utils.utils.ubCommands.log.file"), true, true))
 				.addCommands(Commands.slash("stop", Translations.translate("utils.utils.ubCommands.stop")))

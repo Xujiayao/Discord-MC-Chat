@@ -1,5 +1,10 @@
 package top.xujiayao.mcdiscordchat.discord;
 
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.ParseResults;
+import com.mojang.brigadier.suggestion.Suggestion;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.tree.CommandNode;
 import com.vdurmont.emoji.EmojiManager;
 import com.vdurmont.emoji.EmojiParser;
 import net.dv8tion.jda.api.entities.Member;
@@ -14,9 +19,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.utils.FileUpload;
 import net.fabricmc.loader.api.FabricLoader;
-//#if MC <= 11605
-//$$ import net.minecraft.server.command.ServerCommandSource;
-//#endif
+import net.minecraft.server.command.ServerCommandSource;
 //#if MC <= 11802
 //$$ import net.minecraft.text.LiteralText;
 //#endif
@@ -46,6 +49,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -219,6 +223,48 @@ public class DiscordEventListener extends ListenerAdapter {
 					.collect(Collectors.toList());
 
 			e.replyChoices(options).queue();
+		} else if (e.getName().equals("console") && e.getFocusedOption().getName().equals("command")) {
+			CommandDispatcher<ServerCommandSource> dispatcher = SERVER.getCommandManager().getDispatcher();
+
+			try {
+				String input = e.getFocusedOption().getValue();
+				if (input.startsWith("/")) {
+					input = input.substring(1);
+				}
+
+				List<String> temp = new ArrayList<>();
+
+				ParseResults<ServerCommandSource> results = dispatcher.parse(input, SERVER.getCommandSource());
+				Suggestions suggestions = dispatcher.getCompletionSuggestions(results).get();
+
+				int size = results.getContext().getNodes().size();
+				if (size > 0) {
+					Map<CommandNode<ServerCommandSource>, String> map = dispatcher.getSmartUsage(results.getContext().getNodes().get(size - 1).getNode(), SERVER.getCommandSource());
+
+					for (String string : map.values()) {
+						temp.add((string.length() > 100) ? string.substring(0, 99) : string);
+					}
+				}
+
+				for (Suggestion suggestion : suggestions.getList()) {
+					temp.add(suggestion.apply(input));
+				}
+
+				String[] commands = temp.toArray(new String[0]);
+
+				if (commands.length > 25) {
+					commands = Arrays.copyOfRange(commands, 0, 25);
+					commands[24] = "...";
+				}
+
+				List<Command.Choice> options = Stream.of(commands)
+						.map(command -> new Command.Choice(command, command))
+						.collect(Collectors.toList());
+
+				e.replyChoices(options).queue();
+			} catch (Exception ex) {
+				LOGGER.error(ExceptionUtils.getStackTrace(ex));
+			}
 		}
 	}
 
@@ -304,7 +350,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
 		if (e.getMessage().getReferencedMessage() != null) {
 			referencedMessage = new StringBuilder(EmojiParser.parseToAliases(referencedMessageTemp)
-						.replace("\\", "\\\\"));
+					.replace("\\", "\\\\"));
 
 
 			if (CONFIG.generic.formatChatMessages && !e.getMessage().getReferencedMessage().getAttachments().isEmpty()) {
@@ -395,7 +441,7 @@ public class DiscordEventListener extends ListenerAdapter {
 		}
 
 		StringBuilder message = new StringBuilder(EmojiParser.parseToAliases(messageTemp)
-					.replace("\\", "\\\\"));
+				.replace("\\", "\\\\"));
 
 
 		if (CONFIG.generic.formatChatMessages && !e.getMessage().getAttachments().isEmpty()) {
