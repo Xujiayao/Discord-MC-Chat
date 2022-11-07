@@ -56,8 +56,9 @@ For translation contributions, language files are located in the `/wrapper/src/m
 
 - Full multi-language support
 - Support multi-server mode (multi-server operation on the same Discord channel)
-- Support displaying server status using Discord channel topic feature
 - Minecraft <> Discord cross server chat
+  - Support displaying server status using Discord channel topic feature
+  - Support displaying server player count in bot activity status
   - Support Discord Webhook feature
     - Customizable Webhook Avatar API
     - Use the bot itself to send chat messages when Webhook URL is not filled
@@ -78,6 +79,7 @@ For translation contributions, language files are located in the `/wrapper/src/m
 - Discord Commands available
   - Use Discord to manage channels that can execute MCDC commands
   - Notify in-game players when someone executes an MCDC command
+  - /console command supports Minecraft command auto-completion
   - Normal Commands
     - /info                    | Query server running status
     - /help                    | Get a list of available commands
@@ -117,6 +119,14 @@ For translation contributions, language files are located in the `/wrapper/src/m
 - Check for updates regularly
   - Customizable update notification channel
   - Check for updates can be disabled
+
+Languages currently available:
+
+| Code | Language |
+| ----- | ----- |
+| `en_us` | English (US) |
+| `zh_cn` | 中文（简体） |
+| `ru_ru` | Русский (Россия) |
 
 ## Contributors
 

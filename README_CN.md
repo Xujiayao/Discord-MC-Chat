@@ -56,8 +56,9 @@ MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Dis
 
 - 全面的多语言支持
 - 支持多服务器模式（同 Discord 频道多服务器运行 MCDC）
-- 支持使用 Discord 频道主题功能显示服务器状态
 - Minecraft <> Discord 跨服聊天
+  - 支持使用 Discord 频道主题功能显示服务器状态
+  - 支持使用机器人活动状态显示服务器玩家数
   - 支持 Discord Webhook 功能
     - 可自定义 Webhook 玩家头像 API
     - 未填写 Webhook URL 时使用机器人自身发送聊天消息
@@ -78,6 +79,7 @@ MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Dis
 - 可使用 Discord 命令
   - 可使用 Discord 管理可执行 MCDC 命令的频道
   - 当有人执行 MCDC 命令时通知游戏内玩家
+  - /console 命令支持 Minecraft 命令自动补全
   - 普通命令
     - /info                    | 查询服务器运行状态
     - /help                    | 获取可用命令列表
@@ -117,6 +119,14 @@ MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Dis
 - 定期检查更新
   - 可自定义更新通知频道
   - 可禁用检查更新
+
+目前可用的语言：
+
+| 代码 | 语言 |
+| ----- | ----- |
+| `en_us` | English (US) |
+| `zh_cn` | 中文（简体） |
+| `ru_ru` | Русский (Россия) |
 
 ## 贡献者
 

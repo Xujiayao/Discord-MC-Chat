@@ -1,25 +1,22 @@
-# Changelog 更新日志 | 🥳 MCDC v2 Stable Release
+# Changelog 更新日志
 
-## MCDiscordChat 2.0.0 for Minecraft 1.14+ - 2022/10/8
-
-This is the first stable release of MCDC v2.
-
-You are strongly recommended to update to this version if you are using any of the alpha or release candidate versions.
+## MCDiscordChat 2.1.0 for Minecraft 1.14+ - 2022/11/7
 
 ## New Features 新特性
 
-- Add role support for admin checks (#88)
-  为管理员检查添加身份组支持
+- Russian translation (#94)
+  俄语翻译
 
-- Add option to disable slash command broadcast (#89)
-  添加禁用斜线命令广播的选项
+- Bot activity status supports displaying server player count (#90)
+  机器人活动状态支持显示服务器玩家数
 
-- Check for updates can be disabled
-  可禁用检查更新
+- Minecraft command auto-completion for Discord /console command (#25)
+  Discord /console 命令实现 Minecraft 命令自动补全
 
 ## Changes 更改
 
-N/A
+- Fix GSON Invalid escape sequence exception when escaping Markdown (#92)
+  修复转义 Markdown 时 GSON 解析报错
 
 ## Removed 移除
 
@@ -28,7 +25,8 @@ N/A
 ## Contributors 贡献者
 
 - @Xujiayao
+- @ZetThunder
 
 ## Detailed Information 详细信息
 
-https://github.com/Xujiayao/MCDiscordChat/compare/2.0.0-rc.1...2.0.0
+https://github.com/Xujiayao/MCDiscordChat/compare/2.0.0...2.1.0
