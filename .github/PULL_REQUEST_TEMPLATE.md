@@ -16,10 +16,6 @@
 
 <!-- Any GitHub issues related to this PR? If not, please fill in N/A. -->
 <!-- Example: Fix #ISSUE-NUMBER -->
-<!---->
-<!-- Start -->
-
-<!-- End -->
 
 ### Description
 
@@ -28,7 +24,3 @@
 <!---->
 <!-- For New Feature Pull Request: -->
 <!-- What new feature or change have you added? What does it improve? Please tell us what the new feature or change is with a clear and detailed description, add screenshots to help explain if possible. -->
-<!---->
-<!-- Start -->
-
-<!-- End -->
