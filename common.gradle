@@ -15,20 +15,20 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    modImplementation("net.dv8tion:JDA:5.0.0-alpha.22") {
+    modImplementation("net.dv8tion:JDA:5.0.0-beta.2") {
         exclude module: "opus-java"
     }
     modImplementation("net.sf.trove4j:trove4j:3.0.3")
     modImplementation("org.apache.commons:commons-collections4:4.4")
-    modImplementation("org.slf4j:slf4j-api:2.0.3")
+    modImplementation("org.slf4j:slf4j-api:2.0.5")
     modImplementation("com.neovisionaries:nv-websocket-client:2.14")
-    modImplementation("com.fasterxml.jackson.core:jackson-core:2.13.4")
-    modImplementation("com.fasterxml.jackson.core:jackson-databind:2.13.4.2")
-    modImplementation("com.fasterxml.jackson.core:jackson-annotations:2.13.4")
+    modImplementation("com.fasterxml.jackson.core:jackson-core:2.14.1")
+    modImplementation("com.fasterxml.jackson.core:jackson-databind:2.14.1")
+    modImplementation("com.fasterxml.jackson.core:jackson-annotations:2.14.1")
 
     modImplementation("com.squareup.okhttp3:okhttp:4.10.0")
     modImplementation("com.squareup.okio:okio:2.10.0")
-    modImplementation("org.jetbrains.kotlin:kotlin-stdlib:1.7.20")
+    modImplementation("org.jetbrains.kotlin:kotlin-stdlib:1.7.22")
 
     modImplementation("com.vdurmont:emoji-java:5.1.1")
     modImplementation("org.json:json:20220924")
