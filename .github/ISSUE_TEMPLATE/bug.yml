@@ -31,7 +31,7 @@ body:
       label: Minecraft Version
       description: |
         The version of Minecraft you are using?
-      placeholder: "Example: 1.19.2"
+      placeholder: "Example: 1.19.3"
     validations:
       required: true
   - type: input
