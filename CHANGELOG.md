@@ -1,32 +1,26 @@
 # Changelog 更新日志
 
-## MCDiscordChat 2.1.0 for Minecraft 1.14+ - 2022/11/7
+## MCDiscordChat 2.1.1 for Minecraft 1.14+ - 2022/12/10
 
 ## New Features 新特性
 
-- Russian translation (#94)
-  俄语翻译
-
-- Bot activity status supports displaying server player count (#90)
-  机器人活动状态支持显示服务器玩家数
-
-- Minecraft command auto-completion for Discord /console command (#25)
-  Discord /console 命令实现 Minecraft 命令自动补全
+- Compatible with version 1.19.3
+  兼容 1.19.3 版本
 
 ## Changes 更改
 
-- Fix GSON Invalid escape sequence exception when escaping Markdown (#92)
-  修复转义 Markdown 时 GSON 解析报错
+- Fix crash on start due to MixinLanguage class injection failure (#96)
+  修复由于 MixinLanguage 类注入失败导致的启动崩溃
 
 ## Removed 移除
 
-N/A
+- No longer compatible with versions 1.19.1 and 1.19.2
+  不再兼容 1.19.1 和 1.19.2 版本
 
 ## Contributors 贡献者
 
 - @Xujiayao
-- @ZetThunder
 
 ## Detailed Information 详细信息
 
-https://github.com/Xujiayao/MCDiscordChat/compare/2.0.0...2.1.0
+https://github.com/Xujiayao/MCDiscordChat/compare/2.1.0...2.1.1
