@@ -4,9 +4,6 @@ import com.mojang.authlib.GameProfile;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
-//#if MC >= 11900
-import net.minecraft.network.encryption.PlayerPublicKey;
-//#endif
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableTextContent;
@@ -30,14 +27,10 @@ import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
 @Mixin(ServerPlayerEntity.class)
 public abstract class MixinServerPlayerEntity extends PlayerEntity {
 
-	//#if MC >= 11900
-	private MixinServerPlayerEntity(World world, BlockPos pos, float yaw, GameProfile profile, PlayerPublicKey publicKey) {
-		super(world, pos, yaw, profile, publicKey);
+	//#if MC >= 11600
+	private MixinServerPlayerEntity(World world, BlockPos pos, float yaw, GameProfile profile) {
+		super(world, pos, yaw, profile);
 	}
-	//#elseif MC >= 11600
-	//$$ private MixinServerPlayerEntity(World world, BlockPos pos, float yaw, GameProfile profile) {
-	//$$ 	super(world, pos, yaw, profile);
-	//$$ }
 	//#else
 	//$$ private MixinServerPlayerEntity(World world, GameProfile profile) {
 	//$$  super(world, profile);
