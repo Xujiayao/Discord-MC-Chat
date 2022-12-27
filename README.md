@@ -131,3 +131,7 @@ Languages currently available:
 ## Contributors
 
 [![Contributors](https://contrib.rocks/image?repo=xujiayao/mcdiscordchat)](https://github.com/Xujiayao/mcdiscordchat/graphs/contributors)
+
+## Stargazers over time
+
+[![Stargazers over time](https://starchart.cc/Xujiayao/MCDiscordChat.svg)](https://starchart.cc/Xujiayao/MCDiscordChat)

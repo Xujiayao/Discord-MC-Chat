@@ -131,3 +131,7 @@ MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Dis
 ## 贡献者
 
 [![Contributors](https://contrib.rocks/image?repo=xujiayao/mcdiscordchat)](https://github.com/Xujiayao/mcdiscordchat/graphs/contributors)
+
+## 星标历史
+
+[![Stargazers over time](https://starchart.cc/Xujiayao/MCDiscordChat.svg)](https://starchart.cc/Xujiayao/MCDiscordChat)
