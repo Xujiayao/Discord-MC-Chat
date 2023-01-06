@@ -9,12 +9,9 @@ import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.minecraft.SharedConstants;
 import net.minecraft.network.listener.ServerPlayPacketListener;
-import net.minecraft.network.message.FilterMask;
 import net.minecraft.network.message.LastSeenMessageList;
-import net.minecraft.network.message.MessageBody;
 import net.minecraft.network.message.MessageChain;
 import net.minecraft.network.message.MessageChainTaskQueue;
-import net.minecraft.network.message.MessageLink;
 import net.minecraft.network.message.MessageType;
 import net.minecraft.network.message.SignedMessage;
 import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
@@ -44,6 +41,7 @@ import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
@@ -193,9 +191,12 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 				}
 
 				if (CONFIG.generic.formatChatMessages) {
-					MessageBody messageBody = MessageBody.ofUnsigned(packet.chatMessage());
-					MessageLink messageLink = MessageLink.of(player.getUuid());
-					server.getPlayerManager().broadcast(new SignedMessage(messageLink, null, messageBody, Text.Serializer.fromJson("[{\"text\":\"" + contentToMinecraft + "\"}]"), FilterMask.PASS_THROUGH), player, MessageType.params(MessageType.CHAT, player));
+					try {
+						SignedMessage signedMessage = getSignedMessage(packet, optional.get());
+						server.getPlayerManager().broadcast(signedMessage.withUnsignedContent(Objects.requireNonNull(Text.Serializer.fromJson("[{\"text\":\"" + contentToMinecraft + "\"}]"))), player, MessageType.params(MessageType.CHAT, player));
+					} catch (MessageChain.MessageChainException e) {
+						handleMessageChainException(e);
+					}
 				} else {
 					server.submit(() -> {
 						SignedMessage signedMessage;
