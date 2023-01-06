@@ -136,7 +136,7 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 
 							String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.WHITE;
 							contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, tagMention, member.getAsMention());
-							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, tagMention, formattedMention);
+							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, tagMention, MarkdownSanitizer.escape(formattedMention));
 						}
 					}
 
@@ -149,19 +149,19 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 						String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.WHITE;
 
 						contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, usernameMention, member.getAsMention());
-						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, usernameMention, formattedMention);
+						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, usernameMention, MarkdownSanitizer.escape(formattedMention));
 
 						if (member.getNickname() != null) {
 							String nicknameMention = "@" + member.getNickname();
 							contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, nicknameMention, member.getAsMention());
-							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, nicknameMention, formattedMention);
+							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, nicknameMention, MarkdownSanitizer.escape(formattedMention));
 						}
 					}
 					for (Role role : CHANNEL.getGuild().getRoles()) {
 						String roleMention = "@" + role.getName();
 						String formattedMention = Formatting.YELLOW + "@" + role.getName() + Formatting.WHITE;
 						contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, roleMention, role.getAsMention());
-						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, roleMention, formattedMention);
+						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, roleMention, MarkdownSanitizer.escape(formattedMention));
 					}
 					contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, "@everyone", Formatting.YELLOW + "@everyone" + Formatting.WHITE);
 					contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, "@here", Formatting.YELLOW + "@here" + Formatting.WHITE);

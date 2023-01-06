@@ -18,6 +18,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.utils.FileUpload;
+import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.command.ServerCommandSource;
 //#if MC <= 11802
@@ -347,82 +348,172 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 		}
 
-		StringBuilder referencedMessage;
 		String finalReferencedMessage = "";
+		String finalMessage = "";
 
-		if (e.getMessage().getReferencedMessage() != null) {
-			referencedMessage = new StringBuilder(EmojiParser.parseToAliases(referencedMessageTemp)
-					.replace("\\", "\\\\"));
+		if (CONFIG.generic.formatChatMessages) {
+			StringBuilder referencedMessage;
 
+			if (e.getMessage().getReferencedMessage() != null) {
+				referencedMessage = new StringBuilder(EmojiParser.parseToAliases(referencedMessageTemp));
 
-			if (CONFIG.generic.formatChatMessages && !e.getMessage().getReferencedMessage().getAttachments().isEmpty()) {
-				if (!referencedMessageTemp.isBlank()) {
-					referencedMessage.append(" ");
+				if (!e.getMessage().getReferencedMessage().getAttachments().isEmpty()) {
+					if (!referencedMessageTemp.isBlank()) {
+						referencedMessage.append(" ");
+					}
+					for (Message.Attachment attachment : e.getMessage().getReferencedMessage().getAttachments()) {
+						referencedMessage.append(Formatting.YELLOW).append(attachment.isSpoiler() ? "<SPOILER_" : "<");
+						if (attachment.isImage()) {
+							referencedMessage.append("image>");
+						} else if (attachment.isVideo()) {
+							referencedMessage.append("video>");
+						} else {
+							referencedMessage.append("file>");
+						}
+					}
 				}
-				for (Message.Attachment attachment : e.getMessage().getReferencedMessage().getAttachments()) {
-					referencedMessage.append(Formatting.YELLOW).append(attachment.isSpoiler() ? "<SPOILER_" : "<");
-					if (attachment.isImage()) {
-						referencedMessage.append("image>");
-					} else if (attachment.isVideo()) {
-						referencedMessage.append("video>");
-					} else {
-						referencedMessage.append("file>");
+
+				if (!e.getMessage().getReferencedMessage().getStickers().isEmpty()) {
+					if (!referencedMessageTemp.isBlank()) {
+						referencedMessage.append(" ");
+					}
+					for (StickerItem ignored : e.getMessage().getReferencedMessage().getStickers()) {
+						referencedMessage.append(Formatting.YELLOW).append("<sticker>");
+					}
+				}
+
+				if (StringUtils.countMatches(referencedMessage, ":") >= 2) {
+					String[] emojiNames = StringUtils.substringsBetween(referencedMessage.toString(), ":", ":");
+					for (String emojiName : emojiNames) {
+						List<RichCustomEmoji> emojis = JDA.getEmojisByName(emojiName, true);
+						if (!emojis.isEmpty()) {
+							referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.DARK_GRAY)));
+						} else if (EmojiManager.getForAlias(emojiName) != null) {
+							referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.DARK_GRAY)));
+						}
+					}
+				}
+
+				if (referencedMessage.toString().contains("@")) {
+					String temp = referencedMessage.toString();
+
+					for (Member member : CHANNEL.getMembers()) {
+						String usernameMention = "@" + member.getUser().getName();
+						String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.DARK_GRAY;
+						temp = StringUtils.replaceIgnoreCase(temp, usernameMention, MarkdownSanitizer.escape(formattedMention));
+
+						if (member.getNickname() != null) {
+							String nicknameMention = "@" + member.getNickname();
+							temp = StringUtils.replaceIgnoreCase(temp, nicknameMention, MarkdownSanitizer.escape(formattedMention));
+						}
+					}
+					for (Role role : CHANNEL.getGuild().getRoles()) {
+						String roleMention = "@" + role.getName();
+						String formattedMention = Formatting.YELLOW + "@" + role.getName() + Formatting.DARK_GRAY;
+						temp = StringUtils.replaceIgnoreCase(temp, roleMention, MarkdownSanitizer.escape(formattedMention));
+					}
+					temp = StringUtils.replaceIgnoreCase(temp, "@everyone", Formatting.YELLOW + "@everyone" + Formatting.DARK_GRAY);
+					temp = StringUtils.replaceIgnoreCase(temp, "@here", Formatting.YELLOW + "@here" + Formatting.DARK_GRAY);
+
+					referencedMessage = new StringBuilder(temp);
+				}
+
+				finalReferencedMessage = MarkdownParser.parseMarkdown(referencedMessage.toString().replace("\\", "\\\\"));
+
+				for (String protocol : new String[]{"http://", "https://"}) {
+					if (finalReferencedMessage.contains(protocol)) {
+						String[] links = StringUtils.substringsBetween(finalReferencedMessage, protocol, " ");
+						if (!StringUtils.substringAfterLast(finalReferencedMessage, protocol).contains(" ")) {
+							links = ArrayUtils.add(links, StringUtils.substringAfterLast(finalReferencedMessage, protocol));
+						}
+						for (String link : links) {
+							if (link.contains("\n")) {
+								link = StringUtils.substringBefore(link, "\n");
+							}
+
+							String hyperlinkInsert;
+							if (StringUtils.containsIgnoreCase(link, "gif")
+									&& StringUtils.containsIgnoreCase(link, "tenor.com")) {
+								hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"<gif>\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
+							} else {
+								hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"" + protocol + link + "\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
+							}
+							finalReferencedMessage = StringUtils.replaceIgnoreCase(finalReferencedMessage, (protocol + link), hyperlinkInsert);
+						}
 					}
 				}
 			}
 
-			if (CONFIG.generic.formatChatMessages && !e.getMessage().getReferencedMessage().getStickers().isEmpty()) {
-				if (!referencedMessageTemp.isBlank()) {
-					referencedMessage.append(" ");
+			StringBuilder message = new StringBuilder(EmojiParser.parseToAliases(messageTemp));
+
+			if (!e.getMessage().getAttachments().isEmpty()) {
+				if (!messageTemp.isBlank()) {
+					message.append(" ");
 				}
-				for (StickerItem ignored : e.getMessage().getReferencedMessage().getStickers()) {
-					referencedMessage.append(Formatting.YELLOW).append("<sticker>");
+				for (Message.Attachment attachment : e.getMessage().getAttachments()) {
+					message.append(Formatting.YELLOW).append(attachment.isSpoiler() ? "<SPOILER_" : "<");
+					if (attachment.isImage()) {
+						message.append("image>");
+					} else if (attachment.isVideo()) {
+						message.append("video>");
+					} else {
+						message.append("file>");
+					}
 				}
 			}
 
-			if (CONFIG.generic.formatChatMessages && StringUtils.countMatches(referencedMessage, ":") >= 2) {
-				String[] emojiNames = StringUtils.substringsBetween(referencedMessage.toString(), ":", ":");
+			if (!e.getMessage().getStickers().isEmpty()) {
+				if (!messageTemp.isBlank()) {
+					message.append(" ");
+				}
+				for (StickerItem ignored : e.getMessage().getStickers()) {
+					message.append(Formatting.YELLOW).append("<sticker>");
+				}
+			}
+
+			if (StringUtils.countMatches(message, ":") >= 2) {
+				String[] emojiNames = StringUtils.substringsBetween(message.toString(), ":", ":");
 				for (String emojiName : emojiNames) {
 					List<RichCustomEmoji> emojis = JDA.getEmojisByName(emojiName, true);
 					if (!emojis.isEmpty()) {
-						referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.DARK_GRAY)));
+						message = new StringBuilder(StringUtils.replaceIgnoreCase(message.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.GRAY)));
 					} else if (EmojiManager.getForAlias(emojiName) != null) {
-						referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.DARK_GRAY)));
+						message = new StringBuilder(StringUtils.replaceIgnoreCase(message.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.GRAY)));
 					}
 				}
 			}
 
-			if (CONFIG.generic.formatChatMessages && referencedMessage.toString().contains("@")) {
-				String temp = referencedMessage.toString();
+			if (message.toString().contains("@")) {
+				String temp = message.toString();
 
 				for (Member member : CHANNEL.getMembers()) {
 					String usernameMention = "@" + member.getUser().getName();
-					String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.DARK_GRAY;
-					temp = StringUtils.replaceIgnoreCase(temp, usernameMention, formattedMention.replace("\\", "\\\\"));
+					String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.GRAY;
+					temp = StringUtils.replaceIgnoreCase(temp, usernameMention, MarkdownSanitizer.escape(formattedMention));
 
 					if (member.getNickname() != null) {
 						String nicknameMention = "@" + member.getNickname();
-						temp = StringUtils.replaceIgnoreCase(temp, nicknameMention, formattedMention.replace("\\", "\\\\"));
+						temp = StringUtils.replaceIgnoreCase(temp, nicknameMention, MarkdownSanitizer.escape(formattedMention));
 					}
 				}
 				for (Role role : CHANNEL.getGuild().getRoles()) {
 					String roleMention = "@" + role.getName();
-					String formattedMention = Formatting.YELLOW + "@" + role.getName() + Formatting.DARK_GRAY;
-					temp = StringUtils.replaceIgnoreCase(temp, roleMention, formattedMention.replace("\\", "\\\\"));
+					String formattedMention = Formatting.YELLOW + "@" + role.getName() + Formatting.GRAY;
+					temp = StringUtils.replaceIgnoreCase(temp, roleMention, MarkdownSanitizer.escape(formattedMention));
 				}
-				temp = StringUtils.replaceIgnoreCase(temp, "@everyone", Formatting.YELLOW + "@everyone" + Formatting.DARK_GRAY);
-				temp = StringUtils.replaceIgnoreCase(temp, "@here", Formatting.YELLOW + "@here" + Formatting.DARK_GRAY);
+				temp = StringUtils.replaceIgnoreCase(temp, "@everyone", Formatting.YELLOW + "@everyone" + Formatting.GRAY);
+				temp = StringUtils.replaceIgnoreCase(temp, "@here", Formatting.YELLOW + "@here" + Formatting.GRAY);
 
-				referencedMessage = new StringBuilder(temp);
+				message = new StringBuilder(temp);
 			}
 
-			finalReferencedMessage = MarkdownParser.parseMarkdown(referencedMessage.toString());
+			finalMessage = MarkdownParser.parseMarkdown(message.toString().replace("\\", "\\\\"));
 
 			for (String protocol : new String[]{"http://", "https://"}) {
-				if (CONFIG.generic.formatChatMessages && finalReferencedMessage.contains(protocol)) {
-					String[] links = StringUtils.substringsBetween(finalReferencedMessage, protocol, " ");
-					if (!StringUtils.substringAfterLast(finalReferencedMessage, protocol).contains(" ")) {
-						links = ArrayUtils.add(links, StringUtils.substringAfterLast(finalReferencedMessage, protocol));
+				if (finalMessage.contains(protocol)) {
+					String[] links = StringUtils.substringsBetween(finalMessage, protocol, " ");
+					if (!StringUtils.substringAfterLast(finalMessage, protocol).contains(" ")) {
+						links = ArrayUtils.add(links, StringUtils.substringAfterLast(finalMessage, protocol));
 					}
 					for (String link : links) {
 						if (link.contains("\n")) {
@@ -436,98 +527,8 @@ public class DiscordEventListener extends ListenerAdapter {
 						} else {
 							hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"" + protocol + link + "\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
 						}
-						finalReferencedMessage = StringUtils.replaceIgnoreCase(finalReferencedMessage, (protocol + link), hyperlinkInsert);
+						finalMessage = StringUtils.replaceIgnoreCase(finalMessage, (protocol + link), hyperlinkInsert);
 					}
-				}
-			}
-		}
-
-		StringBuilder message = new StringBuilder(EmojiParser.parseToAliases(messageTemp)
-				.replace("\\", "\\\\"));
-
-
-		if (CONFIG.generic.formatChatMessages && !e.getMessage().getAttachments().isEmpty()) {
-			if (!messageTemp.isBlank()) {
-				message.append(" ");
-			}
-			for (Message.Attachment attachment : e.getMessage().getAttachments()) {
-				message.append(Formatting.YELLOW).append(attachment.isSpoiler() ? "<SPOILER_" : "<");
-				if (attachment.isImage()) {
-					message.append("image>");
-				} else if (attachment.isVideo()) {
-					message.append("video>");
-				} else {
-					message.append("file>");
-				}
-			}
-		}
-
-		if (CONFIG.generic.formatChatMessages && !e.getMessage().getStickers().isEmpty()) {
-			if (!messageTemp.isBlank()) {
-				message.append(" ");
-			}
-			for (StickerItem ignored : e.getMessage().getStickers()) {
-				message.append(Formatting.YELLOW).append("<sticker>");
-			}
-		}
-
-		if (CONFIG.generic.formatChatMessages && StringUtils.countMatches(message, ":") >= 2) {
-			String[] emojiNames = StringUtils.substringsBetween(message.toString(), ":", ":");
-			for (String emojiName : emojiNames) {
-				List<RichCustomEmoji> emojis = JDA.getEmojisByName(emojiName, true);
-				if (!emojis.isEmpty()) {
-					message = new StringBuilder(StringUtils.replaceIgnoreCase(message.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.GRAY)));
-				} else if (EmojiManager.getForAlias(emojiName) != null) {
-					message = new StringBuilder(StringUtils.replaceIgnoreCase(message.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.GRAY)));
-				}
-			}
-		}
-
-		if (CONFIG.generic.formatChatMessages && message.toString().contains("@")) {
-			String temp = message.toString();
-
-			for (Member member : CHANNEL.getMembers()) {
-				String usernameMention = "@" + member.getUser().getName();
-				String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.GRAY;
-				temp = StringUtils.replaceIgnoreCase(temp, usernameMention, formattedMention.replace("\\", "\\\\"));
-
-				if (member.getNickname() != null) {
-					String nicknameMention = "@" + member.getNickname();
-					temp = StringUtils.replaceIgnoreCase(temp, nicknameMention, formattedMention.replace("\\", "\\\\"));
-				}
-			}
-			for (Role role : CHANNEL.getGuild().getRoles()) {
-				String roleMention = "@" + role.getName();
-				String formattedMention = Formatting.YELLOW + "@" + role.getName() + Formatting.GRAY;
-				temp = StringUtils.replaceIgnoreCase(temp, roleMention, formattedMention.replace("\\", "\\\\"));
-			}
-			temp = StringUtils.replaceIgnoreCase(temp, "@everyone", Formatting.YELLOW + "@everyone" + Formatting.GRAY);
-			temp = StringUtils.replaceIgnoreCase(temp, "@here", Formatting.YELLOW + "@here" + Formatting.GRAY);
-
-			message = new StringBuilder(temp);
-		}
-
-		String finalMessage = MarkdownParser.parseMarkdown(message.toString());
-
-		for (String protocol : new String[]{"http://", "https://"}) {
-			if (CONFIG.generic.formatChatMessages && finalMessage.contains(protocol)) {
-				String[] links = StringUtils.substringsBetween(finalMessage, protocol, " ");
-				if (!StringUtils.substringAfterLast(finalMessage, protocol).contains(" ")) {
-					links = ArrayUtils.add(links, StringUtils.substringAfterLast(finalMessage, protocol));
-				}
-				for (String link : links) {
-					if (link.contains("\n")) {
-						link = StringUtils.substringBefore(link, "\n");
-					}
-
-					String hyperlinkInsert;
-					if (StringUtils.containsIgnoreCase(link, "gif")
-							&& StringUtils.containsIgnoreCase(link, "tenor.com")) {
-						hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"<gif>\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
-					} else {
-						hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"" + protocol + link + "\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
-					}
-					finalMessage = StringUtils.replaceIgnoreCase(finalMessage, (protocol + link), hyperlinkInsert);
 				}
 			}
 		}
@@ -539,7 +540,7 @@ public class DiscordEventListener extends ListenerAdapter {
 						.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()).replace("\\", "\\\\") : webhookName)
 						.replace("%roleName%", referencedMemberRoleName)
 						.replace("%roleColor%", "#" + Integer.toHexString((referencedMember != null) ? referencedMember.getColorRaw() : Role.DEFAULT_COLOR_RAW))
-						.replace("%message%", finalReferencedMessage));
+						.replace("%message%", CONFIG.generic.formatChatMessages ? finalReferencedMessage : EmojiParser.parseToAliases(referencedMessageTemp)));
 
 				SERVER.getPlayerManager().getPlayerList().forEach(
 						player -> player.sendMessage(referenceFinalText, false));
@@ -550,7 +551,7 @@ public class DiscordEventListener extends ListenerAdapter {
 					.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\"))
 					.replace("%roleName%", memberRoleName)
 					.replace("%roleColor%", "#" + Integer.toHexString(e.getMember().getColorRaw()))
-					.replace("%message%", finalMessage));
+					.replace("%message%", CONFIG.generic.formatChatMessages ? finalMessage : EmojiParser.parseToAliases(messageTemp)));
 
 			SERVER.getPlayerManager().getPlayerList().forEach(
 					player -> player.sendMessage(finalText, false));
