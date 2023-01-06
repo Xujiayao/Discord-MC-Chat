@@ -215,9 +215,11 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 					});
 				}
 
-				sendMessage(contentToDiscord, false);
-				if (CONFIG.multiServer.enable) {
-					MULTI_SERVER.sendMessage(false, true, false, player.getEntityName(), CONFIG.generic.formatChatMessages ? contentToMinecraft : packet.chatMessage());
+				if (CONFIG.generic.broadcastChatMessages) {
+					sendMessage(contentToDiscord, false);
+					if (CONFIG.multiServer.enable) {
+						MULTI_SERVER.sendMessage(false, true, false, player.getEntityName(), CONFIG.generic.formatChatMessages ? contentToMinecraft : packet.chatMessage());
+					}
 				}
 			}
 		}

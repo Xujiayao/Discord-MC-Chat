@@ -44,11 +44,11 @@ public class Config {
 		public boolean announceDeathMessages = true;
 		public boolean announceAdvancements = true;
 
-		public boolean allowMentions = true;
-
+		public boolean broadcastChatMessages = true;
 		public boolean formatChatMessages = true;
-
+		public boolean allowMentions = true;
 		public boolean useServerNickname = true;
+		public int discordNewlineLimit = 3;
 
 		public boolean announceHighMspt = true;
 		public int msptCheckInterval = 5000;
@@ -59,8 +59,6 @@ public class Config {
 
 		public boolean updateChannelTopic = true;
 		public int channelTopicUpdateInterval = 600000;
-
-		public int discordNewlineLimit = 3;
 
 		public List<String> excludedCommands = List.of("/msg", "/tell", "/tellraw", "/w");
 

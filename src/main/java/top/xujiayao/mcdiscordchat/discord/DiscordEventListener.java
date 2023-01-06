@@ -532,26 +532,28 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 		}
 
-		if (e.getMessage().getReferencedMessage() != null) {
-			Text referenceFinalText = Text.Serializer.fromJson(Translations.translateMessage("message.formattedResponseMessage")
+		if (CONFIG.generic.broadcastChatMessages) {
+			if (e.getMessage().getReferencedMessage() != null) {
+				Text referenceFinalText = Text.Serializer.fromJson(Translations.translateMessage("message.formattedResponseMessage")
+						.replace("%server%", "Discord")
+						.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()).replace("\\", "\\\\") : webhookName)
+						.replace("%roleName%", referencedMemberRoleName)
+						.replace("%roleColor%", "#" + Integer.toHexString((referencedMember != null) ? referencedMember.getColorRaw() : Role.DEFAULT_COLOR_RAW))
+						.replace("%message%", finalReferencedMessage));
+
+				SERVER.getPlayerManager().getPlayerList().forEach(
+						player -> player.sendMessage(referenceFinalText, false));
+			}
+
+			Text finalText = Text.Serializer.fromJson(Translations.translateMessage("message.formattedChatMessage")
 					.replace("%server%", "Discord")
-					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()).replace("\\", "\\\\") : webhookName)
-					.replace("%roleName%", referencedMemberRoleName)
-					.replace("%roleColor%", "#" + Integer.toHexString((referencedMember != null) ? referencedMember.getColorRaw() : Role.DEFAULT_COLOR_RAW))
-					.replace("%message%", finalReferencedMessage));
+					.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\"))
+					.replace("%roleName%", memberRoleName)
+					.replace("%roleColor%", "#" + Integer.toHexString(e.getMember().getColorRaw()))
+					.replace("%message%", finalMessage));
 
 			SERVER.getPlayerManager().getPlayerList().forEach(
-					player -> player.sendMessage(referenceFinalText, false));
+					player -> player.sendMessage(finalText, false));
 		}
-
-		Text finalText = Text.Serializer.fromJson(Translations.translateMessage("message.formattedChatMessage")
-				.replace("%server%", "Discord")
-				.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\"))
-				.replace("%roleName%", memberRoleName)
-				.replace("%roleColor%", "#" + Integer.toHexString(Objects.requireNonNull(e.getMember()).getColorRaw()))
-				.replace("%message%", finalMessage));
-
-		SERVER.getPlayerManager().getPlayerList().forEach(
-				player -> player.sendMessage(finalText, false));
 	}
 }
