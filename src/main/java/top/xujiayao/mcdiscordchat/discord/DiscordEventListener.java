@@ -280,6 +280,8 @@ public class DiscordEventListener extends ListenerAdapter {
 			return;
 		}
 
+		Objects.requireNonNull(e.getMember());
+
 		Member referencedMember = null;
 		String memberRoleName;
 		String referencedMemberRoleName = "null";
@@ -319,14 +321,14 @@ public class DiscordEventListener extends ListenerAdapter {
 		}
 
 		try {
-			memberRoleName = Objects.requireNonNull(e.getMember()).getRoles().get(0).getName();
+			memberRoleName = e.getMember().getRoles().get(0).getName();
 		} catch (Exception ex) {
 			memberRoleName = "null";
 		}
 
 		LOGGER.info(Translations.translateMessage("message.unformattedChatMessage")
 				.replace("%server%", "Discord")
-				.replace("%name%", CONFIG.generic.useServerNickname ? Objects.requireNonNull(e.getMember()).getEffectiveName() : Objects.requireNonNull(e.getMember()).getUser().getName())
+				.replace("%name%", CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName())
 				.replace("%roleName%", memberRoleName)
 				.replace("%message%", EmojiParser.parseToAliases(messageTemp)));
 
