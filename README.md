@@ -57,6 +57,7 @@ For translation contributions, language files are located in the `/wrapper/src/m
 - Full multi-language support
 - Support multi-server mode (multi-server operation on the same Discord channel)
 - Minecraft <> Discord cross server chat
+  - Support disabling Discord and in-game chat broadcasts
   - Support displaying server status using Discord channel topic feature
   - Support displaying server player count in bot activity status
   - Support Discord Webhook feature

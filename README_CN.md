@@ -57,6 +57,7 @@ MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Dis
 - 全面的多语言支持
 - 支持多服务器模式（同 Discord 频道多服务器运行 MCDC）
 - Minecraft <> Discord 跨服聊天
+  - 支持禁用 Discord 和游戏内聊天广播
   - 支持使用 Discord 频道主题功能显示服务器状态
   - 支持使用机器人活动状态显示服务器玩家数
   - 支持 Discord Webhook 功能

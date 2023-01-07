@@ -1,1 +1,1 @@
-{"version":"2.1.1","changelog":"<https://github.com/Xujiayao/MCDiscordChat/releases/latest>"}
+{"version":"2.1.2","changelog":"<https://github.com/Xujiayao/MCDiscordChat/releases/latest>\n\n> The 'chat message validation failure' issue in 1.19.3 has been fixed in this new version.\n> \n> You may remove the 'no-chat-reports' mod and set `formatChatMessages` back to `true` in MCDC config now."}
