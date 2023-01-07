@@ -28,7 +28,7 @@ dependencies {
 
     modImplementation("com.squareup.okhttp3:okhttp:4.10.0")
     modImplementation("com.squareup.okio:okio:2.10.0")
-    modImplementation("org.jetbrains.kotlin:kotlin-stdlib:1.7.22")
+    modImplementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.0")
 
     modImplementation("com.vdurmont:emoji-java:5.1.1")
     modImplementation("org.json:json:20220924")

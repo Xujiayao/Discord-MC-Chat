@@ -31,7 +31,7 @@ dependencies {
 
     include("com.squareup.okhttp3:okhttp:4.10.0")
     include("com.squareup.okio:okio:2.10.0")
-    include("org.jetbrains.kotlin:kotlin-stdlib:1.7.22")
+    include("org.jetbrains.kotlin:kotlin-stdlib:1.8.0")
 
     include("com.vdurmont:emoji-java:5.1.1")
     include("org.json:json:20220924")
