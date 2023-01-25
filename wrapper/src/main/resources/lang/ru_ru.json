@@ -165,5 +165,5 @@
   "death.fell.assist.item": "%1$s был обречён на падение %2$s с помощью %3$s",
   "death.fell.finish": "%1$s упал с высоты и был добит %2$s",
   "death.fell.finish.item": "%1$s упал с высоты и был добит %2$s с помощью %3$s",
-  "death.fell.killer": "%1$s был обречён на падение",
+  "death.fell.killer": "%1$s был обречён на падение"
 }
