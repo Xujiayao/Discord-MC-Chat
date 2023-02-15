@@ -18,25 +18,25 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    include("net.dv8tion:JDA:5.0.0-beta.2") {
+    include("net.dv8tion:JDA:5.0.0-beta.3") {
         exclude module: "opus-java"
     }
     include("net.sf.trove4j:trove4j:3.0.3")
     include("org.apache.commons:commons-collections4:4.4")
     include("org.slf4j:slf4j-api:2.0.6")
     include("com.neovisionaries:nv-websocket-client:2.14")
-    include("com.fasterxml.jackson.core:jackson-core:2.14.1")
-    include("com.fasterxml.jackson.core:jackson-databind:2.14.1")
-    include("com.fasterxml.jackson.core:jackson-annotations:2.14.1")
+    include("com.fasterxml.jackson.core:jackson-core:2.14.2")
+    include("com.fasterxml.jackson.core:jackson-databind:2.14.2")
+    include("com.fasterxml.jackson.core:jackson-annotations:2.14.2")
 
     include("com.squareup.okhttp3:okhttp:4.10.0")
     include("com.squareup.okio:okio:2.10.0")
-    include("org.jetbrains.kotlin:kotlin-stdlib:1.8.0")
+    include("org.jetbrains.kotlin:kotlin-stdlib:1.8.10")
 
     include("com.vdurmont:emoji-java:5.1.1")
     include("org.json:json:20220924")
 
-    include("com.google.code.gson:gson:2.10")
+    include("com.google.code.gson:gson:2.10.1")
 }
 
 def fabric_subprojects = project.parent.subprojects.findAll({
