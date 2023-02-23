@@ -540,7 +540,7 @@ public class DiscordEventListener extends ListenerAdapter {
 						.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()).replace("\\", "\\\\") : webhookName)
 						.replace("%roleName%", referencedMemberRoleName)
 						.replace("%roleColor%", "#" + Integer.toHexString((referencedMember != null) ? referencedMember.getColorRaw() : Role.DEFAULT_COLOR_RAW))
-						.replace("%message%", CONFIG.generic.formatChatMessages ? finalReferencedMessage : EmojiParser.parseToAliases(referencedMessageTemp)));
+						.replace("%message%", CONFIG.generic.formatChatMessages ? finalReferencedMessage : EmojiParser.parseToAliases(referencedMessageTemp).replace("\"", "\\\"")));
 
 				SERVER.getPlayerManager().getPlayerList().forEach(
 						player -> player.sendMessage(referenceFinalText, false));
@@ -551,7 +551,7 @@ public class DiscordEventListener extends ListenerAdapter {
 					.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\"))
 					.replace("%roleName%", memberRoleName)
 					.replace("%roleColor%", "#" + Integer.toHexString(e.getMember().getColorRaw()))
-					.replace("%message%", CONFIG.generic.formatChatMessages ? finalMessage : EmojiParser.parseToAliases(messageTemp)));
+					.replace("%message%", CONFIG.generic.formatChatMessages ? finalMessage : EmojiParser.parseToAliases(messageTemp).replace("\"", "\\\"")));
 
 			SERVER.getPlayerManager().getPlayerList().forEach(
 					player -> player.sendMessage(finalText, false));
