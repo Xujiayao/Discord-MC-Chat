@@ -107,7 +107,7 @@ MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Dis
     - 来自 Discord 的回复消息
     - 来自其它服务器的消息
   - Discord
-    - 在服务器自动时
+    - 在服务器启动时
     - 在服务器关闭时
     - 在玩家加入服务器时
     - 在玩家离开服务器时
