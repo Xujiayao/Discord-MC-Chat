@@ -57,10 +57,12 @@ public abstract class MixinServerPlayerEntity extends PlayerEntity {
 			}
 
 			CHANNEL.sendMessage(Translations.translateMessage("message.deathMessage")
-					.replace("%deathMessage%", MarkdownSanitizer.escape(Translations.translate(key, args)))).queue();
+					.replace("%deathMessage%", MarkdownSanitizer.escape(Translations.translate(key, args)))
+					.replace("%playerName%", MarkdownSanitizer.escape(this.getEntityName()))).queue();
 			if (CONFIG.multiServer.enable) {
 				MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.deathMessage")
-						.replace("%deathMessage%", MarkdownSanitizer.escape(Translations.translate(key, args))));
+						.replace("%deathMessage%", MarkdownSanitizer.escape(Translations.translate(key, args)))
+						.replace("%playerName%", MarkdownSanitizer.escape(this.getEntityName())));
 			}
 		}
 	}
