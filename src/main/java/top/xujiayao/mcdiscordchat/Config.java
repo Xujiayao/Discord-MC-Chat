@@ -94,8 +94,8 @@ public class Config {
 		public String deathMessage = "";
 
 		public String advancementTask = "";
-		public String advancementChallenge = "";
 		public String advancementGoal = "";
+		public String advancementChallenge = "";
 
 		public String highMspt = "";
 
