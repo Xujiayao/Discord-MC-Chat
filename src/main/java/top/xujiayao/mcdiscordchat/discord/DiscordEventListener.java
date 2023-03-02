@@ -91,7 +91,6 @@ public class DiscordEventListener extends ListenerAdapter {
 
 		if (CONFIG.generic.broadcastSlashCommandExecution) {
 			Text commandNoticeText = Text.Serializer.fromJson(Translations.translateMessage("message.formattedCommandNotice")
-					.replace("%server%", (CONFIG.multiServer.enable ? CONFIG.multiServer.name : "Discord"))
 					.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\"))
 					.replace("%roleName%", e.getMember().getRoles().get(0).getName())
 					.replace("%roleColor%", "#" + Integer.toHexString(e.getMember().getColorRaw()))
