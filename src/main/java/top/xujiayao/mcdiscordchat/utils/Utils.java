@@ -12,7 +12,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.math.MathHelper;
 import okhttp3.CacheControl;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -224,7 +223,7 @@ public class Utils {
 		}
 
 		// Server TPS
-		double serverTickTime = MathHelper.average(SERVER.lastTickLengths) * 1.0E-6D;
+		double serverTickTime = average(SERVER.lastTickLengths) * 1.0E-6D;
 		message.append(Translations.translate("utils.utils.gicMessage.serverTps", String.format("%.2f", Math.min(1000.0 / serverTickTime, 20))));
 
 		// Server MSPT
@@ -324,7 +323,7 @@ public class Utils {
 		MSPT_MONITOR_TIMER.schedule(new TimerTask() {
 			@Override
 			public void run() {
-				double mspt = MathHelper.average(SERVER.lastTickLengths) * 1.0E-6D;
+				double mspt = average(SERVER.lastTickLengths) * 1.0E-6D;
 
 				if (mspt > CONFIG.generic.msptLimit) {
 					CHANNEL.sendMessage(Translations.translateMessage("message.highMspt")
@@ -379,5 +378,14 @@ public class Utils {
 				}
 			}
 		}, 3600000, 21600000);
+	}
+
+	public static double average(long[] array) {
+		long sum = 0L;
+		for (final long i : array) {
+			sum += i;
+		}
+
+		return sum / (double) array.length;
 	}
 }

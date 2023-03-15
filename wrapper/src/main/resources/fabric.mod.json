@@ -36,6 +36,9 @@
     },
     {
       "file": "META-INF/jars/MCDiscordChat-1.19.3-${version}.jar"
+    },
+    {
+      "file": "META-INF/jars/MCDiscordChat-1.19.4-${version}.jar"
     }
   ]
 }
