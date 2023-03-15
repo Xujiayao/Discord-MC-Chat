@@ -22,7 +22,7 @@ body:
       label: Java Version
       description: |
         The version of Java you are using?
-      placeholder: "Example: 17.0.5"
+      placeholder: "Example: 17.0.6"
     validations:
       required: true
   - type: input
@@ -31,7 +31,7 @@ body:
       label: Minecraft Version
       description: |
         The version of Minecraft you are using?
-      placeholder: "Example: 1.19.3"
+      placeholder: "Example: 1.19.4"
     validations:
       required: true
   - type: input
@@ -40,7 +40,7 @@ body:
       label: MCDiscordChat Version
       description: |
         The version of MCDiscordChat you are using?
-      placeholder: "Example: 2.1.2"
+      placeholder: "Example: 2.1.3"
     validations:
       required: true
   - type: textarea

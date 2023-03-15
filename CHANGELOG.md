@@ -1,28 +1,29 @@
 # Changelog 更新日志
 
-## MCDiscordChat 2.1.2 for Minecraft 1.14+ - 2023/1/7
+## MCDiscordChat 2.1.3 for Minecraft 1.14+ - 2023/3/16
 
-The 'chat message validation failure' issue in 1.19.3 has been fixed in this new version.
-You may remove the 'no-chat-reports' mod and set `formatChatMessages` back to `true` in MCDC config now.
+This version still supports versions 1.19.2 and 1.19.3, which have been integrated into the same file.
 
-1.19.3 中的 "聊天消息验证失败" 问题已在此新版本中修复。
-你现在可以删除 "no-chat-reports" 模组并在 MCDC 配置中将 `formatChatMessages` 改回 `true`。
+此版本仍然支持 1.19.2 和 1.19.3 版本，已集成到同一个文件中。
 
 ## New Features 新特性
 
-- Re-add support for version 1.19.2 (#101)
-  重新添加对 1.19.2 版本的支持
+- Support using %playerName% placeholder for custom death messages (#115)
+  自定义死亡消息支持 %playerName% 占位符
 
-- Add option to disable Discord and in-game chat broadcasts (#103)
-  添加禁用 Discord 和游戏内聊天广播的选项
+- Compatible with version 1.19.4
+  兼容 1.19.4 版本
 
 ## Changes 更改
 
-- Fix chat message validation failure (#100)
-  修复聊天记录验证失败报错
+- Fix ru_ru lang causing player disconnections on death (#111)
+  修复 ru_ru 语言导致玩家死亡时报错
 
-- Fix in-game highlighted mentions not being escaped (#104)
-  修复游戏内高亮提及没有进行转义
+- Fix modded death source causing player disconnections on death (#114)
+  修复来自模组的死亡源导致玩家死亡时报错
+
+- Fix exception when Discord message contains quotation marks (#119)
+  修复 Discord 消息包含引号时报错
 
 ## Removed 移除
 
@@ -34,4 +35,4 @@ N/A
 
 ## Detailed Information 详细信息
 
-https://github.com/Xujiayao/MCDiscordChat/compare/2.1.1...2.1.2
+https://github.com/Xujiayao/MCDiscordChat/compare/2.1.2...2.1.3
