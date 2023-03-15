@@ -32,7 +32,10 @@
       "file": "META-INF/jars/MCDiscordChat-1.18.x-${version}.jar"
     },
     {
-      "file": "META-INF/jars/MCDiscordChat-1.19.x-${version}.jar"
+      "file": "META-INF/jars/MCDiscordChat-1.19.2-${version}.jar"
+    },
+    {
+      "file": "META-INF/jars/MCDiscordChat-1.19.3-${version}.jar"
     }
   ]
 }
