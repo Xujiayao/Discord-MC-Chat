@@ -236,10 +236,16 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 			} else {
 				Optional<LastSeenMessageList> optional = validateMessage(packet.command(), packet.timestamp(), packet.acknowledgment());
 				if (optional.isPresent()) {
+					server.submit(() -> {
+						handleCommandExecution(packet, optional.get());
+						checkForSpam();
+					});
+
 					String input = "/" + packet.command();
 
 					for (String command : CONFIG.generic.excludedCommands) {
 						if (input.startsWith(command + " ")) {
+							ci.cancel();
 							return;
 						}
 					}
@@ -253,8 +259,8 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 					if (MINECRAFT_SEND_COUNT <= 20) {
 						Text text = Text.of("<" + player.getEntityName() + "> " + input);
 
-						List<ServerPlayerEntity> list = new ArrayList<>(server.getPlayerManager().getPlayerList());
-						list.forEach(serverPlayerEntity -> serverPlayerEntity.sendMessage(text, false));
+						server.getPlayerManager().getPlayerList().forEach(
+								player -> player.sendMessage(text, false));
 
 						SERVER.sendMessage(text);
 
@@ -263,11 +269,6 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 							MULTI_SERVER.sendMessage(false, true, false, player.getEntityName(), MarkdownSanitizer.escape(input));
 						}
 					}
-
-					server.submit(() -> {
-						handleCommandExecution(packet, optional.get());
-						checkForSpam();
-					});
 				}
 			}
 

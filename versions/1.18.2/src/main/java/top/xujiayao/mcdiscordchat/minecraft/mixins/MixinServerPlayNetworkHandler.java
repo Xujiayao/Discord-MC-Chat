@@ -234,8 +234,8 @@ public abstract class MixinServerPlayNetworkHandler {
 			if (MINECRAFT_SEND_COUNT <= 20) {
 				Text text = new LiteralText("<").append(player.getEntityName()).append("> ").append(input);
 
-				List<ServerPlayerEntity> list = new ArrayList<>(server.getPlayerManager().getPlayerList());
-				list.forEach(serverPlayerEntity -> serverPlayerEntity.sendMessage(text, false));
+				server.getPlayerManager().getPlayerList().forEach(
+						player -> player.sendMessage(text, false));
 
 				SERVER.sendSystemMessage(text, player.getUuid());
 

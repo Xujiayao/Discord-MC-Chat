@@ -220,8 +220,8 @@ public abstract class MixinServerPlayNetworkHandler implements ServerPlayPacketL
 			if (MINECRAFT_SEND_COUNT <= 20) {
 				Text text = new LiteralText("<").append(player.getEntityName()).append("> ").append(input);
 
-				List<ServerPlayerEntity> list = new ArrayList<>(server.getPlayerManager().getPlayerList());
-				list.forEach(serverPlayerEntity -> serverPlayerEntity.sendMessage(text));
+				server.getPlayerManager().getPlayerList().forEach(
+						player -> player.sendMessage(text));
 
 				SERVER.sendMessage(text);
 
