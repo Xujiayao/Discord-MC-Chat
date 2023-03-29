@@ -167,50 +167,24 @@ public class Main implements DedicatedServerModInitializer {
 			}
 
 			if (CONFIG.generic.updateChannelTopic) {
-				if (CONFIG.generic.announceServerStartStop) {
-					CHANNEL.sendMessage(Translations.translateMessage("message.serverStopped"))
-							.submit()
-							.whenComplete((v, ex) -> {
-								String topic = Translations.translateMessage("message.offlineChannelTopic")
-										.replace("%lastUpdateTime%", Long.toString(Instant.now().getEpochSecond()));
+					
+				String topic = Translations.translateMessage("message.offlineChannelTopic")
+						.replace("%lastUpdateTime%", Long.toString(Instant.now().getEpochSecond()));
 
-								CHANNEL.getManager().setTopic(topic)
-										.submit()
-										.whenComplete((v2, ex2) -> {
-											if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
-												CONSOLE_LOG_CHANNEL.getManager().setTopic(topic)
-														.submit()
-														.whenComplete((v3, ex3) -> JDA.shutdownNow());
-											} else {
-												JDA.shutdownNow();
-											}
-										});
-							});
-				} else {
-					String topic = Translations.translateMessage("message.offlineChannelTopic")
-							.replace("%lastUpdateTime%", Long.toString(Instant.now().getEpochSecond()));
-
-					CHANNEL.getManager().setTopic(topic)
-							.submit()
-							.whenComplete((v2, ex2) -> {
-								if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
-									CONSOLE_LOG_CHANNEL.getManager().setTopic(topic)
-											.submit()
-											.whenComplete((v3, ex3) -> JDA.shutdownNow());
-								} else {
-									JDA.shutdownNow();
-								}
-							});
-				}
-			} else {
-				if (CONFIG.generic.announceServerStartStop) {
-					CHANNEL.sendMessage(Translations.translateMessage("message.serverStopped"))
-							.submit()
-							.whenComplete((v, ex) -> JDA.shutdownNow());
-				} else {
-					JDA.shutdownNow();
-				}
+				CHANNEL.getManager().setTopic(topic).queue();		
+				
 			}
+				
+			if (CONFIG.generic.announceServerStartStop) {
+				CHANNEL.sendMessage(Translations.translateMessage("message.serverStopped"))
+						.submit()
+						.whenComplete((v3, ex3) -> JDA.shutdownNow());					
+			} else {
+				JDA.shutdownNow();
+			}
+
+			HTTP_CLIENT.connectionPool().evictAll();
+			HTTP_CLIENT.dispatcher().executorService().shutdown();
 		});
 	}
 }
