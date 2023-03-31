@@ -33,6 +33,7 @@ import top.xujiayao.mcdiscordchat.utils.Utils;
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
 import static top.xujiayao.mcdiscordchat.Main.HTTP_CLIENT;
+import static top.xujiayao.mcdiscordchat.Main.JDA;
 import static top.xujiayao.mcdiscordchat.Main.LOGGER;
 import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
 
@@ -77,7 +78,7 @@ public class MixinPlayerManager {
 				JsonObject body = new JsonObject();
 				body.addProperty("content", content);
 				body.addProperty("username", ((CONFIG.multiServer.enable) ? ("[" + CONFIG.multiServer.name + "] " + username) : username));
-				body.addProperty("avatar_url", "https://cdn.jsdelivr.net/gh/Xujiayao/MCDiscordChat@master/src/main/resources/assets/mcdiscordchat/icon.png");
+				body.addProperty("avatar_url", JDA.getSelfUser().getAvatarUrl());
 				if (!CONFIG.generic.allowMentions) {
 					body.add("allowed_mentions", new Gson().fromJson("{\"parse\":[]}", JsonObject.class));
 				}
