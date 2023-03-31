@@ -326,13 +326,17 @@ public class Utils {
 				double mspt = average(SERVER.lastTickLengths) * 1.0E-6D;
 
 				if (mspt > CONFIG.generic.msptLimit) {
-					CHANNEL.sendMessage(Translations.translateMessage("message.highMspt")
+					String message = Translations.translateMessage("message.highMspt")
 							.replace("%mspt%", String.format("%.2f", mspt))
-							.replace("%msptLimit%", Integer.toString(CONFIG.generic.msptLimit))).queue();
+							.replace("%msptLimit%", Integer.toString(CONFIG.generic.msptLimit));
+
+					if (CONFIG.generic.consoleLogChannelId.isEmpty()) {
+						CHANNEL.sendMessage(message).queue();
+					} else {
+						CONSOLE_LOG_CHANNEL.sendMessage(message).queue();
+					}
 					if (CONFIG.multiServer.enable) {
-						MULTI_SERVER.sendMessage(false, false, false, null, MarkdownParser.parseMarkdown(Translations.translateMessage("message.highMspt")
-								.replace("%mspt%", String.format("%.2f", mspt))
-								.replace("%msptLimit%", Integer.toString(CONFIG.generic.msptLimit))));
+						MULTI_SERVER.sendMessage(false, false, false, null, MarkdownParser.parseMarkdown(message));
 					}
 				}
 			}
