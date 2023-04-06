@@ -33,6 +33,7 @@ import top.xujiayao.mcdiscordchat.utils.Translations;
 import top.xujiayao.mcdiscordchat.utils.Utils;
 
 import java.io.File;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Timer;
 
@@ -158,14 +159,6 @@ public class Main implements DedicatedServerModInitializer {
 				LOGGER.error(ExceptionUtils.getStackTrace(e));
 			}
 
-			if (CONFIG.multiServer.enable) {
-				if (CONFIG.generic.announceServerStartStop) {
-					MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.serverStopped"));
-				}
-				MULTI_SERVER.bye();
-				MULTI_SERVER.stopMultiServer();
-			}
-
 			if (CONFIG.generic.updateChannelTopic) {
 				String topic = Translations.translateMessage("message.offlineChannelTopic")
 						.replace("%lastUpdateTime%", Long.toString(Instant.now().getEpochSecond()));
@@ -176,16 +169,39 @@ public class Main implements DedicatedServerModInitializer {
 				}
 			}
 
+			if (CONFIG.multiServer.enable) {
+				if (CONFIG.generic.announceServerStartStop) {
+					MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.serverStopped"));
+				}
+				MULTI_SERVER.bye();
+				MULTI_SERVER.stopMultiServer();
+			}
+
 			if (CONFIG.generic.announceServerStartStop) {
 				CHANNEL.sendMessage(Translations.translateMessage("message.serverStopped"))
 						.submit()
-						.whenComplete((v, ex) -> JDA.shutdownNow());
+						.whenComplete((v, ex) -> shutdown());
 			} else {
-				JDA.shutdownNow();
+				shutdown();
 			}
-
-			HTTP_CLIENT.connectionPool().evictAll();
-			HTTP_CLIENT.dispatcher().executorService().shutdown();
 		});
+	}
+
+	private void shutdown() {
+		try {
+			JDA.shutdown();
+			if (!JDA.awaitShutdown(Duration.ofSeconds(10))) {
+				if (CONFIG.generic.shutdownImmediately) {
+					JDA.shutdownNow();
+				}
+				if (!JDA.awaitShutdown(Duration.ofSeconds(900))) {
+					JDA.shutdownNow();
+					HTTP_CLIENT.connectionPool().evictAll();
+					HTTP_CLIENT.dispatcher().executorService().shutdown();
+				}
+			}
+		} catch (Exception e) {
+			LOGGER.error(ExceptionUtils.getStackTrace(e));
+		}
 	}
 }
