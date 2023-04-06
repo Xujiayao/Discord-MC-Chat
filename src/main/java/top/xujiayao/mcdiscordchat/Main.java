@@ -167,18 +167,19 @@ public class Main implements DedicatedServerModInitializer {
 			}
 
 			if (CONFIG.generic.updateChannelTopic) {
-					
 				String topic = Translations.translateMessage("message.offlineChannelTopic")
 						.replace("%lastUpdateTime%", Long.toString(Instant.now().getEpochSecond()));
 
-				CHANNEL.getManager().setTopic(topic).queue();		
-				
+				CHANNEL.getManager().setTopic(topic).queue();
+				if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
+					CONSOLE_LOG_CHANNEL.getManager().setTopic(topic).queue();
+				}
 			}
-				
+
 			if (CONFIG.generic.announceServerStartStop) {
 				CHANNEL.sendMessage(Translations.translateMessage("message.serverStopped"))
 						.submit()
-						.whenComplete((v3, ex3) -> JDA.shutdownNow());					
+						.whenComplete((v, ex) -> JDA.shutdownNow());
 			} else {
 				JDA.shutdownNow();
 			}
