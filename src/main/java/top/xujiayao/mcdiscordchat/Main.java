@@ -191,15 +191,12 @@ public class Main implements DedicatedServerModInitializer {
 		try {
 			JDA.shutdown();
 			if (!JDA.awaitShutdown(Duration.ofSeconds(10))) {
-				if (CONFIG.generic.shutdownImmediately) {
+				if (CONFIG.generic.shutdownImmediately || !JDA.awaitShutdown(Duration.ofSeconds(900))) {
 					JDA.shutdownNow();
-				}
-				if (!JDA.awaitShutdown(Duration.ofSeconds(900))) {
-					JDA.shutdownNow();
-					HTTP_CLIENT.connectionPool().evictAll();
-					HTTP_CLIENT.dispatcher().executorService().shutdown();
 				}
 			}
+			HTTP_CLIENT.connectionPool().evictAll();
+			HTTP_CLIENT.dispatcher().executorService().shutdown();
 		} catch (Exception e) {
 			LOGGER.error(ExceptionUtils.getStackTrace(e));
 		}
