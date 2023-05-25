@@ -50,7 +50,7 @@ If you are interested in contributing to MCDC, you can submit a pull request on 
 
 For code contributions, the build file is located in the `/wrapper/build/libs/` folder.
 
-For translation contributions, language files are located in the `/wrapper/src/main/resources/lang/` folder. Copy `en_us.json` and rename the new one to your language code to get started. Please provide translations for all keys in the entire file, except those keys beginning with the `death` prefix, which are the official Minecraft translations.
+For translation contributions, language files are located in the `/wrapper/src/main/resources/lang/` folder. Copy `en_us.json` and rename the new one to your language code to get started. Please provide translations for the entire file for all keys except those starting with the `death` prefix. The death messages are official translations for Minecraft, which may sync from the official translations at any time.
 
 ## Features
 
@@ -123,11 +123,13 @@ For translation contributions, language files are located in the `/wrapper/src/m
 
 Languages currently available:
 
-| Code | Language |
-| ----- | ----- |
-| `en_us` | English (US) |
-| `zh_cn` | 中文（简体） |
-| `ru_ru` | Русский (Россия) |
+| Code    | Language          |
+|---------|-------------------|
+| `en_us` | English (US)      |
+| `zh_cn` | 中文（简体）            |
+| `ru_ru` | Русский (Россия)  |
+| `ko_kr` | 한국어（대한민국）         |
+| `fr_fr` | Français (France) |
 
 ## Contributors
 
