@@ -50,7 +50,7 @@ MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Dis
 
 对于代码贡献，构建文件位于 `/wrapper/build/libs/` 文件夹中。
 
-对于翻译贡献，语言文件位于 `/wrapper/src/main/resources/lang/` 文件夹中。复制 `en_us.json` 并将新的文件重命名为您的语言代码以开始翻译。请提供整个文件中所有键的翻译，除了以 `death` 前缀开头的，那些是以 Minecraft 官方翻译为准。
+对于翻译贡献，语言文件位于 `/wrapper/src/main/resources/lang/` 文件夹中。复制 `en_us.json` 并将新的文件重命名为您的语言代码以开始翻译。请为整个文件中除了以 `death` 前缀开头的键之外其它所有键提供翻译。死亡消息是 Minecraft 的官方翻译，可随时从官方翻译同步。
 
 ## 功能特色
 
@@ -123,11 +123,13 @@ MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Dis
 
 目前可用的语言：
 
-| 代码 | 语言 |
-| ----- | ----- |
-| `en_us` | English (US) |
-| `zh_cn` | 中文（简体） |
-| `ru_ru` | Русский (Россия) |
+| 代码      | 语言                |
+|---------|-------------------|
+| `en_us` | English (US)      |
+| `zh_cn` | 中文（简体）            |
+| `ru_ru` | Русский (Россия)  |
+| `ko_kr` | 한국어（대한민국）         |
+| `fr_fr` | Français (France) |
 
 ## 贡献者
 
