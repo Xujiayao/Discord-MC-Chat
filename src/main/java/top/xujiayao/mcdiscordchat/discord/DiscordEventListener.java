@@ -82,17 +82,24 @@ public class DiscordEventListener extends ListenerAdapter {
 			return;
 		}
 
+		String roleName;
+		try {
+			roleName = Objects.requireNonNull(e.getMember()).getRoles().get(0).getName();
+		} catch (Exception ex) {
+			roleName = "null";
+		}
+
 		LOGGER.info(Translations.translateMessage("message.unformattedOtherMessage")
 				.replace("%server%", (CONFIG.multiServer.enable ? CONFIG.multiServer.name : "Discord"))
 				.replace("%message%", Translations.translateMessage("message.unformattedCommandNotice")
 						.replace("%name%", CONFIG.generic.useServerNickname ? Objects.requireNonNull(e.getMember()).getEffectiveName() : Objects.requireNonNull(e.getMember()).getUser().getName())
-						.replace("%roleName%", e.getMember().getRoles().get(0).getName())
+						.replace("%roleName%", roleName)
 						.replace("%command%", e.getCommandString())));
 
 		if (CONFIG.generic.broadcastSlashCommandExecution) {
 			Text commandNoticeText = Text.Serializer.fromJson(Translations.translateMessage("message.formattedCommandNotice")
 					.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\"))
-					.replace("%roleName%", e.getMember().getRoles().get(0).getName())
+					.replace("%roleName%", roleName)
 					.replace("%roleColor%", "#" + Integer.toHexString(e.getMember().getColorRaw()))
 					.replace("%command%", e.getCommandString()));
 
