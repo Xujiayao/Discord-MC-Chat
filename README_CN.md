@@ -89,7 +89,7 @@ MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Dis
   - 管理员命令
     - /reload                  | 重新加载 MCDiscordChat 配置文件（仅限管理员）
     - /console \<command\>     | 在服务器控制台中执行命令（仅限管理员）
-    - /log                     | 获取指定的服务器日志（仅限管理员）
+    - /log \<file\>            | 获取指定的服务器日志（仅限管理员）
     - /stop                    | 停止服务器（仅限管理员）
 - 可使用 Minecraft 命令
   - 仅限管理员的命令仅对 4 级管理员可用

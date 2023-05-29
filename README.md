@@ -89,7 +89,7 @@ For translation contributions, language files are located in the `/wrapper/src/m
   - Admin Commands
     - /reload                  | Reload MCDiscordChat config file (admin only)
     - /console \<command\>     | Execute a command in the server console (admin only)
-    - /log                     | Get the specified server log (admin only)
+    - /log \<file\>            | Get the specified server log (admin only)
     - /stop                    | Stop the server (admin only)
 - Minecraft Commands available
   - Admin-only commands require a level 4 operator at minimum
