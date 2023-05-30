@@ -14,7 +14,7 @@ This version still supports versions 1.19.2 and 1.19.3, which have been integrat
 - Announce high MSPT at the console log channel when the console log feature is enabled (#125)
   启用控制台日志功能时将 MSPT 警告发送到控制台日志频道
 
-- Add an option to flexibly choose whether to wait for the rate limit to complete (#129)
+- Add an option to flexibly choose whether to wait for the rate limit to reset (#129)
   添加选项供灵活选择是否等待速率限制重置
 
 - Korean translation (#136)
