@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static top.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.LOGGER;
@@ -27,7 +28,9 @@ import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_SEND_COUNT;
  */
 public class ConsoleLogListener implements Runnable {
 
-	private final boolean readFileHistory;
+	private final        boolean readFileHistory;
+	private static final Pattern newlinePattern = Pattern.compile("\n");
+	private static final Pattern formatPattern = Pattern.compile("§.");
 
 	public ConsoleLogListener(boolean readFileHistory) {
 		this.readFileHistory = readFileHistory;
@@ -87,8 +90,11 @@ public class ConsoleLogListener implements Runnable {
 									// create the message batch
 									messageBatch.append(currentLine);
 									messageBatch.append("\n");
+
 									if (newMessageIterator.hasNext()) {
 										currentLine = newMessageIterator.next();
+										currentLine =
+												formatPattern.matcher(currentLine).replaceAll("");
 									} else {
 										finishedSendingMessages = true;
 										break;
@@ -98,11 +104,14 @@ public class ConsoleLogListener implements Runnable {
 								if (messageBatch.isEmpty()) {
 									// currentLine is somehow larger than char limit
 									messageBatch.append(currentLine);
+									messageBatch.append("\n");
 								}
 
-								messageBatch.deleteCharAt(messageBatch.lastIndexOf("\n"));
-								sendLogChannelMessage(messageBatch.toString());
-								messageBatch.delete(0, messageBatch.length());
+								if (!messageBatch.isEmpty()) {
+									messageBatch.deleteCharAt(messageBatch.lastIndexOf("\n"));
+									sendLogChannelMessage(messageBatch.toString());
+									messageBatch.delete(0, messageBatch.length());
+								}
 							}
 						}
 
@@ -126,6 +135,9 @@ public class ConsoleLogListener implements Runnable {
 		} else if (message.length() > 1900) {
 			message = message.substring(0, 1900) + "...";
 		}
+
+		message = "`" + message + "`";
+		message = newlinePattern.matcher(message).replaceAll("`\n`");
 
 		if ((System.currentTimeMillis() - MINECRAFT_LAST_RESET_TIME) > 20_000) {
 			MINECRAFT_SEND_COUNT = 0;
