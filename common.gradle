@@ -15,16 +15,16 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    modImplementation("net.dv8tion:JDA:5.0.0-beta.9") {
+    modImplementation("net.dv8tion:JDA:5.0.0-beta.10") {
         exclude module: "opus-java"
     }
     modImplementation("net.sf.trove4j:trove4j:3.0.3")
     modImplementation("org.apache.commons:commons-collections4:4.4")
     modImplementation("org.slf4j:slf4j-api:2.0.7")
     modImplementation("com.neovisionaries:nv-websocket-client:2.14")
-    modImplementation("com.fasterxml.jackson.core:jackson-core:2.15.1")
-    modImplementation("com.fasterxml.jackson.core:jackson-databind:2.15.1")
-    modImplementation("com.fasterxml.jackson.core:jackson-annotations:2.15.1")
+    modImplementation("com.fasterxml.jackson.core:jackson-core:2.15.2")
+    modImplementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
+    modImplementation("com.fasterxml.jackson.core:jackson-annotations:2.15.2")
 
     modImplementation("com.squareup.okhttp3:okhttp:4.11.0")
     modImplementation("com.squareup.okio:okio:2.10.0")

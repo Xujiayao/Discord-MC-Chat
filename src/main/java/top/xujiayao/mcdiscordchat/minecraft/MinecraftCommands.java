@@ -21,8 +21,10 @@ public class MinecraftCommands {
 
 	public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
 		dispatcher.register(literal("mcdc").executes(context -> {
-					//#if MC >= 11900
-					context.getSource().sendFeedback(Text.literal(MarkdownParser.parseMarkdown(
+					//#if MC >= 12000
+					context.getSource().sendFeedback(() -> Text.literal(MarkdownParser.parseMarkdown(
+					//#elseif MC >= 11900
+					//$$ context.getSource().sendFeedback(Text.literal(MarkdownParser.parseMarkdown(
 					//#else
 					//$$ context.getSource().sendFeedback(new LiteralText(MarkdownParser.parseMarkdown(
 					//#endif
@@ -30,8 +32,10 @@ public class MinecraftCommands {
 					return 1;
 				})
 				.then(literal("info").executes(context -> {
-					//#if MC >= 11900
-					context.getSource().sendFeedback(Text.literal(
+					//#if MC >= 12000
+					context.getSource().sendFeedback(() -> Text.literal(
+					//#elseif MC >= 11900
+					//$$ context.getSource().sendFeedback(Text.literal(
 					//#else
 					//$$ context.getSource().sendFeedback(new LiteralText(
 					//#endif
@@ -39,8 +43,10 @@ public class MinecraftCommands {
 					return 1;
 				}))
 				.then(literal("help").executes(context -> {
-					//#if MC >= 11900
-					context.getSource().sendFeedback(Text.literal(MarkdownParser.parseMarkdown(
+					//#if MC >= 12000
+					context.getSource().sendFeedback(() -> Text.literal(MarkdownParser.parseMarkdown(
+					//#elseif MC >= 11900
+					//$$ context.getSource().sendFeedback(Text.literal(MarkdownParser.parseMarkdown(
 					//#else
 					//$$ context.getSource().sendFeedback(new LiteralText(MarkdownParser.parseMarkdown(
 					//#endif
@@ -48,8 +54,10 @@ public class MinecraftCommands {
 					return 1;
 				}))
 				.then(literal("update").executes(context -> {
-					//#if MC >= 11900
-					context.getSource().sendFeedback(Text.literal(
+					//#if MC >= 12000
+					context.getSource().sendFeedback(() -> Text.literal(
+					//#elseif MC >= 11900
+					//$$ context.getSource().sendFeedback(Text.literal(
 					//#else
 					//$$ context.getSource().sendFeedback(new LiteralText(
 					//#endif
@@ -62,8 +70,10 @@ public class MinecraftCommands {
 										.executes(context -> {
 											String type = StringArgumentType.getString(context, "type");
 											String name = StringArgumentType.getString(context, "name");
-											//#if MC >= 11900
-											context.getSource().sendFeedback(Text.literal(
+											//#if MC >= 12000
+											context.getSource().sendFeedback(() -> Text.literal(
+											//#elseif MC >= 11900
+											//$$ context.getSource().sendFeedback(Text.literal(
 											//#else
 											//$$ context.getSource().sendFeedback(new LiteralText(
 											//#endif
@@ -73,8 +83,10 @@ public class MinecraftCommands {
 				.then(literal("reload")
 						.requires(source -> source.hasPermissionLevel(4))
 						.executes(context -> {
-							//#if MC >= 11900
-							context.getSource().sendFeedback(Text.literal(
+							//#if MC >= 12000
+							context.getSource().sendFeedback(() -> Text.literal(
+							//#elseif MC >= 11900
+							//$$ context.getSource().sendFeedback(Text.literal(
 							//#else
 							//$$ context.getSource().sendFeedback(new LiteralText(
 							//#endif

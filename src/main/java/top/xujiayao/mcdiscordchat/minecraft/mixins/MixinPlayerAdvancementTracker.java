@@ -35,7 +35,7 @@ public abstract class MixinPlayerAdvancementTracker {
 				&& getProgress(advancement).isDone()
 				&& advancement.getDisplay() != null
 				&& advancement.getDisplay().shouldAnnounceToChat()
-				&& owner.world.getGameRules().getBoolean(GameRules.ANNOUNCE_ADVANCEMENTS)) {
+				&& owner.getWorld().getGameRules().getBoolean(GameRules.ANNOUNCE_ADVANCEMENTS)) {
 			switch (advancement.getDisplay().getFrame()) {
 				case GOAL -> {
 					CHANNEL.sendMessage(Translations.translateMessage("message.advancementGoal")
