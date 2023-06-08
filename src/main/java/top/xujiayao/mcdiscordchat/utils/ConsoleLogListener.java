@@ -29,7 +29,7 @@ import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_SEND_COUNT;
 public class ConsoleLogListener implements Runnable {
 
 	private final        boolean readFileHistory;
-	private static final Pattern newlinePattern = Pattern.compile("\n");
+	private static final Pattern newlinePattern = Pattern.compile("\n+");
 	private static final Pattern formatPattern = Pattern.compile("§.");
 
 	public ConsoleLogListener(boolean readFileHistory) {
@@ -137,7 +137,7 @@ public class ConsoleLogListener implements Runnable {
 		}
 
 		message = "`" + message + "`";
-		message = newlinePattern.matcher(message).replaceAll("`\n`");
+		message = newlinePattern.matcher(message).replaceAll("`$0`");
 
 		if ((System.currentTimeMillis() - MINECRAFT_LAST_RESET_TIME) > 20_000) {
 			MINECRAFT_SEND_COUNT = 0;
