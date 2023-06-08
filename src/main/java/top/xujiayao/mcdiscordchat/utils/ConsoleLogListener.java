@@ -38,7 +38,7 @@ public class ConsoleLogListener implements Runnable {
 
 	@Override
 	public void run() {
-		sendLogChannelMessage(Translations.translate("utils.clListener.startListening"));
+		CONSOLE_LOG_CHANNEL.sendMessage(Translations.translate("utils.clListener.startListening")).queue();
 		LOGGER.info("[ConsoleLog] Starting new ConsoleLogListener");
 
 		final File file = new File(FabricLoader.getInstance().getGameDir().toString() + "/logs/latest.log");
@@ -124,7 +124,7 @@ public class ConsoleLogListener implements Runnable {
 				}
 			}
 		} finally {
-			sendLogChannelMessage(Translations.translate("utils.clListener.stopListening"));
+			CONSOLE_LOG_CHANNEL.sendMessage(Translations.translate("utils.clListener.stopListening")).queue();
 			LOGGER.info("[ConsoleLog] Closing ConsoleLogListener");
 		}
 	}
