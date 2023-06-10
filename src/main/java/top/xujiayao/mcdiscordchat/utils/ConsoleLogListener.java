@@ -88,13 +88,10 @@ public class ConsoleLogListener implements Runnable {
 
 								while (messageBatch.length() + currentLine.length() < 1900) {
 									// create the message batch
-									messageBatch.append(currentLine);
-									messageBatch.append("\n");
+									appendLine(messageBatch, currentLine);
 
 									if (newMessageIterator.hasNext()) {
 										currentLine = newMessageIterator.next();
-										currentLine =
-												formatPattern.matcher(currentLine).replaceAll("");
 									} else {
 										finishedSendingMessages = true;
 										break;
@@ -103,8 +100,7 @@ public class ConsoleLogListener implements Runnable {
 
 								if (messageBatch.isEmpty()) {
 									// currentLine is somehow larger than char limit
-									messageBatch.append(currentLine);
-									messageBatch.append("\n");
+									appendLine(messageBatch, currentLine);
 								}
 
 								if (!messageBatch.isEmpty()) {
@@ -127,6 +123,12 @@ public class ConsoleLogListener implements Runnable {
 			CONSOLE_LOG_CHANNEL.sendMessage(Translations.translate("utils.clListener.stopListening")).queue();
 			LOGGER.info("[ConsoleLog] Closing ConsoleLogListener");
 		}
+	}
+
+	private void appendLine(StringBuilder messageBatch, String currentLine) {
+		currentLine = formatPattern.matcher(currentLine).replaceAll("");
+		messageBatch.append(currentLine);
+		messageBatch.append("\n");
 	}
 
 	private void sendLogChannelMessage(String message) {
