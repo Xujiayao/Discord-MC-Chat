@@ -98,7 +98,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
 		if (CONFIG.generic.broadcastSlashCommandExecution) {
 			Text commandNoticeText = Text.Serializer.fromJson(Translations.translateMessage("message.formattedCommandNotice")
-					.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\"))
+					.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\").replace("\"", "\\\""))
 					.replace("%roleName%", roleName)
 					.replace("%roleColor%", "#" + Integer.toHexString(e.getMember().getColorRaw()))
 					.replace("%command%", e.getCommandString()));
@@ -543,7 +543,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			if (e.getMessage().getReferencedMessage() != null) {
 				Text referenceFinalText = Text.Serializer.fromJson(Translations.translateMessage("message.formattedResponseMessage")
 						.replace("%server%", "Discord")
-						.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()).replace("\\", "\\\\") : webhookName)
+						.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()).replace("\\", "\\\\").replace("\"", "\\\"") : webhookName)
 						.replace("%roleName%", referencedMemberRoleName)
 						.replace("%roleColor%", "#" + Integer.toHexString((referencedMember != null) ? referencedMember.getColorRaw() : Role.DEFAULT_COLOR_RAW))
 						.replace("%message%", CONFIG.generic.formatChatMessages ? finalReferencedMessage : EmojiParser.parseToAliases(referencedMessageTemp).replace("\"", "\\\"")));
@@ -554,7 +554,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
 			Text finalText = Text.Serializer.fromJson(Translations.translateMessage("message.formattedChatMessage")
 					.replace("%server%", "Discord")
-					.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\"))
+					.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\").replace("\"", "\\\""))
 					.replace("%roleName%", memberRoleName)
 					.replace("%roleColor%", "#" + Integer.toHexString(e.getMember().getColorRaw()))
 					.replace("%message%", CONFIG.generic.formatChatMessages ? finalMessage : EmojiParser.parseToAliases(messageTemp).replace("\"", "\\\"")));
