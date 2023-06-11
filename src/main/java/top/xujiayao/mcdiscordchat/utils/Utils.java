@@ -340,7 +340,7 @@ public class Utils {
 					}
 				}
 			}
-		}, 0, CONFIG.generic.msptCheckInterval);
+		}, CONFIG.generic.msptCheckInterval, CONFIG.generic.msptCheckInterval);
 	}
 
 	public static void initChannelTopicMonitor() {
