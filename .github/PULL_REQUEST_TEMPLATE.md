@@ -15,7 +15,7 @@
 ### Related Issues
 
 <!-- Any GitHub issues related to this PR? If not, please fill in N/A. -->
-<!-- Example: Fix #ISSUE-NUMBER -->
+<!-- Example: Fixes #ISSUE-NUMBER -->
 
 ### Description
 
