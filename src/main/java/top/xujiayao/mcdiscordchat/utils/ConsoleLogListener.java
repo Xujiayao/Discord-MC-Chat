@@ -28,9 +28,10 @@ import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_SEND_COUNT;
  */
 public class ConsoleLogListener implements Runnable {
 
-	private final boolean readFileHistory;
+	private boolean readFileHistory;
 	private static final Pattern newlinePattern = Pattern.compile("\n+");
 	private static final Pattern formatPattern = Pattern.compile("§.");
+	private static final Integer MAX_MESSAGE_LENGTH = 1900;
 
 	public ConsoleLogListener(boolean readFileHistory) {
 		this.readFileHistory = readFileHistory;
@@ -86,7 +87,7 @@ public class ConsoleLogListener implements Runnable {
 							boolean finishedSendingMessages = false;
 							while (!finishedSendingMessages) {
 
-								while (messageBatch.length() + currentLine.length() < 1900) {
+								while (messageBatch.length() + currentLine.length() < MAX_MESSAGE_LENGTH) {
 									// create the message batch
 									appendLine(messageBatch, currentLine);
 
@@ -99,11 +100,15 @@ public class ConsoleLogListener implements Runnable {
 								}
 
 								if (messageBatch.isEmpty()) {
-									// currentLine is somehow larger than char limit
-									appendLine(messageBatch, currentLine);
-								}
-
-								if (!messageBatch.isEmpty()) {
+									// currentLine is somehow larger than char limit, so send in multiple parts
+									for (int i = 0; i < currentLine.length(); i += MAX_MESSAGE_LENGTH) {
+										appendLine(messageBatch, currentLine.substring(i, Math.min(i + MAX_MESSAGE_LENGTH, currentLine.length())));
+										messageBatch.deleteCharAt(messageBatch.lastIndexOf("\n"));
+										sendLogChannelMessage(messageBatch.toString());
+										messageBatch.delete(0, messageBatch.length());
+									}
+									finishedSendingMessages = true;
+								} else {
 									messageBatch.deleteCharAt(messageBatch.lastIndexOf("\n"));
 									sendLogChannelMessage(messageBatch.toString());
 									messageBatch.delete(0, messageBatch.length());
@@ -117,6 +122,8 @@ public class ConsoleLogListener implements Runnable {
 					return;
 				} catch (Exception e) {
 					LOGGER.error(ExceptionUtils.getStackTrace(e));
+					// don't re-send all logs when restarting from an error
+					readFileHistory = false;
 				}
 			}
 		} finally {
@@ -134,8 +141,8 @@ public class ConsoleLogListener implements Runnable {
 	private void sendLogChannelMessage(String message) {
 		if (message.isEmpty()) {
 			return;
-		} else if (message.length() > 1900) {
-			message = message.substring(0, 1900) + "...";
+		} else if (message.length() > MAX_MESSAGE_LENGTH) {
+			message = message.substring(0, MAX_MESSAGE_LENGTH) + "...";
 		}
 
 		message = "`" + message + "`";
