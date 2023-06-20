@@ -3,20 +3,16 @@ apply plugin: "fabric-loom"
 sourceCompatibility = JavaVersion.VERSION_17
 targetCompatibility = JavaVersion.VERSION_17
 
-archivesBaseName = project.archives_base_name
-version = project.mod_version
-group = project.maven_group
-
-repositories {
-    mavenCentral()
-}
+archivesBaseName = archives_base_name
+version = mod_version
+group = maven_group
 
 dependencies {
-    minecraft "com.mojang:minecraft:${project.parent.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.parent.yarn_mappings}:v2"
+    minecraft("com.mojang:minecraft:${minecraft_version}")
+    mappings("net.fabricmc:yarn:${yarn_mappings}:v2")
 
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    modImplementation("net.fabricmc:fabric-loader:${loader_version}")
+    modImplementation("net.fabricmc.fabric-api:fabric-api:${fabric_version}")
 
     include("net.dv8tion:JDA:5.0.0-beta.11") {
         exclude module: "opus-java"
@@ -38,13 +34,11 @@ dependencies {
     include("com.google.code.gson:gson:2.10.1")
 }
 
-def fabric_subprojects = project.parent.subprojects.findAll({
+def fabric_subprojects = parent.subprojects.findAll({
     it.name != "wrapper"
 })
 
 remapJar {
-    outputs.upToDateWhen { false }
-
     dependsOn(fabric_subprojects.collect {
         it.tasks.remapJar
     })
@@ -54,28 +48,21 @@ remapJar {
         copy {
             from {
                 fabric_subprojects.collect {
-                    it.remapJar.outputs.files
+                    it.tasks.remapJar.outputs.files
                 }
             }
             into("build/tmp/versions/META-INF/jars")
         }
     }
 
-    from("../LICENSE")
+    from("../LICENSE") {
+        rename { "${it}_${archives_base_name}" }
+    }
     from("build/tmp/versions")
 }
 
 processResources {
     filesMatching("fabric.mod.json") {
-        def valueMap = [
-                "version": project.mod_version
-        ]
-        expand valueMap
-    }
-}
-
-loom {
-    runConfigs.configureEach {
-        runDir "../run"
+        expand "version": mod_version
     }
 }

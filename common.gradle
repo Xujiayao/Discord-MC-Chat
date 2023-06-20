@@ -4,16 +4,23 @@ apply plugin: "com.replaymod.preprocess"
 int mcVersion = 1
 
 preprocess {
-    mcVersion = vars.get()["MC"] as int
+    mcVersion = vars.get().get("MC")
     tabIndentation = true
 }
 
-dependencies {
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+archivesBaseName = "${archives_base_name}-${minecraft_dependency}"
+version = mod_version
+group = maven_group
+
+dependencies {
+    minecraft("com.mojang:minecraft:${minecraft_version}")
+    mappings("net.fabricmc:yarn:${yarn_mappings}:v2")
+
+    modImplementation("net.fabricmc:fabric-loader:${loader_version}")
+    modImplementation("net.fabricmc.fabric-api:fabric-api:${fabric_version}")
 
     modImplementation("net.dv8tion:JDA:5.0.0-beta.11") {
         exclude module: "opus-java"
@@ -35,30 +42,12 @@ dependencies {
     modImplementation("com.google.code.gson:gson:2.10.1")
 }
 
-loom {
-    runConfigs.configureEach {
-        ideConfigGenerated = true
-        runDir "../../run"
-    }
-}
-
-remapJar {
-    remapperIsolation = true
-}
-
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
-
-version = project.mod_version
-group = project.maven_group
-archivesBaseName = project.archives_base_name + "-" + project.minecraft_dependency
-
 processResources {
     filesMatching("fabric.mod.json") {
         def valueMap = [
-                "mc_version"          : project.minecraft_dependency.replace(".", "_"),
-                "version"             : project.version,
-                "minecraft_dependency": project.minecraft_dependency
+                "mc_version"          : minecraft_dependency.replace(".", "_"),
+                "version"             : mod_version,
+                "minecraft_dependency": minecraft_dependency
         ]
         expand valueMap
     }
@@ -66,10 +55,4 @@ processResources {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
-}
-
-jar {
-    from("../../LICENSE") {
-        rename { "${it}_${project.archives_base_name}" }
-    }
 }
