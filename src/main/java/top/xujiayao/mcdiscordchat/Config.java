@@ -46,7 +46,7 @@ public class Config {
 
 		public boolean broadcastChatMessages = true;
 		public boolean formatChatMessages = true;
-		public boolean allowMentions = true;
+		public List<String> allowedMentions = List.of("everyone", "users", "roles");
 		public boolean useServerNickname = true;
 		public int discordNewlineLimit = 3;
 

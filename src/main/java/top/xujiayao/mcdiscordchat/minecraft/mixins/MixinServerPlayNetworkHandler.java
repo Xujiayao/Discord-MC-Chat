@@ -1,6 +1,7 @@
 package top.xujiayao.mcdiscordchat.minecraft.mixins;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.vdurmont.emoji.EmojiManager;
 import net.dv8tion.jda.api.entities.Member;
@@ -121,48 +122,55 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 					}
 				}
 
-				if (CONFIG.generic.allowMentions && contentToDiscord.contains("@")) {
-					List<String> parsedList = new ArrayList<>();
-					Pattern pattern = Pattern.compile("@[^@]*?#\\d{4}");
-					Matcher matcher = pattern.matcher(contentToDiscord);
-					while (matcher.find()) {
-						String tagMention = matcher.group();
-						Member member = CHANNEL.getGuild().getMemberByTag(tagMention.substring(1));
-						if (member != null) {
-							parsedList.add(member.getUser().getName());
-							parsedList.add(member.getEffectiveName());
+				if (!CONFIG.generic.allowedMentions.isEmpty() && contentToDiscord.contains("@")) {
+					if (CONFIG.generic.allowedMentions.contains("users")) {
+						List<String> parsedList = new ArrayList<>();
+						Pattern pattern = Pattern.compile("@[^@]*?#\\d{4}");
+						Matcher matcher = pattern.matcher(contentToDiscord);
+						while (matcher.find()) {
+							String tagMention = matcher.group();
+							Member member = CHANNEL.getGuild().getMemberByTag(tagMention.substring(1));
+							if (member != null) {
+								parsedList.add(member.getUser().getName());
+								parsedList.add(member.getEffectiveName());
 
+								String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.WHITE;
+								contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, tagMention, member.getAsMention());
+								contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, tagMention, MarkdownSanitizer.escape(formattedMention));
+							}
+						}
+						for (Member member : CHANNEL.getMembers()) {
+							if (parsedList.contains(member.getUser().getName()) || parsedList.contains(member.getEffectiveName())) {
+								continue;
+							}
+
+							String usernameMention = "@" + member.getUser().getName();
 							String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.WHITE;
-							contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, tagMention, member.getAsMention());
-							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, tagMention, MarkdownSanitizer.escape(formattedMention));
+
+							contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, usernameMention, member.getAsMention());
+							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, usernameMention, MarkdownSanitizer.escape(formattedMention));
+
+							if (member.getNickname() != null) {
+								String nicknameMention = "@" + member.getNickname();
+								contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, nicknameMention, member.getAsMention());
+								contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, nicknameMention, MarkdownSanitizer.escape(formattedMention));
+							}
 						}
 					}
 
-					for (Member member : CHANNEL.getMembers()) {
-						if (parsedList.contains(member.getUser().getName()) || parsedList.contains(member.getEffectiveName())) {
-							continue;
-						}
-
-						String usernameMention = "@" + member.getUser().getName();
-						String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.WHITE;
-
-						contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, usernameMention, member.getAsMention());
-						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, usernameMention, MarkdownSanitizer.escape(formattedMention));
-
-						if (member.getNickname() != null) {
-							String nicknameMention = "@" + member.getNickname();
-							contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, nicknameMention, member.getAsMention());
-							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, nicknameMention, MarkdownSanitizer.escape(formattedMention));
+					if (CONFIG.generic.allowedMentions.contains("roles")) {
+						for (Role role : CHANNEL.getGuild().getRoles()) {
+							String roleMention = "@" + role.getName();
+							String formattedMention = Formatting.YELLOW + "@" + role.getName() + Formatting.WHITE;
+							contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, roleMention, role.getAsMention());
+							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, roleMention, MarkdownSanitizer.escape(formattedMention));
 						}
 					}
-					for (Role role : CHANNEL.getGuild().getRoles()) {
-						String roleMention = "@" + role.getName();
-						String formattedMention = Formatting.YELLOW + "@" + role.getName() + Formatting.WHITE;
-						contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, roleMention, role.getAsMention());
-						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, roleMention, MarkdownSanitizer.escape(formattedMention));
+
+					if (CONFIG.generic.allowedMentions.contains("everyone")) {
+						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, "@everyone", Formatting.YELLOW + "@everyone" + Formatting.WHITE);
+						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, "@here", Formatting.YELLOW + "@here" + Formatting.WHITE);
 					}
-					contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, "@everyone", Formatting.YELLOW + "@everyone" + Formatting.WHITE);
-					contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, "@here", Formatting.YELLOW + "@here" + Formatting.WHITE);
 				}
 
 				contentToMinecraft = MarkdownParser.parseMarkdown(contentToMinecraft.replace("\\", "\\\\"));
@@ -286,9 +294,10 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 			body.addProperty("content", content);
 			body.addProperty("username", ((CONFIG.multiServer.enable) ? ("[" + CONFIG.multiServer.name + "] " + player.getEntityName()) : player.getEntityName()));
 			body.addProperty("avatar_url", CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUuid().toString() : player.getEntityName())));
-			if (!CONFIG.generic.allowMentions) {
-				body.add("allowed_mentions", new Gson().fromJson("{\"parse\":[]}", JsonObject.class));
-			}
+
+			JsonObject allowed_mentions = new JsonObject();
+			allowed_mentions.add("parse", new Gson().toJsonTree(CONFIG.generic.allowedMentions).getAsJsonArray());
+			body.add("allowed_mentions", allowed_mentions);
 
 			Request request = new Request.Builder()
 					.url(CONFIG.generic.webhookUrl)

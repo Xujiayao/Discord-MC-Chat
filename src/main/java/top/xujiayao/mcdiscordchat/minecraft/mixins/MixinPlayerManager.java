@@ -1,6 +1,7 @@
 package top.xujiayao.mcdiscordchat.minecraft.mixins;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.minecraft.network.ClientConnection;
@@ -79,9 +80,10 @@ public class MixinPlayerManager {
 				body.addProperty("content", content);
 				body.addProperty("username", ((CONFIG.multiServer.enable) ? ("[" + CONFIG.multiServer.name + "] " + username) : username));
 				body.addProperty("avatar_url", JDA.getSelfUser().getAvatarUrl());
-				if (!CONFIG.generic.allowMentions) {
-					body.add("allowed_mentions", new Gson().fromJson("{\"parse\":[]}", JsonObject.class));
-				}
+
+				JsonObject allowed_mentions = new JsonObject();
+				allowed_mentions.add("parse", new Gson().toJsonTree(CONFIG.generic.allowedMentions).getAsJsonArray());
+				body.add("allowed_mentions", allowed_mentions);
 
 				Request request = new Request.Builder()
 						.url(CONFIG.generic.webhookUrl)
