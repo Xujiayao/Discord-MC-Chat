@@ -23,18 +23,17 @@ dependencies {
     }
     include("net.sf.trove4j:trove4j:3.0.3")
     include("org.apache.commons:commons-collections4:4.4")
-    include("org.slf4j:slf4j-api:2.0.7")
+    include("org.slf4j:slf4j-api:1.7.36")
     include("com.neovisionaries:nv-websocket-client:2.14")
-    include("com.fasterxml.jackson.core:jackson-core:2.15.2")
-    include("com.fasterxml.jackson.core:jackson-databind:2.15.2")
-    include("com.fasterxml.jackson.core:jackson-annotations:2.15.2")
-
-    include("com.squareup.okhttp3:okhttp:4.11.0")
-    include("com.squareup.okio:okio:2.10.0")
-    include("org.jetbrains.kotlin:kotlin-stdlib:1.8.22")
+    include("com.fasterxml.jackson.core:jackson-core:2.14.1")
+    include("com.fasterxml.jackson.core:jackson-databind:2.14.1")
+    include("com.fasterxml.jackson.core:jackson-annotations:2.14.1")
+    include("com.squareup.okhttp3:okhttp:4.11.0") // Use 4.11.0 instead of 4.10.0 for cleaner logs
+    include("com.squareup.okio:okio:2.10.0") // Cannot use okio-jvm (#55)
+    include("org.jetbrains.kotlin:kotlin-stdlib:1.6.20")
 
     include("com.vdurmont:emoji-java:5.1.1")
-    include("org.json:json:20230618")
+    include("org.json:json:20230227") // Vulnerabilities exist in older versions
 
     include("com.google.code.gson:gson:2.10.1")
 }

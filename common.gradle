@@ -20,24 +20,23 @@ dependencies {
     }
     modImplementation("net.sf.trove4j:trove4j:3.0.3")
     modImplementation("org.apache.commons:commons-collections4:4.4")
-    modImplementation("org.slf4j:slf4j-api:2.0.7")
+    modImplementation("org.slf4j:slf4j-api:1.7.36")
     modImplementation("com.neovisionaries:nv-websocket-client:2.14")
-    modImplementation("com.fasterxml.jackson.core:jackson-core:2.15.2")
-    modImplementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
-    modImplementation("com.fasterxml.jackson.core:jackson-annotations:2.15.2")
-
-    modImplementation("com.squareup.okhttp3:okhttp:4.11.0")
-    modImplementation("com.squareup.okio:okio:2.10.0")
-    modImplementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.22")
+    modImplementation("com.fasterxml.jackson.core:jackson-core:2.14.1")
+    modImplementation("com.fasterxml.jackson.core:jackson-databind:2.14.1")
+    modImplementation("com.fasterxml.jackson.core:jackson-annotations:2.14.1")
+    modImplementation("com.squareup.okhttp3:okhttp:4.11.0") // Use 4.11.0 instead of 4.10.0 for cleaner logs
+    modImplementation("com.squareup.okio:okio:2.10.0") // Cannot use okio-jvm (#55)
+    modImplementation("org.jetbrains.kotlin:kotlin-stdlib:1.6.20")
 
     modImplementation("com.vdurmont:emoji-java:5.1.1")
-    modImplementation("org.json:json:20230618")
+    modImplementation("org.json:json:20230227") // Vulnerabilities exist in older versions
 
     modImplementation("com.google.code.gson:gson:2.10.1")
 }
 
 loom {
-    runConfigs.all {
+    runConfigs.configureEach {
         ideConfigGenerated = true
         runDir "../../run"
     }
