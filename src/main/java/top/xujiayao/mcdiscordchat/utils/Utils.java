@@ -347,6 +347,8 @@ public class Utils {
 		CHANNEL_TOPIC_MONITOR_TIMER.schedule(new TimerTask() {
 			@Override
 			public void run() {
+				long epochSecond = Instant.now().getEpochSecond();
+
 				String topic = Translations.translateMessage("message.onlineChannelTopic")
 						.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerManager().getPlayerList().size()))
 						.replace("%maxPlayerCount%", Integer.toString(SERVER.getPlayerManager().getMaxPlayerCount()))
@@ -356,7 +358,8 @@ public class Utils {
 						//$$ .replace("%uniquePlayerCount%", Integer.toString(FileUtils.listFiles(new File((SERVER.getLevelName() + "/stats/")), null, false).size()))
 						//#endif
 						.replace("%serverStartedTime%", SERVER_STARTED_TIME)
-						.replace("%lastUpdateTime%", Long.toString(Instant.now().getEpochSecond()));
+						.replace("%lastUpdateTime%", Long.toString(epochSecond))
+						.replace("%nextUpdateTime%", Long.toString(epochSecond + CONFIG.generic.channelTopicUpdateInterval / 1000));
 
 				CHANNEL.getManager().setTopic(topic).queue();
 

@@ -104,6 +104,8 @@ public class MultiServer extends Thread {
 					serverStartedTime.add(Long.parseLong(infoJson.get("serverStartedTime").getAsString()));
 				}
 
+				long epochSecond = Instant.now().getEpochSecond();
+
 				String topic = Translations.translateMessage("message.onlineChannelTopicForMultiServer")
 						.replace("%onlinePlayerCount%", Integer.toString(onlinePlayerCount))
 						.replace("%maxPlayerCount%", Integer.toString(maxPlayerCount))
@@ -111,7 +113,8 @@ public class MultiServer extends Thread {
 						.replace("%onlineServerCount%", Integer.toString(onlineServerCount))
 						.replace("%onlineServerList%", String.join(", ", onlineServerList))
 						.replace("%serverStartedTime%", Long.toString(Collections.min(serverStartedTime)))
-						.replace("%lastUpdateTime%", Long.toString(Instant.now().getEpochSecond()));
+						.replace("%lastUpdateTime%", Long.toString(epochSecond))
+						.replace("%nextUpdateTime%", Long.toString(epochSecond + CONFIG.generic.channelTopicUpdateInterval / 1000));
 
 				CHANNEL.getManager().setTopic(topic).queue();
 
