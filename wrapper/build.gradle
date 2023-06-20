@@ -18,7 +18,7 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    include("net.dv8tion:JDA:5.0.0-beta.10") {
+    include("net.dv8tion:JDA:5.0.0-beta.11") {
         exclude module: "opus-java"
     }
     include("net.sf.trove4j:trove4j:3.0.3")
@@ -31,10 +31,10 @@ dependencies {
 
     include("com.squareup.okhttp3:okhttp:4.11.0")
     include("com.squareup.okio:okio:2.10.0")
-    include("org.jetbrains.kotlin:kotlin-stdlib:1.8.21")
+    include("org.jetbrains.kotlin:kotlin-stdlib:1.8.22")
 
     include("com.vdurmont:emoji-java:5.1.1")
-    include("org.json:json:20230227")
+    include("org.json:json:20230618")
 
     include("com.google.code.gson:gson:2.10.1")
 }
@@ -76,7 +76,7 @@ processResources {
 }
 
 loom {
-    runConfigs.all {
+    runConfigs.configureEach {
         runDir "../run"
     }
 }
