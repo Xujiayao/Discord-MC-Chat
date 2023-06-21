@@ -36,37 +36,25 @@ public abstract class MixinPlayerAdvancementTracker {
 				&& advancement.getDisplay() != null
 				&& advancement.getDisplay().shouldAnnounceToChat()
 				&& owner.getWorld().getGameRules().getBoolean(GameRules.ANNOUNCE_ADVANCEMENTS)) {
+			String message = "null";
+
 			switch (advancement.getDisplay().getFrame()) {
-				case GOAL -> {
-					CHANNEL.sendMessage(Translations.translateMessage("message.advancementGoal")
-							.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
-							.replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
-					if (CONFIG.multiServer.enable) {
-						MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.advancementGoal")
-								.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
-								.replace("%advancement%", advancement.getDisplay().getTitle().getString()));
-					}
-				}
-				case TASK -> {
-					CHANNEL.sendMessage(Translations.translateMessage("message.advancementTask")
-							.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
-							.replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
-					if (CONFIG.multiServer.enable) {
-						MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.advancementTask")
-								.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
-								.replace("%advancement%", advancement.getDisplay().getTitle().getString()));
-					}
-				}
-				case CHALLENGE -> {
-					CHANNEL.sendMessage(Translations.translateMessage("message.advancementChallenge")
-							.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
-							.replace("%advancement%", advancement.getDisplay().getTitle().getString())).queue();
-					if (CONFIG.multiServer.enable) {
-						MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.advancementChallenge")
-								.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
-								.replace("%advancement%", advancement.getDisplay().getTitle().getString()));
-					}
-				}
+				case GOAL -> message = Translations.translateMessage("message.advancementGoal");
+				case TASK -> message = Translations.translateMessage("message.advancementTask");
+				case CHALLENGE -> message = Translations.translateMessage("message.advancementChallenge");
+			}
+
+			String title = Translations.translate("advancements." + advancement.getId().getPath().replace("/", ".") + ".title");
+			String description = Translations.translate("advancements." + advancement.getId().getPath().replace("/", ".") + ".description");
+
+			message = message
+					.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
+					.replace("%advancement%", title.contains("TranslateError") ? advancement.getDisplay().getTitle().getString() : title)
+					.replace("%description%", description.contains("TranslateError") ? advancement.getDisplay().getDescription().getString() : description);
+
+			CHANNEL.sendMessage(message).queue();
+			if (CONFIG.multiServer.enable) {
+				MULTI_SERVER.sendMessage(false, false, false, null, message);
 			}
 		}
 	}
