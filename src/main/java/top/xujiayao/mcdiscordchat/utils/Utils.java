@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.fabricmc.loader.api.FabricLoader;
@@ -50,6 +51,7 @@ import static top.xujiayao.mcdiscordchat.Main.SERVER;
 import static top.xujiayao.mcdiscordchat.Main.SERVER_STARTED_TIME;
 import static top.xujiayao.mcdiscordchat.Main.UPDATE_NOTIFICATION_CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.VERSION;
+import static top.xujiayao.mcdiscordchat.Main.WEBHOOK;
 
 /**
  * @author Xujiayao
@@ -202,6 +204,20 @@ public class Utils {
 			}
 			if (UPDATE_NOTIFICATION_CHANNEL == null || !UPDATE_NOTIFICATION_CHANNEL.canTalk()) {
 				UPDATE_NOTIFICATION_CHANNEL = CHANNEL;
+			}
+
+			WEBHOOK = null;
+			for (Webhook webhook : Objects.requireNonNull(CHANNEL).getGuild().retrieveWebhooks().complete()) {
+				if ("MCDC Webhook".equals(webhook.getName())) {
+					if (webhook.getChannel().asTextChannel() == CHANNEL) {
+						WEBHOOK = webhook;
+					} else {
+						webhook.delete().queue();
+					}
+				}
+			}
+			if (CONFIG.generic.useWebhook && WEBHOOK == null) {
+				WEBHOOK = CHANNEL.createWebhook("MCDC Webhook").complete();
 			}
 
 			Utils.updateBotCommands();

@@ -1,7 +1,6 @@
 package top.xujiayao.mcdiscordchat.minecraft.mixins;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.vdurmont.emoji.EmojiManager;
 import net.dv8tion.jda.api.entities.Member;
@@ -57,6 +56,7 @@ import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_LAST_RESET_TIME;
 import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_SEND_COUNT;
 import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
 import static top.xujiayao.mcdiscordchat.Main.SERVER;
+import static top.xujiayao.mcdiscordchat.Main.WEBHOOK;
 
 /**
  * @author Xujiayao
@@ -287,7 +287,7 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 	private void sendMessage(String message, boolean escapeMarkdown) {
 		String content = (escapeMarkdown ? MarkdownSanitizer.escape(message) : message);
 
-		if (CONFIG.generic.webhookUrl.isBlank()) {
+		if (!CONFIG.generic.useWebhook) {
 			CHANNEL.sendMessage(((CONFIG.multiServer.enable) ? ("[" + CONFIG.multiServer.name + "] <") : "<") + player.getEntityName() + "> " + content).queue();
 		} else {
 			JsonObject body = new JsonObject();
@@ -300,7 +300,7 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 			body.add("allowed_mentions", allowed_mentions);
 
 			Request request = new Request.Builder()
-					.url(CONFIG.generic.webhookUrl)
+					.url(WEBHOOK.getUrl())
 					.post(RequestBody.create(body.toString(), MediaType.get("application/json")))
 					.build();
 

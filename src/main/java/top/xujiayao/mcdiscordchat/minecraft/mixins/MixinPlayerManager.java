@@ -1,7 +1,6 @@
 package top.xujiayao.mcdiscordchat.minecraft.mixins;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.minecraft.network.ClientConnection;
@@ -37,6 +36,7 @@ import static top.xujiayao.mcdiscordchat.Main.HTTP_CLIENT;
 import static top.xujiayao.mcdiscordchat.Main.JDA;
 import static top.xujiayao.mcdiscordchat.Main.LOGGER;
 import static top.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
+import static top.xujiayao.mcdiscordchat.Main.WEBHOOK;
 
 /**
  * @author Xujiayao
@@ -73,7 +73,7 @@ public class MixinPlayerManager {
 
 	private void sendMessage(String content, String username) {
 		if (CONFIG.generic.broadcastChatMessages) {
-			if (CONFIG.generic.webhookUrl.isBlank()) {
+			if (!CONFIG.generic.useWebhook) {
 				CHANNEL.sendMessage(((CONFIG.multiServer.enable) ? ("[" + CONFIG.multiServer.name + "] <") : "<") + username + "> " + content).queue();
 			} else {
 				JsonObject body = new JsonObject();
@@ -86,7 +86,7 @@ public class MixinPlayerManager {
 				body.add("allowed_mentions", allowed_mentions);
 
 				Request request = new Request.Builder()
-						.url(CONFIG.generic.webhookUrl)
+						.url(WEBHOOK.getUrl())
 						.post(RequestBody.create(body.toString(), MediaType.get("application/json")))
 						.build();
 

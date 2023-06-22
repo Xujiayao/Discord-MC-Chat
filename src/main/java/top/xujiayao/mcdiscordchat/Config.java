@@ -26,7 +26,7 @@ public class Config {
 		public String botPlayingStatus = "Minecraft (%onlinePlayerCount%/%maxPlayerCount%)";
 		public String botListeningStatus = "";
 
-		public String webhookUrl = "";
+		public boolean useWebhook = true;
 
 		public String channelId = "";
 		public String consoleLogChannelId = "";

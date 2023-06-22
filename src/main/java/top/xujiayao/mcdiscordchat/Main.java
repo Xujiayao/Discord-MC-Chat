@@ -2,6 +2,7 @@ package top.xujiayao.mcdiscordchat;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
@@ -35,6 +36,7 @@ import top.xujiayao.mcdiscordchat.utils.Utils;
 import java.io.File;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Timer;
 
 /**
@@ -54,6 +56,7 @@ public class Main implements DedicatedServerModInitializer {
 	public static Config CONFIG;
 	public static JDA JDA;
 	public static TextChannel CHANNEL;
+	public static Webhook WEBHOOK;
 	public static TextChannel CONSOLE_LOG_CHANNEL;
 	public static Thread CONSOLE_LOG_THREAD = new Thread(new ConsoleLogListener(true));
 	public static TextChannel UPDATE_NOTIFICATION_CHANNEL;
@@ -99,6 +102,19 @@ public class Main implements DedicatedServerModInitializer {
 			}
 			if (UPDATE_NOTIFICATION_CHANNEL == null || !UPDATE_NOTIFICATION_CHANNEL.canTalk()) {
 				UPDATE_NOTIFICATION_CHANNEL = CHANNEL;
+			}
+
+			for (Webhook webhook : Objects.requireNonNull(CHANNEL).getGuild().retrieveWebhooks().complete()) {
+				if ("MCDC Webhook".equals(webhook.getName())) {
+					if (webhook.getChannel().asTextChannel() == CHANNEL) {
+						WEBHOOK = webhook;
+					} else {
+						webhook.delete().queue();
+					}
+				}
+			}
+			if (CONFIG.generic.useWebhook && WEBHOOK == null) {
+				WEBHOOK = CHANNEL.createWebhook("MCDC Webhook").complete();
 			}
 
 			Utils.updateBotCommands();
