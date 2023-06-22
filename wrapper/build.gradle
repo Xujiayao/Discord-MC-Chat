@@ -39,6 +39,8 @@ def fabric_subprojects = parent.subprojects.findAll({
 })
 
 remapJar {
+    outputs.upToDateWhen { false }
+
     dependsOn(fabric_subprojects.collect {
         it.tasks.remapJar
     })
