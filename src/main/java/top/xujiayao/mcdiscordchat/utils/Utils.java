@@ -304,18 +304,18 @@ public class Utils {
 
 	public static void updateBotCommands() {
 		JDA.updateCommands()
-				.addCommands(Commands.slash("console", Translations.translate("utils.utils.ubCommands.console"))
-						.addOption(OptionType.STRING, "command", Translations.translate("utils.utils.ubCommands.console.command"), true, true))
 				.addCommands(Commands.slash("help", Translations.translate("utils.utils.ubCommands.help")))
 				.addCommands(Commands.slash("info", Translations.translate("utils.utils.ubCommands.info")))
-				.addCommands(Commands.slash("log", Translations.translate("utils.utils.ubCommands.log"))
-						.addOption(OptionType.STRING, "file", Translations.translate("utils.utils.ubCommands.log.file"), true, true))
-				.addCommands(Commands.slash("reload", Translations.translate("utils.utils.ubCommands.reload")))
 				.addCommands(Commands.slash("stats", Translations.translate("utils.utils.ubCommands.stats"))
 						.addOption(OptionType.STRING, "type", Translations.translate("utils.utils.ubCommands.stats.type"), true)
 						.addOption(OptionType.STRING, "name", Translations.translate("utils.utils.ubCommands.stats.name"), true))
-				.addCommands(Commands.slash("stop", Translations.translate("utils.utils.ubCommands.stop")))
 				.addCommands(Commands.slash("update", Translations.translate("utils.utils.ubCommands.update")))
+				.addCommands(Commands.slash("console", Translations.translate("utils.utils.ubCommands.console"))
+						.addOption(OptionType.STRING, "command", Translations.translate("utils.utils.ubCommands.console.command"), true, true))
+				.addCommands(Commands.slash("log", Translations.translate("utils.utils.ubCommands.log"))
+						.addOption(OptionType.STRING, "file", Translations.translate("utils.utils.ubCommands.log.file"), true, true))
+				.addCommands(Commands.slash("reload", Translations.translate("utils.utils.ubCommands.reload")))
+				.addCommands(Commands.slash("stop", Translations.translate("utils.utils.ubCommands.stop")))
 				.queue();
 	}
 

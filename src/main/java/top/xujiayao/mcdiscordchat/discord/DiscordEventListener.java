@@ -127,6 +127,19 @@ public class DiscordEventListener extends ListenerAdapter {
 		}
 
 		switch (e.getName()) {
+			case "help" -> e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.helpMessage")).queue();
+			case "info" -> {
+				e.getHook().sendMessage("```\n" + Utils.getInfoCommandMessage() + "\n```").queue();
+				if (CONFIG.multiServer.enable) {
+					MULTI_SERVER.sendMessage(true, false, false, null, "{\"type\":\"discordInfoCommand\",\"channel\":\"" + e.getChannel().getId() + "\"}");
+				}
+			}
+			case "stats" -> {
+				String type = Objects.requireNonNull(e.getOption("type")).getAsString();
+				String name = Objects.requireNonNull(e.getOption("name")).getAsString();
+				e.getHook().sendMessage("```\n" + Utils.getStatsCommandMessage(type, name) + "\n```").queue();
+			}
+			case "update" -> e.getHook().sendMessage(Utils.checkUpdate(true)).queue();
 			case "console" -> {
 				if (Utils.isAdmin(e.getMember())) {
 					String command = Objects.requireNonNull(e.getOption("command")).getAsString();
@@ -150,13 +163,6 @@ public class DiscordEventListener extends ListenerAdapter {
 					}
 				} else {
 					e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.noPermission")).queue();
-				}
-			}
-			case "help" -> e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.helpMessage")).queue();
-			case "info" -> {
-				e.getHook().sendMessage("```\n" + Utils.getInfoCommandMessage() + "\n```").queue();
-				if (CONFIG.multiServer.enable) {
-					MULTI_SERVER.sendMessage(true, false, false, null, "{\"type\":\"discordInfoCommand\",\"channel\":\"" + e.getChannel().getId() + "\"}");
 				}
 			}
 			case "log" -> {
@@ -194,11 +200,6 @@ public class DiscordEventListener extends ListenerAdapter {
 					e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.noPermission")).queue();
 				}
 			}
-			case "stats" -> {
-				String type = Objects.requireNonNull(e.getOption("type")).getAsString();
-				String name = Objects.requireNonNull(e.getOption("name")).getAsString();
-				e.getHook().sendMessage("```\n" + Utils.getStatsCommandMessage(type, name) + "\n```").queue();
-			}
 			case "stop" -> {
 				if (Utils.isAdmin(e.getMember())) {
 					e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.stoppingServer"))
@@ -208,7 +209,6 @@ public class DiscordEventListener extends ListenerAdapter {
 					e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.noPermission")).queue();
 				}
 			}
-			case "update" -> e.getHook().sendMessage(Utils.checkUpdate(true)).queue();
 		}
 	}
 
