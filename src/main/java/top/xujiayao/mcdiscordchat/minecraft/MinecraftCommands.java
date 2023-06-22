@@ -31,17 +31,6 @@ public class MinecraftCommands {
 							Translations.translate("minecraft.mcCommands.register.helpMessage"))), false);
 					return 1;
 				})
-				.then(literal("info").executes(context -> {
-					//#if MC >= 12000
-					context.getSource().sendFeedback(() -> Text.literal(
-					//#elseif MC >= 11900
-					//$$ context.getSource().sendFeedback(Text.literal(
-					//#else
-					//$$ context.getSource().sendFeedback(new LiteralText(
-					//#endif
-							Utils.getInfoCommandMessage()), false);
-					return 1;
-				}))
 				.then(literal("help").executes(context -> {
 					//#if MC >= 12000
 					context.getSource().sendFeedback(() -> Text.literal(MarkdownParser.parseMarkdown(
@@ -53,7 +42,7 @@ public class MinecraftCommands {
 							Translations.translate("minecraft.mcCommands.register.helpMessage"))), false);
 					return 1;
 				}))
-				.then(literal("update").executes(context -> {
+				.then(literal("info").executes(context -> {
 					//#if MC >= 12000
 					context.getSource().sendFeedback(() -> Text.literal(
 					//#elseif MC >= 11900
@@ -61,9 +50,22 @@ public class MinecraftCommands {
 					//#else
 					//$$ context.getSource().sendFeedback(new LiteralText(
 					//#endif
-							MarkdownParser.parseMarkdown(Utils.checkUpdate(true))), false);
+							Utils.getInfoCommandMessage()), false);
 					return 1;
 				}))
+				.then(literal("reload")
+						.requires(source -> source.hasPermissionLevel(4))
+						.executes(context -> {
+							//#if MC >= 12000
+							context.getSource().sendFeedback(() -> Text.literal(
+							//#elseif MC >= 11900
+							//$$ context.getSource().sendFeedback(Text.literal(
+							//#else
+							//$$ context.getSource().sendFeedback(new LiteralText(
+							//#endif
+									MarkdownParser.parseMarkdown(Utils.reload())), false);
+							return 1;
+						}))
 				.then(literal("stats")
 						.then(argument("type", StringArgumentType.word())
 								.then(argument("name", StringArgumentType.word())
@@ -80,18 +82,16 @@ public class MinecraftCommands {
 													Utils.getStatsCommandMessage(type, name)), false);
 											return 1;
 										}))))
-				.then(literal("reload")
-						.requires(source -> source.hasPermissionLevel(4))
-						.executes(context -> {
-							//#if MC >= 12000
-							context.getSource().sendFeedback(() -> Text.literal(
-							//#elseif MC >= 11900
-							//$$ context.getSource().sendFeedback(Text.literal(
-							//#else
-							//$$ context.getSource().sendFeedback(new LiteralText(
-							//#endif
-									MarkdownParser.parseMarkdown(Utils.reload())), false);
-							return 1;
-						})));
+				.then(literal("update").executes(context -> {
+					//#if MC >= 12000
+					context.getSource().sendFeedback(() -> Text.literal(
+					//#elseif MC >= 11900
+					//$$ context.getSource().sendFeedback(Text.literal(
+					//#else
+					//$$ context.getSource().sendFeedback(new LiteralText(
+					//#endif
+							MarkdownParser.parseMarkdown(Utils.checkUpdate(true))), false);
+					return 1;
+				})));
 	}
 }
