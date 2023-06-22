@@ -2,9 +2,9 @@
   "discord.deListener.oscInteraction.serverNotStarted": "**서버가 완전히 시작될 때까지 기다려야 합니다!**",
   "discord.deListener.oscInteraction.notFromGuild": "**해당 명령어는 DM을 통해 사용할 수 없습니다!**",
   "discord.deListener.oscInteraction.helpMessage": "```\n=============== 도움말 ===============\n/info                | 서버 현황을 확인합니다.\n/help                | 사용 가능한 명령어 목록을 확인합니다.\n/update              | 업데이트 확인\n/stats <type> <name> | 누적 기록을 확인합니다.\n/reload              | MCDiscordChat 설정 파일을 불러옵니다. (관리자 전용)\n/console <command>   | 서버 콘솔에 명령어를 실행합니다. (관리자 전용)\n/log <file>          | 해당 서버 기록을 불러옵니다. (관리자 전용)\n/stop                | 서버를 닫습니다. (관리자 전용)\n```",
-  "discord.deListener.oscInteraction.noPermission": "**해당 명령어를 사용할 권한이 없습니다!**",
   "discord.deListener.oscInteraction.stoppingServer": "**서버를 닫는 중입니다!**",
   "discord.deListener.oscInteraction.executingCommand": "**명령어를 실행합니다!**",
+  "discord.deListener.oscInteraction.noPermission": "**해당 명령어를 사용할 권한이 없습니다!**",
   "discord.deListener.oscInteraction.fileNotFound": "**해당 파일을 찾을 수 없습니다!**",
 
   "minecraft.mcCommands.register.helpMessage": "=============== 도움말 ===============\n/mcdc info                  | 서버 현황을 확인합니다.\n/mcdc help                  | 사용 가능한 명령어 목록을 확인합니다.\n/mcdc update                | 업데이트 확인\n/mcdc stats <type> <name>   | 누적 기록을 확인합니다.\n/mcdc reload                | MCDiscordChat 설정 파일을 불러옵니다. (관리자 전용)\n~~/mcdc console <command>~~ | 서버 콘솔에 명령어를 실행합니다. (관리자 전용)\n~~/mcdc log <file>~~        | 해당 서버 기록을 불러옵니다. (관리자 전용)\n~~/mcdc stop~~              | 서버를 닫습니다. (관리자 전용)\n\n*Strike through 명령어는 중복되거나 게임 내에서 구현할 수 없기 때문에 구현되지 않습니다.*\n\n*관리자 전용 명령어는 최소 레벨 4 운영자(레벨 4 OP 권한 또는 서버 콘솔)가 필요합니다.*",
@@ -16,6 +16,10 @@
   "utils.utils.cUpdate.downloadLink": "다운로드 링크: <https://github.com/Xujiayao/MCDiscordChat/blob/master/README.md#Download>",
   "utils.utils.cUpdate.changelog": "변경사항: ",
   "utils.utils.cUpdate.upToDate": "**MCDiscordChat는 최신 버전입니다.**",
+
+  "utils.utils.whitelist.whitelistFailed": "**플레이어가 이미 화이트리스트에 있습니다!**",
+  "utils.utils.whitelist.whitelistSuccess": "**%s을(를) 화이트리스트에 추가했습니다!**",
+  "utils.utils.whitelist.playerNotExist": "**해당 플레이어가 존재하지 않습니다!**",
 
   "utils.utils.reload.success": "**설정 파일 읽기에 성공했습니다!**",
   "utils.utils.reload.fail": "**설정 파일 읽기에 실패했습니다!**",
@@ -36,6 +40,8 @@
   "utils.utils.ubCommands.stats.type": "기록 타입",
   "utils.utils.ubCommands.stats.name": "기록 내용",
   "utils.utils.ubCommands.update": "업데이트 확인",
+  "utils.utils.ubCommands.whitelist": "서버 화이트리스트에 플레이어 추가",
+  "utils.utils.ubCommands.whitelist.player": "플레이어 이름",
   "utils.utils.ubCommands.console": "서버 콘솔에 명령어를 실행합니다. (관리자 전용)",
   "utils.utils.ubCommands.console.command": "실행할 명령어",
   "utils.utils.ubCommands.log": "해당 서버 기록을 불러옵니다. (관리자 전용)",

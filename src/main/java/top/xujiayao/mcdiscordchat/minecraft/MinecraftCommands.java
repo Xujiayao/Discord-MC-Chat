@@ -80,6 +80,20 @@ public class MinecraftCommands {
 							MarkdownParser.parseMarkdown(Utils.checkUpdate(true))), false);
 					return 1;
 				}))
+				.then(literal("whitelist")
+						.then(argument("player", StringArgumentType.word())
+								.executes(context -> {
+									String player = StringArgumentType.getString(context, "player");
+									//#if MC >= 12000
+									context.getSource().sendFeedback(() -> Text.literal(
+									//#elseif MC >= 11900
+									//$$ context.getSource().sendFeedback(Text.literal(
+									//#else
+									//$$ context.getSource().sendFeedback(new LiteralText(
+									//#endif
+											MarkdownParser.parseMarkdown(Utils.whitelist(player))), false);
+									return 1;
+				})))
 				.then(literal("reload")
 						.requires(source -> source.hasPermissionLevel(4))
 						.executes(context -> {

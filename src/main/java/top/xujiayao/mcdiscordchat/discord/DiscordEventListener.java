@@ -140,6 +140,10 @@ public class DiscordEventListener extends ListenerAdapter {
 				e.getHook().sendMessage("```\n" + Utils.getStatsCommandMessage(type, name) + "\n```").queue();
 			}
 			case "update" -> e.getHook().sendMessage(Utils.checkUpdate(true)).queue();
+			case "whitelist" -> {
+				String player = Objects.requireNonNull(e.getOption("player")).getAsString();
+				e.getHook().sendMessage(Utils.whitelist(player)).queue();
+			}
 			case "console" -> {
 				if (Utils.isAdmin(e.getMember())) {
 					String command = Objects.requireNonNull(e.getOption("command")).getAsString();

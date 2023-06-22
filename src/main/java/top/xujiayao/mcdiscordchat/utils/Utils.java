@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.mojang.authlib.GameProfile;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -11,6 +12,8 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.server.Whitelist;
+import net.minecraft.server.WhitelistEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
 import okhttp3.CacheControl;
 import okhttp3.Request;
@@ -30,6 +33,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL_TOPIC_MONITOR_TIMER;
@@ -135,6 +139,38 @@ public class Utils {
 			LOGGER.error(ExceptionUtils.getStackTrace(e));
 			return "";
 		}
+	}
+
+	public static String whitelist(String player) {
+		Whitelist whitelist = SERVER.getPlayerManager().getWhitelist();
+
+		Request request = new Request.Builder()
+				.url("https://api.mojang.com/users/profiles/minecraft/" + player)
+				.get()
+				.build();
+
+		try (Response response = HTTP_CLIENT.newCall(request).execute()) {
+			if (response.body() != null && response.code() == 200) {
+				JsonObject json = new Gson().fromJson(response.body().string(), JsonObject.class);
+				String id = json.get("id").getAsString();
+				UUID uuid = UUID.fromString(String.format("%s-%s-%s-%s-%s", id.substring(0,8), id.substring(8,12), id.substring(12,16), id.substring(16,20), id.substring(20,32)));
+				String name = json.get("name").getAsString();
+
+				GameProfile profile = new GameProfile(uuid, name);
+				if (whitelist.isAllowed(profile)) {
+					return Translations.translate("utils.utils.whitelist.whitelistFailed");
+				} else {
+					whitelist.add(new WhitelistEntry(profile));
+					return Translations.translate("utils.utils.whitelist.whitelistSuccess", name);
+				}
+			} else if (response.code() == 404) {
+				return Translations.translate("utils.utils.whitelist.playerNotExist");
+			}
+		} catch (Exception ex) {
+			LOGGER.error(ExceptionUtils.getStackTrace(ex));
+		}
+
+		return "";
 	}
 
 	public static String reload() {
@@ -310,6 +346,8 @@ public class Utils {
 						.addOption(OptionType.STRING, "type", Translations.translate("utils.utils.ubCommands.stats.type"), true)
 						.addOption(OptionType.STRING, "name", Translations.translate("utils.utils.ubCommands.stats.name"), true))
 				.addCommands(Commands.slash("update", Translations.translate("utils.utils.ubCommands.update")))
+				.addCommands(Commands.slash("whitelist", Translations.translate("utils.utils.ubCommands.whitelist"))
+						.addOption(OptionType.STRING, "player", Translations.translate("utils.utils.ubCommands.whitelist.player"), true))
 				.addCommands(Commands.slash("console", Translations.translate("utils.utils.ubCommands.console"))
 						.addOption(OptionType.STRING, "command", Translations.translate("utils.utils.ubCommands.console.command"), true, true))
 				.addCommands(Commands.slash("log", Translations.translate("utils.utils.ubCommands.log"))
