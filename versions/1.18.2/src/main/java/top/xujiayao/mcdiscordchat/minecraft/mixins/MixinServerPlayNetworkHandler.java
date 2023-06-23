@@ -115,9 +115,9 @@ public abstract class MixinServerPlayNetworkHandler {
 						List<RichCustomEmoji> emojis = JDA.getEmojisByName(emojiName, true);
 						if (!emojis.isEmpty()) {
 							contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, (":" + emojiName + ":"), emojis.get(0).getAsMention());
-							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.WHITE));
+							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.RESET));
 						} else if (EmojiManager.getForAlias(emojiName) != null) {
-							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.WHITE));
+							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.RESET));
 						}
 					}
 				}
@@ -134,7 +134,7 @@ public abstract class MixinServerPlayNetworkHandler {
 								parsedList.add(member.getUser().getName());
 								parsedList.add(member.getEffectiveName());
 
-								String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.WHITE;
+								String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.RESET;
 								contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, tagMention, member.getAsMention());
 								contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, tagMention, MarkdownSanitizer.escape(formattedMention));
 							}
@@ -145,7 +145,7 @@ public abstract class MixinServerPlayNetworkHandler {
 							}
 
 							String usernameMention = "@" + member.getUser().getName();
-							String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.WHITE;
+							String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.RESET;
 
 							contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, usernameMention, member.getAsMention());
 							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, usernameMention, MarkdownSanitizer.escape(formattedMention));
@@ -161,15 +161,15 @@ public abstract class MixinServerPlayNetworkHandler {
 					if (CONFIG.generic.allowedMentions.contains("roles")) {
 						for (Role role : CHANNEL.getGuild().getRoles()) {
 							String roleMention = "@" + role.getName();
-							String formattedMention = Formatting.YELLOW + "@" + role.getName() + Formatting.WHITE;
+							String formattedMention = Formatting.YELLOW + "@" + role.getName() + Formatting.RESET;
 							contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, roleMention, role.getAsMention());
 							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, roleMention, MarkdownSanitizer.escape(formattedMention));
 						}
 					}
 
 					if (CONFIG.generic.allowedMentions.contains("everyone")) {
-						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, "@everyone", Formatting.YELLOW + "@everyone" + Formatting.WHITE);
-						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, "@here", Formatting.YELLOW + "@here" + Formatting.WHITE);
+						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, "@everyone", Formatting.YELLOW + "@everyone" + Formatting.RESET);
+						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, "@here", Formatting.YELLOW + "@here" + Formatting.RESET);
 					}
 				}
 

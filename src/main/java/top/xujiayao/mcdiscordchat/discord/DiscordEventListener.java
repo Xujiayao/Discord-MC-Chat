@@ -347,17 +347,6 @@ public class DiscordEventListener extends ListenerAdapter {
 			return;
 		}
 
-		String textBeforePlaceholder = "";
-		String textAfterPlaceholder = "";
-
-		String[] arrayParts = StringUtils.substringsBetween(Translations.translateMessage("message.formattedChatMessage"), "{", "}");
-		for (String arrayPart : arrayParts) {
-			if (arrayPart.contains("%message%")) {
-				textBeforePlaceholder = StringUtils.substringBefore(arrayPart, "%message%");
-				textAfterPlaceholder = StringUtils.substringAfter(arrayPart, "%message%");
-			}
-		}
-
 		String finalReferencedMessage = "";
 		String finalMessage = "";
 
@@ -397,9 +386,9 @@ public class DiscordEventListener extends ListenerAdapter {
 					for (String emojiName : emojiNames) {
 						List<RichCustomEmoji> emojis = JDA.getEmojisByName(emojiName, true);
 						if (!emojis.isEmpty()) {
-							referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.DARK_GRAY)));
+							referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.RESET)));
 						} else if (EmojiManager.getForAlias(emojiName) != null) {
-							referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.DARK_GRAY)));
+							referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.RESET)));
 						}
 					}
 				}
@@ -409,7 +398,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
 					for (Member member : CHANNEL.getMembers()) {
 						String usernameMention = "@" + member.getUser().getName();
-						String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.DARK_GRAY;
+						String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.RESET;
 						temp = StringUtils.replaceIgnoreCase(temp, usernameMention, MarkdownSanitizer.escape(formattedMention));
 
 						if (member.getNickname() != null) {
@@ -419,13 +408,23 @@ public class DiscordEventListener extends ListenerAdapter {
 					}
 					for (Role role : CHANNEL.getGuild().getRoles()) {
 						String roleMention = "@" + role.getName();
-						String formattedMention = Formatting.YELLOW + "@" + role.getName() + Formatting.DARK_GRAY;
+						String formattedMention = Formatting.YELLOW + "@" + role.getName() + Formatting.RESET;
 						temp = StringUtils.replaceIgnoreCase(temp, roleMention, MarkdownSanitizer.escape(formattedMention));
 					}
-					temp = StringUtils.replaceIgnoreCase(temp, "@everyone", Formatting.YELLOW + "@everyone" + Formatting.DARK_GRAY);
-					temp = StringUtils.replaceIgnoreCase(temp, "@here", Formatting.YELLOW + "@here" + Formatting.DARK_GRAY);
+					temp = StringUtils.replaceIgnoreCase(temp, "@everyone", Formatting.YELLOW + "@everyone" + Formatting.RESET);
+					temp = StringUtils.replaceIgnoreCase(temp, "@here", Formatting.YELLOW + "@here" + Formatting.RESET);
 
 					referencedMessage = new StringBuilder(temp);
+				}
+
+				String textBeforePlaceholder = "";
+				String textAfterPlaceholder = "";
+				String[] arrayParts = StringUtils.substringsBetween(Translations.translateMessage("message.formattedResponseMessage"), "{", "}");
+				for (String arrayPart : arrayParts) {
+					if (arrayPart.contains("%message%")) {
+						textBeforePlaceholder = StringUtils.substringBefore(arrayPart, "%message%");
+						textAfterPlaceholder = StringUtils.substringAfter(arrayPart, "%message%");
+					}
 				}
 
 				finalReferencedMessage = MarkdownParser.parseMarkdown(referencedMessage.toString().replace("\\", "\\\\"));
@@ -486,9 +485,9 @@ public class DiscordEventListener extends ListenerAdapter {
 				for (String emojiName : emojiNames) {
 					List<RichCustomEmoji> emojis = JDA.getEmojisByName(emojiName, true);
 					if (!emojis.isEmpty()) {
-						message = new StringBuilder(StringUtils.replaceIgnoreCase(message.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.GRAY)));
+						message = new StringBuilder(StringUtils.replaceIgnoreCase(message.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.RESET)));
 					} else if (EmojiManager.getForAlias(emojiName) != null) {
-						message = new StringBuilder(StringUtils.replaceIgnoreCase(message.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.GRAY)));
+						message = new StringBuilder(StringUtils.replaceIgnoreCase(message.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.RESET)));
 					}
 				}
 			}
@@ -498,7 +497,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
 				for (Member member : CHANNEL.getMembers()) {
 					String usernameMention = "@" + member.getUser().getName();
-					String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.GRAY;
+					String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.RESET;
 					temp = StringUtils.replaceIgnoreCase(temp, usernameMention, MarkdownSanitizer.escape(formattedMention));
 
 					if (member.getNickname() != null) {
@@ -508,13 +507,23 @@ public class DiscordEventListener extends ListenerAdapter {
 				}
 				for (Role role : CHANNEL.getGuild().getRoles()) {
 					String roleMention = "@" + role.getName();
-					String formattedMention = Formatting.YELLOW + "@" + role.getName() + Formatting.GRAY;
+					String formattedMention = Formatting.YELLOW + "@" + role.getName() + Formatting.RESET;
 					temp = StringUtils.replaceIgnoreCase(temp, roleMention, MarkdownSanitizer.escape(formattedMention));
 				}
-				temp = StringUtils.replaceIgnoreCase(temp, "@everyone", Formatting.YELLOW + "@everyone" + Formatting.GRAY);
-				temp = StringUtils.replaceIgnoreCase(temp, "@here", Formatting.YELLOW + "@here" + Formatting.GRAY);
+				temp = StringUtils.replaceIgnoreCase(temp, "@everyone", Formatting.YELLOW + "@everyone" + Formatting.RESET);
+				temp = StringUtils.replaceIgnoreCase(temp, "@here", Formatting.YELLOW + "@here" + Formatting.RESET);
 
 				message = new StringBuilder(temp);
+			}
+
+			String textBeforePlaceholder = "";
+			String textAfterPlaceholder = "";
+			String[] arrayParts = StringUtils.substringsBetween(Translations.translateMessage("message.formattedChatMessage"), "{", "}");
+			for (String arrayPart : arrayParts) {
+				if (arrayPart.contains("%message%")) {
+					textBeforePlaceholder = StringUtils.substringBefore(arrayPart, "%message%");
+					textAfterPlaceholder = StringUtils.substringAfter(arrayPart, "%message%");
+				}
 			}
 
 			finalMessage = MarkdownParser.parseMarkdown(message.toString().replace("\\", "\\\\"));
