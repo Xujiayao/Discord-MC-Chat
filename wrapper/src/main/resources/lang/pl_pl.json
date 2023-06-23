@@ -17,9 +17,9 @@
   "utils.utils.cUpdate.changelog": "Zmiany: ",
   "utils.utils.cUpdate.upToDate": "**MCDiscordChat jest w najnowszej wersji!**",
 
-  "utils.utils.whitelist.whitelistFailed": "**Player is already whitelisted!**",
-  "utils.utils.whitelist.whitelistSuccess": "**Added %s to the whitelist!**",
-  "utils.utils.whitelist.playerNotExist": "**That player does not exist!**",
+  "utils.utils.whitelist.whitelistFailed": "**Gracz jest już na białej liście!**",
+  "utils.utils.whitelist.whitelistSuccess": "**Dodano %s do białej listy!**",
+  "utils.utils.whitelist.playerNotExist": "**Ten gracz nie istnieje!**",
 
   "utils.utils.reload.success": "**Plik ustawień poprawnie przeładowano!**",
   "utils.utils.reload.fail": "**Plik ustawień został nie poprawnie przeładowany!**",
@@ -40,8 +40,8 @@
   "utils.utils.ubCommands.stats.type": "Typ statystyki",
   "utils.utils.ubCommands.stats.name": "Nazwa statystyki",
   "utils.utils.ubCommands.update": "Sprawdź czy jest aktualizacja",
-  "utils.utils.ubCommands.whitelist": "Add a player to the server whitelist",
-  "utils.utils.ubCommands.whitelist.player": "Player name",
+  "utils.utils.ubCommands.whitelist": "Dodaj gracza do białej listy serwera",
+  "utils.utils.ubCommands.whitelist.player": "Nazwa gracza",
   "utils.utils.ubCommands.console": "Wykonaj komendę w konsoli serwera (tylko administrator)",
   "utils.utils.ubCommands.console.command": "Komenda do wykonania",
   "utils.utils.ubCommands.log": "Zobacz specyficzny dziennik serwera (tylko administrator)",
