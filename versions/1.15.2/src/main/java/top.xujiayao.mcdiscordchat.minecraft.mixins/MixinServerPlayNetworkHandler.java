@@ -36,10 +36,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
@@ -118,31 +115,16 @@ public abstract class MixinServerPlayNetworkHandler implements ServerPlayPacketL
 
 				if (!CONFIG.generic.allowedMentions.isEmpty() && contentToDiscord.contains("@")) {
 					if (CONFIG.generic.allowedMentions.contains("users")) {
-						List<String> parsedList = new ArrayList<>();
-						Pattern pattern = Pattern.compile("@[^@]*?#\\d{4}");
-						Matcher matcher = pattern.matcher(contentToDiscord);
-						while (matcher.find()) {
-							String tagMention = matcher.group();
-							Member member = CHANNEL.getGuild().getMemberByTag(tagMention.substring(1));
-							if (member != null) {
-								parsedList.add(member.getUser().getName());
-								parsedList.add(member.getEffectiveName());
-
-								String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.RESET;
-								contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, tagMention, member.getAsMention());
-								contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, tagMention, MarkdownSanitizer.escape(formattedMention));
-							}
-						}
 						for (Member member : CHANNEL.getMembers()) {
-							if (parsedList.contains(member.getUser().getName()) || parsedList.contains(member.getEffectiveName())) {
-								continue;
-							}
-
 							String usernameMention = "@" + member.getUser().getName();
+							String displayNameMention = "@" + member.getUser().getEffectiveName();
 							String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.RESET;
 
 							contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, usernameMention, member.getAsMention());
 							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, usernameMention, MarkdownSanitizer.escape(formattedMention));
+
+							contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, displayNameMention, member.getAsMention());
+							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, displayNameMention, MarkdownSanitizer.escape(formattedMention));
 
 							if (member.getNickname() != null) {
 								String nicknameMention = "@" + member.getNickname();

@@ -398,8 +398,10 @@ public class DiscordEventListener extends ListenerAdapter {
 
 					for (Member member : CHANNEL.getMembers()) {
 						String usernameMention = "@" + member.getUser().getName();
+						String displayNameMention = "@" + member.getUser().getEffectiveName();
 						String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.RESET;
 						temp = StringUtils.replaceIgnoreCase(temp, usernameMention, MarkdownSanitizer.escape(formattedMention));
+						temp = StringUtils.replaceIgnoreCase(temp, displayNameMention, MarkdownSanitizer.escape(formattedMention));
 
 						if (member.getNickname() != null) {
 							String nicknameMention = "@" + member.getNickname();
@@ -497,8 +499,10 @@ public class DiscordEventListener extends ListenerAdapter {
 
 				for (Member member : CHANNEL.getMembers()) {
 					String usernameMention = "@" + member.getUser().getName();
+					String displayNameMention = "@" + member.getUser().getEffectiveName();
 					String formattedMention = Formatting.YELLOW + "@" + member.getEffectiveName() + Formatting.RESET;
 					temp = StringUtils.replaceIgnoreCase(temp, usernameMention, MarkdownSanitizer.escape(formattedMention));
+					temp = StringUtils.replaceIgnoreCase(temp, displayNameMention, MarkdownSanitizer.escape(formattedMention));
 
 					if (member.getNickname() != null) {
 						String nicknameMention = "@" + member.getNickname();
