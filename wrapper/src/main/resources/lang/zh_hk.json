@@ -26,7 +26,7 @@
 
   "utils.utils.gicMessage.serverStatus": "運行狀態",
   "utils.utils.gicMessage.onlinePlayers": "在線玩家 (%s/%s)：\n",
-  "utils.utils.gicMessage.noPlayersOnline": "當前沒有在線玩家！\n",
+  "utils.utils.gicMessage.noPlayersOnline": "目前冇在線玩家！\n",
   "utils.utils.gicMessage.serverTps": "\n伺服器 TPS：\n%s",
   "utils.utils.gicMessage.serverMspt": "\n\n伺服器 MSPT：\n%s",
   "utils.utils.gicMessage.serverUsedMemory": "\n\n伺服器已用記憶體：\n%s MB / %s MB",
