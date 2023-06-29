@@ -305,7 +305,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			referencedMessageTemp = e.getMessage().getReferencedMessage().getContentDisplay();
 
 			if (StringUtils.countMatches(referencedMessageTemp, "\n") > CONFIG.generic.discordNewlineLimit) {
-				referencedMessageTemp = referencedMessageTemp.substring(0, StringUtils.ordinalIndexOf(referencedMessageTemp, "\n", CONFIG.generic.discordNewlineLimit + 1) + 1) + "...";
+				referencedMessageTemp = referencedMessageTemp.substring(0, StringUtils.ordinalIndexOf(referencedMessageTemp, "\n", CONFIG.generic.discordNewlineLimit) + 1) + "...";
 			}
 
 			try {
@@ -328,7 +328,7 @@ public class DiscordEventListener extends ListenerAdapter {
 		}
 
 		if (StringUtils.countMatches(messageTemp, "\n") > CONFIG.generic.discordNewlineLimit) {
-			messageTemp = messageTemp.substring(0, StringUtils.ordinalIndexOf(messageTemp, "\n", CONFIG.generic.discordNewlineLimit + 1) + 1) + "...";
+			messageTemp = messageTemp.substring(0, StringUtils.ordinalIndexOf(messageTemp, "\n", CONFIG.generic.discordNewlineLimit) + 1) + "...";
 		}
 
 		try {
