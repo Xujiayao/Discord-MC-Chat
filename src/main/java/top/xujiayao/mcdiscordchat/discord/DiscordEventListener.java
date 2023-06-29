@@ -347,6 +347,21 @@ public class DiscordEventListener extends ListenerAdapter {
 			return;
 		}
 
+		String[] textBeforePlaceholder = new String[2];
+		String[] textAfterPlaceholder = new String[2];
+		for (String part : StringUtils.substringsBetween(Translations.translateMessage("message.formattedResponseMessage"), "{", "}")) {
+			if (part.contains("%message%")) {
+				textBeforePlaceholder[0] = StringUtils.substringBefore(part, "%message%");
+				textAfterPlaceholder[0] = StringUtils.substringAfter(part, "%message%");
+			}
+		}
+		for (String part : StringUtils.substringsBetween(Translations.translateMessage("message.formattedChatMessage"), "{", "}")) {
+			if (part.contains("%message%")) {
+				textBeforePlaceholder[1] = StringUtils.substringBefore(part, "%message%");
+				textAfterPlaceholder[1] = StringUtils.substringAfter(part, "%message%");
+			}
+		}
+
 		String finalReferencedMessage = "";
 		String finalMessage = "";
 
@@ -419,16 +434,6 @@ public class DiscordEventListener extends ListenerAdapter {
 					referencedMessage = new StringBuilder(temp);
 				}
 
-				String textBeforePlaceholder = "";
-				String textAfterPlaceholder = "";
-				String[] arrayParts = StringUtils.substringsBetween(Translations.translateMessage("message.formattedResponseMessage"), "{", "}");
-				for (String arrayPart : arrayParts) {
-					if (arrayPart.contains("%message%")) {
-						textBeforePlaceholder = StringUtils.substringBefore(arrayPart, "%message%");
-						textAfterPlaceholder = StringUtils.substringAfter(arrayPart, "%message%");
-					}
-				}
-
 				finalReferencedMessage = MarkdownParser.parseMarkdown(referencedMessage.toString().replace("\\", "\\\\"));
 
 				for (String protocol : new String[]{"http://", "https://"}) {
@@ -445,9 +450,9 @@ public class DiscordEventListener extends ListenerAdapter {
 							String hyperlinkInsert;
 							if (StringUtils.containsIgnoreCase(link, "gif")
 									&& StringUtils.containsIgnoreCase(link, "tenor.com")) {
-								hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"<gif>\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
+								hyperlinkInsert = textAfterPlaceholder[0] + "},{\"text\":\"<gif>\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder[0];
 							} else {
-								hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"" + protocol + link + "\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
+								hyperlinkInsert = textAfterPlaceholder[0] + "},{\"text\":\"" + protocol + link + "\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder[0];
 							}
 							finalReferencedMessage = StringUtils.replaceIgnoreCase(finalReferencedMessage, (protocol + link), hyperlinkInsert);
 						}
@@ -520,16 +525,6 @@ public class DiscordEventListener extends ListenerAdapter {
 				message = new StringBuilder(temp);
 			}
 
-			String textBeforePlaceholder = "";
-			String textAfterPlaceholder = "";
-			String[] arrayParts = StringUtils.substringsBetween(Translations.translateMessage("message.formattedChatMessage"), "{", "}");
-			for (String arrayPart : arrayParts) {
-				if (arrayPart.contains("%message%")) {
-					textBeforePlaceholder = StringUtils.substringBefore(arrayPart, "%message%");
-					textAfterPlaceholder = StringUtils.substringAfter(arrayPart, "%message%");
-				}
-			}
-
 			finalMessage = MarkdownParser.parseMarkdown(message.toString().replace("\\", "\\\\"));
 
 			for (String protocol : new String[]{"http://", "https://"}) {
@@ -546,9 +541,9 @@ public class DiscordEventListener extends ListenerAdapter {
 						String hyperlinkInsert;
 						if (StringUtils.containsIgnoreCase(link, "gif")
 								&& StringUtils.containsIgnoreCase(link, "tenor.com")) {
-							hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"<gif>\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
+							hyperlinkInsert = textAfterPlaceholder[1] + "},{\"text\":\"<gif>\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder[1];
 						} else {
-							hyperlinkInsert = textAfterPlaceholder + "},{\"text\":\"" + protocol + link + "\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder;
+							hyperlinkInsert = textAfterPlaceholder[1] + "},{\"text\":\"" + protocol + link + "\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder[1];
 						}
 						finalMessage = StringUtils.replaceIgnoreCase(finalMessage, (protocol + link), hyperlinkInsert);
 					}
@@ -558,23 +553,27 @@ public class DiscordEventListener extends ListenerAdapter {
 
 		if (CONFIG.generic.broadcastChatMessages) {
 			if (e.getMessage().getReferencedMessage() != null) {
-				Text referenceFinalText = Text.Serializer.fromJson(Translations.translateMessage("message.formattedResponseMessage")
+				String s = Translations.translateMessage("message.formattedResponseMessage");
+				Text referenceFinalText = Text.Serializer.fromJson(s
+						.replace("%message%", (CONFIG.generic.formatChatMessages ? finalReferencedMessage : EmojiParser.parseToAliases(referencedMessageTemp).replace("\"", "\\\""))
+								.replace("\n", "\n" + textAfterPlaceholder[0] + "}," + s.substring(1, s.indexOf("%message%"))))
 						.replace("%server%", "Discord")
 						.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()).replace("\\", "\\\\").replace("\"", "\\\"") : webhookName)
 						.replace("%roleName%", referencedMemberRoleName)
-						.replace("%roleColor%", "#" + Integer.toHexString((referencedMember != null) ? referencedMember.getColorRaw() : Role.DEFAULT_COLOR_RAW))
-						.replace("%message%", CONFIG.generic.formatChatMessages ? finalReferencedMessage : EmojiParser.parseToAliases(referencedMessageTemp).replace("\"", "\\\"")));
+						.replace("%roleColor%", "#" + Integer.toHexString((referencedMember != null) ? referencedMember.getColorRaw() : Role.DEFAULT_COLOR_RAW)));
 
 				SERVER.getPlayerManager().getPlayerList().forEach(
 						player -> player.sendMessage(referenceFinalText, false));
 			}
 
-			Text finalText = Text.Serializer.fromJson(Translations.translateMessage("message.formattedChatMessage")
+			String s = Translations.translateMessage("message.formattedChatMessage");
+			Text finalText = Text.Serializer.fromJson(s
+					.replace("%message%", (CONFIG.generic.formatChatMessages ? finalMessage : EmojiParser.parseToAliases(messageTemp).replace("\"", "\\\""))
+							.replace("\n", "\n" + textAfterPlaceholder[1] + "}," + s.substring(1, s.indexOf("%message%"))))
 					.replace("%server%", "Discord")
 					.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\").replace("\"", "\\\""))
 					.replace("%roleName%", memberRoleName)
-					.replace("%roleColor%", "#" + Integer.toHexString(e.getMember().getColorRaw()))
-					.replace("%message%", CONFIG.generic.formatChatMessages ? finalMessage : EmojiParser.parseToAliases(messageTemp).replace("\"", "\\\"")));
+					.replace("%roleColor%", "#" + Integer.toHexString(e.getMember().getColorRaw())));
 
 			SERVER.getPlayerManager().getPlayerList().forEach(
 					player -> player.sendMessage(finalText, false));
