@@ -33,7 +33,7 @@ public class UserThread extends Thread {
 
 	@Override
 	public void run() {
-		LOGGER.info("[MultiServer] A client is connected to the server");
+		LOGGER.info("[MultiServer] A client has connected to the server");
 
 		try {
 			reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
