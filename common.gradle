@@ -22,7 +22,7 @@ dependencies {
     modImplementation("net.fabricmc:fabric-loader:${loader_version}")
     modImplementation("net.fabricmc.fabric-api:fabric-api:${fabric_version}")
 
-    modImplementation("net.dv8tion:JDA:5.0.0-beta.11") {
+    modImplementation("net.dv8tion:JDA:5.0.0-beta.12") {
         exclude module: "opus-java"
     }
     modImplementation("net.sf.trove4j:trove4j:3.0.3")
