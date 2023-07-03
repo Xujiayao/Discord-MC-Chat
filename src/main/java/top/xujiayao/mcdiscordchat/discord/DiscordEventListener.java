@@ -147,7 +147,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			case "console" -> {
 				if (Utils.isAdmin(e.getMember())) {
 					String command = Objects.requireNonNull(e.getOption("command")).getAsString();
-					if (command.equals("stop") || command.equals("/stop")) {
+					if ("stop".equals(command) || "/stop".equals(command)) {
 						e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.stoppingServer"))
 								.submit()
 								.whenComplete((v, ex) -> SERVER.stop(true));
@@ -173,7 +173,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				if (Utils.isAdmin(e.getMember())) {
 					String fileName = Objects.requireNonNull(e.getOption("file")).getAsString();
 
-					if (fileName.equals("latest.log")) {
+					if ("latest.log".equals(fileName)) {
 						e.getHook().sendFiles(FileUpload.fromData(new File(FabricLoader.getInstance().getGameDir().toFile(), "logs/latest.log"))).queue();
 					} else {
 						File source = new File(FabricLoader.getInstance().getGameDir().toFile(), ("logs/" + fileName));
@@ -218,7 +218,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
 	@Override
 	public void onCommandAutoCompleteInteraction(CommandAutoCompleteInteractionEvent e) {
-		if (e.getName().equals("log") && e.getFocusedOption().getName().equals("file")) {
+		if ("log".equals(e.getName()) && "file".equals(e.getFocusedOption().getName())) {
 			String[] files = new File(FabricLoader.getInstance().getGameDir().toFile(), "logs").list();
 			files = Arrays.stream(Objects.requireNonNull(files))
 					.filter(file -> file.contains(e.getFocusedOption().getValue()))
@@ -234,7 +234,7 @@ public class DiscordEventListener extends ListenerAdapter {
 					.collect(Collectors.toList());
 
 			e.replyChoices(options).queue();
-		} else if (e.getName().equals("console") && e.getFocusedOption().getName().equals("command")) {
+		} else if ("console".equals(e.getName()) && "command".equals(e.getFocusedOption().getName())) {
 			CommandDispatcher<ServerCommandSource> dispatcher = SERVER.getCommandManager().getDispatcher();
 
 			try {

@@ -43,7 +43,7 @@ public class UserThread extends Thread {
 			while (true) {
 				String message = reader.readLine();
 
-				if (message.equals("bye")) {
+				if ("bye".equals(message)) {
 					reader.close();
 					socket.close();
 					break;
