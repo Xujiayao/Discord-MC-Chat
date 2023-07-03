@@ -248,9 +248,9 @@ public abstract class MixinServerPlayNetworkHandler {
 			body.addProperty("username", ((CONFIG.multiServer.enable) ? ("[" + CONFIG.multiServer.name + "] " + player.getEntityName()) : player.getEntityName()));
 			body.addProperty("avatar_url", CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUuid().toString() : player.getEntityName())));
 
-			JsonObject allowed_mentions = new JsonObject();
-			allowed_mentions.add("parse", new Gson().toJsonTree(CONFIG.generic.allowedMentions).getAsJsonArray());
-			body.add("allowed_mentions", allowed_mentions);
+			JsonObject allowedMentions = new JsonObject();
+			allowedMentions.add("parse", new Gson().toJsonTree(CONFIG.generic.allowedMentions).getAsJsonArray());
+			body.add("allowed_mentions", allowedMentions);
 
 			Request request = new Request.Builder()
 					.url(WEBHOOK.getUrl())

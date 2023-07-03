@@ -11,7 +11,6 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
-import net.dv8tion.jda.api.entities.sticker.StickerItem;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -52,7 +51,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
@@ -231,7 +229,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
 			List<Command.Choice> options = Stream.of(files)
 					.map(file -> new Command.Choice(file, file))
-					.collect(Collectors.toList());
+					.toList();
 
 			e.replyChoices(options).queue();
 		} else if ("console".equals(e.getName()) && "command".equals(e.getFocusedOption().getName())) {
@@ -270,7 +268,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
 				List<Command.Choice> options = Stream.of(commands)
 						.map(command -> new Command.Choice(command, command))
-						.collect(Collectors.toList());
+						.toList();
 
 				e.replyChoices(options).queue();
 			} catch (Exception ex) {
@@ -391,7 +389,7 @@ public class DiscordEventListener extends ListenerAdapter {
 					if (!referencedMessageTemp.isBlank()) {
 						referencedMessage.append(" ");
 					}
-					for (StickerItem ignored : e.getMessage().getReferencedMessage().getStickers()) {
+					for (int i = 0; i < e.getMessage().getReferencedMessage().getStickers().size(); i++) {
 						referencedMessage.append(Formatting.YELLOW).append("<sticker>");
 					}
 				}
@@ -400,9 +398,7 @@ public class DiscordEventListener extends ListenerAdapter {
 					String[] emojiNames = StringUtils.substringsBetween(referencedMessage.toString(), ":", ":");
 					for (String emojiName : emojiNames) {
 						List<RichCustomEmoji> emojis = JDA.getEmojisByName(emojiName, true);
-						if (!emojis.isEmpty()) {
-							referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.RESET)));
-						} else if (EmojiManager.getForAlias(emojiName) != null) {
+						if (!emojis.isEmpty() || EmojiManager.getForAlias(emojiName) != null) {
 							referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.RESET)));
 						}
 					}
@@ -482,7 +478,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				if (!messageTemp.isBlank()) {
 					message.append(" ");
 				}
-				for (StickerItem ignored : e.getMessage().getStickers()) {
+				for (int i = 0; i < e.getMessage().getStickers().size(); i++) {
 					message.append(Formatting.YELLOW).append("<sticker>");
 				}
 			}
@@ -491,9 +487,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				String[] emojiNames = StringUtils.substringsBetween(message.toString(), ":", ":");
 				for (String emojiName : emojiNames) {
 					List<RichCustomEmoji> emojis = JDA.getEmojisByName(emojiName, true);
-					if (!emojis.isEmpty()) {
-						message = new StringBuilder(StringUtils.replaceIgnoreCase(message.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.RESET)));
-					} else if (EmojiManager.getForAlias(emojiName) != null) {
+					if (!emojis.isEmpty() || EmojiManager.getForAlias(emojiName) != null) {
 						message = new StringBuilder(StringUtils.replaceIgnoreCase(message.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.RESET)));
 					}
 				}

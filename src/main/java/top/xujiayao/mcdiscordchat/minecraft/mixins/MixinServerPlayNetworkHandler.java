@@ -199,7 +199,7 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 
 						CompletableFuture<FilteredMessage> completableFuture = filterText(signedMessage.getSignedContent());
 						CompletableFuture<Text> completableFuture2 = server.getMessageDecorator().decorate(player, signedMessage.getContent());
-						messageChainTaskQueue.append((executor) -> CompletableFuture.allOf(completableFuture, completableFuture2).thenAcceptAsync((void_) -> {
+						messageChainTaskQueue.append(executor -> CompletableFuture.allOf(completableFuture, completableFuture2).thenAcceptAsync(void_ -> {
 							SignedMessage signedMessage2 = signedMessage.withUnsignedContent(completableFuture2.join()).withFilterMask(completableFuture.join().mask());
 							handleDecoratedMessage(signedMessage2);
 						}, executor));
@@ -277,9 +277,9 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 			body.addProperty("username", ((CONFIG.multiServer.enable) ? ("[" + CONFIG.multiServer.name + "] " + player.getEntityName()) : player.getEntityName()));
 			body.addProperty("avatar_url", CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUuid().toString() : player.getEntityName())));
 
-			JsonObject allowed_mentions = new JsonObject();
-			allowed_mentions.add("parse", new Gson().toJsonTree(CONFIG.generic.allowedMentions).getAsJsonArray());
-			body.add("allowed_mentions", allowed_mentions);
+			JsonObject allowedMentions = new JsonObject();
+			allowedMentions.add("parse", new Gson().toJsonTree(CONFIG.generic.allowedMentions).getAsJsonArray());
+			body.add("allowed_mentions", allowedMentions);
 
 			Request request = new Request.Builder()
 					.url(WEBHOOK.getUrl())

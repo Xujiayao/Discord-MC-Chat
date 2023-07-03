@@ -35,8 +35,8 @@ public abstract class MixinServerPlayerEntity extends PlayerEntity {
 	//$$ 	super(world, pos, yaw, profile, publicKey);
 	//$$ }
 	//#elseif MC >= 11600
-	private MixinServerPlayerEntity(World world, BlockPos pos, float yaw, GameProfile profile) {
-		super(world, pos, yaw, profile);
+	protected MixinServerPlayerEntity(World world, BlockPos pos, float yaw, GameProfile gameProfile) {
+		super(world, pos, yaw, gameProfile);
 	}
 	//#else
 	//$$ private MixinServerPlayerEntity(World world, GameProfile profile) {
@@ -56,8 +56,8 @@ public abstract class MixinServerPlayerEntity extends PlayerEntity {
 			Object[] args = new String[deathMessage.getArgs().length];
 			for (int i = 0; i < deathMessage.getArgs().length; i++) {
 				Object object = deathMessage.getArgs()[i];
-				if (object instanceof Text) {
-					args[i] = ((Text) object).getString();
+				if (object instanceof Text text) {
+					args[i] = text.getString();
 				} else {
 					args[i] = object == null ? "null" : object.toString();
 				}

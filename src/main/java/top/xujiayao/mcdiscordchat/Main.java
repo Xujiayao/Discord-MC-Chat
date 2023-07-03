@@ -134,7 +134,7 @@ public class Main implements DedicatedServerModInitializer {
 		//$$ CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> MinecraftCommands.register(dispatcher));
 		//#endif
 
-		ServerLifecycleEvents.SERVER_STARTED.register((server) -> {
+		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
 			SERVER_STARTED_TIME = Long.toString(Instant.now().getEpochSecond());
 
 			if (CONFIG.generic.announceServerStartStop) {
@@ -163,7 +163,7 @@ public class Main implements DedicatedServerModInitializer {
 			}
 		});
 
-		ServerLifecycleEvents.SERVER_STOPPED.register((server) -> {
+		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			MSPT_MONITOR_TIMER.cancel();
 			CHANNEL_TOPIC_MONITOR_TIMER.cancel();
 			CHECK_UPDATE_TIMER.cancel();

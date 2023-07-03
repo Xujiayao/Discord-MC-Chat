@@ -333,7 +333,7 @@ public class Utils {
 			sortedlist.sort((c1, c2) -> c2.getValue().compareTo(c1.getValue()));
 
 			for (Map.Entry<String, Integer> entry : sortedlist) {
-				message.append(String.format("\n%-8d %-8s", entry.getValue(), entry.getKey()));
+				message.append(String.format("%n%-8d %-8s", entry.getValue(), entry.getKey()));
 			}
 		}
 
