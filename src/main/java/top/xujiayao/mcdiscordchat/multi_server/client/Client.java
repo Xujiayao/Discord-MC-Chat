@@ -1,4 +1,4 @@
-package top.xujiayao.mcdiscordchat.multiServer.client;
+package top.xujiayao.mcdiscordchat.multi_server.client;
 
 import java.net.Socket;
 

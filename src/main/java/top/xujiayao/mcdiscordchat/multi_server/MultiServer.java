@@ -1,11 +1,11 @@
-package top.xujiayao.mcdiscordchat.multiServer;
+package top.xujiayao.mcdiscordchat.multi_server;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import top.xujiayao.mcdiscordchat.multiServer.client.Client;
-import top.xujiayao.mcdiscordchat.multiServer.server.Server;
-import top.xujiayao.mcdiscordchat.multiServer.server.UserThread;
+import top.xujiayao.mcdiscordchat.multi_server.client.Client;
+import top.xujiayao.mcdiscordchat.multi_server.server.Server;
+import top.xujiayao.mcdiscordchat.multi_server.server.UserThread;
 import top.xujiayao.mcdiscordchat.utils.Translations;
 
 import java.time.Instant;

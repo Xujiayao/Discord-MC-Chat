@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 //#endif
 import top.xujiayao.mcdiscordchat.discord.DiscordEventListener;
 import top.xujiayao.mcdiscordchat.minecraft.MinecraftCommands;
-import top.xujiayao.mcdiscordchat.multiServer.MultiServer;
+import top.xujiayao.mcdiscordchat.multi_server.MultiServer;
 import top.xujiayao.mcdiscordchat.utils.ConfigManager;
 import top.xujiayao.mcdiscordchat.utils.ConsoleLogListener;
 import top.xujiayao.mcdiscordchat.utils.Translations;

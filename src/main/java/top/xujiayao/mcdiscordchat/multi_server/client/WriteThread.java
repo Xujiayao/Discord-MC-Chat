@@ -1,4 +1,4 @@
-package top.xujiayao.mcdiscordchat.multiServer.client;
+package top.xujiayao.mcdiscordchat.multi_server.client;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 

@@ -1,4 +1,4 @@
-package top.xujiayao.mcdiscordchat.multiServer.server;
+package top.xujiayao.mcdiscordchat.multi_server.server;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;

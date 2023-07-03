@@ -22,7 +22,7 @@ import okhttp3.Response;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import top.xujiayao.mcdiscordchat.multiServer.MultiServer;
+import top.xujiayao.mcdiscordchat.multi_server.MultiServer;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
