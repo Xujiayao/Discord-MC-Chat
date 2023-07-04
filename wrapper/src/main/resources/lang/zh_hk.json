@@ -1,13 +1,13 @@
 {
   "discord.deListener.oscInteraction.serverNotStarted": "**你需要等待伺服器完全啟動！**",
   "discord.deListener.oscInteraction.notFromGuild": "**你唔可以透過私人訊息使用此命令！**",
-  "discord.deListener.oscInteraction.helpMessage": "```\n=============== 幫助 ===============\n/info                | 查詢伺服器運行狀態\n/help                | 獲取可用嘅命令列表\n/update              | 檢查更新\n/stats <type> <name> | 查詢該統計資訊嘅排行榜\n/reload              | 重新載入 MCDiscordChat 設定文件（僅限管理員）\n/console <command>   | 喺伺服器控制台中執行命令（僅限管理員）\n/log <file>          | 獲取指定嘅伺服器日志（僅限管理員）\n/stop                | 停止伺服器（僅限管理員）\n```",
+  "discord.deListener.oscInteraction.helpMessage": "```\n=============== 幫助 ===============\n/help                | 獲取可用嘅命令列表\n/info                | 查詢伺服器運行狀態\n/stats <type> <name> | 查詢該統計資訊嘅排行榜\n/update              | 檢查更新\n/whitelist <player>  | 新增玩家至伺服器白名單\n/console <command>   | 喺伺服器控制台中執行命令（僅限管理員）\n/log <file>          | 獲取指定嘅伺服器日志（僅限管理員）\n/reload              | 重新載入 MCDiscordChat 設定文件（僅限管理員）\n/stop                | 停止伺服器（僅限管理員）\n```",
   "discord.deListener.oscInteraction.stoppingServer": "**正在停止伺服器！**",
   "discord.deListener.oscInteraction.executingCommand": "**正在執行命令！**",
   "discord.deListener.oscInteraction.noPermission": "**你冇權限使用此命令！**",
   "discord.deListener.oscInteraction.fileNotFound": "**搵唔到指定文件！**",
 
-  "minecraft.mcCommands.register.helpMessage": "=============== 幫助 ===============\n/mcdc info                  | 查詢伺服器運行狀態\n/mcdc help                  | 獲取可用嘅命令列表\n/mcdc update                | 檢查更新\n/mcdc stats <type> <name>   | 查詢該統計資訊嘅排行榜\n/mcdc reload                | 重新載入 MCDiscordChat 設定文件（僅限管理員）\n~~/mcdc console <command>~~ | 喺伺服器控制台中執行命令（僅限管理員）\n~~/mcdc log <file>~~        | 獲取指定嘅伺服器日志（僅限管理員）\n~~/mcdc stop~~              | 停止伺服器（僅限管理員）\n\n*帶刪除線嘅命令並冇實現，因爲呢啲命令喺游戲内係多餘或無法實現嘅。*\n\n*僅限管理員嘅命令只係對 4 級管理員可用，即擁有 OP 權限等級 4 嘅玩家或伺服器控制台。*",
+  "minecraft.mcCommands.register.helpMessage": "=============== 幫助 ===============\n/mcdc help                  | 獲取可用嘅命令列表\n/mcdc info                  | 查詢伺服器運行狀態\n/mcdc stats <type> <name>   | 查詢該統計資訊嘅排行榜\n/mcdc update                | 檢查更新\n/mcdc whitelist <player>    | 新增玩家至伺服器白名單\n/mcdc reload                | 重新載入 MCDiscordChat 設定文件（僅限管理員）\n~~/mcdc console <command>~~ | 喺伺服器控制台中執行命令（僅限管理員）\n~~/mcdc log <file>~~        | 獲取指定嘅伺服器日志（僅限管理員）\n~~/mcdc stop~~              | 停止伺服器（僅限管理員）\n\n*帶刪除線嘅命令並冇實現，因爲呢啲命令喺游戲内係多餘或無法實現嘅。*\n\n*僅限管理員嘅命令只係對 4 級管理員可用，即擁有 OP 權限等級 4 嘅玩家或伺服器控制台。*",
 
   "utils.clListener.startListening": "**開始監聽控制台日志！**",
   "utils.clListener.stopListening": "**停止監聽控制台日志！**",
