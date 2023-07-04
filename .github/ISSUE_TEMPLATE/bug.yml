@@ -31,7 +31,7 @@ body:
       label: Minecraft Version
       description: |
         The version of Minecraft you are using?
-      placeholder: "Example: 1.20"
+      placeholder: "Example: 1.20.1"
     validations:
       required: true
   - type: input
@@ -40,7 +40,7 @@ body:
       label: MCDiscordChat Version
       description: |
         The version of MCDiscordChat you are using?
-      placeholder: "Example: 2.1.4"
+      placeholder: "Example: 2.2.0"
     validations:
       required: true
   - type: textarea
@@ -72,6 +72,6 @@ body:
     attributes:
       label: Config
       description: |
-        Please provide your MCDiscordChat config file (mcdiscordchat.json) here, remember to remove the botToken and webhookURL.
+        Please provide your MCDiscordChat config file (mcdiscordchat.json) here, remember to remove the botToken.
     validations:
       required: true

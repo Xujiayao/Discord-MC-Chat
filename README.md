@@ -50,7 +50,7 @@ If you are interested in contributing to MCDC, you can submit a pull request on 
 
 For code contributions, the build file is located in the `/wrapper/build/libs/` folder.
 
-For translation contributions, language files are located in the `/wrapper/src/main/resources/lang/` folder. Copy `en_us.json` and rename the new one to your language code to get started. Please provide translations for the entire file for all keys except those starting with the `death` prefix. The death messages are official translations for Minecraft, which may sync from the official translations at any time.
+For translation contributions, language files are located in the `/wrapper/src/main/resources/lang/` folder. Copy `en_us.json` and rename the new one to your language code to get started. Please provide translations for the entire file for all keys except those starting with the `advancements` and `death` prefixes. Those messages are official translations of Minecraft, which may sync from the official translations at any time.
 
 ## Features
 
@@ -61,12 +61,14 @@ For translation contributions, language files are located in the `/wrapper/src/m
   - Support displaying server status using Discord channel topic feature
   - Support displaying server player count in bot activity status
   - Support Discord Webhook feature
+    - Dynamic-created MCDC Webhook
     - Customizable Webhook Avatar API
-    - Use the bot itself to send chat messages when Webhook URL is not filled
+    - Use the bot itself to send chat messages when Webhook is disabled
   - Support in-game Markdown parsing
   - Support highlighting and using default Unicode and server custom emoji in-game
   - Support highlighting stickers in-game
   - Support highlighting and mentions (@) in-game
+    - Customizable scope of allowed mentions (@) in-game
     - Support disabling mentions (@) in-game
   - Support highlighting and opening hyperlinks and GIFs in-game
   - Support disabling all parsing
@@ -82,22 +84,24 @@ For translation contributions, language files are located in the `/wrapper/src/m
   - Notify in-game players when someone executes an MCDC command
   - /console command supports Minecraft command auto-completion
   - Normal Commands
-    - /info                    | Query server running status
     - /help                    | Get a list of available commands
-    - /update                  | Check for update
+    - /info                    | Query server running status
     - /stats \<type\> \<name\> | Query the scoreboard of a statistic
+    - /update                  | Check for update
+    - /whitelist \<player\>    | Add a player to the server whitelist
   - Admin Commands
-    - /reload                  | Reload MCDiscordChat config file (admin only)
     - /console \<command\>     | Execute a command in the server console (admin only)
     - /log \<file\>            | Get the specified server log (admin only)
+    - /reload                  | Reload MCDiscordChat config file (admin only)
     - /stop                    | Stop the server (admin only)
 - Minecraft Commands available
   - Admin-only commands require a level 4 operator at minimum
   - Normal Commands
-    - /mcdc info                    | Query server running status
     - /mcdc help                    | Get a list of available commands
-    - /mcdc update                  | Check for update
+    - /mcdc info                    | Query server running status
     - /mcdc stats \<type\> \<name\> | Query the scoreboard of a statistic
+    - /mcdc update                  | Check for update
+    - /mcdc whitelist \<player\>    | Add a player to the server whitelist
   - Admin Commands
     - /mcdc reload                  | Reload MCDiscordChat config file (admin only)
 - Fully customizable message format
@@ -105,14 +109,17 @@ For translation contributions, language files are located in the `/wrapper/src/m
   - In-game
     - Chat messages from Discord
     - Response messages from Discord
-    - Messages from other servers
+    - Messages from other MCDC servers
   - Discord
     - Server started
     - Server stopped
     - Player joined server
     - Player left server
     - Player reached a progress / achieved a goal / completed a challenge
+      - Multilingual support
+      - Support displaying descriptions for task/challenge/goal messages
     - Player died
+      - Multilingual support
     - Server MSPT is higher than a certain value
 - Use admin list to configure user permissions to use special commands
 - Support Hot Reloading of the config file
@@ -123,13 +130,16 @@ For translation contributions, language files are located in the `/wrapper/src/m
 
 Languages currently available:
 
-| Code    | Language          |
-|---------|-------------------|
-| `en_us` | English (US)      |
-| `zh_cn` | 中文（简体）            |
-| `ru_ru` | Русский (Россия)  |
-| `ko_kr` | 한국어（대한민국）         |
-| `fr_fr` | Français (France) |
+| Code    | Language             |
+|---------|----------------------|
+| `en_us` | English (US)         |
+| `fr_fr` | Français (France)    |
+| `ko_kr` | 한국어（대한민국）            |
+| `no_no` | Norsk Bokmål (Norge) |
+| `pl_pl` | Polski (Polska)      |
+| `ru_ru` | Русский (Россия)     |
+| `zh_cn` | 简体中文（中国大陆）           |
+| `zh_hk` | 繁體中文（香港特別行政區）        |
 
 ## Contributors
 

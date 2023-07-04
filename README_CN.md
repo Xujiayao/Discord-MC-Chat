@@ -50,7 +50,7 @@ MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Dis
 
 对于代码贡献，构建文件位于 `/wrapper/build/libs/` 文件夹中。
 
-对于翻译贡献，语言文件位于 `/wrapper/src/main/resources/lang/` 文件夹中。复制 `en_us.json` 并将新的文件重命名为您的语言代码以开始翻译。请为整个文件中除了以 `death` 前缀开头的键之外其它所有键提供翻译。死亡消息是 Minecraft 的官方翻译，可随时从官方翻译同步。
+对于翻译贡献，语言文件位于 `/wrapper/src/main/resources/lang/` 文件夹中。复制 `en_us.json` 并将新的文件重命名为你的语言代码以开始翻译。请为整个文件中除了以 `advancements` 和 `death` 前缀开头的键之外其它所有键提供翻译。那些是 Minecraft 的官方翻译，可随时从官方翻译同步。
 
 ## 功能特色
 
@@ -61,12 +61,14 @@ MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Dis
   - 支持使用 Discord 频道主题功能显示服务器状态
   - 支持使用机器人活动状态显示服务器玩家数
   - 支持 Discord Webhook 功能
+    - 动态创建 MCDC Webhook
     - 可自定义 Webhook 玩家头像 API
-    - 未填写 Webhook URL 时使用机器人自身发送聊天消息
+    - 可禁用 Webhook，使用机器人自身发送聊天消息
   - 支持游戏内 Markdown 解析
   - 支持游戏内高亮和使用默认 Unicode 和服务器自定义表情符号
   - 支持游戏内高亮贴纸
   - 支持游戏内高亮和提及 (@)
+    - 可自定义允许游戏内提及 (@) 的范围
     - 支持禁用游戏内提及 (@)
   - 支持游戏内高亮和打开超链接和 GIF
   - 支持禁用所有解析
@@ -82,22 +84,24 @@ MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Dis
   - 当有人执行 MCDC 命令时通知游戏内玩家
   - /console 命令支持 Minecraft 命令自动补全
   - 普通命令
-    - /info                    | 查询服务器运行状态
     - /help                    | 获取可用命令列表
-    - /update                  | 检查更新
+    - /info                    | 查询服务器运行状态
     - /stats \<type\> \<name\> | 查询该统计信息的排行榜
+    - /update                  | 检查更新
+    - /whitelist \<player\>    | 添加玩家至服务器白名单
   - 管理员命令
-    - /reload                  | 重新加载 MCDiscordChat 配置文件（仅限管理员）
     - /console \<command\>     | 在服务器控制台中执行命令（仅限管理员）
     - /log \<file\>            | 获取指定的服务器日志（仅限管理员）
+    - /reload                  | 重新加载 MCDiscordChat 配置文件（仅限管理员）
     - /stop                    | 停止服务器（仅限管理员）
 - 可使用 Minecraft 命令
   - 仅限管理员的命令仅对 4 级管理员可用
   - 普通命令
-    - /mcdc info                    | 查询服务器运行状态
     - /mcdc help                    | 获取可用命令列表
-    - /mcdc update                  | 检查更新
+    - /mcdc info                    | 查询服务器运行状态
     - /mcdc stats \<type\> \<name\> | 查询该统计信息的排行榜
+    - /mcdc update                  | 检查更新
+    - /mcdc whitelist \<player\>    | 添加玩家至服务器白名单
   - 管理员命令
     - /mcdc reload                  | 重新加载 MCDiscordChat 配置文件（仅限管理员）
 - 可完全自定义所有消息格式
@@ -105,14 +109,17 @@ MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Dis
   - 游戏内
     - 来自 Discord 的聊天消息
     - 来自 Discord 的回复消息
-    - 来自其它服务器的消息
+    - 来自其它 MCDC 服务器的消息
   - Discord
     - 在服务器启动时
     - 在服务器关闭时
     - 在玩家加入服务器时
     - 在玩家离开服务器时
     - 在玩家达成进度 / 达成目标 / 完成挑战时
+      - 多语言支持
+      - 支持显示进度 / 挑战 / 目标的描述
     - 在玩家死亡时
+      - 多语言支持
     - 在服务器 MSPT 高于预警值时
 - 可使用管理员名单配置用户使用特殊命令的权限
 - 支持配置文件热重载
@@ -123,13 +130,16 @@ MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Dis
 
 目前可用的语言：
 
-| 代码      | 语言                |
-|---------|-------------------|
-| `en_us` | English (US)      |
-| `zh_cn` | 中文（简体）            |
-| `ru_ru` | Русский (Россия)  |
-| `ko_kr` | 한국어（대한민국）         |
-| `fr_fr` | Français (France) |
+| 代码      | 语言                   |
+|---------|----------------------|
+| `en_us` | English (US)         |
+| `fr_fr` | Français (France)    |
+| `ko_kr` | 한국어（대한민국）            |
+| `no_no` | Norsk Bokmål (Norge) |
+| `pl_pl` | Polski (Polska)      |
+| `ru_ru` | Русский (Россия)     |
+| `zh_cn` | 简体中文（中国大陆）           |
+| `zh_hk` | 繁體中文（香港特別行政區）        |
 
 ## 贡献者
 
