@@ -341,6 +341,10 @@ public class Utils {
 	}
 
 	public static void setBotActivity() {
+		if (SERVER == null) {
+			// Bot is registered before official server start
+			return;
+		}
 		if (!CONFIG.generic.botPlayingStatus.isEmpty()) {
 			JDA.getPresence().setActivity(Activity.playing(CONFIG.generic.botPlayingStatus
 					.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerManager().getPlayerList().size()))
