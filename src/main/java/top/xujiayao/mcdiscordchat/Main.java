@@ -104,8 +104,10 @@ public class Main implements DedicatedServerModInitializer {
 				UPDATE_NOTIFICATION_CHANNEL = CHANNEL;
 			}
 
+			String webhookName = "MCDC Webhook" + (CONFIG.multiServer.enable ? " (" + CONFIG.multiServer.name + ")" : "");
+			WEBHOOK = null;
 			for (Webhook webhook : Objects.requireNonNull(CHANNEL).getGuild().retrieveWebhooks().complete()) {
-				if ("MCDC Webhook".equals(webhook.getName())) {
+				if (webhookName.equals(webhook.getName())) {
 					if (webhook.getChannel().asTextChannel() == CHANNEL) {
 						WEBHOOK = webhook;
 					} else {
@@ -114,7 +116,7 @@ public class Main implements DedicatedServerModInitializer {
 				}
 			}
 			if (CONFIG.generic.useWebhook && WEBHOOK == null) {
-				WEBHOOK = CHANNEL.createWebhook("MCDC Webhook").complete();
+				WEBHOOK = CHANNEL.createWebhook(webhookName).complete();
 			}
 
 			Utils.updateBotCommands();
