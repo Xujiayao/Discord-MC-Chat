@@ -1,13 +1,12 @@
 {
   "discord.deListener.oscInteraction.serverNotStarted": "**你需要等待服务器完全启动！**",
   "discord.deListener.oscInteraction.notFromGuild": "**你不能通过私信使用此命令！**",
-  "discord.deListener.oscInteraction.helpMessage": "```\n=============== 帮助 ===============\n/help                | 获取可用命令列表\n/info                | 查询服务器运行状态\n/stats <type> <name> | 查询该统计信息的排行榜\n/update              | 检查更新\n/whitelist <player>  | 添加玩家至服务器白名单\n/console <command>   | 在服务器控制台中执行命令（仅限管理员）\n/log <file>          | 获取指定的服务器日志（仅限管理员）\n/reload              | 重新加载 MCDiscordChat 配置文件（仅限管理员）\n/stop                | 停止服务器（仅限管理员）\n```",
   "discord.deListener.oscInteraction.stoppingServer": "**正在停止服务器！**",
   "discord.deListener.oscInteraction.executingCommand": "**正在执行命令！**",
   "discord.deListener.oscInteraction.noPermission": "**你没有权限使用此命令！**",
   "discord.deListener.oscInteraction.fileNotFound": "**找不到指定的文件！**",
 
-  "minecraft.mcCommands.register.helpMessage": "=============== 帮助 ===============\n/mcdc help                  | 获取可用命令列表\n/mcdc info                  | 查询服务器运行状态\n/mcdc stats <type> <name>   | 查询该统计信息的排行榜\n/mcdc update                | 检查更新\n/mcdc whitelist <player>    | 添加玩家至服务器白名单\n/mcdc reload                | 重新加载 MCDiscordChat 配置文件（仅限管理员）\n~~/mcdc console <command>~~ | 在服务器控制台中执行命令（仅限管理员）\n~~/mcdc log <file>~~        | 获取指定的服务器日志（仅限管理员）\n~~/mcdc stop~~              | 停止服务器（仅限管理员）\n\n*带删除线的命令并没有实现，因为这些命令在游戏内是多余或无法实现的。*\n\n*仅限管理员的命令仅对 4 级管理员可用，即拥有 OP 权限等级 4 的玩家或服务器控制台。*",
+  "minecraft.mcCommands.register.helpMessageExplanation": "\n\n*带删除线的命令并没有实现，因为这些命令在游戏内是多余或无法实现的。*\n\n*仅限管理员的命令仅对 4 级管理员可用，即拥有 OP 权限等级 4 的玩家或服务器控制台。*",
 
   "utils.clListener.startListening": "**开始监听控制台日志！**",
   "utils.clListener.stopListening": "**停止监听控制台日志！**",
@@ -23,6 +22,9 @@
 
   "utils.utils.reload.success": "**配置文件重新加载成功！**",
   "utils.utils.reload.fail": "**配置文件重新加载失败！**",
+
+  "utils.utils.ghcMessage.help": "帮助",
+  "utils.utils.ghcMessage.adminOnly": "（仅限管理员）",
 
   "utils.utils.gicMessage.serverStatus": "运行状态",
   "utils.utils.gicMessage.onlinePlayers": "在线玩家 (%s/%s)：\n",
@@ -42,12 +44,12 @@
   "utils.utils.ubCommands.update": "检查更新",
   "utils.utils.ubCommands.whitelist": "添加玩家至服务器白名单",
   "utils.utils.ubCommands.whitelist.player": "玩家昵称",
-  "utils.utils.ubCommands.console": "在服务器控制台中执行指令（仅限管理员）",
+  "utils.utils.ubCommands.console": "在服务器控制台中执行指令",
   "utils.utils.ubCommands.console.command": "要执行的命令",
-  "utils.utils.ubCommands.log": "获取指定的服务器日志（仅限管理员）",
+  "utils.utils.ubCommands.log": "获取指定的服务器日志",
   "utils.utils.ubCommands.log.file": "文件名",
-  "utils.utils.ubCommands.reload": "重新加载 MCDiscordChat 配置文件（仅限管理员）",
-  "utils.utils.ubCommands.stop": "停止服务器（仅限管理员）",
+  "utils.utils.ubCommands.reload": "重新加载 MCDiscordChat 配置文件",
+  "utils.utils.ubCommands.stop": "停止服务器",
 
   "message.unformattedResponseMessage": "    ┌──── <%name%> %message%",
   "message.unformattedChatMessage": "[%server%] <%name%> %message%",

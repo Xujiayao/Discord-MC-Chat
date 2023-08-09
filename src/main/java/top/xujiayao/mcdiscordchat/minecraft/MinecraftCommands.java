@@ -28,7 +28,7 @@ public class MinecraftCommands {
 					//#else
 					//$$ context.getSource().sendFeedback(new LiteralText(MarkdownParser.parseMarkdown(
 					//#endif
-							Translations.translate("minecraft.mcCommands.register.helpMessage"))), false);
+							Utils.getHelpCommandMessage(false) + Translations.translate("minecraft.mcCommands.register.helpMessageExplanation"))), false);
 					return 1;
 				})
 				.then(literal("help").executes(context -> {
@@ -39,7 +39,7 @@ public class MinecraftCommands {
 					//#else
 					//$$ context.getSource().sendFeedback(new LiteralText(MarkdownParser.parseMarkdown(
 					//#endif
-							Translations.translate("minecraft.mcCommands.register.helpMessage"))), false);
+							Utils.getHelpCommandMessage(false) + Translations.translate("minecraft.mcCommands.register.helpMessageExplanation"))), false);
 					return 1;
 				}))
 				.then(literal("info").executes(context -> {

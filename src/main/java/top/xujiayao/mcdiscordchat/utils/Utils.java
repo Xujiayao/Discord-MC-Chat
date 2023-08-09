@@ -257,6 +257,51 @@ public class Utils {
 		}
 	}
 
+	public static String getHelpCommandMessage(boolean isDiscordSide) {
+		StringBuilder message = new StringBuilder();
+
+		message.append("=============== ");
+		message.append(Translations.translate("utils.utils.ghcMessage.help"));
+		message.append(" ===============");
+
+		message.append(isDiscordSide ? "\n/help                | " : "\n/mcdc help                  | ");
+		message.append(Translations.translate("utils.utils.ubCommands.help"));
+
+		message.append(isDiscordSide ? "\n/info                | " : "\n/mcdc info                  | ");
+		message.append(Translations.translate("utils.utils.ubCommands.info"));
+
+		message.append(isDiscordSide ? "\n/stats <type> <name> | " : "\n/mcdc stats <type> <name>   | ");
+		message.append(Translations.translate("utils.utils.ubCommands.stats"));
+
+		message.append(isDiscordSide ? "\n/update              | " : "\n/mcdc update                | ");
+		message.append(Translations.translate("utils.utils.ubCommands.update"));
+
+		for (int i = 0; i < 5; i++) {
+			if (i == 0) {
+				message.append(isDiscordSide ? "\n/whitelist <player>  | " : "\n/mcdc whitelist <player>    | ");
+				message.append(Translations.translate("utils.utils.ubCommands.whitelist"));
+			} else if ((i == 1 && isDiscordSide) || (i == 2 && !isDiscordSide)) {
+				message.append(isDiscordSide ? "\n/console <command>   | " : "\n~~/mcdc console <command>~~ | ");
+				message.append(Translations.translate("utils.utils.ubCommands.console"));
+				message.append(Translations.translate("utils.utils.ghcMessage.adminOnly"));
+			} else if ((i == 2 && isDiscordSide) || (i == 3 && !isDiscordSide)) {
+				message.append(isDiscordSide ? "\n/log <file>          | " : "\n~~/mcdc log <file>~~        | ");
+				message.append(Translations.translate("utils.utils.ubCommands.log"));
+				message.append(Translations.translate("utils.utils.ghcMessage.adminOnly"));
+			} else if ((i == 3 && isDiscordSide) || (i == 1 && !isDiscordSide)) {
+				message.append(isDiscordSide ? "\n/reload              | " : "\n/mcdc reload                | ");
+				message.append(Translations.translate("utils.utils.ubCommands.reload"));
+				message.append(Translations.translate("utils.utils.ghcMessage.adminOnly"));
+			} else if ((i == 4 && isDiscordSide) || (i == 4 && !isDiscordSide)) {
+				message.append(isDiscordSide ? "\n/stop                | " : "\n~~/mcdc stop~~              | ");
+				message.append(Translations.translate("utils.utils.ubCommands.stop"));
+				message.append(Translations.translate("utils.utils.ghcMessage.adminOnly"));
+			}
+		}
+
+		return message.toString();
+	}
+
 	public static String getInfoCommandMessage() {
 		StringBuilder message = new StringBuilder()
 				.append("=============== ")

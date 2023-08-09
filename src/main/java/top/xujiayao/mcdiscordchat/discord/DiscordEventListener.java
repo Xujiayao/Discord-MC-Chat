@@ -125,7 +125,7 @@ public class DiscordEventListener extends ListenerAdapter {
 		}
 
 		switch (e.getName()) {
-			case "help" -> e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.helpMessage")).queue();
+			case "help" -> e.getHook().sendMessage("```\n" + Utils.getHelpCommandMessage(true) + "\n```").queue();
 			case "info" -> {
 				e.getHook().sendMessage("```\n" + Utils.getInfoCommandMessage() + "\n```").queue();
 				if (CONFIG.multiServer.enable) {

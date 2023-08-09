@@ -1,13 +1,12 @@
 {
   "discord.deListener.oscInteraction.serverNotStarted": "**Du må vente til at serveren starter helt!**",
   "discord.deListener.oscInteraction.notFromGuild": "**Du kan ikke bruke denne kommandoen via en direkte melding!**",
-  "discord.deListener.oscInteraction.helpMessage": "```\n=============== Hjelp ===============\n/help                | Få en liste over alle kommandoer\n/info                | Spør serveren om status\n/stats <type> <name> | Spør resultattavlen for en statistikk\n/update              | Sjekk etter oppdateringer\n/whitelist <player>  | Legg en spiller til serverens hviteliste\n/console <command>   | Kjør en kommando i serverens konsoll (kun admin)\n/log <file>          | Få den spesifikke serverloggen (kun admin)\n/reload              | Last inn konfigurerings filen på nytt (kun admin)\n/stop                | Stopp serveren (kun admin)\n```",
   "discord.deListener.oscInteraction.stoppingServer": "**Stopper serveren!**",
   "discord.deListener.oscInteraction.executingCommand": "**Kjører kommandoen!**",
   "discord.deListener.oscInteraction.noPermission": "**Du har ikke tillatelse til å bruke kommandoen!**",
   "discord.deListener.oscInteraction.fileNotFound": "**kunne ikke finne den spesifikke filen!**",
 
-  "minecraft.mcCommands.register.helpMessage": "=============== Hjelp ===============\n/mcdc help                  | Få en liste over alle kommandoer\n/mcdc info                  | Spør serveren om status\n/mcdc stats <type> <name>   | Spør resultattavlen for en statistikk\n/mcdc update                | Sjekk etter oppdateringer\n/mcdc whitelist <player>    | Legg en spiller til serverens hviteliste\n/mcdc reload                | Last inn konfigurerings filen på nytt (kun admin)\n~~/mcdc console <command>~~ | Kjør en kommando i serverens konsoll (kun admin)\n~~/mcdc log <file>~~        | Få den spesifikke serverloggen (kun admin)\n~~/mcdc stop~~              | Stopp serveren (kun admin)\n\n*Strikethrough er ikke implemintert fordi de er overflødig eller umulig å impleminterie i spillet.*\n\n*Kun admin kommandoer trenger minimum en level 4 operator, altså spillere med OP tillatelser på nivå 4 eller server console.*",
+  "minecraft.mcCommands.register.helpMessageExplanation": "\n\n*Strikethrough er ikke implemintert fordi de er overflødig eller umulig å impleminterie i spillet.*\n\n*Kun admin kommandoer trenger minimum en level 4 operator, altså spillere med OP tillatelser på nivå 4 eller server console.*",
 
   "utils.clListener.startListening": "**Begynner å lytte til konsolllogger!**",
   "utils.clListener.stopListening": "**Stopper å lytte til konsolllogger!**",
@@ -23,6 +22,9 @@
 
   "utils.utils.reload.success": "**Config file reload vellykket!**",
   "utils.utils.reload.fail": "**Config file reload mislyktes!**",
+
+  "utils.utils.ghcMessage.help": "Hjelp",
+  "utils.utils.ghcMessage.adminOnly": " (kun admin)",
 
   "utils.utils.gicMessage.serverStatus": "Server Status",
   "utils.utils.gicMessage.onlinePlayers": "Online spillere (%s/%s):\n",
@@ -42,12 +44,12 @@
   "utils.utils.ubCommands.update": "Sjekk etter oppdateringer",
   "utils.utils.ubCommands.whitelist": "Legg en spiller til serverens hviteliste",
   "utils.utils.ubCommands.whitelist.player": "Navn til spilleren",
-  "utils.utils.ubCommands.console": "Kjør en kommando til serverens konsoll (kun admin)",
+  "utils.utils.ubCommands.console": "Kjør en kommando til serverens konsoll",
   "utils.utils.ubCommands.console.command": "Kommandoen som skal kjøres",
-  "utils.utils.ubCommands.log": "Get the specified server log (kun admin)",
+  "utils.utils.ubCommands.log": "Get the specified server log",
   "utils.utils.ubCommands.log.file": "Filens navn",
-  "utils.utils.ubCommands.reload": "Last inn konfig filen til MCDiscordChat på nytt (kun admin)",
-  "utils.utils.ubCommands.stop": "Stopp servern (kun admin)",
+  "utils.utils.ubCommands.reload": "Last inn konfig filen til MCDiscordChat på nytt",
+  "utils.utils.ubCommands.stop": "Stopp servern",
 
   "message.unformattedResponseMessage": "    ┌──── <%name%> %message%",
   "message.unformattedChatMessage": "[%server%] <%name%> %message%",

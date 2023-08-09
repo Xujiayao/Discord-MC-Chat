@@ -1,13 +1,12 @@
 {
   "discord.deListener.oscInteraction.serverNotStarted": "**Пододжите, пока сервер полностью запустится!**",
   "discord.deListener.oscInteraction.notFromGuild": "**Эту команду нельзя использовать в личных сообщениях!**",
-  "discord.deListener.oscInteraction.helpMessage": "```\n=============== Помощь ===============\n/help                | Список команд\n/info                | Запрос статуса сервера\n/stats <type> <name> | Запрос таблицы статистики\n/update              | Проверить обновления\n/whitelist <player>  | Добавить игрока в белый список сервера\n/console <command>   | Выполнить команду в консоли (только админы)\n/log <file>          | Получить логи конкретного сервера (только админы)\n/reload              | Перезагрузить конфиг MCDiscordChat (только админы)\n/stop                | Остановить сервер (только админы)\n```",
   "discord.deListener.oscInteraction.stoppingServer": "**Останавливаю сервер!**",
   "discord.deListener.oscInteraction.executingCommand": "**Выполняю команду!**",
   "discord.deListener.oscInteraction.noPermission": "**У вас нет разрешения использовать эту команду!**",
   "discord.deListener.oscInteraction.fileNotFound": "**Не удалось найти указанный файл!**",
 
-  "minecraft.mcCommands.register.helpMessage": "=============== Help ===============\n/mcdc help                  | Список команд\n/mcdc info                  | Запрос статуса сервера\n/mcdc stats <type> <name>   | Запрос таблицы статистики\n/mcdc update                | Проверить обновления\n/mcdc whitelist <player>    | Добавить игрока в белый список сервера\n/mcdc reload                | Перезагрузить конфиг MCDiscordChat (только админы)\n~~/mcdc console <command>~~ | Выполнить команду в консоли (только админы)\n~~/mcdc log <file>~~        | Получить логи конкретного сервера (только админы)\n~~/mcdc stop~~              | Остановить сервер (только админы)\n\n*Команды зачеркивания не реализованы, потому что они не нужны, или их невозможно реализовать в игре.*\n\n*Команды толко для админов требуют минимальный уровень оператора 4.*",
+  "minecraft.mcCommands.register.helpMessageExplanation": "\n\n*Команды зачеркивания не реализованы, потому что они не нужны, или их невозможно реализовать в игре.*\n\n*Команды толко для админов требуют минимальный уровень оператора 4.*",
 
   "utils.clListener.startListening": "**Начинаю слушать консольные логи!**",
   "utils.clListener.stopListening": "**Перестаю слушать консольные логи!**",
@@ -23,6 +22,9 @@
 
   "utils.utils.reload.success": "**Файл конфига успешно перезагружен!**",
   "utils.utils.reload.fail": "**Попытка перезагрузить конфиг не удалась!**",
+
+  "utils.utils.ghcMessage.help": "Помощь",
+  "utils.utils.ghcMessage.adminOnly": " (только админы)",
 
   "utils.utils.gicMessage.serverStatus": "Статус сервера",
   "utils.utils.gicMessage.onlinePlayers": "Игроков онлайн (%s/%s):\n",
@@ -42,12 +44,12 @@
   "utils.utils.ubCommands.update": "Проверить обновления",
   "utils.utils.ubCommands.whitelist": "Добавить игрока в белый список сервера",
   "utils.utils.ubCommands.whitelist.player": "Имя игрока",
-  "utils.utils.ubCommands.console": "Выполнить команду в консоли (только админы)",
+  "utils.utils.ubCommands.console": "Выполнить команду в консоли",
   "utils.utils.ubCommands.console.command": "Команда для выполнения",
-  "utils.utils.ubCommands.log": "Получить логи конкретного сервера (только админы)",
+  "utils.utils.ubCommands.log": "Получить логи конкретного сервера",
   "utils.utils.ubCommands.log.file": "Название файла",
-  "utils.utils.ubCommands.reload": "Перезагрузить конфиг MCDiscordChat (только админы)",
-  "utils.utils.ubCommands.stop": "Остановить сервер (только админы)",
+  "utils.utils.ubCommands.reload": "Перезагрузить конфиг MCDiscordChat",
+  "utils.utils.ubCommands.stop": "Остановить сервер",
 
   "message.unformattedResponseMessage": "    ┌──── <%name%> %message%",
   "message.unformattedChatMessage": "[%server%] <%name%> %message%",
