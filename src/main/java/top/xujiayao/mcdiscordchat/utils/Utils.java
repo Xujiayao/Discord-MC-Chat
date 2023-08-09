@@ -277,22 +277,34 @@ public class Utils {
 		message.append(Translations.translate("utils.utils.ubCommands.update"));
 
 		for (int i = 0; i < 5; i++) {
-			if (i == 0) {
+			if ((i == 0 && !CONFIG.generic.whitelistRequiresAdmin)
+					|| (i == 4 && isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)
+					|| (i == 1 && !isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)) {
 				message.append(isDiscordSide ? "\n/whitelist <player>  | " : "\n/mcdc whitelist <player>    | ");
 				message.append(Translations.translate("utils.utils.ubCommands.whitelist"));
-			} else if ((i == 1 && isDiscordSide) || (i == 2 && !isDiscordSide)) {
+				if (CONFIG.generic.whitelistRequiresAdmin) {
+					message.append(Translations.translate("utils.utils.ghcMessage.adminOnly"));
+				}
+			} else if ((i == 1 && isDiscordSide && !CONFIG.generic.whitelistRequiresAdmin)
+					|| (i == 0 && isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)
+					|| (i == 2 && !isDiscordSide)) {
 				message.append(isDiscordSide ? "\n/console <command>   | " : "\n~~/mcdc console <command>~~ | ");
 				message.append(Translations.translate("utils.utils.ubCommands.console"));
 				message.append(Translations.translate("utils.utils.ghcMessage.adminOnly"));
-			} else if ((i == 2 && isDiscordSide) || (i == 3 && !isDiscordSide)) {
+			} else if ((i == 2 && isDiscordSide && !CONFIG.generic.whitelistRequiresAdmin)
+					|| (i == 1 && isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)
+					|| (i == 3 && !isDiscordSide)) {
 				message.append(isDiscordSide ? "\n/log <file>          | " : "\n~~/mcdc log <file>~~        | ");
 				message.append(Translations.translate("utils.utils.ubCommands.log"));
 				message.append(Translations.translate("utils.utils.ghcMessage.adminOnly"));
-			} else if ((i == 3 && isDiscordSide) || (i == 1 && !isDiscordSide)) {
+			} else if ((i == 3 && isDiscordSide && !CONFIG.generic.whitelistRequiresAdmin)
+					|| (i == 2 && isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)
+					|| (i == 1 && !isDiscordSide && !CONFIG.generic.whitelistRequiresAdmin)
+					|| (i == 0 && !isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)) {
 				message.append(isDiscordSide ? "\n/reload              | " : "\n/mcdc reload                | ");
 				message.append(Translations.translate("utils.utils.ubCommands.reload"));
 				message.append(Translations.translate("utils.utils.ghcMessage.adminOnly"));
-			} else if ((i == 4 && isDiscordSide) || (i == 4 && !isDiscordSide)) {
+			} else {
 				message.append(isDiscordSide ? "\n/stop                | " : "\n~~/mcdc stop~~              | ");
 				message.append(Translations.translate("utils.utils.ubCommands.stop"));
 				message.append(Translations.translate("utils.utils.ghcMessage.adminOnly"));

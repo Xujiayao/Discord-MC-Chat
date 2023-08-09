@@ -139,8 +139,12 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 			case "update" -> e.getHook().sendMessage(Utils.checkUpdate(true)).queue();
 			case "whitelist" -> {
-				String player = Objects.requireNonNull(e.getOption("player")).getAsString();
-				e.getHook().sendMessage(Utils.whitelist(player)).queue();
+				if (!CONFIG.generic.whitelistRequiresAdmin || Utils.isAdmin(e.getMember())) {
+					String player = Objects.requireNonNull(e.getOption("player")).getAsString();
+					e.getHook().sendMessage(Utils.whitelist(player)).queue();
+				} else {
+					e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.noPermission")).queue();
+				}
 			}
 			case "console" -> {
 				if (Utils.isAdmin(e.getMember())) {

@@ -13,6 +13,7 @@ import top.xujiayao.mcdiscordchat.utils.Utils;
 
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
+import static top.xujiayao.mcdiscordchat.Main.CONFIG;
 
 /**
  * @author Xujiayao
@@ -81,6 +82,7 @@ public class MinecraftCommands {
 					return 1;
 				}))
 				.then(literal("whitelist")
+						.requires(source -> source.hasPermissionLevel(CONFIG.generic.whitelistRequiresAdmin ? 4 : 0))
 						.then(argument("player", StringArgumentType.word())
 								.executes(context -> {
 									String player = StringArgumentType.getString(context, "player");
