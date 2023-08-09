@@ -389,11 +389,7 @@ public class Utils {
 							.replace("%mspt%", String.format("%.2f", mspt))
 							.replace("%msptLimit%", Integer.toString(CONFIG.generic.msptLimit));
 
-					if (CONFIG.generic.consoleLogChannelId.isEmpty()) {
-						CHANNEL.sendMessage(message).queue();
-					} else {
-						CONSOLE_LOG_CHANNEL.sendMessage(message).queue();
-					}
+					CHANNEL.sendMessage(message).queue();
 					if (CONFIG.multiServer.enable) {
 						MULTI_SERVER.sendMessage(false, false, false, null, MarkdownParser.parseMarkdown(message));
 					}
