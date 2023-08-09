@@ -59,6 +59,9 @@
   "message.formattedOtherMessage": "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]",
   "message.formattedCommandNotice": "[{\"text\":\"%name% \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"wykonał komendę %command%!\",\"bold\":false,\"color\":\"gray\"}]",
 
+  "message.messageWithoutWebhook": "<%name%> %message%",
+  "message.messageWithoutWebhookForMultiServer": "[%server%] <%name%> %message%",
+
   "message.serverStarted": "**Serwer został włączony!**",
   "message.serverStopped": "**Serwer został wyłączony!**",
 

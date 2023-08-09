@@ -59,6 +59,9 @@
   "message.formattedOtherMessage": "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]",
   "message.formattedCommandNotice": "[{\"text\":\"%name% \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"执行了 %command% 命令！\",\"bold\":false,\"color\":\"gray\"}]",
 
+  "message.messageWithoutWebhook": "<%name%> %message%",
+  "message.messageWithoutWebhookForMultiServer": "[%server%] <%name%> %message%",
+
   "message.serverStarted": "**服务器已启动！**",
   "message.serverStopped": "**服务器已关闭！**",
 

@@ -74,7 +74,16 @@ public class MixinPlayerManager {
 	private void sendMessage(String content, String username) {
 		if (CONFIG.generic.broadcastChatMessages) {
 			if (!CONFIG.generic.useWebhook) {
-				CHANNEL.sendMessage(((CONFIG.multiServer.enable) ? ("[" + CONFIG.multiServer.name + "] <") : "<") + username + "> " + content).queue();
+				if (CONFIG.multiServer.enable) {
+					CHANNEL.sendMessage(Translations.translateMessage("message.messageWithoutWebhookForMultiServer")
+							.replace("%server%", CONFIG.multiServer.name)
+							.replace("%name%", username)
+							.replace("%message%", content)).queue();
+				} else {
+					CHANNEL.sendMessage(Translations.translateMessage("message.messageWithoutWebhook")
+							.replace("%name%", username)
+							.replace("%message%", content)).queue();
+				}
 			} else {
 				JsonObject body = new JsonObject();
 				body.addProperty("content", content);

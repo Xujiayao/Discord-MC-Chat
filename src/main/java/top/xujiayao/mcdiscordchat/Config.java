@@ -87,6 +87,9 @@ public class Config {
 		public String formattedOtherMessage = "";
 		public String formattedCommandNotice = "";
 
+		public String messageWithoutWebhook = "";
+		public String messageWithoutWebhookForMultiServer = "";
+
 		public String serverStarted = "";
 		public String serverStopped = "";
 

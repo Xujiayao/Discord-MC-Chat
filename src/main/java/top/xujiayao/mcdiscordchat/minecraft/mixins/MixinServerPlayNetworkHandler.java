@@ -37,6 +37,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
+import top.xujiayao.mcdiscordchat.utils.Translations;
 
 import java.time.Instant;
 import java.util.List;
@@ -270,7 +271,16 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 		String content = (escapeMarkdown ? MarkdownSanitizer.escape(message) : message);
 
 		if (!CONFIG.generic.useWebhook) {
-			CHANNEL.sendMessage(((CONFIG.multiServer.enable) ? ("[" + CONFIG.multiServer.name + "] <") : "<") + player.getEntityName() + "> " + content).queue();
+			if (CONFIG.multiServer.enable) {
+				CHANNEL.sendMessage(Translations.translateMessage("message.messageWithoutWebhookForMultiServer")
+						.replace("%server%", CONFIG.multiServer.name)
+						.replace("%name%", player.getEntityName())
+						.replace("%message%", content)).queue();
+			} else {
+				CHANNEL.sendMessage(Translations.translateMessage("message.messageWithoutWebhook")
+						.replace("%name%", player.getEntityName())
+						.replace("%message%", content)).queue();
+			}
 		} else {
 			JsonObject body = new JsonObject();
 			body.addProperty("content", content);

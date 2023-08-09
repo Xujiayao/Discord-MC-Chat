@@ -59,6 +59,9 @@
   "message.formattedOtherMessage": "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]",
   "message.formattedCommandNotice": "[{\"text\":\"%name% \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"executed %command% command!\",\"bold\":false,\"color\":\"gray\"}]",
 
+  "message.messageWithoutWebhook": "<%name%> %message%",
+  "message.messageWithoutWebhookForMultiServer": "[%server%] <%name%> %message%",
+
   "message.serverStarted": "**서버가 열렸습니다!**",
   "message.serverStopped": "**서버가 닫혔습니다!**",
 

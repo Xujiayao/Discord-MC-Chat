@@ -59,6 +59,9 @@
   "message.formattedOtherMessage": "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]",
   "message.formattedCommandNotice": "[{\"text\":\"%name% \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"a exécuté la commande %command% !\",\"bold\":false,\"color\":\"gray\"}]",
 
+  "message.messageWithoutWebhook": "<%name%> %message%",
+  "message.messageWithoutWebhookForMultiServer": "[%server%] <%name%> %message%",
+
   "message.serverStarted": "**Le serveur a démarré !**",
   "message.serverStopped": "**Le serveur s'est arrêté !**",
 
