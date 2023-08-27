@@ -130,11 +130,8 @@ body:
     attributes:
       label: Log
       description: |
-        Please provide your FULL log here.
-      value: |
-        ```
-        Copy the FULL log from the /log/latest.log file and paste it here to replace this line.
-        ```
+        Please provide your FULL log (/log/latest.log file) here.
+      render: text
     validations:
       required: true
   - type: textarea
@@ -142,10 +139,7 @@ body:
     attributes:
       label: Config
       description: |
-        Please provide your MCDiscordChat config here.
-      value: |
-        ```json
-        Copy the config from the /config/mcdiscordchat.json file and paste it here to replace this line. Remember to REDACT the botToken!
-        ```
+        Please provide your FULL MCDiscordChat config (/config/mcdiscordchat.json file) here. Remember to REDACT the botToken!
+      render: json
     validations:
       required: true
