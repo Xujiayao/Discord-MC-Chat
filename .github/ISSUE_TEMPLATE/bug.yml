@@ -16,31 +16,97 @@ body:
           required: true
         - label: I confirm that I noted that if I don't follow the instructions, the issue may be closed directly.
           required: true
-  - type: input
-    id: java_version
-    attributes:
-      label: Java Version
-      description: |
-        The version of Java you are using?
-      placeholder: "Example: 17.0.7"
-    validations:
-      required: true
-  - type: input
+  - type: dropdown
     id: minecraft_version
     attributes:
       label: Minecraft Version
       description: |
         The version of Minecraft you are using?
-      placeholder: "Example: 1.20.1"
+      multiple: false
+      options:
+        - 1.20.1
+        - 1.20
+        - 1.19.4
+        - 1.19.3
+        - 1.19.2
+        - 1.19.1
+        - 1.19
+        - 1.18.2
+        - 1.18.1
+        - 1.18
+        - 1.17.1
+        - 1.17
+        - 1.16.5
+        - 1.16.4
+        - 1.16.3
+        - 1.16.2
+        - 1.16.1
+        - 1.16
+        - 1.15.2
+        - 1.15.1
+        - 1.15
+        - 1.14.4
+        - 1.14.3
+        - 1.14.2
+        - 1.14.1
+        - 1.14
     validations:
       required: true
-  - type: input
+  - type: dropdown
     id: mcdiscordchat_version
     attributes:
       label: MCDiscordChat Version
       description: |
         The version of MCDiscordChat you are using?
-      placeholder: "Example: 2.2.0"
+      multiple: false
+      options:
+        - Latest Build
+        - 2.2.0
+        - 1.20-2.1.4
+        - 2.1.4
+        - 2.1.3
+        - 1.19.3-2.1.2
+        - 1.19.2-2.1.2
+        - 2.1.1
+        - 2.1.0
+        - 2.0.0
+        - 2.0.0-rc.1
+        - 2.0.0-alpha.10
+        - 2.0.0-alpha.9
+        - 2.0.0-alpha.8
+        - 2.0.0-alpha.7
+        - 2.0.0-alpha.6
+        - 2.0.0-alpha.5
+        - 2.0.0-alpha.4
+        - 2.0.0-alpha.3
+        - 2.0.0-alpha.2
+        - 2.0.0-alpha.1
+        - 1.12.1
+        - 1.12.0
+        - 1.11.4
+        - 1.11.3
+        - 1.11.2
+        - 1.11.1
+        - 1.11.0
+        - 1.10.10
+        - 1.10.9
+        - 1.10.8
+        - 1.10.7
+        - 1.10.6
+        - 1.10.5
+        - 1.10.4
+        - 1.10.3
+        - 1.10.2
+        - 1.10.1
+        - 1.10.0
+        - 1.9.3
+        - 1.9.2
+        - 1.9.1
+        - 1.9.0
+        - 1.8.0
+        - 1.7.0
+        - 1.6.0
+        - 1.5.3
     validations:
       required: true
   - type: textarea
@@ -64,7 +130,11 @@ body:
     attributes:
       label: Log
       description: |
-        Please provide your full log here.
+        Please provide your FULL log here.
+      value: |
+        ```
+        Copy the FULL log from the /log/latest.log file and paste it here to replace this line.
+        ```
     validations:
       required: true
   - type: textarea
@@ -72,6 +142,10 @@ body:
     attributes:
       label: Config
       description: |
-        Please provide your MCDiscordChat config file (mcdiscordchat.json) here, remember to remove the botToken.
+        Please provide your MCDiscordChat config here.
+      value: |
+        ```json
+        Copy the config from the /config/mcdiscordchat.json file and paste it here to replace this line. Remember to REDACT the botToken!
+        ```
     validations:
       required: true
