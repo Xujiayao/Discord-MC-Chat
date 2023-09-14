@@ -12,9 +12,9 @@
   "utils.clListener.stopListening": "**Przestano słuchanie dzienników konsoli!**",
 
   "utils.utils.cUpdate.newVersionAvailable": "**Nowa wersja jest dostępna!**",
-  "utils.utils.cUpdate.downloadLink": "Link do pobrania: <https://github.com/Xujiayao/MCDiscordChat/blob/master/README.md#Download>",
+  "utils.utils.cUpdate.downloadLink": "Link do pobrania: <https://github.com/Xujiayao/MC-Discord-Chat/blob/master/README.md#Download>",
   "utils.utils.cUpdate.changelog": "Zmiany: ",
-  "utils.utils.cUpdate.upToDate": "**MCDiscordChat jest w najnowszej wersji!**",
+  "utils.utils.cUpdate.upToDate": "**MC-Discord-Chat jest w najnowszej wersji!**",
 
   "utils.utils.whitelist.whitelistFailed": "**Gracz jest już na białej liście!**",
   "utils.utils.whitelist.whitelistSuccess": "**Dodano %s do białej listy!**",
@@ -48,7 +48,7 @@
   "utils.utils.ubCommands.console.command": "Komenda do wykonania",
   "utils.utils.ubCommands.log": "Zobacz specyficzny dziennik serwera",
   "utils.utils.ubCommands.log.file": "Nazwa pliku",
-  "utils.utils.ubCommands.reload": "Przeładuj plik ustawień MCDiscordChat",
+  "utils.utils.ubCommands.reload": "Przeładuj plik ustawień MC-Discord-Chat",
   "utils.utils.ubCommands.stop": "Zatrzymaj serwer",
 
   "message.unformattedResponseMessage": "    ┌──── <%name%> %message%",

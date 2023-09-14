@@ -12,7 +12,7 @@
   "utils.clListener.stopListening": "**停止監聽控制台日志！**",
 
   "utils.utils.cUpdate.newVersionAvailable": "**有新版本可用！**",
-  "utils.utils.cUpdate.downloadLink": "下載連結：<https://github.com/Xujiayao/MCDiscordChat/blob/master/README_CN.md#%%E4%%B8%%8B%%E8%%BD%%BD>",
+  "utils.utils.cUpdate.downloadLink": "下載連結：<https://github.com/Xujiayao/MC-Discord-Chat/blob/master/README_CN.md#%%E4%%B8%%8B%%E8%%BD%%BD>",
   "utils.utils.cUpdate.changelog": "更新日志：",
   "utils.utils.cUpdate.upToDate": "**目前版本已經係最新版本！**",
 
@@ -48,7 +48,7 @@
   "utils.utils.ubCommands.console.command": "要執行嘅命令",
   "utils.utils.ubCommands.log": "獲取指定嘅伺服器日志",
   "utils.utils.ubCommands.log.file": "文件名",
-  "utils.utils.ubCommands.reload": "重新載入 MCDiscordChat 設定文件",
+  "utils.utils.ubCommands.reload": "重新載入 MC-Discord-Chat 設定文件",
   "utils.utils.ubCommands.stop": "停止伺服器",
 
   "message.unformattedResponseMessage": "    ┌──── <%name%> %message%",

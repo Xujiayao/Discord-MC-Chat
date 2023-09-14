@@ -10,9 +10,9 @@ body:
       description: |
         Please check that you have done the following things before submitting an issue.
       options:
-        - label: I confirm that I have [searched for existing issues / pull requests](https://github.com/Xujiayao/MCDiscordChat/issues?q=) before reporting to avoid duplicate reporting.
+        - label: I confirm that I have [searched for existing issues / pull requests](https://github.com/Xujiayao/MC-Discord-Chat/issues?q=) before reporting to avoid duplicate reporting.
           required: true
-        - label: I confirm that I followed the [MCDC Docs](https://blog.xujiayao.top/posts/4ba0a17a/) and read the [Changelog](https://github.com/Xujiayao/MCDiscordChat/releases/latest), but this problem still exists.
+        - label: I confirm that I followed the [MCDC Docs](https://blog.xujiayao.top/posts/4ba0a17a/) and read the [Changelog](https://github.com/Xujiayao/MC-Discord-Chat/releases/latest), but this problem still exists.
           required: true
         - label: I confirm that I noted that if I don't follow the instructions, the issue may be closed directly.
           required: true
@@ -55,9 +55,9 @@ body:
   - type: dropdown
     id: mcdiscordchat_version
     attributes:
-      label: MCDiscordChat Version
+      label: MC-Discord-Chat Version
       description: |
-        The version of MCDiscordChat you are using?
+        The version of MC-Discord-Chat you are using?
       multiple: false
       options:
         - "Latest Build"
@@ -139,7 +139,7 @@ body:
     attributes:
       label: Config
       description: |
-        Please provide your FULL MCDiscordChat config (/config/mcdiscordchat.json file) here. Remember to REDACT the botToken!
+        Please provide your FULL MC-Discord-Chat config (/config/mcdiscordchat.json file) here. Remember to REDACT the botToken!
       render: json
     validations:
       required: true

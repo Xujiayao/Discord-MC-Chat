@@ -46,9 +46,9 @@ public class Main implements DedicatedServerModInitializer {
 
 	public static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
 	//#if MC >= 11700
-	public static final Logger LOGGER = LoggerFactory.getLogger("MCDiscordChat");
+	public static final Logger LOGGER = LoggerFactory.getLogger("MC-Discord-Chat");
 	//#else
-	//$$ public static final Logger LOGGER = LogManager.getLogger("MCDiscordChat");
+	//$$ public static final Logger LOGGER = LogManager.getLogger("MC-Discord-Chat");
 	//#endif
 	public static final File CONFIG_FILE = new File(FabricLoader.getInstance().getConfigDir().toFile(), "mcdiscordchat.json");
 	public static final File CONFIG_BACKUP_FILE = new File(FabricLoader.getInstance().getConfigDir().toFile(), "mcdiscordchat-backup.json");
@@ -76,7 +76,7 @@ public class Main implements DedicatedServerModInitializer {
 			Translations.init();
 
 			LOGGER.info("-----------------------------------------");
-			LOGGER.info("MCDiscordChat (MCDC) " + VERSION);
+			LOGGER.info("MC-Discord-Chat (MCDC) " + VERSION);
 			LOGGER.info("By Xujiayao");
 			LOGGER.info("");
 			LOGGER.info("More information + Docs:");

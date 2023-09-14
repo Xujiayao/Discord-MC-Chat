@@ -93,7 +93,7 @@ public class Utils {
 	public static String checkUpdate(boolean isManualCheck) {
 		try {
 			Request request = new Request.Builder()
-					.url("https://cdn.jsdelivr.net/gh/Xujiayao/MCDiscordChat@master/update/version.json")
+					.url("https://cdn.jsdelivr.net/gh/Xujiayao/MC-Discord-Chat@master/update/version.json")
 					.cacheControl(CacheControl.FORCE_NETWORK)
 					.build();
 
@@ -117,7 +117,7 @@ public class Utils {
 
 					message.append(Translations.translate("utils.utils.cUpdate.newVersionAvailable"));
 					message.append("\n\n");
-					message.append("MCDiscordChat **").append(VERSION).append("** -> **").append(CONFIG.latestVersion).append("**");
+					message.append("MC-Discord-Chat **").append(VERSION).append("** -> **").append(CONFIG.latestVersion).append("**");
 					message.append("\n\n");
 					message.append(Translations.translate("utils.utils.cUpdate.downloadLink"));
 					message.append("\n\n");
@@ -130,7 +130,7 @@ public class Utils {
 
 					return message.toString();
 				} else {
-					message.append("MCDiscordChat **").append(VERSION).append("**");
+					message.append("MC-Discord-Chat **").append(VERSION).append("**");
 					message.append("\n\n");
 					message.append(Translations.translate("utils.utils.cUpdate.upToDate"));
 

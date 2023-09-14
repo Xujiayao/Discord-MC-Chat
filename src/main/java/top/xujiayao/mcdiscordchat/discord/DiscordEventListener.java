@@ -162,9 +162,9 @@ public class DiscordEventListener extends ListenerAdapter {
 										//#elseif MC >= 11700
 										//$$ .execute(SERVER.getCommandSource().withOutput(new DiscordCommandOutput(e)), command));
 										//#elseif MC >= 11600
-										//$$ .execute(new ServerCommandSource(new DiscordCommandOutput(e), Vec3d.ZERO, Vec2f.ZERO, SERVER.getOverworld(), 4, "MCDiscordChat", new LiteralText("MCDiscordChat"), SERVER, null), command));
+										//$$ .execute(new ServerCommandSource(new DiscordCommandOutput(e), Vec3d.ZERO, Vec2f.ZERO, SERVER.getOverworld(), 4, "MC-Discord-Chat", new LiteralText("MC-Discord-Chat"), SERVER, null), command));
 										//#else
-										//$$ .execute(new ServerCommandSource(new DiscordCommandOutput(e), Vec3d.ZERO, Vec2f.ZERO, SERVER.getWorld(DimensionType.OVERWORLD), 4, "MCDiscordChat", new LiteralText("MCDiscordChat"), SERVER, null), command));
+										//$$ .execute(new ServerCommandSource(new DiscordCommandOutput(e), Vec3d.ZERO, Vec2f.ZERO, SERVER.getWorld(DimensionType.OVERWORLD), 4, "MC-Discord-Chat", new LiteralText("MC-Discord-Chat"), SERVER, null), command));
 										//#endif
 					}
 				} else {

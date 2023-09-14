@@ -12,9 +12,9 @@
   "utils.clListener.stopListening": "**콘솔 기록을 중단합니다!**",
 
   "utils.utils.cUpdate.newVersionAvailable": "**새 버전을 사용할 수 있습니다!**",
-  "utils.utils.cUpdate.downloadLink": "다운로드 링크: <https://github.com/Xujiayao/MCDiscordChat/blob/master/README.md#Download>",
+  "utils.utils.cUpdate.downloadLink": "다운로드 링크: <https://github.com/Xujiayao/MC-Discord-Chat/blob/master/README.md#Download>",
   "utils.utils.cUpdate.changelog": "변경사항: ",
-  "utils.utils.cUpdate.upToDate": "**MCDiscordChat는 최신 버전입니다.**",
+  "utils.utils.cUpdate.upToDate": "**MC-Discord-Chat는 최신 버전입니다.**",
 
   "utils.utils.whitelist.whitelistFailed": "**플레이어가 이미 화이트리스트에 있습니다!**",
   "utils.utils.whitelist.whitelistSuccess": "**%s을(를) 화이트리스트에 추가했습니다!**",
@@ -48,7 +48,7 @@
   "utils.utils.ubCommands.console.command": "실행할 명령어",
   "utils.utils.ubCommands.log": "해당 서버 기록을 불러옵니다.",
   "utils.utils.ubCommands.log.file": "파일 이름",
-  "utils.utils.ubCommands.reload": "MCDiscordChat 설정 파일을 불러옵니다.",
+  "utils.utils.ubCommands.reload": "MC-Discord-Chat 설정 파일을 불러옵니다.",
   "utils.utils.ubCommands.stop": "서버를 닫습니다.",
 
   "message.unformattedResponseMessage": "    ┌──── <%name%> %message%",

@@ -2,15 +2,15 @@
   "schemaVersion": 1,
   "id": "mcdiscordchat-${mc_version}",
   "version": "${version}",
-  "name": "MCDiscordChat",
-  "description": "MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric",
+  "name": "MC-Discord-Chat",
+  "description": "MC-Discord-Chat (MCDC), formerly known as MCDiscordChat, a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric",
   "authors": [
     "Xujiayao"
   ],
   "contact": {
     "homepage": "https://blog.xujiayao.top/posts/4ba0a17a/",
-    "issues": "https://github.com/Xujiayao/MCDiscordChat/issues",
-    "sources": "https://github.com/Xujiayao/MCDiscordChat"
+    "issues": "https://github.com/Xujiayao/MC-Discord-Chat/issues",
+    "sources": "https://github.com/Xujiayao/MC-Discord-Chat"
   },
   "license": "MIT",
   "icon": "assets/mcdiscordchat/icon.png",
