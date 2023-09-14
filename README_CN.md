@@ -3,26 +3,26 @@
 </div>
 
 <p align="center">
-<img width=128 src="https://cdn.jsdelivr.net/gh/Xujiayao/MCDiscordChat@master/src/main/resources/assets/mcdiscordchat/icon.png">
+<img width=128 src="https://cdn.jsdelivr.net/gh/Xujiayao/MC-Discord-Chat@master/src/main/resources/assets/mcdiscordchat/icon.png">
 </p>
 
-# MCDiscordChat
+# MC-Discord-Chat
 
-[![License](https://img.shields.io/github/license/xujiayao/MCDiscordChat?logo=github)](https://github.com/Xujiayao/MCDiscordChat/blob/master/LICENSE)
-[![Release](https://img.shields.io/github/v/release/xujiayao/MCDiscordChat?logo=github)](https://github.com/Xujiayao/MCDiscordChat/releases)
+[![License](https://img.shields.io/github/license/xujiayao/MC-Discord-Chat?logo=github)](https://github.com/Xujiayao/MC-Discord-Chat/blob/master/LICENSE)
+[![Release](https://img.shields.io/github/v/release/xujiayao/MC-Discord-Chat?logo=github)](https://github.com/Xujiayao/MC-Discord-Chat/releases)
 [![jsDelivr Hits](https://data.jsdelivr.com/v1/package/gh/Xujiayao/MCDiscordChat/badge?style=rounded)](https://www.jsdelivr.com/package/gh/Xujiayao/MCDiscordChat)
-[![GitHub Downloads](https://img.shields.io/github/downloads/xujiayao/MCDiscordChat/total?logo=github)](https://github.com/Xujiayao/MCDiscordChat/releases)
+[![GitHub Downloads](https://img.shields.io/github/downloads/xujiayao/MC-Discord-Chat/total?logo=github)](https://github.com/Xujiayao/MC-Discord-Chat/releases)
 [![Modrinth Downloads](https://img.shields.io/modrinth/dt/mcdiscordchat?label=modrinth%20downloads)](https://modrinth.com/mod/mcdiscordchat)
-[![CurseForge Downloads](https://cf.way2muchnoise.eu/full_mcdiscordchat_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
-[![Versions Supported](https://cf.way2muchnoise.eu/versions/mcdiscordchat.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
+[![CurseForge Downloads](https://cf.way2muchnoise.eu/full_548539_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
+[![Versions Supported](https://cf.way2muchnoise.eu/versions/548539.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
 
-MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric
+MC-Discord-Chat (MCDC), formerly known as MCDiscordChat, a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric
 
-更多介绍 + 文档：[MCDiscordChat 文档 | Xujiayao's Blog](https://blog.xujiayao.top/posts/4ba0a17a/)
+更多介绍 + 文档：[MC-Discord-Chat 文档 | Xujiayao's Blog](https://blog.xujiayao.top/posts/4ba0a17a/)
 
 ## 简介
 
-[MCDiscordChat](https://github.com/Xujiayao/MCDiscordChat)（简称为 MCDC），一个实用且功能强大的 Fabric 和 Quilt Minecraft <> Discord 跨服聊天工具，灵感来自 BRForgers/DisFabric。
+[MC-Discord-Chat](https://github.com/Xujiayao/MC-Discord-Chat) (MCDC)，前身为 MCDiscordChat，一个实用且功能强大的 Fabric 和 Quilt Minecraft <> Discord 跨服聊天工具，灵感来自 BRForgers/DisFabric。
 
 ![0001.png](https://cdn.jsdelivr.net/gh/Xujiayao/BlogSource@master/source/file/posts/4ba0a17a/0001.png)
 
@@ -34,13 +34,13 @@ MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Dis
 
 - [Modrinth](https://modrinth.com/mod/mcdiscordchat/versions)
 - [CurseForge](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat/files)
-- [GitHub](https://github.com/Xujiayao/MCDiscordChat/releases)
+- [GitHub](https://github.com/Xujiayao/MC-Discord-Chat/releases)
 
-你可以在 [GitHub Actions](https://github.com/Xujiayao/MCDiscordChat/actions) 找到最新的构建 JAR 文件。
+你可以在 [GitHub Actions](https://github.com/Xujiayao/MC-Discord-Chat/actions) 找到最新的构建 JAR 文件。
 
 ## 帮助
 
-如果有 bug 或建议，或者有什么不懂的，可以 [提交 issue](https://github.com/Xujiayao/MCDiscordChat/issues/new/choose)。
+如果有 bug 或建议，或者有什么不懂的，可以 [提交 issue](https://github.com/Xujiayao/MC-Discord-Chat/issues/new/choose)。
 
 ## 贡献
 
@@ -92,7 +92,7 @@ MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Dis
   - 管理员命令
     - /console \<command\>     | 在服务器控制台中执行命令（仅限管理员）
     - /log \<file\>            | 获取指定的服务器日志（仅限管理员）
-    - /reload                  | 重新加载 MCDiscordChat 配置文件（仅限管理员）
+    - /reload                  | 重新加载 MC-Discord-Chat 配置文件（仅限管理员）
     - /stop                    | 停止服务器（仅限管理员）
 - 可使用 Minecraft 命令
   - 仅限管理员的命令仅对 4 级管理员可用
@@ -103,7 +103,7 @@ MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Dis
     - /mcdc update                  | 检查更新
     - /mcdc whitelist \<player\>    | 添加玩家至服务器白名单
   - 管理员命令
-    - /mcdc reload                  | 重新加载 MCDiscordChat 配置文件（仅限管理员）
+    - /mcdc reload                  | 重新加载 MC-Discord-Chat 配置文件（仅限管理员）
 - 可完全自定义所有消息格式
   - 可禁用向 Discord 频道发送特定服务器消息
   - 游戏内
@@ -143,8 +143,8 @@ MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Dis
 
 ## 贡献者
 
-[![Contributors](https://contrib.rocks/image?repo=xujiayao/mcdiscordchat)](https://github.com/Xujiayao/mcdiscordchat/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=Xujiayao/MC-Discord-Chat)](https://github.com/Xujiayao/MC-Discord-Chat/graphs/contributors)
 
 ## 星标历史
 
-[![Stargazers over time](https://starchart.cc/Xujiayao/MCDiscordChat.svg)](https://starchart.cc/Xujiayao/MCDiscordChat)
+[![Stargazers over time](https://starchart.cc/Xujiayao/MC-Discord-Chat.svg)](https://starchart.cc/Xujiayao/MC-Discord-Chat)

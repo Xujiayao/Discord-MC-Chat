@@ -3,26 +3,26 @@ Language: English <a href="/README_CN.md">中文</a>
 </div>
 
 <p align="center">
-<img width=128 src="https://cdn.jsdelivr.net/gh/Xujiayao/MCDiscordChat@master/src/main/resources/assets/mcdiscordchat/icon.png">
+<img width=128 src="https://cdn.jsdelivr.net/gh/Xujiayao/MC-Discord-Chat@master/src/main/resources/assets/mcdiscordchat/icon.png">
 </p>
 
-# MCDiscordChat
+# MC-Discord-Chat
 
-[![License](https://img.shields.io/github/license/xujiayao/MCDiscordChat?logo=github)](https://github.com/Xujiayao/MCDiscordChat/blob/master/LICENSE)
-[![Release](https://img.shields.io/github/v/release/xujiayao/MCDiscordChat?logo=github)](https://github.com/Xujiayao/MCDiscordChat/releases)
+[![License](https://img.shields.io/github/license/xujiayao/MC-Discord-Chat?logo=github)](https://github.com/Xujiayao/MC-Discord-Chat/blob/master/LICENSE)
+[![Release](https://img.shields.io/github/v/release/xujiayao/MC-Discord-Chat?logo=github)](https://github.com/Xujiayao/MC-Discord-Chat/releases)
 [![jsDelivr Hits](https://data.jsdelivr.com/v1/package/gh/Xujiayao/MCDiscordChat/badge?style=rounded)](https://www.jsdelivr.com/package/gh/Xujiayao/MCDiscordChat)
-[![GitHub Downloads](https://img.shields.io/github/downloads/xujiayao/MCDiscordChat/total?logo=github)](https://github.com/Xujiayao/MCDiscordChat/releases)
+[![GitHub Downloads](https://img.shields.io/github/downloads/xujiayao/MC-Discord-Chat/total?logo=github)](https://github.com/Xujiayao/MC-Discord-Chat/releases)
 [![Modrinth Downloads](https://img.shields.io/modrinth/dt/mcdiscordchat?label=modrinth%20downloads)](https://modrinth.com/mod/mcdiscordchat)
-[![CurseForge Downloads](https://cf.way2muchnoise.eu/full_mcdiscordchat_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
-[![Versions Supported](https://cf.way2muchnoise.eu/versions/mcdiscordchat.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
+[![CurseForge Downloads](https://cf.way2muchnoise.eu/full_548539_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
+[![Versions Supported](https://cf.way2muchnoise.eu/versions/548539.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
 
-MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric
+MC-Discord-Chat (MCDC), formerly known as MCDiscordChat, a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric
 
-More information + Docs: [MCDiscordChat Docs | Xujiayao's Blog](https://blog.xujiayao.top/posts/4ba0a17a/)
+More information + Docs: [MC-Discord-Chat Docs | Xujiayao's Blog](https://blog.xujiayao.top/posts/4ba0a17a/)
 
 ## Introduction
 
-[MCDiscordChat](https://github.com/Xujiayao/MCDiscordChat) (abbreviated as MCDC), a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric.
+[MC-Discord-Chat](https://github.com/Xujiayao/MC-Discord-Chat) (MCDC), formerly known as MCDiscordChat, a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric.
 
 ![0001.png](https://cdn.jsdelivr.net/gh/Xujiayao/BlogSource@master/source/file/posts/4ba0a17a/0001.png)
 
@@ -34,13 +34,13 @@ All releases can be downloaded at the following sites:
 
 - [Modrinth](https://modrinth.com/mod/mcdiscordchat/versions)
 - [CurseForge](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat/files)
-- [GitHub](https://github.com/Xujiayao/MCDiscordChat/releases)
+- [GitHub](https://github.com/Xujiayao/MC-Discord-Chat/releases)
 
-You can find the latest build JAR files at [GitHub Actions](https://github.com/Xujiayao/MCDiscordChat/actions).
+You can find the latest build JAR files at [GitHub Actions](https://github.com/Xujiayao/MC-Discord-Chat/actions).
 
 ## Support
 
-If there is a bug or suggestion, or something you don't understand, you can [submit an issue](https://github.com/Xujiayao/MCDiscordChat/issues/new/choose) on GitHub.
+If there is a bug or suggestion, or something you don't understand, you can [submit an issue](https://github.com/Xujiayao/MC-Discord-Chat/issues/new/choose) on GitHub.
 
 ## Contributing
 
@@ -92,7 +92,7 @@ For translation contributions, language files are located in the `/wrapper/src/m
   - Admin Commands
     - /console \<command\>     | Execute a command in the server console (admin only)
     - /log \<file\>            | Get the specified server log (admin only)
-    - /reload                  | Reload MCDiscordChat config file (admin only)
+    - /reload                  | Reload MC-Discord-Chat config file (admin only)
     - /stop                    | Stop the server (admin only)
 - Minecraft Commands available
   - Admin-only commands require a level 4 operator at minimum
@@ -103,7 +103,7 @@ For translation contributions, language files are located in the `/wrapper/src/m
     - /mcdc update                  | Check for update
     - /mcdc whitelist \<player\>    | Add a player to the server whitelist
   - Admin Commands
-    - /mcdc reload                  | Reload MCDiscordChat config file (admin only)
+    - /mcdc reload                  | Reload MC-Discord-Chat config file (admin only)
 - Fully customizable message format
   - Sending specific server messages to Discord can be disabled
   - In-game
@@ -143,8 +143,8 @@ Languages currently available:
 
 ## Contributors
 
-[![Contributors](https://contrib.rocks/image?repo=xujiayao/mcdiscordchat)](https://github.com/Xujiayao/mcdiscordchat/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=Xujiayao/MC-Discord-Chat)](https://github.com/Xujiayao/MC-Discord-Chat/graphs/contributors)
 
 ## Stargazers over time
 
-[![Stargazers over time](https://starchart.cc/Xujiayao/MCDiscordChat.svg)](https://starchart.cc/Xujiayao/MCDiscordChat)
+[![Stargazers over time](https://starchart.cc/Xujiayao/MC-Discord-Chat.svg)](https://starchart.cc/Xujiayao/MC-Discord-Chat)
