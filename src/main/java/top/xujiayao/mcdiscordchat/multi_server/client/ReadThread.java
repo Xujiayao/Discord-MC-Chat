@@ -19,6 +19,7 @@ import top.xujiayao.mcdiscordchat.utils.Utils;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -31,6 +32,7 @@ import java.util.HashSet;
 import java.util.List;
 //#endif
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Set;
 
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
@@ -70,11 +72,14 @@ public class ReadThread extends Thread {
 							channelTopicInfo.addProperty("onlinePlayerCount", SERVER.getPlayerManager().getPlayerList().size());
 							channelTopicInfo.addProperty("maxPlayerCount", SERVER.getPlayerManager().getMaxPlayerCount());
 
+							Properties properties = new Properties();
+							properties.load(new FileInputStream("server.properties"));
+
 							Set<String> uniquePlayers = new HashSet<>();
 							//#if MC >= 11600
-							FileUtils.listFiles(new File((SERVER.getSaveProperties().getLevelName() + "/stats/")), null, false).forEach(file -> uniquePlayers.add(file.getName()));
+							FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).forEach(file -> uniquePlayers.add(file.getName()));
 							//#else
-							//$$ FileUtils.listFiles(new File((SERVER.getLevelName() + "/stats/")), null, false).forEach(file -> uniquePlayers.add(file.getName()));
+							//$$ FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).forEach(file -> uniquePlayers.add(file.getName()));
 							//#endif
 							channelTopicInfo.add("uniquePlayers", new Gson().fromJson(Arrays.toString(uniquePlayers.toArray()), JsonArray.class));
 

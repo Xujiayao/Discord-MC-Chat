@@ -25,6 +25,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import top.xujiayao.mcdiscordchat.multi_server.MultiServer;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -32,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
@@ -356,10 +358,13 @@ public class Utils {
 		try {
 			JsonArray players = new Gson().fromJson(IOUtils.toString(new File(FabricLoader.getInstance().getGameDir().toAbsolutePath() + "/usercache.json").toURI(), StandardCharsets.UTF_8), JsonArray.class);
 
+			Properties properties = new Properties();
+			properties.load(new FileInputStream("server.properties"));
+
 			//#if MC >= 11600
-			FileUtils.listFiles(new File((SERVER.getSaveProperties().getLevelName() + "/stats/")), null, false).forEach(file -> {
+			FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).forEach(file -> {
 			//#else
-			//$$ FileUtils.listFiles(new File((SERVER.getLevelName() + "/stats/")), null, false).forEach(file -> {
+			//$$ FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).forEach(file -> {
 			//#endif
 				try {
 					for (JsonElement player : players) {
@@ -459,24 +464,31 @@ public class Utils {
 		CHANNEL_TOPIC_MONITOR_TIMER.schedule(new TimerTask() {
 			@Override
 			public void run() {
-				long epochSecond = Instant.now().getEpochSecond();
+				try {
+					long epochSecond = Instant.now().getEpochSecond();
 
-				String topic = Translations.translateMessage("message.onlineChannelTopic")
-						.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerManager().getPlayerList().size()))
-						.replace("%maxPlayerCount%", Integer.toString(SERVER.getPlayerManager().getMaxPlayerCount()))
-						//#if MC >= 11600
-						.replace("%uniquePlayerCount%", Integer.toString(FileUtils.listFiles(new File((SERVER.getSaveProperties().getLevelName() + "/stats/")), null, false).size()))
-						//#else
-						//$$ .replace("%uniquePlayerCount%", Integer.toString(FileUtils.listFiles(new File((SERVER.getLevelName() + "/stats/")), null, false).size()))
-						//#endif
-						.replace("%serverStartedTime%", SERVER_STARTED_TIME)
-						.replace("%lastUpdateTime%", Long.toString(epochSecond))
-						.replace("%nextUpdateTime%", Long.toString(epochSecond + CONFIG.generic.channelTopicUpdateInterval / 1000));
+					Properties properties = new Properties();
+					properties.load(new FileInputStream("server.properties"));
 
-				CHANNEL.getManager().setTopic(topic).queue();
+					String topic = Translations.translateMessage("message.onlineChannelTopic")
+							.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerManager().getPlayerList().size()))
+							.replace("%maxPlayerCount%", Integer.toString(SERVER.getPlayerManager().getMaxPlayerCount()))
+							//#if MC >= 11600
+							.replace("%uniquePlayerCount%", Integer.toString(FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).size()))
+							//#else
+							//$$ .replace("%uniquePlayerCount%", Integer.toString(FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).size()))
+							//#endif
+							.replace("%serverStartedTime%", SERVER_STARTED_TIME)
+							.replace("%lastUpdateTime%", Long.toString(epochSecond))
+							.replace("%nextUpdateTime%", Long.toString(epochSecond + CONFIG.generic.channelTopicUpdateInterval / 1000));
 
-				if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
-					CONSOLE_LOG_CHANNEL.getManager().setTopic(topic).queue();
+					CHANNEL.getManager().setTopic(topic).queue();
+
+					if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
+						CONSOLE_LOG_CHANNEL.getManager().setTopic(topic).queue();
+					}
+				} catch (Exception e) {
+					LOGGER.error(ExceptionUtils.getStackTrace(e));
 				}
 			}
 		}, 0, CONFIG.generic.channelTopicUpdateInterval);
