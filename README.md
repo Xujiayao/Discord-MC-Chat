@@ -89,12 +89,13 @@ For translation contributions, language files are located in the `/wrapper/src/m
     - /info                    | Query server running status
     - /stats \<type\> \<name\> | Query the scoreboard of a statistic
     - /update                  | Check for update
-    - /whitelist \<player\>    | Add a player to the server whitelist
   - Admin Commands
     - /console \<command\>     | Execute a command in the server console (admin only)
     - /log \<file\>            | Get the specified server log (admin only)
     - /reload                  | Reload MC-Discord-Chat config file (admin only)
     - /stop                    | Stop the server (admin only)
+  - Commands with Adjustable Permissions
+    - /whitelist \<player\>    | Add a player to the server whitelist
 - Minecraft Commands available
   - Admin-only commands require a level 4 operator at minimum
   - Normal Commands
@@ -102,9 +103,10 @@ For translation contributions, language files are located in the `/wrapper/src/m
     - /mcdc info                    | Query server running status
     - /mcdc stats \<type\> \<name\> | Query the scoreboard of a statistic
     - /mcdc update                  | Check for update
-    - /mcdc whitelist \<player\>    | Add a player to the server whitelist
   - Admin Commands
     - /mcdc reload                  | Reload MC-Discord-Chat config file (admin only)
+  - Commands with Adjustable Permissions
+    - /mcdc whitelist \<player\>    | Add a player to the server whitelist
 - Fully customizable message format
   - Sending specific server messages to Discord can be disabled
   - In-game

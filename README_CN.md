@@ -89,12 +89,13 @@ MC-Discord-Chat (MCDC), formerly known as MCDiscordChat, a practical and powerfu
     - /info                    | 查询服务器运行状态
     - /stats \<type\> \<name\> | 查询该统计信息的排行榜
     - /update                  | 检查更新
-    - /whitelist \<player\>    | 添加玩家至服务器白名单
   - 管理员命令
     - /console \<command\>     | 在服务器控制台中执行命令（仅限管理员）
     - /log \<file\>            | 获取指定的服务器日志（仅限管理员）
     - /reload                  | 重新加载 MC-Discord-Chat 配置文件（仅限管理员）
     - /stop                    | 停止服务器（仅限管理员）
+  - 可调整权限的命令
+    - /whitelist \<player\>    | 添加玩家至服务器白名单
 - 可使用 Minecraft 命令
   - 仅限管理员的命令仅对 4 级管理员可用
   - 普通命令
@@ -102,9 +103,10 @@ MC-Discord-Chat (MCDC), formerly known as MCDiscordChat, a practical and powerfu
     - /mcdc info                    | 查询服务器运行状态
     - /mcdc stats \<type\> \<name\> | 查询该统计信息的排行榜
     - /mcdc update                  | 检查更新
-    - /mcdc whitelist \<player\>    | 添加玩家至服务器白名单
   - 管理员命令
     - /mcdc reload                  | 重新加载 MC-Discord-Chat 配置文件（仅限管理员）
+  - 可调整权限的命令
+    - /mcdc whitelist \<player\>    | 添加玩家至服务器白名单
 - 可完全自定义所有消息格式
   - 可禁用向 Discord 频道发送特定服务器消息
   - 游戏内
