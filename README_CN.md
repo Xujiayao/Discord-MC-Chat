@@ -10,7 +10,8 @@
 
 [![License](https://img.shields.io/github/license/xujiayao/MC-Discord-Chat?logo=github)](https://github.com/Xujiayao/MC-Discord-Chat/blob/master/LICENSE)
 [![Release](https://img.shields.io/github/v/release/xujiayao/MC-Discord-Chat?logo=github)](https://github.com/Xujiayao/MC-Discord-Chat/releases)
-[![jsDelivr Hits](https://data.jsdelivr.com/v1/package/gh/Xujiayao/MCDiscordChat/badge?style=rounded)](https://www.jsdelivr.com/package/gh/Xujiayao/MCDiscordChat)
+[![jsDelivr Hits (Old)](https://data.jsdelivr.com/v1/package/gh/Xujiayao/MCDiscordChat/badge?style=rounded)](https://www.jsdelivr.com/package/gh/Xujiayao/MCDiscordChat)
+[![jsDelivr Hits (New)](https://data.jsdelivr.com/v1/package/gh/Xujiayao/MC-Discord-Chat/badge?style=rounded)](https://www.jsdelivr.com/package/gh/Xujiayao/MC-Discord-Chat)
 [![GitHub Downloads](https://img.shields.io/github/downloads/xujiayao/MC-Discord-Chat/total?logo=github)](https://github.com/Xujiayao/MC-Discord-Chat/releases)
 [![Modrinth Downloads](https://img.shields.io/modrinth/dt/mcdiscordchat?label=modrinth%20downloads)](https://modrinth.com/mod/mcdiscordchat)
 [![CurseForge Downloads](https://cf.way2muchnoise.eu/full_548539_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/mcdiscordchat)
