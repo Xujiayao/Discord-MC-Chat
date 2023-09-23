@@ -150,7 +150,7 @@ public class Utils {
 
 		Request request = new Request.Builder()
 				.url("https://api.mojang.com/users/profiles/minecraft/" + player)
-				.get()
+				.cacheControl(CacheControl.FORCE_NETWORK)
 				.build();
 
 		try (Response response = HTTP_CLIENT.newCall(request).execute()) {
