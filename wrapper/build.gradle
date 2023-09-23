@@ -72,18 +72,18 @@ processResources {
     }
 
     doLast {
-        ArrayList<?> depends_minecraft = []
+        ArrayList<?> minecraft_dependency = []
         ArrayList<?> jars = []
 
         fabric_subprojects.each({
-            depends_minecraft.add("${it.minecraft_dependency}")
-            jars.add(["file": "META-INF/jars/MC-Discord-Chat-${it.minecraft_dependency}-${mod_version}.jar"])
+            minecraft_dependency.addAll("${it.minecraft_dependency}".split(","))
+            jars.add(["file": "META-INF/jars/MC-Discord-Chat-${it.minecraft_version}-${mod_version}.jar"])
         })
 
         File file = file("build/resources/main/fabric.mod.json")
         JsonSlurper slurper = new JsonSlurper()
         JsonBuilder builder = new JsonBuilder(slurper.parse(file))
-        builder.content.depends.minecraft = depends_minecraft
+        builder.content.depends.minecraft = minecraft_dependency
         builder.content.jars = jars
         BufferedWriter writer = file.newWriter()
         writer.append(builder.toPrettyString())

@@ -1,3 +1,6 @@
+import groovy.json.JsonBuilder
+import groovy.json.JsonSlurper
+
 apply plugin: "fabric-loom"
 apply plugin: "com.replaymod.preprocess"
 
@@ -11,7 +14,7 @@ preprocess {
 sourceCompatibility = JavaVersion.VERSION_17
 targetCompatibility = JavaVersion.VERSION_17
 
-archivesBaseName = "${archives_base_name}-${minecraft_dependency}"
+archivesBaseName = "${archives_base_name}-${minecraft_version}"
 version = mod_version
 group = maven_group
 
@@ -45,11 +48,23 @@ dependencies {
 processResources {
     filesMatching("fabric.mod.json") {
         def valueMap = [
-                "mc_version"          : minecraft_dependency.replace(".", "_"),
-                "version"             : mod_version,
-                "minecraft_dependency": minecraft_dependency
+                "mc_version"          : minecraft_version.replace(".", "_"),
+                "version"             : mod_version
         ]
         expand valueMap
+    }
+
+    doLast {
+        ArrayList<?> minecraft_dependency = minecraft_dependency.split(",")
+
+        File file = file("build/resources/main/fabric.mod.json")
+        JsonSlurper slurper = new JsonSlurper()
+        JsonBuilder builder = new JsonBuilder(slurper.parse(file))
+        builder.content.depends.minecraft = minecraft_dependency
+        BufferedWriter writer = file.newWriter()
+        writer.append(builder.toPrettyString())
+        writer.flush()
+        writer.close()
     }
 }
 
