@@ -330,7 +330,11 @@ public class Utils {
 			message.append(Translations.translate("utils.utils.gicMessage.noPlayersOnline"));
 		} else {
 			for (ServerPlayerEntity player : onlinePlayers) {
-				message.append("[").append(player.pingMilliseconds).append("ms] ").append(player.getEntityName()).append("\n");
+				//#if MC >= 12002
+				message.append("[").append(player.networkHandler.getLatency()).append("ms] ").append(player.getEntityName()).append("\n");
+				//#else
+				//$$ message.append("[").append(player.pingMilliseconds).append("ms] ").append(player.getEntityName()).append("\n");
+				//#endif
 			}
 		}
 

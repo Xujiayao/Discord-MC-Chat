@@ -10,7 +10,6 @@ import net.minecraft.network.message.SignedMessage;
 //#endif
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ConnectedClientData;
 import net.minecraft.server.network.ServerPlayerEntity;
 //#if MC < 11900
 //$$ import net.minecraft.text.Text;
@@ -45,10 +44,32 @@ import static top.xujiayao.mcdiscordchat.Main.WEBHOOK;
 @Mixin(PlayerManager.class)
 public class MixinPlayerManager {
 
+	//#if MC >= 11903
 	@Inject(method = "broadcast(Lnet/minecraft/network/message/SignedMessage;Lnet/minecraft/server/command/ServerCommandSource;Lnet/minecraft/network/message/MessageType$Parameters;)V", at = @At("RETURN"))
 	private void broadcast(SignedMessage message, ServerCommandSource source, MessageType.Parameters params, CallbackInfo ci) {
 		sendMessage(message.getSignedContent(), source.getName());
 	}
+	//#elseif MC >= 11900
+	//$$ @Inject(method = "broadcast(Lnet/minecraft/network/message/SignedMessage;Lnet/minecraft/server/command/ServerCommandSource;Lnet/minecraft/network/message/MessageType$Parameters;)V", at = @At("RETURN"))
+	//$$ private void broadcast(SignedMessage message, ServerCommandSource source, MessageType.Parameters params, CallbackInfo ci) {
+	//$$  sendMessage(message.getSignedContent().plain(), source.getName());
+	//$$ }
+	//#elseif MC >= 11800
+	//$$ @Inject(method = "broadcast", at = @At("RETURN"))
+	//$$ private void broadcast(Text message, MessageType type, UUID sender, CallbackInfo ci) {
+	//$$  sendMessage(message.getString(), "Server");
+	//$$ }
+	//#elseif MC >= 11600
+	//$$ @Inject(method = "broadcastChatMessage", at = @At("RETURN"))
+	//$$ private void broadcastChatMessage(Text message, MessageType type, UUID sender, CallbackInfo ci) {
+	//$$  sendMessage(message.getString(), "Server");
+	//$$ }
+	//#else
+	//$$ @Inject(method = "sendToAll(Lnet/minecraft/text/Text;)V", at = @At("RETURN"))
+	//$$ private void sendToAll(Text text, CallbackInfo ci) {
+	//$$  sendMessage(text.getString(), "Server");
+	//$$ }
+	//#endif
 
 	private void sendMessage(String content, String username) {
 		if (CONFIG.generic.broadcastChatMessages) {
@@ -93,7 +114,7 @@ public class MixinPlayerManager {
 	}
 
 	@Inject(method = "onPlayerConnect", at = @At("RETURN"))
-	private void onPlayerConnect(ClientConnection connection, ServerPlayerEntity player, ConnectedClientData clientData, CallbackInfo ci) {
+	private void onPlayerConnect(ClientConnection connection, ServerPlayerEntity player, CallbackInfo ci) {
 		Utils.setBotActivity();
 
 		if (CONFIG.generic.announcePlayerJoinLeave) {

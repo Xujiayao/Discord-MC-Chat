@@ -1,3 +1,4 @@
+//#if MC >= 11900
 package top.xujiayao.mcdiscordchat.minecraft.mixins;
 
 import com.google.gson.Gson;
@@ -8,7 +9,7 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.minecraft.SharedConstants;
-import net.minecraft.network.ClientConnection;
+import net.minecraft.network.listener.ServerPlayPacketListener;
 import net.minecraft.network.message.LastSeenMessageList;
 import net.minecraft.network.message.MessageChain;
 import net.minecraft.network.message.MessageChainTaskQueue;
@@ -18,10 +19,9 @@ import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
 import net.minecraft.network.packet.c2s.play.CommandExecutionC2SPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.filter.FilteredMessage;
-import net.minecraft.server.network.ConnectedClientData;
-import net.minecraft.server.network.ServerCommonNetworkHandler;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.EntityTrackingListener;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import okhttp3.MediaType;
@@ -61,14 +61,14 @@ import static top.xujiayao.mcdiscordchat.Main.WEBHOOK;
  * @author Xujiayao
  */
 @Mixin(ServerPlayNetworkHandler.class)
-public abstract class MixinServerPlayNetworkHandler extends ServerCommonNetworkHandler {
-
-	protected MixinServerPlayNetworkHandler(MinecraftServer server, ClientConnection connection, ConnectedClientData clientData) {
-		super(server, connection, clientData);
-	}
+public abstract class MixinServerPlayNetworkHandler implements EntityTrackingListener, ServerPlayPacketListener {
 
 	@Shadow
 	private ServerPlayerEntity player;
+
+	@Final
+	@Shadow
+	private MinecraftServer server;
 
 	@Final
 	@Shadow
@@ -76,6 +76,9 @@ public abstract class MixinServerPlayNetworkHandler extends ServerCommonNetworkH
 
 	@Shadow
 	public abstract void checkForSpam();
+
+	@Shadow
+	public abstract void disconnect(Text reason);
 
 	@Shadow
 	public abstract CompletableFuture<FilteredMessage> filterText(String text);
@@ -197,9 +200,9 @@ public abstract class MixinServerPlayNetworkHandler extends ServerCommonNetworkH
 						}
 
 						CompletableFuture<FilteredMessage> completableFuture = filterText(signedMessage.getSignedContent());
-						Text text = server.getMessageDecorator().decorate(player, signedMessage.getContent());
-						messageChainTaskQueue.append((executor) -> completableFuture.thenAcceptAsync((filteredMessage) -> {
-							SignedMessage signedMessage2 = signedMessage.withUnsignedContent(text).withFilterMask(filteredMessage.mask());
+						CompletableFuture<Text> completableFuture2 = server.getMessageDecorator().decorate(player, signedMessage.getContent());
+						messageChainTaskQueue.append(executor -> CompletableFuture.allOf(completableFuture, completableFuture2).thenAcceptAsync(void_ -> {
+							SignedMessage signedMessage2 = signedMessage.withUnsignedContent(completableFuture2.join()).withFilterMask(completableFuture.join().mask());
 							handleDecoratedMessage(signedMessage2);
 						}, executor));
 					});
@@ -313,3 +316,4 @@ public abstract class MixinServerPlayNetworkHandler extends ServerCommonNetworkH
 		return false;
 	}
 }
+//#endif

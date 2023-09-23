@@ -1,7 +1,8 @@
+//#if MC >= 11900
 package top.xujiayao.mcdiscordchat.minecraft.mixins;
 
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
-import net.minecraft.advancement.AdvancementEntry;
+import net.minecraft.advancement.Advancement;
 import net.minecraft.advancement.AdvancementProgress;
 import net.minecraft.advancement.PlayerAdvancementTracker;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -27,31 +28,30 @@ public abstract class MixinPlayerAdvancementTracker {
 	private ServerPlayerEntity owner;
 
 	@Shadow
-	public abstract AdvancementProgress getProgress(AdvancementEntry advancement);
+	public abstract AdvancementProgress getProgress(Advancement advancement);
 
 	@Inject(method = "grantCriterion", at = @At("RETURN"))
-	private void grantCriterion(AdvancementEntry advancement, String criterionName, CallbackInfoReturnable<Boolean> cir) {
+	private void grantCriterion(Advancement advancement, String criterionName, CallbackInfoReturnable<Boolean> cir) {
 		if (CONFIG.generic.announceAdvancements
 				&& getProgress(advancement).isDone()
-				&& advancement.value().parent().isPresent()
-				&& advancement.value().display().isPresent()
-				&& advancement.value().display().get().shouldAnnounceToChat()
+				&& advancement.getDisplay() != null
+				&& advancement.getDisplay().shouldAnnounceToChat()
 				&& owner.getWorld().getGameRules().getBoolean(GameRules.ANNOUNCE_ADVANCEMENTS)) {
 			String message = "null";
 
-			switch (advancement.value().display().get().getFrame()) {
+			switch (advancement.getDisplay().getFrame()) {
 				case GOAL -> message = Translations.translateMessage("message.advancementGoal");
 				case TASK -> message = Translations.translateMessage("message.advancementTask");
 				case CHALLENGE -> message = Translations.translateMessage("message.advancementChallenge");
 			}
 
-			String title = Translations.translate("advancements." + advancement.value().parent().get().getPath().replace("/", ".") + ".title");
-			String description = Translations.translate("advancements." + advancement.value().parent().get().getPath().replace("/", ".") + ".description");
+			String title = Translations.translate("advancements." + advancement.getId().getPath().replace("/", ".") + ".title");
+			String description = Translations.translate("advancements." + advancement.getId().getPath().replace("/", ".") + ".description");
 
 			message = message
 					.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
-					.replace("%advancement%", title.contains("TranslateError") ? advancement.value().display().get().getTitle().getString() : title)
-					.replace("%description%", description.contains("TranslateError") ? advancement.value().display().get().getDescription().getString() : description);
+					.replace("%advancement%", title.contains("TranslateError") ? advancement.getDisplay().getTitle().getString() : title)
+					.replace("%description%", description.contains("TranslateError") ? advancement.getDisplay().getDescription().getString() : description);
 
 			CHANNEL.sendMessage(message).queue();
 			if (CONFIG.multiServer.enable) {
@@ -60,3 +60,4 @@ public abstract class MixinPlayerAdvancementTracker {
 		}
 	}
 }
+//#endif
