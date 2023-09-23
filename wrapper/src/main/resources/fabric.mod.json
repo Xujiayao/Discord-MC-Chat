@@ -15,30 +15,9 @@
   "license": "MIT",
   "icon": "assets/mcdiscordchat/icon.png",
   "environment": "server",
-  "jars": [
-    {
-      "file": "META-INF/jars/MC-Discord-Chat-1.14.x-${version}.jar"
-    },
-    {
-      "file": "META-INF/jars/MC-Discord-Chat-1.15.x-${version}.jar"
-    },
-    {
-      "file": "META-INF/jars/MC-Discord-Chat-1.16.x-${version}.jar"
-    },
-    {
-      "file": "META-INF/jars/MC-Discord-Chat-1.17.x-${version}.jar"
-    },
-    {
-      "file": "META-INF/jars/MC-Discord-Chat-1.18.x-${version}.jar"
-    },
-    {
-      "file": "META-INF/jars/MC-Discord-Chat-1.19.x-${version}.jar"
-    },
-    {
-      "file": "META-INF/jars/MC-Discord-Chat-1.20.1-${version}.jar"
-    },
-    {
-      "file": "META-INF/jars/MC-Discord-Chat-1.20.2-${version}.jar"
-    }
-  ]
+  "depends": {
+    "fabricloader": ">=0.14.22",
+    "java": ">=17",
+    "fabric-api": "*"
+  }
 }
