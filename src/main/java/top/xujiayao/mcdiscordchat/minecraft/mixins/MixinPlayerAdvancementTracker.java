@@ -33,7 +33,6 @@ public abstract class MixinPlayerAdvancementTracker {
 	private void grantCriterion(AdvancementEntry advancement, String criterionName, CallbackInfoReturnable<Boolean> cir) {
 		if (CONFIG.generic.announceAdvancements
 				&& getProgress(advancement).isDone()
-				&& advancement.value().parent().isPresent()
 				&& advancement.value().display().isPresent()
 				&& advancement.value().display().get().shouldAnnounceToChat()
 				&& owner.getWorld().getGameRules().getBoolean(GameRules.ANNOUNCE_ADVANCEMENTS)) {
@@ -45,8 +44,8 @@ public abstract class MixinPlayerAdvancementTracker {
 				case CHALLENGE -> message = Translations.translateMessage("message.advancementChallenge");
 			}
 
-			String title = Translations.translate("advancements." + advancement.value().parent().get().getPath().replace("/", ".") + ".title");
-			String description = Translations.translate("advancements." + advancement.value().parent().get().getPath().replace("/", ".") + ".description");
+			String title = Translations.translate("advancements." + advancement.id().getPath().replace("/", ".") + ".title");
+			String description = Translations.translate("advancements." + advancement.id().getPath().replace("/", ".") + ".description");
 
 			message = message
 					.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
