@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.SharedConstants;
 import net.minecraft.server.Whitelist;
 import net.minecraft.server.WhitelistEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -21,6 +22,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import top.xujiayao.mcdiscordchat.multi_server.MultiServer;
 
@@ -95,17 +97,77 @@ public class Utils {
 	public static String checkUpdate(boolean isManualCheck) {
 		try {
 			Request request = new Request.Builder()
-					.url("https://cdn.jsdelivr.net/gh/Xujiayao/MC-Discord-Chat@master/update/version.json")
+					.url("https://cdn.jsdelivr.net/gh/Xujiayao/MC-Discord-Chat@master/update/versions.json")
 					.cacheControl(CacheControl.FORCE_NETWORK)
 					.build();
 
 			try (Response response = HTTP_CLIENT.newCall(request).execute()) {
 				String result = Objects.requireNonNull(response.body()).string();
 
-				JsonObject latestJson = new Gson().fromJson(result, JsonObject.class);
+				String minecraftVersion = SharedConstants.getGameVersion().getName();
 
-				CONFIG.latestVersion = latestJson.get("version").getAsString();
-				ConfigManager.update();
+				CONFIG.latestVersion = "";
+				String latestChangelog = "";
+
+				JsonArray versions = new Gson().fromJson(result, JsonObject.class).getAsJsonArray("versions");
+				for (JsonElement versionElement : versions) {
+					boolean isCompatible = false;
+
+					JsonObject object = versionElement.getAsJsonObject();
+
+					JsonArray minecraft_dependency = object.getAsJsonArray("minecraft_dependency");
+					for (JsonElement dependencyElement : minecraft_dependency) {
+						String minecraft = dependencyElement.getAsString();
+
+						if (minecraft.startsWith("~")) {
+							String thisMinorVersion;
+							if (StringUtils.countMatches(minecraft, ".") == 1) {
+								thisMinorVersion = minecraft.substring(3);
+							} else {
+								thisMinorVersion = StringUtils.substringBetween(minecraft, ".");
+							}
+
+							String serverMinorVersion;
+							if (StringUtils.countMatches(minecraft, ".") == 1) {
+								serverMinorVersion = minecraft.substring(2);
+							} else {
+								serverMinorVersion = StringUtils.substringBetween(minecraft, ".");
+							}
+
+							if (serverMinorVersion.equals(thisMinorVersion)) {
+								int thisPatchVersion;
+								if (minecraft.substring(5).isEmpty()) {
+									thisPatchVersion = 0;
+								} else {
+									thisPatchVersion = Integer.parseInt(minecraft.substring(6));
+								}
+
+								int serverPatchVersion;
+								if (minecraftVersion.substring(4).isEmpty()) {
+									serverPatchVersion = 0;
+								} else {
+									serverPatchVersion = Integer.parseInt(minecraftVersion.substring(5));
+								}
+
+								if (serverPatchVersion >= thisPatchVersion) {
+									isCompatible = true;
+									break;
+								}
+							}
+						} else {
+							if (minecraftVersion.equals(minecraft)) {
+								isCompatible = true;
+								break;
+							}
+						}
+					}
+
+					if (isCompatible) {
+						CONFIG.latestVersion = object.get("version").getAsString();
+						latestChangelog = object.get("changelog").getAsString();
+						break;
+					}
+				}
 
 				StringBuilder message = new StringBuilder();
 
@@ -119,11 +181,11 @@ public class Utils {
 
 					message.append(Translations.translate("utils.utils.cUpdate.newVersionAvailable"));
 					message.append("\n\n");
-					message.append("MC-Discord-Chat **").append(VERSION).append("** -> **").append(CONFIG.latestVersion).append("**");
+					message.append("**MC-Discord-Chat ").append(VERSION).append(" -> ").append(CONFIG.latestVersion).append("**");
 					message.append("\n\n");
 					message.append(Translations.translate("utils.utils.cUpdate.downloadLink"));
 					message.append("\n\n");
-					message.append(Translations.translate("utils.utils.cUpdate.changelog")).append(latestJson.get("changelog").getAsString());
+					message.append(Translations.translate("utils.utils.cUpdate.changelog")).append(latestChangelog);
 					message.append("\n\n");
 
 					if (CONFIG.generic.mentionAdminsForUpdates) {
@@ -132,7 +194,7 @@ public class Utils {
 
 					return message.toString();
 				} else {
-					message.append("MC-Discord-Chat **").append(VERSION).append("**");
+					message.append("**MC-Discord-Chat ").append(VERSION).append("**");
 					message.append("\n\n");
 					message.append(Translations.translate("utils.utils.cUpdate.upToDate"));
 
@@ -157,7 +219,7 @@ public class Utils {
 			if (response.body() != null && response.code() == 200) {
 				JsonObject json = new Gson().fromJson(response.body().string(), JsonObject.class);
 				String id = json.get("id").getAsString();
-				UUID uuid = UUID.fromString(String.format("%s-%s-%s-%s-%s", id.substring(0,8), id.substring(8,12), id.substring(12,16), id.substring(16,20), id.substring(20,32)));
+				UUID uuid = UUID.fromString(String.format("%s-%s-%s-%s-%s", id.substring(0, 8), id.substring(8, 12), id.substring(12, 16), id.substring(16, 20), id.substring(20, 32)));
 				String name = json.get("name").getAsString();
 
 				GameProfile profile = new GameProfile(uuid, name);
@@ -367,9 +429,9 @@ public class Utils {
 
 			//#if MC >= 11600
 			FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).forEach(file -> {
-			//#else
-			//$$ FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).forEach(file -> {
-			//#endif
+				//#else
+				//$$ FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).forEach(file -> {
+				//#endif
 				try {
 					for (JsonElement player : players) {
 						if (player.getAsJsonObject().get("uuid").getAsString().equals(file.getName().replace(".json", ""))) {
