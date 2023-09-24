@@ -1,4 +1,3 @@
-//#if MC >= 11900
 package top.xujiayao.mcdiscordchat.minecraft.mixins;
 
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
@@ -60,4 +59,3 @@ public abstract class MixinPlayerAdvancementTracker {
 		}
 	}
 }
-//#endif
