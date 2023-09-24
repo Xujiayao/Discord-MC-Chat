@@ -17,7 +17,6 @@
   "environment": "server",
   "depends": {
     "fabricloader": ">=0.14.22",
-    "java": ">=17",
-    "fabric-api": "*"
+    "java": ">=17"
   }
 }
