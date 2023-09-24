@@ -63,16 +63,16 @@ import static top.xujiayao.mcdiscordchat.Main.WEBHOOK;
 @Mixin(ServerPlayNetworkHandler.class)
 public abstract class MixinServerPlayNetworkHandler extends ServerCommonNetworkHandler {
 
-	protected MixinServerPlayNetworkHandler(MinecraftServer server, ClientConnection connection, ConnectedClientData clientData) {
-		super(server, connection, clientData);
-	}
-
 	@Shadow
 	private ServerPlayerEntity player;
 
 	@Final
 	@Shadow
 	private MessageChainTaskQueue messageChainTaskQueue;
+
+	protected MixinServerPlayNetworkHandler(MinecraftServer server, ClientConnection connection, ConnectedClientData clientData) {
+		super(server, connection, clientData);
+	}
 
 	@Shadow
 	public abstract void checkForSpam();

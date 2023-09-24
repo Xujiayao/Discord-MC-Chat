@@ -95,7 +95,7 @@ public class MinecraftCommands {
 									//#endif
 											MarkdownParser.parseMarkdown(Utils.whitelist(player))), false);
 									return 1;
-				})))
+								})))
 				.then(literal("reload")
 						.requires(source -> source.hasPermissionLevel(4))
 						.executes(context -> {

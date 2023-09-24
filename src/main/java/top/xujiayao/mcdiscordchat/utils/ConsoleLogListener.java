@@ -28,9 +28,9 @@ import static top.xujiayao.mcdiscordchat.Main.MINECRAFT_SEND_COUNT;
  */
 public class ConsoleLogListener implements Runnable {
 
-	private boolean readFileHistory;
 	private static final Pattern formatPattern = Pattern.compile("§.");
 	private static final Integer MAX_MESSAGE_LENGTH = 1900;
+	private boolean readFileHistory;
 
 	public ConsoleLogListener(boolean readFileHistory) {
 		this.readFileHistory = readFileHistory;
