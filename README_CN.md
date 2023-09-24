@@ -51,7 +51,7 @@ MC-Discord-Chat (MCDC), formerly known as MCDiscordChat, a practical and powerfu
 
 对于代码贡献，构建文件位于 `/wrapper/build/libs/` 文件夹中。
 
-对于翻译贡献，语言文件位于 `/wrapper/src/main/resources/lang/` 文件夹中。复制 `en_us.json` 并将新的文件重命名为你的语言代码以开始翻译。请为整个文件中除了以 `advancements` 和 `death` 前缀开头的键之外其它所有键提供翻译。那些是 Minecraft 的官方翻译，可随时从官方翻译同步。
+对于翻译贡献，语言文件位于 `/wrapper/src/main/resources/lang/` 文件夹中。复制 `en_us.json` 并将新的文件重命名为你的语言代码以开始翻译。请为整个文件中所有键提供翻译。
 
 ## 功能特色
 
@@ -128,6 +128,7 @@ MC-Discord-Chat (MCDC), formerly known as MCDiscordChat, a practical and powerfu
 - 支持配置文件热重载
   - 每次加载配置文件时进行备份
 - 定期检查更新
+  - 通过检查服务器 Minecraft 版本兼容性来准确推送 MCDC 版本更新
   - 可自定义更新通知频道
   - 可禁用检查更新
 

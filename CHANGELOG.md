@@ -1,52 +1,43 @@
 # Changelog 更新日志
 
-## MC-Discord-Chat 2.2.1 for Minecraft 1.14+ - 2023/9/14
+## MC-Discord-Chat 2.2.2 for Minecraft 1.14+ - 2023/9/24
 
-MCDiscordChat has been renamed to MC-Discord-Chat.
+MCDC now accurately pushes MCDC version updates by checking the compatibility of the server's Minecraft version.
 
-The comprehensive list of supported Minecraft versions for each MCDC version is now available on Modrinth, CurseForge, and the MCDC Docs.
+This new feature ensures no more situations where an old MCDC with an old Minecraft version pushes a new MCDC version that doesn't support that particular Minecraft version.
 
-MCDiscordChat 已更名为 MC-Discord-Chat。
+MCDC 现在通过检查服务器 Minecraft 版本的兼容性来准确推送 MCDC 版本更新。
 
-从现在开始，你可以在 Modrinth、CurseForge 和 MCDC 文档中找到每个 MCDC 版本所支持的 Minecraft 版本的全面列表。
+此新功能可确保不再出现旧 Minecraft 版本中安装的旧 MCDC 推送不支持该特定 Minecraft 版本的新 MCDC 版本的情况。
 
 ## New Features 新特性
 
-- Customizable messages when Webhook is disabled (#163)
-  可自定义禁用 Webhook 时发送的消息
+- Compatible with version 1.20.2 (#189)
+  兼容 1.20.2 版本
 
-- Dynamically generate MCDC help messages (#167)
-  动态生成 MCDC 帮助消息
-
-- Adjustable permissions for the MCDC /whitelist command (#167)
-  可调整 MCDC /whitelist 命令的使用权限
+- Push MCDC version updates accurately by checking server Minecraft version compatibility
+  通过检查服务器 Minecraft 版本兼容性来准确推送 MCDC 版本更新
 
 ## Changes 更改
 
-- Fix Quilt compatibility issue (#164)
-  修复 Quilt 兼容性问题
+- Fix channel topic monitor not using the correct level name for getting stats information (#139)
+  修复频道主题监视器不使用正确的存档名称来获取统计信息
 
-- Fix exception when players register before the server is fully started (#168)
-  修复玩家在服务器未完全启动前注册时报错
+- Optimize JAR file size
+  优化 JAR 文件大小
 
-- Fix chat messages not being sent when using multi-server mode
-  修复使用多服务器模式时没有发送聊天消息
-
-- Send MSPT warnings to main channel when console log channel is enabled (#171)
-  启用控制台日志频道时将 MSPT 警告发送到主频道
-
-- Fix console log messages may be too long (#174)
-  修复控制台日志消息有机会过长
+- Force not to use cache to obtain player profile
+  强制不使用缓存来获取玩家资料
 
 ## Removed 移除
 
-N/A
+- No longer compatible with version 1.19.3
+  不再兼容 1.19.3 版本
 
 ## Contributors 贡献者
 
 - @Xujiayao
-- @aria1th
 
 ## Detailed Information 详细信息
 
-https://github.com/Xujiayao/MC-Discord-Chat/compare/2.2.0...2.2.1
+https://github.com/Xujiayao/MC-Discord-Chat/compare/2.2.1...2.2.2

@@ -51,7 +51,7 @@ If you are interested in contributing to MCDC, you can submit a pull request on 
 
 For code contributions, the build file is located in the `/wrapper/build/libs/` folder.
 
-For translation contributions, language files are located in the `/wrapper/src/main/resources/lang/` folder. Copy `en_us.json` and rename the new one to your language code to get started. Please provide translations for the entire file for all keys except those starting with the `advancements` and `death` prefixes. Those messages are official translations of Minecraft, which may sync from the official translations at any time.
+For translation contributions, language files are located in the `/wrapper/src/main/resources/lang/` folder. Copy `en_us.json` and rename the new one to your language code to get started. Please provide translations for the entire file for all keys.
 
 ## Features
 
@@ -128,6 +128,7 @@ For translation contributions, language files are located in the `/wrapper/src/m
 - Support Hot Reloading of the config file
   - Backup every time the config file is loaded
 - Check for updates regularly
+  - Push MCDC version updates accurately by checking server Minecraft version compatibility
   - Customizable update notification channel
   - Check for updates can be disabled
 
