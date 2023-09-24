@@ -128,10 +128,10 @@ public class Utils {
 							}
 
 							String serverMinorVersion;
-							if (StringUtils.countMatches(minecraft, ".") == 1) {
-								serverMinorVersion = minecraft.substring(2);
+							if (StringUtils.countMatches(minecraftVersion, ".") == 1) {
+								serverMinorVersion = minecraftVersion.substring(2);
 							} else {
-								serverMinorVersion = StringUtils.substringBetween(minecraft, ".");
+								serverMinorVersion = StringUtils.substringBetween(minecraftVersion, ".");
 							}
 
 							if (serverMinorVersion.equals(thisMinorVersion)) {
