@@ -67,13 +67,13 @@
   "message.serverStarted": "**伺服器已啟動！**",
   "message.serverStopped": "**伺服器已關閉！**",
 
-  "message.joinServer": "**%playerName% 加入咗伺服器**",
-  "message.leftServer": "**%playerName% 離開咗伺服器**",
+  "message.joinServer": "**%playerName% 加入咗遊戲**",
+  "message.leftServer": "**%playerName% 離開咗遊戲**",
 
   "message.deathMessage": "**%deathMessage%**",
 
   "message.advancementTask": "**%playerName% 達成咗進度 [%advancement%]**\n*%description%*",
-  "message.advancementChallenge": "**%playerName% 完成咗挑戰 [%advancement%]**\n*%description%*",
+  "message.advancementChallenge": "**%playerName% 已經完成挑戰 [%advancement%]**\n*%description%*",
   "message.advancementGoal": "**%playerName% 達成咗目標 [%advancement%]**\n*%description%*",
 
   "message.highMspt": "**伺服器 MSPT (%mspt%) 高於 %msptLimit%！**",
