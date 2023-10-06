@@ -29,7 +29,7 @@ public abstract class MixinPlayerAdvancementTracker {
 	@Shadow
 	public abstract AdvancementProgress getProgress(Advancement advancement);
 
-	@Inject(method = "grantCriterion", at = @At("RETURN"))
+	@Inject(method = "grantCriterion", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancement/PlayerAdvancementTracker;onStatusUpdate(Lnet/minecraft/advancement/Advancement;)V"))
 	private void grantCriterion(Advancement advancement, String criterionName, CallbackInfoReturnable<Boolean> cir) {
 		if (CONFIG.generic.announceAdvancements
 				&& getProgress(advancement).isDone()
