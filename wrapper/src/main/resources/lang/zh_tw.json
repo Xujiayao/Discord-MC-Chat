@@ -34,7 +34,7 @@
   "utils.utils.gicMessage.serverUsedMemory": "\n\n伺服器已使用記憶體：\n%s MB / %s MB",
 
   "utils.utils.gscMessage.scoreboard": "排行榜",
-  "utils.utils.gscMessage.noResult": "\n無結果",
+  "utils.utils.gscMessage.noResult": "\n沒有結果",
 
   "utils.utils.ubCommands.help": "取得可用指令清單",
   "utils.utils.ubCommands.info": "查詢伺服器執行狀態",
@@ -51,7 +51,7 @@
   "utils.utils.ubCommands.reload": "重新載入 MC-Discord-Chat 設定檔",
   "utils.utils.ubCommands.stop": "停止伺服器",
 
-  "message.unformattedResponseMessage": "  ┌──── <%name%> %message%",
+  "message.unformattedResponseMessage": "    ┌──── <%name%> %message%",
   "message.unformattedChatMessage": "[%server%] <%name%> %message%",
   "message.unformattedOtherMessage": "[%server%] %message%",
   "message.unformattedCommandNotice": "%name% 執行了 %command% 指令！",
