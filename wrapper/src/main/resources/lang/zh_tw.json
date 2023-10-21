@@ -1,84 +1,84 @@
 {
-  "discord.deListener.oscInteraction.serverNotStarted": "**你需要等待伺服器完全啟動！**",
-  "discord.deListener.oscInteraction.notFromGuild": "**你不能透過私訊使用此命令！**",
-  "discord.deListener.oscInteraction.stoppingServer": "**正在停止伺服器！**",
-  "discord.deListener.oscInteraction.executingCommand": "**正在執行命令！**",
-  "discord.deListener.oscInteraction.noPermission": "**你沒有權限使用此命令！**",
-  "discord.deListener.oscInteraction.fileNotFound": "**找不到指定的檔案！**",
-
-  "minecraft.mcCommands.register.helpMessageExplanation": "\n\n*帶刪除線的命令並沒有實做，因為這些命令在遊戲內是多餘或無法實做的。*\n\n*僅限管理員的命令僅對 4 級管理員可用，即擁有 OP 權限等級 4 的玩家或伺服器控制台。*",
-
-  "utils.clListener.startListening": "**開始監聽控制台日誌！**",
-  "utils.clListener.stopListening": "**停止監聽控制台日誌！**",
-
-  "utils.utils.cUpdate.newVersionAvailable": "**有新版本可用！**",
-  "utils.utils.cUpdate.downloadLink": "下載連結：<https://github.com/Xujiayao/MC-Discord-Chat/blob/master/README_CN.md#%%E4%%B8%%8B%%E8%%BD%%BD>",
-  "utils.utils.cUpdate.changelog": "更新日誌：",
-  "utils.utils.cUpdate.upToDate": "**當前版本已經是最新版本！**",
-
-  "utils.utils.whitelist.whitelistFailed": "**玩家已在白名單內！**",
-  "utils.utils.whitelist.whitelistSuccess": "**已新增 %s 到白名單！**",
-  "utils.utils.whitelist.playerNotExist": "**該玩家不存在！**",
-
-  "utils.utils.reload.success": "**設定檔重新載入成功！**",
-  "utils.utils.reload.fail": "**設定檔重新載入失敗！**",
-
-  "utils.utils.ghcMessage.help": "幫助",
-  "utils.utils.ghcMessage.adminOnly": "（僅限管理員）",
-
-  "utils.utils.gicMessage.serverStatus": "執行狀態",
-  "utils.utils.gicMessage.onlinePlayers": "在線玩家 (%s/%s)：\n",
-  "utils.utils.gicMessage.noPlayersOnline": "目前沒有玩家在線！\n",
-  "utils.utils.gicMessage.serverTps": "\n伺服器 TPS：\n%s",
-  "utils.utils.gicMessage.serverMspt": "\n\n伺服器 MSPT：\n%s",
-  "utils.utils.gicMessage.serverUsedMemory": "\n\n伺服器已用記憶體：\n%s MB / %s MB",
-
-  "utils.utils.gscMessage.scoreboard": "排行榜",
-  "utils.utils.gscMessage.noResult": "\n無結果",
-
-  "utils.utils.ubCommands.help": "取得可用命令列表",
-  "utils.utils.ubCommands.info": "查詢伺服器執行狀態",
-  "utils.utils.ubCommands.stats": "查詢該統計資訊的排行榜",
-  "utils.utils.ubCommands.stats.type": "統計類型",
-  "utils.utils.ubCommands.stats.name": "統計名稱",
-  "utils.utils.ubCommands.update": "檢查更新",
-  "utils.utils.ubCommands.whitelist": "將玩家新增到伺服器白名單",
-  "utils.utils.ubCommands.whitelist.player": "玩家暱稱",
-  "utils.utils.ubCommands.console": "在伺服器控制台中執行命令",
-  "utils.utils.ubCommands.console.command": "要執行的命令",
-  "utils.utils.ubCommands.log": "取得指定的伺服器日誌檔",
-  "utils.utils.ubCommands.log.file": "檔案名稱",
-  "utils.utils.ubCommands.reload": "重新載入 MC-Discord-Chat 設定檔",
-  "utils.utils.ubCommands.stop": "停止伺服器",
-
-  "message.unformattedResponseMessage": "    ┌──── <%name%> %message%",
-  "message.unformattedChatMessage": "[%server%] <%name%> %message%",
-  "message.unformattedOtherMessage": "[%server%] %message%",
-  "message.unformattedCommandNotice": "%name% 執行了 %command% 命令！",
-
-  "message.formattedResponseMessage": "[{\"text\":\"    ┌──── \",\"bold\":true,\"color\":\"dark_gray\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"dark_gray\"}]",
-  "message.formattedChatMessage": "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]",
-  "message.formattedOtherMessage": "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]",
-  "message.formattedCommandNotice": "[{\"text\":\"%name% \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"執行了 %command% 命令！\",\"bold\":false,\"color\":\"gray\"}]",
-
-  "message.messageWithoutWebhook": "<%name%> %message%",
-  "message.messageWithoutWebhookForMultiServer": "[%server%] <%name%> %message%",
-
-  "message.serverStarted": "**伺服器已啟動！**",
-  "message.serverStopped": "**伺服器已關閉！**",
-
-  "message.joinServer": "**%playerName% 加入了遊戲**",
-  "message.leftServer": "**%playerName% 離開了遊戲**",
-
-  "message.deathMessage": "**%deathMessage%**",
-
-  "message.advancementTask": "**%playerName% 已完成進度 [%advancement%]**\n*%description%*",
-  "message.advancementChallenge": "**%playerName% 已完成挑戰 [%advancement%]**\n*%description%*",
-  "message.advancementGoal": "**%playerName% 已達成目標 [%advancement%]**\n*%description%*",
-
-  "message.highMspt": "**伺服器 MSPT (%mspt%) 高於 %msptLimit%！**",
-
-  "message.offlineChannelTopic": ":x: 伺服器離線 | 最後更新於：<t:%lastUpdateTime%:f>",
-  "message.onlineChannelTopic": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% 位玩家在線 | 伺服器玩家總數：%uniquePlayerCount% | 伺服器於 <t:%serverStartedTime%:R> 啟動 | 最後更新於：<t:%lastUpdateTime%:f>",
-  "message.onlineChannelTopicForMultiServer": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% 位玩家在線 | 伺服器玩家總數：%uniquePlayerCount% | %onlineServerCount% 個伺服器在線 [%onlineServerList%] | 伺服器於 <t:%serverStartedTime%:R> 啟動 | 最後更新於：<t:%lastUpdateTime%:f>"
-}
+    "discord.deListener.oscInteraction.serverNotStarted": "**你需要等待伺服器完全啟動！**",
+    "discord.deListener.oscInteraction.notFromGuild": "**你不能透過私訊使用此指令！**",
+    "discord.deListener.oscInteraction.stoppingServer": "**正在停止伺服器！**",
+    "discord.deListener.oscInteraction.executingCommand": "**正在執行指令！**",
+    "discord.deListener.oscInteraction.noPermission": "**你沒有權限使用此指令！**",
+    "discord.deListener.oscInteraction.fileNotFound": "**找不到指定的檔案！**",
+  
+    "minecraft.mcCommands.register.helpMessageExplanation": "\n\n*帶刪除線的指令並沒有實做，因為這些指令在遊戲內是多餘或無法實做的。*\n\n*僅限管理員的指令僅對 4 級管理員可用，即擁有 OP 權限等級 4 的玩家或伺服器控制台。*",
+  
+    "utils.clListener.startListening": "**開始監聽控制台記錄！**",
+    "utils.clListener.stopListening": "**停止監聽控制台記錄！**",
+  
+    "utils.utils.cUpdate.newVersionAvailable": "**有新版本可用！**",
+    "utils.utils.cUpdate.downloadLink": "下載連結：<https://github.com/Xujiayao/MC-Discord-Chat/blob/master/README_CN.md#%E4%B8%8B%E8%BD%BD>",
+    "utils.utils.cUpdate.changelog": "更新日誌：",
+    "utils.utils.cUpdate.upToDate": "**目前版本已經是最新版本！**",
+  
+    "utils.utils.whitelist.whitelistFailed": "**玩家已在白名單內！**",
+    "utils.utils.whitelist.whitelistSuccess": "**已新增 %s 到白名單！**",
+    "utils.utils.whitelist.playerNotExist": "**該玩家不存在！**",
+  
+    "utils.utils.reload.success": "**設定檔重新載入成功！**",
+    "utils.utils.reload.fail": "**設定檔重新載入失敗！**",
+  
+    "utils.utils.ghcMessage.help": "幫助",
+    "utils.utils.ghcMessage.adminOnly": "（僅限管理員）",
+  
+    "utils.utils.gicMessage.serverStatus": "執行狀態",
+    "utils.utils.gicMessage.onlinePlayers": "在線玩家 (%s/%s)：\n",
+    "utils.utils.gicMessage.noPlayersOnline": "目前沒有玩家在線！\n",
+    "utils.utils.gicMessage.serverTps": "\n伺服器 TPS：\n%s",
+    "utils.utils.gicMessage.serverMspt": "\n\n伺服器 MSPT：\n%s",
+    "utils.utils.gicMessage.serverUsedMemory": "\n\n伺服器已使用記憶體：\n%s MB / %s MB",
+  
+    "utils.utils.gscMessage.scoreboard": "排行榜",
+    "utils.utils.gscMessage.noResult": "\n無結果",
+  
+    "utils.utils.ubCommands.help": "取得可用指令清單",
+    "utils.utils.ubCommands.info": "查詢伺服器執行狀態",
+    "utils.utils.ubCommands.stats": "查詢該統計資訊的排行榜",
+    "utils.utils.ubCommands.stats.type": "統計類型",
+    "utils.utils.ubCommands.stats.name": "統計名稱",
+    "utils.utils.ubCommands.update": "檢查更新",
+    "utils.utils.ubCommands.whitelist": "將玩家新增到伺服器白名單",
+    "utils.utils.ubCommands.whitelist.player": "玩家暱稱",
+    "utils.utils.ubCommands.console": "在伺服器控制台中執行指令",
+    "utils.utils.ubCommands.console.command": "要執行的指令",
+    "utils.utils.ubCommands.log": "取得指定的伺服器記錄檔",
+    "utils.utils.ubCommands.log.file": "檔案名稱",
+    "utils.utils.ubCommands.reload": "重新載入 MC-Discord-Chat 設定檔",
+    "utils.utils.ubCommands.stop": "停止伺服器",
+  
+    "message.unformattedResponseMessage": "    ┌──── <%name%> %message%",
+    "message.unformattedChatMessage": "[%server%] <%name%> %message%",
+    "message.unformattedOtherMessage": "[%server%] %message%",
+    "message.unformattedCommandNotice": "%name% 執行了 %command% 指令！",
+  
+    "message.formattedResponseMessage": "[{\"text\":\"    ┌──── \",\"bold\":true,\"color\":\"dark_gray\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"dark_gray\"}]",
+    "message.formattedChatMessage": "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]",
+    "message.formattedOtherMessage": "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]",
+    "message.formattedCommandNotice": "[{\"text\":\"%name% \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"執行了 %command% 指令！\",\"bold\":false,\"color\":\"gray\"}]",
+  
+    "message.messageWithoutWebhook": "<%name%> %message%",
+    "message.messageWithoutWebhookForMultiServer": "[%server%] <%name%> %message%",
+  
+    "message.serverStarted": "**伺服器已啟動！**",
+    "message.serverStopped": "**伺服器已關閉！**",
+  
+    "message.joinServer": "**%playerName% 加入了遊戲**",
+    "message.leftServer": "**%playerName% 離開了遊戲**",
+  
+    "message.deathMessage": "**%deathMessage%**",
+  
+    "message.advancementTask": "**%playerName% 已完成進度 [%advancement%]**\n*%description%*",
+    "message.advancementChallenge": "**%playerName% 已完成挑戰 [%advancement%]**\n*%description%*",
+    "message.advancementGoal": "**%playerName% 已達成目標 [%advancement%]**\n*%description%*",
+  
+    "message.highMspt": "**伺服器 MSPT (%mspt%) 高於 %msptLimit%！**",
+  
+    "message.offlineChannelTopic": ":x: 伺服器離線 | 最後更新於：<t:%lastUpdateTime%:f>",
+    "message.onlineChannelTopic": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% 位玩家在線 | 伺服器玩家總數：%uniquePlayerCount% | 伺服器於 <t:%serverStartedTime%:R> 啟動 | 最後更新於：<t:%lastUpdateTime%:f>",
+    "message.onlineChannelTopicForMultiServer": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% 位玩家在線 | 伺服器玩家總數：%uniquePlayerCount% | %onlineServerCount% 個伺服器在線 [%onlineServerList%] | 伺服器於 <t:%serverStartedTime%:R> 啟動 | 最後更新於：<t:%lastUpdateTime%:f>"
+  }
