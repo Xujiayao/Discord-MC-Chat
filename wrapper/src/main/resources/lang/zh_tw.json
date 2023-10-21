@@ -56,7 +56,7 @@
   "message.unformattedOtherMessage": "[%server%] %message%",
   "message.unformattedCommandNotice": "%name% 執行了 %command% 指令！",
 
-  "message.formattedResponseMessage": "[{\"text\":\"  ┌──── \",\"bold\":true,\"color\":\"dark_gray\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"dark_gray\"}]",
+  "message.formattedResponseMessage": "[{\"text\":\"    ┌──── \",\"bold\":true,\"color\":\"dark_gray\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"dark_gray\"}]",
   "message.formattedChatMessage": "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]",
   "message.formattedOtherMessage": "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]",
   "message.formattedCommandNotice": "[{\"text\":\"%name% \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"執行了 %command% 指令！\",\"bold\":false,\"color\":\"gray\"}]",
