@@ -12,9 +12,9 @@
   "utils.clListener.stopListening": "**停止监听控制台日志！**",
 
   "utils.utils.cUpdate.newVersionAvailable": "**有新版本可用！**",
-  "utils.utils.cUpdate.downloadLink": "下载链接：<https://github.com/Xujiayao/MC-Discord-Chat/blob/master/README_CN.md#%%E4%%B8%%8B%%E8%%BD%%BD>",
+  "utils.utils.cUpdate.downloadLink": "下载链接：<https://github.com/Xujiayao/MC-Discord-Chat/blob/master/README_CN.md#%E4%B8%8B%E8%BD%BD>",
   "utils.utils.cUpdate.changelog": "更新日志：",
-  "utils.utils.cUpdate.upToDate": "**当前版本已经是最新版本！**",
+  "utils.utils.cUpdate.upToDate": "**目前版本已经是最新版本！**",
 
   "utils.utils.whitelist.whitelistFailed": "**玩家已在服务器白名单内！**",
   "utils.utils.whitelist.whitelistSuccess": "**已将 %s 添加至服务器白名单！**",
