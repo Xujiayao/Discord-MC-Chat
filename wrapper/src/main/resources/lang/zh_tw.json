@@ -10,7 +10,7 @@
 
   "utils.clListener.startListening": "**開始監聽控制台記錄！**",
   "utils.clListener.stopListening": "**停止監聽控制台記錄！**",
-  
+
   "utils.utils.cUpdate.newVersionAvailable": "**有新版本可用！**",
   "utils.utils.cUpdate.downloadLink": "下載連結：<https://github.com/Xujiayao/MC-Discord-Chat/blob/master/README_CN.md#%E4%B8%8B%E8%BD%BD>",
   "utils.utils.cUpdate.changelog": "更新日誌：",
@@ -31,10 +31,10 @@
   "utils.utils.gicMessage.noPlayersOnline": "目前沒有玩家在線！\n",
   "utils.utils.gicMessage.serverTps": "\n伺服器 TPS：\n%s",
   "utils.utils.gicMessage.serverMspt": "\n\n伺服器 MSPT：\n%s",
-  "utils.utils.gicMessage.serverUsedMemory": "\n\n伺服器已使用記憶體：\n%s MB / %s MB",
+  "utils.utils.gicMessage.serverUsedMemory": "\n\n伺服器已用記憶體：\n%s MB / %s MB",
 
   "utils.utils.gscMessage.scoreboard": "排行榜",
-  "utils.utils.gscMessage.noResult": "\n沒有結果",
+  "utils.utils.gscMessage.noResult": "\n無結果",
 
   "utils.utils.ubCommands.help": "取得可用指令清單",
   "utils.utils.ubCommands.info": "查詢伺服器執行狀態",
