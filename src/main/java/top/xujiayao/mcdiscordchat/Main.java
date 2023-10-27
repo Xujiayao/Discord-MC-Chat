@@ -93,20 +93,30 @@ public class Main implements DedicatedServerModInitializer {
 			JDA.awaitReady();
 
 			CHANNEL = JDA.getTextChannelById(CONFIG.generic.channelId);
+			if (CHANNEL == null) {
+				throw new NullPointerException("Invalid Channel ID");
+			}
 			if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
 				CONSOLE_LOG_CHANNEL = JDA.getTextChannelById(CONFIG.generic.consoleLogChannelId);
+				if (CONSOLE_LOG_CHANNEL == null) {
+					throw new NullPointerException("Invalid Console Log Channel ID");
+				}
 				CONSOLE_LOG_THREAD.start();
 			}
 			if (!CONFIG.generic.updateNotificationChannelId.isEmpty()) {
 				UPDATE_NOTIFICATION_CHANNEL = JDA.getTextChannelById(CONFIG.generic.updateNotificationChannelId);
-			}
-			if (UPDATE_NOTIFICATION_CHANNEL == null || !UPDATE_NOTIFICATION_CHANNEL.canTalk()) {
-				UPDATE_NOTIFICATION_CHANNEL = CHANNEL;
+				if (UPDATE_NOTIFICATION_CHANNEL == null) {
+					throw new NullPointerException("Invalid Update Notification Channel ID");
+				}
+				if (!UPDATE_NOTIFICATION_CHANNEL.canTalk()) {
+					LOGGER.warn("Unable to send messages in the Update Notification Channel; Using the default channel instead.");
+					UPDATE_NOTIFICATION_CHANNEL = CHANNEL;
+				}
 			}
 
 			String webhookName = "MCDC Webhook" + (CONFIG.multiServer.enable ? " (" + CONFIG.multiServer.name + ")" : "");
 			WEBHOOK = null;
-			for (Webhook webhook : Objects.requireNonNull(CHANNEL).getGuild().retrieveWebhooks().complete()) {
+			for (Webhook webhook : CHANNEL.getGuild().retrieveWebhooks().complete()) {
 				if (webhookName.equals(webhook.getName())) {
 					if (webhook.getChannel().asTextChannel() == CHANNEL) {
 						WEBHOOK = webhook;
