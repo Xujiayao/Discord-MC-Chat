@@ -144,6 +144,7 @@ MC-Discord-Chat (MCDC), formerly known as MCDiscordChat, a practical and powerfu
 | `ru_ru` | Русский (Россия)     |
 | `zh_cn` | 简体中文（中国大陆）           |
 | `zh_hk` | 繁體中文（香港特別行政區）        |
+| `zh_tw` | 繁體中文（台灣）             |
 
 ## 贡献者
 

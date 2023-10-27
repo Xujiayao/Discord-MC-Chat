@@ -1,6 +1,21 @@
 {
   "versions": [
     {
+      "version": "2.2.3",
+      "changelog": "<https://github.com/Xujiayao/MC-Discord-Chat/releases/latest>",
+      "minecraft_dependency": [
+        "~1.14.4",
+        "~1.15.2",
+        "~1.16.4",
+        "~1.17",
+        "~1.18",
+        "~1.19.4",
+        "1.20",
+        "1.20.1",
+        "~1.20.2"
+      ]
+    },
+    {
       "version": "2.2.2",
       "changelog": "<https://github.com/Xujiayao/MC-Discord-Chat/releases/latest>\n\n> MCDC now accurately pushes MCDC version updates by checking the compatibility of the server's Minecraft version.\n> \n> This new feature ensures no more situations where an old MCDC with an old Minecraft version pushes a new MCDC version that doesn't support that particular Minecraft version.",
       "minecraft_dependency": [
