@@ -12,7 +12,7 @@
   "utils.clListener.stopListening": "**停止監聽控制台記錄！**",
 
   "utils.utils.cUpdate.newVersionAvailable": "**有新版本可用！**",
-  "utils.utils.cUpdate.downloadLink": "下載連結：<https://github.com/Xujiayao/MC-Discord-Chat/blob/master/README_CN.md#%E4%B8%8B%E8%BD%BD>",
+  "utils.utils.cUpdate.downloadLink": "下載連結：<https://github.com/Xujiayao/MC-Discord-Chat/blob/master/README_CN.md#%%E4%%B8%%8B%%E8%%BD%%BD>",
   "utils.utils.cUpdate.changelog": "更新日志：",
   "utils.utils.cUpdate.upToDate": "**目前版本已經係最新版本！**",
 
