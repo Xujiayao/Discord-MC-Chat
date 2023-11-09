@@ -3,7 +3,7 @@ on: [ pull_request, push ]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
