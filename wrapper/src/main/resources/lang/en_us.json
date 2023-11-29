@@ -73,7 +73,7 @@
   "message.deathMessage": "**%deathMessage%**",
 
   "message.advancementTask": "**%playerName% has made the advancement [%advancement%]**\n*%description%*",
-  "message.advancementChallenge": "**%playerName% has completed the Challenge [%advancement%]**\n*%description%*",
+  "message.advancementChallenge": "**%playerName% has completed the challenge [%advancement%]**\n*%description%*",
   "message.advancementGoal": "**%playerName% has reached the goal [%advancement%]**\n*%description%*",
 
   "message.highMspt": "**Server MSPT (%mspt%) is above %msptLimit%!**",
