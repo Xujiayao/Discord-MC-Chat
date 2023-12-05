@@ -22,6 +22,7 @@ body:
       label: Minecraft Version
       description: |
         The version of Minecraft you are using?
+        (If a version is not listed below, it is not supported by MCDC)
       multiple: false
       options:
         - "1.20.2"
@@ -49,6 +50,7 @@ body:
       label: MC-Discord-Chat Version
       description: |
         The version of MC-Discord-Chat you are using?
+        (Only MCDC v2 versions are supported)
       multiple: false
       options:
         - "Latest Build (GitHub Actions)"
