@@ -402,8 +402,10 @@ public class Utils {
 			message.append(Translations.translate("utils.utils.gicMessage.noPlayersOnline"));
 		} else {
 			for (ServerPlayerEntity player : onlinePlayers) {
-				//#if MC >= 12002
-				message.append("[").append(player.networkHandler.getLatency()).append("ms] ").append(player.getEntityName()).append("\n");
+				//#if MC >= 12003
+				message.append("[").append(player.networkHandler.getLatency()).append("ms] ").append(player.getNameForScoreboard()).append("\n");
+				//#elseif MC >= 12002
+				//$$ message.append("[").append(player.networkHandler.getLatency()).append("ms] ").append(player.getEntityName()).append("\n");
 				//#else
 				//$$ message.append("[").append(player.pingMilliseconds).append("ms] ").append(player.getEntityName()).append("\n");
 				//#endif
@@ -411,7 +413,11 @@ public class Utils {
 		}
 
 		// Server TPS
-		double serverTickTime = average(SERVER.lastTickLengths) * 1.0E-6D;
+		//#if MC >= 12003
+		double serverTickTime = average(SERVER.getTickTimes()) * 1.0E-6D;
+		//#else
+		//$$ double serverTickTime = average(SERVER.lastTickLengths) * 1.0E-6D;
+		//#endif
 		message.append(Translations.translate("utils.utils.gicMessage.serverTps", String.format("%.2f", Math.min(1000.0 / serverTickTime, 20))));
 
 		// Server MSPT
@@ -520,7 +526,11 @@ public class Utils {
 		MSPT_MONITOR_TIMER.schedule(new TimerTask() {
 			@Override
 			public void run() {
-				double mspt = average(SERVER.lastTickLengths) * 1.0E-6D;
+				//#if MC >= 12003
+				double mspt = average(SERVER.getTickTimes()) * 1.0E-6D;
+				//#else
+				//$$ double mspt = average(SERVER.lastTickLengths) * 1.0E-6D;
+				//#endif
 
 				if (mspt > CONFIG.generic.msptLimit) {
 					String message = Translations.translateMessage("message.highMspt")

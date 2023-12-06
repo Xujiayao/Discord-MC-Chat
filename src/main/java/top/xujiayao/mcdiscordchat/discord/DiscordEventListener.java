@@ -95,7 +95,7 @@ public class DiscordEventListener extends ListenerAdapter {
 						.replace("%command%", e.getCommandString())));
 
 		if (CONFIG.generic.broadcastSlashCommandExecution) {
-			Text commandNoticeText = Text.Serializer.fromJson(Translations.translateMessage("message.formattedCommandNotice")
+			Text commandNoticeText = Text.Serialization.fromJson(Translations.translateMessage("message.formattedCommandNotice")
 					.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\").replace("\"", "\\\""))
 					.replace("%roleName%", roleName)
 					.replace("%roleColor%", "#" + Integer.toHexString(e.getMember().getColorRaw()))
@@ -110,7 +110,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			//$$ 				.append(commandNoticeText), false));
 			//#else
 			List<Text> commandNoticeTextList = new ArrayList<>();
-			commandNoticeTextList.add(Text.Serializer.fromJson(Translations.translateMessage("message.formattedOtherMessage")
+			commandNoticeTextList.add(Text.Serialization.fromJson(Translations.translateMessage("message.formattedOtherMessage")
 					.replace("%server%", (CONFIG.multiServer.enable ? CONFIG.multiServer.name : "Discord"))
 					.replace("%message%", "")));
 			commandNoticeTextList.add(commandNoticeText);
@@ -120,7 +120,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			//#endif
 
 			if (CONFIG.multiServer.enable) {
-				MULTI_SERVER.sendMessage(false, false, true, null, Text.Serializer.toJson(commandNoticeText));
+				MULTI_SERVER.sendMessage(false, false, true, null, Text.Serialization.toJsonString(commandNoticeText));
 			}
 		}
 
@@ -552,7 +552,7 @@ public class DiscordEventListener extends ListenerAdapter {
 		if (CONFIG.generic.broadcastChatMessages) {
 			if (e.getMessage().getReferencedMessage() != null) {
 				String s = Translations.translateMessage("message.formattedResponseMessage");
-				Text referenceFinalText = Text.Serializer.fromJson(s
+				Text referenceFinalText = Text.Serialization.fromJson(s
 						.replace("%message%", (CONFIG.generic.formatChatMessages ? finalReferencedMessage : EmojiParser.parseToAliases(referencedMessageTemp).replace("\"", "\\\""))
 								.replace("\n", "\n" + textAfterPlaceholder[0] + "}," + s.substring(1, s.indexOf("%message%"))))
 						.replace("%server%", "Discord")
@@ -565,7 +565,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 
 			String s = Translations.translateMessage("message.formattedChatMessage");
-			Text finalText = Text.Serializer.fromJson(s
+			Text finalText = Text.Serialization.fromJson(s
 					.replace("%message%", (CONFIG.generic.formatChatMessages ? finalMessage : EmojiParser.parseToAliases(messageTemp).replace("\"", "\\\""))
 							.replace("\n", "\n" + textAfterPlaceholder[1] + "}," + s.substring(1, s.indexOf("%message%"))))
 					.replace("%server%", "Discord")

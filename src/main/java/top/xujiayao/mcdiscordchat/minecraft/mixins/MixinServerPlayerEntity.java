@@ -65,11 +65,19 @@ public abstract class MixinServerPlayerEntity extends PlayerEntity {
 
 			CHANNEL.sendMessage(Translations.translateMessage("message.deathMessage")
 					.replace("%deathMessage%", MarkdownSanitizer.escape(Translations.translate(key, args)))
-					.replace("%playerName%", MarkdownSanitizer.escape(this.getEntityName()))).queue();
+					//#if MC >= 12003
+					.replace("%playerName%", MarkdownSanitizer.escape(this.getNameForScoreboard()))).queue();
+					//#else
+					//$$ .replace("%playerName%", MarkdownSanitizer.escape(this.getEntityName()))).queue();
+					//#endif
 			if (CONFIG.multiServer.enable) {
 				MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.deathMessage")
 						.replace("%deathMessage%", MarkdownSanitizer.escape(Translations.translate(key, args)))
-						.replace("%playerName%", MarkdownSanitizer.escape(this.getEntityName())));
+						//#if MC >= 12003
+						.replace("%playerName%", MarkdownSanitizer.escape(this.getNameForScoreboard())));
+						//#else
+						//$$ .replace("%playerName%", MarkdownSanitizer.escape(this.getEntityName())));
+						//#endif
 			}
 		}
 	}

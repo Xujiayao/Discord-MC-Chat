@@ -1,3 +1,4 @@
+//#if MC >= 12002
 package top.xujiayao.mcdiscordchat.minecraft.mixins;
 
 import com.google.gson.Gson;
@@ -40,6 +41,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import top.xujiayao.mcdiscordchat.utils.MarkdownParser;
 import top.xujiayao.mcdiscordchat.utils.Translations;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -80,7 +82,7 @@ public abstract class MixinServerPlayNetworkHandler extends ServerCommonNetworkH
 	public abstract CompletableFuture<FilteredMessage> filterText(String text);
 
 	@Shadow
-	public abstract Optional<LastSeenMessageList> validateMessage(LastSeenMessageList.Acknowledgment acknowledgment);
+	public abstract Optional<LastSeenMessageList> validateMessage(String message, Instant timestamp, LastSeenMessageList.Acknowledgment acknowledgment);
 
 	@Shadow
 	public abstract void handleCommandExecution(CommandExecutionC2SPacket packet, LastSeenMessageList lastSeenMessages);
@@ -99,7 +101,7 @@ public abstract class MixinServerPlayNetworkHandler extends ServerCommonNetworkH
 		if (hasIllegalCharacter(packet.chatMessage())) {
 			disconnect(Text.translatable("multiplayer.disconnect.illegal_characters"));
 		} else {
-			Optional<LastSeenMessageList> optional = validateMessage(packet.acknowledgment());
+			Optional<LastSeenMessageList> optional = validateMessage(packet.chatMessage(), packet.timestamp(), packet.acknowledgment());
 			if (optional.isPresent()) {
 				String contentToDiscord = packet.chatMessage();
 				String contentToMinecraft = packet.chatMessage();
@@ -181,7 +183,7 @@ public abstract class MixinServerPlayNetworkHandler extends ServerCommonNetworkH
 				if (CONFIG.generic.formatChatMessages) {
 					try {
 						SignedMessage signedMessage = getSignedMessage(packet, optional.get());
-						server.getPlayerManager().broadcast(signedMessage.withUnsignedContent(Objects.requireNonNull(Text.Serialization.fromJson("[{\"text\":\"" + contentToMinecraft + "\"}]"))), player, MessageType.params(MessageType.CHAT, player));
+						server.getPlayerManager().broadcast(signedMessage.withUnsignedContent(Objects.requireNonNull(Text.Serializer.fromJson("[{\"text\":\"" + contentToMinecraft + "\"}]"))), player, MessageType.params(MessageType.CHAT, player));
 					} catch (MessageChain.MessageChainException e) {
 						handleMessageChainException(e);
 					}
@@ -197,17 +199,17 @@ public abstract class MixinServerPlayNetworkHandler extends ServerCommonNetworkH
 
 						CompletableFuture<FilteredMessage> completableFuture = filterText(signedMessage.getSignedContent());
 						Text text = server.getMessageDecorator().decorate(player, signedMessage.getContent());
-						messageChainTaskQueue.append(completableFuture, (filtered) -> {
-							SignedMessage signedMessage2 = signedMessage.withUnsignedContent(text).withFilterMask(filtered.mask());
+						messageChainTaskQueue.append((executor) -> completableFuture.thenAcceptAsync((filteredMessage) -> {
+							SignedMessage signedMessage2 = signedMessage.withUnsignedContent(text).withFilterMask(filteredMessage.mask());
 							handleDecoratedMessage(signedMessage2);
-						});
+						}, executor));
 					});
 				}
 
 				if (CONFIG.generic.broadcastChatMessages) {
 					sendMessage(contentToDiscord, false);
 					if (CONFIG.multiServer.enable) {
-						MULTI_SERVER.sendMessage(false, true, false, player.getNameForScoreboard(), CONFIG.generic.formatChatMessages ? contentToMinecraft : packet.chatMessage());
+						MULTI_SERVER.sendMessage(false, true, false, player.getEntityName(), CONFIG.generic.formatChatMessages ? contentToMinecraft : packet.chatMessage());
 					}
 				}
 			}
@@ -222,7 +224,7 @@ public abstract class MixinServerPlayNetworkHandler extends ServerCommonNetworkH
 			if (hasIllegalCharacter(packet.command())) {
 				disconnect(Text.translatable("multiplayer.disconnect.illegal_characters"));
 			} else {
-				Optional<LastSeenMessageList> optional = validateMessage(packet.acknowledgment());
+				Optional<LastSeenMessageList> optional = validateMessage(packet.command(), packet.timestamp(), packet.acknowledgment());
 				if (optional.isPresent()) {
 					server.submit(() -> {
 						handleCommandExecution(packet, optional.get());
@@ -245,7 +247,7 @@ public abstract class MixinServerPlayNetworkHandler extends ServerCommonNetworkH
 
 					MINECRAFT_SEND_COUNT++;
 					if (MINECRAFT_SEND_COUNT <= 20) {
-						Text text = Text.of("<" + player.getNameForScoreboard() + "> " + input);
+						Text text = Text.of("<" + player.getEntityName() + "> " + input);
 
 						server.getPlayerManager().getPlayerList().forEach(
 								player -> player.sendMessage(text, false));
@@ -254,7 +256,7 @@ public abstract class MixinServerPlayNetworkHandler extends ServerCommonNetworkH
 
 						sendMessage(input, true);
 						if (CONFIG.multiServer.enable) {
-							MULTI_SERVER.sendMessage(false, true, false, player.getNameForScoreboard(), MarkdownSanitizer.escape(input));
+							MULTI_SERVER.sendMessage(false, true, false, player.getEntityName(), MarkdownSanitizer.escape(input));
 						}
 					}
 				}
@@ -271,18 +273,18 @@ public abstract class MixinServerPlayNetworkHandler extends ServerCommonNetworkH
 			if (CONFIG.multiServer.enable) {
 				CHANNEL.sendMessage(Translations.translateMessage("message.messageWithoutWebhookForMultiServer")
 						.replace("%server%", CONFIG.multiServer.name)
-						.replace("%name%", player.getNameForScoreboard())
+						.replace("%name%", player.getEntityName())
 						.replace("%message%", content)).queue();
 			} else {
 				CHANNEL.sendMessage(Translations.translateMessage("message.messageWithoutWebhook")
-						.replace("%name%", player.getNameForScoreboard())
+						.replace("%name%", player.getEntityName())
 						.replace("%message%", content)).queue();
 			}
 		} else {
 			JsonObject body = new JsonObject();
 			body.addProperty("content", content);
-			body.addProperty("username", ((CONFIG.multiServer.enable) ? ("[" + CONFIG.multiServer.name + "] " + player.getNameForScoreboard()) : player.getNameForScoreboard()));
-			body.addProperty("avatar_url", CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUuid().toString() : player.getNameForScoreboard())));
+			body.addProperty("username", ((CONFIG.multiServer.enable) ? ("[" + CONFIG.multiServer.name + "] " + player.getEntityName()) : player.getEntityName()));
+			body.addProperty("avatar_url", CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUuid().toString() : player.getEntityName())));
 
 			JsonObject allowedMentions = new JsonObject();
 			allowedMentions.add("parse", new Gson().toJsonTree(CONFIG.generic.allowedMentions).getAsJsonArray());
@@ -312,3 +314,4 @@ public abstract class MixinServerPlayNetworkHandler extends ServerCommonNetworkH
 		return false;
 	}
 }
+//#endif

@@ -98,7 +98,7 @@ public class ReadThread extends Thread {
 								.replace("%name%", json.get("playerName").getAsString())
 								.replace("%message%", json.get("message").getAsString()));
 
-						Text text = Text.Serializer.fromJson(Translations.translateMessage("message.formattedChatMessage")
+						Text text = Text.Serialization.fromJson(Translations.translateMessage("message.formattedChatMessage")
 								.replace("%server%", json.get("serverName").getAsString())
 								.replace("%name%", json.get("playerName").getAsString())
 								.replace("%roleColor%", "white")
@@ -110,9 +110,9 @@ public class ReadThread extends Thread {
 						if (json.get("isText").getAsBoolean()) {
 							LOGGER.info(Translations.translateMessage("message.unformattedOtherMessage")
 									.replace("%server%", json.get("serverName").getAsString())
-									.replace("%message%", Objects.requireNonNull(Text.Serializer.fromJson(json.get("message").getAsString())).getString()));
+									.replace("%message%", Objects.requireNonNull(Text.Serialization.fromJson(json.get("message").getAsString())).getString()));
 
-							Text text = Text.Serializer.fromJson(Translations.translateMessage("message.formattedOtherMessage")
+							Text text = Text.Serialization.fromJson(Translations.translateMessage("message.formattedOtherMessage")
 									.replace("%server%", json.get("serverName").getAsString())
 									.replace("%message%", ""));
 
@@ -124,7 +124,7 @@ public class ReadThread extends Thread {
 							//#else
 							List<Text> textList = new ArrayList<>();
 							textList.add(text);
-							textList.add(Text.Serializer.fromJson(json.get("message").getAsString()));
+							textList.add(Text.Serialization.fromJson(json.get("message").getAsString()));
 
 							SERVER.getPlayerManager().getPlayerList().forEach(
 									player -> player.sendMessage(Texts.join(textList, Text.of("")), false));
@@ -134,7 +134,7 @@ public class ReadThread extends Thread {
 									.replace("%server%", json.get("serverName").getAsString())
 									.replace("%message%", json.get("message").getAsString()));
 
-							Text text = Text.Serializer.fromJson(Translations.translateMessage("message.formattedOtherMessage")
+							Text text = Text.Serialization.fromJson(Translations.translateMessage("message.formattedOtherMessage")
 									.replace("%server%", json.get("serverName").getAsString())
 									.replace("%message%", MarkdownParser.parseMarkdown(json.get("message").getAsString())));
 

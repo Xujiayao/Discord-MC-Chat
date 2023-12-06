@@ -98,10 +98,18 @@ public class MixinPlayerManager {
 
 		if (CONFIG.generic.announcePlayerJoinLeave) {
 			CHANNEL.sendMessage(Translations.translateMessage("message.joinServer")
-					.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();
+					//#if MC >= 12003
+					.replace("%playerName%", MarkdownSanitizer.escape(player.getNameForScoreboard()))).queue();
+					//#else
+					//$$ .replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();
+					//#endif
 			if (CONFIG.multiServer.enable) {
 				MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.joinServer")
-						.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName())));
+						//#if MC >= 12003
+						.replace("%playerName%", MarkdownSanitizer.escape(player.getNameForScoreboard())));
+						//#else
+						//$$ .replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName())));
+						//#endif
 			}
 		}
 	}
@@ -112,10 +120,18 @@ public class MixinPlayerManager {
 
 		if (CONFIG.generic.announcePlayerJoinLeave) {
 			CHANNEL.sendMessage(Translations.translateMessage("message.leftServer")
-					.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();
+					//#if MC >= 12003
+					.replace("%playerName%", MarkdownSanitizer.escape(player.getNameForScoreboard()))).queue();
+					//#else
+					//$$ .replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();
+					//#endif
 			if (CONFIG.multiServer.enable) {
 				MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.leftServer")
-						.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName())));
+						//#if MC >= 12003
+						.replace("%playerName%", MarkdownSanitizer.escape(player.getNameForScoreboard())));
+						//#else
+						//$$ .replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName())));
+						//#endif
 			}
 		}
 	}
