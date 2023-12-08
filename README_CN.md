@@ -153,3 +153,27 @@ MC-Discord-Chat (MCDC), formerly known as MCDiscordChat, a practical and powerfu
 ## 星标历史
 
 [![Stargazers over time](https://starchart.cc/Xujiayao/MC-Discord-Chat.svg)](https://starchart.cc/Xujiayao/MC-Discord-Chat)
+
+## 许可证
+
+本项目采用 [MIT 许可证](https://github.com/Xujiayao/MC-Discord-Chat/blob/master/LICENSE) 进行授权。
+
+作为例外，`src/main/java/top/xujiayao/mcdiscordchat/utils/MarkdownParser.java` 文件于 2020 年 12 月 31 日从 BRForgers/DisFabric 获取，采用 Mozilla 公共许可证 2.0 (MPL-2.0) 进行授权。
+
+> `src/main/java/top/xujiayao/mcdiscordchat/utils/MarkdownParser.java` 文件的更多详情：
+>
+> 作者：allanf181 (Allan Fernando)
+>
+> 链接到原始来源：
+> https://github.com/BRForgers/DisFabric/blob/e0c7601405ee1b3f1de3c3168bc4ddd520501565/src/main/java/br/com/brforgers/mods/disfabric/utils/MarkdownParser.java
+>
+> 链接到许可证：
+> https://github.com/BRForgers/DisFabric/blob/e0c7601405ee1b3f1de3c3168bc4ddd520501565/LICENSE
+>
+> 请注意，新创建的 BRForgers/DisFabric-and-DisForge 项目中使用的 "Don't Be a Jerk" 许可证与旧项目 BRForgers/DisFabric 是分开的。
+>
+> - 项目名称和许可证的任何近期变更都不会追溯影响到之前特定时刻（即 2020 年 12 月 31 日）所获取的代码的许可条款。
+> - 从 BRForgers/DisFabric 获取的任何文件仍仅受 MPL-2.0 许可证条款的约束。
+>
+> 链接到 "Don't Be a Jerk" 许可证：
+> https://github.com/BRForgers/DisFabric-and-DisForge/blob/d1468a6c9b50ba24a250ec370cf645d58dccdfd1/LICENSE.md

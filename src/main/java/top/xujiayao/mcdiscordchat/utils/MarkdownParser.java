@@ -1,8 +1,21 @@
 /*
-This file was obtained from BRForgers/DisFabric, licensed under the Mozilla Public License 2.0 (MPL-2.0).
+This file was obtained from BRForgers/DisFabric on December 31, 2020, licensed under the Mozilla Public License 2.0 (MPL-2.0).
+
 Author: allanf181 (Allan Fernando)
-Link to the original source: https://github.com/BRForgers/DisFabric (/src/main/java/br/com/brforgers/mods/disfabric/utils/MarkdownParser.java)
-Link to the license: https://raw.githubusercontent.com/BRForgers/DisFabric/master/LICENSE
+
+Link to the original source:
+https://github.com/BRForgers/DisFabric/blob/e0c7601405ee1b3f1de3c3168bc4ddd520501565/src/main/java/br/com/brforgers/mods/disfabric/utils/MarkdownParser.java
+
+Link to the license:
+https://github.com/BRForgers/DisFabric/blob/e0c7601405ee1b3f1de3c3168bc4ddd520501565/LICENSE
+
+Note that the "Don't Be a Jerk" license used in the newly created project BRForgers/DisFabric-and-DisForge is separate from the old project BRForgers/DisFabric.
+
+- Any recent changes in the project name and license do not retroactively affect the license terms of the code obtained at a specific moment before, that is, December 31, 2020.
+- Any files obtained from BRForgers/DisFabric continue to be subject to the terms of the MPL-2.0 license only.
+
+Link to the "Don't Be a Jerk" license:
+https://github.com/BRForgers/DisFabric-and-DisForge/blob/d1468a6c9b50ba24a250ec370cf645d58dccdfd1/LICENSE.md
  */
 
 package top.xujiayao.mcdiscordchat.utils;
