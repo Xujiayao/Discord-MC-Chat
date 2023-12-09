@@ -7,7 +7,7 @@ sourceCompatibility = JavaVersion.VERSION_17
 targetCompatibility = JavaVersion.VERSION_17
 
 archivesBaseName = archives_base_name
-version = mod_version
+version = mod_version + "-compat"
 group = maven_group
 
 dependencies {
@@ -37,15 +37,21 @@ dependencies {
 }
 
 def fabric_subprojects = parent.subprojects.findAll({
-    it.name != "wrapper" && !it.name.contains("compat")
+    it.name.contains("compat_")
 })
+
+compileJava.dependsOn(":wrapper:jar")
+processResources.dependsOn(":wrapper:jar")
 
 remapJar {
     outputs.upToDateWhen { false }
 
-    dependsOn(fabric_subprojects.collect {
-        it.tasks.remapJar
-    })
+    dependsOn {
+        fabric_subprojects.collect {
+            it.tasks.remapJar
+        }
+        ":wrapper:remapJar"
+    }
 
     doFirst {
         delete fileTree("build/tmp/versions/META-INF/jars")
