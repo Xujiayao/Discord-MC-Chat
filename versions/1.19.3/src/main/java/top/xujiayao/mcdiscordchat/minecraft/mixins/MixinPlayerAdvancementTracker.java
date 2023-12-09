@@ -1,4 +1,3 @@
-//#if MC >= 11904
 package top.xujiayao.mcdiscordchat.minecraft.mixins;
 
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
@@ -30,7 +29,7 @@ public abstract class MixinPlayerAdvancementTracker {
 	@Shadow
 	public abstract AdvancementProgress getProgress(Advancement advancement);
 
-	@Inject(method = "grantCriterion", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancement/PlayerAdvancementTracker;onStatusUpdate(Lnet/minecraft/advancement/Advancement;)V"))
+	@Inject(method = "grantCriterion", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancement/PlayerAdvancementTracker;updateDisplay(Lnet/minecraft/advancement/Advancement;)V"))
 	private void grantCriterion(Advancement advancement, String criterionName, CallbackInfoReturnable<Boolean> cir) {
 		if (CONFIG.generic.announceAdvancements
 				&& getProgress(advancement).isDone()
@@ -60,4 +59,3 @@ public abstract class MixinPlayerAdvancementTracker {
 		}
 	}
 }
-//#endif

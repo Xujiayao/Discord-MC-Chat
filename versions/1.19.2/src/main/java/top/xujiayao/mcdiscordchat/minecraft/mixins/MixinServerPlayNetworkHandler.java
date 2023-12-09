@@ -1,4 +1,4 @@
-//#if MC >= 11903
+//#if MC >= 11900
 package top.xujiayao.mcdiscordchat.minecraft.mixins;
 
 import com.google.gson.Gson;
@@ -9,7 +9,7 @@ import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.fellbaum.jemoji.EmojiManager;
 import net.minecraft.SharedConstants;
-import net.minecraft.network.listener.ServerPlayPacketListener;
+import net.minecraft.network.message.FilterMask;
 import net.minecraft.network.message.LastSeenMessageList;
 import net.minecraft.network.message.MessageChain;
 import net.minecraft.network.message.MessageChainTaskQueue;
@@ -21,7 +21,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.filter.FilteredMessage;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.EntityTrackingListener;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import okhttp3.MediaType;
@@ -43,7 +42,6 @@ import top.xujiayao.mcdiscordchat.utils.Translations;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
@@ -61,7 +59,7 @@ import static top.xujiayao.mcdiscordchat.Main.WEBHOOK;
  * @author Xujiayao
  */
 @Mixin(ServerPlayNetworkHandler.class)
-public abstract class MixinServerPlayNetworkHandler implements EntityTrackingListener, ServerPlayPacketListener {
+public abstract class MixinServerPlayNetworkHandler {
 
 	@Shadow
 	private ServerPlayerEntity player;
@@ -81,30 +79,29 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 	public abstract void disconnect(Text reason);
 
 	@Shadow
+	public abstract boolean canAcceptMessage(SignedMessage message);
+
+	@Shadow
+	public abstract boolean canAcceptMessage(String message, Instant timestamp, LastSeenMessageList.Acknowledgment acknowledgment);
+
+	@Shadow
 	public abstract CompletableFuture<FilteredMessage> filterText(String text);
 
 	@Shadow
-	public abstract Optional<LastSeenMessageList> validateMessage(String message, Instant timestamp, LastSeenMessageList.Acknowledgment acknowledgment);
+	public abstract void handleCommandExecution(CommandExecutionC2SPacket packet);
 
 	@Shadow
-	public abstract void handleCommandExecution(CommandExecutionC2SPacket packet, LastSeenMessageList lastSeenMessages);
-
-	@Shadow
-	public abstract SignedMessage getSignedMessage(ChatMessageC2SPacket packet, LastSeenMessageList lastSeenMessages) throws MessageChain.MessageChainException;
+	public abstract SignedMessage getSignedMessage(ChatMessageC2SPacket packet);
 
 	@Shadow
 	public abstract void handleDecoratedMessage(SignedMessage message);
-
-	@Shadow
-	public abstract void handleMessageChainException(MessageChain.MessageChainException exception);
 
 	@Inject(method = "onChatMessage", at = @At("HEAD"), cancellable = true)
 	private void onChatMessage(ChatMessageC2SPacket packet, CallbackInfo ci) {
 		if (hasIllegalCharacter(packet.chatMessage())) {
 			disconnect(Text.translatable("multiplayer.disconnect.illegal_characters"));
 		} else {
-			Optional<LastSeenMessageList> optional = validateMessage(packet.chatMessage(), packet.timestamp(), packet.acknowledgment());
-			if (optional.isPresent()) {
+			if (canAcceptMessage(packet.chatMessage(), packet.timestamp(), packet.acknowledgment())) {
 				String contentToDiscord = packet.chatMessage();
 				String contentToMinecraft = packet.chatMessage();
 
@@ -183,28 +180,22 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 				}
 
 				if (CONFIG.generic.formatChatMessages) {
-					try {
-						SignedMessage signedMessage = getSignedMessage(packet, optional.get());
-						server.getPlayerManager().broadcast(signedMessage.withUnsignedContent(Objects.requireNonNull(Text.Serializer.fromJson("[{\"text\":\"" + contentToMinecraft + "\"}]"))), player, MessageType.params(MessageType.CHAT, player));
-					} catch (MessageChain.MessageChainException e) {
-						handleMessageChainException(e);
-					}
+					SignedMessage signedMessage = getSignedMessage(packet);
+					server.getPlayerManager().broadcast(signedMessage.withUnsignedContent(Objects.requireNonNull(Text.Serializer.fromJson("[{\"text\":\"" + contentToMinecraft + "\"}]"))), player, MessageType.params(MessageType.CHAT, player));
 				} else {
 					server.submit(() -> {
-						SignedMessage signedMessage;
-						try {
-							signedMessage = getSignedMessage(packet, optional.get());
-						} catch (MessageChain.MessageChainException var6) {
-							handleMessageChainException(var6);
-							return;
+						SignedMessage signedMessage = getSignedMessage(packet);
+						if (canAcceptMessage(signedMessage)) {
+							messageChainTaskQueue.append(() -> {
+								CompletableFuture<FilteredMessage> completableFuture = filterText(signedMessage.getSignedContent().plain());
+								CompletableFuture<SignedMessage> completableFuture2 = server.getMessageDecorator().decorate(player, signedMessage);
+								return CompletableFuture.allOf(completableFuture, completableFuture2).thenAcceptAsync((void_) -> {
+									FilterMask filterMask = completableFuture.join().mask();
+									SignedMessage signedMessage2 = completableFuture2.join().withFilterMask(filterMask);
+									handleDecoratedMessage(signedMessage2);
+								}, server);
+							});
 						}
-
-						CompletableFuture<FilteredMessage> completableFuture = filterText(signedMessage.getSignedContent());
-						CompletableFuture<Text> completableFuture2 = server.getMessageDecorator().decorate(player, signedMessage.getContent());
-						messageChainTaskQueue.append(executor -> CompletableFuture.allOf(completableFuture, completableFuture2).thenAcceptAsync(void_ -> {
-							SignedMessage signedMessage2 = signedMessage.withUnsignedContent(completableFuture2.join()).withFilterMask(completableFuture.join().mask());
-							handleDecoratedMessage(signedMessage2);
-						}, executor));
 					});
 				}
 
@@ -226,10 +217,9 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 			if (hasIllegalCharacter(packet.command())) {
 				disconnect(Text.translatable("multiplayer.disconnect.illegal_characters"));
 			} else {
-				Optional<LastSeenMessageList> optional = validateMessage(packet.command(), packet.timestamp(), packet.acknowledgment());
-				if (optional.isPresent()) {
+				if (canAcceptMessage(packet.command(), packet.timestamp(), packet.acknowledgment())) {
 					server.submit(() -> {
-						handleCommandExecution(packet, optional.get());
+						handleCommandExecution(packet);
 						checkForSpam();
 					});
 
