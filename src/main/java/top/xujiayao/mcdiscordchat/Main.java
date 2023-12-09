@@ -36,7 +36,6 @@ import top.xujiayao.mcdiscordchat.utils.Utils;
 import java.io.File;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Objects;
 import java.util.Timer;
 
 /**

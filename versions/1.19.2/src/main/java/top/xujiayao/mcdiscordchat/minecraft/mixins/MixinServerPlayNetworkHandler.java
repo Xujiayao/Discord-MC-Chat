@@ -11,7 +11,6 @@ import net.fellbaum.jemoji.EmojiManager;
 import net.minecraft.SharedConstants;
 import net.minecraft.network.message.FilterMask;
 import net.minecraft.network.message.LastSeenMessageList;
-import net.minecraft.network.message.MessageChain;
 import net.minecraft.network.message.MessageChainTaskQueue;
 import net.minecraft.network.message.MessageType;
 import net.minecraft.network.message.SignedMessage;

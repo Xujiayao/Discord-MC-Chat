@@ -350,6 +350,7 @@ public class Utils {
 		message.append(isDiscordSide ? "\n/update              | " : "\n/mcdc update                | ");
 		message.append(Translations.translate("utils.utils.ubCommands.update"));
 
+		// TODO Simplify
 		for (int i = 0; i < 5; i++) {
 			if ((i == 0 && !CONFIG.generic.whitelistRequiresAdmin)
 					|| (i == 4 && isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)
