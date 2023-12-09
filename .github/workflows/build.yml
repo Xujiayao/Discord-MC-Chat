@@ -21,13 +21,13 @@ jobs:
         with:
           arguments: build
           cache-read-only: false
-      - name: Find Correct JAR
-        id: findjar
+      - name: Get Short Commit Hash
+        id: get_short_commit_hash
         run: |
-          output="$(find wrapper/build/libs/ ! -name "*-sources.jar" -type f -printf "%f\n")"
-          echo "::set-output name=jarname::$output"
+          short_sha=$(echo ${GITHUB_SHA} | cut -c1-7)
+          echo "short_sha=$short_sha" >> $GITHUB_OUTPUT
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ steps.findjar.outputs.jarname }}
-          path: wrapper/build/libs/${{ steps.findjar.outputs.jarname }}
+          name: MC-Discord-Chat ${{ steps.get_short_commit_hash.outputs.short_sha }}
+          path: wrapper/build/libs/*.jar
