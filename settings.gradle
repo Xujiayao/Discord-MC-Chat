@@ -8,12 +8,18 @@ pluginManagement {
             name = "Jitpack"
             url = "https://jitpack.io"
         }
-        maven {
-            name = "Nyan Maven"
-            url = "https://maven.hendrixshen.top"
-        }
         mavenCentral()
         gradlePluginPortal()
+    }
+    resolutionStrategy {
+        eachPlugin {
+            switch (requested.id.id) {
+                case "com.replaymod.preprocess": {
+                    useModule("com.github.Fallen-Breath:preprocessor:${requested.version}")
+                    break
+                }
+            }
+        }
     }
 }
 
