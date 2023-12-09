@@ -5,8 +5,6 @@ import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.tree.CommandNode;
-import com.vdurmont.emoji.EmojiManager;
-import com.vdurmont.emoji.EmojiParser;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
@@ -19,6 +17,7 @@ import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.fabricmc.loader.api.FabricLoader;
+import net.fellbaum.jemoji.EmojiManager;
 import net.minecraft.server.command.ServerCommandSource;
 //#if MC <= 11802
 //$$ import net.minecraft.text.LiteralText;
@@ -326,7 +325,7 @@ public class DiscordEventListener extends ListenerAdapter {
 					.replace("%server%", "Discord")
 					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : webhookName)
 					.replace("%roleName%", referencedMemberRoleName)
-					.replace("%message%", EmojiParser.parseToAliases(referencedMessageTemp)));
+					.replace("%message%", EmojiManager.replaceAllEmojis(referencedMessageTemp, emoji -> emoji.getDiscordAliases().get(0))));
 		}
 
 		if (StringUtils.countMatches(messageTemp, "\n") > CONFIG.generic.discordNewlineLimit) {
@@ -343,7 +342,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				.replace("%server%", "Discord")
 				.replace("%name%", CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName())
 				.replace("%roleName%", memberRoleName)
-				.replace("%message%", EmojiParser.parseToAliases(messageTemp)));
+				.replace("%message%", EmojiManager.replaceAllEmojis(messageTemp, emoji -> emoji.getDiscordAliases().get(0))));
 
 		if (SERVER == null) {
 			return;
@@ -371,7 +370,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			StringBuilder referencedMessage;
 
 			if (e.getMessage().getReferencedMessage() != null) {
-				referencedMessage = new StringBuilder(EmojiParser.parseToAliases(referencedMessageTemp));
+				referencedMessage = new StringBuilder(EmojiManager.replaceAllEmojis(referencedMessageTemp, emoji -> emoji.getDiscordAliases().get(0)));
 
 				if (!e.getMessage().getReferencedMessage().getAttachments().isEmpty()) {
 					if (!referencedMessageTemp.isBlank()) {
@@ -402,7 +401,7 @@ public class DiscordEventListener extends ListenerAdapter {
 					String[] emojiNames = StringUtils.substringsBetween(referencedMessage.toString(), ":", ":");
 					for (String emojiName : emojiNames) {
 						List<RichCustomEmoji> emojis = JDA.getEmojisByName(emojiName, true);
-						if (!emojis.isEmpty() || EmojiManager.getForAlias(emojiName) != null) {
+						if (!emojis.isEmpty() || EmojiManager.getByAlias(emojiName).isPresent()) {
 							referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.RESET)));
 						}
 					}
@@ -460,7 +459,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				}
 			}
 
-			StringBuilder message = new StringBuilder(EmojiParser.parseToAliases(messageTemp));
+			StringBuilder message = new StringBuilder(EmojiManager.replaceAllEmojis(messageTemp, emoji -> emoji.getDiscordAliases().get(0)));
 
 			if (!e.getMessage().getAttachments().isEmpty()) {
 				if (!messageTemp.isBlank()) {
@@ -491,7 +490,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				String[] emojiNames = StringUtils.substringsBetween(message.toString(), ":", ":");
 				for (String emojiName : emojiNames) {
 					List<RichCustomEmoji> emojis = JDA.getEmojisByName(emojiName, true);
-					if (!emojis.isEmpty() || EmojiManager.getForAlias(emojiName) != null) {
+					if (!emojis.isEmpty() || EmojiManager.getByAlias(emojiName).isPresent()) {
 						message = new StringBuilder(StringUtils.replaceIgnoreCase(message.toString(), (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.RESET)));
 					}
 				}
@@ -553,7 +552,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			if (e.getMessage().getReferencedMessage() != null) {
 				String s = Translations.translateMessage("message.formattedResponseMessage");
 				Text referenceFinalText = Text.Serialization.fromJson(s
-						.replace("%message%", (CONFIG.generic.formatChatMessages ? finalReferencedMessage : EmojiParser.parseToAliases(referencedMessageTemp).replace("\"", "\\\""))
+						.replace("%message%", (CONFIG.generic.formatChatMessages ? finalReferencedMessage : EmojiManager.replaceAllEmojis(referencedMessageTemp, emoji -> emoji.getDiscordAliases().get(0)).replace("\"", "\\\""))
 								.replace("\n", "\n" + textAfterPlaceholder[0] + "}," + s.substring(1, s.indexOf("%message%"))))
 						.replace("%server%", "Discord")
 						.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()).replace("\\", "\\\\").replace("\"", "\\\"") : webhookName)
@@ -566,7 +565,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
 			String s = Translations.translateMessage("message.formattedChatMessage");
 			Text finalText = Text.Serialization.fromJson(s
-					.replace("%message%", (CONFIG.generic.formatChatMessages ? finalMessage : EmojiParser.parseToAliases(messageTemp).replace("\"", "\\\""))
+					.replace("%message%", (CONFIG.generic.formatChatMessages ? finalMessage : EmojiManager.replaceAllEmojis(messageTemp, emoji -> emoji.getDiscordAliases().get(0)).replace("\"", "\\\""))
 							.replace("\n", "\n" + textAfterPlaceholder[1] + "}," + s.substring(1, s.indexOf("%message%"))))
 					.replace("%server%", "Discord")
 					.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\").replace("\"", "\\\""))

@@ -3,11 +3,11 @@ package top.xujiayao.mcdiscordchat.minecraft.mixins;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.vdurmont.emoji.EmojiManager;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
+import net.fellbaum.jemoji.EmojiManager;
 import net.minecraft.SharedConstants;
 import net.minecraft.network.listener.ServerPlayPacketListener;
 import net.minecraft.network.message.LastSeenMessageList;
@@ -115,7 +115,7 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 						if (!emojis.isEmpty()) {
 							contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, (":" + emojiName + ":"), emojis.get(0).getAsMention());
 							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.RESET));
-						} else if (EmojiManager.getForAlias(emojiName) != null) {
+						} else if (EmojiManager.getByAlias(emojiName).isPresent()) {
 							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, (":" + emojiName + ":"), (Formatting.YELLOW + ":" + emojiName + ":" + Formatting.RESET));
 						}
 					}
