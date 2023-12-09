@@ -1,4 +1,4 @@
 {
-  "version": "2.2.3",
-  "changelog": "<https://github.com/Xujiayao/MC-Discord-Chat/releases/latest>"
+  "version": "2.2.4",
+  "changelog": "<https://github.com/Xujiayao/MC-Discord-Chat/releases/tag/2.2.4>\n\n> Starting from this version, MCDC will be split into two version update channels: \"Active\" and \"Compat (Compatibility)\".\n> \n> Minecraft versions in the Active channel will be released every time a new version of MCDC is released, while Minecraft versions in the Compat channel will only be released from time to time."
 }
