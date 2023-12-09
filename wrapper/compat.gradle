@@ -73,7 +73,7 @@ remapJar {
 
 processResources {
     filesMatching("fabric.mod.json") {
-        expand "version": mod_version
+        expand "version": mod_version + "-compat"
     }
 
     doLast {
