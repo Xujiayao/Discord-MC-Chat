@@ -97,7 +97,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			Text commandNoticeText = Text.Serialization.fromJson(Translations.translateMessage("message.formattedCommandNotice")
 					.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\").replace("\"", "\\\""))
 					.replace("%roleName%", roleName)
-					.replace("%roleColor%", "#" + Integer.toHexString(e.getMember().getColorRaw()))
+					.replace("%roleColor%", String.format("#%06X", (0xFFFFFF & e.getMember().getColorRaw())))
 					.replace("%command%", e.getCommandString()));
 
 			//#if MC <= 11802
@@ -557,7 +557,7 @@ public class DiscordEventListener extends ListenerAdapter {
 						.replace("%server%", "Discord")
 						.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()).replace("\\", "\\\\").replace("\"", "\\\"") : webhookName)
 						.replace("%roleName%", referencedMemberRoleName)
-						.replace("%roleColor%", "#" + Integer.toHexString((referencedMember != null) ? referencedMember.getColorRaw() : Role.DEFAULT_COLOR_RAW)));
+						.replace("%roleColor%", String.format("#%06X", (0xFFFFFF & ((referencedMember != null) ? referencedMember.getColorRaw() : Role.DEFAULT_COLOR_RAW)))));
 
 				SERVER.getPlayerManager().getPlayerList().forEach(
 						player -> player.sendMessage(referenceFinalText, false));
@@ -570,7 +570,7 @@ public class DiscordEventListener extends ListenerAdapter {
 					.replace("%server%", "Discord")
 					.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\").replace("\"", "\\\""))
 					.replace("%roleName%", memberRoleName)
-					.replace("%roleColor%", "#" + Integer.toHexString(e.getMember().getColorRaw())));
+					.replace("%roleColor%", String.format("#%06X", (0xFFFFFF & e.getMember().getColorRaw()))));
 
 			SERVER.getPlayerManager().getPlayerList().forEach(
 					player -> player.sendMessage(finalText, false));
