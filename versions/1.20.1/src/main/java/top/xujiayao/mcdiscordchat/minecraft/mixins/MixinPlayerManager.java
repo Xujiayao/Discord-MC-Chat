@@ -63,7 +63,7 @@ public class MixinPlayerManager {
 	//$$  sendMessage(Objects.requireNonNull(message.filtered()).signedContent().getString(), source.getName());
 	//$$ }
 	//#endif
-	// This feature has been removed in versions 1.18.2 and below due to compatibility issues
+	// This feature has been removed in versions 1.18.2 and below due to compatibility issues (#197)
 
 	private void sendMessage(String content, String username) {
 		if (CONFIG.generic.broadcastChatMessages) {
