@@ -29,7 +29,6 @@ def versions = Arrays.asList(
         "compat_1.17.1",
         "compat_1.18.2",
 //        "compat_1.19"  ,
-//        "compat_1.19.1",
         "1.19.2",
         "1.19.3",
         "1.19.4",
