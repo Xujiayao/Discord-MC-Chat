@@ -8,8 +8,14 @@ import net.minecraft.network.message.MessageType;
 //#if MC >= 11900
 import net.minecraft.network.message.SignedMessage;
 //#endif
+//#if MC == 11900
+//$$ import net.minecraft.util.registry.RegistryKey;
+//#endif
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.command.ServerCommandSource;
+//#if MC == 11900
+//$$ import net.minecraft.server.filter.FilteredMessage;
+//#endif
 import net.minecraft.server.network.ServerPlayerEntity;
 //#if MC < 11900
 //$$ import net.minecraft.text.Text;
@@ -28,6 +34,10 @@ import top.xujiayao.mcdiscordchat.utils.Utils;
 
 //#if MC < 11900
 //$$ import java.util.UUID;
+//#endif
+
+//#if MC == 11900
+//$$ import java.util.Objects;
 //#endif
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
@@ -49,10 +59,15 @@ public class MixinPlayerManager {
 	private void broadcast(SignedMessage message, ServerCommandSource source, MessageType.Parameters params, CallbackInfo ci) {
 		sendMessage(message.getSignedContent(), source.getName());
 	}
-	//#elseif MC >= 11900
+	//#elseif MC >= 11901
 	//$$ @Inject(method = "broadcast(Lnet/minecraft/network/message/SignedMessage;Lnet/minecraft/server/command/ServerCommandSource;Lnet/minecraft/network/message/MessageType$Parameters;)V", at = @At("RETURN"))
 	//$$ private void broadcast(SignedMessage message, ServerCommandSource source, MessageType.Parameters params, CallbackInfo ci) {
 	//$$  sendMessage(message.getSignedContent().plain(), source.getName());
+	//$$ }
+	//#elseif MC >= 11900
+	//$$ @Inject(method = "broadcast(Lnet/minecraft/server/filter/FilteredMessage;Lnet/minecraft/server/command/ServerCommandSource;Lnet/minecraft/util/registry/RegistryKey;)V", at = @At("RETURN"))
+	//$$ private void broadcast(FilteredMessage<SignedMessage> message, ServerCommandSource source, RegistryKey<MessageType> typeKey, CallbackInfo ci) {
+	//$$  sendMessage(Objects.requireNonNull(message.filtered()).signedContent().getString(), source.getName());
 	//$$ }
 	//#elseif MC >= 11800
 	//$$ @Inject(method = "broadcast", at = @At("RETURN"))

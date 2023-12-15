@@ -1,4 +1,4 @@
-//#if MC >= 11901
+//#if MC >= 11900
 package top.xujiayao.mcdiscordchat.minecraft.mixins;
 
 import com.google.gson.Gson;
@@ -9,17 +9,18 @@ import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.fellbaum.jemoji.EmojiManager;
 import net.minecraft.SharedConstants;
-import net.minecraft.network.message.FilterMask;
-import net.minecraft.network.message.LastSeenMessageList;
-import net.minecraft.network.message.MessageChainTaskQueue;
+import net.minecraft.network.NetworkThreadUtils;
+import net.minecraft.network.listener.ServerPlayPacketListener;
 import net.minecraft.network.message.MessageType;
 import net.minecraft.network.message.SignedMessage;
 import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
 import net.minecraft.network.packet.c2s.play.CommandExecutionC2SPacket;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.filter.FilteredMessage;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.EntityTrackingListener;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import okhttp3.MediaType;
@@ -40,8 +41,7 @@ import top.xujiayao.mcdiscordchat.utils.Translations;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 import static top.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static top.xujiayao.mcdiscordchat.Main.CONFIG;
@@ -58,7 +58,7 @@ import static top.xujiayao.mcdiscordchat.Main.WEBHOOK;
  * @author Xujiayao
  */
 @Mixin(ServerPlayNetworkHandler.class)
-public abstract class MixinServerPlayNetworkHandler {
+public abstract class MixinServerPlayNetworkHandler implements EntityTrackingListener, ServerPlayPacketListener {
 
 	@Shadow
 	private ServerPlayerEntity player;
@@ -67,10 +67,6 @@ public abstract class MixinServerPlayNetworkHandler {
 	@Shadow
 	private MinecraftServer server;
 
-	@Final
-	@Shadow
-	private MessageChainTaskQueue messageChainTaskQueue;
-
 	@Shadow
 	public abstract void checkForSpam();
 
@@ -78,31 +74,22 @@ public abstract class MixinServerPlayNetworkHandler {
 	public abstract void disconnect(Text reason);
 
 	@Shadow
-	public abstract boolean canAcceptMessage(SignedMessage message);
+	public abstract boolean canAcceptMessage(String message, Instant timestamp);
 
 	@Shadow
-	public abstract boolean canAcceptMessage(String message, Instant timestamp, LastSeenMessageList.Acknowledgment acknowledgment);
+	public abstract void filterText(String text, Consumer<FilteredMessage<String>> consumer);
 
 	@Shadow
-	public abstract CompletableFuture<FilteredMessage> filterText(String text);
-
-	@Shadow
-	public abstract void handleCommandExecution(CommandExecutionC2SPacket packet);
-
-	@Shadow
-	public abstract SignedMessage getSignedMessage(ChatMessageC2SPacket packet);
-
-	@Shadow
-	public abstract void handleDecoratedMessage(SignedMessage message);
+	public abstract void handleMessage(ChatMessageC2SPacket packet, FilteredMessage<String> message);
 
 	@Inject(method = "onChatMessage", at = @At("HEAD"), cancellable = true)
 	private void onChatMessage(ChatMessageC2SPacket packet, CallbackInfo ci) {
-		if (hasIllegalCharacter(packet.chatMessage())) {
+		if (hasIllegalCharacter(packet.getChatMessage())) {
 			disconnect(Text.translatable("multiplayer.disconnect.illegal_characters"));
 		} else {
-			if (canAcceptMessage(packet.chatMessage(), packet.timestamp(), packet.acknowledgment())) {
-				String contentToDiscord = packet.chatMessage();
-				String contentToMinecraft = packet.chatMessage();
+			if (canAcceptMessage(packet.getChatMessage(), packet.getTimestamp())) {
+				String contentToDiscord = packet.getChatMessage();
+				String contentToMinecraft = packet.getChatMessage();
 
 				if (StringUtils.countMatches(contentToDiscord, ":") >= 2) {
 					String[] emojiNames = StringUtils.substringsBetween(contentToDiscord, ":", ":");
@@ -179,29 +166,15 @@ public abstract class MixinServerPlayNetworkHandler {
 				}
 
 				if (CONFIG.generic.formatChatMessages) {
-					SignedMessage signedMessage = getSignedMessage(packet);
-					server.getPlayerManager().broadcast(signedMessage.withUnsignedContent(Objects.requireNonNull(Text.Serializer.fromJson("[{\"text\":\"" + contentToMinecraft + "\"}]"))), player, MessageType.params(MessageType.CHAT, player));
+					server.getPlayerManager().broadcast(FilteredMessage.permitted(SignedMessage.of(Text.Serializer.fromJson("[{\"text\":\"" + contentToMinecraft + "\"}]"))), player, MessageType.CHAT);
 				} else {
-					server.submit(() -> {
-						SignedMessage signedMessage = getSignedMessage(packet);
-						if (canAcceptMessage(signedMessage)) {
-							messageChainTaskQueue.append(() -> {
-								CompletableFuture<FilteredMessage> completableFuture = filterText(signedMessage.getSignedContent().plain());
-								CompletableFuture<SignedMessage> completableFuture2 = server.getMessageDecorator().decorate(player, signedMessage);
-								return CompletableFuture.allOf(completableFuture, completableFuture2).thenAcceptAsync((void_) -> {
-									FilterMask filterMask = completableFuture.join().mask();
-									SignedMessage signedMessage2 = completableFuture2.join().withFilterMask(filterMask);
-									handleDecoratedMessage(signedMessage2);
-								}, server);
-							});
-						}
-					});
+					filterText(packet.getChatMessage(), (message) -> handleMessage(packet, message));
 				}
 
 				if (CONFIG.generic.broadcastChatMessages) {
 					sendMessage(contentToDiscord, false);
 					if (CONFIG.multiServer.enable) {
-						MULTI_SERVER.sendMessage(false, true, false, player.getEntityName(), CONFIG.generic.formatChatMessages ? contentToMinecraft : packet.chatMessage());
+						MULTI_SERVER.sendMessage(false, true, false, player.getEntityName(), CONFIG.generic.formatChatMessages ? contentToMinecraft : packet.getChatMessage());
 					}
 				}
 			}
@@ -216,11 +189,11 @@ public abstract class MixinServerPlayNetworkHandler {
 			if (hasIllegalCharacter(packet.command())) {
 				disconnect(Text.translatable("multiplayer.disconnect.illegal_characters"));
 			} else {
-				if (canAcceptMessage(packet.command(), packet.timestamp(), packet.acknowledgment())) {
-					server.submit(() -> {
-						handleCommandExecution(packet);
-						checkForSpam();
-					});
+				NetworkThreadUtils.forceMainThread(packet, this, player.getWorld());
+				if (canAcceptMessage(packet.command(), packet.timestamp())) {
+					ServerCommandSource serverCommandSource = this.player.getCommandSource().withSigner(packet.createArgumentsSigner(this.player.getUuid()));
+					server.getCommandManager().execute(serverCommandSource, packet.command());
+					checkForSpam();
 
 					String input = "/" + packet.command();
 
