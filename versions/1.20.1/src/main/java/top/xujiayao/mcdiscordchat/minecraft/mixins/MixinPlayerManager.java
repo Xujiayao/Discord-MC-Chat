@@ -17,9 +17,6 @@ import net.minecraft.server.command.ServerCommandSource;
 //$$ import net.minecraft.server.filter.FilteredMessage;
 //#endif
 import net.minecraft.server.network.ServerPlayerEntity;
-//#if MC < 11900
-//$$ import net.minecraft.text.Text;
-//#endif
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -31,10 +28,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import top.xujiayao.mcdiscordchat.utils.Translations;
 import top.xujiayao.mcdiscordchat.utils.Utils;
-
-//#if MC < 11900
-//$$ import java.util.UUID;
-//#endif
 
 //#if MC == 11900
 //$$ import java.util.Objects;
@@ -69,22 +62,8 @@ public class MixinPlayerManager {
 	//$$ private void broadcast(FilteredMessage<SignedMessage> message, ServerCommandSource source, RegistryKey<MessageType> typeKey, CallbackInfo ci) {
 	//$$  sendMessage(Objects.requireNonNull(message.filtered()).signedContent().getString(), source.getName());
 	//$$ }
-	//#elseif MC >= 11800
-	//$$ @Inject(method = "broadcast", at = @At("RETURN"))
-	//$$ private void broadcast(Text message, MessageType type, UUID sender, CallbackInfo ci) {
-	//$$  sendMessage(message.getString(), "Server");
-	//$$ }
-	//#elseif MC >= 11600
-	//$$ @Inject(method = "broadcastChatMessage", at = @At("RETURN"))
-	//$$ private void broadcastChatMessage(Text message, MessageType type, UUID sender, CallbackInfo ci) {
-	//$$  sendMessage(message.getString(), "Server");
-	//$$ }
-	//#else
-	//$$ @Inject(method = "sendToAll(Lnet/minecraft/text/Text;)V", at = @At("RETURN"))
-	//$$ private void sendToAll(Text text, CallbackInfo ci) {
-	//$$  sendMessage(text.getString(), "Server");
-	//$$ }
 	//#endif
+	// This feature has been removed in versions 1.18.2 and below due to compatibility issues
 
 	private void sendMessage(String content, String username) {
 		if (CONFIG.generic.broadcastChatMessages) {
