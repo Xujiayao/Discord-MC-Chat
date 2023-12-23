@@ -56,7 +56,7 @@ MC-Discord-Chat (MCDC), formerly known as MCDiscordChat, a practical and powerfu
 ## 功能特色
 
 - 全面的多语言支持
-- 支持多服务器模式（同 Discord 频道多服务器运行 MCDC）
+- 支持多服务器模式（在同一个 Discord 服务器中运行多个装有 MCDC 的 Minecraft 服务器）
 - Minecraft <> Discord 跨服聊天
   - 支持禁用 Discord 和游戏内聊天广播
   - 支持使用 Discord 频道主题功能显示服务器状态

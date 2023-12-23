@@ -56,7 +56,7 @@ For translation contributions, language files are located in the `/wrapper/src/m
 ## Features
 
 - Full multi-language support
-- Support multi-server mode (multi-server operation on the same Discord channel)
+- Support multi-server mode (running more than one Minecraft server with MCDC in the same Discord guild)
 - Minecraft <> Discord cross server chat
   - Support disabling Discord and in-game chat broadcasts
   - Support displaying server status using Discord channel topic feature
