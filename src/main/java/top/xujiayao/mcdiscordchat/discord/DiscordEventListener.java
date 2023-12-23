@@ -288,7 +288,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			return;
 		}
 
-		if (CONFIG.multiServer.botIds.contains(e.getAuthor().getId())) {
+		if (CONFIG.multiServer.botIds.contains(e.getAuthor().getId()) && e.getAuthor().isBot()) {
 			return;
 		}
 
