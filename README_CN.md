@@ -19,7 +19,7 @@
 
 MC-Discord-Chat (MCDC), formerly known as MCDiscordChat, a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric
 
-更多介绍 + 文档：[MC-Discord-Chat 文档 | Xujiayao's Blog](https://blog.xujiayao.top/posts/4ba0a17a/)
+更多介绍 + 文档：[MC-Discord-Chat 文档 | Xujiayao's Blog](https://blog.xujiayao.com/posts/4ba0a17a/)
 
 ## 简介
 

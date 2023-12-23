@@ -79,7 +79,7 @@ public class Main implements DedicatedServerModInitializer {
 			LOGGER.info("By Xujiayao");
 			LOGGER.info("");
 			LOGGER.info("More information + Docs:");
-			LOGGER.info("https://blog.xujiayao.top/posts/4ba0a17a/");
+			LOGGER.info("https://blog.xujiayao.com/posts/4ba0a17a/");
 			LOGGER.info("-----------------------------------------");
 
 			JDA = JDABuilder.createDefault(CONFIG.generic.botToken)

@@ -12,7 +12,7 @@ body:
       options:
         - label: I confirm that I have [searched for existing issues / pull requests](https://github.com/Xujiayao/MC-Discord-Chat/issues?q=) before reporting to avoid duplicate reporting.
           required: true
-        - label: I confirm that I followed the [MCDC Docs](https://blog.xujiayao.top/posts/4ba0a17a/) and read the [Changelog](https://github.com/Xujiayao/MC-Discord-Chat/releases/latest), but this problem still exists.
+        - label: I confirm that I followed the [MCDC Docs](https://blog.xujiayao.com/posts/4ba0a17a/) and read the [Changelog](https://github.com/Xujiayao/MC-Discord-Chat/releases/latest), but this problem still exists.
           required: true
         - label: I confirm that I noted that if I don't follow the instructions, the issue may be closed directly.
           required: true

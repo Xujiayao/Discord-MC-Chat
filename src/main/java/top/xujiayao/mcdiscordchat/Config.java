@@ -10,7 +10,7 @@ import static top.xujiayao.mcdiscordchat.Main.VERSION;
  */
 public class Config {
 
-	// More information + Docs: https://blog.xujiayao.top/posts/4ba0a17a/
+	// More information + Docs: https://blog.xujiayao.com/posts/4ba0a17a/
 
 	public Generic generic = new Generic();
 	public MultiServer multiServer = new MultiServer();

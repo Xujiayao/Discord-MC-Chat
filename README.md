@@ -19,7 +19,7 @@ Language: English <a href="/README_CN.md">中文</a>
 
 MC-Discord-Chat (MCDC), formerly known as MCDiscordChat, a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric
 
-More information + Docs: [MC-Discord-Chat Docs | Xujiayao's Blog](https://blog.xujiayao.top/posts/4ba0a17a/)
+More information + Docs: [MC-Discord-Chat Docs | Xujiayao's Blog](https://blog.xujiayao.com/posts/4ba0a17a/)
 
 ## Introduction
 

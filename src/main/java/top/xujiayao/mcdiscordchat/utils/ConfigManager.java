@@ -58,7 +58,7 @@ public class ConfigManager {
 			LOGGER.error("Error: The config file cannot be found or is empty!");
 			LOGGER.error("");
 			LOGGER.error("Please follow the documentation to configure MC-Discord-Chat before restarting the server!");
-			LOGGER.error("More information + Docs: https://blog.xujiayao.top/posts/4ba0a17a/");
+			LOGGER.error("More information + Docs: https://blog.xujiayao.com/posts/4ba0a17a/");
 			LOGGER.error("");
 			LOGGER.error("Stopping the server...");
 			LOGGER.error("-----------------------------------------");
