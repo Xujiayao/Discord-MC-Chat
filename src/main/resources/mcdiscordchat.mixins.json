@@ -1,6 +1,6 @@
 {
   "required": true,
-  "package": "top.xujiayao.mcdiscordchat.minecraft.mixins",
+  "package": "com.xujiayao.mcdiscordchat.minecraft.mixins",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
     "MixinLanguage",

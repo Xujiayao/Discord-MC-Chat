@@ -17,7 +17,7 @@
   "environment": "server",
   "entrypoints": {
     "server": [
-      "top.xujiayao.mcdiscordchat.Main"
+      "com.xujiayao.mcdiscordchat.Main"
     ]
   },
   "mixins": [

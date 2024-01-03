@@ -159,9 +159,9 @@ MC-Discord-Chat (MCDC), formerly known as MCDiscordChat, a practical and powerfu
 
 本项目采用 [MIT 许可证](https://github.com/Xujiayao/MC-Discord-Chat/blob/master/LICENSE) 进行授权。
 
-作为例外，`src/main/java/top/xujiayao/mcdiscordchat/utils/MarkdownParser.java` 文件于 2020 年 12 月 31 日从 BRForgers/DisFabric 获取，采用 Mozilla 公共许可证 2.0 (MPL-2.0) 进行授权。
+作为例外，`src/main/java/com/xujiayao/mcdiscordchat/utils/MarkdownParser.java` 文件于 2020 年 12 月 31 日从 BRForgers/DisFabric 获取，采用 Mozilla 公共许可证 2.0 (MPL-2.0) 进行授权。
 
-> `src/main/java/top/xujiayao/mcdiscordchat/utils/MarkdownParser.java` 文件的更多详情：
+> `src/main/java/com/xujiayao/mcdiscordchat/utils/MarkdownParser.java` 文件的更多详情：
 >
 > 作者：allanf181 (Allan Fernando)
 >

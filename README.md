@@ -159,9 +159,9 @@ Languages currently available:
 
 This project is licensed under the [MIT license](https://github.com/Xujiayao/MC-Discord-Chat/blob/master/LICENSE).
 
-Exceptionally, the `src/main/java/top/xujiayao/mcdiscordchat/utils/MarkdownParser.java` file was obtained from BRForgers/DisFabric on December 31, 2020, licensed under the Mozilla Public License 2.0 (MPL-2.0).
+Exceptionally, the `src/main/java/com/xujiayao/mcdiscordchat/utils/MarkdownParser.java` file was obtained from BRForgers/DisFabric on December 31, 2020, licensed under the Mozilla Public License 2.0 (MPL-2.0).
 
-> More details of the `src/main/java/top/xujiayao/mcdiscordchat/utils/MarkdownParser.java` file:
+> More details of the `src/main/java/com/xujiayao/mcdiscordchat/utils/MarkdownParser.java` file:
 >
 > Author: allanf181 (Allan Fernando)
 >
