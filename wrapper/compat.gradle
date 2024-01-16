@@ -6,9 +6,12 @@ apply plugin: "fabric-loom"
 sourceCompatibility = JavaVersion.VERSION_17
 targetCompatibility = JavaVersion.VERSION_17
 
-archivesBaseName = archives_base_name
 version = mod_version + "-compat"
 group = maven_group
+
+base {
+    archivesName = archives_base_name
+}
 
 dependencies {
     minecraft("com.mojang:minecraft:${minecraft_version}")

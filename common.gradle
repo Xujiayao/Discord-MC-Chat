@@ -14,9 +14,12 @@ preprocess {
 sourceCompatibility = JavaVersion.VERSION_17
 targetCompatibility = JavaVersion.VERSION_17
 
-archivesBaseName = "${archives_base_name}-${minecraft_version}"
 version = mod_version
 group = maven_group
+
+base {
+    archivesName = "${archives_base_name}-${minecraft_version}"
+}
 
 dependencies {
     minecraft("com.mojang:minecraft:${minecraft_version}")
@@ -68,5 +71,6 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    options.encoding = "UTF-8"
+    it.options.encoding = "UTF-8"
+    it.options.release = 17
 }
