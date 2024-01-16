@@ -44,9 +44,12 @@ for (String version : versions) {
     proj.buildFileName = "../../common.gradle"
 }
 
-include(":wrapper")
+include(":active")
+def active = project(":active")
+active.name = "active"
+active.projectDir = file("wrapper/active")
 
 include(":compat")
 def compat = project(":compat")
-compat.projectDir = file("wrapper")
-compat.buildFileName = "compat.gradle"
+compat.name = "compat"
+compat.projectDir = file("wrapper/compat")

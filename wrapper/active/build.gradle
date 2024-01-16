@@ -6,11 +6,15 @@ apply plugin: "fabric-loom"
 sourceCompatibility = JavaVersion.VERSION_17
 targetCompatibility = JavaVersion.VERSION_17
 
-version = mod_version + "-compat"
+version = mod_version
 group = maven_group
 
 base {
     archivesName = archives_base_name
+}
+
+sourceSets {
+    main.resources.srcDir "../src/main/resources"
 }
 
 dependencies {
@@ -40,21 +44,15 @@ dependencies {
 }
 
 def fabric_subprojects = parent.subprojects.findAll({
-    it.name.contains("compat_")
+    it.name != "active" && !it.name.contains("compat")
 })
-
-compileJava.dependsOn(":wrapper:jar")
-processResources.dependsOn(":wrapper:jar")
 
 remapJar {
     outputs.upToDateWhen { false }
 
-    dependsOn {
-        fabric_subprojects.collect {
-            it.tasks.remapJar
-        }
-        ":wrapper:remapJar"
-    }
+    dependsOn(fabric_subprojects.collect {
+        it.tasks.remapJar
+    })
 
     doFirst {
         delete fileTree("build/tmp/versions/META-INF/jars")
@@ -76,7 +74,7 @@ remapJar {
 
 processResources {
     filesMatching("fabric.mod.json") {
-        expand "version": mod_version + "-compat"
+        expand "version": mod_version
     }
 
     doLast {
@@ -98,4 +96,8 @@ processResources {
         writer.flush()
         writer.close()
     }
+}
+
+clean {
+    delete file("../../build")
 }

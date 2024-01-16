@@ -30,4 +30,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: MC-Discord-Chat ${{ steps.get_short_commit_hash.outputs.short_sha }}
-          path: wrapper/build/libs/*.jar
+          path: build/*.jar
