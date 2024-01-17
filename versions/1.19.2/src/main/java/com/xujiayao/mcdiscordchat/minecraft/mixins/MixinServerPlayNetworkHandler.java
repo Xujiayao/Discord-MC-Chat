@@ -42,6 +42,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static com.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static com.xujiayao.mcdiscordchat.Main.CONFIG;
@@ -286,12 +288,16 @@ public abstract class MixinServerPlayNetworkHandler {
 					.post(RequestBody.create(body.toString(), MediaType.get("application/json")))
 					.build();
 
-			try {
-				Response response = HTTP_CLIENT.newCall(request).execute();
-				response.close();
-			} catch (Exception e) {
-				LOGGER.error(ExceptionUtils.getStackTrace(e));
-			}
+			ExecutorService executor = Executors.newFixedThreadPool(1);
+			executor.submit(() -> {
+				try {
+					Response response = HTTP_CLIENT.newCall(request).execute();
+					response.close();
+				} catch (Exception e) {
+					LOGGER.error(ExceptionUtils.getStackTrace(e));
+				}
+			});
+			executor.shutdown();
 		}
 	}
 
