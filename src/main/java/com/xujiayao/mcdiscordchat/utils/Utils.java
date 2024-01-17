@@ -404,11 +404,11 @@ public class Utils {
 		} else {
 			for (ServerPlayerEntity player : onlinePlayers) {
 				//#if MC >= 12003
-				message.append("[").append(player.networkHandler.getLatency()).append("ms] ").append(player.getNameForScoreboard()).append("\n");
+				message.append("[").append(player.networkHandler.getLatency()).append("ms] ").append(Objects.requireNonNull(player.getDisplayName()).getString()).append("\n");
 				//#elseif MC >= 12002
-				//$$ message.append("[").append(player.networkHandler.getLatency()).append("ms] ").append(player.getEntityName()).append("\n");
+				//$$ message.append("[").append(player.networkHandler.getLatency()).append("ms] ").append(Objects.requireNonNull(player.getDisplayName()).getString()).append("\n");
 				//#else
-				//$$ message.append("[").append(player.pingMilliseconds).append("ms] ").append(player.getEntityName()).append("\n");
+				//$$ message.append("[").append(player.pingMilliseconds).append("ms] ").append(Objects.requireNonNull(player.getDisplayName()).getString()).append("\n");
 				//#endif
 			}
 		}

@@ -31,6 +31,7 @@ import com.xujiayao.mcdiscordchat.utils.Utils;
 //$$ import java.util.UUID;
 //#endif
 
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -106,16 +107,16 @@ public class MixinPlayerManager {
 		if (CONFIG.generic.announcePlayerJoinLeave) {
 			CHANNEL.sendMessage(Translations.translateMessage("message.joinServer")
 					//#if MC >= 12003
-					.replace("%playerName%", MarkdownSanitizer.escape(player.getNameForScoreboard()))).queue();
+					.replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString()))).queue();
 					//#else
-					//$$ .replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();
+					//$$ .replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString()))).queue();
 					//#endif
 			if (CONFIG.multiServer.enable) {
 				MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.joinServer")
 						//#if MC >= 12003
-						.replace("%playerName%", MarkdownSanitizer.escape(player.getNameForScoreboard())));
+						.replace("%playerName%", MarkdownSanitizer.escape(player.getDisplayName().getString())));
 						//#else
-						//$$ .replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName())));
+						//$$ .replace("%playerName%", MarkdownSanitizer.escape(player.getDisplayName().getString())));
 						//#endif
 			}
 		}
@@ -128,16 +129,16 @@ public class MixinPlayerManager {
 		if (CONFIG.generic.announcePlayerJoinLeave) {
 			CHANNEL.sendMessage(Translations.translateMessage("message.leftServer")
 					//#if MC >= 12003
-					.replace("%playerName%", MarkdownSanitizer.escape(player.getNameForScoreboard()))).queue();
+					.replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString()))).queue();
 					//#else
-					//$$ .replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();
+					//$$ .replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString()))).queue();
 					//#endif
 			if (CONFIG.multiServer.enable) {
 				MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.leftServer")
 						//#if MC >= 12003
-						.replace("%playerName%", MarkdownSanitizer.escape(player.getNameForScoreboard())));
+						.replace("%playerName%", MarkdownSanitizer.escape(player.getDisplayName().getString())));
 						//#else
-						//$$ .replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName())));
+						//$$ .replace("%playerName%", MarkdownSanitizer.escape(player.getDisplayName().getString())));
 						//#endif
 			}
 		}

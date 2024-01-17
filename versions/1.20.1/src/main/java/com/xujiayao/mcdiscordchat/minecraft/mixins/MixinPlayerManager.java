@@ -120,10 +120,10 @@ public class MixinPlayerManager {
 
 		if (CONFIG.generic.announcePlayerJoinLeave) {
 			CHANNEL.sendMessage(Translations.translateMessage("message.joinServer")
-					.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();
+					.replace("%playerName%", MarkdownSanitizer.escape(player.getDisplayName().getString()))).queue();
 			if (CONFIG.multiServer.enable) {
 				MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.joinServer")
-						.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName())));
+						.replace("%playerName%", MarkdownSanitizer.escape(player.getDisplayName().getString())));
 			}
 		}
 	}
@@ -134,10 +134,10 @@ public class MixinPlayerManager {
 
 		if (CONFIG.generic.announcePlayerJoinLeave) {
 			CHANNEL.sendMessage(Translations.translateMessage("message.leftServer")
-					.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName()))).queue();
+					.replace("%playerName%", MarkdownSanitizer.escape(player.getDisplayName().getString()))).queue();
 			if (CONFIG.multiServer.enable) {
 				MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.leftServer")
-						.replace("%playerName%", MarkdownSanitizer.escape(player.getEntityName())));
+						.replace("%playerName%", MarkdownSanitizer.escape(player.getDisplayName().getString())));
 			}
 		}
 	}

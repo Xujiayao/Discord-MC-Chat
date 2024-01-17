@@ -52,7 +52,7 @@ public abstract class MixinPlayerAdvancementTracker {
 			String description = Translations.translate("advancements." + advancement.getId().getPath().replace("/", ".") + ".description");
 
 			message = message
-					.replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
+					.replace("%playerName%", MarkdownSanitizer.escape(owner.getDisplayName().getString()))
 					.replace("%advancement%", title.contains("TranslateError") ? advancement.getDisplay().getTitle().getString() : title)
 					.replace("%description%", description.contains("TranslateError") ? advancement.getDisplay().getDescription().getString() : description);
 

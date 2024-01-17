@@ -13,6 +13,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.xujiayao.mcdiscordchat.utils.Translations;
 
+import java.util.Objects;
+
 import static com.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static com.xujiayao.mcdiscordchat.Main.CONFIG;
 import static com.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
@@ -49,9 +51,9 @@ public abstract class MixinPlayerAdvancementTracker {
 
 			message = message
 					//#if MC >= 12003
-					.replace("%playerName%", MarkdownSanitizer.escape(owner.getNameForScoreboard()))
+					.replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(owner.getDisplayName()).getString()))
 					//#else
-					//$$ .replace("%playerName%", MarkdownSanitizer.escape(owner.getEntityName()))
+					//$$ .replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(owner.getDisplayName()).getString()))
 					//#endif
 					.replace("%advancement%", title.contains("TranslateError") ? advancement.value().display().get().getTitle().getString() : title)
 					.replace("%description%", description.contains("TranslateError") ? advancement.value().display().get().getDescription().getString() : description);

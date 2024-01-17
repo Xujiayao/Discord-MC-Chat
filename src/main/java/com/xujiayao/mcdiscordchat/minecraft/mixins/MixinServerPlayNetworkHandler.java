@@ -209,7 +209,7 @@ public abstract class MixinServerPlayNetworkHandler extends ServerCommonNetworkH
 				if (CONFIG.generic.broadcastChatMessages) {
 					sendMessage(contentToDiscord, false);
 					if (CONFIG.multiServer.enable) {
-						MULTI_SERVER.sendMessage(false, true, false, player.getNameForScoreboard(), CONFIG.generic.formatChatMessages ? contentToMinecraft : packet.chatMessage());
+						MULTI_SERVER.sendMessage(false, true, false, Objects.requireNonNull(player.getDisplayName()).getString(), CONFIG.generic.formatChatMessages ? contentToMinecraft : packet.chatMessage());
 					}
 				}
 			}
@@ -247,7 +247,7 @@ public abstract class MixinServerPlayNetworkHandler extends ServerCommonNetworkH
 
 					MINECRAFT_SEND_COUNT++;
 					if (MINECRAFT_SEND_COUNT <= 20) {
-						Text text = Text.of("<" + player.getNameForScoreboard() + "> " + input);
+						Text text = Text.of("<" + Objects.requireNonNull(player.getDisplayName()).getString() + "> " + input);
 
 						server.getPlayerManager().getPlayerList().forEach(
 								player -> player.sendMessage(text, false));
@@ -256,7 +256,7 @@ public abstract class MixinServerPlayNetworkHandler extends ServerCommonNetworkH
 
 						sendMessage(input, true);
 						if (CONFIG.multiServer.enable) {
-							MULTI_SERVER.sendMessage(false, true, false, player.getNameForScoreboard(), MarkdownSanitizer.escape(input));
+							MULTI_SERVER.sendMessage(false, true, false, player.getDisplayName().getString(), MarkdownSanitizer.escape(input));
 						}
 					}
 				}
@@ -273,18 +273,18 @@ public abstract class MixinServerPlayNetworkHandler extends ServerCommonNetworkH
 			if (CONFIG.multiServer.enable) {
 				CHANNEL.sendMessage(Translations.translateMessage("message.messageWithoutWebhookForMultiServer")
 						.replace("%server%", CONFIG.multiServer.name)
-						.replace("%name%", player.getNameForScoreboard())
+						.replace("%name%", Objects.requireNonNull(player.getDisplayName()).getString())
 						.replace("%message%", content)).queue();
 			} else {
 				CHANNEL.sendMessage(Translations.translateMessage("message.messageWithoutWebhook")
-						.replace("%name%", player.getNameForScoreboard())
+						.replace("%name%", Objects.requireNonNull(player.getDisplayName()).getString())
 						.replace("%message%", content)).queue();
 			}
 		} else {
 			JsonObject body = new JsonObject();
 			body.addProperty("content", content);
-			body.addProperty("username", ((CONFIG.multiServer.enable) ? ("[" + CONFIG.multiServer.name + "] " + player.getNameForScoreboard()) : player.getNameForScoreboard()));
-			body.addProperty("avatar_url", CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUuid().toString() : player.getNameForScoreboard())));
+			body.addProperty("username", ((CONFIG.multiServer.enable) ? ("[" + CONFIG.multiServer.name + "] " + Objects.requireNonNull(player.getDisplayName()).getString()) : Objects.requireNonNull(player.getDisplayName()).getString()));
+			body.addProperty("avatar_url", CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUuid().toString() : player.getDisplayName().getString())));
 
 			JsonObject allowedMentions = new JsonObject();
 			allowedMentions.add("parse", new Gson().toJsonTree(CONFIG.generic.allowedMentions).getAsJsonArray());

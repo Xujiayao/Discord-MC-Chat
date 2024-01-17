@@ -213,7 +213,7 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 				if (CONFIG.generic.broadcastChatMessages) {
 					sendMessage(contentToDiscord, false);
 					if (CONFIG.multiServer.enable) {
-						MULTI_SERVER.sendMessage(false, true, false, player.getEntityName(), CONFIG.generic.formatChatMessages ? contentToMinecraft : packet.chatMessage());
+						MULTI_SERVER.sendMessage(false, true, false, player.getDisplayName().getString(), CONFIG.generic.formatChatMessages ? contentToMinecraft : packet.chatMessage());
 					}
 				}
 			}
@@ -251,7 +251,7 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 
 					MINECRAFT_SEND_COUNT++;
 					if (MINECRAFT_SEND_COUNT <= 20) {
-						Text text = Text.of("<" + player.getEntityName() + "> " + input);
+						Text text = Text.of("<" + player.getDisplayName().getString() + "> " + input);
 
 						server.getPlayerManager().getPlayerList().forEach(
 								player -> player.sendMessage(text, false));
@@ -260,7 +260,7 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 
 						sendMessage(input, true);
 						if (CONFIG.multiServer.enable) {
-							MULTI_SERVER.sendMessage(false, true, false, player.getEntityName(), MarkdownSanitizer.escape(input));
+							MULTI_SERVER.sendMessage(false, true, false, player.getDisplayName().getString(), MarkdownSanitizer.escape(input));
 						}
 					}
 				}
@@ -277,18 +277,18 @@ public abstract class MixinServerPlayNetworkHandler implements EntityTrackingLis
 			if (CONFIG.multiServer.enable) {
 				CHANNEL.sendMessage(Translations.translateMessage("message.messageWithoutWebhookForMultiServer")
 						.replace("%server%", CONFIG.multiServer.name)
-						.replace("%name%", player.getEntityName())
+						.replace("%name%", player.getDisplayName().getString())
 						.replace("%message%", content)).queue();
 			} else {
 				CHANNEL.sendMessage(Translations.translateMessage("message.messageWithoutWebhook")
-						.replace("%name%", player.getEntityName())
+						.replace("%name%", player.getDisplayName().getString())
 						.replace("%message%", content)).queue();
 			}
 		} else {
 			JsonObject body = new JsonObject();
 			body.addProperty("content", content);
-			body.addProperty("username", ((CONFIG.multiServer.enable) ? ("[" + CONFIG.multiServer.name + "] " + player.getEntityName()) : player.getEntityName()));
-			body.addProperty("avatar_url", CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUuid().toString() : player.getEntityName())));
+			body.addProperty("username", ((CONFIG.multiServer.enable) ? ("[" + CONFIG.multiServer.name + "] " + player.getDisplayName().getString()) : player.getDisplayName().getString()));
+			body.addProperty("avatar_url", CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUuid().toString() : player.getDisplayName().getString())));
 
 			JsonObject allowedMentions = new JsonObject();
 			allowedMentions.add("parse", new Gson().toJsonTree(CONFIG.generic.allowedMentions).getAsJsonArray());

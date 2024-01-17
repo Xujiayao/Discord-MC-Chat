@@ -20,6 +20,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.xujiayao.mcdiscordchat.utils.Translations;
 
+import java.util.Objects;
+
 import static com.xujiayao.mcdiscordchat.Main.CHANNEL;
 import static com.xujiayao.mcdiscordchat.Main.CONFIG;
 import static com.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
@@ -66,17 +68,17 @@ public abstract class MixinServerPlayerEntity extends PlayerEntity {
 			CHANNEL.sendMessage(Translations.translateMessage("message.deathMessage")
 					.replace("%deathMessage%", MarkdownSanitizer.escape(Translations.translate(key, args)))
 					//#if MC >= 12003
-					.replace("%playerName%", MarkdownSanitizer.escape(this.getNameForScoreboard()))).queue();
+					.replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(this.getDisplayName()).getString()))).queue();
 					//#else
-					//$$ .replace("%playerName%", MarkdownSanitizer.escape(this.getEntityName()))).queue();
+					//$$ .replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(this.getDisplayName()).getString()))).queue();
 					//#endif
 			if (CONFIG.multiServer.enable) {
 				MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.deathMessage")
 						.replace("%deathMessage%", MarkdownSanitizer.escape(Translations.translate(key, args)))
 						//#if MC >= 12003
-						.replace("%playerName%", MarkdownSanitizer.escape(this.getNameForScoreboard())));
+						.replace("%playerName%", MarkdownSanitizer.escape(this.getDisplayName().getString())));
 						//#else
-						//$$ .replace("%playerName%", MarkdownSanitizer.escape(this.getEntityName())));
+						//$$ .replace("%playerName%", MarkdownSanitizer.escape(this.getDisplayName().getString())));
 						//#endif
 			}
 		}
