@@ -1,6 +1,20 @@
 {
   "versions": [
     {
+      "version": "2.2.6",
+      "changelog": "<https://github.com/Xujiayao/MC-Discord-Chat/releases/tag/2.2.6>",
+      "minecraft_dependency": [
+        "1.19.1",
+        "1.19.2",
+        "1.19.3",
+        "~1.19.4",
+        "1.20",
+        "1.20.1",
+        "1.20.2",
+        "~1.20.3"
+      ]
+    },
+    {
       "version": "2.2.5",
       "changelog": "<https://github.com/Xujiayao/MC-Discord-Chat/releases/tag/2.2.5>",
       "minecraft_dependency": [

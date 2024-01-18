@@ -3,7 +3,7 @@ Language: English <a href="/README_CN.md">中文</a>
 </div>
 
 <p align="center">
-<img width=128 src="https://cdn.jsdelivr.net/gh/Xujiayao/MC-Discord-Chat@master/src/main/resources/assets/mcdiscordchat/icon.png">
+<img width=128 src="https://cdn.jsdelivr.net/gh/Xujiayao/MC-Discord-Chat@master/wrapper/src/main/resources/assets/mcdiscordchat/icon.png">
 </p>
 
 # MC-Discord-Chat
@@ -49,7 +49,7 @@ If there is a bug or suggestion, or something you don't understand, you can [sub
 
 If you are interested in contributing to MCDC, you can submit a pull request on GitHub.
 
-For code contributions, the build file is located in the `/wrapper/build/libs/` folder.
+For code contributions, the build file is located in the `/build/` folder.
 
 For translation contributions, language files are located in the `/wrapper/src/main/resources/lang/` folder. Copy `en_us.json` and rename the new one to your language code to get started. Please provide translations for the entire file for all keys.
 

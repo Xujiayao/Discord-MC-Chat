@@ -3,7 +3,7 @@
 </div>
 
 <p align="center">
-<img width=128 src="https://cdn.jsdelivr.net/gh/Xujiayao/MC-Discord-Chat@master/src/main/resources/assets/mcdiscordchat/icon.png">
+<img width=128 src="https://cdn.jsdelivr.net/gh/Xujiayao/MC-Discord-Chat@master/wrapper/src/main/resources/assets/mcdiscordchat/icon.png">
 </p>
 
 # MC-Discord-Chat
@@ -49,7 +49,7 @@ MC-Discord-Chat (MCDC), formerly known as MCDiscordChat, a practical and powerfu
 
 如果你有兴趣为 MCDC 做出贡献，你可以在 GitHub 上提交拉取请求。
 
-对于代码贡献，构建文件位于 `/wrapper/build/libs/` 文件夹中。
+对于代码贡献，构建文件位于 `/build/` 文件夹中。
 
 对于翻译贡献，语言文件位于 `/wrapper/src/main/resources/lang/` 文件夹中。复制 `en_us.json` 并将新的文件重命名为你的语言代码以开始翻译。请为整个文件中所有键提供翻译。
 
