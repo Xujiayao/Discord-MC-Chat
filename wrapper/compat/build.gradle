@@ -3,8 +3,10 @@ import groovy.json.JsonSlurper
 
 apply plugin: "fabric-loom"
 
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
 
 version = mod_version + "-compat"
 group = maven_group
