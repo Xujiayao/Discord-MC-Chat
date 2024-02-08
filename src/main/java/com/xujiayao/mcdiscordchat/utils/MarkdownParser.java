@@ -20,7 +20,7 @@ https://github.com/BRForgers/DisFabric-and-DisForge/blob/d1468a6c9b50ba24a250ec3
 
 package com.xujiayao.mcdiscordchat.utils;
 
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,11 +34,11 @@ import java.util.regex.Pattern;
 public class MarkdownParser {
 
 	public static String parseMarkdown(String message) {
-		message = replaceWith(message, "(?<!\\\\)\\*\\*", Formatting.BOLD.toString(), Formatting.RESET.toString());
-		message = replaceWith(message, "(?<!\\\\)\\*", Formatting.ITALIC.toString(), Formatting.RESET.toString());
-		message = replaceWith(message, "(?<!\\\\)__", Formatting.UNDERLINE.toString(), Formatting.RESET.toString());
-		message = replaceWith(message, "(?<!\\\\)_", Formatting.ITALIC.toString(), Formatting.RESET.toString());
-		message = replaceWith(message, "(?<!\\\\)~~", Formatting.STRIKETHROUGH.toString(), Formatting.RESET.toString());
+		message = replaceWith(message, "(?<!\\\\)\\*\\*", ChatFormatting.BOLD.toString(), ChatFormatting.RESET.toString());
+		message = replaceWith(message, "(?<!\\\\)\\*", ChatFormatting.ITALIC.toString(), ChatFormatting.RESET.toString());
+		message = replaceWith(message, "(?<!\\\\)__", ChatFormatting.UNDERLINE.toString(), ChatFormatting.RESET.toString());
+		message = replaceWith(message, "(?<!\\\\)_", ChatFormatting.ITALIC.toString(), ChatFormatting.RESET.toString());
+		message = replaceWith(message, "(?<!\\\\)~~", ChatFormatting.STRIKETHROUGH.toString(), ChatFormatting.RESET.toString());
 
 		message = message.replace("\\\\*", "*").replace("\\\\_", "_").replace("\\\\~", "~");
 

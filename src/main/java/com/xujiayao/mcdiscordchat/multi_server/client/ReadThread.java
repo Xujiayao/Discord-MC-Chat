@@ -3,19 +3,14 @@ package com.xujiayao.mcdiscordchat.multi_server.client;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-//#if MC <= 11802
-//$$ import net.minecraft.text.LiteralText;
-//#endif
-import net.minecraft.text.Text;
-//#if MC >= 11900
-import net.minecraft.text.Texts;
-//#endif
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import com.xujiayao.mcdiscordchat.utils.MarkdownParser;
 import com.xujiayao.mcdiscordchat.utils.Translations;
 import com.xujiayao.mcdiscordchat.utils.Utils;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -23,14 +18,8 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-//#if MC >= 11900
-import java.util.ArrayList;
-//#endif
 import java.util.Arrays;
 import java.util.HashSet;
-//#if MC >= 11900
-import java.util.List;
-//#endif
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
@@ -69,18 +58,14 @@ public class ReadThread extends Thread {
 							Objects.requireNonNull(channel).sendMessage("```\n" + Utils.getInfoCommandMessage() + "\n```").queue();
 						} else if ("updateChannelTopic".equals(message.get("type").getAsString())) {
 							JsonObject channelTopicInfo = new JsonObject();
-							channelTopicInfo.addProperty("onlinePlayerCount", SERVER.getPlayerManager().getPlayerList().size());
-							channelTopicInfo.addProperty("maxPlayerCount", SERVER.getPlayerManager().getMaxPlayerCount());
+							channelTopicInfo.addProperty("onlinePlayerCount", SERVER.getPlayerCount());
+							channelTopicInfo.addProperty("maxPlayerCount", SERVER.getMaxPlayers());
 
 							Properties properties = new Properties();
 							properties.load(new FileInputStream("server.properties"));
 
 							Set<String> uniquePlayers = new HashSet<>();
-							//#if MC >= 11600
 							FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).forEach(file -> uniquePlayers.add(file.getName()));
-							//#else
-							//$$ FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).forEach(file -> uniquePlayers.add(file.getName()));
-							//#endif
 							channelTopicInfo.add("uniquePlayers", new Gson().fromJson(Arrays.toString(uniquePlayers.toArray()), JsonArray.class));
 
 							channelTopicInfo.addProperty("serverName", CONFIG.multiServer.name);
@@ -98,48 +83,39 @@ public class ReadThread extends Thread {
 								.replace("%name%", json.get("playerName").getAsString())
 								.replace("%message%", json.get("message").getAsString()));
 
-						Text text = Text.Serialization.fromJson(Translations.translateMessage("message.formattedChatMessage")
+						MutableComponent text = Component.Serializer.fromJson(Translations.translateMessage("message.formattedChatMessage")
 								.replace("%server%", json.get("serverName").getAsString())
 								.replace("%name%", json.get("playerName").getAsString())
 								.replace("%roleColor%", "white")
 								.replace("%message%", MarkdownParser.parseMarkdown(json.get("message").getAsString())));
 
-						SERVER.getPlayerManager().getPlayerList().forEach(
-								player -> player.sendMessage(text, false));
+						SERVER.getPlayerList().getPlayers().forEach(
+								player -> player.displayClientMessage(text, false));
 					} else {
 						if (json.get("isText").getAsBoolean()) {
 							LOGGER.info(Translations.translateMessage("message.unformattedOtherMessage")
 									.replace("%server%", json.get("serverName").getAsString())
-									.replace("%message%", Objects.requireNonNull(Text.Serialization.fromJson(json.get("message").getAsString())).getString()));
+									.replace("%message%", Objects.requireNonNull(Component.Serializer.fromJson(json.get("message").getAsString())).getString()));
 
-							Text text = Text.Serialization.fromJson(Translations.translateMessage("message.formattedOtherMessage")
+							MutableComponent text = Component.Serializer.fromJson(Translations.translateMessage("message.formattedOtherMessage")
 									.replace("%server%", json.get("serverName").getAsString())
 									.replace("%message%", ""));
 
-							//#if MC <= 11802
-							//$$ SERVER.getPlayerManager().getPlayerList().forEach(
-							//$$ 		player -> player.sendMessage(new LiteralText("")
-							//$$ 				.append(text)
-							//$$ 				.append(Text.Serializer.fromJson(json.get("message").getAsString())), false));
-							//#else
-							List<Text> textList = new ArrayList<>();
-							textList.add(text);
-							textList.add(Text.Serialization.fromJson(json.get("message").getAsString()));
+							Objects.requireNonNull(text).append(Component.Serializer.fromJson(json.get("message").getAsString()));
 
-							SERVER.getPlayerManager().getPlayerList().forEach(
-									player -> player.sendMessage(Texts.join(textList, Text.of("")), false));
-							//#endif
+							SERVER.getPlayerList().getPlayers().forEach(
+									player -> player.displayClientMessage(text, false));
 						} else {
 							LOGGER.info(Translations.translateMessage("message.unformattedOtherMessage")
 									.replace("%server%", json.get("serverName").getAsString())
 									.replace("%message%", json.get("message").getAsString()));
 
-							Text text = Text.Serialization.fromJson(Translations.translateMessage("message.formattedOtherMessage")
+							MutableComponent text = Component.Serializer.fromJson(Translations.translateMessage("message.formattedOtherMessage")
 									.replace("%server%", json.get("serverName").getAsString())
 									.replace("%message%", MarkdownParser.parseMarkdown(json.get("message").getAsString())));
 
-							SERVER.getPlayerManager().getPlayerList().forEach(
-									player -> player.sendMessage(text, false));
+							SERVER.getPlayerList().getPlayers().forEach(
+									player -> player.displayClientMessage(text, false));
 						}
 					}
 				} catch (Exception e) {
