@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.PlayerChatMessage;
+import net.minecraft.network.protocol.game.ServerboundChatCommandPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 
@@ -21,6 +22,12 @@ public interface MinecraftEvents {
 			result = callback.message(player, playerChatMessage);
 		}
 		return result;
+	});
+
+	Event<PlayerCommand> PLAYER_COMMAND = EventFactory.createArrayBacked(PlayerCommand.class, callbacks -> (player, packet) -> {
+		for (PlayerCommand callback : callbacks) {
+			callback.command(player, packet);
+		}
 	});
 
 	Event<PlayerAdvancement> PLAYER_ADVANCEMENT = EventFactory.createArrayBacked(PlayerAdvancement.class, callbacks -> (player, advancementHolder, isDone) -> {
@@ -50,6 +57,11 @@ public interface MinecraftEvents {
 	interface PlayerMessage {
 		Optional<Component> message(ServerPlayer player, PlayerChatMessage playerChatMessage);
 	}
+
+	interface PlayerCommand {
+		void command(ServerPlayer player, ServerboundChatCommandPacket packet);
+	}
+
 
 	interface PlayerAdvancement {
 		void advancement(ServerPlayer player, AdvancementHolder advancementHolder, boolean isDone);
