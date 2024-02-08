@@ -3,13 +3,25 @@ package com.xujiayao.mcdiscordchat.minecraft;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.advancements.AdvancementHolder;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
+
+import java.util.Optional;
 
 /**
  * @author Xujiayao
  */
 public interface MinecraftEvents {
+
+	Event<PlayerMessage> PLAYER_MESSAGE = EventFactory.createArrayBacked(PlayerMessage.class, callbacks -> (player, playerChatMessage) -> {
+		Optional<Component> result = Optional.empty();
+		for (PlayerMessage callback : callbacks) {
+			result = callback.message(player, playerChatMessage);
+		}
+		return result;
+	});
 
 	Event<PlayerAdvancement> PLAYER_ADVANCEMENT = EventFactory.createArrayBacked(PlayerAdvancement.class, callbacks -> (player, advancementHolder, isDone) -> {
 		for (PlayerAdvancement callback : callbacks) {
@@ -34,6 +46,10 @@ public interface MinecraftEvents {
 			callback.quit(player);
 		}
 	});
+
+	interface PlayerMessage {
+		Optional<Component> message(ServerPlayer player, PlayerChatMessage playerChatMessage);
+	}
 
 	interface PlayerAdvancement {
 		void advancement(ServerPlayer player, AdvancementHolder advancementHolder, boolean isDone);

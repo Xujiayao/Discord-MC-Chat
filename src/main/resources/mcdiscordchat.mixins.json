@@ -5,6 +5,7 @@
   "mixins": [
     "MixinPlayerAdvancements",
     "MixinPlayerList",
+    "MixinServerGamePacketListenerImpl",
     "MixinServerPlayer"
   ],
   "injectors": {
