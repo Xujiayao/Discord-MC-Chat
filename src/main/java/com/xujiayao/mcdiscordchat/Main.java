@@ -1,5 +1,6 @@
 package com.xujiayao.mcdiscordchat;
 
+import com.xujiayao.mcdiscordchat.minecraft.MinecraftEventListener;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Webhook;
@@ -212,6 +213,8 @@ public class Main implements DedicatedServerModInitializer {
 				shutdown();
 			}
 		});
+
+		MinecraftEventListener.init();
 	}
 
 	private void shutdown() {

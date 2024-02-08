@@ -3,8 +3,8 @@ package com.xujiayao.mcdiscordchat.utils;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.SharedConstants;
-import net.minecraft.util.Language;
+import net.minecraft.DetectedVersion;
+import net.minecraft.locale.Language;
 import okhttp3.CacheControl;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -63,11 +63,11 @@ public class Translations {
 					return;
 				}
 
-				File minecraftLangFile = new File(FabricLoader.getInstance().getConfigDir().toFile(), "/mcdiscordchat/" + SharedConstants.getGameVersion().getName() + "-" + CONFIG.generic.language + ".json");
+				File minecraftLangFile = new File(FabricLoader.getInstance().getConfigDir().toFile(), "/mcdiscordchat/" + DetectedVersion.tryDetectVersion().getName() + "-" + CONFIG.generic.language + ".json");
 
 				if (minecraftLangFile.length() == 0) {
 					Request request1 = new Request.Builder()
-							.url("https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@" + SharedConstants.getGameVersion().getName() + "/assets/minecraft/lang/" + CONFIG.generic.language + ".json")
+							.url("https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@" + DetectedVersion.tryDetectVersion().getName() + "/assets/minecraft/lang/" + CONFIG.generic.language + ".json")
 							.cacheControl(CacheControl.FORCE_NETWORK)
 							.build();
 
@@ -109,11 +109,7 @@ public class Translations {
 		if (translation1 != null) {
 			return String.format(translation1, args);
 		} else {
-			//#if MC >= 11600
-			String translation2 = Language.getInstance().get(key);
-			//#else
-			//$$ String translation2 = Language.getInstance().translate(key);
-			//#endif
+			String translation2 = Language.getInstance().getOrDefault(key);
 			if (!translation2.equals(key)) {
 				return String.format(translation2, args);
 			} else {

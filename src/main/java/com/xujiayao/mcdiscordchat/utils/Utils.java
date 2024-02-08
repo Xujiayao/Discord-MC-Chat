@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.authlib.GameProfile;
+import com.xujiayao.mcdiscordchat.multi_server.MultiServer;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -13,10 +14,10 @@ import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Whitelist;
-import net.minecraft.server.WhitelistEntry;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.DetectedVersion;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.UserWhiteList;
+import net.minecraft.server.players.UserWhiteListEntry;
 import okhttp3.CacheControl;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -24,7 +25,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import com.xujiayao.mcdiscordchat.multi_server.MultiServer;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -104,7 +104,7 @@ public class Utils {
 			try (Response response = HTTP_CLIENT.newCall(request).execute()) {
 				String result = Objects.requireNonNull(response.body()).string();
 
-				String minecraftVersion = SharedConstants.getGameVersion().getName();
+				String minecraftVersion = DetectedVersion.tryDetectVersion().getName();
 
 				CONFIG.latestVersion = "";
 				String latestChangelog = "";
@@ -208,7 +208,7 @@ public class Utils {
 	}
 
 	public static String whitelist(String player) {
-		Whitelist whitelist = SERVER.getPlayerManager().getWhitelist();
+		UserWhiteList whitelist = SERVER.getPlayerList().getWhiteList();
 
 		Request request = new Request.Builder()
 				.url("https://api.mojang.com/users/profiles/minecraft/" + player)
@@ -223,10 +223,10 @@ public class Utils {
 				String name = json.get("name").getAsString();
 
 				GameProfile profile = new GameProfile(uuid, name);
-				if (whitelist.isAllowed(profile)) {
+				if (whitelist.isWhiteListed(profile)) {
 					return Translations.translate("utils.utils.whitelist.whitelistFailed");
 				} else {
-					whitelist.add(new WhitelistEntry(profile));
+					whitelist.add(new UserWhiteListEntry(profile));
 					return Translations.translate("utils.utils.whitelist.whitelistSuccess", name);
 				}
 			} else if (response.code() == 404) {
@@ -396,20 +396,14 @@ public class Utils {
 				.append(" ===============\n\n");
 
 		// Online players
-		List<ServerPlayerEntity> onlinePlayers = SERVER.getPlayerManager().getPlayerList();
-		message.append(Translations.translate("utils.utils.gicMessage.onlinePlayers", onlinePlayers.size(), SERVER.getPlayerManager().getMaxPlayerCount()));
+		List<ServerPlayer> onlinePlayers = SERVER.getPlayerList().getPlayers();
+		message.append(Translations.translate("utils.utils.gicMessage.onlinePlayers", onlinePlayers.size(), SERVER.getMaxPlayers()));
 
 		if (onlinePlayers.isEmpty()) {
 			message.append(Translations.translate("utils.utils.gicMessage.noPlayersOnline"));
 		} else {
-			for (ServerPlayerEntity player : onlinePlayers) {
-				//#if MC >= 12003
-				message.append("[").append(player.networkHandler.getLatency()).append("ms] ").append(Objects.requireNonNull(player.getDisplayName()).getString()).append("\n");
-				//#elseif MC >= 12002
-				//$$ message.append("[").append(player.networkHandler.getLatency()).append("ms] ").append(Objects.requireNonNull(player.getDisplayName()).getString()).append("\n");
-				//#else
-				//$$ message.append("[").append(player.pingMilliseconds).append("ms] ").append(Objects.requireNonNull(player.getDisplayName()).getString()).append("\n");
-				//#endif
+			for (ServerPlayer player : onlinePlayers) {
+				message.append("[").append(player.connection.latency()).append("ms] ").append(Objects.requireNonNull(player.getDisplayName()).getString()).append("\n");
 			}
 		}
 
@@ -439,11 +433,7 @@ public class Utils {
 			Properties properties = new Properties();
 			properties.load(new FileInputStream("server.properties"));
 
-			//#if MC >= 11600
 			FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).forEach(file -> {
-				//#else
-				//$$ FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).forEach(file -> {
-				//#endif
 				try {
 					for (JsonElement player : players) {
 						if (player.getAsJsonObject().get("uuid").getAsString().equals(file.getName().replace(".json", ""))) {
@@ -488,12 +478,12 @@ public class Utils {
 		}
 		if (!CONFIG.generic.botPlayingStatus.isEmpty()) {
 			JDA.getPresence().setActivity(Activity.playing(CONFIG.generic.botPlayingStatus
-					.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerManager().getPlayerList().size()))
-					.replace("%maxPlayerCount%", Integer.toString(SERVER.getPlayerManager().getMaxPlayerCount()))));
+					.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerCount()))
+					.replace("%maxPlayerCount%", Integer.toString(SERVER.getMaxPlayers()))));
 		} else if (!CONFIG.generic.botListeningStatus.isEmpty()) {
 			JDA.getPresence().setActivity(Activity.listening(CONFIG.generic.botListeningStatus
-					.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerManager().getPlayerList().size()))
-					.replace("%maxPlayerCount%", Integer.toString(SERVER.getPlayerManager().getMaxPlayerCount()))));
+					.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerCount()))
+					.replace("%maxPlayerCount%", Integer.toString(SERVER.getMaxPlayers()))));
 		} else {
 			JDA.getPresence().setActivity(null);
 		}
@@ -549,13 +539,9 @@ public class Utils {
 					properties.load(new FileInputStream("server.properties"));
 
 					String topic = Translations.translateMessage("message.onlineChannelTopic")
-							.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerManager().getPlayerList().size()))
-							.replace("%maxPlayerCount%", Integer.toString(SERVER.getPlayerManager().getMaxPlayerCount()))
-							//#if MC >= 11600
+							.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerCount()))
+							.replace("%maxPlayerCount%", Integer.toString(SERVER.getMaxPlayers()))
 							.replace("%uniquePlayerCount%", Integer.toString(FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).size()))
-							//#else
-							//$$ .replace("%uniquePlayerCount%", Integer.toString(FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).size()))
-							//#endif
 							.replace("%serverStartedTime%", SERVER_STARTED_TIME)
 							.replace("%lastUpdateTime%", Long.toString(epochSecond))
 							.replace("%nextUpdateTime%", Long.toString(epochSecond + CONFIG.generic.channelTopicUpdateInterval / 1000));
