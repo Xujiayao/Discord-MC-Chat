@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.fellbaum.jemoji.EmojiManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.level.GameRules;
 import okhttp3.MediaType;
 import okhttp3.Request;
@@ -32,7 +33,10 @@ import static com.xujiayao.mcdiscordchat.Main.CONFIG;
 import static com.xujiayao.mcdiscordchat.Main.HTTP_CLIENT;
 import static com.xujiayao.mcdiscordchat.Main.JDA;
 import static com.xujiayao.mcdiscordchat.Main.LOGGER;
+import static com.xujiayao.mcdiscordchat.Main.MINECRAFT_LAST_RESET_TIME;
+import static com.xujiayao.mcdiscordchat.Main.MINECRAFT_SEND_COUNT;
 import static com.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
+import static com.xujiayao.mcdiscordchat.Main.SERVER;
 import static com.xujiayao.mcdiscordchat.Main.WEBHOOK;
 
 /**
@@ -120,7 +124,7 @@ public class MinecraftEventListener {
 			}
 
 			if (CONFIG.generic.broadcastChatMessages) {
-				sendDiscordMessage(contentToDiscord, Objects.requireNonNull(player.getDisplayName()).getString(), (CONFIG.generic.useUuidInsteadOfName ? player.getUUID().toString() : player.getDisplayName().getString()));
+				sendDiscordMessage(contentToDiscord, Objects.requireNonNull(player.getDisplayName()).getString(), CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUUID().toString() : player.getDisplayName().getString())));
 				if (CONFIG.multiServer.enable) {
 					MULTI_SERVER.sendMessage(false, true, false, Objects.requireNonNull(player.getDisplayName()).getString(), CONFIG.generic.formatChatMessages ? contentToMinecraft : playerChatMessage.decoratedContent().getString());
 				}
@@ -130,6 +134,35 @@ public class MinecraftEventListener {
 				return Optional.ofNullable(Component.Serializer.fromJson("[{\"text\":\"" + contentToMinecraft + "\"}]"));
 			} else {
 				return Optional.empty();
+			}
+		});
+
+		MinecraftEvents.PLAYER_COMMAND.register((player, packet) -> {
+			String input = "/" + packet.command();
+
+			for (String command : CONFIG.generic.excludedCommands) {
+				if (input.startsWith(command + " ")) {
+					return;
+				}
+			}
+
+			if ((System.currentTimeMillis() - MINECRAFT_LAST_RESET_TIME) > 20000) {
+				MINECRAFT_SEND_COUNT = 0;
+				MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();
+			}
+
+			MINECRAFT_SEND_COUNT++;
+			if (MINECRAFT_SEND_COUNT <= 20) {
+				MutableComponent message = Component.literal("<" + Objects.requireNonNull(player.getDisplayName()).getString() + "> " + input);
+
+				SERVER.getPlayerList().getPlayers().forEach(
+						player1 -> player1.displayClientMessage(message, false));
+				SERVER.sendSystemMessage(message);
+
+				sendDiscordMessage(MarkdownSanitizer.escape(input), Objects.requireNonNull(player.getDisplayName()).getString(), CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUUID().toString() : player.getDisplayName().getString())));
+				if (CONFIG.multiServer.enable) {
+					MULTI_SERVER.sendMessage(false, true, false, player.getDisplayName().getString(), MarkdownSanitizer.escape(input));
+				}
 			}
 		});
 
@@ -214,7 +247,7 @@ public class MinecraftEventListener {
 			JsonObject body = new JsonObject();
 			body.addProperty("content", content);
 			body.addProperty("username", ((CONFIG.multiServer.enable) ? ("[" + CONFIG.multiServer.name + "] " + username) : username));
-			body.addProperty("avatar_url", CONFIG.generic.avatarApi.replace("%player%", avatar_url));
+			body.addProperty("avatar_url", avatar_url);
 
 			JsonObject allowedMentions = new JsonObject();
 			allowedMentions.add("parse", new Gson().toJsonTree(CONFIG.generic.allowedMentions).getAsJsonArray());
