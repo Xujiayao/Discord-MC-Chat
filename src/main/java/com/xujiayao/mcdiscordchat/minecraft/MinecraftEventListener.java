@@ -16,6 +16,12 @@ import static com.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
 public class MinecraftEventListener {
 
 	public static void init() {
+		MinecraftEvents.PLAYER_DIE.register((player, source) -> {
+			if (CONFIG.generic.announceDeathMessages) {
+				System.out.println(source.getLocalizedDeathMessage(player));
+			}
+		});
+
 		// TODO Server /say
 
 		MinecraftEvents.PLAYER_JOIN.register(player -> {
