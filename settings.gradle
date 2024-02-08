@@ -24,16 +24,16 @@ pluginManagement {
 }
 
 def versions = Arrays.asList(
-        "compat_1.15.2",
-        "compat_1.16.5",
-        "compat_1.17.1",
-        "compat_1.18.2",
-        "compat_1.19"  ,
-        "1.19.2",
-        "1.19.3",
-        "1.19.4",
-        "1.20.1",
-        "1.20.2",
+//        "compat_1.15.2",
+//        "compat_1.16.5",
+//        "compat_1.17.1",
+//        "compat_1.18.2",
+//        "compat_1.19"  ,
+//        "1.19.2",
+//        "1.19.3",
+//        "1.19.4",
+//        "1.20.1",
+//        "1.20.2",
         "1.20.4"
 )
 for (String version : versions) {
