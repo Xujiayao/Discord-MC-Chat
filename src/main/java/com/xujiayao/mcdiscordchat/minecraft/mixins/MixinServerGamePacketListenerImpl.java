@@ -25,7 +25,7 @@ public class MixinServerGamePacketListenerImpl {
 	@Shadow
 	private ServerPlayer player;
 
-	@Inject(method = "broadcastChatMessage", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;broadcastChatMessage(Lnet/minecraft/network/chat/PlayerChatMessage;Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/network/chat/ChatType$Bound;)V"), cancellable = true)
+	@Inject(method = "broadcastChatMessage", at = @At("HEAD"), cancellable = true)
 	private void broadcastChatMessage(PlayerChatMessage playerChatMessage, CallbackInfo ci) {
 		Optional<Component> result = MinecraftEvents.PLAYER_MESSAGE.invoker().message(player, playerChatMessage);
 		if (result.isPresent()) {
