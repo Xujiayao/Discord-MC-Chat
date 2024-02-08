@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(PlayerList.class)
 public class MixinPlayerList {
 
-	@Inject(method = "broadcastChatMessage", at = @At("HEAD"))
+	@Inject(method = "broadcastChatMessage(Lnet/minecraft/network/chat/PlayerChatMessage;Lnet/minecraft/commands/CommandSourceStack;Lnet/minecraft/network/chat/ChatType$Bound;)V", at = @At("HEAD"))
 	private void broadcastChatMessage(PlayerChatMessage playerChatMessage, CommandSourceStack commandSourceStack, ChatType.Bound bound, CallbackInfo ci) {
 		MinecraftEvents.SERVER_MESSAGE.invoker().message(playerChatMessage, commandSourceStack);
 	}
