@@ -414,15 +414,10 @@ public class Utils {
 		}
 
 		// Server TPS
-		//#if MC >= 12003
-		double serverTickTime = average(SERVER.getTickTimes()) * 1.0E-6D;
-		//#else
-		//$$ double serverTickTime = average(SERVER.lastTickLengths) * 1.0E-6D;
-		//#endif
-		message.append(Translations.translate("utils.utils.gicMessage.serverTps", String.format("%.2f", Math.min(1000.0 / serverTickTime, 20))));
+		message.append(Translations.translate("utils.utils.gicMessage.serverTps", String.format("%.2f", SERVER.tickRateManager().tickrate())));
 
 		// Server MSPT
-		message.append(Translations.translate("utils.utils.gicMessage.serverMspt", String.format("%.2f", serverTickTime)));
+		message.append(Translations.translate("utils.utils.gicMessage.serverMspt", String.format("%.2f", SERVER.getCurrentSmoothedTickTime())));
 
 		// Server used memory
 		message.append(Translations.translate("utils.utils.gicMessage.serverUsedMemory", (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024, Runtime.getRuntime().totalMemory() / 1024 / 1024));
@@ -527,11 +522,7 @@ public class Utils {
 		MSPT_MONITOR_TIMER.schedule(new TimerTask() {
 			@Override
 			public void run() {
-				//#if MC >= 12003
-				double mspt = average(SERVER.getTickTimes()) * 1.0E-6D;
-				//#else
-				//$$ double mspt = average(SERVER.lastTickLengths) * 1.0E-6D;
-				//#endif
+				double mspt = SERVER.getCurrentSmoothedTickTime();
 
 				if (mspt > CONFIG.generic.msptLimit) {
 					String message = Translations.translateMessage("message.highMspt")
@@ -596,14 +587,5 @@ public class Utils {
 				}
 			}
 		}, 3600000, 21600000);
-	}
-
-	public static double average(long[] array) {
-		long sum = 0L;
-		for (final long i : array) {
-			sum += i;
-		}
-
-		return sum / (double) array.length;
 	}
 }
