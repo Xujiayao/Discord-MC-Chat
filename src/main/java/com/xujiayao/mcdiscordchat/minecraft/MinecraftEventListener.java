@@ -45,6 +45,13 @@ import static com.xujiayao.mcdiscordchat.Main.WEBHOOK;
 public class MinecraftEventListener {
 
 	public static void init() {
+		MinecraftEvents.SERVER_MESSAGE.register((playerChatMessage, commandSourceStack) -> {
+			sendDiscordMessage(playerChatMessage.decoratedContent().getString(), commandSourceStack.getDisplayName().getString(), JDA.getSelfUser().getAvatarUrl());
+			if (CONFIG.multiServer.enable) {
+				MULTI_SERVER.sendMessage(false, true, false, commandSourceStack.getDisplayName().getString(), playerChatMessage.decoratedContent().getString());
+			}
+		});
+
 		MinecraftEvents.PLAYER_MESSAGE.register((player, playerChatMessage) -> {
 			String contentToDiscord = playerChatMessage.decoratedContent().getString();
 			String contentToMinecraft = playerChatMessage.decoratedContent().getString();

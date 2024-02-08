@@ -3,6 +3,7 @@ package com.xujiayao.mcdiscordchat.minecraft;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.advancements.AdvancementHolder;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.network.protocol.game.ServerboundChatCommandPacket;
@@ -15,6 +16,12 @@ import java.util.Optional;
  * @author Xujiayao
  */
 public interface MinecraftEvents {
+
+	Event<ServerMessage> SERVER_MESSAGE = EventFactory.createArrayBacked(ServerMessage.class, callbacks -> (playerChatMessage, commandSourceStack) -> {
+		for (ServerMessage callback : callbacks) {
+			callback.message(playerChatMessage, commandSourceStack);
+		}
+	});
 
 	Event<PlayerMessage> PLAYER_MESSAGE = EventFactory.createArrayBacked(PlayerMessage.class, callbacks -> (player, playerChatMessage) -> {
 		Optional<Component> result = Optional.empty();
@@ -53,6 +60,10 @@ public interface MinecraftEvents {
 			callback.quit(player);
 		}
 	});
+
+	interface ServerMessage {
+		void message(PlayerChatMessage playerChatMessage, CommandSourceStack commandSourceStack);
+	}
 
 	interface PlayerMessage {
 		Optional<Component> message(ServerPlayer player, PlayerChatMessage playerChatMessage);
