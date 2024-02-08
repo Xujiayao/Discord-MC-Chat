@@ -2,6 +2,7 @@ package com.xujiayao.mcdiscordchat.minecraft;
 
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
+import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 
@@ -9,6 +10,12 @@ import net.minecraft.world.damagesource.DamageSource;
  * @author Xujiayao
  */
 public interface MinecraftEvents {
+
+	Event<PlayerAdvancement> PLAYER_ADVANCEMENT = EventFactory.createArrayBacked(PlayerAdvancement.class, callbacks -> (player, advancementHolder, isDone) -> {
+		for (PlayerAdvancement callback : callbacks) {
+			callback.advancement(player, advancementHolder, isDone);
+		}
+	});
 
 	Event<PlayerDie> PLAYER_DIE = EventFactory.createArrayBacked(PlayerDie.class, callbacks -> (player, source) -> {
 		for (PlayerDie callback : callbacks) {
@@ -27,6 +34,10 @@ public interface MinecraftEvents {
 			callback.quit(player);
 		}
 	});
+
+	interface PlayerAdvancement {
+		void advancement(ServerPlayer player, AdvancementHolder advancementHolder, boolean isDone);
+	}
 
 	interface PlayerDie {
 		void die(ServerPlayer player, DamageSource source);
