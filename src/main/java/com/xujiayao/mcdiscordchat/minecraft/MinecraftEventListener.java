@@ -11,6 +11,7 @@ import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.fellbaum.jemoji.EmojiManager;
 import net.minecraft.ChatFormatting;
+import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.level.GameRules;
@@ -174,14 +175,25 @@ public class MinecraftEventListener {
 		});
 
 		MinecraftEvents.PLAYER_ADVANCEMENT.register((player, advancementHolder, isDone) -> {
+			//#if MC >= 12002
+			if (advancementHolder.value().display().isEmpty()) {
+				return;
+			}
+			DisplayInfo display = advancementHolder.value().display().get();
+			//#else
+			//$$ if (advancementHolder.getDisplay() == null) {
+			//$$ 	return;
+			//$$ }
+			//$$ DisplayInfo display = advancementHolder.getDisplay();
+			//#endif
+
 			if (CONFIG.generic.announceAdvancements
 					&& isDone
-					&& advancementHolder.value().display().isPresent()
-					&& advancementHolder.value().display().get().shouldAnnounceChat()
+					&& display.shouldAnnounceChat()
 					&& player.level().getGameRules().getBoolean(GameRules.RULE_ANNOUNCE_ADVANCEMENTS)) {
 				String message = "null";
 
-				switch (advancementHolder.value().display().get().getType()) {
+				switch (display.getType()) {
 					case GOAL -> message = Translations.translateMessage("message.advancementGoal");
 					case TASK -> message = Translations.translateMessage("message.advancementTask");
 					case CHALLENGE -> message = Translations.translateMessage("message.advancementChallenge");
@@ -192,8 +204,8 @@ public class MinecraftEventListener {
 
 				message = message
 						.replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString()))
-						.replace("%advancement%", title.contains("TranslateError") ? advancementHolder.value().display().get().getTitle().getString() : title)
-						.replace("%description%", description.contains("TranslateError") ? advancementHolder.value().display().get().getDescription().getString() : description);
+						.replace("%advancement%", title.contains("TranslateError") ? display.getTitle().getString() : title)
+						.replace("%description%", description.contains("TranslateError") ? display.getDescription().getString() : description);
 
 				CHANNEL.sendMessage(message).queue();
 				if (CONFIG.multiServer.enable) {

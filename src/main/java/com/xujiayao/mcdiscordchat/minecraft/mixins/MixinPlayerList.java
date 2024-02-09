@@ -6,7 +6,9 @@ import net.minecraft.network.Connection;
 import net.minecraft.network.chat.ChatType;
 import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.server.level.ServerPlayer;
+//#if MC >= 12002
 import net.minecraft.server.network.CommonListenerCookie;
+//#endif
 import net.minecraft.server.players.PlayerList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -25,7 +27,11 @@ public class MixinPlayerList {
 	}
 
 	@Inject(method = "placeNewPlayer", at = @At("RETURN"))
+	//#if MC >= 12002
 	private void placeNewPlayer(Connection connection, ServerPlayer serverPlayer, CommonListenerCookie commonListenerCookie, CallbackInfo ci) {
+	//#else
+	//$$ private void placeNewPlayer(Connection connection, ServerPlayer serverPlayer, CallbackInfo ci) {
+	//#endif
 		MinecraftEvents.PLAYER_JOIN.invoker().join(serverPlayer);
 	}
 
