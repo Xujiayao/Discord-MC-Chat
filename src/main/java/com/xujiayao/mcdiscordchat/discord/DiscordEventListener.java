@@ -136,8 +136,12 @@ public class DiscordEventListener extends ListenerAdapter {
 								.submit()
 								.whenComplete((v, ex) -> {
 									CommandSourceStack source = new CommandSourceStack(new DiscordCommandSource(e), Vec3.ZERO, Vec2.ZERO, SERVER.overworld(), 4, "MC-Discord-Chat", Component.literal("MC-Discord-Chat"), SERVER, null);
+									//#if MC > 11900
 									ParseResults<CommandSourceStack> results = SERVER.getCommands().getDispatcher().parse(command, source);
 									SERVER.getCommands().performCommand(results, command);
+									//#else
+									//$$ SERVER.getCommands().performCommand(source, command);
+									//#endif
 								});
 					}
 				} else {
