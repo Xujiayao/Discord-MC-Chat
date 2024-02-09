@@ -10,13 +10,13 @@ import java.util.TimerTask;
 /**
  * @author Xujiayao
  */
-public class DiscordCommandOutput implements CommandSource {
+public class DiscordCommandSource implements CommandSource {
 
 	private final SlashCommandInteractionEvent e;
 	private StringBuilder output = new StringBuilder("```\n");
 	private long lastOutputMillis = 0;
 
-	public DiscordCommandOutput(SlashCommandInteractionEvent e) {
+	public DiscordCommandSource(SlashCommandInteractionEvent e) {
 		this.e = e;
 	}
 
