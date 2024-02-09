@@ -15,9 +15,12 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.DetectedVersion;
+import net.minecraft.server.ServerTickRateManager;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.UserWhiteList;
 import net.minecraft.server.players.UserWhiteListEntry;
+import net.minecraft.util.TimeUtil;
+import net.minecraft.util.Tuple;
 import okhttp3.CacheControl;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -408,10 +411,10 @@ public class Utils {
 		}
 
 		// Server TPS
-		message.append(Translations.translate("utils.utils.gicMessage.serverTps", String.format("%.2f", SERVER.tickRateManager().tickrate())));
+		message.append(Translations.translate("utils.utils.gicMessage.serverTps", String.format("%.2f", getTickInfo().getA())));
 
 		// Server MSPT
-		message.append(Translations.translate("utils.utils.gicMessage.serverMspt", String.format("%.2f", SERVER.getCurrentSmoothedTickTime())));
+		message.append(Translations.translate("utils.utils.gicMessage.serverMspt", String.format("%.2f", getTickInfo().getB())));
 
 		// Server used memory
 		message.append(Translations.translate("utils.utils.gicMessage.serverUsedMemory", (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024, Runtime.getRuntime().totalMemory() / 1024 / 1024));
@@ -512,7 +515,7 @@ public class Utils {
 		MSPT_MONITOR_TIMER.schedule(new TimerTask() {
 			@Override
 			public void run() {
-				double mspt = SERVER.getCurrentSmoothedTickTime();
+				double mspt = getTickInfo().getB();
 
 				if (mspt > CONFIG.generic.msptLimit) {
 					String message = Translations.translateMessage("message.highMspt")
@@ -573,5 +576,18 @@ public class Utils {
 				}
 			}
 		}, 3600000, 21600000);
+	}
+
+	private static Tuple<Double, Double> getTickInfo() {
+		ServerTickRateManager manager = SERVER.tickRateManager();
+
+		double mspt = ((double) SERVER.getAverageTickTimeNanos()) / TimeUtil.NANOSECONDS_PER_MILLISECOND;
+
+		double tps = 1000.0D / Math.max(manager.isSprinting() ? 0.0 : manager.millisecondsPerTick(), mspt);
+		if (manager.isFrozen()) {
+			tps = 0;
+		}
+
+		return new Tuple<>(tps, mspt);
 	}
 }
