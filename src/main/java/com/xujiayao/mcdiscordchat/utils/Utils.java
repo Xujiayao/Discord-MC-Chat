@@ -15,7 +15,9 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.DetectedVersion;
+//#if MC > 12002
 import net.minecraft.server.ServerTickRateManager;
+//#endif
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.UserWhiteList;
 import net.minecraft.server.players.UserWhiteListEntry;
@@ -579,6 +581,7 @@ public class Utils {
 	}
 
 	private static Tuple<Double, Double> getTickInfo() {
+		//#if MC > 12002
 		ServerTickRateManager manager = SERVER.tickRateManager();
 
 		double mspt = ((double) SERVER.getAverageTickTimeNanos()) / TimeUtil.NANOSECONDS_PER_MILLISECOND;
@@ -587,6 +590,11 @@ public class Utils {
 		if (manager.isFrozen()) {
 			tps = 0;
 		}
+		//#else
+		//$$ // TODO Compat TPS & MSPT (Issue #217)
+		//$$ double tps = 0;
+		//$$ double mspt = 0;
+		//#endif
 
 		return new Tuple<>(tps, mspt);
 	}
