@@ -408,7 +408,11 @@ public class Utils {
 			message.append(Translations.translate("utils.utils.gicMessage.noPlayersOnline"));
 		} else {
 			for (ServerPlayer player : onlinePlayers) {
+				//#if MC >= 12002
 				message.append("[").append(player.connection.latency()).append("ms] ").append(Objects.requireNonNull(player.getDisplayName()).getString()).append("\n");
+				//#else
+				//$$ message.append("[").append(player.latency).append("ms] ").append(Objects.requireNonNull(player.getDisplayName()).getString()).append("\n");
+				//#endif
 			}
 		}
 
