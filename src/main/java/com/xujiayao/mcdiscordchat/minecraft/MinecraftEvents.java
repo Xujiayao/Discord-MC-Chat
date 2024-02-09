@@ -31,9 +31,9 @@ public interface MinecraftEvents {
 		return result;
 	});
 
-	Event<PlayerCommand> PLAYER_COMMAND = EventFactory.createArrayBacked(PlayerCommand.class, callbacks -> (player, packet) -> {
+	Event<PlayerCommand> PLAYER_COMMAND = EventFactory.createArrayBacked(PlayerCommand.class, callbacks -> (player, command) -> {
 		for (PlayerCommand callback : callbacks) {
-			callback.command(player, packet);
+			callback.command(player, command);
 		}
 	});
 
@@ -70,7 +70,7 @@ public interface MinecraftEvents {
 	}
 
 	interface PlayerCommand {
-		void command(ServerPlayer player, ServerboundChatCommandPacket packet);
+		void command(ServerPlayer player, String command);
 	}
 
 
