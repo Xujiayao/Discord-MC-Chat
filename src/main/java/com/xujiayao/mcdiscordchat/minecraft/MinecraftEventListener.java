@@ -208,9 +208,6 @@ public class MinecraftEventListener {
 			}
 		});
 
-		// TODO Server /say
-		// avatar_url = JDA.getSelfUser().getAvatarUrl()
-
 		MinecraftEvents.PLAYER_JOIN.register(player -> {
 			Utils.setBotActivity();
 
