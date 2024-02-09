@@ -36,8 +36,8 @@ public class MixinServerGamePacketListenerImpl {
 		}
 	}
 
-	@Inject(method = "performChatCommand", at = @At("HEAD"), cancellable = true)
+	@Inject(method = "performChatCommand", at = @At("HEAD"))
 	private void performChatCommand(ServerboundChatCommandPacket serverboundChatCommandPacket, LastSeenMessages lastSeenMessages, CallbackInfo ci) {
-		MinecraftEvents.PLAYER_COMMAND.invoker().command(player, serverboundChatCommandPacket);
+		MinecraftEvents.PLAYER_COMMAND.invoker().command(player, serverboundChatCommandPacket.command());
 	}
 }

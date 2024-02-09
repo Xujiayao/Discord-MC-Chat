@@ -145,11 +145,11 @@ public class MinecraftEventListener {
 			}
 		});
 
-		MinecraftEvents.PLAYER_COMMAND.register((player, packet) -> {
-			String input = "/" + packet.command();
+		MinecraftEvents.PLAYER_COMMAND.register((player, command) -> {
+			String input = "/" + command;
 
-			for (String command : CONFIG.generic.excludedCommands) {
-				if (input.startsWith(command + " ")) {
+			for (String excludedCommand : CONFIG.generic.excludedCommands) {
+				if (input.startsWith(excludedCommand + " ")) {
 					return;
 				}
 			}
