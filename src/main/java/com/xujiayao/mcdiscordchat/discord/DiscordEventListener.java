@@ -25,6 +25,9 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+//#if MC < 11900
+//$$ import net.minecraft.network.chat.TextComponent;
+//#endif
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.ArrayUtils;
@@ -135,7 +138,11 @@ public class DiscordEventListener extends ListenerAdapter {
 						e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.executingCommand"))
 								.submit()
 								.whenComplete((v, ex) -> {
+									//#if MC >= 11900
 									CommandSourceStack source = new CommandSourceStack(new DiscordCommandSource(e), Vec3.ZERO, Vec2.ZERO, SERVER.overworld(), 4, "MC-Discord-Chat", Component.literal("MC-Discord-Chat"), SERVER, null);
+									//#else
+									//$$ CommandSourceStack source = new CommandSourceStack(new DiscordCommandSource(e), Vec3.ZERO, Vec2.ZERO, SERVER.overworld(), 4, "MC-Discord-Chat", new TextComponent("MC-Discord-Chat"), SERVER, null);
+									//#endif
 									//#if MC > 11900
 									ParseResults<CommandSourceStack> results = SERVER.getCommands().getDispatcher().parse(command, source);
 									SERVER.getCommands().performCommand(results, command);
