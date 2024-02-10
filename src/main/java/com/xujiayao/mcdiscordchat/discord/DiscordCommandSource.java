@@ -26,8 +26,10 @@ public class DiscordCommandSource implements CommandSource {
 	@Override
 	//#if MC >= 11900
 	public void sendSystemMessage(Component message) {
-	//#else
+	//#elseif MC > 11502
 	//$$ public void sendMessage(Component message, UUID uUID) {
+	//#else
+	//$$ public void sendMessage(Component message) {
 	//#endif
 		long currentOutputMillis = System.currentTimeMillis();
 

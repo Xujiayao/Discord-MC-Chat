@@ -13,12 +13,15 @@ import net.minecraft.network.protocol.game.ServerboundChatCommandPacket;
 //#if MC <= 11802
 //$$ import net.minecraft.network.chat.TranslatableComponent;
 //#endif
+//#if MC < 11605
+//$$ import net.minecraft.network.protocol.game.ServerboundChatPacket;
+//#endif
 import net.minecraft.server.level.ServerPlayer;
 //#if MC == 11900
 //$$ import net.minecraft.server.network.FilteredText;
 //#endif
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
-//#if MC <= 11802
+//#if MC >= 11605 && MC <= 11802
 //$$ import net.minecraft.server.network.TextFilter;
 //#endif
 import org.spongepowered.asm.mixin.Mixin;
@@ -63,13 +66,23 @@ public class MixinServerGamePacketListenerImpl {
 	//$$ 		ci.cancel();
 	//$$ 	}
 	//$$ }
-	//#else
+	//#elseif MC == 11605
 	//$$ @Inject(method = "handleChat(Ljava/lang/String;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;broadcastMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/ChatType;Ljava/util/UUID;)V"), cancellable = true)
 	//$$ private void handleChat(String string, CallbackInfo ci) {
 	//$$ 	Optional<Component> result = MinecraftEvents.PLAYER_MESSAGE.invoker().message(player, string);
 	//$$ 	if (result.isPresent()) {
 	//$$ 		Component component = new TranslatableComponent("chat.type.text", this.player.getDisplayName(), result.get());
 	//$$ 		SERVER.getPlayerList().broadcastMessage(component, ChatType.CHAT, this.player.getUUID());
+	//$$ 		ci.cancel();
+	//$$ 	}
+	//$$ }
+	//#else
+	//$$ @Inject(method = "handleChat(Lnet/minecraft/network/protocol/game/ServerboundChatPacket;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;broadcastMessage(Lnet/minecraft/network/chat/Component;Z)V"), cancellable = true)
+	//$$ private void handleChat(ServerboundChatPacket serverboundChatPacket, CallbackInfo ci) {
+	//$$ 	Optional<Component> result = MinecraftEvents.PLAYER_MESSAGE.invoker().message(player, serverboundChatPacket.getMessage());
+	//$$ 	if (result.isPresent()) {
+	//$$ 		Component component = new TranslatableComponent("chat.type.text", this.player.getDisplayName(), result.get());
+	//$$ 		SERVER.getPlayerList().broadcastMessage(component, false);
 	//$$ 		ci.cancel();
 	//$$ 	}
 	//$$ }
