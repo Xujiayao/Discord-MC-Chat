@@ -50,7 +50,7 @@ public class MixinPlayerList {
 	//$$ 	// TODO filtered() or raw() ?
 	//$$ }
 	//#else
-	//$$ @Inject(method = "broadcastMessage", at = @At("HEAD"))
+	//$$ @Inject(method = "broadcastMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/ChatType;Ljava/util/UUID;)V", at = @At("HEAD"))
 	//$$ private void broadcastMessage(Component component, ChatType chatType, UUID uUID, CallbackInfo ci) {
 	//$$ 	// TODO Check if need (uuid == Util.NIL_UUID)
 	//$$ 	MinecraftEvents.SERVER_MESSAGE.invoker().message(component.getString(), SERVER.createCommandSourceStack());
