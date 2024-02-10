@@ -42,7 +42,7 @@ public class Translations {
 
 		if (optional.isEmpty()) {
 			LOGGER.warn("-----------------------------------------");
-			LOGGER.warn("MCDC cannot find translations for \"" + CONFIG.generic.language + "\" and uses \"en_us\" by default!");
+			LOGGER.warn("MCDC cannot find its translations for \"" + CONFIG.generic.language + "\" and uses \"en_us\" by default!");
 			LOGGER.warn("");
 			LOGGER.warn("You are welcome to contribute translations!");
 			LOGGER.warn("Contributing: https://github.com/Xujiayao/MC-Discord-Chat#Contributing");
