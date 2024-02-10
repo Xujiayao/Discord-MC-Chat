@@ -13,10 +13,14 @@ import net.fellbaum.jemoji.EmojiManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.network.chat.Component;
+//#if MC >= 11900
+import net.minecraft.network.chat.ComponentContents;
+//#endif
 import net.minecraft.network.chat.MutableComponent;
 //#if MC < 11900
 //$$ import net.minecraft.network.chat.TextComponent;
 //#endif
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.level.GameRules;
 import okhttp3.MediaType;
 import okhttp3.Request;
@@ -227,7 +231,40 @@ public class MinecraftEventListener {
 
 		MinecraftEvents.PLAYER_DIE.register((player, source) -> {
 			if (CONFIG.generic.announceDeathMessages) {
-				System.out.println(source.getLocalizedDeathMessage(player));
+				//#if MC >= 11900
+				TranslatableContents deathMessage = (TranslatableContents) source.getLocalizedDeathMessage(player).getContents();
+				//#else
+				//$$ TranslatableComponent deathMessage = (TranslatableComponent) source.getLocalizedDeathMessage(player);
+				//#endif
+				String key = deathMessage.getKey();
+				Object[] args = new String[deathMessage.getArgs().length];
+				for (int i = 0; i < deathMessage.getArgs().length; i++) {
+					Object object = deathMessage.getArgs()[i];
+					if (object instanceof Component component) {
+						//#if MC >= 11900
+						ComponentContents componentContents = component.getContents();
+						if (componentContents instanceof TranslatableContents) {
+							args[i] = Translations.translate(((TranslatableContents) componentContents).getKey());
+						//#else
+						//$$ if (component instanceof TranslatableComponent) {
+						//$$ 	args[i] = Translations.translate(((TranslatableComponent) component).getKey());
+						//#endif
+						} else {
+							args[i] = component.getString();
+						}
+					} else {
+						args[i] = object == null ? "null" : object.toString();
+					}
+				}
+
+				CHANNEL.sendMessage(Translations.translateMessage("message.deathMessage")
+						.replace("%deathMessage%", MarkdownSanitizer.escape(Translations.translate(key, args)))
+						.replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString()))).queue();
+				if (CONFIG.multiServer.enable) {
+					MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.deathMessage")
+							.replace("%deathMessage%", MarkdownSanitizer.escape(Translations.translate(key, args)))
+							.replace("%playerName%", MarkdownSanitizer.escape(player.getDisplayName().getString())));
+				}
 			}
 		});
 
