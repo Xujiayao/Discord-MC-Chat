@@ -58,7 +58,7 @@ public class MixinServerGamePacketListenerImpl {
 	//$$ private void handleChat(TextFilter.FilteredText filteredText, CallbackInfo ci) {
 	//$$ 	Optional<Component> result = MinecraftEvents.PLAYER_MESSAGE.invoker().message(player, filteredText.getFiltered());
 	//$$ 	if (result.isPresent()) {
-	//$$ 		Component component = new TranslatableComponent("chat.type.text", this.player.getDisplayName(), filteredText.getFiltered());
+	//$$ 		Component component = new TranslatableComponent("chat.type.text", this.player.getDisplayName(), result.get());
 	//$$ 		SERVER.getPlayerList().broadcastMessage(component, ChatType.CHAT, this.player.getUUID());
 	//$$ 		ci.cancel();
 	//$$ 	}
