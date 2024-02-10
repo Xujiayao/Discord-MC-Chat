@@ -5,8 +5,6 @@ import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.PlayerChatMessage;
-import net.minecraft.network.protocol.game.ServerboundChatCommandPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 
@@ -17,16 +15,16 @@ import java.util.Optional;
  */
 public interface MinecraftEvents {
 
-	Event<ServerMessage> SERVER_MESSAGE = EventFactory.createArrayBacked(ServerMessage.class, callbacks -> (playerChatMessage, commandSourceStack) -> {
+	Event<ServerMessage> SERVER_MESSAGE = EventFactory.createArrayBacked(ServerMessage.class, callbacks -> (message, commandSourceStack) -> {
 		for (ServerMessage callback : callbacks) {
-			callback.message(playerChatMessage, commandSourceStack);
+			callback.message(message, commandSourceStack);
 		}
 	});
 
-	Event<PlayerMessage> PLAYER_MESSAGE = EventFactory.createArrayBacked(PlayerMessage.class, callbacks -> (player, playerChatMessage) -> {
+	Event<PlayerMessage> PLAYER_MESSAGE = EventFactory.createArrayBacked(PlayerMessage.class, callbacks -> (player, message) -> {
 		Optional<Component> result = Optional.empty();
 		for (PlayerMessage callback : callbacks) {
-			result = callback.message(player, playerChatMessage);
+			result = callback.message(player, message);
 		}
 		return result;
 	});
@@ -62,11 +60,11 @@ public interface MinecraftEvents {
 	});
 
 	interface ServerMessage {
-		void message(PlayerChatMessage playerChatMessage, CommandSourceStack commandSourceStack);
+		void message(String message, CommandSourceStack commandSourceStack);
 	}
 
 	interface PlayerMessage {
-		Optional<Component> message(ServerPlayer player, PlayerChatMessage playerChatMessage);
+		Optional<Component> message(ServerPlayer player, String message);
 	}
 
 	interface PlayerCommand {

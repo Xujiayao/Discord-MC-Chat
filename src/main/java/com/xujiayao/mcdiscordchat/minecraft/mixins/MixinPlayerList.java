@@ -30,12 +30,12 @@ public class MixinPlayerList {
 	//#if MC > 11900
 	@Inject(method = "broadcastChatMessage(Lnet/minecraft/network/chat/PlayerChatMessage;Lnet/minecraft/commands/CommandSourceStack;Lnet/minecraft/network/chat/ChatType$Bound;)V", at = @At("HEAD"))
 	private void broadcastChatMessage(PlayerChatMessage playerChatMessage, CommandSourceStack commandSourceStack, ChatType.Bound bound, CallbackInfo ci) {
-		MinecraftEvents.SERVER_MESSAGE.invoker().message(playerChatMessage, commandSourceStack);
+		MinecraftEvents.SERVER_MESSAGE.invoker().message(playerChatMessage.decoratedContent().getString(), commandSourceStack);
 	}
 	//#else
 	//$$ @Inject(method = "broadcastChatMessage", at = @At("HEAD"))
 	//$$ private void broadcastChatMessage(FilteredText<PlayerChatMessage> filteredText, CommandSourceStack commandSourceStack, ResourceKey<ChatType> resourceKey, CallbackInfo ci) {
-	//$$ 	MinecraftEvents.SERVER_MESSAGE.invoker().message(filteredText.filtered(), commandSourceStack);
+	//$$ 	MinecraftEvents.SERVER_MESSAGE.invoker().message(filteredText.filtered().serverContent().getString(), commandSourceStack);
 	//$$ 	// TODO filtered() or raw() ?
 	//$$ }
 	//#endif

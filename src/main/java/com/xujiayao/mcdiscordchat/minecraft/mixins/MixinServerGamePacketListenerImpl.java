@@ -34,7 +34,7 @@ public class MixinServerGamePacketListenerImpl {
 
 	@Inject(method = "broadcastChatMessage", at = @At("HEAD"), cancellable = true)
 	private void broadcastChatMessage(PlayerChatMessage playerChatMessage, CallbackInfo ci) {
-		Optional<Component> result = MinecraftEvents.PLAYER_MESSAGE.invoker().message(player, playerChatMessage);
+		Optional<Component> result = MinecraftEvents.PLAYER_MESSAGE.invoker().message(player, playerChatMessage.decoratedContent().getString());
 		if (result.isPresent()) {
 			//#if MC > 11900
 			SERVER.getPlayerList().broadcastChatMessage(playerChatMessage.withUnsignedContent(result.get()), this.player, ChatType.bind(ChatType.CHAT, player));

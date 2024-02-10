@@ -46,16 +46,16 @@ import static com.xujiayao.mcdiscordchat.Main.WEBHOOK;
 public class MinecraftEventListener {
 
 	public static void init() {
-		MinecraftEvents.SERVER_MESSAGE.register((playerChatMessage, commandSourceStack) -> {
-			sendDiscordMessage(playerChatMessage.decoratedContent().getString(), commandSourceStack.getDisplayName().getString(), JDA.getSelfUser().getAvatarUrl());
+		MinecraftEvents.SERVER_MESSAGE.register((message, commandSourceStack) -> {
+			sendDiscordMessage(message, commandSourceStack.getDisplayName().getString(), JDA.getSelfUser().getAvatarUrl());
 			if (CONFIG.multiServer.enable) {
-				MULTI_SERVER.sendMessage(false, true, false, commandSourceStack.getDisplayName().getString(), playerChatMessage.decoratedContent().getString());
+				MULTI_SERVER.sendMessage(false, true, false, commandSourceStack.getDisplayName().getString(), message);
 			}
 		});
 
-		MinecraftEvents.PLAYER_MESSAGE.register((player, playerChatMessage) -> {
-			String contentToDiscord = playerChatMessage.decoratedContent().getString();
-			String contentToMinecraft = playerChatMessage.decoratedContent().getString();
+		MinecraftEvents.PLAYER_MESSAGE.register((player, message) -> {
+			String contentToDiscord = message;
+			String contentToMinecraft = message;
 
 			if (StringUtils.countMatches(contentToDiscord, ":") >= 2) {
 				String[] emojiNames = StringUtils.substringsBetween(contentToDiscord, ":", ":");
@@ -134,7 +134,7 @@ public class MinecraftEventListener {
 			if (CONFIG.generic.broadcastChatMessages) {
 				sendDiscordMessage(contentToDiscord, Objects.requireNonNull(player.getDisplayName()).getString(), CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUUID().toString() : player.getDisplayName().getString())));
 				if (CONFIG.multiServer.enable) {
-					MULTI_SERVER.sendMessage(false, true, false, Objects.requireNonNull(player.getDisplayName()).getString(), CONFIG.generic.formatChatMessages ? contentToMinecraft : playerChatMessage.decoratedContent().getString());
+					MULTI_SERVER.sendMessage(false, true, false, Objects.requireNonNull(player.getDisplayName()).getString(), CONFIG.generic.formatChatMessages ? contentToMinecraft : message);
 				}
 			}
 
