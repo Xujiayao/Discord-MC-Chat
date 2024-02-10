@@ -4,6 +4,9 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.minecraft.commands.CommandSource;
 import net.minecraft.network.chat.Component;
 
+//#if MC < 11900
+//$$ import java.util.UUID;
+//#endif
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -21,7 +24,11 @@ public class DiscordCommandSource implements CommandSource {
 	}
 
 	@Override
+	//#if MC >= 11900
 	public void sendSystemMessage(Component message) {
+	//#else
+	//$$ public void sendMessage(Component message, UUID uUID) {
+	//#endif
 		long currentOutputMillis = System.currentTimeMillis();
 
 		if (output.length() > 1500) {

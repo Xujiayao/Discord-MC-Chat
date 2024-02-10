@@ -14,6 +14,9 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+//#if MC < 11900
+//$$ import net.minecraft.network.chat.TextComponent;
+//#endif
 import net.minecraft.world.level.GameRules;
 import okhttp3.MediaType;
 import okhttp3.Request;
@@ -159,11 +162,19 @@ public class MinecraftEventListener {
 
 			MINECRAFT_SEND_COUNT++;
 			if (MINECRAFT_SEND_COUNT <= 20) {
+				//#if MC >= 11900
 				MutableComponent message = Component.literal("<" + Objects.requireNonNull(player.getDisplayName()).getString() + "> " + command);
+				//#else
+				//$$ MutableComponent message = new TextComponent("<" + Objects.requireNonNull(player.getDisplayName()).getString() + "> " + command);
+				//#endif
 
 				SERVER.getPlayerList().getPlayers().forEach(
 						player1 -> player1.displayClientMessage(message, false));
+				//#if MC >= 11900
 				SERVER.sendSystemMessage(message);
+				//#else
+				//$$ SERVER.sendMessage(message, player.getUUID());
+				//#endif
 
 				sendDiscordMessage(MarkdownSanitizer.escape(command), Objects.requireNonNull(player.getDisplayName()).getString(), CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUUID().toString() : player.getDisplayName().getString())));
 				if (CONFIG.multiServer.enable) {

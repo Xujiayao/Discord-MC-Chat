@@ -7,6 +7,9 @@ import com.xujiayao.mcdiscordchat.utils.Translations;
 import com.xujiayao.mcdiscordchat.utils.Utils;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
+//#if MC < 11900
+//$$ import net.minecraft.network.chat.TextComponent;
+//#endif
 
 import static com.xujiayao.mcdiscordchat.Main.CONFIG;
 import static net.minecraft.commands.Commands.argument;
@@ -24,7 +27,11 @@ public class MinecraftCommands {
 					//#else
 					//$$ context.getSource().sendSuccess(
 					//#endif
+							//#if MC >= 11900
 							Component.literal(MarkdownParser.parseMarkdown(Utils.getHelpCommandMessage(false) + Translations.translate("minecraft.mcCommands.register.helpMessageExplanation"))), false);
+							//#else
+							//$$ new TextComponent(MarkdownParser.parseMarkdown(Utils.getHelpCommandMessage(false) + Translations.translate("minecraft.mcCommands.register.helpMessageExplanation"))), false);
+							//#endif
 					return 1;
 				})
 				.then(literal("help").executes(context -> {
@@ -33,7 +40,11 @@ public class MinecraftCommands {
 					//#else
 					//$$ context.getSource().sendSuccess(
 					//#endif
+							//#if MC >= 11900
 							Component.literal(MarkdownParser.parseMarkdown(Utils.getHelpCommandMessage(false) + Translations.translate("minecraft.mcCommands.register.helpMessageExplanation"))), false);
+							//#else
+							//$$ new TextComponent(MarkdownParser.parseMarkdown(Utils.getHelpCommandMessage(false) + Translations.translate("minecraft.mcCommands.register.helpMessageExplanation"))), false);
+							//#endif
 					return 1;
 				}))
 				.then(literal("info").executes(context -> {
@@ -42,7 +53,11 @@ public class MinecraftCommands {
 					//#else
 					//$$ context.getSource().sendSuccess(
 					//#endif
+							//#if MC >= 11900
 							Component.literal(Utils.getInfoCommandMessage()), false);
+							//#else
+							//$$ new TextComponent(Utils.getInfoCommandMessage()), false);
+							//#endif
 					return 1;
 				}))
 				.then(literal("stats")
@@ -56,7 +71,11 @@ public class MinecraftCommands {
 											//#else
 											//$$ context.getSource().sendSuccess(
 											//#endif
+													//#if MC >= 11900
 													Component.literal(Utils.getStatsCommandMessage(type, name)), false);
+													//#else
+													//$$ new TextComponent(Utils.getStatsCommandMessage(type, name)), false);
+													//#endif
 											return 1;
 										}))))
 				.then(literal("update").executes(context -> {
@@ -65,7 +84,11 @@ public class MinecraftCommands {
 					//#else
 					//$$ context.getSource().sendSuccess(
 					//#endif
+							//#if MC >= 11900
 							Component.literal(MarkdownParser.parseMarkdown(Utils.checkUpdate(true))), false);
+							//#else
+							//$$ new TextComponent(MarkdownParser.parseMarkdown(Utils.checkUpdate(true))), false);
+							//#endif
 					return 1;
 				}))
 				.then(literal("whitelist")
@@ -78,7 +101,11 @@ public class MinecraftCommands {
 									//#else
 									//$$ context.getSource().sendSuccess(
 									//#endif
+											//#if MC >= 11900
 											Component.literal(MarkdownParser.parseMarkdown(Utils.whitelist(player))), false);
+											//#else
+											//$$ new TextComponent(MarkdownParser.parseMarkdown(Utils.whitelist(player))), false);
+											//#endif
 									return 1;
 								})))
 				.then(literal("reload")
@@ -89,7 +116,11 @@ public class MinecraftCommands {
 							//#else
 							//$$ context.getSource().sendSuccess(
 							//#endif
+									//#if MC >= 11900
 									Component.literal(MarkdownParser.parseMarkdown(Utils.reload())), false);
+									//#else
+									//$$ new TextComponent(MarkdownParser.parseMarkdown(Utils.reload())), false);
+									//#endif
 							return 1;
 						})));
 	}

@@ -4,7 +4,12 @@ import com.xujiayao.mcdiscordchat.minecraft.MinecraftEvents;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.ChatType;
+//#if MC < 11900
+//$$ import net.minecraft.network.chat.Component;
+//#endif
+//#if MC >= 11900
 import net.minecraft.network.chat.PlayerChatMessage;
+//#endif
 //#if MC <= 11900
 //$$ import net.minecraft.resources.ResourceKey;
 //#endif
@@ -12,7 +17,7 @@ import net.minecraft.server.level.ServerPlayer;
 //#if MC >= 12002
 import net.minecraft.server.network.CommonListenerCookie;
 //#endif
-//#if MC <= 11900
+//#if MC == 11900
 //$$ import net.minecraft.server.network.FilteredText;
 //#endif
 import net.minecraft.server.players.PlayerList;
@@ -20,6 +25,12 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+//#if MC < 11900
+//$$ import java.util.UUID;
+//$$
+//$$ import static com.xujiayao.mcdiscordchat.Main.SERVER;
+//#endif
 
 /**
  * @author Xujiayao
@@ -32,11 +43,17 @@ public class MixinPlayerList {
 	private void broadcastChatMessage(PlayerChatMessage playerChatMessage, CommandSourceStack commandSourceStack, ChatType.Bound bound, CallbackInfo ci) {
 		MinecraftEvents.SERVER_MESSAGE.invoker().message(playerChatMessage.decoratedContent().getString(), commandSourceStack);
 	}
-	//#else
-	//$$ @Inject(method = "broadcastChatMessage", at = @At("HEAD"))
+	//#elseif MC == 11900
+	//$$ @Inject(method = "broadcastChatMessage(Lnet/minecraft/server/network/FilteredText;Lnet/minecraft/commands/CommandSourceStack;Lnet/minecraft/resources/ResourceKey;)V", at = @At("HEAD"))
 	//$$ private void broadcastChatMessage(FilteredText<PlayerChatMessage> filteredText, CommandSourceStack commandSourceStack, ResourceKey<ChatType> resourceKey, CallbackInfo ci) {
 	//$$ 	MinecraftEvents.SERVER_MESSAGE.invoker().message(filteredText.filtered().serverContent().getString(), commandSourceStack);
 	//$$ 	// TODO filtered() or raw() ?
+	//$$ }
+	//#else
+	//$$ @Inject(method = "broadcastMessage", at = @At("HEAD"))
+	//$$ private void broadcastMessage(Component component, ChatType chatType, UUID uUID, CallbackInfo ci) {
+	//$$ 	// TODO Check if need (uuid == Util.NIL_UUID)
+	//$$ 	MinecraftEvents.SERVER_MESSAGE.invoker().message(component.getString(), SERVER.createCommandSourceStack());
 	//$$ }
 	//#endif
 
