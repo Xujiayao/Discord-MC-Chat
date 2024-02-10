@@ -10,7 +10,7 @@ import net.minecraft.network.chat.ChatType;
 //#if MC >= 11900
 import net.minecraft.network.chat.PlayerChatMessage;
 //#endif
-//#if MC <= 11900
+//#if MC > 11502 && MC <= 11900
 //$$ import net.minecraft.resources.ResourceKey;
 //#endif
 import net.minecraft.server.level.ServerPlayer;
@@ -49,10 +49,15 @@ public class MixinPlayerList {
 	//$$ 	MinecraftEvents.SERVER_MESSAGE.invoker().message(filteredText.filtered().serverContent().getString(), commandSourceStack);
 	//$$ 	// TODO filtered() or raw() ?
 	//$$ }
-	//#else
+	//#elseif MC > 11502
 	//$$ @Inject(method = "broadcastMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/ChatType;Ljava/util/UUID;)V", at = @At("HEAD"))
 	//$$ private void broadcastMessage(Component component, ChatType chatType, UUID uUID, CallbackInfo ci) {
 	//$$ 	// TODO Check if need (uuid == Util.NIL_UUID)
+	//$$ 	MinecraftEvents.SERVER_MESSAGE.invoker().message(component.getString(), SERVER.createCommandSourceStack());
+	//$$ }
+	//#else
+	//$$ @Inject(method = "broadcastMessage(Lnet/minecraft/network/chat/Component;)V", at = @At("HEAD"))
+	//$$ private void broadcastMessage(Component component, CallbackInfo ci) {
 	//$$ 	MinecraftEvents.SERVER_MESSAGE.invoker().message(component.getString(), SERVER.createCommandSourceStack());
 	//$$ }
 	//#endif

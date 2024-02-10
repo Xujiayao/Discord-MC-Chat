@@ -21,7 +21,9 @@ import net.minecraft.server.ServerTickRateManager;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.UserWhiteList;
 import net.minecraft.server.players.UserWhiteListEntry;
+//#if MC > 11502
 import net.minecraft.util.TimeUtil;
+//#endif
 import net.minecraft.util.Tuple;
 import okhttp3.CacheControl;
 import okhttp3.Request;

@@ -172,8 +172,10 @@ public class MinecraftEventListener {
 						player1 -> player1.displayClientMessage(message, false));
 				//#if MC >= 11900
 				SERVER.sendSystemMessage(message);
-				//#else
+				//#elseif MC > 11502
 				//$$ SERVER.sendMessage(message, player.getUUID());
+				//#else
+				//$$ SERVER.sendMessage(message);
 				//#endif
 
 				sendDiscordMessage(MarkdownSanitizer.escape(command), Objects.requireNonNull(player.getDisplayName()).getString(), CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUUID().toString() : player.getDisplayName().getString())));

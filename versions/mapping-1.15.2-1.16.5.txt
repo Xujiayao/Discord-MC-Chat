@@ -1,0 +1,2 @@
+net.minecraft.network.chat.Component net.minecraft.network.chat.MutableComponent
+net.minecraft.locale.Language getElement() getOrDefault()
