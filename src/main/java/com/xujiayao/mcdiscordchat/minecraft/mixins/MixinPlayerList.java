@@ -49,18 +49,8 @@ public class MixinPlayerList {
 	//$$ 	MinecraftEvents.SERVER_MESSAGE.invoker().message(filteredText.filtered().serverContent().getString(), commandSourceStack);
 	//$$ 	// TODO filtered() or raw() ?
 	//$$ }
-	//#elseif MC > 11502
-	//$$ @Inject(method = "broadcastMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/ChatType;Ljava/util/UUID;)V", at = @At("HEAD"))
-	//$$ private void broadcastMessage(Component component, ChatType chatType, UUID uUID, CallbackInfo ci) {
-	//$$ 	// TODO Check if need (uuid == Util.NIL_UUID)
-	//$$ 	MinecraftEvents.SERVER_MESSAGE.invoker().message(component.getString(), SERVER.createCommandSourceStack());
-	//$$ }
-	//#else
-	//$$ @Inject(method = "broadcastMessage(Lnet/minecraft/network/chat/Component;)V", at = @At("HEAD"))
-	//$$ private void broadcastMessage(Component component, CallbackInfo ci) {
-	//$$ 	MinecraftEvents.SERVER_MESSAGE.invoker().message(component.getString(), SERVER.createCommandSourceStack());
-	//$$ }
 	//#endif
+	// TODO This feature has been removed in versions 1.18.2 and below due to compatibility issues (#197)
 
 	@Inject(method = "placeNewPlayer", at = @At("RETURN"))
 	//#if MC >= 12002
