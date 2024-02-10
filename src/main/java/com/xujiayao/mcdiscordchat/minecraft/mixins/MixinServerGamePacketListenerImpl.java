@@ -54,7 +54,7 @@ public class MixinServerGamePacketListenerImpl {
 		}
 	}
 	//#else
-	//$$ @Inject(method = "handleChat", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;broadcastMessage(Lnet/minecraft/network/chat/Component;Ljava/util/Function;Lnet/minecraft/network/chat/ChatType;Ljava/util/UUID;)V"), cancellable = true)
+	//$$ @Inject(method = "handleChat(Lnet/minecraft/server/network/TextFilter$FilteredText;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;broadcastMessage(Lnet/minecraft/network/chat/Component;Ljava/util/Function;Lnet/minecraft/network/chat/ChatType;Ljava/util/UUID;)V"), cancellable = true)
 	//$$ private void handleChat(TextFilter.FilteredText filteredText, CallbackInfo ci) {
 	//$$ 	Optional<Component> result = MinecraftEvents.PLAYER_MESSAGE.invoker().message(player, filteredText.getFiltered());
 	//$$ 	if (result.isPresent()) {
