@@ -48,12 +48,12 @@ public class MixinServerGamePacketListenerImpl {
 	//#if MC > 11900
 	@Inject(method = "performChatCommand", at = @At("HEAD"))
 	private void performChatCommand(ServerboundChatCommandPacket serverboundChatCommandPacket, LastSeenMessages lastSeenMessages, CallbackInfo ci) {
-		MinecraftEvents.PLAYER_COMMAND.invoker().command(player, serverboundChatCommandPacket.command());
+		MinecraftEvents.PLAYER_COMMAND.invoker().command(player, "/" + serverboundChatCommandPacket.command());
 	}
 	//#else
 	//$$ @Inject(method = "handleChatCommand", at = @At(value = "INVOKE", target = "Lnet/minecraft/commands/Commands;performCommand(Lnet/minecraft/commands/CommandSourceStack;Ljava/lang/String;)V"))
 	//$$ private void handleChatCommand(ServerboundChatCommandPacket serverboundChatCommandPacket, CallbackInfo ci) {
-	//$$  MinecraftEvents.PLAYER_COMMAND.invoker().command(player, serverboundChatCommandPacket.command());
+	//$$  MinecraftEvents.PLAYER_COMMAND.invoker().command(player, "/" + serverboundChatCommandPacket.command());
 	//$$ }
 	//#endif
 }
