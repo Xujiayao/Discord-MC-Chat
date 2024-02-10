@@ -146,10 +146,8 @@ public class MinecraftEventListener {
 		});
 
 		MinecraftEvents.PLAYER_COMMAND.register((player, command) -> {
-			String input = "/" + command;
-
 			for (String excludedCommand : CONFIG.generic.excludedCommands) {
-				if (input.startsWith(excludedCommand + " ")) {
+				if (command.startsWith(excludedCommand + " ")) {
 					return;
 				}
 			}
@@ -161,15 +159,15 @@ public class MinecraftEventListener {
 
 			MINECRAFT_SEND_COUNT++;
 			if (MINECRAFT_SEND_COUNT <= 20) {
-				MutableComponent message = Component.literal("<" + Objects.requireNonNull(player.getDisplayName()).getString() + "> " + input);
+				MutableComponent message = Component.literal("<" + Objects.requireNonNull(player.getDisplayName()).getString() + "> " + command);
 
 				SERVER.getPlayerList().getPlayers().forEach(
 						player1 -> player1.displayClientMessage(message, false));
 				SERVER.sendSystemMessage(message);
 
-				sendDiscordMessage(MarkdownSanitizer.escape(input), Objects.requireNonNull(player.getDisplayName()).getString(), CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUUID().toString() : player.getDisplayName().getString())));
+				sendDiscordMessage(MarkdownSanitizer.escape(command), Objects.requireNonNull(player.getDisplayName()).getString(), CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUUID().toString() : player.getDisplayName().getString())));
 				if (CONFIG.multiServer.enable) {
-					MULTI_SERVER.sendMessage(false, true, false, player.getDisplayName().getString(), MarkdownSanitizer.escape(input));
+					MULTI_SERVER.sendMessage(false, true, false, player.getDisplayName().getString(), MarkdownSanitizer.escape(command));
 				}
 			}
 		});
