@@ -47,21 +47,21 @@ public class MixinPlayerList {
 	//$$ @Inject(method = "broadcastChatMessage(Lnet/minecraft/server/network/FilteredText;Lnet/minecraft/commands/CommandSourceStack;Lnet/minecraft/resources/ResourceKey;)V", at = @At("HEAD"))
 	//$$ private void broadcastChatMessage(FilteredText<PlayerChatMessage> filteredText, CommandSourceStack commandSourceStack, ResourceKey<ChatType> resourceKey, CallbackInfo ci) {
 	//$$ 	MinecraftEvents.SERVER_MESSAGE.invoker().message(filteredText.filtered().serverContent().getString(), commandSourceStack);
-	//$$ 	// TODO filtered() or raw() ?
 	//$$ }
 	//#endif
 	// TODO This feature has been removed in versions 1.18.2 and below due to compatibility issues (#197)
 
-	@Inject(method = "placeNewPlayer", at = @At("RETURN"))
 	//#if MC >= 12002
+	@Inject(method = "placeNewPlayer(Lnet/minecraft/network/Connection;Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/server/network/CommonListenerCookie;)V", at = @At("RETURN"))
 	private void placeNewPlayer(Connection connection, ServerPlayer serverPlayer, CommonListenerCookie commonListenerCookie, CallbackInfo ci) {
 	//#else
+	//$$ @Inject(method = "placeNewPlayer(Lnet/minecraft/network/Connection;Lnet/minecraft/server/level/ServerPlayer;)V", at = @At("RETURN"))
 	//$$ private void placeNewPlayer(Connection connection, ServerPlayer serverPlayer, CallbackInfo ci) {
 	//#endif
 		MinecraftEvents.PLAYER_JOIN.invoker().join(serverPlayer);
 	}
 
-	@Inject(method = "remove", at = @At("HEAD"))
+	@Inject(method = "remove(Lnet/minecraft/server/level/ServerPlayer;)V", at = @At("HEAD"))
 	private void remove(ServerPlayer serverPlayer, CallbackInfo ci) {
 		MinecraftEvents.PLAYER_QUIT.invoker().quit(serverPlayer);
 	}

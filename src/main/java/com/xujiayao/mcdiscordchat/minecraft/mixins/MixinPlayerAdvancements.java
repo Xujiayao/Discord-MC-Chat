@@ -23,7 +23,7 @@ public abstract class MixinPlayerAdvancements {
 	@Shadow
 	public abstract AdvancementProgress getOrStartProgress(AdvancementHolder advancementHolder);
 
-	@Inject(method = "award", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/AdvancementRewards;grant(Lnet/minecraft/server/level/ServerPlayer;)V", shift = At.Shift.AFTER))
+	@Inject(method = "award(Lnet/minecraft/advancements/AdvancementHolder;Ljava/lang/String;)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/AdvancementRewards;grant(Lnet/minecraft/server/level/ServerPlayer;)V", shift = At.Shift.AFTER))
 	private void award(AdvancementHolder advancementHolder, String string, CallbackInfoReturnable<Boolean> cir) {
 		MinecraftEvents.PLAYER_ADVANCEMENT.invoker().advancement(player, advancementHolder, getOrStartProgress(advancementHolder).isDone());
 	}
