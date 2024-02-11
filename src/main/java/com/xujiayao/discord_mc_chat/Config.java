@@ -1,9 +1,9 @@
-package com.xujiayao.mcdiscordchat;
+package com.xujiayao.discord_mc_chat;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.xujiayao.mcdiscordchat.Main.VERSION;
+import static com.xujiayao.discord_mc_chat.Main.VERSION;
 
 /**
  * @author Xujiayao

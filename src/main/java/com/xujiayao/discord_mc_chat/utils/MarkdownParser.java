@@ -18,7 +18,7 @@ Link to the "Don't Be a Jerk" license:
 https://github.com/BRForgers/DisFabric-and-DisForge/blob/d1468a6c9b50ba24a250ec370cf645d58dccdfd1/LICENSE.md
  */
 
-package com.xujiayao.mcdiscordchat.utils;
+package com.xujiayao.discord_mc_chat.utils;
 
 import net.minecraft.ChatFormatting;
 

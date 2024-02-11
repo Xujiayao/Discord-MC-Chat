@@ -85,7 +85,7 @@ processResources {
 
         fabric_subprojects.each({
             minecraft_dependency.addAll("${it.minecraft_dependency}".split(","))
-            jars.add(["file": "META-INF/jars/MC-Discord-Chat-${it.minecraft_version}-${mod_version}.jar"])
+            jars.add(["file": "META-INF/jars/Discord-MC-Chat-${it.minecraft_version}-${mod_version}.jar"])
         })
 
         File file = file("build/resources/main/fabric.mod.json")

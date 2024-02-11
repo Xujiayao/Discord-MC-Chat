@@ -12,9 +12,9 @@
   "utils.clListener.stopListening": "**Stopper å lytte til konsolllogger!**",
 
   "utils.utils.cUpdate.newVersionAvailable": "**En ny versjon er tilgjengenlig!**",
-  "utils.utils.cUpdate.downloadLink": "Link til nedlastning: <https://github.com/Xujiayao/MC-Discord-Chat/blob/master/README.md#Download>",
+  "utils.utils.cUpdate.downloadLink": "Link til nedlastning: <https://github.com/Xujiayao/Discord-MC-Chat/blob/master/README.md#Download>",
   "utils.utils.cUpdate.changelog": "Endringslogg: ",
-  "utils.utils.cUpdate.upToDate": "**MC-Discord-Chat er oppdatert!**",
+  "utils.utils.cUpdate.upToDate": "**Discord-MC-Chat er oppdatert!**",
 
   "utils.utils.whitelist.whitelistFailed": "**Spilleren er allerede hvitelistet!**",
   "utils.utils.whitelist.whitelistSuccess": "**La %s til hvitelisten!**",
@@ -48,7 +48,7 @@
   "utils.utils.ubCommands.console.command": "Kommandoen som skal kjøres",
   "utils.utils.ubCommands.log": "Get the specified server log",
   "utils.utils.ubCommands.log.file": "Filens navn",
-  "utils.utils.ubCommands.reload": "Last inn konfig filen til MC-Discord-Chat på nytt",
+  "utils.utils.ubCommands.reload": "Last inn konfig filen til Discord-MC-Chat på nytt",
   "utils.utils.ubCommands.stop": "Stopp servern",
 
   "message.unformattedResponseMessage": "    ┌──── <%name%> %message%",

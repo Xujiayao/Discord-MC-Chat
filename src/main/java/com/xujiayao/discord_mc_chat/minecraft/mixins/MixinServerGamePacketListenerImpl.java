@@ -1,6 +1,6 @@
-package com.xujiayao.mcdiscordchat.minecraft.mixins;
+package com.xujiayao.discord_mc_chat.minecraft.mixins;
 
-import com.xujiayao.mcdiscordchat.minecraft.MinecraftEvents;
+import com.xujiayao.discord_mc_chat.minecraft.MinecraftEvents;
 import net.minecraft.network.chat.ChatType;
 import net.minecraft.network.chat.Component;
 //#if MC > 11900
@@ -35,7 +35,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 //#endif
 import java.util.Optional;
 
-import static com.xujiayao.mcdiscordchat.Main.SERVER;
+import static com.xujiayao.discord_mc_chat.Main.SERVER;
 
 /**
  * @author Xujiayao

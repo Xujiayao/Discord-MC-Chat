@@ -1,11 +1,11 @@
-package com.xujiayao.mcdiscordchat.multi_server.client;
+package com.xujiayao.discord_mc_chat.multi_server.client;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.xujiayao.mcdiscordchat.utils.MarkdownParser;
-import com.xujiayao.mcdiscordchat.utils.Translations;
-import com.xujiayao.mcdiscordchat.utils.Utils;
+import com.xujiayao.discord_mc_chat.utils.MarkdownParser;
+import com.xujiayao.discord_mc_chat.utils.Translations;
+import com.xujiayao.discord_mc_chat.utils.Utils;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -24,12 +24,12 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 
-import static com.xujiayao.mcdiscordchat.Main.CONFIG;
-import static com.xujiayao.mcdiscordchat.Main.JDA;
-import static com.xujiayao.mcdiscordchat.Main.LOGGER;
-import static com.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
-import static com.xujiayao.mcdiscordchat.Main.SERVER;
-import static com.xujiayao.mcdiscordchat.Main.SERVER_STARTED_TIME;
+import static com.xujiayao.discord_mc_chat.Main.CONFIG;
+import static com.xujiayao.discord_mc_chat.Main.JDA;
+import static com.xujiayao.discord_mc_chat.Main.LOGGER;
+import static com.xujiayao.discord_mc_chat.Main.MULTI_SERVER;
+import static com.xujiayao.discord_mc_chat.Main.SERVER;
+import static com.xujiayao.discord_mc_chat.Main.SERVER_STARTED_TIME;
 
 /**
  * @author Xujiayao

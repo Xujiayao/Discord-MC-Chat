@@ -1,11 +1,11 @@
-package com.xujiayao.mcdiscordchat.utils;
+package com.xujiayao.discord_mc_chat.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.authlib.GameProfile;
-import com.xujiayao.mcdiscordchat.multi_server.MultiServer;
+import com.xujiayao.discord_mc_chat.multi_server.MultiServer;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -47,22 +47,22 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
-import static com.xujiayao.mcdiscordchat.Main.CHANNEL;
-import static com.xujiayao.mcdiscordchat.Main.CHANNEL_TOPIC_MONITOR_TIMER;
-import static com.xujiayao.mcdiscordchat.Main.CHECK_UPDATE_TIMER;
-import static com.xujiayao.mcdiscordchat.Main.CONFIG;
-import static com.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_CHANNEL;
-import static com.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_THREAD;
-import static com.xujiayao.mcdiscordchat.Main.HTTP_CLIENT;
-import static com.xujiayao.mcdiscordchat.Main.JDA;
-import static com.xujiayao.mcdiscordchat.Main.LOGGER;
-import static com.xujiayao.mcdiscordchat.Main.MSPT_MONITOR_TIMER;
-import static com.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
-import static com.xujiayao.mcdiscordchat.Main.SERVER;
-import static com.xujiayao.mcdiscordchat.Main.SERVER_STARTED_TIME;
-import static com.xujiayao.mcdiscordchat.Main.UPDATE_NOTIFICATION_CHANNEL;
-import static com.xujiayao.mcdiscordchat.Main.VERSION;
-import static com.xujiayao.mcdiscordchat.Main.WEBHOOK;
+import static com.xujiayao.discord_mc_chat.Main.CHANNEL;
+import static com.xujiayao.discord_mc_chat.Main.CHANNEL_TOPIC_MONITOR_TIMER;
+import static com.xujiayao.discord_mc_chat.Main.CHECK_UPDATE_TIMER;
+import static com.xujiayao.discord_mc_chat.Main.CONFIG;
+import static com.xujiayao.discord_mc_chat.Main.CONSOLE_LOG_CHANNEL;
+import static com.xujiayao.discord_mc_chat.Main.CONSOLE_LOG_THREAD;
+import static com.xujiayao.discord_mc_chat.Main.HTTP_CLIENT;
+import static com.xujiayao.discord_mc_chat.Main.JDA;
+import static com.xujiayao.discord_mc_chat.Main.LOGGER;
+import static com.xujiayao.discord_mc_chat.Main.MSPT_MONITOR_TIMER;
+import static com.xujiayao.discord_mc_chat.Main.MULTI_SERVER;
+import static com.xujiayao.discord_mc_chat.Main.SERVER;
+import static com.xujiayao.discord_mc_chat.Main.SERVER_STARTED_TIME;
+import static com.xujiayao.discord_mc_chat.Main.UPDATE_NOTIFICATION_CHANNEL;
+import static com.xujiayao.discord_mc_chat.Main.VERSION;
+import static com.xujiayao.discord_mc_chat.Main.WEBHOOK;
 
 /**
  * @author Xujiayao
@@ -104,7 +104,7 @@ public class Utils {
 	public static String checkUpdate(boolean isManualCheck) {
 		try {
 			Request request = new Request.Builder()
-					.url("https://cdn.jsdelivr.net/gh/Xujiayao/MC-Discord-Chat@master/update/versions.json")
+					.url("https://cdn.jsdelivr.net/gh/Xujiayao/Discord-MC-Chat@master/update/versions.json")
 					.cacheControl(CacheControl.FORCE_NETWORK)
 					.build();
 
@@ -188,7 +188,7 @@ public class Utils {
 
 					message.append(Translations.translate("utils.utils.cUpdate.newVersionAvailable"));
 					message.append("\n\n");
-					message.append("**MC-Discord-Chat ").append(VERSION).append(" -> ").append(CONFIG.latestVersion).append("**");
+					message.append("**Discord-MC-Chat ").append(VERSION).append(" -> ").append(CONFIG.latestVersion).append("**");
 					message.append("\n\n");
 					message.append(Translations.translate("utils.utils.cUpdate.downloadLink"));
 					message.append("\n\n");
@@ -201,7 +201,7 @@ public class Utils {
 
 					return message.toString();
 				} else {
-					message.append("**MC-Discord-Chat ").append(VERSION).append("**");
+					message.append("**Discord-MC-Chat ").append(VERSION).append("**");
 					message.append("\n\n");
 					message.append(Translations.translate("utils.utils.cUpdate.upToDate"));
 
@@ -287,7 +287,7 @@ public class Utils {
 				}
 			}
 
-			String webhookName = "MCDC Webhook" + (CONFIG.multiServer.enable ? " (" + CONFIG.multiServer.name + ")" : "");
+			String webhookName = "DMCC Webhook" + (CONFIG.multiServer.enable ? " (" + CONFIG.multiServer.name + ")" : "");
 			WEBHOOK = null;
 			for (Webhook webhook : CHANNEL.getGuild().retrieveWebhooks().complete()) {
 				if (webhookName.equals(webhook.getName())) {
@@ -345,16 +345,16 @@ public class Utils {
 		message.append(Translations.translate("utils.utils.ghcMessage.help"));
 		message.append(" ===============");
 
-		message.append(isDiscordSide ? "\n/help                | " : "\n/mcdc help                  | ");
+		message.append(isDiscordSide ? "\n/help                | " : "\n/dmcc help                  | ");
 		message.append(Translations.translate("utils.utils.ubCommands.help"));
 
-		message.append(isDiscordSide ? "\n/info                | " : "\n/mcdc info                  | ");
+		message.append(isDiscordSide ? "\n/info                | " : "\n/dmcc info                  | ");
 		message.append(Translations.translate("utils.utils.ubCommands.info"));
 
-		message.append(isDiscordSide ? "\n/stats <type> <name> | " : "\n/mcdc stats <type> <name>   | ");
+		message.append(isDiscordSide ? "\n/stats <type> <name> | " : "\n/dmcc stats <type> <name>   | ");
 		message.append(Translations.translate("utils.utils.ubCommands.stats"));
 
-		message.append(isDiscordSide ? "\n/update              | " : "\n/mcdc update                | ");
+		message.append(isDiscordSide ? "\n/update              | " : "\n/dmcc update                | ");
 		message.append(Translations.translate("utils.utils.ubCommands.update"));
 
 		// TODO Simplify
@@ -362,7 +362,7 @@ public class Utils {
 			if ((i == 0 && !CONFIG.generic.whitelistRequiresAdmin)
 					|| (i == 4 && isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)
 					|| (i == 1 && !isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)) {
-				message.append(isDiscordSide ? "\n/whitelist <player>  | " : "\n/mcdc whitelist <player>    | ");
+				message.append(isDiscordSide ? "\n/whitelist <player>  | " : "\n/dmcc whitelist <player>    | ");
 				message.append(Translations.translate("utils.utils.ubCommands.whitelist"));
 				if (CONFIG.generic.whitelistRequiresAdmin) {
 					message.append(Translations.translate("utils.utils.ghcMessage.adminOnly"));
@@ -370,24 +370,24 @@ public class Utils {
 			} else if ((i == 1 && isDiscordSide && !CONFIG.generic.whitelistRequiresAdmin)
 					|| (i == 0 && isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)
 					|| (i == 2 && !isDiscordSide)) {
-				message.append(isDiscordSide ? "\n/console <command>   | " : "\n~~/mcdc console <command>~~ | ");
+				message.append(isDiscordSide ? "\n/console <command>   | " : "\n~~/dmcc console <command>~~ | ");
 				message.append(Translations.translate("utils.utils.ubCommands.console"));
 				message.append(Translations.translate("utils.utils.ghcMessage.adminOnly"));
 			} else if ((i == 2 && isDiscordSide && !CONFIG.generic.whitelistRequiresAdmin)
 					|| (i == 1 && isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)
 					|| (i == 3 && !isDiscordSide)) {
-				message.append(isDiscordSide ? "\n/log <file>          | " : "\n~~/mcdc log <file>~~        | ");
+				message.append(isDiscordSide ? "\n/log <file>          | " : "\n~~/dmcc log <file>~~        | ");
 				message.append(Translations.translate("utils.utils.ubCommands.log"));
 				message.append(Translations.translate("utils.utils.ghcMessage.adminOnly"));
 			} else if ((i == 3 && isDiscordSide && !CONFIG.generic.whitelistRequiresAdmin)
 					|| (i == 2 && isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)
 					|| (i == 1 && !isDiscordSide && !CONFIG.generic.whitelistRequiresAdmin)
 					|| (i == 0 && !isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)) {
-				message.append(isDiscordSide ? "\n/reload              | " : "\n/mcdc reload                | ");
+				message.append(isDiscordSide ? "\n/reload              | " : "\n/dmcc reload                | ");
 				message.append(Translations.translate("utils.utils.ubCommands.reload"));
 				message.append(Translations.translate("utils.utils.ghcMessage.adminOnly"));
 			} else {
-				message.append(isDiscordSide ? "\n/stop                | " : "\n~~/mcdc stop~~              | ");
+				message.append(isDiscordSide ? "\n/stop                | " : "\n~~/dmcc stop~~              | ");
 				message.append(Translations.translate("utils.utils.ubCommands.stop"));
 				message.append(Translations.translate("utils.utils.ghcMessage.adminOnly"));
 			}

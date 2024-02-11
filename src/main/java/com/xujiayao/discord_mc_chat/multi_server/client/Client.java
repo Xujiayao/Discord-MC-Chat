@@ -1,9 +1,9 @@
-package com.xujiayao.mcdiscordchat.multi_server.client;
+package com.xujiayao.discord_mc_chat.multi_server.client;
 
 import java.net.Socket;
 
-import static com.xujiayao.mcdiscordchat.Main.CONFIG;
-import static com.xujiayao.mcdiscordchat.Main.LOGGER;
+import static com.xujiayao.discord_mc_chat.Main.CONFIG;
+import static com.xujiayao.discord_mc_chat.Main.LOGGER;
 
 /**
  * @author Xujiayao

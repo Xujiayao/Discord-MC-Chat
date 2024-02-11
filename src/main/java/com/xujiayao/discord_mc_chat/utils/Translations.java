@@ -1,4 +1,4 @@
-package com.xujiayao.mcdiscordchat.utils;
+package com.xujiayao.discord_mc_chat.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -23,9 +23,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.xujiayao.mcdiscordchat.Main.CONFIG;
-import static com.xujiayao.mcdiscordchat.Main.HTTP_CLIENT;
-import static com.xujiayao.mcdiscordchat.Main.LOGGER;
+import static com.xujiayao.discord_mc_chat.Main.CONFIG;
+import static com.xujiayao.discord_mc_chat.Main.HTTP_CLIENT;
+import static com.xujiayao.discord_mc_chat.Main.LOGGER;
 
 /**
  * @author Xujiayao
@@ -37,33 +37,33 @@ public class Translations {
 	public static void init() {
 		translations = new HashMap<>();
 
-		Optional<Path> optional = FabricLoader.getInstance().getModContainer("mcdiscordchat").orElseThrow()
+		Optional<Path> optional = FabricLoader.getInstance().getModContainer("discord-mc-chat").orElseThrow()
 				.findPath("/lang/" + CONFIG.generic.language + ".json");
 
 		if (optional.isEmpty()) {
 			LOGGER.warn("-----------------------------------------");
-			LOGGER.warn("MCDC cannot find its translations for \"" + CONFIG.generic.language + "\" and uses \"en_us\" by default!");
+			LOGGER.warn("DMCC cannot find its translations for \"" + CONFIG.generic.language + "\" and uses \"en_us\" by default!");
 			LOGGER.warn("");
 			LOGGER.warn("You are welcome to contribute translations!");
-			LOGGER.warn("Contributing: https://github.com/Xujiayao/MC-Discord-Chat#Contributing");
+			LOGGER.warn("Contributing: https://github.com/Xujiayao/Discord-MC-Chat#Contributing");
 			LOGGER.warn("-----------------------------------------");
 
-			optional = FabricLoader.getInstance().getModContainer("mcdiscordchat").orElseThrow()
+			optional = FabricLoader.getInstance().getModContainer("discord-mc-chat").orElseThrow()
 					.findPath("/lang/en_us.json");
 		}
 
 		if (optional.isPresent()) {
 			try {
-				String mcdcLang = IOUtils.toString(Files.newInputStream(optional.get()), StandardCharsets.UTF_8);
-				translations.putAll(new Gson().fromJson(mcdcLang, new TypeToken<Map<String, String>>() {
+				String dmccLang = IOUtils.toString(Files.newInputStream(optional.get()), StandardCharsets.UTF_8);
+				translations.putAll(new Gson().fromJson(dmccLang, new TypeToken<Map<String, String>>() {
 				}.getType()));
 
-				File langFolder = new File(FabricLoader.getInstance().getConfigDir().toFile(), "/mcdiscordchat/");
+				File langFolder = new File(FabricLoader.getInstance().getConfigDir().toFile(), "/discord-mc-chat/");
 				if (!(langFolder.mkdirs() || langFolder.isDirectory())) {
 					return;
 				}
 
-				File minecraftLangFile = new File(FabricLoader.getInstance().getConfigDir().toFile(), "/mcdiscordchat/" + DetectedVersion.tryDetectVersion().getName() + "-" + CONFIG.generic.language + ".json");
+				File minecraftLangFile = new File(FabricLoader.getInstance().getConfigDir().toFile(), "/discord-mc-chat/" + DetectedVersion.tryDetectVersion().getName() + "-" + CONFIG.generic.language + ".json");
 
 				if (minecraftLangFile.length() == 0) {
 					Request request1 = new Request.Builder()
@@ -77,7 +77,7 @@ public class Translations {
 							sink.writeAll(response1.body().source());
 							sink.close();
 						} else if (response1.code() == 404) {
-							minecraftLangFile = new File(FabricLoader.getInstance().getConfigDir().toFile(), "/mcdiscordchat/latest-" + CONFIG.generic.language + ".json");
+							minecraftLangFile = new File(FabricLoader.getInstance().getConfigDir().toFile(), "/discord-mc-chat/latest-" + CONFIG.generic.language + ".json");
 
 							Request request2 = new Request.Builder()
 									.url("https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@latest/assets/minecraft/lang/" + CONFIG.generic.language + ".json")

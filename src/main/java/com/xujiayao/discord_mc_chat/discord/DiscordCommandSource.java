@@ -1,4 +1,4 @@
-package com.xujiayao.mcdiscordchat.discord;
+package com.xujiayao.discord_mc_chat.discord;
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.minecraft.commands.CommandSource;

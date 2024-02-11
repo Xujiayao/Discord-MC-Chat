@@ -1,5 +1,5 @@
 //#if MC >= 11900
-package com.xujiayao.mcdiscordchat.minecraft.mixins;
+package com.xujiayao.discord_mc_chat.minecraft.mixins;
 
 import net.minecraft.locale.Language;
 import org.spongepowered.asm.mixin.Mixin;

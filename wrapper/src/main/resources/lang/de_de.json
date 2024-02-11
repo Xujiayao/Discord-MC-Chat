@@ -12,9 +12,9 @@
   "utils.clListener.stopListening": "**Abhören der Server-Logs stoppen!**",
 
   "utils.utils.cUpdate.newVersionAvailable": "**Eine neue Version ist verfügbar!**",
-  "utils.utils.cUpdate.downloadLink": "Download-Link: <https://github.com/Xujiayao/MC-Discord-Chat/blob/master/README.md#Download>",
+  "utils.utils.cUpdate.downloadLink": "Download-Link: <https://github.com/Xujiayao/Discord-MC-Chat/blob/master/README.md#Download>",
   "utils.utils.cUpdate.changelog": "Änderungen: ",
-  "utils.utils.cUpdate.upToDate": "**MC-Discord-Chat ist auf dem neuesten Stand!**",
+  "utils.utils.cUpdate.upToDate": "**Discord-MC-Chat ist auf dem neuesten Stand!**",
 
   "utils.utils.whitelist.whitelistFailed": "**Der Spieler ist bereits auf der whitelist!**",
   "utils.utils.whitelist.whitelistSuccess": "**Spieler %s wurde zu der whitelist hinzugefügt!**",
@@ -48,7 +48,7 @@
   "utils.utils.ubCommands.console.command": "Befehl, welcher ausgeführt werden soll",
   "utils.utils.ubCommands.log": "Frage einen Server-Log an",
   "utils.utils.ubCommands.log.file": "Dateiname",
-  "utils.utils.ubCommands.reload": "Lade MC-Discord-Chat Konfigurations-Datei neu",
+  "utils.utils.ubCommands.reload": "Lade Discord-MC-Chat Konfigurations-Datei neu",
   "utils.utils.ubCommands.stop": "Stoppe den Server",
 
   "message.unformattedResponseMessage": "    ┌──── <%name%> %message%",

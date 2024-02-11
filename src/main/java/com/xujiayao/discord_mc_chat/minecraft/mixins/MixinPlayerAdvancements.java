@@ -1,6 +1,6 @@
-package com.xujiayao.mcdiscordchat.minecraft.mixins;
+package com.xujiayao.discord_mc_chat.minecraft.mixins;
 
-import com.xujiayao.mcdiscordchat.minecraft.MinecraftEvents;
+import com.xujiayao.discord_mc_chat.minecraft.MinecraftEvents;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.server.PlayerAdvancements;

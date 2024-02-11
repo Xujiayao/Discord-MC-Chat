@@ -1,12 +1,12 @@
-package com.xujiayao.mcdiscordchat.multi_server.server;
+package com.xujiayao.discord_mc_chat.multi_server.server;
 
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import static com.xujiayao.mcdiscordchat.Main.CONFIG;
-import static com.xujiayao.mcdiscordchat.Main.LOGGER;
+import static com.xujiayao.discord_mc_chat.Main.CONFIG;
+import static com.xujiayao.discord_mc_chat.Main.LOGGER;
 
 /**
  * @author Xujiayao

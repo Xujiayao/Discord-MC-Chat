@@ -1,11 +1,11 @@
 blank_issues_enabled: false
 contact_links:
   - name: Example Issue
-    url: https://github.com/Xujiayao/MC-Discord-Chat/issues/73
+    url: https://github.com/Xujiayao/Discord-MC-Chat/issues/73
     about: You can refer to this example issue to fill in your issue.
-  - name: MC-Discord-Chat Docs
+  - name: Discord-MC-Chat Docs
     url: https://blog.xujiayao.com/posts/4ba0a17a/
-    about: Make sure you follow the docs to configure MC-Discord-Chat!
+    about: Make sure you follow the docs to configure Discord-MC-Chat!
   - name: Latest Builds
-    url: https://github.com/Xujiayao/MC-Discord-Chat/actions
+    url: https://github.com/Xujiayao/Discord-MC-Chat/actions
     about: You can find the latest build JAR files at GitHub Actions.

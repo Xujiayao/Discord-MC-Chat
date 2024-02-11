@@ -1,13 +1,13 @@
-package com.xujiayao.mcdiscordchat.discord;
+package com.xujiayao.discord_mc_chat.discord;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.tree.CommandNode;
-import com.xujiayao.mcdiscordchat.utils.MarkdownParser;
-import com.xujiayao.mcdiscordchat.utils.Translations;
-import com.xujiayao.mcdiscordchat.utils.Utils;
+import com.xujiayao.discord_mc_chat.utils.MarkdownParser;
+import com.xujiayao.discord_mc_chat.utils.Translations;
+import com.xujiayao.discord_mc_chat.utils.Utils;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
@@ -49,12 +49,12 @@ import java.util.Objects;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
-import static com.xujiayao.mcdiscordchat.Main.CHANNEL;
-import static com.xujiayao.mcdiscordchat.Main.CONFIG;
-import static com.xujiayao.mcdiscordchat.Main.JDA;
-import static com.xujiayao.mcdiscordchat.Main.LOGGER;
-import static com.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
-import static com.xujiayao.mcdiscordchat.Main.SERVER;
+import static com.xujiayao.discord_mc_chat.Main.CHANNEL;
+import static com.xujiayao.discord_mc_chat.Main.CONFIG;
+import static com.xujiayao.discord_mc_chat.Main.JDA;
+import static com.xujiayao.discord_mc_chat.Main.LOGGER;
+import static com.xujiayao.discord_mc_chat.Main.MULTI_SERVER;
+import static com.xujiayao.discord_mc_chat.Main.SERVER;
 
 /**
  * @author Xujiayao
@@ -142,11 +142,11 @@ public class DiscordEventListener extends ListenerAdapter {
 								.submit()
 								.whenComplete((v, ex) -> {
 									//#if MC >= 11900
-									CommandSourceStack source = new CommandSourceStack(new DiscordCommandSource(e), Vec3.ZERO, Vec2.ZERO, SERVER.overworld(), 4, "MC-Discord-Chat", Component.literal("MC-Discord-Chat"), SERVER, null);
+									CommandSourceStack source = new CommandSourceStack(new DiscordCommandSource(e), Vec3.ZERO, Vec2.ZERO, SERVER.overworld(), 4, "Discord-MC-Chat", Component.literal("Discord-MC-Chat"), SERVER, null);
 									//#elseif MC > 11502
-									//$$ CommandSourceStack source = new CommandSourceStack(new DiscordCommandSource(e), Vec3.ZERO, Vec2.ZERO, SERVER.overworld(), 4, "MC-Discord-Chat", new TextComponent("MC-Discord-Chat"), SERVER, null);
+									//$$ CommandSourceStack source = new CommandSourceStack(new DiscordCommandSource(e), Vec3.ZERO, Vec2.ZERO, SERVER.overworld(), 4, "Discord-MC-Chat", new TextComponent("Discord-MC-Chat"), SERVER, null);
 									//#else
-									//$$ CommandSourceStack source = new CommandSourceStack(new DiscordCommandSource(e), Vec3.ZERO, Vec2.ZERO, SERVER.getLevel(DimensionType.OVERWORLD), 4, "MC-Discord-Chat", new TextComponent("MC-Discord-Chat"), SERVER, null);
+									//$$ CommandSourceStack source = new CommandSourceStack(new DiscordCommandSource(e), Vec3.ZERO, Vec2.ZERO, SERVER.getLevel(DimensionType.OVERWORLD), 4, "Discord-MC-Chat", new TextComponent("Discord-MC-Chat"), SERVER, null);
 									//#endif
 									//#if MC > 11900
 									ParseResults<CommandSourceStack> results = SERVER.getCommands().getDispatcher().parse(command, source);

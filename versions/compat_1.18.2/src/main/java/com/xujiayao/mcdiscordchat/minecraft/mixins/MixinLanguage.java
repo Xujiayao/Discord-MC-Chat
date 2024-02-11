@@ -1,5 +1,5 @@
 //#if MC >= 11600
-package com.xujiayao.mcdiscordchat.minecraft.mixins;
+package com.xujiayao.discord_mc_chat.minecraft.mixins;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-import static com.xujiayao.mcdiscordchat.Main.LOGGER;
+import static com.xujiayao.discord_mc_chat.Main.LOGGER;
 
 /**
  * @author Xujiayao

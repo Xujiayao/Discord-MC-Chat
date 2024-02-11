@@ -29,5 +29,5 @@ jobs:
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: MC-Discord-Chat ${{ steps.get_short_commit_hash.outputs.short_sha }}
+          name: Discord-MC-Chat ${{ steps.get_short_commit_hash.outputs.short_sha }}
           path: build/*.jar

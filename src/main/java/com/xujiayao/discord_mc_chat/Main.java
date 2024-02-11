@@ -1,6 +1,6 @@
-package com.xujiayao.mcdiscordchat;
+package com.xujiayao.discord_mc_chat;
 
-import com.xujiayao.mcdiscordchat.minecraft.MinecraftEventListener;
+import com.xujiayao.discord_mc_chat.minecraft.MinecraftEventListener;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Webhook;
@@ -26,13 +26,13 @@ import org.slf4j.LoggerFactory;
 //$$ import org.apache.logging.log4j.Logger;
 //$$ import org.apache.logging.log4j.LogManager;
 //#endif
-import com.xujiayao.mcdiscordchat.discord.DiscordEventListener;
-import com.xujiayao.mcdiscordchat.minecraft.MinecraftCommands;
-import com.xujiayao.mcdiscordchat.multi_server.MultiServer;
-import com.xujiayao.mcdiscordchat.utils.ConfigManager;
-import com.xujiayao.mcdiscordchat.utils.ConsoleLogListener;
-import com.xujiayao.mcdiscordchat.utils.Translations;
-import com.xujiayao.mcdiscordchat.utils.Utils;
+import com.xujiayao.discord_mc_chat.discord.DiscordEventListener;
+import com.xujiayao.discord_mc_chat.minecraft.MinecraftCommands;
+import com.xujiayao.discord_mc_chat.multi_server.MultiServer;
+import com.xujiayao.discord_mc_chat.utils.ConfigManager;
+import com.xujiayao.discord_mc_chat.utils.ConsoleLogListener;
+import com.xujiayao.discord_mc_chat.utils.Translations;
+import com.xujiayao.discord_mc_chat.utils.Utils;
 
 import java.io.File;
 import java.time.Duration;
@@ -46,13 +46,13 @@ public class Main implements DedicatedServerModInitializer {
 
 	public static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
 	//#if MC >= 11700
-	public static final Logger LOGGER = LoggerFactory.getLogger("MC-Discord-Chat");
+	public static final Logger LOGGER = LoggerFactory.getLogger("Discord-MC-Chat");
 	//#else
-	//$$ public static final Logger LOGGER = LogManager.getLogger("MC-Discord-Chat");
+	//$$ public static final Logger LOGGER = LogManager.getLogger("Discord-MC-Chat");
 	//#endif
-	public static final File CONFIG_FILE = new File(FabricLoader.getInstance().getConfigDir().toFile(), "mcdiscordchat.json");
-	public static final File CONFIG_BACKUP_FILE = new File(FabricLoader.getInstance().getConfigDir().toFile(), "mcdiscordchat-backup.json");
-	public static final String VERSION = FabricLoader.getInstance().getModContainer("mcdiscordchat").orElseThrow().getMetadata().getVersion().getFriendlyString();
+	public static final File CONFIG_FILE = new File(FabricLoader.getInstance().getConfigDir().toFile(), "discord-mc-chat.json");
+	public static final File CONFIG_BACKUP_FILE = new File(FabricLoader.getInstance().getConfigDir().toFile(), "discord-mc-chat-backup.json");
+	public static final String VERSION = FabricLoader.getInstance().getModContainer("discord-mc-chat").orElseThrow().getMetadata().getVersion().getFriendlyString();
 	public static Config CONFIG;
 	public static JDA JDA;
 	public static TextChannel CHANNEL;
@@ -76,7 +76,7 @@ public class Main implements DedicatedServerModInitializer {
 			Translations.init();
 
 			LOGGER.info("-----------------------------------------");
-			LOGGER.info("MC-Discord-Chat (MCDC) " + VERSION);
+			LOGGER.info("Discord-MC-Chat (DMCC) " + VERSION);
 			LOGGER.info("By Xujiayao");
 			LOGGER.info("");
 			LOGGER.info("More information + Docs:");
@@ -114,7 +114,7 @@ public class Main implements DedicatedServerModInitializer {
 				}
 			}
 
-			String webhookName = "MCDC Webhook" + (CONFIG.multiServer.enable ? " (" + CONFIG.multiServer.name + ")" : "");
+			String webhookName = "DMCC Webhook" + (CONFIG.multiServer.enable ? " (" + CONFIG.multiServer.name + ")" : "");
 			WEBHOOK = null;
 			for (Webhook webhook : CHANNEL.getGuild().retrieveWebhooks().complete()) {
 				if (webhookName.equals(webhook.getName())) {

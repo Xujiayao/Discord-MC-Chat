@@ -12,9 +12,9 @@
   "utils.clListener.stopListening": "**Перестаю слушать консольные логи!**",
 
   "utils.utils.cUpdate.newVersionAvailable": "**Доступна новая версия!**",
-  "utils.utils.cUpdate.downloadLink": "Ссылка для скачивания: <https://github.com/Xujiayao/MC-Discord-Chat/blob/master/README.md#Download>",
+  "utils.utils.cUpdate.downloadLink": "Ссылка для скачивания: <https://github.com/Xujiayao/Discord-MC-Chat/blob/master/README.md#Download>",
   "utils.utils.cUpdate.changelog": "Список изменений: ",
-  "utils.utils.cUpdate.upToDate": "**MC-Discord-Chat последней версии!**",
+  "utils.utils.cUpdate.upToDate": "**Discord-MC-Chat последней версии!**",
 
   "utils.utils.whitelist.whitelistFailed": "**Игрок уже в белом списке!**",
   "utils.utils.whitelist.whitelistSuccess": "**%s добавлен в белый список!**",
@@ -48,7 +48,7 @@
   "utils.utils.ubCommands.console.command": "Команда для выполнения",
   "utils.utils.ubCommands.log": "Получить логи конкретного сервера",
   "utils.utils.ubCommands.log.file": "Название файла",
-  "utils.utils.ubCommands.reload": "Перезагрузить конфиг MC-Discord-Chat",
+  "utils.utils.ubCommands.reload": "Перезагрузить конфиг Discord-MC-Chat",
   "utils.utils.ubCommands.stop": "Остановить сервер",
 
   "message.unformattedResponseMessage": "    ┌──── <%name%> %message%",

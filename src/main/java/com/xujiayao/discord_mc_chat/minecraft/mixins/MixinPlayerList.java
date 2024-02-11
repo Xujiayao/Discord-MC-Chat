@@ -1,6 +1,6 @@
-package com.xujiayao.mcdiscordchat.minecraft.mixins;
+package com.xujiayao.discord_mc_chat.minecraft.mixins;
 
-import com.xujiayao.mcdiscordchat.minecraft.MinecraftEvents;
+import com.xujiayao.discord_mc_chat.minecraft.MinecraftEvents;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.ChatType;
@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 //#if MC < 11900
 //$$ import java.util.UUID;
 //$$
-//$$ import static com.xujiayao.mcdiscordchat.Main.SERVER;
+//$$ import static com.xujiayao.discord_mc_chat.Main.SERVER;
 //#endif
 
 /**

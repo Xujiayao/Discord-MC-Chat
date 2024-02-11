@@ -1,12 +1,12 @@
-package com.xujiayao.mcdiscordchat.multi_server;
+package com.xujiayao.discord_mc_chat.multi_server;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import com.xujiayao.mcdiscordchat.multi_server.client.Client;
-import com.xujiayao.mcdiscordchat.multi_server.server.Server;
-import com.xujiayao.mcdiscordchat.multi_server.server.UserThread;
-import com.xujiayao.mcdiscordchat.utils.Translations;
+import com.xujiayao.discord_mc_chat.multi_server.client.Client;
+import com.xujiayao.discord_mc_chat.multi_server.server.Server;
+import com.xujiayao.discord_mc_chat.multi_server.server.UserThread;
+import com.xujiayao.discord_mc_chat.utils.Translations;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -15,11 +15,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.TimerTask;
 
-import static com.xujiayao.mcdiscordchat.Main.CHANNEL;
-import static com.xujiayao.mcdiscordchat.Main.CHANNEL_TOPIC_MONITOR_TIMER;
-import static com.xujiayao.mcdiscordchat.Main.CONFIG;
-import static com.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_CHANNEL;
-import static com.xujiayao.mcdiscordchat.Main.LOGGER;
+import static com.xujiayao.discord_mc_chat.Main.CHANNEL;
+import static com.xujiayao.discord_mc_chat.Main.CHANNEL_TOPIC_MONITOR_TIMER;
+import static com.xujiayao.discord_mc_chat.Main.CONFIG;
+import static com.xujiayao.discord_mc_chat.Main.CONSOLE_LOG_CHANNEL;
+import static com.xujiayao.discord_mc_chat.Main.LOGGER;
 
 /**
  * @author Xujiayao

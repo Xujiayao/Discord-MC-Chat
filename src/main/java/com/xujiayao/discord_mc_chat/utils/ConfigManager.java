@@ -1,4 +1,4 @@
-package com.xujiayao.mcdiscordchat.utils;
+package com.xujiayao.discord_mc_chat.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -6,15 +6,15 @@ import com.google.gson.JsonSyntaxException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import com.xujiayao.mcdiscordchat.Config;
+import com.xujiayao.discord_mc_chat.Config;
 
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
 
-import static com.xujiayao.mcdiscordchat.Main.CONFIG;
-import static com.xujiayao.mcdiscordchat.Main.CONFIG_BACKUP_FILE;
-import static com.xujiayao.mcdiscordchat.Main.CONFIG_FILE;
-import static com.xujiayao.mcdiscordchat.Main.LOGGER;
+import static com.xujiayao.discord_mc_chat.Main.CONFIG;
+import static com.xujiayao.discord_mc_chat.Main.CONFIG_BACKUP_FILE;
+import static com.xujiayao.discord_mc_chat.Main.CONFIG_FILE;
+import static com.xujiayao.discord_mc_chat.Main.LOGGER;
 
 /**
  * @author Xujiayao
@@ -57,7 +57,7 @@ public class ConfigManager {
 			LOGGER.error("-----------------------------------------");
 			LOGGER.error("Error: The config file cannot be found or is empty!");
 			LOGGER.error("");
-			LOGGER.error("Please follow the documentation to configure MC-Discord-Chat before restarting the server!");
+			LOGGER.error("Please follow the documentation to configure Discord-MC-Chat before restarting the server!");
 			LOGGER.error("More information + Docs: https://blog.xujiayao.com/posts/4ba0a17a/");
 			LOGGER.error("");
 			LOGGER.error("Stopping the server...");

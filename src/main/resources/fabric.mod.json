@@ -1,27 +1,27 @@
 {
   "schemaVersion": 1,
-  "id": "mcdiscordchat-${mc_version}",
+  "id": "discord-mc-chat-${mc_version}",
   "version": "${version}",
-  "name": "MC-Discord-Chat",
-  "description": "MC-Discord-Chat (MCDC), formerly known as MCDiscordChat, a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric",
+  "name": "Discord-MC-Chat",
+  "description": "Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric",
   "authors": [
     "Xujiayao"
   ],
   "contact": {
     "homepage": "https://blog.xujiayao.com/posts/4ba0a17a/",
-    "issues": "https://github.com/Xujiayao/MC-Discord-Chat/issues",
-    "sources": "https://github.com/Xujiayao/MC-Discord-Chat"
+    "issues": "https://github.com/Xujiayao/Discord-MC-Chat/issues",
+    "sources": "https://github.com/Xujiayao/Discord-MC-Chat"
   },
   "license": "MIT",
-  "icon": "assets/mcdiscordchat/icon.png",
+  "icon": "assets/discord-mc-chat/icon.png",
   "environment": "server",
   "entrypoints": {
     "server": [
-      "com.xujiayao.mcdiscordchat.Main"
+      "com.xujiayao.discord_mc_chat.Main"
     ]
   },
   "mixins": [
-    "mcdiscordchat.mixins.json"
+    "discord-mc-chat.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.14.22",

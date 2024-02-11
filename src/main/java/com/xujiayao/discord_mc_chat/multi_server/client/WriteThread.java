@@ -1,4 +1,4 @@
-package com.xujiayao.mcdiscordchat.multi_server.client;
+package com.xujiayao.discord_mc_chat.multi_server.client;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -7,7 +7,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
-import static com.xujiayao.mcdiscordchat.Main.LOGGER;
+import static com.xujiayao.discord_mc_chat.Main.LOGGER;
 
 /**
  * @author Xujiayao

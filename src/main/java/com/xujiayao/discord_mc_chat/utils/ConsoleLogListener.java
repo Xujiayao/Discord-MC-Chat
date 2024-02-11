@@ -1,4 +1,4 @@
-package com.xujiayao.mcdiscordchat.utils;
+package com.xujiayao.discord_mc_chat.utils;
 
 import net.fabricmc.loader.api.FabricLoader;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -17,10 +17,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import static com.xujiayao.mcdiscordchat.Main.CONSOLE_LOG_CHANNEL;
-import static com.xujiayao.mcdiscordchat.Main.LOGGER;
-import static com.xujiayao.mcdiscordchat.Main.MINECRAFT_LAST_RESET_TIME;
-import static com.xujiayao.mcdiscordchat.Main.MINECRAFT_SEND_COUNT;
+import static com.xujiayao.discord_mc_chat.Main.CONSOLE_LOG_CHANNEL;
+import static com.xujiayao.discord_mc_chat.Main.LOGGER;
+import static com.xujiayao.discord_mc_chat.Main.MINECRAFT_LAST_RESET_TIME;
+import static com.xujiayao.discord_mc_chat.Main.MINECRAFT_SEND_COUNT;
 
 /**
  * @author LofiTurtle

@@ -10,9 +10,9 @@ body:
       description: |
         Please check that you have done the following things before submitting an issue.
       options:
-        - label: I confirm that I have [searched for existing issues / pull requests](https://github.com/Xujiayao/MC-Discord-Chat/issues?q=) before reporting to avoid duplicate reporting.
+        - label: I confirm that I have [searched for existing issues / pull requests](https://github.com/Xujiayao/Discord-MC-Chat/issues?q=) before reporting to avoid duplicate reporting.
           required: true
-        - label: I confirm that I followed the [MCDC Docs](https://blog.xujiayao.com/posts/4ba0a17a/) and read the [Changelog](https://github.com/Xujiayao/MC-Discord-Chat/releases/latest), but this problem still exists.
+        - label: I confirm that I followed the [DMCC Docs](https://blog.xujiayao.com/posts/4ba0a17a/) and read the [Changelog](https://github.com/Xujiayao/Discord-MC-Chat/releases/latest), but this problem still exists.
           required: true
         - label: I confirm that I noted that if I don't follow the instructions, the issue may be closed directly.
           required: true
@@ -22,7 +22,7 @@ body:
       label: Minecraft Version
       description: |
         The version of Minecraft you are using?
-        If a version is not listed below, it is not supported by MCDC.
+        If a version is not listed below, it is not supported by DMCC.
       multiple: false
       options:
         - "1.20.4"
@@ -47,12 +47,12 @@ body:
     validations:
       required: true
   - type: dropdown
-    id: mcdiscordchat_version
+    id: discord_mc_chat_version
     attributes:
-      label: MC-Discord-Chat Version
+      label: Discord-MC-Chat Version
       description: |
-        The version of MC-Discord-Chat you are using?
-        Only MCDC v2 versions are supported.
+        The version of Discord-MC-Chat you are using?
+        Only DMCC v2 versions are supported.
       multiple: false
       options:
         - "Latest Build (GitHub Actions)"
@@ -104,7 +104,7 @@ body:
     attributes:
       label: Config
       description: |
-        Please provide your FULL MC-Discord-Chat config (/config/mcdiscordchat.json file) here.
+        Please provide your FULL Discord-MC-Chat config (/config/discord_mc_chat.json file) here.
         Remember to REDACT the botToken!
       render: json
     validations:

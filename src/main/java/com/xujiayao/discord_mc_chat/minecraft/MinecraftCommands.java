@@ -1,17 +1,17 @@
-package com.xujiayao.mcdiscordchat.minecraft;
+package com.xujiayao.discord_mc_chat.minecraft;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import com.xujiayao.mcdiscordchat.utils.MarkdownParser;
-import com.xujiayao.mcdiscordchat.utils.Translations;
-import com.xujiayao.mcdiscordchat.utils.Utils;
+import com.xujiayao.discord_mc_chat.utils.MarkdownParser;
+import com.xujiayao.discord_mc_chat.utils.Translations;
+import com.xujiayao.discord_mc_chat.utils.Utils;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 //#if MC < 11900
 //$$ import net.minecraft.network.chat.TextComponent;
 //#endif
 
-import static com.xujiayao.mcdiscordchat.Main.CONFIG;
+import static com.xujiayao.discord_mc_chat.Main.CONFIG;
 import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
@@ -21,7 +21,7 @@ import static net.minecraft.commands.Commands.literal;
 public class MinecraftCommands {
 
 	public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-		dispatcher.register(literal("mcdc").executes(context -> {
+		dispatcher.register(literal("dmcc").executes(context -> {
 					//#if MC > 11904
 					context.getSource().sendSuccess(() ->
 					//#else

@@ -1,10 +1,10 @@
-package com.xujiayao.mcdiscordchat.minecraft;
+package com.xujiayao.discord_mc_chat.minecraft;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.xujiayao.mcdiscordchat.utils.MarkdownParser;
-import com.xujiayao.mcdiscordchat.utils.Translations;
-import com.xujiayao.mcdiscordchat.utils.Utils;
+import com.xujiayao.discord_mc_chat.utils.MarkdownParser;
+import com.xujiayao.discord_mc_chat.utils.Translations;
+import com.xujiayao.discord_mc_chat.utils.Utils;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
@@ -36,16 +36,16 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static com.xujiayao.mcdiscordchat.Main.CHANNEL;
-import static com.xujiayao.mcdiscordchat.Main.CONFIG;
-import static com.xujiayao.mcdiscordchat.Main.HTTP_CLIENT;
-import static com.xujiayao.mcdiscordchat.Main.JDA;
-import static com.xujiayao.mcdiscordchat.Main.LOGGER;
-import static com.xujiayao.mcdiscordchat.Main.MINECRAFT_LAST_RESET_TIME;
-import static com.xujiayao.mcdiscordchat.Main.MINECRAFT_SEND_COUNT;
-import static com.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
-import static com.xujiayao.mcdiscordchat.Main.SERVER;
-import static com.xujiayao.mcdiscordchat.Main.WEBHOOK;
+import static com.xujiayao.discord_mc_chat.Main.CHANNEL;
+import static com.xujiayao.discord_mc_chat.Main.CONFIG;
+import static com.xujiayao.discord_mc_chat.Main.HTTP_CLIENT;
+import static com.xujiayao.discord_mc_chat.Main.JDA;
+import static com.xujiayao.discord_mc_chat.Main.LOGGER;
+import static com.xujiayao.discord_mc_chat.Main.MINECRAFT_LAST_RESET_TIME;
+import static com.xujiayao.discord_mc_chat.Main.MINECRAFT_SEND_COUNT;
+import static com.xujiayao.discord_mc_chat.Main.MULTI_SERVER;
+import static com.xujiayao.discord_mc_chat.Main.SERVER;
+import static com.xujiayao.discord_mc_chat.Main.WEBHOOK;
 
 /**
  * @author Xujiayao

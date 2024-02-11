@@ -1,4 +1,4 @@
-package com.xujiayao.mcdiscordchat.multi_server.server;
+package com.xujiayao.discord_mc_chat.multi_server.server;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -13,8 +13,8 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 
-import static com.xujiayao.mcdiscordchat.Main.LOGGER;
-import static com.xujiayao.mcdiscordchat.Main.MULTI_SERVER;
+import static com.xujiayao.discord_mc_chat.Main.LOGGER;
+import static com.xujiayao.discord_mc_chat.Main.MULTI_SERVER;
 
 /**
  * @author Xujiayao
