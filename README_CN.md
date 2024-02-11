@@ -11,7 +11,7 @@
 [![License](https://img.shields.io/github/license/xujiayao/Discord-MC-Chat?logo=github)](https://github.com/Xujiayao/Discord-MC-Chat/blob/master/LICENSE)
 [![Release](https://img.shields.io/github/v/release/xujiayao/Discord-MC-Chat?logo=github)](https://github.com/Xujiayao/Discord-MC-Chat/releases)
 [![jsDelivr Hits (Very Old)](https://data.jsdelivr.com/v1/package/gh/Xujiayao/MCDiscordChat/badge?style=rounded)](https://www.jsdelivr.com/package/gh/Xujiayao/MCDiscordChat)
-[![jsDelivr Hits (Old)](https://data.jsdelivr.com/v1/package/gh/Xujiayao/Discord-MC-Chat/badge?style=rounded)](https://www.jsdelivr.com/package/gh/Xujiayao/Discord-MC-Chat)
+[![jsDelivr Hits (Old)](https://data.jsdelivr.com/v1/package/gh/Xujiayao/MC-Discord-Chat/badge?style=rounded)](https://www.jsdelivr.com/package/gh/Xujiayao/MC-Discord-Chat)
 [![jsDelivr Hits (New)](https://data.jsdelivr.com/v1/package/gh/Xujiayao/Discord-MC-Chat/badge?style=rounded)](https://www.jsdelivr.com/package/gh/Xujiayao/Discord-MC-Chat)
 [![GitHub Downloads](https://img.shields.io/github/downloads/xujiayao/Discord-MC-Chat/total?logo=github)](https://github.com/Xujiayao/Discord-MC-Chat/releases)
 [![Modrinth Downloads](https://img.shields.io/modrinth/dt/discord-mc-chat?label=modrinth%20downloads)](https://modrinth.com/mod/discord-mc-chat)
