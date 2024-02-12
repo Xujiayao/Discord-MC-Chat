@@ -24,7 +24,7 @@ More information + Docs: [Discord-MC-Chat Docs | Xujiayao's Blog](https://blog.x
 
 ## Introduction
 
-[Discord-MC-Chat](https://github.com/Xujiayao/Discord-MC-Chat) (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric.
+[Discord-MC-Chat](https://github.com/Xujiayao/Discord-MC-Chat) (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCDC), is a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric.
 
 ![0001.png](https://cdn.jsdelivr.net/gh/Xujiayao/BlogSource@master/source/file/posts/4ba0a17a/0001.png)
 
