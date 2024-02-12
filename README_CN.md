@@ -18,13 +18,13 @@
 [![CurseForge Downloads](https://cf.way2muchnoise.eu/full_548539_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/discord-mc-chat)
 [![Versions Supported](https://cf.way2muchnoise.eu/versions/548539.svg)](https://www.curseforge.com/minecraft/mc-mods/discord-mc-chat)
 
-Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric
+Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCDC), is a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric
 
 更多介绍 + 文档：[Discord-MC-Chat 文档 | Xujiayao's Blog](https://blog.xujiayao.com/posts/4ba0a17a/)
 
 ## 简介
 
-[Discord-MC-Chat](https://github.com/Xujiayao/Discord-MC-Chat) (DMCC)，前身为 MC-Discord-Chat (MCDC)，一个实用且功能强大的 Fabric 和 Quilt Minecraft <> Discord 跨服聊天工具，灵感来自 BRForgers/DisFabric。
+[Discord-MC-Chat](https://github.com/Xujiayao/Discord-MC-Chat) (DMCC)，前身为 MC-Discord-Chat 和 MCDiscordChat (MCDC)，一个实用且功能强大的 Fabric 和 Quilt Minecraft <> Discord 跨服聊天工具，灵感来自 BRForgers/DisFabric。
 
 ![0001.png](https://cdn.jsdelivr.net/gh/Xujiayao/BlogSource@master/source/file/posts/4ba0a17a/0001.png)
 

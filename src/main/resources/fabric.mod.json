@@ -3,7 +3,7 @@
   "id": "discord-mc-chat-${mc_version}",
   "version": "${version}",
   "name": "Discord-MC-Chat",
-  "description": "Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat (MCDC), a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric",
+  "description": "Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCDC), is a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric",
   "authors": [
     "Xujiayao"
   ],
