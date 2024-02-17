@@ -129,8 +129,6 @@ public class MinecraftEventListener {
 				}
 			}
 
-			System.out.println(contentToMinecraft);
-
 			contentToMinecraft = MarkdownParser.parseMarkdown(contentToMinecraft.replace("\\", "\\\\"));
 
 			for (String protocol : new String[]{"http://", "https://"}) {
