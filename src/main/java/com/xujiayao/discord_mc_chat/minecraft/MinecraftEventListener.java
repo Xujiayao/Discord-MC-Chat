@@ -113,6 +113,24 @@ public class MinecraftEventListener {
 				}
 			}
 
+			for (String protocol : new String[]{"http://", "https://"}) {
+				if (contentToMinecraft.contains(protocol)) {
+					String[] links = StringUtils.substringsBetween(contentToMinecraft, protocol, " ");
+					if (!StringUtils.substringAfterLast(contentToMinecraft, protocol).contains(" ")) {
+						links = ArrayUtils.add(links, StringUtils.substringAfterLast(contentToMinecraft, protocol));
+					}
+					for (String link : links) {
+						if (link.contains("\n")) {
+							link = StringUtils.substringBefore(link, "\n");
+						}
+
+						contentToMinecraft = contentToMinecraft.replace(link, MarkdownSanitizer.escape(link));
+					}
+				}
+			}
+
+			System.out.println(contentToMinecraft);
+
 			contentToMinecraft = MarkdownParser.parseMarkdown(contentToMinecraft.replace("\\", "\\\\"));
 
 			for (String protocol : new String[]{"http://", "https://"}) {
