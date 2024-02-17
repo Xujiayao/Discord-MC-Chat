@@ -598,8 +598,8 @@ public class Utils {
 		}
 		//#else
 		//$$ // TODO Compat TPS & MSPT (Issue #217)
-		//$$ double tps = 0;
-		//$$ double mspt = 0;
+		//$$ double mspt = SERVER.getAverageTickTime();
+		//$$ double tps = Math.min(1000.0 / mspt, 20);
 		//#endif
 
 		return new Tuple<>(tps, mspt);
