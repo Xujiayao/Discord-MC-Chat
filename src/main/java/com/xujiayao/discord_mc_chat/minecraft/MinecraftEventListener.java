@@ -169,38 +169,40 @@ public class MinecraftEventListener {
 		});
 
 		MinecraftEvents.PLAYER_COMMAND.register((player, command) -> {
-			for (String excludedCommand : CONFIG.generic.excludedCommands) {
-				if (command.startsWith(excludedCommand + " ")) {
-					return;
+			if (CONFIG.generic.broadcastPlayerCommandExecution) {
+				for (String excludedCommand : CONFIG.generic.excludedCommands) {
+					if (command.startsWith(excludedCommand + " ")) {
+						return;
+					}
 				}
-			}
 
-			if ((System.currentTimeMillis() - MINECRAFT_LAST_RESET_TIME) > 20000) {
-				MINECRAFT_SEND_COUNT = 0;
-				MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();
-			}
+				if ((System.currentTimeMillis() - MINECRAFT_LAST_RESET_TIME) > 20000) {
+					MINECRAFT_SEND_COUNT = 0;
+					MINECRAFT_LAST_RESET_TIME = System.currentTimeMillis();
+				}
 
-			MINECRAFT_SEND_COUNT++;
-			if (MINECRAFT_SEND_COUNT <= 20) {
-				//#if MC >= 11900
-				MutableComponent message = Component.literal("<" + Objects.requireNonNull(player.getDisplayName()).getString() + "> " + command);
-				//#else
-				//$$ MutableComponent message = new TextComponent("<" + Objects.requireNonNull(player.getDisplayName()).getString() + "> " + command);
-				//#endif
+				MINECRAFT_SEND_COUNT++;
+				if (MINECRAFT_SEND_COUNT <= 20) {
+					//#if MC >= 11900
+					MutableComponent message = Component.literal("<" + Objects.requireNonNull(player.getDisplayName()).getString() + "> " + command);
+					//#else
+					//$$ MutableComponent message = new TextComponent("<" + Objects.requireNonNull(player.getDisplayName()).getString() + "> " + command);
+					//#endif
 
-				SERVER.getPlayerList().getPlayers().forEach(
-						player1 -> player1.displayClientMessage(message, false));
-				//#if MC >= 11900
-				SERVER.sendSystemMessage(message);
-				//#elseif MC > 11502
-				//$$ SERVER.sendMessage(message, player.getUUID());
-				//#else
-				//$$ SERVER.sendMessage(message);
-				//#endif
+					SERVER.getPlayerList().getPlayers().forEach(
+							player1 -> player1.displayClientMessage(message, false));
+					//#if MC >= 11900
+					SERVER.sendSystemMessage(message);
+					//#elseif MC > 11502
+					//$$ SERVER.sendMessage(message, player.getUUID());
+					//#else
+					//$$ SERVER.sendMessage(message);
+					//#endif
 
-				sendDiscordMessage(MarkdownSanitizer.escape(command), Objects.requireNonNull(player.getDisplayName()).getString(), CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUUID().toString() : player.getDisplayName().getString())));
-				if (CONFIG.multiServer.enable) {
-					MULTI_SERVER.sendMessage(false, true, false, player.getDisplayName().getString(), MarkdownSanitizer.escape(command));
+					sendDiscordMessage(MarkdownSanitizer.escape(command), Objects.requireNonNull(player.getDisplayName()).getString(), CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUUID().toString() : player.getDisplayName().getString())));
+					if (CONFIG.multiServer.enable) {
+						MULTI_SERVER.sendMessage(false, true, false, player.getDisplayName().getString(), MarkdownSanitizer.escape(command));
+					}
 				}
 			}
 		});
