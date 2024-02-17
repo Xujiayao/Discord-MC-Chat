@@ -2,6 +2,14 @@
 
 ## Discord-MC-Chat 2.3.1-compat for Minecraft 1.14.4+ - 2024/2/17
 
+MC-Discord-Chat (MCDC) has been renamed to Discord-MC-Chat (DMCC).
+
+Please rename the configuration file from `mcdiscordchat.json` to `discord-mc-chat.json` before starting the server.
+
+MC-Discord-Chat (MCDC) 已更名为 Discord-MC-Chat (DMCC)。
+
+请在启动服务器前将配置文件从 `mcdiscordchat.json` 重命名为 `discord-mc-chat.json`。
+
 ## New Features 新特性
 
 N/A
