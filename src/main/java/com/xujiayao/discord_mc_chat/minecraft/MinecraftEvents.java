@@ -6,7 +6,6 @@ import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.damagesource.DamageSource;
 
 import java.util.Optional;
 
@@ -41,9 +40,9 @@ public interface MinecraftEvents {
 		}
 	});
 
-	Event<PlayerDie> PLAYER_DIE = EventFactory.createArrayBacked(PlayerDie.class, callbacks -> (player, source) -> {
+	Event<PlayerDie> PLAYER_DIE = EventFactory.createArrayBacked(PlayerDie.class, callbacks -> player -> {
 		for (PlayerDie callback : callbacks) {
-			callback.die(player, source);
+			callback.die(player);
 		}
 	});
 
@@ -77,7 +76,7 @@ public interface MinecraftEvents {
 	}
 
 	interface PlayerDie {
-		void die(ServerPlayer player, DamageSource source);
+		void die(ServerPlayer player);
 	}
 
 	interface PlayerJoin {

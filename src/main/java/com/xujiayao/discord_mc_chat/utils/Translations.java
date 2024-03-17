@@ -5,6 +5,11 @@ import com.google.gson.reflect.TypeToken;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.DetectedVersion;
 import net.minecraft.locale.Language;
+import net.minecraft.network.chat.Component;
+//#if MC >= 11900
+import net.minecraft.network.chat.ComponentContents;
+//#endif
+import net.minecraft.network.chat.contents.TranslatableContents;
 import okhttp3.CacheControl;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -105,6 +110,25 @@ public class Translations {
 	}
 
 	public static String translate(String key, Object... args) {
+		for (int i = 0; i < args.length; i++) {
+			Object object = args[i];
+			if (object instanceof Component component) {
+				//#if MC >= 11900
+				ComponentContents componentContents = component.getContents();
+				if (componentContents instanceof TranslatableContents translatable) {
+					args[i] = translate(translatable.getKey(), translatable.getArgs());
+				//#else
+				//$$ if (component instanceof TranslatableComponent translatable) {
+				//$$ 	args[i] = translate(translatable.getKey(), translatable.getArgs());
+				//#endif
+				} else {
+					args[i] = component.getString();
+				}
+			} else {
+				args[i] = object == null ? "null" : object.toString();
+			}
+		}
+
 		String translation1 = translations.get(key);
 		if (translation1 != null) {
 			return String.format(translation1, args);
