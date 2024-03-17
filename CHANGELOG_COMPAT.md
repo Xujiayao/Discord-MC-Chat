@@ -1,14 +1,6 @@
 # Changelog 更新日志
 
-## Discord-MC-Chat 2.3.1-compat for Minecraft 1.14.4+ - 2024/2/17
-
-MC-Discord-Chat (MCDC) has been renamed to Discord-MC-Chat (DMCC).
-
-Please rename the configuration file from `mcdiscordchat.json` to `discord-mc-chat.json` before starting the server.
-
-MC-Discord-Chat (MCDC) 已更名为 Discord-MC-Chat (DMCC)。
-
-请在启动服务器前将配置文件从 `mcdiscordchat.json` 重命名为 `discord-mc-chat.json`。
+## Discord-MC-Chat 2.3.2-compat for Minecraft 1.14.4+ - 2024/3/17
 
 ## New Features 新特性
 
@@ -16,8 +8,8 @@ N/A
 
 ## Changes 更改
 
-- Fix commands are being broadcasted despite the config toggle being turned off (#219)
-  修复在关闭配置文件开关后仍广播游戏内指令
+- Fix server crashes due to player deaths caused by falling blocks and intentional game design (#223)
+  修复玩家因下落的方块和刻意的游戏设计而死亡导致服务器崩溃
 
 ## Removed 移除
 
@@ -29,4 +21,4 @@ N/A
 
 ## Detailed Information 详细信息
 
-https://github.com/Xujiayao/Discord-MC-Chat/compare/2.3.0-compat...2.3.1-compat
+https://github.com/Xujiayao/Discord-MC-Chat/compare/2.3.1-compat...2.3.2-compat

@@ -1,4 +1,4 @@
 {
-  "version": "2.3.1",
-  "changelog": "<https://github.com/Xujiayao/Discord-MC-Chat/releases/tag/2.3.1>\n\n> MC-Discord-Chat (MCDC) has been renamed to Discord-MC-Chat (DMCC).\n> \n> Please rename the configuration file from `mcdiscordchat.json` to `discord-mc-chat.json` before starting the server."
+  "version": "2.3.2",
+  "changelog": "<https://github.com/Xujiayao/Discord-MC-Chat/releases/tag/2.3.2>"
 }
