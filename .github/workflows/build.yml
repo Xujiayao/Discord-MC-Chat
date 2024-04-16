@@ -16,6 +16,10 @@ jobs:
         uses: gradle/actions/wrapper-validation@v3
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
+      - name: Make Gradle Wrapper Executable
+        run: chmod +x ./gradlew
+      - name: Clean
+        run: ./gradlew clean
       - name: Build
         run: ./gradlew build
       - name: Get Short Commit Hash
