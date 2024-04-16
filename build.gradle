@@ -1,5 +1,5 @@
 plugins {
-    id "fabric-loom" version "1.4-SNAPSHOT" apply false // cannot use 0.94.0 (loom & okio)
+    id "fabric-loom" version "1.6-SNAPSHOT" apply false
     id "com.replaymod.preprocess" version "ce1aeb2b"
 }
 

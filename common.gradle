@@ -30,21 +30,21 @@ dependencies {
     modImplementation("net.fabricmc:fabric-loader:${loader_version}")
     modApi("net.fabricmc.fabric-api:fabric-api:${fabric_version}")
 
-    modImplementation("net.dv8tion:JDA:5.0.0-beta.18") {
+    modImplementation("net.dv8tion:JDA:5.0.0-beta.22") {
         exclude module: "opus-java"
     }
-    modImplementation("net.sf.trove4j:trove4j:3.0.3")
+    modImplementation("net.sf.trove4j:core:3.1.0")
     modImplementation("org.apache.commons:commons-collections4:4.4")
     modImplementation("org.slf4j:slf4j-api:2.0.9") // 1.x is Incompatible with Quilt (#164)
     modImplementation("com.neovisionaries:nv-websocket-client:2.14")
-    modImplementation("com.fasterxml.jackson.core:jackson-core:2.14.1")
-    modImplementation("com.fasterxml.jackson.core:jackson-databind:2.14.1")
-    modImplementation("com.fasterxml.jackson.core:jackson-annotations:2.14.1")
-    modImplementation("com.squareup.okhttp3:okhttp:4.11.0") // Use 4.11.0 instead of 4.10.0 for cleaner logs
-    modImplementation("com.squareup.okio:okio:2.10.0") // Cannot use okio-jvm (#55)
-    modImplementation("org.jetbrains.kotlin:kotlin-stdlib:1.6.20")
+    modImplementation("com.fasterxml.jackson.core:jackson-core:2.16.0")
+    modImplementation("com.fasterxml.jackson.core:jackson-databind:2.16.0")
+    modImplementation("com.fasterxml.jackson.core:jackson-annotations:2.16.0")
+    modImplementation("com.squareup.okhttp3:okhttp:4.12.0")
+    modImplementation("com.squareup.okio:okio-jvm:3.6.0")
+    modImplementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.21")
 
-    modImplementation("net.fellbaum:jemoji:1.3.3")
+    modImplementation("net.fellbaum:jemoji:1.3.4")
 
     modImplementation("com.google.code.gson:gson:2.10.1")
 }
