@@ -83,7 +83,7 @@ public class ReadThread extends Thread {
 								.replace("%name%", json.get("playerName").getAsString())
 								.replace("%message%", json.get("message").getAsString()));
 
-						MutableComponent text = Component.Serializer.fromJson(Translations.translateMessage("message.formattedChatMessage")
+						MutableComponent text = Utils.fromJson(Translations.translateMessage("message.formattedChatMessage")
 								.replace("%server%", json.get("serverName").getAsString())
 								.replace("%name%", json.get("playerName").getAsString())
 								.replace("%roleColor%", "white")
@@ -95,13 +95,13 @@ public class ReadThread extends Thread {
 						if (json.get("isText").getAsBoolean()) {
 							LOGGER.info(Translations.translateMessage("message.unformattedOtherMessage")
 									.replace("%server%", json.get("serverName").getAsString())
-									.replace("%message%", Objects.requireNonNull(Component.Serializer.fromJson(json.get("message").getAsString())).getString()));
+									.replace("%message%", Objects.requireNonNull(Utils.fromJson(json.get("message").getAsString())).getString()));
 
-							MutableComponent text = Component.Serializer.fromJson(Translations.translateMessage("message.formattedOtherMessage")
+							MutableComponent text = Utils.fromJson(Translations.translateMessage("message.formattedOtherMessage")
 									.replace("%server%", json.get("serverName").getAsString())
 									.replace("%message%", ""));
 
-							Objects.requireNonNull(text).append(Component.Serializer.fromJson(json.get("message").getAsString()));
+							Objects.requireNonNull(text).append(Utils.fromJson(json.get("message").getAsString()));
 
 							SERVER.getPlayerList().getPlayers().forEach(
 									player -> player.displayClientMessage(text, false));
@@ -110,7 +110,7 @@ public class ReadThread extends Thread {
 									.replace("%server%", json.get("serverName").getAsString())
 									.replace("%message%", json.get("message").getAsString()));
 
-							MutableComponent text = Component.Serializer.fromJson(Translations.translateMessage("message.formattedOtherMessage")
+							MutableComponent text = Utils.fromJson(Translations.translateMessage("message.formattedOtherMessage")
 									.replace("%server%", json.get("serverName").getAsString())
 									.replace("%message%", MarkdownParser.parseMarkdown(json.get("message").getAsString())));
 

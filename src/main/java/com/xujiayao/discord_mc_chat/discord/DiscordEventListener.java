@@ -23,6 +23,9 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fellbaum.jemoji.EmojiManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
+//#if MC >= 12005
+import net.minecraft.core.RegistryAccess;
+//#endif
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 //#if MC < 11900
@@ -90,11 +93,11 @@ public class DiscordEventListener extends ListenerAdapter {
 						.replace("%command%", e.getCommandString())));
 
 		if (CONFIG.generic.broadcastSlashCommandExecution) {
-			MutableComponent commandNoticeText = Component.Serializer.fromJson(Translations.translateMessage("message.formattedOtherMessage")
+			MutableComponent commandNoticeText = Utils.fromJson(Translations.translateMessage("message.formattedOtherMessage")
 					.replace("%server%", (CONFIG.multiServer.enable ? CONFIG.multiServer.name : "Discord"))
 					.replace("%message%", ""));
 
-			Objects.requireNonNull(commandNoticeText).append(Component.Serializer.fromJson(Translations.translateMessage("message.formattedCommandNotice")
+			Objects.requireNonNull(commandNoticeText).append(Utils.fromJson(Translations.translateMessage("message.formattedCommandNotice")
 					.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\").replace("\"", "\\\""))
 					.replace("%roleName%", roleName)
 					.replace("%roleColor%", String.format("#%06X", (0xFFFFFF & e.getMember().getColorRaw())))
@@ -104,7 +107,11 @@ public class DiscordEventListener extends ListenerAdapter {
 					player -> player.displayClientMessage(commandNoticeText, false));
 
 			if (CONFIG.multiServer.enable) {
-				MULTI_SERVER.sendMessage(false, false, true, null, Component.Serializer.toJson(commandNoticeText));
+				//#if MC >= 12005
+				MULTI_SERVER.sendMessage(false, false, true, null, Component.Serializer.toJson(commandNoticeText, RegistryAccess.EMPTY));
+				//#else
+				//$$ MULTI_SERVER.sendMessage(false, false, true, null, Component.Serializer.toJson(commandNoticeText));
+				//#endif
 			}
 		}
 
@@ -541,7 +548,7 @@ public class DiscordEventListener extends ListenerAdapter {
 		if (CONFIG.generic.broadcastChatMessages) {
 			if (e.getMessage().getReferencedMessage() != null) {
 				String s = Translations.translateMessage("message.formattedResponseMessage");
-				MutableComponent referenceFinalText = Component.Serializer.fromJson(s
+				MutableComponent referenceFinalText = Utils.fromJson(s
 						.replace("%message%", (CONFIG.generic.formatChatMessages ? finalReferencedMessage : EmojiManager.replaceAllEmojis(referencedMessageTemp, emoji -> emoji.getDiscordAliases().get(0)).replace("\"", "\\\""))
 								.replace("\n", "\n" + textAfterPlaceholder[0] + "}," + s.substring(1, s.indexOf("%message%"))))
 						.replace("%server%", "Discord")
@@ -554,7 +561,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 
 			String s = Translations.translateMessage("message.formattedChatMessage");
-			MutableComponent finalText = Component.Serializer.fromJson(s
+			MutableComponent finalText = Utils.fromJson(s
 					.replace("%message%", (CONFIG.generic.formatChatMessages ? finalMessage : EmojiManager.replaceAllEmojis(messageTemp, emoji -> emoji.getDiscordAliases().get(0)).replace("\"", "\\\""))
 							.replace("\n", "\n" + textAfterPlaceholder[1] + "}," + s.substring(1, s.indexOf("%message%"))))
 					.replace("%server%", "Discord")

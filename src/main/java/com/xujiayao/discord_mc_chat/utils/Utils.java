@@ -15,6 +15,11 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.DetectedVersion;
+//#if MC >= 12005
+import net.minecraft.core.RegistryAccess;
+//#endif
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 //#if MC > 12002
 import net.minecraft.server.ServerTickRateManager;
 //#endif
@@ -603,5 +608,13 @@ public class Utils {
 		//#endif
 
 		return new Tuple<>(tps, mspt);
+	}
+
+	public static MutableComponent fromJson(String json) {
+		//#if MC >= 12005
+		return Component.Serializer.fromJson(json, RegistryAccess.EMPTY);
+		//#else
+		//$$ return Component.Serializer.fromJson(json);
+		//#endif
 	}
 }

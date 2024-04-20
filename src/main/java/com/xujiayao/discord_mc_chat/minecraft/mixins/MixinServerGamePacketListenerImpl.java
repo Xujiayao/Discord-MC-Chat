@@ -8,7 +8,12 @@ import net.minecraft.network.chat.LastSeenMessages;
 //#endif
 //#if MC >= 11900
 import net.minecraft.network.chat.PlayerChatMessage;
-import net.minecraft.network.protocol.game.ServerboundChatCommandPacket;
+//#endif
+//#if MC >= 11900 && MC <= 12004
+//$$ import net.minecraft.network.protocol.game.ServerboundChatCommandPacket;
+//#endif
+//#if MC >= 12005
+import net.minecraft.network.protocol.game.ServerboundChatCommandSignedPacket;
 //#endif
 //#if MC <= 11802
 //$$ import net.minecraft.network.chat.TranslatableComponent;
@@ -96,11 +101,21 @@ public class MixinServerGamePacketListenerImpl {
 	//$$ }
 	//#endif
 
-	//#if MC >= 11903
-	@Inject(method = "performChatCommand(Lnet/minecraft/network/protocol/game/ServerboundChatCommandPacket;Lnet/minecraft/network/chat/LastSeenMessages;)V", at = @At("HEAD"))
-	private void performChatCommand(ServerboundChatCommandPacket serverboundChatCommandPacket, LastSeenMessages lastSeenMessages, CallbackInfo ci) {
-		MinecraftEvents.PLAYER_COMMAND.invoker().command(player, "/" + serverboundChatCommandPacket.command());
+	//#if MC >= 12005
+	@Inject(method = "performUnsignedChatCommand(Ljava/lang/String;)V", at = @At("HEAD"))
+	private void performUnsignedChatCommand(String string, CallbackInfo ci) {
+		MinecraftEvents.PLAYER_COMMAND.invoker().command(player, "/" + string);
 	}
+
+	@Inject(method = "performSignedChatCommand(Lnet/minecraft/network/protocol/game/ServerboundChatCommandSignedPacket;Lnet/minecraft/network/chat/LastSeenMessages;)V", at = @At("HEAD"))
+	private void performSignedChatCommand(ServerboundChatCommandSignedPacket serverboundChatCommandSignedPacket, LastSeenMessages lastSeenMessages, CallbackInfo ci) {
+		MinecraftEvents.PLAYER_COMMAND.invoker().command(player, "/" + serverboundChatCommandSignedPacket.command());
+	}
+	//#elseif MC >= 11903
+	//$$ @Inject(method = "performChatCommand(Lnet/minecraft/network/protocol/game/ServerboundChatCommandPacket;Lnet/minecraft/network/chat/LastSeenMessages;)V", at = @At("HEAD"))
+	//$$ private void performChatCommand(ServerboundChatCommandPacket serverboundChatCommandPacket, LastSeenMessages lastSeenMessages, CallbackInfo ci) {
+	//$$ 	MinecraftEvents.PLAYER_COMMAND.invoker().command(player, "/" + serverboundChatCommandPacket.command());
+	//$$ }
 	//#elseif MC > 11900
 	//$$ @Inject(method = "performChatCommand(Lnet/minecraft/network/protocol/game/ServerboundChatCommandPacket;)V", at = @At("HEAD"))
 	//$$ private void performChatCommand(ServerboundChatCommandPacket serverboundChatCommandPacket, CallbackInfo ci) {

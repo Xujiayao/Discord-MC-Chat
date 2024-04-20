@@ -159,7 +159,7 @@ public class MinecraftEventListener {
 			}
 
 			if (CONFIG.generic.formatChatMessages) {
-				return Optional.ofNullable(Component.Serializer.fromJson("[{\"text\":\"" + contentToMinecraft + "\"}]"));
+				return Optional.ofNullable(Utils.fromJson("[{\"text\":\"" + contentToMinecraft + "\"}]"));
 			} else {
 				return Optional.empty();
 			}
