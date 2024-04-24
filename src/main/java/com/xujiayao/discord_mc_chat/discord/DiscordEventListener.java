@@ -80,7 +80,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
 		String roleName;
 		try {
-			roleName = Objects.requireNonNull(e.getMember()).getRoles().get(0).getName();
+			roleName = Objects.requireNonNull(e.getMember()).getRoles().getFirst().getName();
 		} catch (Exception ex) {
 			roleName = "null";
 		}
@@ -313,7 +313,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			}
 
 			try {
-				referencedMemberRoleName = Objects.requireNonNull(referencedMember).getRoles().get(0).getName();
+				referencedMemberRoleName = Objects.requireNonNull(referencedMember).getRoles().getFirst().getName();
 			} catch (Exception ex) {
 				referencedMemberRoleName = "null";
 			}
@@ -322,7 +322,7 @@ public class DiscordEventListener extends ListenerAdapter {
 					.replace("%server%", "Discord")
 					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : webhookName)
 					.replace("%roleName%", referencedMemberRoleName)
-					.replace("%message%", EmojiManager.replaceAllEmojis(referencedMessageTemp, emoji -> emoji.getDiscordAliases().get(0))));
+					.replace("%message%", EmojiManager.replaceAllEmojis(referencedMessageTemp, emoji -> emoji.getDiscordAliases().getFirst())));
 		}
 
 		if (StringUtils.countMatches(messageTemp, "\n") > CONFIG.generic.discordNewlineLimit) {
@@ -330,7 +330,7 @@ public class DiscordEventListener extends ListenerAdapter {
 		}
 
 		try {
-			memberRoleName = e.getMember().getRoles().get(0).getName();
+			memberRoleName = e.getMember().getRoles().getFirst().getName();
 		} catch (Exception ex) {
 			memberRoleName = "null";
 		}
@@ -339,7 +339,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				.replace("%server%", "Discord")
 				.replace("%name%", CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName())
 				.replace("%roleName%", memberRoleName)
-				.replace("%message%", EmojiManager.replaceAllEmojis(messageTemp, emoji -> emoji.getDiscordAliases().get(0))));
+				.replace("%message%", EmojiManager.replaceAllEmojis(messageTemp, emoji -> emoji.getDiscordAliases().getFirst())));
 
 		if (SERVER == null) {
 			return;
@@ -367,7 +367,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			StringBuilder referencedMessage;
 
 			if (e.getMessage().getReferencedMessage() != null) {
-				referencedMessage = new StringBuilder(EmojiManager.replaceAllEmojis(referencedMessageTemp, emoji -> emoji.getDiscordAliases().get(0)));
+				referencedMessage = new StringBuilder(EmojiManager.replaceAllEmojis(referencedMessageTemp, emoji -> emoji.getDiscordAliases().getFirst()));
 
 				if (!e.getMessage().getReferencedMessage().getAttachments().isEmpty()) {
 					if (!referencedMessageTemp.isBlank()) {
@@ -456,7 +456,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				}
 			}
 
-			StringBuilder message = new StringBuilder(EmojiManager.replaceAllEmojis(messageTemp, emoji -> emoji.getDiscordAliases().get(0)));
+			StringBuilder message = new StringBuilder(EmojiManager.replaceAllEmojis(messageTemp, emoji -> emoji.getDiscordAliases().getFirst()));
 
 			if (!e.getMessage().getAttachments().isEmpty()) {
 				if (!messageTemp.isBlank()) {
@@ -549,7 +549,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			if (e.getMessage().getReferencedMessage() != null) {
 				String s = Translations.translateMessage("message.formattedResponseMessage");
 				MutableComponent referenceFinalText = Utils.fromJson(s
-						.replace("%message%", (CONFIG.generic.formatChatMessages ? finalReferencedMessage : EmojiManager.replaceAllEmojis(referencedMessageTemp, emoji -> emoji.getDiscordAliases().get(0)).replace("\"", "\\\""))
+						.replace("%message%", (CONFIG.generic.formatChatMessages ? finalReferencedMessage : EmojiManager.replaceAllEmojis(referencedMessageTemp, emoji -> emoji.getDiscordAliases().getFirst()).replace("\"", "\\\""))
 								.replace("\n", "\n" + textAfterPlaceholder[0] + "}," + s.substring(1, s.indexOf("%message%"))))
 						.replace("%server%", "Discord")
 						.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()).replace("\\", "\\\\").replace("\"", "\\\"") : webhookName)
@@ -562,7 +562,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
 			String s = Translations.translateMessage("message.formattedChatMessage");
 			MutableComponent finalText = Utils.fromJson(s
-					.replace("%message%", (CONFIG.generic.formatChatMessages ? finalMessage : EmojiManager.replaceAllEmojis(messageTemp, emoji -> emoji.getDiscordAliases().get(0)).replace("\"", "\\\""))
+					.replace("%message%", (CONFIG.generic.formatChatMessages ? finalMessage : EmojiManager.replaceAllEmojis(messageTemp, emoji -> emoji.getDiscordAliases().getFirst()).replace("\"", "\\\""))
 							.replace("\n", "\n" + textAfterPlaceholder[1] + "}," + s.substring(1, s.indexOf("%message%"))))
 					.replace("%server%", "Discord")
 					.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\").replace("\"", "\\\""))

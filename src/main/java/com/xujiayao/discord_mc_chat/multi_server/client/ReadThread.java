@@ -7,7 +7,6 @@ import com.xujiayao.discord_mc_chat.utils.MarkdownParser;
 import com.xujiayao.discord_mc_chat.utils.Translations;
 import com.xujiayao.discord_mc_chat.utils.Utils;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
