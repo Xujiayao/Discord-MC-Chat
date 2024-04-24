@@ -1,6 +1,13 @@
 {
   "versions": [
     {
+      "version": "1.20.5-2.3.2",
+      "changelog": "<https://github.com/Xujiayao/Discord-MC-Chat/releases/tag/1.20.5-2.3.2>\n\n> Starting from Minecraft 1.20.5 (Snapshot 24w14a), the game requires Java 21.\n> \n> Therefore, in order to ensure compatibility with multiple versions, DMCC now requires Fabric Loader version >=0.15.10 and Java version >=21, regardless of whether the game version is later than Minecraft 1.20.5.",
+      "minecraft_dependency": [
+        "~1.20.5"
+      ]
+    },
+    {
       "version": "2.3.2",
       "changelog": "<https://github.com/Xujiayao/Discord-MC-Chat/releases/tag/2.3.2>",
       "minecraft_dependency": [
@@ -11,26 +18,13 @@
         "1.20",
         "1.20.1",
         "1.20.2",
-        "~1.20.3"
+        "1.20.3",
+        "1.20.4"
       ]
     },
     {
-      "version": "2.3.1",
-      "changelog": "<https://github.com/Xujiayao/Discord-MC-Chat/releases/tag/2.3.1>\n\n> MC-Discord-Chat (MCDC) has been renamed to Discord-MC-Chat (DMCC).\n> \n> Please rename the configuration file from `mcdiscordchat.json` to `discord-mc-chat.json` before starting the server.",
-      "minecraft_dependency": [
-        "1.19.1",
-        "1.19.2",
-        "1.19.3",
-        "~1.19.4",
-        "1.20",
-        "1.20.1",
-        "1.20.2",
-        "~1.20.3"
-      ]
-    },
-    {
-      "version": "2.3.1-compat",
-      "changelog": "<https://github.com/Xujiayao/Discord-MC-Chat/releases/tag/2.3.1-compat>\n\n> MC-Discord-Chat (MCDC) has been renamed to Discord-MC-Chat (DMCC).\n> \n> Please rename the configuration file from `mcdiscordchat.json` to `discord-mc-chat.json` before starting the server.",
+      "version": "2.3.2-compat",
+      "changelog": "<https://github.com/Xujiayao/Discord-MC-Chat/releases/tag/2.3.2-compat>",
       "minecraft_dependency": [
         "~1.14.4",
         "~1.15.2",
