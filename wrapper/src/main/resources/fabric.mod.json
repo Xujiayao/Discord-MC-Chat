@@ -16,7 +16,7 @@
   "icon": "assets/discord-mc-chat/icon.png",
   "environment": "server",
   "depends": {
-    "fabricloader": ">=0.14.22",
+    "fabricloader": ">=0.15.10",
     "java": ">=21"
   }
 }
