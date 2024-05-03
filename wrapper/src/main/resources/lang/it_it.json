@@ -79,6 +79,6 @@
   "message.highMspt": "**Il MSPT del server (%mspt%) è oltre %msptLimit%!**",
 
   "message.offlineChannelTopic": ":x: Server offline | Ultimo aggiornamento: <t:%lastUpdateTime%:f>",
-  "message.onlineChannelTopic": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% giocatori online | %uniquePlayerCount% giocatori unici si sono uniti | Server avviato alle <t:%serverStartedTime%:R> | Ultimo aggiornamento: <t:%lastUpdateTime%:f>",
-  "message.onlineChannelTopicForMultiServer": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% giocatori online | %uniquePlayerCount% giocatori unici si sono uniti | %onlineServerCount% server online [%onlineServerList%] | Server avviato alle <t:%serverStartedTime%:R> | Ultimo aggiornamento: <t:%lastUpdateTime%:f>"
+  "message.onlineChannelTopic": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% giocatori online | %uniquePlayerCount% giocatori unici si sono uniti | Server avviato <t:%serverStartedTime%:R> | Ultimo aggiornamento: <t:%lastUpdateTime%:f>",
+  "message.onlineChannelTopicForMultiServer": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% giocatori online | %uniquePlayerCount% giocatori unici si sono uniti | %onlineServerCount% server online [%onlineServerList%] | Server avviato <t:%serverStartedTime%:R> | Ultimo aggiornamento: <t:%lastUpdateTime%:f>"
 }
