@@ -28,7 +28,7 @@ jobs:
           short_sha=$(echo ${GITHUB_SHA} | cut -c1-7)
           echo "short_sha=$short_sha" >> $GITHUB_OUTPUT
       - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Discord-MC-Chat ${{ steps.get_short_commit_hash.outputs.short_sha }}
           path: build/*.jar
