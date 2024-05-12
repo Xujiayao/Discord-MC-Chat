@@ -488,7 +488,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				for (String emojiName : emojiNames) {
 					List<RichCustomEmoji> emojis = JDA.getEmojisByName(emojiName, true);
 					if (!emojis.isEmpty() || EmojiManager.getByAlias(emojiName).isPresent()) {
-						message = new StringBuilder(StringUtils.replaceIgnoreCase(message.toString(), (":" + emojiName + ":"), (ChatFormatting.YELLOW + ":" + emojiName + ":" + ChatFormatting.RESET)));
+						message = new StringBuilder(StringUtils.replaceIgnoreCase(message.toString(), (":" + emojiName + ":"), (ChatFormatting.YELLOW + ":" + MarkdownSanitizer.escape(emojiName) + ":" + ChatFormatting.RESET)));
 					}
 				}
 			}
