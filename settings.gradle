@@ -1,48 +1,48 @@
 pluginManagement {
-    repositories {
-        maven {
-            name = "Fabric"
-            url = "https://maven.fabricmc.net/"
-        }
-        maven {
-            name = "Jitpack"
-            url = "https://jitpack.io"
-        }
-        mavenCentral()
-        gradlePluginPortal()
-    }
-    resolutionStrategy {
-        eachPlugin {
-            switch (requested.id.id) {
-                case "com.replaymod.preprocess": {
-                    useModule("com.github.Fallen-Breath:preprocessor:${requested.version}")
-                    break
-                }
-            }
-        }
-    }
+	repositories {
+		maven {
+			name = "Fabric"
+			url = "https://maven.fabricmc.net/"
+		}
+		maven {
+			name = "Jitpack"
+			url = "https://jitpack.io"
+		}
+		mavenCentral()
+		gradlePluginPortal()
+	}
+	resolutionStrategy {
+		eachPlugin {
+			switch (requested.id.id) {
+				case "com.replaymod.preprocess": {
+					useModule("com.github.Fallen-Breath:preprocessor:${requested.version}")
+					break
+				}
+			}
+		}
+	}
 }
 
 def versions = Arrays.asList(
-        "compat_1.15.2",
-        "compat_1.16.5",
-        "compat_1.17.1",
-        "compat_1.18.2",
-        "compat_1.19"  ,
-        "compat_1.19.2",
-        "1.19.3",
-        "1.19.4",
-        "1.20.1",
-        "1.20.2",
-        "1.20.4",
-        "1.20.6"
+		"compat_1.15.2",
+		"compat_1.16.5",
+		"compat_1.17.1",
+		"compat_1.18.2",
+		"compat_1.19"  ,
+		"compat_1.19.2",
+		"1.19.3",
+		"1.19.4",
+		"1.20.1",
+		"1.20.2",
+		"1.20.4",
+		"1.20.6"
 )
 for (String version : versions) {
-    include(":$version")
+	include(":$version")
 
-    def proj = project(":$version")
-    proj.projectDir = file("versions/$version")
-    proj.buildFileName = "../../common.gradle"
+	def proj = project(":$version")
+	proj.projectDir = file("versions/$version")
+	proj.buildFileName = "../../common.gradle"
 }
 
 include(":active")

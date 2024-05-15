@@ -7,72 +7,72 @@ apply plugin: "com.replaymod.preprocess"
 int mcVersion = 1
 
 preprocess {
-    mcVersion = vars.get().get("MC")
-    tabIndentation = true
+	mcVersion = vars.get().get("MC")
+	tabIndentation = true
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
 }
 
 version = mod_version
 group = maven_group
 
 base {
-    archivesName = "${archives_base_name}-${minecraft_version}"
+	archivesName = "${archives_base_name}-${minecraft_version}"
 }
 
 dependencies {
-    minecraft("com.mojang:minecraft:${minecraft_version}")
-    mappings(loom.officialMojangMappings())
+	minecraft("com.mojang:minecraft:${minecraft_version}")
+	mappings(loom.officialMojangMappings())
 
-    modImplementation("net.fabricmc:fabric-loader:${loader_version}")
-    modApi("net.fabricmc.fabric-api:fabric-api:${fabric_version}")
+	modImplementation("net.fabricmc:fabric-loader:${loader_version}")
+	modApi("net.fabricmc.fabric-api:fabric-api:${fabric_version}")
 
-    modImplementation("net.dv8tion:JDA:5.0.0-beta.22") {
-        exclude module: "opus-java"
-    }
-    modImplementation("net.sf.trove4j:core:3.1.0")
-    modImplementation("org.apache.commons:commons-collections4:4.4")
-    modImplementation("org.slf4j:slf4j-api:2.0.9") // 1.x is Incompatible with Quilt (#164)
-    modImplementation("com.neovisionaries:nv-websocket-client:2.14")
-    modImplementation("com.fasterxml.jackson.core:jackson-core:2.16.0")
-    modImplementation("com.fasterxml.jackson.core:jackson-databind:2.16.0")
-    modImplementation("com.fasterxml.jackson.core:jackson-annotations:2.16.0")
-    modImplementation("com.squareup.okhttp3:okhttp:4.12.0")
-    modImplementation("com.squareup.okio:okio-jvm:3.6.0")
-    modImplementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.21")
+	modImplementation("net.dv8tion:JDA:5.0.0-beta.22") {
+		exclude module: "opus-java"
+	}
+	modImplementation("net.sf.trove4j:core:3.1.0")
+	modImplementation("org.apache.commons:commons-collections4:4.4")
+	modImplementation("org.slf4j:slf4j-api:2.0.9") // 1.x is Incompatible with Quilt (#164)
+	modImplementation("com.neovisionaries:nv-websocket-client:2.14")
+	modImplementation("com.fasterxml.jackson.core:jackson-core:2.16.0")
+	modImplementation("com.fasterxml.jackson.core:jackson-databind:2.16.0")
+	modImplementation("com.fasterxml.jackson.core:jackson-annotations:2.16.0")
+	modImplementation("com.squareup.okhttp3:okhttp:4.12.0")
+	modImplementation("com.squareup.okio:okio-jvm:3.6.0")
+	modImplementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.21")
 
-    modImplementation("net.fellbaum:jemoji:1.3.4")
+	modImplementation("net.fellbaum:jemoji:1.3.4")
 
-    modImplementation("com.google.code.gson:gson:2.10.1")
+	modImplementation("com.google.code.gson:gson:2.10.1")
 }
 
 processResources {
-    filesMatching("fabric.mod.json") {
-        def valueMap = [
-                "mc_version": minecraft_version.replace(".", "_"),
-                "version"   : mod_version
-        ]
-        expand valueMap
-    }
+	filesMatching("fabric.mod.json") {
+		def valueMap = [
+				"mc_version": minecraft_version.replace(".", "_"),
+				"version"   : mod_version
+		]
+		expand valueMap
+	}
 
-    doLast {
-        ArrayList<?> minecraft_dependency = minecraft_dependency.split(",")
+	doLast {
+		ArrayList<?> minecraft_dependency = minecraft_dependency.split(",")
 
-        File file = file("build/resources/main/fabric.mod.json")
-        JsonSlurper slurper = new JsonSlurper()
-        JsonBuilder builder = new JsonBuilder(slurper.parse(file))
-        builder.content.depends.minecraft = minecraft_dependency
-        BufferedWriter writer = file.newWriter()
-        writer.append(builder.toPrettyString())
-        writer.flush()
-        writer.close()
-    }
+		File file = file("build/resources/main/fabric.mod.json")
+		JsonSlurper slurper = new JsonSlurper()
+		JsonBuilder builder = new JsonBuilder(slurper.parse(file))
+		builder.content.depends.minecraft = minecraft_dependency
+		BufferedWriter writer = file.newWriter()
+		writer.append(builder.toPrettyString())
+		writer.flush()
+		writer.close()
+	}
 }
 
 tasks.withType(JavaCompile).configureEach {
-    it.options.encoding = "UTF-8"
-    it.options.release = 21
+	it.options.encoding = "UTF-8"
+	it.options.release = 21
 }

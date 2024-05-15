@@ -59,79 +59,79 @@ For translation contributions, language files are located in the `/wrapper/src/m
 - Full multi-language support
 - Support multi-server mode (running more than one Minecraft server with DMCC in the same Discord guild)
 - Minecraft <> Discord cross server chat
-  - Support disabling Discord and in-game chat broadcasts
-  - Support displaying server status using Discord channel topic feature
-  - Support displaying server player count in bot activity status
-  - Support Discord Webhook feature
-    - Dynamic-created DMCC Webhook
-    - Customizable Webhook Avatar API
-    - Use the bot itself to send chat messages when Webhook is disabled
-  - Support in-game Markdown parsing
-  - Support highlighting and using default Unicode and server custom emoji in-game
-  - Support highlighting stickers in-game
-  - Support highlighting and mentions (@) in-game
-    - Customizable scope of allowed mentions (@) in-game
-    - Support disabling mentions (@) in-game
-  - Support highlighting and opening hyperlinks and GIFs in-game
-  - Support disabling all parsing
-  - Support in-game display of Discord user role colour
-  - Support in-game display of response messages
-  - Support limiting the number of newlines for Discord messages
-  - Broadcast player command execution
-    - Players who execute commands can also see the commands themselves
-    - Exclude broadcasts for execution of specific commands
-  - Send all console log messages to Discord
+    - Support disabling Discord and in-game chat broadcasts
+    - Support displaying server status using Discord channel topic feature
+    - Support displaying server player count in bot activity status
+    - Support Discord Webhook feature
+        - Dynamic-created DMCC Webhook
+        - Customizable Webhook Avatar API
+        - Use the bot itself to send chat messages when Webhook is disabled
+    - Support in-game Markdown parsing
+    - Support highlighting and using default Unicode and server custom emoji in-game
+    - Support highlighting stickers in-game
+    - Support highlighting and mentions (@) in-game
+        - Customizable scope of allowed mentions (@) in-game
+        - Support disabling mentions (@) in-game
+    - Support highlighting and opening hyperlinks and GIFs in-game
+    - Support disabling all parsing
+    - Support in-game display of Discord user role colour
+    - Support in-game display of response messages
+    - Support limiting the number of newlines for Discord messages
+    - Broadcast player command execution
+        - Players who execute commands can also see the commands themselves
+        - Exclude broadcasts for execution of specific commands
+    - Send all console log messages to Discord
 - Discord Commands available
-  - Use Discord to manage channels that can execute DMCC commands
-  - Notify in-game players when someone executes an DMCC command
-  - /console command supports Minecraft command auto-completion
-  - Normal Commands
-    - /help                    | Get a list of available commands
-    - /info                    | Query server running status
-    - /stats \<type\> \<name\> | Query the scoreboard of a statistic
-    - /update                  | Check for update
-  - Admin Commands
-    - /console \<command\>     | Execute a command in the server console (admin only)
-    - /log \<file\>            | Get the specified server log (admin only)
-    - /reload                  | Reload Discord-MC-Chat config file (admin only)
-    - /stop                    | Stop the server (admin only)
-  - Commands with Adjustable Permissions
-    - /whitelist \<player\>    | Add a player to the server whitelist
+    - Use Discord to manage channels that can execute DMCC commands
+    - Notify in-game players when someone executes an DMCC command
+    - /console command supports Minecraft command auto-completion
+    - Normal Commands
+        - /help                    | Get a list of available commands
+        - /info                    | Query server running status
+        - /stats \<type\> \<name\> | Query the scoreboard of a statistic
+        - /update                  | Check for update
+    - Admin Commands
+        - /console \<command\>     | Execute a command in the server console (admin only)
+        - /log \<file\>            | Get the specified server log (admin only)
+        - /reload                  | Reload Discord-MC-Chat config file (admin only)
+        - /stop                    | Stop the server (admin only)
+    - Commands with Adjustable Permissions
+        - /whitelist \<player\>    | Add a player to the server whitelist
 - Minecraft Commands available
-  - Admin-only commands require a level 4 operator at minimum
-  - Normal Commands
-    - /dmcc help                    | Get a list of available commands
-    - /dmcc info                    | Query server running status
-    - /dmcc stats \<type\> \<name\> | Query the scoreboard of a statistic
-    - /dmcc update                  | Check for update
-  - Admin Commands
-    - /dmcc reload                  | Reload Discord-MC-Chat config file (admin only)
-  - Commands with Adjustable Permissions
-    - /dmcc whitelist \<player\>    | Add a player to the server whitelist
+    - Admin-only commands require a level 4 operator at minimum
+    - Normal Commands
+        - /dmcc help                    | Get a list of available commands
+        - /dmcc info                    | Query server running status
+        - /dmcc stats \<type\> \<name\> | Query the scoreboard of a statistic
+        - /dmcc update                  | Check for update
+    - Admin Commands
+        - /dmcc reload                  | Reload Discord-MC-Chat config file (admin only)
+    - Commands with Adjustable Permissions
+        - /dmcc whitelist \<player\>    | Add a player to the server whitelist
 - Fully customizable message format
-  - Sending specific server messages to Discord can be disabled
-  - In-game
-    - Chat messages from Discord
-    - Response messages from Discord
-    - Messages from other DMCC servers
-  - Discord
-    - Server started
-    - Server stopped
-    - Player joined server
-    - Player left server
-    - Player reached a progress / achieved a goal / completed a challenge
-      - Multilingual support
-      - Support displaying descriptions for task/challenge/goal messages
-    - Player died
-      - Multilingual support
-    - Server MSPT is higher than a certain value
+    - Sending specific server messages to Discord can be disabled
+    - In-game
+        - Chat messages from Discord
+        - Response messages from Discord
+        - Messages from other DMCC servers
+    - Discord
+        - Server started
+        - Server stopped
+        - Player joined server
+        - Player left server
+        - Player reached a progress / achieved a goal / completed a challenge
+            - Multilingual support
+            - Support displaying descriptions for task/challenge/goal messages
+        - Player died
+            - Multilingual support
+        - Server MSPT is higher than a certain value
 - Use admin list to configure user permissions to use special commands
 - Support Hot Reloading of the config file
-  - Backup every time the config file is loaded
+    - Backup every time the config file is loaded
 - Check for updates regularly
-  - Push DMCC version updates accurately by checking server Minecraft version compatibility
-  - Customizable update notification channel
-  - Check for updates can be disabled
+    - Push DMCC version updates accurately by checking server Minecraft version compatibility
+    - Customizable update notification channel
+    - Check for updates can be disabled
 
 Languages currently available:
 
