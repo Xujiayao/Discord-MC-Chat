@@ -19,3 +19,10 @@ classes/
 # Fabric
 
 run/
+
+# Java
+
+hs_err_*.log
+replay_*.log
+*.hprof
+*.jfr
