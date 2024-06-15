@@ -49,9 +49,6 @@ def fabric_subprojects = parent.subprojects.findAll({
 	it.name.contains("compat_")
 })
 
-compileJava.dependsOn(":active:jar")
-processResources.dependsOn(":active:jar")
-
 remapJar {
 	outputs.upToDateWhen { false }
 
@@ -59,7 +56,6 @@ remapJar {
 		fabric_subprojects.collect {
 			it.tasks.remapJar
 		}
-		":active:remapJar"
 	}
 
 	doFirst {
