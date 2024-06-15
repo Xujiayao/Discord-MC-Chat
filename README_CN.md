@@ -139,7 +139,9 @@ Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCD
 |---------|-----------------------|
 | `de_de` | Deutsch (Deutschland) |
 | `en_us` | English (US)          |
+| `es_es` | Español (España)      |
 | `fr_fr` | Français (France)     |
+| `it_it` | Italiano (Italia)     |
 | `ko_kr` | 한국어（대한민국）             |
 | `no_no` | Norsk Bokmål (Norge)  |
 | `pl_pl` | Polski (Polska)       |

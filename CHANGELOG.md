@@ -1,6 +1,6 @@
 # Changelog 更新日志
 
-## Discord-MC-Chat 1.20.5-2.3.2 for Minecraft 1.20.5 - 2024/4/24
+## Discord-MC-Chat 2.3.3 for Minecraft 1.19.4+ - 2024/6/15
 
 Starting from Minecraft 1.20.5 (Snapshot 24w14a), the game requires Java 21.
 
@@ -12,21 +12,31 @@ Therefore, in order to ensure compatibility with multiple versions, DMCC now req
 
 ## New Features 新特性
 
-- Compatible with version 1.20.5
-  兼容 1.20.5 版本
+- Italian translation (#229)
+  意大利语翻译
+
+- Spanish translation (#232)
+  西班牙语翻译
+
+- Compatible with version 1.21 (#237)
+  兼容 1.21 版本
 
 ## Changes 更改
 
-N/A
+- Fix special characters in emojis / emotes not being escaped (#227)
+  修复表情中的特殊字符没有被转义
 
 ## Removed 移除
 
-N/A
+- Move 1.19.1 - 1.19.3 versions to Compat update channel
+  将 1.19.1 - 1.19.3 版本移至 Compat 更新通道
 
 ## Contributors 贡献者
 
 - @Xujiayao
+- @Lucadecastle
+- @BroxyZF
 
 ## Detailed Information 详细信息
 
-https://github.com/Xujiayao/Discord-MC-Chat/compare/2.3.2...1.20.5-2.3.2
+https://github.com/Xujiayao/Discord-MC-Chat/compare/1.20.5-2.3.2...2.3.3

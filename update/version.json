@@ -1,0 +1,4 @@
+{
+	"version": "2.3.3",
+	"changelog": "<https://github.com/Xujiayao/Discord-MC-Chat/releases/tag/2.3.3>\n\n> Starting from Minecraft 1.20.5 (Snapshot 24w14a), the game requires Java 21.\n> \n> Therefore, in order to ensure compatibility with multiple versions, DMCC now requires Fabric Loader version >=0.15.10 and Java version >=21, regardless of whether the game version is later than Minecraft 1.20.5."
+}
