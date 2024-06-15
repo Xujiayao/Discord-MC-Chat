@@ -4,8 +4,8 @@ import groovy.json.JsonSlurper
 apply plugin: "fabric-loom"
 
 java {
-	sourceCompatibility = JavaVersion.VERSION_17
-	targetCompatibility = JavaVersion.VERSION_17
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
 }
 
 version = mod_version
@@ -72,6 +72,13 @@ remapJar {
 		rename { "${it}_${archives_base_name}" }
 	}
 	from("build/tmp/versions")
+
+	doLast {
+		copy {
+			from "build/libs"
+			into "../../build"
+		}
+	}
 }
 
 processResources {
@@ -98,8 +105,4 @@ processResources {
 		writer.flush()
 		writer.close()
 	}
-}
-
-clean {
-	delete file("../../build")
 }

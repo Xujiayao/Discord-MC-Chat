@@ -31,3 +31,7 @@ preprocess {
 	mc1204.link(mc1206, null)
 	mc1206.link(mc1210, null)
 }
+
+project.afterEvaluate {
+	delete file("build")
+}
