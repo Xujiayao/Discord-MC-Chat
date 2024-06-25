@@ -300,8 +300,15 @@ public class Utils {
 					continue;
 				}
 
+				if (webhook.getOwnerAsUser() == JDA.getSelfUser() && !webhookName.equals(webhook.getName())) {
+					webhook.delete().queue();
+					continue;
+				}
+
 				if (webhookName.equals(webhook.getName())) {
-					if (webhook.getChannel().asTextChannel() == CHANNEL) {
+					if (CONFIG.generic.useWebhook
+							&& webhook.getOwnerAsUser() == JDA.getSelfUser()
+							&& webhook.getChannel().asTextChannel() == CHANNEL) {
 						WEBHOOK = webhook;
 					} else {
 						webhook.delete().queue();
