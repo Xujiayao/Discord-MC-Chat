@@ -114,9 +114,14 @@ public class Main implements DedicatedServerModInitializer {
 				}
 			}
 
-			String webhookName = "DMCC Webhook" + (CONFIG.multiServer.enable ? " (" + CONFIG.multiServer.name + ")" : "");
+			String webhookName = "DMCC Webhook" + " (" + JDA.getSelfUser().getApplicationId() + ")";
 			WEBHOOK = null;
 			for (Webhook webhook : CHANNEL.getGuild().retrieveWebhooks().complete()) {
+				if (webhook.getName().contains("MCDC Webhook") || "DMCC Webhook".equals(webhook.getName())) {
+					webhook.delete().queue();
+					continue;
+				}
+
 				if (webhookName.equals(webhook.getName())) {
 					if (webhook.getChannel().asTextChannel() == CHANNEL) {
 						WEBHOOK = webhook;
