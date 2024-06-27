@@ -118,7 +118,7 @@ public class Utils {
 
 				String minecraftVersion = DetectedVersion.tryDetectVersion().getName();
 
-				CONFIG.latestVersion = "";
+				String latestVersion = "";
 				String latestChangelog = "";
 
 				JsonArray versions = new Gson().fromJson(result, JsonObject.class).getAsJsonArray("versions");
@@ -175,26 +175,28 @@ public class Utils {
 					}
 
 					if (isCompatible) {
-						CONFIG.latestVersion = object.get("version").getAsString();
+						latestVersion = object.get("version").getAsString();
 						latestChangelog = object.get("changelog").getAsString();
-						ConfigManager.update();
 						break;
 					}
 				}
 
 				StringBuilder message = new StringBuilder();
 
-				if (!CONFIG.latestVersion.equals(VERSION)) {
-					if (CONFIG.latestCheckTime > (System.currentTimeMillis() - 172800000) && !isManualCheck) {
+				if (!latestVersion.equals(VERSION)) {
+					if (latestVersion.equals(CONFIG.latestVersion)
+							&& CONFIG.latestCheckTime > (System.currentTimeMillis() - 172800000)
+							&& !isManualCheck) {
 						return "";
 					}
 
+					CONFIG.latestVersion = latestVersion;
 					CONFIG.latestCheckTime = System.currentTimeMillis();
 					ConfigManager.update();
 
 					message.append(Translations.translate("utils.utils.cUpdate.newVersionAvailable"));
 					message.append("\n\n");
-					message.append("**Discord-MC-Chat ").append(VERSION).append(" -> ").append(CONFIG.latestVersion).append("**");
+					message.append("**Discord-MC-Chat ").append(VERSION).append(" -> ").append(latestVersion).append("**");
 					message.append("\n\n");
 					message.append(Translations.translate("utils.utils.cUpdate.downloadLink"));
 					message.append("\n\n");
@@ -207,6 +209,7 @@ public class Utils {
 
 					return message.toString();
 				} else {
+					CONFIG.latestVersion = latestVersion;
 					CONFIG.latestCheckTime = System.currentTimeMillis();
 					ConfigManager.update();
 					
