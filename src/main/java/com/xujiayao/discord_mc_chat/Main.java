@@ -108,6 +108,7 @@ public class Main implements DedicatedServerModInitializer {
 				if (UPDATE_NOTIFICATION_CHANNEL == null) {
 					throw new NullPointerException("Invalid Update Notification Channel ID");
 				}
+				// TODO This (including other messages, /reload) should be checked every time before sending!
 				if (!UPDATE_NOTIFICATION_CHANNEL.canTalk()) {
 					LOGGER.warn("Unable to send messages in the Update Notification Channel; Using the default channel instead.");
 					UPDATE_NOTIFICATION_CHANNEL = CHANNEL;
