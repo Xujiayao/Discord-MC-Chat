@@ -61,7 +61,7 @@ public class MixinPlayerList {
 		MinecraftEvents.PLAYER_JOIN.invoker().join(serverPlayer);
 	}
 
-	@Inject(method = "remove(Lnet/minecraft/server/level/ServerPlayer;)V", at = @At("HEAD"))
+	@Inject(method = "remove(Lnet/minecraft/server/level/ServerPlayer;)V", at = @At("RETURN"))
 	private void remove(ServerPlayer serverPlayer, CallbackInfo ci) {
 		MinecraftEvents.PLAYER_QUIT.invoker().quit(serverPlayer);
 	}
