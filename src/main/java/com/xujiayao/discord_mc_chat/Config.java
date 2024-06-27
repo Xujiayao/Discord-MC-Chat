@@ -17,7 +17,7 @@ public class Config {
 	public CustomMessage customMessage = new CustomMessage();
 
 	public String latestVersion = VERSION;
-	public long latestCheckTime = System.currentTimeMillis() - 300000000;
+	public long latestCheckTime = 0;
 
 	public static class Generic {
 		public String language = "en_us";

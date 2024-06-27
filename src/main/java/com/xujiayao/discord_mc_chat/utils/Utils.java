@@ -177,6 +177,7 @@ public class Utils {
 					if (isCompatible) {
 						CONFIG.latestVersion = object.get("version").getAsString();
 						latestChangelog = object.get("changelog").getAsString();
+						ConfigManager.update();
 						break;
 					}
 				}
@@ -206,6 +207,9 @@ public class Utils {
 
 					return message.toString();
 				} else {
+					CONFIG.latestCheckTime = System.currentTimeMillis();
+					ConfigManager.update();
+					
 					message.append("**Discord-MC-Chat ").append(VERSION).append("**");
 					message.append("\n\n");
 					message.append(Translations.translate("utils.utils.cUpdate.upToDate"));
@@ -591,7 +595,7 @@ public class Utils {
 			@Override
 			public void run() {
 				if (CONFIG.latestCheckTime > System.currentTimeMillis()) {
-					CONFIG.latestCheckTime = System.currentTimeMillis() - 300000000;
+					CONFIG.latestCheckTime = 0;
 					ConfigManager.update();
 				}
 
