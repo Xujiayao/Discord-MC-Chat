@@ -616,7 +616,7 @@ public class Utils {
 					UPDATE_NOTIFICATION_CHANNEL.sendMessage(message).queue();
 				}
 			}
-		}, 3600000, 21600000);
+		}, 0, 21600000);
 	}
 
 	private static Tuple<Double, Double> getTickInfo() {
