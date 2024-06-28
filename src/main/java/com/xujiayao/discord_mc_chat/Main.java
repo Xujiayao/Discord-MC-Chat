@@ -106,13 +106,16 @@ public class Main implements DedicatedServerModInitializer {
 			if (!CONFIG.generic.updateNotificationChannelId.isEmpty()) {
 				UPDATE_NOTIFICATION_CHANNEL = JDA.getTextChannelById(CONFIG.generic.updateNotificationChannelId);
 				if (UPDATE_NOTIFICATION_CHANNEL == null) {
+					UPDATE_NOTIFICATION_CHANNEL = CHANNEL;
 					throw new NullPointerException("Invalid Update Notification Channel ID");
 				}
 				// TODO This (including other messages, /reload) should be checked every time before sending!
 				if (!UPDATE_NOTIFICATION_CHANNEL.canTalk()) {
-					LOGGER.warn("Unable to send messages in the Update Notification Channel; Using the default channel instead.");
 					UPDATE_NOTIFICATION_CHANNEL = CHANNEL;
+					LOGGER.warn("Unable to send messages in the Update Notification Channel; Using the default channel instead.");
 				}
+			} else {
+				UPDATE_NOTIFICATION_CHANNEL = CHANNEL;
 			}
 
 			String webhookName = "DMCC Webhook" + " (" + JDA.getSelfUser().getApplicationId() + ")";
