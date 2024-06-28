@@ -64,7 +64,10 @@ public class ReadThread extends Thread {
 							properties.load(new FileInputStream("server.properties"));
 
 							Set<String> uniquePlayers = new HashSet<>();
-							FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).forEach(file -> uniquePlayers.add(file.getName()));
+							try {
+								FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).forEach(file -> uniquePlayers.add(file.getName()));
+							} catch (Exception ignored) {
+							}
 							channelTopicInfo.add("uniquePlayers", new Gson().fromJson(Arrays.toString(uniquePlayers.toArray()), JsonArray.class));
 
 							channelTopicInfo.addProperty("serverName", CONFIG.multiServer.name);

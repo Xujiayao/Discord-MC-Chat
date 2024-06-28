@@ -43,6 +43,7 @@ import java.io.FileInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -468,26 +469,28 @@ public class Utils {
 			Properties properties = new Properties();
 			properties.load(new FileInputStream("server.properties"));
 
-			FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).forEach(file -> {
-				try {
-					for (JsonElement player : players) {
-						if (player.getAsJsonObject().get("uuid").getAsString().equals(file.getName().replace(".json", ""))) {
-							JsonObject json = new Gson().fromJson(IOUtils.toString(file.toURI(), StandardCharsets.UTF_8), JsonObject.class);
+			Collection<File> files = new ArrayList<>();
+			try {
+				files = FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false);
+			} catch (Exception ignored) {
+			}
 
-							try {
-								stats.put(player.getAsJsonObject().get("name").getAsString(), json
-										.getAsJsonObject("stats")
-										.getAsJsonObject("minecraft:" + type)
-										.get("minecraft:" + name)
-										.getAsInt());
-							} catch (NullPointerException ignored) {
-							}
+			for (File file : files) {
+				for (JsonElement player : players) {
+					if (player.getAsJsonObject().get("uuid").getAsString().equals(file.getName().replace(".json", ""))) {
+						JsonObject json = new Gson().fromJson(IOUtils.toString(file.toURI(), StandardCharsets.UTF_8), JsonObject.class);
+
+						try {
+							stats.put(player.getAsJsonObject().get("name").getAsString(), json
+									.getAsJsonObject("stats")
+									.getAsJsonObject("minecraft:" + type)
+									.get("minecraft:" + name)
+									.getAsInt());
+						} catch (NullPointerException ignored) {
 						}
 					}
-				} catch (Exception e) {
-					LOGGER.error(ExceptionUtils.getStackTrace(e));
 				}
-			});
+			}
 		} catch (Exception e) {
 			LOGGER.error(ExceptionUtils.getStackTrace(e));
 		}
@@ -573,10 +576,16 @@ public class Utils {
 					Properties properties = new Properties();
 					properties.load(new FileInputStream("server.properties"));
 
+					int uniquePlayerCount = 0;
+					try {
+						uniquePlayerCount = FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).size();
+					} catch (Exception ignored) {
+					}
+
 					String topic = Translations.translateMessage("message.onlineChannelTopic")
 							.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerCount()))
 							.replace("%maxPlayerCount%", Integer.toString(SERVER.getMaxPlayers()))
-							.replace("%uniquePlayerCount%", Integer.toString(FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).size()))
+							.replace("%uniquePlayerCount%", Integer.toString(uniquePlayerCount))
 							.replace("%serverStartedTime%", SERVER_STARTED_TIME)
 							.replace("%lastUpdateTime%", Long.toString(epochSecond))
 							.replace("%nextUpdateTime%", Long.toString(epochSecond + CONFIG.generic.channelTopicUpdateInterval / 1000));
