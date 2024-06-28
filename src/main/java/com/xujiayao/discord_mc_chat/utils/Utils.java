@@ -212,7 +212,7 @@ public class Utils {
 					CONFIG.latestVersion = latestVersion;
 					CONFIG.latestCheckTime = System.currentTimeMillis();
 					ConfigManager.update();
-					
+
 					message.append("**Discord-MC-Chat ").append(VERSION).append("**");
 					message.append("\n\n");
 					message.append(Translations.translate("utils.utils.cUpdate.upToDate"));
