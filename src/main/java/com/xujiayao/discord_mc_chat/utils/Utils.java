@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.authlib.GameProfile;
 import com.xujiayao.discord_mc_chat.multi_server.MultiServer;
+import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -273,7 +274,7 @@ public class Utils {
 			ConfigManager.init(true);
 			Translations.init();
 
-			Utils.setBotActivity();
+			Utils.setBotPresence();
 
 			CHANNEL = JDA.getTextChannelById(CONFIG.generic.channelId);
 			if (CHANNEL == null) {
@@ -517,11 +518,18 @@ public class Utils {
 		return message.toString();
 	}
 
-	public static void setBotActivity() {
+	public static void setBotPresence() {
 		if (SERVER == null) {
 			// Bot is registered before official server start
 			return;
 		}
+
+		if (CONFIG.generic.showServerStatusInBotStatus && SERVER.getPlayerCount() == 0) {
+			JDA.getPresence().setStatus(OnlineStatus.IDLE);
+		} else {
+			JDA.getPresence().setStatus(OnlineStatus.ONLINE);
+		}
+
 		if (!CONFIG.generic.botPlayingActivity.isEmpty()) {
 			JDA.getPresence().setActivity(Activity.playing(CONFIG.generic.botPlayingActivity
 					.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerCount()))

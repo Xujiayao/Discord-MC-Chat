@@ -265,7 +265,7 @@ public class MinecraftEventListener {
 		});
 
 		MinecraftEvents.PLAYER_JOIN.register(player -> {
-			Utils.setBotActivity();
+			Utils.setBotPresence();
 
 			if (CONFIG.generic.announcePlayerJoinLeave) {
 				CHANNEL.sendMessage(Translations.translateMessage("message.joinServer")
@@ -278,7 +278,7 @@ public class MinecraftEventListener {
 		});
 
 		MinecraftEvents.PLAYER_QUIT.register(player -> {
-			Utils.setBotActivity();
+			Utils.setBotPresence();
 
 			if (CONFIG.generic.announcePlayerJoinLeave) {
 				CHANNEL.sendMessage(Translations.translateMessage("message.leftServer")

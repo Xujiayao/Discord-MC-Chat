@@ -3,6 +3,7 @@ package com.xujiayao.discord_mc_chat;
 import com.xujiayao.discord_mc_chat.minecraft.MinecraftEventListener;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -88,6 +89,7 @@ public class Main implements DedicatedServerModInitializer {
 					.setMemberCachePolicy(MemberCachePolicy.ALL)
 					.enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT)
 					.addEventListeners(new DiscordEventListener())
+					.setStatus(CONFIG.generic.showServerStatusInBotStatus ? OnlineStatus.DO_NOT_DISTURB : OnlineStatus.ONLINE)
 					.build();
 
 			JDA.awaitReady();
@@ -174,7 +176,7 @@ public class Main implements DedicatedServerModInitializer {
 
 			SERVER = server;
 
-			Utils.setBotActivity();
+			Utils.setBotPresence();
 
 			Utils.initCheckUpdateTimer();
 
@@ -188,6 +190,12 @@ public class Main implements DedicatedServerModInitializer {
 				} else if (MULTI_SERVER.server != null) {
 					MULTI_SERVER.initMultiServerChannelTopicMonitor();
 				}
+			}
+		});
+
+		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+			if (CONFIG.generic.showServerStatusInBotStatus) {
+				JDA.getPresence().setStatus(OnlineStatus.DO_NOT_DISTURB);
 			}
 		});
 

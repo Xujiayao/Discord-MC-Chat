@@ -23,6 +23,8 @@ public class Config {
 		public String language = "en_us";
 
 		public String botToken = "";
+
+		public boolean showServerStatusInBotStatus = true;
 		public String botPlayingActivity = "Minecraft (%onlinePlayerCount%/%maxPlayerCount%)";
 		public String botListeningActivity = "";
 
