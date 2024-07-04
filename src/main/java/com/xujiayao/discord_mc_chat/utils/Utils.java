@@ -522,12 +522,12 @@ public class Utils {
 			// Bot is registered before official server start
 			return;
 		}
-		if (!CONFIG.generic.botPlayingStatus.isEmpty()) {
-			JDA.getPresence().setActivity(Activity.playing(CONFIG.generic.botPlayingStatus
+		if (!CONFIG.generic.botPlayingActivity.isEmpty()) {
+			JDA.getPresence().setActivity(Activity.playing(CONFIG.generic.botPlayingActivity
 					.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerCount()))
 					.replace("%maxPlayerCount%", Integer.toString(SERVER.getMaxPlayers()))));
-		} else if (!CONFIG.generic.botListeningStatus.isEmpty()) {
-			JDA.getPresence().setActivity(Activity.listening(CONFIG.generic.botListeningStatus
+		} else if (!CONFIG.generic.botListeningActivity.isEmpty()) {
+			JDA.getPresence().setActivity(Activity.listening(CONFIG.generic.botListeningActivity
 					.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerCount()))
 					.replace("%maxPlayerCount%", Integer.toString(SERVER.getMaxPlayers()))));
 		} else {
