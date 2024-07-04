@@ -35,6 +35,7 @@
 
 	"utils.utils.gscMessage.scoreboard": "Marcador",
 	"utils.utils.gscMessage.noResult": "\nSin resultados",
+	"utils.utils.gscMessage.truncated": "[NOT YET TRANSLATED] Since messages sent through Discord cannot exceed 2000 characters, the scoreboard has been truncated. You may execute [/dmcc stats] command in-game to view the full scoreboard.",
 
 	"utils.utils.ubCommands.help": "Obtener una lista de comandos disponibles",
 	"utils.utils.ubCommands.info": "Consultar el estado de del servidor",

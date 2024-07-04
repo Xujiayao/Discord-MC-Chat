@@ -458,7 +458,7 @@ public class Utils {
 		return message.toString();
 	}
 
-	public static String getStatsCommandMessage(String type, String name) {
+	public static String getStatsCommandMessage(String type, String name, boolean hasCharLimit) {
 		StringBuilder message = new StringBuilder()
 				.append("=============== ")
 				.append(Translations.translate("utils.utils.gscMessage.scoreboard"))
@@ -506,6 +506,11 @@ public class Utils {
 
 			for (Map.Entry<String, Integer> entry : sortedlist) {
 				message.append(String.format("\n%-8d %-8s", entry.getValue(), entry.getKey()));
+				if (message.length() > 1700 && hasCharLimit) {
+					message.append("\n...\n\n");
+					message.append(Translations.translate("utils.utils.gscMessage.truncated"));
+					break;
+				}
 			}
 		}
 

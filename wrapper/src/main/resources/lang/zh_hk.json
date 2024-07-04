@@ -35,6 +35,7 @@
 
 	"utils.utils.gscMessage.scoreboard": "排行榜",
 	"utils.utils.gscMessage.noResult": "\n無結果",
+	"utils.utils.gscMessage.truncated": "由於透過 Discord 發送嘅訊息唔可以超過 2000 個字符，因此排行榜已被截斷。你可以喺遊戲內執行 [/dmcc stats] 命令來查看完整的排行榜。",
 
 	"utils.utils.ubCommands.help": "獲取可用命令列表",
 	"utils.utils.ubCommands.info": "查詢伺服器運行狀態",

@@ -35,6 +35,8 @@
 
 	"utils.utils.gscMessage.scoreboard": "排行榜",
 	"utils.utils.gscMessage.noResult": "\n无结果",
+	"utils.utils.gscMessage.truncated": "由于通过 Discord 发送的消息不能超过 2000 个字符，因此排行榜已被截断。你可以在游戏内执行 [/dmcc stats] 命令来查看完整的排行榜。",
+
 
 	"utils.utils.ubCommands.help": "获取可用命令列表",
 	"utils.utils.ubCommands.info": "查询服务器运行状态",

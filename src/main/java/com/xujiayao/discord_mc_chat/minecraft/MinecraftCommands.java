@@ -72,9 +72,9 @@ public class MinecraftCommands {
 											//$$ context.getSource().sendSuccess(
 											//#endif
 													//#if MC >= 11900
-													Component.literal(Utils.getStatsCommandMessage(type, name)), false);
+													Component.literal(Utils.getStatsCommandMessage(type, name, false)), false);
 													//#else
-													//$$ new TextComponent(Utils.getStatsCommandMessage(type, name)), false);
+													//$$ new TextComponent(Utils.getStatsCommandMessage(type, name, false)), false);
 													//#endif
 											return 1;
 										}))))

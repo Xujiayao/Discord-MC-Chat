@@ -126,7 +126,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			case "stats" -> {
 				String type = Objects.requireNonNull(e.getOption("type")).getAsString();
 				String name = Objects.requireNonNull(e.getOption("name")).getAsString();
-				e.getHook().sendMessage("```\n" + Utils.getStatsCommandMessage(type, name) + "\n```").queue();
+				e.getHook().sendMessage("```\n" + Utils.getStatsCommandMessage(type, name, true) + "\n```").queue();
 			}
 			case "update" -> e.getHook().sendMessage(Utils.checkUpdate(true)).queue();
 			case "whitelist" -> {
