@@ -81,11 +81,19 @@ public class DiscordEventListener extends ListenerAdapter {
 
 		Objects.requireNonNull(e.getMember());
 
-		LOGGER.info(PlaceholderParser.parseOtherMessage(PlaceholderParser.parseCommandNotice(e)).getString());
+		Component commandNoticeText = PlaceholderParser.parseOtherMessage(
+				CONFIG.multiServer.enable ? CONFIG.multiServer.name : "Discord",
+				PlaceholderParser.parseCommandNotice(
+						CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName(),
+						e.getMember().getRoles().stream().map(Role::getName).findFirst().orElse("null"),
+						String.format("#%06X", (0xFFFFFF & e.getMember().getColorRaw())),
+						e.getCommandString()
+				)
+		);
+
+		LOGGER.info(commandNoticeText.getString());
 
 		if (CONFIG.generic.broadcastSlashCommandExecution) {
-			Component commandNoticeText = PlaceholderParser.parseOtherMessage(PlaceholderParser.parseCommandNotice(e));
-
 			SERVER.getPlayerList().getPlayers().forEach(
 					player -> player.displayClientMessage(commandNoticeText, false));
 
@@ -301,7 +309,12 @@ public class DiscordEventListener extends ListenerAdapter {
 				referencedMemberRoleName = "null";
 			}
 
-			LOGGER.info(PlaceholderParser.parseResponseMessage(referencedMember, webhookName, referencedMemberRoleName, referencedMessageTemp).getString());
+			LOGGER.info(PlaceholderParser.parseResponseMessage(
+					"Discord",
+					(referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : webhookName,
+					referencedMemberRoleName,
+					EmojiManager.replaceAllEmojis(referencedMessageTemp, emoji -> emoji.getDiscordAliases().getFirst())
+			).getString());
 		}
 
 		if (StringUtils.countMatches(messageTemp, "\n") > CONFIG.generic.discordNewlineLimit) {
@@ -314,7 +327,12 @@ public class DiscordEventListener extends ListenerAdapter {
 			memberRoleName = "null";
 		}
 
-		LOGGER.info(PlaceholderParser.parseChatMessage(e, memberRoleName, messageTemp).getString());
+		LOGGER.info(PlaceholderParser.parseChatMessage(
+				"Discord",
+				CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName(),
+				memberRoleName,
+				EmojiManager.replaceAllEmojis(messageTemp, emoji -> emoji.getDiscordAliases().getFirst())
+		).getString());
 
 		if (SERVER == null) {
 			return;
