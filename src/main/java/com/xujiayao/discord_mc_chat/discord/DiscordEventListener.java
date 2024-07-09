@@ -6,6 +6,7 @@ import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.tree.CommandNode;
 import com.xujiayao.discord_mc_chat.utils.MarkdownParser;
+import com.xujiayao.discord_mc_chat.utils.PlaceholderParser;
 import com.xujiayao.discord_mc_chat.utils.Translations;
 import com.xujiayao.discord_mc_chat.utils.Utils;
 import net.dv8tion.jda.api.entities.Member;
@@ -78,30 +79,12 @@ public class DiscordEventListener extends ListenerAdapter {
 			return;
 		}
 
-		String roleName;
-		try {
-			roleName = Objects.requireNonNull(e.getMember()).getRoles().getFirst().getName();
-		} catch (Exception ex) {
-			roleName = "null";
-		}
+		Objects.requireNonNull(e.getMember());
 
-		LOGGER.info(Translations.translateMessage("message.unformattedOtherMessage")
-				.replace("%server%", (CONFIG.multiServer.enable ? CONFIG.multiServer.name : "Discord"))
-				.replace("%message%", Translations.translateMessage("message.unformattedCommandNotice")
-						.replace("%name%", CONFIG.generic.useServerNickname ? Objects.requireNonNull(e.getMember()).getEffectiveName() : Objects.requireNonNull(e.getMember()).getUser().getName())
-						.replace("%roleName%", roleName)
-						.replace("%command%", e.getCommandString())));
+		LOGGER.info(PlaceholderParser.parseOtherMessage(PlaceholderParser.parseCommandNotice(e)).getString());
 
 		if (CONFIG.generic.broadcastSlashCommandExecution) {
-			MutableComponent commandNoticeText = Utils.fromJson(Translations.translateMessage("message.formattedOtherMessage")
-					.replace("%server%", (CONFIG.multiServer.enable ? CONFIG.multiServer.name : "Discord"))
-					.replace("%message%", ""));
-
-			Objects.requireNonNull(commandNoticeText).append(Utils.fromJson(Translations.translateMessage("message.formattedCommandNotice")
-					.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\").replace("\"", "\\\""))
-					.replace("%roleName%", roleName)
-					.replace("%roleColor%", String.format("#%06X", (0xFFFFFF & e.getMember().getColorRaw())))
-					.replace("%command%", e.getCommandString())));
+			Component commandNoticeText = PlaceholderParser.parseOtherMessage(PlaceholderParser.parseCommandNotice(e));
 
 			SERVER.getPlayerList().getPlayers().forEach(
 					player -> player.displayClientMessage(commandNoticeText, false));
@@ -318,11 +301,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				referencedMemberRoleName = "null";
 			}
 
-			LOGGER.info(Translations.translateMessage("message.unformattedResponseMessage")
-					.replace("%server%", "Discord")
-					.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()) : webhookName)
-					.replace("%roleName%", referencedMemberRoleName)
-					.replace("%message%", EmojiManager.replaceAllEmojis(referencedMessageTemp, emoji -> emoji.getDiscordAliases().getFirst())));
+			LOGGER.info(PlaceholderParser.parseResponseMessage(referencedMember, webhookName, referencedMemberRoleName, referencedMessageTemp).getString());
 		}
 
 		if (StringUtils.countMatches(messageTemp, "\n") > CONFIG.generic.discordNewlineLimit) {
@@ -335,11 +314,7 @@ public class DiscordEventListener extends ListenerAdapter {
 			memberRoleName = "null";
 		}
 
-		LOGGER.info(Translations.translateMessage("message.unformattedChatMessage")
-				.replace("%server%", "Discord")
-				.replace("%name%", CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName())
-				.replace("%roleName%", memberRoleName)
-				.replace("%message%", EmojiManager.replaceAllEmojis(messageTemp, emoji -> emoji.getDiscordAliases().getFirst())));
+		LOGGER.info(PlaceholderParser.parseChatMessage(e, memberRoleName, messageTemp).getString());
 
 		if (SERVER == null) {
 			return;
