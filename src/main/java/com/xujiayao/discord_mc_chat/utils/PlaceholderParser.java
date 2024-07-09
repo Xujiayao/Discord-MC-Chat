@@ -36,8 +36,8 @@ public class PlaceholderParser {
 
 	private static TextNode customUrlFormatting(TextNode[] textNodes, TextNode url) {
 		// TODO Toggle: Yellow vs Blue
-		// TODO Hover "Open URL"
-		return new ClickActionNode(TextNode.array(new FormattingNode(textNodes, ChatFormatting.YELLOW, ChatFormatting.UNDERLINE)), ClickEvent.Action.OPEN_URL, url);
+		// TODO Hover "Open URL" translation
+		return new ClickActionNode(TextNode.array(new HoverNode<>(TextNode.array(new FormattingNode(textNodes, ChatFormatting.YELLOW, ChatFormatting.UNDERLINE)), HoverNode.Action.TEXT, TextNode.of("Open URL"))), ClickEvent.Action.OPEN_URL, url);
 	}
 
 	public static Component parseOtherMessage(String server, Component message) {
