@@ -28,7 +28,7 @@ import static com.xujiayao.discord_mc_chat.Main.MINECRAFT_SEND_COUNT;
  */
 public class ConsoleLogListener implements Runnable {
 
-	private static final Pattern formatPattern = Pattern.compile("§.");
+	private static final Pattern FORMAT_PATTERN = Pattern.compile("§.");
 	private static final Integer MAX_MESSAGE_LENGTH = 1900;
 	private boolean readFileHistory;
 
@@ -132,7 +132,7 @@ public class ConsoleLogListener implements Runnable {
 	}
 
 	private void appendLine(StringBuilder messageBatch, String currentLine) {
-		currentLine = formatPattern.matcher(currentLine).replaceAll("");
+		currentLine = FORMAT_PATTERN.matcher(currentLine).replaceAll("");
 		currentLine = currentLine.replace("`", "");
 		messageBatch.append(currentLine.isEmpty() ? currentLine : ('`' + currentLine + '`'));
 		messageBatch.append("\n");
