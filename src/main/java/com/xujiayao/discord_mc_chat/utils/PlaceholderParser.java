@@ -162,4 +162,18 @@ public class PlaceholderParser {
 
 		return parser.parseText(TextNode.of(Translations.translateMessage("message.offlineChannelTopic")), PlaceholderContext.of(SERVER).asParserContext());
 	}
+
+	public static Component parseHighMspt(String mspt, String msptLimit) {
+		Map<String, TextNode> placeholders = Map.of(
+				"mspt", TextNode.of(mspt),
+				"msptLimit", TextNode.of(msptLimit)
+		);
+
+		NodeParser parser = ParserBuilder.of()
+				.add(DISCORD_PARSER)
+				.customTags(TagLikeParser.PLACEHOLDER_ALTERNATIVE, TagLikeParser.Provider.placeholder(placeholders::get))
+				.build();
+
+		return parser.parseText(TextNode.of(Translations.translateMessage("message.highMspt")), PlaceholderContext.of(SERVER).asParserContext());
+	}
 }
