@@ -250,7 +250,7 @@ public class MinecraftEventListener {
 
 				String message = PlaceholderParser.parseDeathMessage(
 						player,
-						Translations.translate(key, deathMessage.getArgs()),
+						MarkdownSanitizer.escape(Translations.translate(key, deathMessage.getArgs())),
 						MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString())
 				).getString();
 
