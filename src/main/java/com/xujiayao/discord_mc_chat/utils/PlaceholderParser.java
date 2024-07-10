@@ -22,7 +22,7 @@ import static com.xujiayao.discord_mc_chat.Main.SERVER;
  */
 public class PlaceholderParser {
 
-	private static final NodeParser PARSER = ParserBuilder.of()
+	private static final NodeParser MINECRAFT_PARSER = ParserBuilder.of()
 			.globalPlaceholders()
 			.quickText()
 			.simplifiedTextFormat()
@@ -30,6 +30,10 @@ public class PlaceholderParser {
 					MarkdownLiteParserV1::defaultQuoteFormatting,
 					PlaceholderParser::customUrlFormatting,
 					MarkdownLiteParserV1.MarkdownFormat.values())
+			.build();
+
+	private static final NodeParser DISCORD_PARSER = ParserBuilder.of()
+			.globalPlaceholders()
 			.build();
 
 	private static TextNode customUrlFormatting(TextNode[] textNodes, TextNode url) {
@@ -98,5 +102,13 @@ public class PlaceholderParser {
 				.build();
 
 		return parser.parseText(TextNode.of(Translations.translateMessage("message.chatMessage")), PlaceholderContext.of(SERVER).asParserContext());
+	}
+
+	public static Component parseServerStarted() {
+		return DISCORD_PARSER.parseText(TextNode.of(Translations.translateMessage("message.serverStarted")), PlaceholderContext.of(SERVER).asParserContext());
+	}
+
+	public static Component parseServerStopped() {
+		return DISCORD_PARSER.parseText(TextNode.of(Translations.translateMessage("message.serverStopped")), PlaceholderContext.of(SERVER).asParserContext());
 	}
 }
