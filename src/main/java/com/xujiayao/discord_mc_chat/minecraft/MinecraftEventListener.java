@@ -228,6 +228,7 @@ public class MinecraftEventListener {
 				String message = PlaceholderParser.parseAdvancement(
 						display.getType(),
 						player,
+						MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString()),
 						title.contains("TranslateError") ? display.getTitle().getString() : title,
 						description.contains("TranslateError") ? display.getDescription().getString() : description
 				).getString();

@@ -114,8 +114,9 @@ public class PlaceholderParser {
 		return DISCORD_PARSER.parseText(TextNode.of(Translations.translateMessage("message.serverStopped")), PlaceholderContext.of(SERVER).asParserContext());
 	}
 
-	public static Component parseAdvancement(AdvancementType type, ServerPlayer player, String advancement, String description) {
+	public static Component parseAdvancement(AdvancementType type, ServerPlayer player, String playerName, String advancement, String description) {
 		Map<String, TextNode> placeholders = Map.of(
+				"playerName", TextNode.of(playerName),
 				"advancement", TextNode.of(advancement),
 				"description", TextNode.of(description)
 		);
