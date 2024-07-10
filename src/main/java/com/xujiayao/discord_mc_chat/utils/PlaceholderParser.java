@@ -203,4 +203,33 @@ public class PlaceholderParser {
 
 		return parser.parseText(TextNode.of(Translations.translateMessage("message.highMspt")), PlaceholderContext.of(SERVER).asParserContext());
 	}
+
+	public static Component parseMessageWithoutWebhook(String name, String message) {
+		Map<String, TextNode> placeholders = Map.of(
+				"name", TextNode.of(name),
+				"message", TextNode.of(message)
+		);
+
+		NodeParser parser = ParserBuilder.of()
+				.add(DISCORD_PARSER)
+				.customTags(TagLikeParser.PLACEHOLDER_ALTERNATIVE, TagLikeParser.Provider.placeholder(placeholders::get))
+				.build();
+
+		return parser.parseText(TextNode.of(Translations.translateMessage("message.messageWithoutWebhook")), PlaceholderContext.of(SERVER).asParserContext());
+	}
+
+	public static Component parseMessageWithoutWebhookForMultiServer(String server, String name, String message) {
+		Map<String, TextNode> placeholders = Map.of(
+				"server", TextNode.of(server),
+				"name", TextNode.of(name),
+				"message", TextNode.of(message)
+		);
+
+		NodeParser parser = ParserBuilder.of()
+				.add(DISCORD_PARSER)
+				.customTags(TagLikeParser.PLACEHOLDER_ALTERNATIVE, TagLikeParser.Provider.placeholder(placeholders::get))
+				.build();
+
+		return parser.parseText(TextNode.of(Translations.translateMessage("message.messageWithoutWebhookForMultiServer")), PlaceholderContext.of(SERVER).asParserContext());
+	}
 }

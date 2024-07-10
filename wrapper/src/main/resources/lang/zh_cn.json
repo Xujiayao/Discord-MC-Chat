@@ -57,8 +57,8 @@
 	"message.otherMessage": "<blue><bold>[{server}]</bold></blue> <gray>{message}</gray>",
 	"message.commandNotice": "<color:{roleColor}>{name}</color> <gray>执行了 {command} 命令！</gray>",
 
-	"message.messageWithoutWebhook": "<%name%> %message%",
-	"message.messageWithoutWebhookForMultiServer": "[%server%] <%name%> %message%",
+	"message.messageWithoutWebhook": "<{name}> {message}",
+	"message.messageWithoutWebhookForMultiServer": "[{server}] <{name}> {message}",
 
 	"message.serverStarted": "**服务器已启动！**",
 	"message.serverStopped": "**服务器已关闭！**",

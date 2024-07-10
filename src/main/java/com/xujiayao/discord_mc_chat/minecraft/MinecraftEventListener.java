@@ -289,14 +289,16 @@ public class MinecraftEventListener {
 	private static void sendDiscordMessage(String content, String username, String avatar_url) {
 		if (!CONFIG.generic.useWebhook) {
 			if (CONFIG.multiServer.enable) {
-				CHANNEL.sendMessage(Translations.translateMessage("message.messageWithoutWebhookForMultiServer")
-						.replace("%server%", CONFIG.multiServer.name)
-						.replace("%name%", username)
-						.replace("%message%", content)).queue();
+				CHANNEL.sendMessage(PlaceholderParser.parseMessageWithoutWebhookForMultiServer(
+						CONFIG.multiServer.name,
+						username,
+						content
+				).getString()).queue();
 			} else {
-				CHANNEL.sendMessage(Translations.translateMessage("message.messageWithoutWebhook")
-						.replace("%name%", username)
-						.replace("%message%", content)).queue();
+				CHANNEL.sendMessage(PlaceholderParser.parseMessageWithoutWebhook(
+						username,
+						content
+				).getString()).queue();
 			}
 		} else {
 			JsonObject body = new JsonObject();
