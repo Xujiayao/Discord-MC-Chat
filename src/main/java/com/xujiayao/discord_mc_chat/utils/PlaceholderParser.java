@@ -111,4 +111,55 @@ public class PlaceholderParser {
 	public static Component parseServerStopped() {
 		return DISCORD_PARSER.parseText(TextNode.of(Translations.translateMessage("message.serverStopped")), PlaceholderContext.of(SERVER).asParserContext());
 	}
+
+	public static Component parseOnlineChannelTopic(String onlinePlayerCount, String maxPlayerCount, String uniquePlayerCount, String serverStartedTime, String lastUpdateTime, String nextUpdateTime) {
+		Map<String, TextNode> placeholders = Map.of(
+				"onlinePlayerCount", TextNode.of(onlinePlayerCount),
+				"maxPlayerCount", TextNode.of(maxPlayerCount),
+				"uniquePlayerCount", TextNode.of(uniquePlayerCount),
+				"serverStartedTime", TextNode.of(serverStartedTime),
+				"lastUpdateTime", TextNode.of(lastUpdateTime),
+				"nextUpdateTime", TextNode.of(nextUpdateTime)
+		);
+
+		NodeParser parser = ParserBuilder.of()
+				.add(DISCORD_PARSER)
+				.customTags(TagLikeParser.PLACEHOLDER_ALTERNATIVE, TagLikeParser.Provider.placeholder(placeholders::get))
+				.build();
+
+		return parser.parseText(TextNode.of(Translations.translateMessage("message.onlineChannelTopic")), PlaceholderContext.of(SERVER).asParserContext());
+	}
+
+	public static Component parseOnlineChannelTopicForMultiServer(String onlinePlayerCount, String maxPlayerCount, String uniquePlayerCount, String onlineServerCount, String onlineServerList, String serverStartedTime, String lastUpdateTime, String nextUpdateTime) {
+		Map<String, TextNode> placeholders = Map.of(
+				"onlinePlayerCount", TextNode.of(onlinePlayerCount),
+				"maxPlayerCount", TextNode.of(maxPlayerCount),
+				"uniquePlayerCount", TextNode.of(uniquePlayerCount),
+				"onlineServerCount", TextNode.of(onlineServerCount),
+				"onlineServerList", TextNode.of(onlineServerList),
+				"serverStartedTime", TextNode.of(serverStartedTime),
+				"lastUpdateTime", TextNode.of(lastUpdateTime),
+				"nextUpdateTime", TextNode.of(nextUpdateTime)
+		);
+
+		NodeParser parser = ParserBuilder.of()
+				.add(DISCORD_PARSER)
+				.customTags(TagLikeParser.PLACEHOLDER_ALTERNATIVE, TagLikeParser.Provider.placeholder(placeholders::get))
+				.build();
+
+		return parser.parseText(TextNode.of(Translations.translateMessage("message.onlineChannelTopicForMultiServer")), PlaceholderContext.of(SERVER).asParserContext());
+	}
+
+	public static Component parseOfflineChannelTopic(String lastUpdateTime) {
+		Map<String, TextNode> placeholders = Map.of(
+				"lastUpdateTime", TextNode.of(lastUpdateTime)
+		);
+
+		NodeParser parser = ParserBuilder.of()
+				.add(DISCORD_PARSER)
+				.customTags(TagLikeParser.PLACEHOLDER_ALTERNATIVE, TagLikeParser.Provider.placeholder(placeholders::get))
+				.build();
+
+		return parser.parseText(TextNode.of(Translations.translateMessage("message.offlineChannelTopic")), PlaceholderContext.of(SERVER).asParserContext());
+	}
 }

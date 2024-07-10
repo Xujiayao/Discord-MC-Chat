@@ -215,8 +215,9 @@ public class Main implements DedicatedServerModInitializer {
 			}
 
 			if (CONFIG.generic.updateChannelTopic) {
-				String topic = Translations.translateMessage("message.offlineChannelTopic")
-						.replace("%lastUpdateTime%", Long.toString(Instant.now().getEpochSecond()));
+				String topic = PlaceholderParser.parseOfflineChannelTopic(
+						Long.toString(Instant.now().getEpochSecond())
+				).getString();
 
 				CHANNEL.getManager().setTopic(topic).queue();
 				if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
