@@ -204,6 +204,20 @@ public class PlaceholderParser {
 		return parser.parseText(TextNode.of(Translations.translateMessage("message.highMspt")), PlaceholderContext.of(SERVER).asParserContext());
 	}
 
+	public static Component parseDeathMessage(ServerPlayer player, String deathMessage, String playerName) {
+		Map<String, TextNode> placeholders = Map.of(
+				"deathMessage", TextNode.of(deathMessage),
+				"playerName", TextNode.of(playerName)
+		);
+
+		NodeParser parser = ParserBuilder.of()
+				.add(DISCORD_PARSER)
+				.customTags(TagLikeParser.PLACEHOLDER_ALTERNATIVE, TagLikeParser.Provider.placeholder(placeholders::get))
+				.build();
+
+		return parser.parseText(TextNode.of(Translations.translateMessage("message.deathMessage")), PlaceholderContext.of(player).asParserContext());
+	}
+
 	public static Component parseMessageWithoutWebhook(String name, String message) {
 		Map<String, TextNode> placeholders = Map.of(
 				"name", TextNode.of(name),

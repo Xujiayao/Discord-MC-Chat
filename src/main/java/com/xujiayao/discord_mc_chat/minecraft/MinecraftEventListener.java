@@ -248,13 +248,15 @@ public class MinecraftEventListener {
 				//#endif
 				String key = deathMessage.getKey();
 
-				CHANNEL.sendMessage(Translations.translateMessage("message.deathMessage")
-						.replace("%deathMessage%", MarkdownSanitizer.escape(Translations.translate(key, deathMessage.getArgs())))
-						.replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString()))).queue();
+				String message = PlaceholderParser.parseDeathMessage(
+						player,
+						Translations.translate(key, deathMessage.getArgs()),
+						MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString())
+				).getString();
+
+				CHANNEL.sendMessage(message).queue();
 				if (CONFIG.multiServer.enable) {
-					MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.deathMessage")
-							.replace("%deathMessage%", MarkdownSanitizer.escape(Translations.translate(key, deathMessage.getArgs())))
-							.replace("%playerName%", MarkdownSanitizer.escape(player.getDisplayName().getString())));
+					MULTI_SERVER.sendMessage(false, false, false, null, message);
 				}
 			}
 		});
