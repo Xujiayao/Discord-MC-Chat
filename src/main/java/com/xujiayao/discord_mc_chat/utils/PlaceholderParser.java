@@ -49,7 +49,7 @@ public class PlaceholderParser {
 		);
 
 		NodeParser parser = ParserBuilder.of()
-				.add(PARSER)
+				.add(MINECRAFT_PARSER)
 				.customTags(TagLikeParser.PLACEHOLDER_ALTERNATIVE, TagLikeParser.Provider.placeholder(placeholders::get))
 				.build();
 
@@ -65,7 +65,7 @@ public class PlaceholderParser {
 		);
 
 		NodeParser parser = ParserBuilder.of()
-				.add(PARSER)
+				.add(MINECRAFT_PARSER)
 				.customTags(TagLikeParser.PLACEHOLDER_ALTERNATIVE, TagLikeParser.Provider.placeholder(placeholders::get))
 				.build();
 
@@ -81,7 +81,7 @@ public class PlaceholderParser {
 		);
 
 		NodeParser parser = ParserBuilder.of()
-				.add(PARSER)
+				.add(MINECRAFT_PARSER)
 				.customTags(TagLikeParser.PLACEHOLDER_ALTERNATIVE, TagLikeParser.Provider.placeholder(placeholders::get))
 				.build();
 
@@ -97,7 +97,7 @@ public class PlaceholderParser {
 		);
 
 		NodeParser parser = ParserBuilder.of()
-				.add(PARSER)
+				.add(MINECRAFT_PARSER)
 				.customTags(TagLikeParser.PLACEHOLDER_ALTERNATIVE, TagLikeParser.Provider.placeholder(placeholders::get))
 				.build();
 
