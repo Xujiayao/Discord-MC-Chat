@@ -3,6 +3,7 @@ package com.xujiayao.discord_mc_chat.minecraft;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.xujiayao.discord_mc_chat.utils.MarkdownParser;
+import com.xujiayao.discord_mc_chat.utils.PlaceholderParser;
 import com.xujiayao.discord_mc_chat.utils.Translations;
 import com.xujiayao.discord_mc_chat.utils.Utils;
 import net.dv8tion.jda.api.entities.Member;
@@ -221,21 +222,15 @@ public class MinecraftEventListener {
 					&& isDone
 					&& display.shouldAnnounceChat()
 					&& player.level().getGameRules().getBoolean(GameRules.RULE_ANNOUNCE_ADVANCEMENTS)) {
-				String message = "null";
-
-				switch (display.getType()) {
-					case GOAL -> message = Translations.translateMessage("message.advancementGoal");
-					case TASK -> message = Translations.translateMessage("message.advancementTask");
-					case CHALLENGE -> message = Translations.translateMessage("message.advancementChallenge");
-				}
-
 				String title = Translations.translate("advancements." + advancementHolder.id().getPath().replace("/", ".") + ".title");
 				String description = Translations.translate("advancements." + advancementHolder.id().getPath().replace("/", ".") + ".description");
 
-				message = message
-						.replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString()))
-						.replace("%advancement%", title.contains("TranslateError") ? display.getTitle().getString() : title)
-						.replace("%description%", description.contains("TranslateError") ? display.getDescription().getString() : description);
+				String message = PlaceholderParser.parseAdvancement(
+						display.getType(),
+						player,
+						title.contains("TranslateError") ? display.getTitle().getString() : title,
+						description.contains("TranslateError") ? display.getDescription().getString() : description
+				).getString();
 
 				CHANNEL.sendMessage(message).queue();
 				if (CONFIG.multiServer.enable) {

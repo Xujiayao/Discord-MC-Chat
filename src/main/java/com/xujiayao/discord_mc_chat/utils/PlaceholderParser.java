@@ -10,8 +10,10 @@ import eu.pb4.placeholders.api.parsers.NodeParser;
 import eu.pb4.placeholders.api.parsers.ParserBuilder;
 import eu.pb4.placeholders.api.parsers.TagLikeParser;
 import net.minecraft.ChatFormatting;
+import net.minecraft.advancements.AdvancementType;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Map;
 
@@ -110,6 +112,31 @@ public class PlaceholderParser {
 
 	public static Component parseServerStopped() {
 		return DISCORD_PARSER.parseText(TextNode.of(Translations.translateMessage("message.serverStopped")), PlaceholderContext.of(SERVER).asParserContext());
+	}
+
+	public static Component parseAdvancement(AdvancementType type, ServerPlayer player, String advancement, String description) {
+		Map<String, TextNode> placeholders = Map.of(
+				"advancement", TextNode.of(advancement),
+				"description", TextNode.of(description)
+		);
+
+		NodeParser parser = ParserBuilder.of()
+				.add(DISCORD_PARSER)
+				.customTags(TagLikeParser.PLACEHOLDER_ALTERNATIVE, TagLikeParser.Provider.placeholder(placeholders::get))
+				.build();
+
+		switch (type) {
+			case GOAL -> {
+				return parser.parseText(TextNode.of(Translations.translateMessage("message.advancementGoal")), PlaceholderContext.of(player).asParserContext());
+			}
+			case TASK -> {
+				return parser.parseText(TextNode.of(Translations.translateMessage("message.advancementTask")), PlaceholderContext.of(player).asParserContext());
+			}
+			case CHALLENGE -> {
+				return parser.parseText(TextNode.of(Translations.translateMessage("message.advancementChallenge")), PlaceholderContext.of(player).asParserContext());
+			}
+		}
+		return TextNode.of("[TranslateError: Unknown advancement type]").toText();
 	}
 
 	public static Component parseOnlineChannelTopic(String onlinePlayerCount, String maxPlayerCount, String uniquePlayerCount, String serverStartedTime, String lastUpdateTime, String nextUpdateTime) {

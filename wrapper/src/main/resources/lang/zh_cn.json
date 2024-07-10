@@ -68,9 +68,9 @@
 
 	"message.deathMessage": "**%deathMessage%**",
 
-	"message.advancementTask": "**%playerName% 达成了进度 [%advancement%]**\n*%description%*",
-	"message.advancementChallenge": "**%playerName% 完成了挑战 [%advancement%]**\n*%description%*",
-	"message.advancementGoal": "**%playerName% 达成了目标 [%advancement%]**\n*%description%*",
+	"message.advancementTask": "**%player:display_name% 达成了进度 [{advancement}]**\n*{description}*",
+	"message.advancementChallenge": "**%player:display_name% 完成了挑战 [{advancement}]**\n*{description}*",
+	"message.advancementGoal": "**%player:display_name% 达成了目标 [{advancement}]**\n*{description}*",
 
 	"message.highMspt": "**服务器 MSPT ({mspt}) 高于 {msptLimit}！**",
 
