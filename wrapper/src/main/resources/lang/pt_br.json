@@ -8,12 +8,12 @@
 
 	"minecraft.mcCommands.register.helpMessageExplanation": "\n\n*Comandos riscados não estão implementados porque eles são redundantes ou impossívels de implementar no jogo.*\n\n*Comandos somente para administradores precisam de um operador nível 4 no mínimo, por exemplo, jogadores com OP nível de permissão 4 ou o console do servidor.*",
 
-	"utils.clListener.startListening": "**Começando a ouvir aos logs do console!**",
-	"utils.clListener.stopListening": "**Parando de ouvir aos logs do console!**",
+	"utils.clListener.startListening": "**Começar a ouvir aos logs do console!**",
+	"utils.clListener.stopListening": "**Parar de ouvir aos logs do console!**",
 
 	"utils.utils.cUpdate.newVersionAvailable": "**Uma nova versão está disponível!**",
 	"utils.utils.cUpdate.downloadLink": "Link para o download: <https://github.com/Xujiayao/Discord-MC-Chat/blob/master/README.md#Download>",
-	"utils.utils.cUpdate.changelog": "Mudanças: ",
+	"utils.utils.cUpdate.changelog": "Lista de mudanças: ",
 	"utils.utils.cUpdate.upToDate": "**Discord-MC-Chat está atualizado!**",
 
 	"utils.utils.whitelist.whitelistFailed": "**O jogador ja está na lista branca!**",
