@@ -44,6 +44,8 @@ You can find the latest build JAR files at [GitHub Actions](https://github.com/X
 
 If there is a bug or suggestion, or something you don't understand, you can [submit an issue](https://github.com/Xujiayao/Discord-MC-Chat/issues/new/choose) on GitHub.
 
+DMCC Discord Server is now public! Join now through: https://discord.gg/kbXkV6k2XU
+
 ## Contributing
 
 **You are welcome to contribute to DMCC!**

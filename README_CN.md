@@ -44,6 +44,8 @@ Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCD
 
 如果有 bug 或建议，或者有什么不懂的，可以 [提交 issue](https://github.com/Xujiayao/Discord-MC-Chat/issues/new/choose)。
 
+DMCC Discord 服务器现已公开！通过以下链接加入：https://discord.gg/kbXkV6k2XU
+
 ## 贡献
 
 **欢迎你为 DMCC 做出贡献！**

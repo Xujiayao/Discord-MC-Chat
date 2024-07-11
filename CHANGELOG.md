@@ -2,13 +2,17 @@
 
 ## Discord-MC-Chat 2.3.4 for Minecraft 1.19.4+ - 2024/7/11
 
-DMCC will support the [Placeholder API](https://placeholders.pb4.eu/) in the next release.
+DMCC Discord Server is now public! Join now through: https://discord.gg/kbXkV6k2XU
+
+DMCC will support the [Placeholder API](<https://placeholders.pb4.eu/>) in the next release.
 
 `botPlayingStatus` and `botListeningStatus` have been renamed to `botPlayingActivity` and `botListeningActivity`. Please modify them before restarting the server to avoid losing any existing changes.
 
 In addition, the check for updates feature has been fixed. You will be able to receive update notifications for future new versions when using version 2.3.4.
 
-DMCC 将在下一个版本中支持 [Placeholder API](https://placeholders.pb4.eu/)。
+DMCC Discord 服务器现已公开！通过以下链接加入：https://discord.gg/kbXkV6k2XU
+
+DMCC 将在下一个版本中支持 [Placeholder API](<https://placeholders.pb4.eu/>)。
 
 `botPlayingStatus` 和 `botListeningStatus` 已被重命名为 `botPlayingActivity` 和 `botListeningActivity`。请在重新启动服务器之前进行修改，以免丢失现有的更改。
 
