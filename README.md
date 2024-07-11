@@ -61,7 +61,8 @@ For translation contributions, language files are located in the `/wrapper/src/m
 - Minecraft <> Discord cross server chat
     - Support disabling Discord and in-game chat broadcasts
     - Support displaying server status using Discord channel topic feature
-    - Support displaying server player count in bot activity status
+    - Support displaying server status in bot's Discord online status
+    - Support displaying server player count in bot's Discord activity status
     - Support Discord Webhook feature
         - Dynamic-created DMCC Webhook
         - Customizable Webhook Avatar API
