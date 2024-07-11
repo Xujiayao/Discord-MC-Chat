@@ -22,6 +22,8 @@ Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCD
 
 More information + Docs: [Discord-MC-Chat Docs | Xujiayao's Blog](https://blog.xujiayao.com/posts/4ba0a17a/)
 
+DMCC Discord Server is now public! Join now through: https://discord.gg/kbXkV6k2XU
+
 ## Introduction
 
 [Discord-MC-Chat](https://github.com/Xujiayao/Discord-MC-Chat) (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCDC), is a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric.
@@ -44,6 +46,8 @@ You can find the latest build JAR files at [GitHub Actions](https://github.com/X
 
 If there is a bug or suggestion, or something you don't understand, you can [submit an issue](https://github.com/Xujiayao/Discord-MC-Chat/issues/new/choose) on GitHub.
 
+DMCC Discord Server is now public! Join now through: https://discord.gg/kbXkV6k2XU
+
 ## Contributing
 
 **You are welcome to contribute to DMCC!**
@@ -61,7 +65,8 @@ For translation contributions, language files are located in the `/wrapper/src/m
 - Minecraft <> Discord cross server chat
     - Support disabling Discord and in-game chat broadcasts
     - Support displaying server status using Discord channel topic feature
-    - Support displaying server player count in bot activity status
+    - Support displaying server status in bot's Discord online status
+    - Support displaying server player count in bot's Discord activity status
     - Support Discord Webhook feature
         - Dynamic-created DMCC Webhook
         - Customizable Webhook Avatar API
