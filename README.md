@@ -22,6 +22,8 @@ Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCD
 
 More information + Docs: [Discord-MC-Chat Docs | Xujiayao's Blog](https://blog.xujiayao.com/posts/4ba0a17a/)
 
+DMCC Discord Server is now public! Join now through: https://discord.gg/kbXkV6k2XU
+
 ## Introduction
 
 [Discord-MC-Chat](https://github.com/Xujiayao/Discord-MC-Chat) (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCDC), is a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric.

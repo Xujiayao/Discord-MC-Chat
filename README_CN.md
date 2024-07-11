@@ -22,6 +22,8 @@ Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCD
 
 更多介绍 + 文档：[Discord-MC-Chat 文档 | Xujiayao's Blog](https://blog.xujiayao.com/posts/4ba0a17a/)
 
+DMCC Discord 服务器现已公开！通过以下链接加入：https://discord.gg/kbXkV6k2XU
+
 ## 简介
 
 [Discord-MC-Chat](https://github.com/Xujiayao/Discord-MC-Chat) (DMCC)，前身为 MC-Discord-Chat 和 MCDiscordChat (MCDC)，一个实用且功能强大的 Fabric 和 Quilt Minecraft <> Discord 跨服聊天工具，灵感来自 BRForgers/DisFabric。
