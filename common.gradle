@@ -55,7 +55,7 @@ dependencies {
 
 	modImplementation("com.google.code.gson:gson:2.11.0")
 
-	modImplementation("eu.pb4:placeholder-api:2.4.0+1.21")
+	modImplementation("eu.pb4:placeholder-api:2.4.1+1.21")
 }
 
 processResources {

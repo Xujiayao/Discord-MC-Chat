@@ -51,7 +51,7 @@ dependencies {
 
 	include("com.google.code.gson:gson:2.11.0")
 
-	include("eu.pb4:placeholder-api:2.4.0+1.21")
+	include("eu.pb4:placeholder-api:2.4.1+1.21")
 }
 
 def fabric_subprojects = parent.subprojects.findAll({
