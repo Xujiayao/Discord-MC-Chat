@@ -22,6 +22,8 @@ Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCD
 
 更多介绍 + 文档：[Discord-MC-Chat 文档 | Xujiayao's Blog](https://blog.xujiayao.com/posts/4ba0a17a/)
 
+DMCC Discord 服务器现已公开！通过以下链接加入：https://discord.gg/kbXkV6k2XU
+
 ## 简介
 
 [Discord-MC-Chat](https://github.com/Xujiayao/Discord-MC-Chat) (DMCC)，前身为 MC-Discord-Chat 和 MCDiscordChat (MCDC)，一个实用且功能强大的 Fabric 和 Quilt Minecraft <> Discord 跨服聊天工具，灵感来自 BRForgers/DisFabric。
@@ -44,6 +46,8 @@ Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCD
 
 如果有 bug 或建议，或者有什么不懂的，可以 [提交 issue](https://github.com/Xujiayao/Discord-MC-Chat/issues/new/choose)。
 
+DMCC Discord 服务器现已公开！通过以下链接加入：https://discord.gg/kbXkV6k2XU
+
 ## 贡献
 
 **欢迎你为 DMCC 做出贡献！**
@@ -61,7 +65,8 @@ Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCD
 - Minecraft <> Discord 跨服聊天
     - 支持禁用 Discord 和游戏内聊天广播
     - 支持使用 Discord 频道主题功能显示服务器状态
-    - 支持使用机器人活动状态显示服务器玩家数
+    - 支持使用机器人 Discord 在线状态中显示服务器状态
+    - 支持使用机器人 Discord 活动状态显示服务器玩家数
     - 支持 Discord Webhook 功能
         - 动态创建 DMCC Webhook
         - 可自定义 Webhook 玩家头像 API

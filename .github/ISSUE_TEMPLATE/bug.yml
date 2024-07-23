@@ -59,6 +59,8 @@ body:
       multiple: false
       options:
         - "Latest Build (GitHub Actions)"
+        - "2.3.4"
+        - "2.3.4-compat"
         - "2.3.3"
         - "2.3.3-compat"
         - "1.20.5-2.3.2"
