@@ -169,7 +169,7 @@ public class MinecraftEventListener {
 		MinecraftEvents.PLAYER_COMMAND.register((player, command) -> {
 			if (CONFIG.generic.broadcastPlayerCommandExecution) {
 				for (String excludedCommand : CONFIG.generic.excludedCommands) {
-					if (command.startsWith(excludedCommand + " ")) {
+					if (command.matches(excludedCommand)) {
 						return;
 					}
 				}
