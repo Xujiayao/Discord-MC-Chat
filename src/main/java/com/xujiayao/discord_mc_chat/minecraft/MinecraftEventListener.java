@@ -18,6 +18,9 @@ import net.minecraft.network.chat.MutableComponent;
 //$$ import net.minecraft.network.chat.TextComponent;
 //#endif
 import net.minecraft.network.chat.contents.TranslatableContents;
+//#if MC <= 11802
+//$$ import net.minecraft.server.level.ServerPlayer;
+//#endif
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameRules;
 import okhttp3.MediaType;
@@ -54,8 +57,22 @@ import static com.xujiayao.discord_mc_chat.Main.WEBHOOK;
 public class MinecraftEventListener {
 
 	public static void init() {
-		MinecraftEvents.SERVER_MESSAGE.register((message, commandSourceStack) -> {
-			sendDiscordMessage(message, commandSourceStack.getDisplayName().getString(), JDA.getSelfUser().getAvatarUrl());
+		MinecraftEvents.COMMAND_MESSAGE.register((message, commandSourceStack) -> {
+			String avatarUrl;
+
+			// TODO May directly link to PLAYER_MESSAGE
+			//#if MC > 11802
+			if (commandSourceStack.isPlayer()) {
+				avatarUrl = getAvatarUrl(commandSourceStack.getPlayer());
+			//#else
+			//$$ if (commandSourceStack.getEntity() instanceof ServerPlayer) {
+			//$$ 	avatarUrl = getAvatarUrl((ServerPlayer) commandSourceStack.getEntity());
+			//#endif
+			} else {
+				avatarUrl = JDA.getSelfUser().getAvatarUrl();
+			}
+
+			sendDiscordMessage(message, commandSourceStack.getDisplayName().getString(), avatarUrl);
 			if (CONFIG.multiServer.enable) {
 				MULTI_SERVER.sendMessage(false, true, false, commandSourceStack.getDisplayName().getString(), message);
 			}
