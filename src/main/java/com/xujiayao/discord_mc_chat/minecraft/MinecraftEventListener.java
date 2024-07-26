@@ -19,6 +19,10 @@ import net.minecraft.network.chat.MutableComponent;
 //$$ import net.minecraft.network.chat.TextComponent;
 //#endif
 import net.minecraft.network.chat.contents.TranslatableContents;
+//#if MC <= 11802
+//$$ import net.minecraft.server.level.ServerPlayer;
+//#endif
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameRules;
 import okhttp3.MediaType;
 import okhttp3.Request;
@@ -28,7 +32,10 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -51,8 +58,22 @@ import static com.xujiayao.discord_mc_chat.Main.WEBHOOK;
 public class MinecraftEventListener {
 
 	public static void init() {
-		MinecraftEvents.SERVER_MESSAGE.register((message, commandSourceStack) -> {
-			sendDiscordMessage(message, commandSourceStack.getDisplayName().getString(), JDA.getSelfUser().getAvatarUrl());
+		MinecraftEvents.COMMAND_MESSAGE.register((message, commandSourceStack) -> {
+			String avatarUrl;
+
+			// TODO May directly link to PLAYER_MESSAGE
+			//#if MC > 11802
+			if (commandSourceStack.isPlayer()) {
+				avatarUrl = getAvatarUrl(commandSourceStack.getPlayer());
+			//#else
+			//$$ if (commandSourceStack.getEntity() instanceof ServerPlayer) {
+			//$$ 	avatarUrl = getAvatarUrl((ServerPlayer) commandSourceStack.getEntity());
+			//#endif
+			} else {
+				avatarUrl = JDA.getSelfUser().getAvatarUrl();
+			}
+
+			sendDiscordMessage(message, commandSourceStack.getDisplayName().getString(), avatarUrl);
 			if (CONFIG.multiServer.enable) {
 				MULTI_SERVER.sendMessage(false, true, false, commandSourceStack.getDisplayName().getString(), message);
 			}
@@ -153,7 +174,7 @@ public class MinecraftEventListener {
 			}
 
 			if (CONFIG.generic.broadcastChatMessages) {
-				sendDiscordMessage(contentToDiscord, Objects.requireNonNull(player.getDisplayName()).getString(), CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUUID().toString() : player.getDisplayName().getString())));
+				sendDiscordMessage(contentToDiscord, Objects.requireNonNull(player.getDisplayName()).getString(), getAvatarUrl(player));
 				if (CONFIG.multiServer.enable) {
 					MULTI_SERVER.sendMessage(false, true, false, Objects.requireNonNull(player.getDisplayName()).getString(), CONFIG.generic.formatChatMessages ? contentToMinecraft : message);
 				}
@@ -197,7 +218,7 @@ public class MinecraftEventListener {
 					//$$ SERVER.sendMessage(message);
 					//#endif
 
-					sendDiscordMessage(MarkdownSanitizer.escape(command), Objects.requireNonNull(player.getDisplayName()).getString(), CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUUID().toString() : player.getDisplayName().getString())));
+					sendDiscordMessage(MarkdownSanitizer.escape(command), Objects.requireNonNull(player.getDisplayName()).getString(), getAvatarUrl(player));
 					if (CONFIG.multiServer.enable) {
 						MULTI_SERVER.sendMessage(false, true, false, player.getDisplayName().getString(), MarkdownSanitizer.escape(command));
 					}
@@ -329,5 +350,31 @@ public class MinecraftEventListener {
 			});
 			executor.shutdown();
 		}
+	}
+
+	// {player_name} conflicts with nickname-changing mods
+	// TODO Move to Placeholder class
+	private static String getAvatarUrl(Player player) {
+		String hash = "null";
+		if (CONFIG.generic.avatarApi.contains("{player_textures}")) {
+			try {
+				//#if MC > 12001
+				String textures = player.getGameProfile().getProperties().get("textures").iterator().next().value();
+				//#else
+				//$$ String textures = player.getGameProfile().getProperties().get("textures").iterator().next().getValue();
+				//#endif
+
+				JsonObject json = new Gson().fromJson(new String(Base64.getDecoder().decode(textures), StandardCharsets.UTF_8), JsonObject.class);
+				String url = json.getAsJsonObject("textures").getAsJsonObject("SKIN").get("url").getAsString();
+
+				hash = url.replace("http://textures.minecraft.net/texture/", "");
+			} catch (NoSuchElementException ignored) {
+			}
+		}
+
+		return CONFIG.generic.avatarApi
+				.replace("{player_uuid}", player.getUUID().toString())
+				.replace("{player_name}", Objects.requireNonNull(player.getDisplayName()).getString())
+				.replace("{player_textures}", hash);
 	}
 }

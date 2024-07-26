@@ -9,3 +9,6 @@ contact_links:
   - name: Latest Builds
     url: https://github.com/Xujiayao/Discord-MC-Chat/actions
     about: You can find the latest build JAR files at GitHub Actions.
+  - name: DMCC Discord Server
+    url: https://discord.gg/kbXkV6k2XU
+    about: You can ask me questions on the DMCC Discord Server.

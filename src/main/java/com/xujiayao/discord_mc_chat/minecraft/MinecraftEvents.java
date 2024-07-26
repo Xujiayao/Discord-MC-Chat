@@ -14,8 +14,8 @@ import java.util.Optional;
  */
 public interface MinecraftEvents {
 
-	Event<ServerMessage> SERVER_MESSAGE = EventFactory.createArrayBacked(ServerMessage.class, callbacks -> (message, commandSourceStack) -> {
-		for (ServerMessage callback : callbacks) {
+	Event<CommandMessage> COMMAND_MESSAGE = EventFactory.createArrayBacked(CommandMessage.class, callbacks -> (message, commandSourceStack) -> {
+		for (CommandMessage callback : callbacks) {
 			callback.message(message, commandSourceStack);
 		}
 	});
@@ -58,7 +58,7 @@ public interface MinecraftEvents {
 		}
 	});
 
-	interface ServerMessage {
+	interface CommandMessage {
 		void message(String message, CommandSourceStack commandSourceStack);
 	}
 
