@@ -341,9 +341,14 @@ public class MinecraftEventListener {
 
 			ExecutorService executor = Executors.newFixedThreadPool(1);
 			executor.submit(() -> {
-				try {
-					Response response = HTTP_CLIENT.newCall(request).execute();
-					response.close();
+				try (Response response = HTTP_CLIENT.newCall(request).execute()) {
+					if (!response.isSuccessful()) {
+						if (response.body() != null) {
+							throw new Exception("Unexpected code " + response.code() + ": " + response.body().string());
+						} else {
+							throw new Exception("Unexpected code " + response.code());
+						}
+					}
 				} catch (Exception e) {
 					LOGGER.error(ExceptionUtils.getStackTrace(e));
 				}
