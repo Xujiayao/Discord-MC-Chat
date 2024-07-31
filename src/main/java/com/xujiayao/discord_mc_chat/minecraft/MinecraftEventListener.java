@@ -379,7 +379,7 @@ public class MinecraftEventListener {
 
 		return CONFIG.generic.avatarApi
 				.replace("{player_uuid}", player.getUUID().toString())
-				.replace("{player_name}", Objects.requireNonNull(player.getDisplayName()).getString())
+				.replace("{player_name}", player.getName().getString())
 				.replace("{player_textures}", hash);
 	}
 }
