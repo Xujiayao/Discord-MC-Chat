@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
@@ -38,6 +39,7 @@ import com.xujiayao.discord_mc_chat.utils.Utils;
 import java.io.File;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Timer;
 
 /**
@@ -122,7 +124,14 @@ public class Main implements DedicatedServerModInitializer {
 
 			String webhookName = "DMCC Webhook" + " (" + JDA.getSelfUser().getApplicationId() + ")";
 			WEBHOOK = null;
-			for (Webhook webhook : CHANNEL.getGuild().retrieveWebhooks().complete()) {
+			List<Webhook> webhooks;
+			try {
+				webhooks = CHANNEL.getGuild().retrieveWebhooks().complete();
+			} catch (InsufficientPermissionException e) {
+				LOGGER.error("Insufficient guild permission, the full functionality of DMCC Webhook Check is not available!", e);
+				webhooks = CHANNEL.retrieveWebhooks().complete();
+			}
+			for (Webhook webhook : webhooks) {
 				if (webhook.getName().contains("MCDC Webhook") || "DMCC Webhook".equals(webhook.getName())) {
 					webhook.delete().queue();
 					continue;

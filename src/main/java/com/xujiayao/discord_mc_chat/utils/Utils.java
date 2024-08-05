@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.Webhook;
+import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.fabricmc.loader.api.FabricLoader;
@@ -306,7 +307,14 @@ public class Utils {
 
 			String webhookName = "DMCC Webhook" + " (" + JDA.getSelfUser().getApplicationId() + ")";
 			WEBHOOK = null;
-			for (Webhook webhook : CHANNEL.getGuild().retrieveWebhooks().complete()) {
+			List<Webhook> webhooks;
+			try {
+				webhooks = CHANNEL.getGuild().retrieveWebhooks().complete();
+			} catch (InsufficientPermissionException e) {
+				LOGGER.error("Insufficient guild permission, the full functionality of DMCC Webhook Check is not available!", e);
+				webhooks = CHANNEL.retrieveWebhooks().complete();
+			}
+			for (Webhook webhook : webhooks) {
 				if (webhook.getName().contains("MCDC Webhook") || "DMCC Webhook".equals(webhook.getName())) {
 					webhook.delete().queue();
 					continue;
