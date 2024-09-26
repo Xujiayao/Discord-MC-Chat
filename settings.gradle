@@ -24,13 +24,13 @@ pluginManagement {
 }
 
 def versions = Arrays.asList(
-		"compat_1.15.2",
-		"compat_1.16.5",
-		"compat_1.17.1",
-		"compat_1.18.2",
-		"compat_1.19"  ,
-		"compat_1.19.2",
-		"compat_1.19.3",
+		"1.15.2",
+		"1.16.5",
+		"1.17.1",
+		"1.18.2",
+		"1.19"  ,
+		"1.19.2",
+		"1.19.3",
 		"1.19.4",
 		"1.20.1",
 		"1.20.2",
@@ -45,12 +45,4 @@ for (String version : versions) {
 	proj.buildFileName = "../../common.gradle"
 }
 
-include(":active")
-def active = project(":active")
-active.name = "active"
-active.projectDir = file("wrapper/active")
-
-include(":compat")
-def compat = project(":compat")
-compat.name = "compat"
-compat.projectDir = file("wrapper/compat")
+include(":wrapper")

@@ -15,10 +15,6 @@ base {
 	archivesName = archives_base_name
 }
 
-sourceSets {
-	main.resources.srcDir "../src/main/resources"
-}
-
 dependencies {
 	minecraft("com.mojang:minecraft:${minecraft_version}")
 	mappings(loom.officialMojangMappings())
@@ -46,7 +42,7 @@ dependencies {
 }
 
 def fabric_subprojects = parent.subprojects.findAll({
-	it.name != "active" && !it.name.contains("compat")
+	it.name != "wrapper"
 })
 
 remapJar {
@@ -70,7 +66,7 @@ remapJar {
 		}
 	}
 
-	from("../../LICENSE") {
+	from("../LICENSE") {
 		rename { "${it}_${archives_base_name}" }
 	}
 	from("build/tmp/versions")
@@ -78,7 +74,7 @@ remapJar {
 	doLast {
 		copy {
 			from "build/libs"
-			into "../../build"
+			into "../build"
 		}
 	}
 }
