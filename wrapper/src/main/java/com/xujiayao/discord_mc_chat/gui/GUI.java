@@ -15,7 +15,7 @@ import java.util.Locale;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 
-import static com.xujiayao.discord_mc_chat.Main.VERSION;
+import static com.xujiayao.discord_mc_chat.gui.Main.VERSION;
 
 /**
  * @author Xujiayao
