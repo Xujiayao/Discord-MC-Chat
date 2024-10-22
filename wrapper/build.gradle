@@ -63,10 +63,10 @@ remapJar {
 	inputFile.set shadowJar.archiveFile
 
 	dependsOn {
+		shadowJar
 		fabric_subprojects.collect {
 			it.tasks.remapJar
 		}
-		shadowJar
 	}
 
 	doFirst {
