@@ -4,12 +4,16 @@ import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.extras.FlatSVGUtils;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
+import com.intellij.uiDesigner.core.Spacer;
 
 import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.text.StyleContext;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.lang.reflect.Method;
+import java.net.URI;
 import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.PropertyResourceBundle;
@@ -26,6 +30,8 @@ public class GUI extends JFrame {
 	private JLabel versionLabel;
 	private JButton button;
 	private JLabel iconLabel;
+	private JLabel docsLabel;
+	private JLabel discordLabel;
 
 	public GUI() {
 		ResourceBundle bundle = PropertyResourceBundle.getBundle("lang/lang");
@@ -40,6 +46,31 @@ public class GUI extends JFrame {
 
 		String pattern = bundle.getString("version");
 		versionLabel.setText(MessageFormat.format(pattern, VERSION));
+
+		docsLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		discordLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+		docsLabel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				try {
+					Desktop.getDesktop().browse(new URI("https://blog.xujiayao.com/posts/4ba0a17a/"));
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			}
+		});
+
+		discordLabel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				try {
+					Desktop.getDesktop().browse(new URI("https://discord.gg/kbXkV6k2XU"));
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			}
+		});
 
 		setPreferredSize(new Dimension(500, 400));
 		pack();
@@ -66,7 +97,7 @@ public class GUI extends JFrame {
 	 */
 	private void $$$setupUI$$$() {
 		contentPane = new JPanel();
-		contentPane.setLayout(new GridLayoutManager(6, 3, new Insets(10, 10, 10, 10), -1, -1));
+		contentPane.setLayout(new GridLayoutManager(13, 3, new Insets(10, 10, 10, 10), -1, -1));
 		versionLabel = new JLabel();
 		Font versionLabelFont = this.$$$getFont$$$(null, -1, 12, versionLabel.getFont());
 		if (versionLabelFont != null) versionLabel.setFont(versionLabelFont);
@@ -78,17 +109,17 @@ public class GUI extends JFrame {
 		final JLabel label1 = new JLabel();
 		Font label1Font = this.$$$getFont$$$(null, -1, 12, label1.getFont());
 		if (label1Font != null) label1.setFont(label1Font);
-		this.$$$loadLabelText$$$(label1, this.$$$getMessageFromBundle$$$("lang/lang", "description"));
+		this.$$$loadLabelText$$$(label1, this.$$$getMessageFromBundle$$$("lang/lang", "description1"));
 		contentPane.add(label1, new GridConstraints(3, 0, 1, 3, GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
 		final JSeparator separator2 = new JSeparator();
 		separator2.setOrientation(0);
-		contentPane.add(separator2, new GridConstraints(4, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		contentPane.add(separator2, new GridConstraints(11, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
 		button = new JButton();
 		Font buttonFont = this.$$$getFont$$$(null, -1, 12, button.getFont());
 		if (buttonFont != null) button.setFont(buttonFont);
 		button.setHorizontalAlignment(0);
 		this.$$$loadButtonText$$$(button, this.$$$getMessageFromBundle$$$("lang/lang", "buttonText"));
-		contentPane.add(button, new GridConstraints(5, 2, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		contentPane.add(button, new GridConstraints(12, 2, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
 		final JLabel label2 = new JLabel();
 		Font label2Font = this.$$$getFont$$$(null, Font.BOLD, 20, label2.getFont());
 		if (label2Font != null) label2.setFont(label2Font);
@@ -101,6 +132,32 @@ public class GUI extends JFrame {
 		contentPane.add(label3, new GridConstraints(1, 2, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
 		iconLabel = new JLabel();
 		contentPane.add(iconLabel, new GridConstraints(0, 0, 2, 1, GridConstraints.ANCHOR_SOUTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, new Dimension(50, 50), new Dimension(50, 50), new Dimension(50, 50), 0, false));
+		final JLabel label4 = new JLabel();
+		Font label4Font = this.$$$getFont$$$(null, -1, 12, label4.getFont());
+		if (label4Font != null) label4.setFont(label4Font);
+		label4.setOpaque(false);
+		this.$$$loadLabelText$$$(label4, this.$$$getMessageFromBundle$$$("lang/lang", "description2"));
+		contentPane.add(label4, new GridConstraints(5, 0, 1, 3, GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+		docsLabel = new JLabel();
+		Font docsLabelFont = this.$$$getFont$$$(null, -1, 12, docsLabel.getFont());
+		if (docsLabelFont != null) docsLabel.setFont(docsLabelFont);
+		this.$$$loadLabelText$$$(docsLabel, this.$$$getMessageFromBundle$$$("lang/lang", "description3"));
+		docsLabel.setToolTipText("https://blog.xujiayao.com/posts/4ba0a17a/");
+		contentPane.add(docsLabel, new GridConstraints(7, 0, 1, 3, GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+		final Spacer spacer1 = new Spacer();
+		contentPane.add(spacer1, new GridConstraints(8, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+		final Spacer spacer2 = new Spacer();
+		contentPane.add(spacer2, new GridConstraints(6, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+		final Spacer spacer3 = new Spacer();
+		contentPane.add(spacer3, new GridConstraints(4, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+		final Spacer spacer4 = new Spacer();
+		contentPane.add(spacer4, new GridConstraints(10, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+		discordLabel = new JLabel();
+		Font discordLabelFont = this.$$$getFont$$$(null, -1, 12, discordLabel.getFont());
+		if (discordLabelFont != null) discordLabel.setFont(discordLabelFont);
+		this.$$$loadLabelText$$$(discordLabel, this.$$$getMessageFromBundle$$$("lang/lang", "description4"));
+		discordLabel.setToolTipText("https://discord.gg/kbXkV6k2XU");
+		contentPane.add(discordLabel, new GridConstraints(9, 0, 1, 3, GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
 	}
 
 	/**
@@ -202,4 +259,5 @@ public class GUI extends JFrame {
 	public JComponent $$$getRootComponent$$$() {
 		return contentPane;
 	}
+
 }
