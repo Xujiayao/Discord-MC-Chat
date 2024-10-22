@@ -2,6 +2,7 @@ import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 
 apply plugin: "fabric-loom"
+apply plugin: "com.gradleup.shadow"
 
 java {
 	sourceCompatibility = JavaVersion.VERSION_21
@@ -13,6 +14,13 @@ group = maven_group
 
 base {
 	archivesName = archives_base_name
+}
+
+repositories {
+	maven {
+		name = "IntelliJ Release"
+		url = "https://www.jetbrains.com/intellij-repository/releases"
+	}
 }
 
 dependencies {
@@ -39,6 +47,10 @@ dependencies {
 	include("net.fellbaum:jemoji:1.3.4") // File size of 1.4.x is too big
 
 	include("com.google.code.gson:gson:2.11.0")
+
+	shadow(implementation("com.jetbrains.intellij.java:java-gui-forms-rt:242.22855.106"))
+	shadow(implementation("com.formdev:flatlaf:3.5.2"))
+	shadow(implementation("com.formdev:flatlaf-extras:3.5.2"))
 }
 
 def fabric_subprojects = parent.subprojects.findAll({
@@ -48,10 +60,13 @@ def fabric_subprojects = parent.subprojects.findAll({
 remapJar {
 	outputs.upToDateWhen { false }
 
+	inputFile.set shadowJar.archiveFile
+
 	dependsOn {
 		fabric_subprojects.collect {
 			it.tasks.remapJar
 		}
+		shadowJar
 	}
 
 	doFirst {
@@ -75,6 +90,7 @@ remapJar {
 		copy {
 			from "build/libs"
 			into "../build"
+			exclude "*wrapper*"
 		}
 	}
 }
@@ -103,4 +119,16 @@ processResources {
 		writer.flush()
 		writer.close()
 	}
+}
+
+jar {
+	manifest {
+		attributes "Main-Class": "com.xujiayao.discord_mc_chat.Main"
+	}
+}
+
+shadowJar {
+	archiveClassifier = "wrapper"
+	configurations = [project.configurations.shadow]
+	// FlatLaf does not support minimization and relocation
 }

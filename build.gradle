@@ -1,6 +1,7 @@
 plugins {
 	id "fabric-loom" version "1.7-SNAPSHOT" apply false
 	id "com.replaymod.preprocess" version "88169fcb"
+	id "com.gradleup.shadow" version "8.3.3" apply false
 }
 
 preprocess {
