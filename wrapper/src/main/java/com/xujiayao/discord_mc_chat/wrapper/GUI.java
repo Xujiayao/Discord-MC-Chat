@@ -1,4 +1,4 @@
-package com.xujiayao.discord_mc_chat.gui;
+package com.xujiayao.discord_mc_chat.wrapper;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.extras.FlatSVGUtils;
@@ -19,7 +19,8 @@ import java.util.Locale;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 
-import static com.xujiayao.discord_mc_chat.gui.Main.VERSION;
+import static com.xujiayao.discord_mc_chat.wrapper.Main.LOGGER;
+import static com.xujiayao.discord_mc_chat.wrapper.Main.VERSION;
 
 /**
  * @author Xujiayao
@@ -56,7 +57,7 @@ public class GUI extends JFrame {
 				try {
 					Desktop.getDesktop().browse(new URI("https://blog.xujiayao.com/posts/4ba0a17a/"));
 				} catch (Exception ex) {
-					ex.printStackTrace();
+					LOGGER.error("Exception", ex);
 				}
 			}
 		});
@@ -67,7 +68,7 @@ public class GUI extends JFrame {
 				try {
 					Desktop.getDesktop().browse(new URI("https://discord.gg/kbXkV6k2XU"));
 				} catch (Exception ex) {
-					ex.printStackTrace();
+					LOGGER.error("Exception", ex);
 				}
 			}
 		});
