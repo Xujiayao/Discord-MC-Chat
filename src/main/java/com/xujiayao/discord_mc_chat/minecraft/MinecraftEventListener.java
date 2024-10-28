@@ -353,4 +353,9 @@ public class MinecraftEventListener {
 			executor.shutdown();
 		}
 	}
+
+	// TODO reverted
+	private static String getAvatarUrl(Player player) {
+		return CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUUID().toString() : Objects.requireNonNull(player.getDisplayName()).getString()));
+	}
 }
