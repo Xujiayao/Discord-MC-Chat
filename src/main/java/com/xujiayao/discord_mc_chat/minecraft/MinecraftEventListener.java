@@ -238,7 +238,7 @@ public class MinecraftEventListener {
 			if (CONFIG.generic.announceAdvancements
 					&& isDone
 					&& display.shouldAnnounceChat()
-					&& player.level().getGameRules().getBoolean(GameRules.RULE_ANNOUNCE_ADVANCEMENTS)) {
+					&& player.serverLevel().getGameRules().getBoolean(GameRules.RULE_ANNOUNCE_ADVANCEMENTS)) {
 				String message = "null";
 
 				switch (display.getType()) {
