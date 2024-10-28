@@ -2,7 +2,6 @@ import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 
 apply plugin: "fabric-loom"
-apply plugin: "com.gradleup.shadow"
 
 java {
 	sourceCompatibility = JavaVersion.VERSION_21
@@ -14,13 +13,6 @@ group = maven_group
 
 base {
 	archivesName = archives_base_name
-}
-
-repositories {
-	maven {
-		name = "IntelliJ Release"
-		url = "https://www.jetbrains.com/intellij-repository/releases"
-	}
 }
 
 dependencies {
@@ -35,8 +27,7 @@ dependencies {
 	}
 	include("net.sf.trove4j:core:3.1.0")
 	include("org.apache.commons:commons-collections4:4.4")
-	shadow(implementation("org.slf4j:slf4j-api:2.0.13")) // 1.x is Incompatible with Quilt (#164)
-	shadow(implementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.24.1")) // TODO Any better way?
+	include("org.slf4j:slf4j-api:2.0.13") // 1.x is Incompatible with Quilt (#164)
 	include("com.neovisionaries:nv-websocket-client:2.14")
 	include("com.fasterxml.jackson.core:jackson-core:2.17.2")
 	include("com.fasterxml.jackson.core:jackson-databind:2.17.2")
@@ -47,11 +38,7 @@ dependencies {
 
 	include("net.fellbaum:jemoji:1.3.4") // File size of 1.4.x is too big
 
-	shadow(implementation("com.google.code.gson:gson:2.11.0"))
-
-	shadow(implementation("com.jetbrains.intellij.java:java-gui-forms-rt:242.22855.106"))
-	shadow(implementation("com.formdev:flatlaf:3.5.2"))
-	shadow(implementation("com.formdev:flatlaf-extras:3.5.2"))
+	include("com.google.code.gson:gson:2.11.0")
 }
 
 def fabric_subprojects = parent.subprojects.findAll({
@@ -61,10 +48,7 @@ def fabric_subprojects = parent.subprojects.findAll({
 remapJar {
 	outputs.upToDateWhen { false }
 
-	inputFile.set shadowJar.archiveFile
-
 	dependsOn {
-		shadowJar
 		fabric_subprojects.collect {
 			it.tasks.remapJar
 		}
@@ -91,7 +75,6 @@ remapJar {
 		copy {
 			from "build/libs"
 			into "../build"
-			exclude "*wrapper*"
 		}
 	}
 }
@@ -120,16 +103,4 @@ processResources {
 		writer.flush()
 		writer.close()
 	}
-}
-
-jar {
-	manifest {
-		attributes "Main-Class": "com.xujiayao.discord_mc_chat.wrapper.Main"
-	}
-}
-
-shadowJar {
-	archiveClassifier = "wrapper"
-	configurations = [project.configurations.shadow]
-	// FlatLaf does not support minimization and relocation
 }
