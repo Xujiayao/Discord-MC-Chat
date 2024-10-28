@@ -29,7 +29,7 @@ preprocess {
 	mc1201.link(mc1202, file("versions/mapping-1.20.1-1.20.2.txt"))
 	mc1202.link(mc1204, null)
 	mc1204.link(mc1211, null)
-	mc1211.link(mc1213, null)
+	mc1211.link(mc1213, file("versions/mapping-1.21.1-1.21.3.txt"))
 }
 
 project.afterEvaluate {
