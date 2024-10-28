@@ -34,7 +34,9 @@ public class Config {
 		public String consoleLogChannelId = "";
 		public String updateNotificationChannelId = "";
 
-		public String avatarApi = "https://mc-heads.net/avatar/{player_uuid}.png";
+		public boolean useUuidInsteadOfName = true;
+
+		public String avatarApi = "https://mc-heads.net/avatar/%player%.png";
 
 		public boolean broadcastPlayerCommandExecution = true;
 		public boolean broadcastSlashCommandExecution = true;

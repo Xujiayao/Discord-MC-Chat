@@ -31,10 +31,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -173,7 +170,7 @@ public class MinecraftEventListener {
 			}
 
 			if (CONFIG.generic.broadcastChatMessages) {
-				sendDiscordMessage(contentToDiscord, Objects.requireNonNull(player.getDisplayName()).getString(), getAvatarUrl(player));
+				sendDiscordMessage(contentToDiscord, Objects.requireNonNull(player.getDisplayName()).getString(), CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUUID().toString() : player.getDisplayName().getString())));
 				if (CONFIG.multiServer.enable) {
 					MULTI_SERVER.sendMessage(false, true, false, Objects.requireNonNull(player.getDisplayName()).getString(), CONFIG.generic.formatChatMessages ? contentToMinecraft : message);
 				}
@@ -217,7 +214,7 @@ public class MinecraftEventListener {
 					//$$ SERVER.sendMessage(message);
 					//#endif
 
-					sendDiscordMessage(MarkdownSanitizer.escape(command), Objects.requireNonNull(player.getDisplayName()).getString(), getAvatarUrl(player));
+					sendDiscordMessage(MarkdownSanitizer.escape(command), Objects.requireNonNull(player.getDisplayName()).getString(), CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUUID().toString() : player.getDisplayName().getString())));
 					if (CONFIG.multiServer.enable) {
 						MULTI_SERVER.sendMessage(false, true, false, player.getDisplayName().getString(), MarkdownSanitizer.escape(command));
 					}
@@ -355,31 +352,5 @@ public class MinecraftEventListener {
 			});
 			executor.shutdown();
 		}
-	}
-
-	// {player_name} conflicts with nickname-changing mods
-	// TODO Move to Placeholder class
-	private static String getAvatarUrl(Player player) {
-		String hash = "null";
-		if (CONFIG.generic.avatarApi.contains("{player_textures}")) {
-			try {
-				//#if MC > 12001
-				String textures = player.getGameProfile().getProperties().get("textures").iterator().next().value();
-				//#else
-				//$$ String textures = player.getGameProfile().getProperties().get("textures").iterator().next().getValue();
-				//#endif
-
-				JsonObject json = new Gson().fromJson(new String(Base64.getDecoder().decode(textures), StandardCharsets.UTF_8), JsonObject.class);
-				String url = json.getAsJsonObject("textures").getAsJsonObject("SKIN").get("url").getAsString();
-
-				hash = url.replace("http://textures.minecraft.net/texture/", "");
-			} catch (NoSuchElementException ignored) {
-			}
-		}
-
-		return CONFIG.generic.avatarApi
-				.replace("{player_uuid}", player.getUUID().toString())
-				.replace("{player_name}", player.getName().getString())
-				.replace("{player_textures}", hash);
 	}
 }
