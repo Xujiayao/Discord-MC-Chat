@@ -355,6 +355,7 @@ public class MinecraftEventListener {
 	}
 
 	// TODO reverted
+	// TODO Commit cafa9c4
 	private static String getAvatarUrl(Player player) {
 		return CONFIG.generic.avatarApi.replace("%player%", (CONFIG.generic.useUuidInsteadOfName ? player.getUUID().toString() : Objects.requireNonNull(player.getDisplayName()).getString()));
 	}
