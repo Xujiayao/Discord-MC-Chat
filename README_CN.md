@@ -85,6 +85,7 @@ DMCC Discord 服务器现已公开！通过以下链接加入：https://discord.
     - 可广播玩家指令执行
         - 执行指令的玩家也可以看到自己执行的指令
         - 可排除执行特定指令的广播
+    - 支持广播使用 /tellraw 和 /say 命令发送的消息
     - 可将所有控制台日志消息发送到 Discord
 - 可使用 Discord 命令
     - 可使用 Discord 管理可执行 DMCC 命令的频道
@@ -150,6 +151,7 @@ DMCC Discord 服务器现已公开！通过以下链接加入：https://discord.
 | `ko_kr` | 한국어（대한민국）             |
 | `no_no` | Norsk Bokmål (Norge)  |
 | `pl_pl` | Polski (Polska)       |
+| `pt_br` | Português (Brasil)    |
 | `ru_ru` | Русский (Россия)      |
 | `zh_cn` | 简体中文（中国大陆）            |
 | `zh_hk` | 繁體中文（香港特別行政區）         |
