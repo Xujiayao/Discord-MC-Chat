@@ -6,7 +6,7 @@ DMCC Discord Server is now public! Join now through: https://discord.gg/kbXkV6k2
 
 DMCC now supports switching to Brazilian Portuguese. Note that DMCC no longer releases Active and Compat versions separately.
 
-As this is a minor release, new features that involve modifying the config file will not be released in this version.
+As this is a minor release, new features that involve modifying the config file are not released in this version.
 
 DMCC Discord 服务器现已公开！通过以下链接加入：https://discord.gg/kbXkV6k2XU
 
