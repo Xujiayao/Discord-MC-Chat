@@ -19,8 +19,8 @@ DMCC 现在支持切换到巴西葡萄牙语。留意现在 DMCC 不再分开发
 - Brazilian Portuguese translation (#243)
   巴西葡萄牙语翻译
 
-- Supports broadcasting messages sent using the /tellraw @a command (#132 and #250)
-  支持广播使用 /tellraw @a 命令发送的消息
+- Supports broadcasting messages sent using the /tellraw command (#132 and #250)
+  支持广播使用 /tellraw 命令发送的消息
 
 - Restore /say command broadcast feature in versions 1.18.2 and below (#197)
   恢复在 1.18.2 及更早版本中广播 /say 命令的功能
