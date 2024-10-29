@@ -85,6 +85,7 @@ For translation contributions, language files are located in the `/wrapper/src/m
     - Broadcast player command execution
         - Players who execute commands can also see the commands themselves
         - Exclude broadcasts for execution of specific commands
+    - Support broadcasting messages sent using /tellraw and /say command
     - Send all console log messages to Discord
 - Discord Commands available
     - Use Discord to manage channels that can execute DMCC commands
@@ -150,6 +151,7 @@ Languages currently available:
 | `ko_kr` | 한국어（대한민국）             |
 | `no_no` | Norsk Bokmål (Norge)  |
 | `pl_pl` | Polski (Polska)       |
+| `pt_br` | Português (Brasil)    |
 | `ru_ru` | Русский (Россия)      |
 | `zh_cn` | 简体中文（中国大陆）            |
 | `zh_hk` | 繁體中文（香港特別行政區）         |
