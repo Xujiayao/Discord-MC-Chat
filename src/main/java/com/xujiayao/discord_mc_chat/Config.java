@@ -36,7 +36,7 @@ public class Config {
 
 		public boolean useUuidInsteadOfName = true;
 
-		public String avatarApi = "https://mc-heads.net/avatar/%player%.png";
+		public String avatarApi = "https://mc-heads.net/avatar/{player_uuid}.png";
 
 		public boolean broadcastPlayerCommandExecution = true;
 		public boolean broadcastSlashCommandExecution = true;
