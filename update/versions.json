@@ -1,8 +1,8 @@
 {
 	"versions": [
 		{
-			"version": "2.3.5",
-			"changelog": "<https://github.com/Xujiayao/Discord-MC-Chat/releases/tag/2.3.5>\n\n> DMCC Discord Server is now public! Join now through: https://discord.gg/kbXkV6k2XU\n> \n> DMCC now supports switching to Brazilian Portuguese. Note that DMCC no longer releases Active and Compat versions separately.\n> \n> As this is a minor release, new features that involve modifying the config file will not be released in this version.",
+			"version": "2.4.0",
+			"changelog": "<https://github.com/Xujiayao/Discord-MC-Chat/releases/tag/2.3.5>\n\n> DMCC Discord Server is now public! Join now through: https://discord.gg/kbXkV6k2XU\n> \n> New features that involve modifying the config file have been released in this version. Please read the docs to reconfigure `generic.avatarApi` and `generic.excludedCommands`!",
 			"minecraft_dependency": [
 				"~1.14.4",
 				"~1.15.2",

@@ -69,7 +69,7 @@ For translation contributions, language files are located in the `/wrapper/src/m
     - Support displaying server player count in bot's Discord activity status
     - Support Discord Webhook feature
         - Dynamic-created DMCC Webhook
-        - Customizable Webhook Avatar API
+        - Customizable Webhook Avatar API that is compatible with mods and plugins for real-time skin changes
         - Use the bot itself to send chat messages when Webhook is disabled
     - Support in-game Markdown parsing
     - Support highlighting and using default Unicode and server custom emoji in-game
@@ -84,7 +84,7 @@ For translation contributions, language files are located in the `/wrapper/src/m
     - Support limiting the number of newlines for Discord messages
     - Broadcast player command execution
         - Players who execute commands can also see the commands themselves
-        - Exclude broadcasts for execution of specific commands
+        - Exclude broadcasts for execution of specific commands (support regular expression)
     - Support broadcasting messages sent using /tellraw and /say command
     - Send all console log messages to Discord
 - Discord Commands available
@@ -138,6 +138,7 @@ For translation contributions, language files are located in the `/wrapper/src/m
     - Push DMCC version updates accurately by checking server Minecraft version compatibility
     - Customizable update notification channel
     - Check for updates can be disabled
+- Prompt when the user runs the JAR as an application instead of a Minecraft mod
 
 Languages currently available:
 
