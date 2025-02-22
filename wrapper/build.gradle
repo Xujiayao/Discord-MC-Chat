@@ -30,12 +30,12 @@ dependencies {
 	modImplementation("net.fabricmc:fabric-loader:${loader_version}")
 	modApi("net.fabricmc.fabric-api:fabric-api:${fabric_version}")
 
-	include("net.dv8tion:JDA:5.1.0") {
+	include("net.dv8tion:JDA:5.3.0") {
 		exclude module: "opus-java"
 	}
 	include("net.sf.trove4j:core:3.1.0")
 	include("org.apache.commons:commons-collections4:4.4")
-	shadow(implementation("org.slf4j:slf4j-api:2.0.13")) // 1.x is Incompatible with Quilt (#164)
+	shadow(implementation("org.slf4j:slf4j-api:2.0.13"))
 	shadow(implementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.24.1")) // TODO Any better way?
 	include("com.neovisionaries:nv-websocket-client:2.14")
 	include("com.fasterxml.jackson.core:jackson-core:2.17.2")
@@ -45,56 +45,18 @@ dependencies {
 	include("com.squareup.okio:okio-jvm:3.6.0")
 	include("org.jetbrains.kotlin:kotlin-stdlib:1.8.21")
 
-	include("net.fellbaum:jemoji:1.3.4") // File size of 1.4.x is too big
+	include("net.fellbaum:jemoji:1.7.1")
 
-	shadow(implementation("com.google.code.gson:gson:2.11.0"))
+	shadow(implementation("com.google.code.gson:gson:2.12.1"))
 
-	shadow(implementation("com.jetbrains.intellij.java:java-gui-forms-rt:242.22855.106"))
-	shadow(implementation("com.formdev:flatlaf:3.5.2"))
-	shadow(implementation("com.formdev:flatlaf-extras:3.5.2"))
+	shadow(implementation("com.jetbrains.intellij.java:java-gui-forms-rt:243.23654.166"))
+	shadow(implementation("com.formdev:flatlaf:3.5.4"))
+	shadow(implementation("com.formdev:flatlaf-extras:3.5.4"))
 }
 
 def fabric_subprojects = parent.subprojects.findAll({
 	it.name != "wrapper"
 })
-
-remapJar {
-	outputs.upToDateWhen { false }
-
-	inputFile.set shadowJar.archiveFile
-
-	dependsOn {
-		shadowJar
-		fabric_subprojects.collect {
-			it.tasks.remapJar
-		}
-	}
-
-	doFirst {
-		delete fileTree("build/tmp/versions/META-INF/jars")
-		copy {
-			from {
-				fabric_subprojects.collect {
-					it.tasks.remapJar.outputs.files
-				}
-			}
-			into("build/tmp/versions/META-INF/jars")
-		}
-	}
-
-	from("../LICENSE") {
-		rename { "${it}_${archives_base_name}" }
-	}
-	from("build/tmp/versions")
-
-	doLast {
-		copy {
-			from "build/libs"
-			into "../build"
-			exclude "*wrapper*"
-		}
-	}
-}
 
 processResources {
 	filesMatching("fabric.mod.json") {
@@ -123,8 +85,37 @@ processResources {
 }
 
 jar {
+	outputs.upToDateWhen { false }
+
+	dependsOn {
+		shadowJar
+		fabric_subprojects.collect {
+			it.tasks.remapJar
+		}
+	}
+
+	doFirst {
+		delete fileTree("build/tmp/versions/META-INF/jars")
+		copy {
+			from {
+				fabric_subprojects.collect {
+					it.tasks.remapJar.outputs.files
+				}
+			}
+			into("build/tmp/versions/META-INF/jars")
+		}
+	}
+
 	manifest {
 		attributes "Main-Class": "com.xujiayao.discord_mc_chat.wrapper.Main"
+	}
+
+	from("../LICENSE") {
+		rename { "${it}_${archives_base_name}" }
+	}
+	from("build/tmp/versions")
+	from(zipTree(shadowJar.archiveFile)) {
+		duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 	}
 }
 
@@ -132,4 +123,14 @@ shadowJar {
 	archiveClassifier = "wrapper"
 	configurations = [project.configurations.shadow]
 	// FlatLaf does not support minimization and relocation
+}
+
+remapJar {
+	doLast {
+		copy {
+			from "build/libs"
+			into "../build"
+			exclude "*wrapper*"
+		}
+	}
 }
