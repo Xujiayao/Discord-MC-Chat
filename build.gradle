@@ -5,6 +5,8 @@ plugins {
 }
 
 preprocess {
+	preprocess.strictExtraMappings.set(false)
+
 	def mc1152 = createNode("1.15.2", 1_15_02, "mojang")
 	def mc1165 = createNode("1.16.5", 1_16_05, "mojang")
 	def mc1171 = createNode("1.17.1", 1_17_01, "mojang")
