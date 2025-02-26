@@ -3,7 +3,6 @@ package com.xujiayao.discord_mc_chat.minecraft;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.xujiayao.discord_mc_chat.utils.MarkdownParser;
-import com.xujiayao.discord_mc_chat.utils.PlaceholderParser;
 import com.xujiayao.discord_mc_chat.utils.Translations;
 import com.xujiayao.discord_mc_chat.utils.Utils;
 import net.dv8tion.jda.api.entities.Member;
@@ -242,17 +241,22 @@ public class MinecraftEventListener {
 			if (CONFIG.generic.announceAdvancements
 					&& isDone
 					&& display.shouldAnnounceChat()
-					&& player.level().getGameRules().getBoolean(GameRules.RULE_ANNOUNCE_ADVANCEMENTS)) {
+					&& player.serverLevel().getGameRules().getBoolean(GameRules.RULE_ANNOUNCE_ADVANCEMENTS)) {
+				String message = "null";
+
+				switch (display.getType()) {
+					case GOAL -> message = Translations.translateMessage("message.advancementGoal");
+					case TASK -> message = Translations.translateMessage("message.advancementTask");
+					case CHALLENGE -> message = Translations.translateMessage("message.advancementChallenge");
+				}
+
 				String title = Translations.translate("advancements." + advancementHolder.id().getPath().replace("/", ".") + ".title");
 				String description = Translations.translate("advancements." + advancementHolder.id().getPath().replace("/", ".") + ".description");
 
-				String message = PlaceholderParser.parseAdvancement(
-						display.getType(),
-						player,
-						MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString()),
-						title.contains("TranslateError") ? display.getTitle().getString() : title,
-						description.contains("TranslateError") ? display.getDescription().getString() : description
-				).getString();
+				message = message
+						.replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString()))
+						.replace("%advancement%", title.contains("TranslateError") ? display.getTitle().getString() : title)
+						.replace("%description%", description.contains("TranslateError") ? display.getDescription().getString() : description);
 
 				CHANNEL.sendMessage(message).queue();
 				if (CONFIG.multiServer.enable) {
@@ -270,15 +274,13 @@ public class MinecraftEventListener {
 				//#endif
 				String key = deathMessage.getKey();
 
-				String message = PlaceholderParser.parseDeathMessage(
-						player,
-						MarkdownSanitizer.escape(Translations.translate(key, deathMessage.getArgs())),
-						MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString())
-				).getString();
-
-				CHANNEL.sendMessage(message).queue();
+				CHANNEL.sendMessage(Translations.translateMessage("message.deathMessage")
+						.replace("%deathMessage%", MarkdownSanitizer.escape(Translations.translate(key, deathMessage.getArgs())))
+						.replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString()))).queue();
 				if (CONFIG.multiServer.enable) {
-					MULTI_SERVER.sendMessage(false, false, false, null, message);
+					MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.deathMessage")
+							.replace("%deathMessage%", MarkdownSanitizer.escape(Translations.translate(key, deathMessage.getArgs())))
+							.replace("%playerName%", MarkdownSanitizer.escape(player.getDisplayName().getString())));
 				}
 			}
 		});
@@ -313,16 +315,14 @@ public class MinecraftEventListener {
 	private static void sendDiscordMessage(String content, String username, String avatar_url) {
 		if (!CONFIG.generic.useWebhook) {
 			if (CONFIG.multiServer.enable) {
-				CHANNEL.sendMessage(PlaceholderParser.parseMessageWithoutWebhookForMultiServer(
-						CONFIG.multiServer.name,
-						username,
-						content
-				).getString()).queue();
+				CHANNEL.sendMessage(Translations.translateMessage("message.messageWithoutWebhookForMultiServer")
+						.replace("%server%", CONFIG.multiServer.name)
+						.replace("%name%", username)
+						.replace("%message%", content)).queue();
 			} else {
-				CHANNEL.sendMessage(PlaceholderParser.parseMessageWithoutWebhook(
-						username,
-						content
-				).getString()).queue();
+				CHANNEL.sendMessage(Translations.translateMessage("message.messageWithoutWebhook")
+						.replace("%name%", username)
+						.replace("%message%", content)).queue();
 			}
 		} else {
 			JsonObject body = new JsonObject();
@@ -341,9 +341,14 @@ public class MinecraftEventListener {
 
 			ExecutorService executor = Executors.newFixedThreadPool(1);
 			executor.submit(() -> {
-				try {
-					Response response = HTTP_CLIENT.newCall(request).execute();
-					response.close();
+				try (Response response = HTTP_CLIENT.newCall(request).execute()) {
+					if (!response.isSuccessful()) {
+						if (response.body() != null) {
+							throw new Exception("Unexpected code " + response.code() + ": " + response.body().string());
+						} else {
+							throw new Exception("Unexpected code " + response.code());
+						}
+					}
 				} catch (Exception e) {
 					LOGGER.error(ExceptionUtils.getStackTrace(e));
 				}
@@ -374,7 +379,7 @@ public class MinecraftEventListener {
 
 		return CONFIG.generic.avatarApi
 				.replace("{player_uuid}", player.getUUID().toString())
-				.replace("{player_name}", Objects.requireNonNull(player.getDisplayName()).getString())
+				.replace("{player_name}", player.getName().getString())
 				.replace("{player_textures}", hash);
 	}
 }

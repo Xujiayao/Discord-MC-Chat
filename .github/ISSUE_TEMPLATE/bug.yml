@@ -25,6 +25,10 @@ body:
         If a version is not listed below, it is not supported by DMCC.
       multiple: false
       options:
+        - "1.21.4"
+        - "1.21.3"
+        - "1.21.2"
+        - "1.21.1"
         - "1.21"
         - "1.20.6"
         - "1.20.5"
@@ -59,6 +63,8 @@ body:
       multiple: false
       options:
         - "Latest Build (GitHub Actions)"
+        - "2.4.0"
+        - "2.3.5"
         - "2.3.4"
         - "2.3.4-compat"
         - "2.3.3"

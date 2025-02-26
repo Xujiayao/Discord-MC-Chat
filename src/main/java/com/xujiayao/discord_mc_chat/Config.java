@@ -79,20 +79,15 @@ public class Config {
 
 	@SuppressWarnings("unused")
 	public static class CustomMessage {
-		public String responseMessage = "";
-		public String chatMessage = "";
-		public String otherMessage = "";
-		public String commandNotice = "";
+		public String unformattedResponseMessage = "";
+		public String unformattedChatMessage = "";
+		public String unformattedOtherMessage = "";
+		public String unformattedCommandNotice = "";
 
-		/* Not Used */ public String unformattedResponseMessage = "";
-		/* Not Used */ public String unformattedChatMessage = "";
-		/* Not Used */ public String unformattedOtherMessage = "";
-		/* Not Used */ public String unformattedCommandNotice = "";
-
-		/* Not Used */ public String formattedResponseMessage = "";
-		/* Not Used */ public String formattedChatMessage = "";
-		/* Not Used */ public String formattedOtherMessage = "";
-		/* Not Used */ public String formattedCommandNotice = "";
+		public String formattedResponseMessage = "";
+		public String formattedChatMessage = "";
+		public String formattedOtherMessage = "";
+		public String formattedCommandNotice = "";
 
 		public String messageWithoutWebhook = "";
 		public String messageWithoutWebhookForMultiServer = "";

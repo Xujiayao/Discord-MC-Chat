@@ -20,7 +20,7 @@ public class MixinTellRawCommand {
 	private static void method_13777(CommandContext<CommandSourceStack> context, CallbackInfoReturnable<Integer> cir) {
 		String input = context.getInput();
 
-		if (input.startsWith("/tellraw @a") || input.startsWith("tellraw @a")) {
+		if (input.startsWith("/tellraw @a ") || input.startsWith("tellraw @a ")) {
 			MinecraftEvents.COMMAND_MESSAGE.invoker().message(ComponentArgument.getComponent(context, "message").getString(), context.getSource());
 		}
 	}

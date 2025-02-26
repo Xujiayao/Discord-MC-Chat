@@ -1,22 +1,8 @@
 {
 	"versions": [
 		{
-			"version": "2.3.4",
-			"changelog": "<https://github.com/Xujiayao/Discord-MC-Chat/releases/tag/2.3.4>\n\n> DMCC Discord Server is now public! Join now through: https://discord.gg/kbXkV6k2XU\n> \n> DMCC will support the [Placeholder API](<https://placeholders.pb4.eu/>) in the next release.\n> \n> `botPlayingStatus` and `botListeningStatus` have been renamed to `botPlayingActivity` and `botListeningActivity`. Please modify them before restarting the server to avoid losing any existing changes.\n> \n> In addition, the check for updates feature has been fixed. You will be able to receive update notifications for future new versions when using version 2.3.4.",
-			"minecraft_dependency": [
-				"~1.19.4",
-				"1.20",
-				"1.20.1",
-				"1.20.2",
-				"1.20.3",
-				"1.20.4",
-				"~1.20.5",
-				"~1.21"
-			]
-		},
-		{
-			"version": "2.3.4-compat",
-			"changelog": "<https://github.com/Xujiayao/Discord-MC-Chat/releases/tag/2.3.4-compat>\n\n> DMCC Discord Server is now public! Join now through: https://discord.gg/kbXkV6k2XU\n> \n> DMCC will support the [Placeholder API](<https://placeholders.pb4.eu/>) in the next release.\n> \n> `botPlayingStatus` and `botListeningStatus` have been renamed to `botPlayingActivity` and `botListeningActivity`. Please modify them before restarting the server to avoid losing any existing changes.\n> \n> In addition, the check for updates feature has been fixed. You will be able to receive update notifications for future new versions when using version 2.3.4.",
+			"version": "2.4.0",
+			"changelog": "<https://github.com/Xujiayao/Discord-MC-Chat/releases/tag/2.4.0>\n\n> DMCC Discord Server is now public! Join now through: https://discord.gg/kbXkV6k2XU\n> \n> New features that involve modifying the config file have been released in this version. Please read the docs to reconfigure `generic.avatarApi` and `generic.excludedCommands`!",
 			"minecraft_dependency": [
 				"~1.14.4",
 				"~1.15.2",
@@ -26,7 +12,17 @@
 				"1.19",
 				"1.19.1",
 				"1.19.2",
-				"1.19.3"
+				"1.19.3",
+				"~1.19.4",
+				"1.20",
+				"1.20.1",
+				"1.20.2",
+				"1.20.3",
+				"1.20.4",
+				"~1.20.5",
+				"1.21",
+				"1.21.1",
+				"~1.21.2"
 			]
 		}
 	]

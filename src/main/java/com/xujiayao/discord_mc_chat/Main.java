@@ -1,12 +1,12 @@
 package com.xujiayao.discord_mc_chat;
 
 import com.xujiayao.discord_mc_chat.minecraft.MinecraftEventListener;
-import com.xujiayao.discord_mc_chat.utils.PlaceholderParser;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
@@ -39,6 +39,7 @@ import com.xujiayao.discord_mc_chat.utils.Utils;
 import java.io.File;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Timer;
 
 /**
@@ -123,7 +124,14 @@ public class Main implements DedicatedServerModInitializer {
 
 			String webhookName = "DMCC Webhook" + " (" + JDA.getSelfUser().getApplicationId() + ")";
 			WEBHOOK = null;
-			for (Webhook webhook : CHANNEL.getGuild().retrieveWebhooks().complete()) {
+			List<Webhook> webhooks;
+			try {
+				webhooks = CHANNEL.getGuild().retrieveWebhooks().complete();
+			} catch (InsufficientPermissionException e) {
+				LOGGER.error("Insufficient guild permission, the full functionality of DMCC Webhook Check is not available!", e);
+				webhooks = CHANNEL.retrieveWebhooks().complete();
+			}
+			for (Webhook webhook : webhooks) {
 				if (webhook.getName().contains("MCDC Webhook") || "DMCC Webhook".equals(webhook.getName())) {
 					webhook.delete().queue();
 					continue;
@@ -168,16 +176,14 @@ public class Main implements DedicatedServerModInitializer {
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
 			SERVER_STARTED_TIME = Long.toString(Instant.now().getEpochSecond());
 
-			SERVER = server;
-
 			if (CONFIG.generic.announceServerStartStop) {
-				String message = PlaceholderParser.parseServerStarted().getString();
-
-				CHANNEL.sendMessage(message).queue();
+				CHANNEL.sendMessage(Translations.translateMessage("message.serverStarted")).queue();
 				if (CONFIG.multiServer.enable) {
-					MULTI_SERVER.sendMessage(false, false, false, null, message);
+					MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.serverStarted"));
 				}
 			}
+
+			SERVER = server;
 
 			Utils.setBotPresence();
 
@@ -215,9 +221,8 @@ public class Main implements DedicatedServerModInitializer {
 			}
 
 			if (CONFIG.generic.updateChannelTopic) {
-				String topic = PlaceholderParser.parseOfflineChannelTopic(
-						Long.toString(Instant.now().getEpochSecond())
-				).getString();
+				String topic = Translations.translateMessage("message.offlineChannelTopic")
+						.replace("%lastUpdateTime%", Long.toString(Instant.now().getEpochSecond()));
 
 				CHANNEL.getManager().setTopic(topic).queue();
 				if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
@@ -225,18 +230,16 @@ public class Main implements DedicatedServerModInitializer {
 				}
 			}
 
-			String message = PlaceholderParser.parseServerStopped().getString();
-
 			if (CONFIG.multiServer.enable) {
 				if (CONFIG.generic.announceServerStartStop) {
-					MULTI_SERVER.sendMessage(false, false, false, null, message);
+					MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.serverStopped"));
 				}
 				MULTI_SERVER.bye();
 				MULTI_SERVER.stopMultiServer();
 			}
 
 			if (CONFIG.generic.announceServerStartStop) {
-				CHANNEL.sendMessage(message)
+				CHANNEL.sendMessage(Translations.translateMessage("message.serverStopped"))
 						.submit()
 						.whenComplete((v, ex) -> shutdown());
 			} else {

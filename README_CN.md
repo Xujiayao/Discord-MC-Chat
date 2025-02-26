@@ -69,7 +69,7 @@ DMCC Discord 服务器现已公开！通过以下链接加入：https://discord.
     - 支持使用机器人 Discord 活动状态显示服务器玩家数
     - 支持 Discord Webhook 功能
         - 动态创建 DMCC Webhook
-        - 可自定义 Webhook 玩家头像 API
+        - 可自定义 Webhook 玩家头像 API，兼容用于实时皮肤更换的模组和插件
         - 可禁用 Webhook，使用机器人自身发送聊天消息
     - 支持游戏内 Markdown 解析
     - 支持游戏内高亮和使用默认 Unicode 和服务器自定义表情符号
@@ -84,7 +84,8 @@ DMCC Discord 服务器现已公开！通过以下链接加入：https://discord.
     - 支持限制 Discord 消息的换行次数
     - 可广播玩家指令执行
         - 执行指令的玩家也可以看到自己执行的指令
-        - 可排除执行特定指令的广播
+        - 可排除执行特定指令的广播（支持正则表达式）
+    - 支持广播使用 /tellraw 和 /say 命令发送的消息
     - 可将所有控制台日志消息发送到 Discord
 - 可使用 Discord 命令
     - 可使用 Discord 管理可执行 DMCC 命令的频道
@@ -137,6 +138,7 @@ DMCC Discord 服务器现已公开！通过以下链接加入：https://discord.
     - 通过检查服务器 Minecraft 版本兼容性来准确推送 DMCC 版本更新
     - 可自定义更新通知频道
     - 可禁用检查更新
+- 当用户将 JAR 作为应用程序运行而不是 Minecraft 模组时进行提示
 
 目前可用的语言：
 
@@ -150,6 +152,7 @@ DMCC Discord 服务器现已公开！通过以下链接加入：https://discord.
 | `ko_kr` | 한국어（대한민국）             |
 | `no_no` | Norsk Bokmål (Norge)  |
 | `pl_pl` | Polski (Polska)       |
+| `pt_br` | Português (Brasil)    |
 | `ru_ru` | Русский (Россия)      |
 | `zh_cn` | 简体中文（中国大陆）            |
 | `zh_hk` | 繁體中文（香港特別行政區）         |
