@@ -17,6 +17,7 @@
 	"environment": "server",
 	"depends": {
 		"fabricloader": ">=0.16.10",
-		"java": ">=21"
+		"java": ">=21",
+		"placeholder-api-compat": "*"
 	}
 }
