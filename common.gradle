@@ -18,6 +18,13 @@ base {
 	archivesName = "${archives_base_name}-${minecraft_version}"
 }
 
+repositories {
+	maven {
+		name = "Jitpack"
+		url = "https://jitpack.io"
+	}
+}
+
 dependencies {
 	minecraft("com.mojang:minecraft:${minecraft_version}")
 	mappings(loom.officialMojangMappings())
@@ -42,6 +49,8 @@ dependencies {
 	modImplementation("net.fellbaum:jemoji:1.7.1")
 
 	modImplementation("com.google.code.gson:gson:2.12.1")
+
+	modCompileOnly("com.github.Xujiayao:TextPlaceholderAPI-Compat:2.5.2-compat.1")
 }
 
 processResources {
