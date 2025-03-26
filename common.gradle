@@ -37,7 +37,7 @@ dependencies {
 	modImplementation("com.fasterxml.jackson.core:jackson-annotations:2.17.2")
 	modImplementation("com.squareup.okhttp3:okhttp:4.12.0")
 	modImplementation("com.squareup.okio:okio-jvm:3.6.0")
-	modImplementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.21")
+	modImplementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.10")
 
 	modImplementation("net.fellbaum:jemoji:1.7.1")
 

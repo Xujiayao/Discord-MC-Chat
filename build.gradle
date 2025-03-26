@@ -20,6 +20,7 @@ preprocess {
 	def mc1204 = createNode("1.20.4", 1_20_04, "mojang")
 	def mc1211 = createNode("1.21.1", 1_21_01, "mojang")
 	def mc1214 = createNode("1.21.4", 1_21_04, "mojang")
+	def mc1215 = createNode("1.21.5", 1_21_05, "mojang")
 
 	mc1152.link(mc1165, file("versions/mapping-1.15.2-1.16.5.txt"))
 	mc1165.link(mc1171, null)
@@ -33,6 +34,7 @@ preprocess {
 	mc1202.link(mc1204, null)
 	mc1204.link(mc1211, null)
 	mc1211.link(mc1214, file("versions/mapping-1.21.1-1.21.4.txt"))
+	mc1214.link(mc1215, null)
 }
 
 project.afterEvaluate {
