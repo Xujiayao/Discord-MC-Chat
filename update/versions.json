@@ -1,8 +1,8 @@
 {
 	"versions": [
 		{
-			"version": "2.4.0",
-			"changelog": "<https://github.com/Xujiayao/Discord-MC-Chat/releases/tag/2.4.0>\n\n> DMCC Discord Server is now public! Join now through: https://discord.gg/kbXkV6k2XU\n> \n> New features that involve modifying the config file have been released in this version. Please read the docs to reconfigure `generic.avatarApi` and `generic.excludedCommands`!",
+			"version": "2.4.1",
+			"changelog": "<https://github.com/Xujiayao/Discord-MC-Chat/releases/tag/2.4.1>\n\n> DMCC Discord Server is now public! Join now through: https://discord.gg/kbXkV6k2XU",
 			"minecraft_dependency": [
 				"~1.14.4",
 				"~1.15.2",
@@ -22,7 +22,10 @@
 				"~1.20.5",
 				"1.21",
 				"1.21.1",
-				"~1.21.2"
+				"1.21.2",
+				"1.21.3",
+				"1.21.4",
+				"~1.21.5"
 			]
 		}
 	]
