@@ -57,11 +57,6 @@
 	"message.unformattedOtherMessage": "[%server%] %message%",
 	"message.unformattedCommandNotice": "%name% a exécuté la commande %command% !",
 
-	"message.formattedResponseMessage": "[{\"text\":\"    ┌──── \",\"bold\":true,\"color\":\"dark_gray\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"dark_gray\"}]",
-	"message.formattedChatMessage": "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]",
-	"message.formattedOtherMessage": "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]",
-	"message.formattedCommandNotice": "[{\"text\":\"%name% \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"a exécuté la commande %command% !\",\"bold\":false,\"color\":\"gray\"}]",
-
 	"message.messageWithoutWebhook": "<%name%> %message%",
 	"message.messageWithoutWebhookForMultiServer": "[%server%] <%name%> %message%",
 
