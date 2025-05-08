@@ -25,23 +25,23 @@ dependencies {
 	modImplementation("net.fabricmc:fabric-loader:${loader_version}")
 	modApi("net.fabricmc.fabric-api:fabric-api:${fabric_version}")
 
-	modImplementation("net.dv8tion:JDA:5.3.0") {
+	modImplementation("net.dv8tion:JDA:5.5.1") {
 		exclude module: "opus-java"
 	}
 	modImplementation("net.sf.trove4j:core:3.1.0")
 	modImplementation("org.apache.commons:commons-collections4:4.4")
-	modImplementation("org.slf4j:slf4j-api:2.0.13")
+	modImplementation("org.slf4j:slf4j-api:2.0.17")
 	modImplementation("com.neovisionaries:nv-websocket-client:2.14")
-	modImplementation("com.fasterxml.jackson.core:jackson-core:2.17.2")
-	modImplementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
-	modImplementation("com.fasterxml.jackson.core:jackson-annotations:2.17.2")
+	modImplementation("com.fasterxml.jackson.core:jackson-core:2.18.3")
+	modImplementation("com.fasterxml.jackson.core:jackson-databind:2.18.3")
+	modImplementation("com.fasterxml.jackson.core:jackson-annotations:2.18.3")
 	modImplementation("com.squareup.okhttp3:okhttp:4.12.0")
 	modImplementation("com.squareup.okio:okio-jvm:3.6.0")
 	modImplementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.10")
 
-	modImplementation("net.fellbaum:jemoji:1.7.1")
+	modImplementation("net.fellbaum:jemoji:1.7.3")
 
-	modImplementation("com.google.code.gson:gson:2.12.1")
+	modImplementation("com.google.code.gson:gson:2.13.1")
 }
 
 processResources {
