@@ -4,7 +4,11 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.mojang.authlib.GameProfile;
+//#if MC >= 12005
+import com.mojang.serialization.JsonOps;
+//#endif
 import com.xujiayao.discord_mc_chat.multi_server.MultiServer;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
@@ -21,6 +25,9 @@ import net.minecraft.DetectedVersion;
 import net.minecraft.core.RegistryAccess;
 //#endif
 import net.minecraft.network.chat.Component;
+//#if MC >= 12005
+import net.minecraft.network.chat.ComponentSerialization;
+//#endif
 import net.minecraft.network.chat.MutableComponent;
 //#if MC > 12002
 import net.minecraft.server.ServerTickRateManager;
@@ -119,7 +126,7 @@ public class Utils {
 			try (Response response = HTTP_CLIENT.newCall(request).execute()) {
 				String result = Objects.requireNonNull(response.body()).string();
 
-				String minecraftVersion = DetectedVersion.tryDetectVersion().getName();
+				String minecraftVersion = DetectedVersion.tryDetectVersion().name();
 
 				String latestVersion = "";
 				String latestChangelog = "";
@@ -663,10 +670,19 @@ public class Utils {
 	}
 
 	public static MutableComponent fromJson(String json) {
+		JsonElement jsonElement = JsonParser.parseString(json);
 		//#if MC >= 12005
-		return Component.Serializer.fromJson(json, RegistryAccess.EMPTY);
+		return jsonElement == null ? null : (MutableComponent) ComponentSerialization.CODEC.parse(RegistryAccess.EMPTY.createSerializationContext(JsonOps.INSTANCE), jsonElement).getOrThrow();
 		//#else
 		//$$ return Component.Serializer.fromJson(json);
+		//#endif
+	}
+
+	public static String toJson(Component component) {
+		//#if MC >= 12005
+		return new Gson().toJson(ComponentSerialization.CODEC.encodeStart(RegistryAccess.EMPTY.createSerializationContext(JsonOps.INSTANCE), component).getOrThrow());
+		//#else
+		//$$ return Component.Serializer.toJson(component);
 		//#endif
 	}
 }

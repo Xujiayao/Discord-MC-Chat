@@ -23,9 +23,6 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fellbaum.jemoji.EmojiManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
-//#if MC >= 12005
-import net.minecraft.core.RegistryAccess;
-//#endif
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 //#if MC < 11900
@@ -107,11 +104,7 @@ public class DiscordEventListener extends ListenerAdapter {
 					player -> player.displayClientMessage(commandNoticeText, false));
 
 			if (CONFIG.multiServer.enable) {
-				//#if MC >= 12005
-				MULTI_SERVER.sendMessage(false, false, true, null, Component.Serializer.toJson(commandNoticeText, RegistryAccess.EMPTY));
-				//#else
-				//$$ MULTI_SERVER.sendMessage(false, false, true, null, Component.Serializer.toJson(commandNoticeText));
-				//#endif
+				MULTI_SERVER.sendMessage(false, false, true, null, Utils.toJson(commandNoticeText));
 			}
 		}
 
