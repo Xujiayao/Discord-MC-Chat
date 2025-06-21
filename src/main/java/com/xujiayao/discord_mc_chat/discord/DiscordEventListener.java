@@ -542,10 +542,10 @@ public class DiscordEventListener extends ListenerAdapter {
 			if (e.getMessage().getReferencedMessage() != null) {
 				String s = Translations.translateMessage("message.formattedResponseMessage");
 				MutableComponent referenceFinalText = Utils.fromJson(s
-						.replace("%message%", (CONFIG.generic.formatChatMessages ? finalReferencedMessage : EmojiManager.replaceAllEmojis(referencedMessageTemp, emoji -> emoji.getDiscordAliases().getFirst()).replace("\"", "\\\""))
+						.replace("%message%", (CONFIG.generic.formatChatMessages ? finalReferencedMessage : Utils.sanitize(EmojiManager.replaceAllEmojis(referencedMessageTemp, emoji -> emoji.getDiscordAliases().getFirst())))
 								.replace("\n", "\n" + textAfterPlaceholder[0] + "}," + s.substring(1, s.indexOf("%message%"))))
 						.replace("%server%", "Discord")
-						.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? referencedMember.getEffectiveName() : referencedMember.getUser().getName()).replace("\\", "\\\\").replace("\"", "\\\"") : webhookName)
+						.replace("%name%", (referencedMember != null) ? (CONFIG.generic.useServerNickname ? Utils.sanitize(referencedMember.getEffectiveName()) : Utils.sanitize(referencedMember.getUser().getName())) : webhookName)
 						.replace("%roleName%", referencedMemberRoleName)
 						.replace("%roleColor%", String.format("#%06X", (0xFFFFFF & ((referencedMember != null) ? referencedMember.getColorRaw() : Role.DEFAULT_COLOR_RAW)))));
 
@@ -555,10 +555,10 @@ public class DiscordEventListener extends ListenerAdapter {
 
 			String s = Translations.translateMessage("message.formattedChatMessage");
 			MutableComponent finalText = Utils.fromJson(s
-					.replace("%message%", (CONFIG.generic.formatChatMessages ? finalMessage : EmojiManager.replaceAllEmojis(messageTemp, emoji -> emoji.getDiscordAliases().getFirst()).replace("\"", "\\\""))
+					.replace("%message%", (CONFIG.generic.formatChatMessages ? finalMessage : Utils.sanitize(EmojiManager.replaceAllEmojis(messageTemp, emoji -> emoji.getDiscordAliases().getFirst())))
 							.replace("\n", "\n" + textAfterPlaceholder[1] + "}," + s.substring(1, s.indexOf("%message%"))))
 					.replace("%server%", "Discord")
-					.replace("%name%", (CONFIG.generic.useServerNickname ? e.getMember().getEffectiveName() : e.getMember().getUser().getName()).replace("\\", "\\\\").replace("\"", "\\\""))
+					.replace("%name%", (CONFIG.generic.useServerNickname ? Utils.sanitize(e.getMember().getEffectiveName()) : Utils.sanitize(e.getMember().getUser().getName())))
 					.replace("%roleName%", memberRoleName)
 					.replace("%roleColor%", String.format("#%06X", (0xFFFFFF & e.getMember().getColorRaw()))));
 

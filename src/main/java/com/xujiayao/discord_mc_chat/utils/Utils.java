@@ -46,6 +46,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -684,5 +686,15 @@ public class Utils {
 		//#else
 		//$$ return Component.Serializer.toJson(component);
 		//#endif
+	}
+
+	public static String sanitize(String in) {
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+			String quoted = mapper.writeValueAsString(in);
+			return quoted.substring(1, quoted.length() - 1);
+		} catch(JsonProcessingException a) {
+			return a.toString();
+		}
 	}
 }
