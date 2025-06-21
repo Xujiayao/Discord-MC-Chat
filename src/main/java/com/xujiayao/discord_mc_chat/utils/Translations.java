@@ -68,11 +68,11 @@ public class Translations {
 					return;
 				}
 
-				File minecraftLangFile = new File(FabricLoader.getInstance().getConfigDir().toFile(), "/discord-mc-chat/" + DetectedVersion.tryDetectVersion().getName() + "-" + CONFIG.generic.language + ".json");
+				File minecraftLangFile = new File(FabricLoader.getInstance().getConfigDir().toFile(), "/discord-mc-chat/" + DetectedVersion.tryDetectVersion().name() + "-" + CONFIG.generic.language + ".json");
 
 				if (minecraftLangFile.length() == 0) {
 					Request request1 = new Request.Builder()
-							.url("https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@" + DetectedVersion.tryDetectVersion().getName() + "/assets/minecraft/lang/" + CONFIG.generic.language + ".json")
+							.url("https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@" + DetectedVersion.tryDetectVersion().name() + "/assets/minecraft/lang/" + CONFIG.generic.language + ".json")
 							.cacheControl(CacheControl.FORCE_NETWORK)
 							.build();
 
