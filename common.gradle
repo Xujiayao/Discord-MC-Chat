@@ -25,7 +25,7 @@ dependencies {
 	modImplementation("net.fabricmc:fabric-loader:${loader_version}")
 	modApi("net.fabricmc.fabric-api:fabric-api:${fabric_version}")
 
-	modImplementation("net.dv8tion:JDA:5.5.1") {
+	modImplementation("net.dv8tion:JDA:5.6.1") {
 		exclude module: "opus-java"
 	}
 	modImplementation("net.sf.trove4j:core:3.1.0")
@@ -39,7 +39,7 @@ dependencies {
 	modImplementation("com.squareup.okio:okio-jvm:3.6.0")
 	modImplementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.10")
 
-	modImplementation("net.fellbaum:jemoji:1.7.3")
+	modImplementation("net.fellbaum:jemoji:1.7.4")
 
 	modImplementation("com.google.code.gson:gson:2.13.1")
 }
