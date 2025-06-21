@@ -149,6 +149,7 @@ Languages currently available:
 | `es_es` | Español (España)      |
 | `fr_fr` | Français (France)     |
 | `it_it` | Italiano (Italia)     |
+| `ja_jp` | 日本語（日本）               |
 | `ko_kr` | 한국어（대한민국）             |
 | `no_no` | Norsk Bokmål (Norge)  |
 | `pl_pl` | Polski (Polska)       |

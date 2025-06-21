@@ -149,6 +149,7 @@ DMCC Discord 服务器现已公开！通过以下链接加入：https://discord.
 | `es_es` | Español (España)      |
 | `fr_fr` | Français (France)     |
 | `it_it` | Italiano (Italia)     |
+| `ja_jp` | 日本語（日本）               |
 | `ko_kr` | 한국어（대한민국）             |
 | `no_no` | Norsk Bokmål (Norge)  |
 | `pl_pl` | Polski (Polska)       |
