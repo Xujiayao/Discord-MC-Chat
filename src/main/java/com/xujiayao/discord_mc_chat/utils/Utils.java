@@ -680,7 +680,7 @@ public class Utils {
 		//#endif
 	}
 
-  public static String toJson(Component component) {
+	public static String toJson(Component component) {
 		//#if MC >= 12005
 		return new Gson().toJson(ComponentSerialization.CODEC.encodeStart(RegistryAccess.EMPTY.createSerializationContext(JsonOps.INSTANCE), component).getOrThrow());
 		//#else
@@ -696,5 +696,5 @@ public class Utils {
 		} catch(JsonProcessingException a) {
 			return a.toString();
 		}
-  }
+	}
 }
