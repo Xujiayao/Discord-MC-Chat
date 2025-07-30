@@ -49,9 +49,9 @@ dependencies {
                  
 	shadow(implementation("com.google.code.gson:gson:2.13.1"))
 
-	shadow(implementation("com.jetbrains.intellij.java:java-gui-forms-rt:251.26094.148"))
-	shadow(implementation("com.formdev:flatlaf:3.6"))
-	shadow(implementation("com.formdev:flatlaf-extras:3.6"))
+	shadow(implementation("com.jetbrains.intellij.java:java-gui-forms-rt:251.27812.49"))
+	shadow(implementation("com.formdev:flatlaf:3.6.1"))
+	shadow(implementation("com.formdev:flatlaf-extras:3.6.1"))
 }
 
 def fabric_subprojects = parent.subprojects.findAll({

@@ -13,11 +13,9 @@ jobs:
           distribution: temurin
           java-version: 21
       - name: Validate Gradle Wrapper
-        uses: gradle/actions/wrapper-validation@v3
+        uses: gradle/actions/wrapper-validation@v4
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-      - name: Make Gradle Wrapper Executable
-        run: chmod +x ./gradlew
+        uses: gradle/actions/setup-gradle@v4
       - name: Clean
         run: ./gradlew clean
       - name: Build
