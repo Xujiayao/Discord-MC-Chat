@@ -5,7 +5,7 @@ plugins {
 version = mod_version
 
 base {
-    archivesName = mod_name
+    archivesName = mod_name + "-fabric"
 }
 
 repositories {
