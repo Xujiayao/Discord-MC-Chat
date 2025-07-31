@@ -2,11 +2,11 @@ package com.xujiayao.discord_mc_chat.multi_server;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import com.xujiayao.discord_mc_chat.multi_server.client.Client;
 import com.xujiayao.discord_mc_chat.multi_server.server.Server;
 import com.xujiayao.discord_mc_chat.multi_server.server.UserThread;
 import com.xujiayao.discord_mc_chat.utils.Translations;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -107,14 +107,14 @@ public class MultiServer extends Thread {
 				long epochSecond = Instant.now().getEpochSecond();
 
 				String topic = Translations.translateMessage("message.onlineChannelTopicForMultiServer")
-						.replace("%onlinePlayerCount%", Integer.toString(onlinePlayerCount))
-						.replace("%maxPlayerCount%", Integer.toString(maxPlayerCount))
-						.replace("%uniquePlayerCount%", Integer.toString(uniquePlayers.size()))
-						.replace("%onlineServerCount%", Integer.toString(onlineServerCount))
-						.replace("%onlineServerList%", String.join(", ", onlineServerList))
-						.replace("%serverStartedTime%", Long.toString(Collections.min(serverStartedTime)))
-						.replace("%lastUpdateTime%", Long.toString(epochSecond))
-						.replace("%nextUpdateTime%", Long.toString(epochSecond + CONFIG.generic.channelTopicUpdateInterval / 1000));
+					.replace("%onlinePlayerCount%", Integer.toString(onlinePlayerCount))
+					.replace("%maxPlayerCount%", Integer.toString(maxPlayerCount))
+					.replace("%uniquePlayerCount%", Integer.toString(uniquePlayers.size()))
+					.replace("%onlineServerCount%", Integer.toString(onlineServerCount))
+					.replace("%onlineServerList%", String.join(", ", onlineServerList))
+					.replace("%serverStartedTime%", Long.toString(Collections.min(serverStartedTime)))
+					.replace("%lastUpdateTime%", Long.toString(epochSecond))
+					.replace("%nextUpdateTime%", Long.toString(epochSecond + CONFIG.generic.channelTopicUpdateInterval / 1000));
 
 				CHANNEL.getManager().setTopic(topic).queue();
 

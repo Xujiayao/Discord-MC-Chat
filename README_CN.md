@@ -18,7 +18,8 @@
 [![CurseForge Downloads](https://cf.way2muchnoise.eu/full_548539_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/discord-mc-chat)
 [![Versions Supported](https://cf.way2muchnoise.eu/versions/548539.svg)](https://www.curseforge.com/minecraft/mc-mods/discord-mc-chat)
 
-Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCDC), is a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric
+Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCDC), is a practical and powerful Fabric
+and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric
 
 更多介绍 + 文档：[Discord-MC-Chat 文档 | Xujiayao's Blog](https://blog.xujiayao.com/posts/4ba0a17a/)
 
@@ -26,7 +27,8 @@ DMCC Discord 服务器现已公开！通过以下链接加入：https://discord.
 
 ## 简介
 
-[Discord-MC-Chat](https://github.com/Xujiayao/Discord-MC-Chat) (DMCC)，前身为 MC-Discord-Chat 和 MCDiscordChat (MCDC)，一个实用且功能强大的 Fabric 和 Quilt Minecraft <> Discord 跨服聊天工具，灵感来自 BRForgers/DisFabric。
+[Discord-MC-Chat](https://github.com/Xujiayao/Discord-MC-Chat) (DMCC)，前身为 MC-Discord-Chat 和 MCDiscordChat (MCDC)
+，一个实用且功能强大的 Fabric 和 Quilt Minecraft <> Discord 跨服聊天工具，灵感来自 BRForgers/DisFabric。
 
 ![0001.png](https://cdn.jsdelivr.net/gh/Xujiayao/BlogSource@master/source/file/posts/4ba0a17a/0001.png)
 
@@ -56,7 +58,8 @@ DMCC Discord 服务器现已公开！通过以下链接加入：https://discord.
 
 对于代码贡献，构建文件位于 `/build/` 文件夹中。
 
-对于翻译贡献，语言文件位于 `/wrapper/src/main/resources/lang/` 文件夹中。复制 `en_us.json` 并将新的文件重命名为你的语言代码以开始翻译。请为整个文件中所有键提供翻译。
+对于翻译贡献，语言文件位于 `/wrapper/src/main/resources/lang/` 文件夹中。复制 `en_us.json`
+并将新的文件重命名为你的语言代码以开始翻译。请为整个文件中所有键提供翻译。
 
 ## 功能特色
 
@@ -171,7 +174,8 @@ DMCC Discord 服务器现已公开！通过以下链接加入：https://discord.
 
 本项目采用 [MIT 许可证](https://github.com/Xujiayao/Discord-MC-Chat/blob/master/LICENSE) 进行授权。
 
-作为例外，`src/main/java/com/xujiayao/discord_mc_chat/utils/MarkdownParser.java` 文件于 2020 年 12 月 31 日从 BRForgers/DisFabric 获取，采用 Mozilla 公共许可证 2.0 (MPL-2.0) 进行授权。
+作为例外，`src/main/java/com/xujiayao/discord_mc_chat/utils/MarkdownParser.java` 文件于 2020 年 12 月 31 日从
+BRForgers/DisFabric 获取，采用 Mozilla 公共许可证 2.0 (MPL-2.0) 进行授权。
 
 > `src/main/java/com/xujiayao/discord_mc_chat/utils/MarkdownParser.java` 文件的更多详情：
 >
@@ -183,7 +187,8 @@ DMCC Discord 服务器现已公开！通过以下链接加入：https://discord.
 > 链接到许可证：
 > https://github.com/BRForgers/DisFabric/blob/e0c7601405ee1b3f1de3c3168bc4ddd520501565/LICENSE
 >
-> 请注意，新创建的 BRForgers/DisFabric-and-DisForge 项目中使用的 "Don't Be a Jerk" 许可证与旧项目 BRForgers/DisFabric 是分开的。
+> 请注意，新创建的 BRForgers/DisFabric-and-DisForge 项目中使用的 "Don't Be a Jerk" 许可证与旧项目 BRForgers/DisFabric
+> 是分开的。
 >
 > - 项目名称和许可证的任何近期变更都不会追溯影响到之前特定时刻（即 2020 年 12 月 31 日）所获取的代码的许可条款。
 > - 从 BRForgers/DisFabric 获取的任何文件仍仅受 MPL-2.0 许可证条款的约束。

@@ -22,106 +22,106 @@ public class MinecraftCommands {
 
 	public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
 		dispatcher.register(literal("dmcc").executes(context -> {
-					//#if MC > 11904
-					context.getSource().sendSuccess(() ->
+				//#if MC > 11904
+				context.getSource().sendSuccess(() ->
+				//#else
+				//$$ context.getSource().sendSuccess(
+				//#endif
+					//#if MC >= 11900
+					Component.literal(MarkdownParser.parseMarkdown(Utils.getHelpCommandMessage(false) + Translations.translate("minecraft.mcCommands.register.helpMessageExplanation"))), false);
 					//#else
-					//$$ context.getSource().sendSuccess(
+					//$$ new TextComponent(MarkdownParser.parseMarkdown(Utils.getHelpCommandMessage(false) + Translations.translate("minecraft.mcCommands.register.helpMessageExplanation"))), false);
 					//#endif
-							//#if MC >= 11900
-							Component.literal(MarkdownParser.parseMarkdown(Utils.getHelpCommandMessage(false) + Translations.translate("minecraft.mcCommands.register.helpMessageExplanation"))), false);
-							//#else
-							//$$ new TextComponent(MarkdownParser.parseMarkdown(Utils.getHelpCommandMessage(false) + Translations.translate("minecraft.mcCommands.register.helpMessageExplanation"))), false);
-							//#endif
-					return 1;
-				})
-				.then(literal("help").executes(context -> {
-					//#if MC > 11904
-					context.getSource().sendSuccess(() ->
+				return 1;
+			})
+			.then(literal("help").executes(context -> {
+				//#if MC > 11904
+				context.getSource().sendSuccess(() ->
+				//#else
+				//$$ context.getSource().sendSuccess(
+				//#endif
+					//#if MC >= 11900
+					Component.literal(MarkdownParser.parseMarkdown(Utils.getHelpCommandMessage(false) + Translations.translate("minecraft.mcCommands.register.helpMessageExplanation"))), false);
 					//#else
-					//$$ context.getSource().sendSuccess(
+					//$$ new TextComponent(MarkdownParser.parseMarkdown(Utils.getHelpCommandMessage(false) + Translations.translate("minecraft.mcCommands.register.helpMessageExplanation"))), false);
 					//#endif
-							//#if MC >= 11900
-							Component.literal(MarkdownParser.parseMarkdown(Utils.getHelpCommandMessage(false) + Translations.translate("minecraft.mcCommands.register.helpMessageExplanation"))), false);
-							//#else
-							//$$ new TextComponent(MarkdownParser.parseMarkdown(Utils.getHelpCommandMessage(false) + Translations.translate("minecraft.mcCommands.register.helpMessageExplanation"))), false);
-							//#endif
-					return 1;
-				}))
-				.then(literal("info").executes(context -> {
-					//#if MC > 11904
-					context.getSource().sendSuccess(() ->
+				return 1;
+			}))
+			.then(literal("info").executes(context -> {
+				//#if MC > 11904
+				context.getSource().sendSuccess(() ->
+				//#else
+				//$$ context.getSource().sendSuccess(
+				//#endif
+					//#if MC >= 11900
+					Component.literal(Utils.getInfoCommandMessage()), false);
 					//#else
-					//$$ context.getSource().sendSuccess(
+					//$$ new TextComponent(Utils.getInfoCommandMessage()), false);
 					//#endif
-							//#if MC >= 11900
-							Component.literal(Utils.getInfoCommandMessage()), false);
-							//#else
-							//$$ new TextComponent(Utils.getInfoCommandMessage()), false);
-							//#endif
-					return 1;
-				}))
-				.then(literal("stats")
-						.then(argument("type", StringArgumentType.word())
-								.then(argument("name", StringArgumentType.word())
-										.executes(context -> {
-											String type = StringArgumentType.getString(context, "type");
-											String name = StringArgumentType.getString(context, "name");
-											//#if MC > 11904
-											context.getSource().sendSuccess(() ->
-											//#else
-											//$$ context.getSource().sendSuccess(
-											//#endif
-													//#if MC >= 11900
-													Component.literal(Utils.getStatsCommandMessage(type, name, false)), false);
-													//#else
-													//$$ new TextComponent(Utils.getStatsCommandMessage(type, name, false)), false);
-													//#endif
-											return 1;
-										}))))
-				.then(literal("update").executes(context -> {
-					//#if MC > 11904
-					context.getSource().sendSuccess(() ->
-					//#else
-					//$$ context.getSource().sendSuccess(
-					//#endif
-							//#if MC >= 11900
-							Component.literal(MarkdownParser.parseMarkdown(Utils.checkUpdate(true))), false);
-							//#else
-							//$$ new TextComponent(MarkdownParser.parseMarkdown(Utils.checkUpdate(true))), false);
-							//#endif
-					return 1;
-				}))
-				.then(literal("whitelist")
-						.requires(source -> source.hasPermission(CONFIG.generic.whitelistRequiresAdmin ? 4 : 0))
-						.then(argument("player", StringArgumentType.word())
-								.executes(context -> {
-									String player = StringArgumentType.getString(context, "player");
-									//#if MC > 11904
-									context.getSource().sendSuccess(() ->
-									//#else
-									//$$ context.getSource().sendSuccess(
-									//#endif
-											//#if MC >= 11900
-											Component.literal(MarkdownParser.parseMarkdown(Utils.whitelist(player))), false);
-											//#else
-											//$$ new TextComponent(MarkdownParser.parseMarkdown(Utils.whitelist(player))), false);
-											//#endif
-									return 1;
-								})))
-				.then(literal("reload")
-						.requires(source -> source.hasPermission(4))
+				return 1;
+			}))
+			.then(literal("stats")
+				.then(argument("type", StringArgumentType.word())
+					.then(argument("name", StringArgumentType.word())
 						.executes(context -> {
+							String type = StringArgumentType.getString(context, "type");
+							String name = StringArgumentType.getString(context, "name");
 							//#if MC > 11904
 							context.getSource().sendSuccess(() ->
 							//#else
 							//$$ context.getSource().sendSuccess(
 							//#endif
-									//#if MC >= 11900
-									Component.literal(MarkdownParser.parseMarkdown(Utils.reload())), false);
-									//#else
-									//$$ new TextComponent(MarkdownParser.parseMarkdown(Utils.reload())), false);
-									//#endif
+								//#if MC >= 11900
+								Component.literal(Utils.getStatsCommandMessage(type, name, false)), false);
+								//#else
+								//$$ new TextComponent(Utils.getStatsCommandMessage(type, name, false)), false);
+								//#endif
 							return 1;
-						})));
+						}))))
+			.then(literal("update").executes(context -> {
+				//#if MC > 11904
+				context.getSource().sendSuccess(() ->
+				//#else
+				//$$ context.getSource().sendSuccess(
+				//#endif
+					//#if MC >= 11900
+					Component.literal(MarkdownParser.parseMarkdown(Utils.checkUpdate(true))), false);
+					//#else
+					//$$ new TextComponent(MarkdownParser.parseMarkdown(Utils.checkUpdate(true))), false);
+					//#endif
+				return 1;
+			}))
+			.then(literal("whitelist")
+				.requires(source -> source.hasPermission(CONFIG.generic.whitelistRequiresAdmin ? 4 : 0))
+				.then(argument("player", StringArgumentType.word())
+					.executes(context -> {
+						String player = StringArgumentType.getString(context, "player");
+						//#if MC > 11904
+						context.getSource().sendSuccess(() ->
+						//#else
+						//$$ context.getSource().sendSuccess(
+						//#endif
+							//#if MC >= 11900
+							Component.literal(MarkdownParser.parseMarkdown(Utils.whitelist(player))), false);
+							//#else
+							//$$ new TextComponent(MarkdownParser.parseMarkdown(Utils.whitelist(player))), false);
+							//#endif
+						return 1;
+					})))
+			.then(literal("reload")
+				.requires(source -> source.hasPermission(4))
+				.executes(context -> {
+					//#if MC > 11904
+					context.getSource().sendSuccess(() ->
+					//#else
+					//$$ context.getSource().sendSuccess(
+					//#endif
+						//#if MC >= 11900
+						Component.literal(MarkdownParser.parseMarkdown(Utils.reload())), false);
+						//#else
+						//$$ new TextComponent(MarkdownParser.parseMarkdown(Utils.reload())), false);
+						//#endif
+					return 1;
+				})));
 	}
 }

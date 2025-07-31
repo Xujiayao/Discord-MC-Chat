@@ -1,5 +1,7 @@
 package com.xujiayao.discord_mc_chat.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -46,8 +48,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -121,9 +121,9 @@ public class Utils {
 	public static String checkUpdate(boolean isManualCheck) {
 		try {
 			Request request = new Request.Builder()
-					.url("https://cdn.jsdelivr.net/gh/Xujiayao/Discord-MC-Chat@master/update/versions.json")
-					.cacheControl(CacheControl.FORCE_NETWORK)
-					.build();
+				.url("https://cdn.jsdelivr.net/gh/Xujiayao/Discord-MC-Chat@master/update/versions.json")
+				.cacheControl(CacheControl.FORCE_NETWORK)
+				.build();
 
 			try (Response response = HTTP_CLIENT.newCall(request).execute()) {
 				String result = Objects.requireNonNull(response.body()).string();
@@ -197,8 +197,8 @@ public class Utils {
 
 				if (!latestVersion.equals(VERSION)) {
 					if (latestVersion.equals(CONFIG.latestVersion)
-							&& CONFIG.latestCheckTime > (System.currentTimeMillis() - 172800000)
-							&& !isManualCheck) {
+						&& CONFIG.latestCheckTime > (System.currentTimeMillis() - 172800000)
+						&& !isManualCheck) {
 						return "";
 					}
 
@@ -242,9 +242,9 @@ public class Utils {
 		UserWhiteList whitelist = SERVER.getPlayerList().getWhiteList();
 
 		Request request = new Request.Builder()
-				.url("https://api.mojang.com/users/profiles/minecraft/" + player)
-				.cacheControl(CacheControl.FORCE_NETWORK)
-				.build();
+			.url("https://api.mojang.com/users/profiles/minecraft/" + player)
+			.cacheControl(CacheControl.FORCE_NETWORK)
+			.build();
 
 		try (Response response = HTTP_CLIENT.newCall(request).execute()) {
 			if (response.body() != null && response.code() == 200) {
@@ -336,8 +336,8 @@ public class Utils {
 
 				if (webhookName.equals(webhook.getName())) {
 					if (CONFIG.generic.useWebhook
-							&& webhook.getOwnerAsUser() == JDA.getSelfUser()
-							&& webhook.getChannel().asTextChannel() == CHANNEL) {
+						&& webhook.getOwnerAsUser() == JDA.getSelfUser()
+						&& webhook.getChannel().asTextChannel() == CHANNEL) {
 						WEBHOOK = webhook;
 					} else {
 						webhook.delete().queue();
@@ -406,29 +406,29 @@ public class Utils {
 		// TODO Simplify
 		for (int i = 0; i < 5; i++) {
 			if ((i == 0 && !CONFIG.generic.whitelistRequiresAdmin)
-					|| (i == 4 && isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)
-					|| (i == 1 && !isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)) {
+				|| (i == 4 && isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)
+				|| (i == 1 && !isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)) {
 				message.append(isDiscordSide ? "\n/whitelist <player>  | " : "\n/dmcc whitelist <player>    | ");
 				message.append(Translations.translate("utils.utils.ubCommands.whitelist"));
 				if (CONFIG.generic.whitelistRequiresAdmin) {
 					message.append(Translations.translate("utils.utils.ghcMessage.adminOnly"));
 				}
 			} else if ((i == 1 && isDiscordSide && !CONFIG.generic.whitelistRequiresAdmin)
-					|| (i == 0 && isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)
-					|| (i == 2 && !isDiscordSide)) {
+				|| (i == 0 && isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)
+				|| (i == 2 && !isDiscordSide)) {
 				message.append(isDiscordSide ? "\n/console <command>   | " : "\n~~/dmcc console <command>~~ | ");
 				message.append(Translations.translate("utils.utils.ubCommands.console"));
 				message.append(Translations.translate("utils.utils.ghcMessage.adminOnly"));
 			} else if ((i == 2 && isDiscordSide && !CONFIG.generic.whitelistRequiresAdmin)
-					|| (i == 1 && isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)
-					|| (i == 3 && !isDiscordSide)) {
+				|| (i == 1 && isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)
+				|| (i == 3 && !isDiscordSide)) {
 				message.append(isDiscordSide ? "\n/log <file>          | " : "\n~~/dmcc log <file>~~        | ");
 				message.append(Translations.translate("utils.utils.ubCommands.log"));
 				message.append(Translations.translate("utils.utils.ghcMessage.adminOnly"));
 			} else if ((i == 3 && isDiscordSide && !CONFIG.generic.whitelistRequiresAdmin)
-					|| (i == 2 && isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)
-					|| (i == 1 && !isDiscordSide && !CONFIG.generic.whitelistRequiresAdmin)
-					|| (i == 0 && !isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)) {
+				|| (i == 2 && isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)
+				|| (i == 1 && !isDiscordSide && !CONFIG.generic.whitelistRequiresAdmin)
+				|| (i == 0 && !isDiscordSide && CONFIG.generic.whitelistRequiresAdmin)) {
 				message.append(isDiscordSide ? "\n/reload              | " : "\n/dmcc reload                | ");
 				message.append(Translations.translate("utils.utils.ubCommands.reload"));
 				message.append(Translations.translate("utils.utils.ghcMessage.adminOnly"));
@@ -444,9 +444,9 @@ public class Utils {
 
 	public static String getInfoCommandMessage() {
 		StringBuilder message = new StringBuilder()
-				.append("=============== ")
-				.append(Translations.translate("utils.utils.gicMessage.serverStatus"))
-				.append(" ===============\n\n");
+			.append("=============== ")
+			.append(Translations.translate("utils.utils.gicMessage.serverStatus"))
+			.append(" ===============\n\n");
 
 		// Online players
 		List<ServerPlayer> onlinePlayers = SERVER.getPlayerList().getPlayers();
@@ -478,9 +478,9 @@ public class Utils {
 
 	public static String getStatsCommandMessage(String type, String name, boolean hasCharLimit) {
 		StringBuilder message = new StringBuilder()
-				.append("=============== ")
-				.append(Translations.translate("utils.utils.gscMessage.scoreboard"))
-				.append(" ===============\n");
+			.append("=============== ")
+			.append(Translations.translate("utils.utils.gscMessage.scoreboard"))
+			.append(" ===============\n");
 
 		Map<String, Integer> stats = new HashMap<>();
 
@@ -503,10 +503,10 @@ public class Utils {
 
 						try {
 							stats.put(player.getAsJsonObject().get("name").getAsString(), json
-									.getAsJsonObject("stats")
-									.getAsJsonObject("minecraft:" + type)
-									.get("minecraft:" + name)
-									.getAsInt());
+								.getAsJsonObject("stats")
+								.getAsJsonObject("minecraft:" + type)
+								.get("minecraft:" + name)
+								.getAsInt());
 						} catch (NullPointerException ignored) {
 						}
 					}
@@ -549,12 +549,12 @@ public class Utils {
 
 		if (!CONFIG.generic.botPlayingActivity.isEmpty()) {
 			JDA.getPresence().setActivity(Activity.playing(CONFIG.generic.botPlayingActivity
-					.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerCount()))
-					.replace("%maxPlayerCount%", Integer.toString(SERVER.getMaxPlayers()))));
+				.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerCount()))
+				.replace("%maxPlayerCount%", Integer.toString(SERVER.getMaxPlayers()))));
 		} else if (!CONFIG.generic.botListeningActivity.isEmpty()) {
 			JDA.getPresence().setActivity(Activity.listening(CONFIG.generic.botListeningActivity
-					.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerCount()))
-					.replace("%maxPlayerCount%", Integer.toString(SERVER.getMaxPlayers()))));
+				.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerCount()))
+				.replace("%maxPlayerCount%", Integer.toString(SERVER.getMaxPlayers()))));
 		} else {
 			JDA.getPresence().setActivity(null);
 		}
@@ -562,21 +562,21 @@ public class Utils {
 
 	public static void updateBotCommands() {
 		JDA.updateCommands()
-				.addCommands(Commands.slash("help", Translations.translate("utils.utils.ubCommands.help")))
-				.addCommands(Commands.slash("info", Translations.translate("utils.utils.ubCommands.info")))
-				.addCommands(Commands.slash("stats", Translations.translate("utils.utils.ubCommands.stats"))
-						.addOption(OptionType.STRING, "type", Translations.translate("utils.utils.ubCommands.stats.type"), true)
-						.addOption(OptionType.STRING, "name", Translations.translate("utils.utils.ubCommands.stats.name"), true))
-				.addCommands(Commands.slash("update", Translations.translate("utils.utils.ubCommands.update")))
-				.addCommands(Commands.slash("whitelist", Translations.translate("utils.utils.ubCommands.whitelist"))
-						.addOption(OptionType.STRING, "player", Translations.translate("utils.utils.ubCommands.whitelist.player"), true))
-				.addCommands(Commands.slash("console", Translations.translate("utils.utils.ubCommands.console"))
-						.addOption(OptionType.STRING, "command", Translations.translate("utils.utils.ubCommands.console.command"), true, true))
-				.addCommands(Commands.slash("log", Translations.translate("utils.utils.ubCommands.log"))
-						.addOption(OptionType.STRING, "file", Translations.translate("utils.utils.ubCommands.log.file"), true, true))
-				.addCommands(Commands.slash("reload", Translations.translate("utils.utils.ubCommands.reload")))
-				.addCommands(Commands.slash("stop", Translations.translate("utils.utils.ubCommands.stop")))
-				.queue();
+			.addCommands(Commands.slash("help", Translations.translate("utils.utils.ubCommands.help")))
+			.addCommands(Commands.slash("info", Translations.translate("utils.utils.ubCommands.info")))
+			.addCommands(Commands.slash("stats", Translations.translate("utils.utils.ubCommands.stats"))
+				.addOption(OptionType.STRING, "type", Translations.translate("utils.utils.ubCommands.stats.type"), true)
+				.addOption(OptionType.STRING, "name", Translations.translate("utils.utils.ubCommands.stats.name"), true))
+			.addCommands(Commands.slash("update", Translations.translate("utils.utils.ubCommands.update")))
+			.addCommands(Commands.slash("whitelist", Translations.translate("utils.utils.ubCommands.whitelist"))
+				.addOption(OptionType.STRING, "player", Translations.translate("utils.utils.ubCommands.whitelist.player"), true))
+			.addCommands(Commands.slash("console", Translations.translate("utils.utils.ubCommands.console"))
+				.addOption(OptionType.STRING, "command", Translations.translate("utils.utils.ubCommands.console.command"), true, true))
+			.addCommands(Commands.slash("log", Translations.translate("utils.utils.ubCommands.log"))
+				.addOption(OptionType.STRING, "file", Translations.translate("utils.utils.ubCommands.log.file"), true, true))
+			.addCommands(Commands.slash("reload", Translations.translate("utils.utils.ubCommands.reload")))
+			.addCommands(Commands.slash("stop", Translations.translate("utils.utils.ubCommands.stop")))
+			.queue();
 	}
 
 	public static void initMsptMonitor() {
@@ -587,8 +587,8 @@ public class Utils {
 
 				if (mspt > CONFIG.generic.msptLimit) {
 					String message = Translations.translateMessage("message.highMspt")
-							.replace("%mspt%", String.format("%.2f", mspt))
-							.replace("%msptLimit%", Integer.toString(CONFIG.generic.msptLimit));
+						.replace("%mspt%", String.format("%.2f", mspt))
+						.replace("%msptLimit%", Integer.toString(CONFIG.generic.msptLimit));
 
 					CHANNEL.sendMessage(message).queue();
 					if (CONFIG.multiServer.enable) {
@@ -616,12 +616,12 @@ public class Utils {
 					}
 
 					String topic = Translations.translateMessage("message.onlineChannelTopic")
-							.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerCount()))
-							.replace("%maxPlayerCount%", Integer.toString(SERVER.getMaxPlayers()))
-							.replace("%uniquePlayerCount%", Integer.toString(uniquePlayerCount))
-							.replace("%serverStartedTime%", SERVER_STARTED_TIME)
-							.replace("%lastUpdateTime%", Long.toString(epochSecond))
-							.replace("%nextUpdateTime%", Long.toString(epochSecond + CONFIG.generic.channelTopicUpdateInterval / 1000));
+						.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerCount()))
+						.replace("%maxPlayerCount%", Integer.toString(SERVER.getMaxPlayers()))
+						.replace("%uniquePlayerCount%", Integer.toString(uniquePlayerCount))
+						.replace("%serverStartedTime%", SERVER_STARTED_TIME)
+						.replace("%lastUpdateTime%", Long.toString(epochSecond))
+						.replace("%nextUpdateTime%", Long.toString(epochSecond + CONFIG.generic.channelTopicUpdateInterval / 1000));
 
 					CHANNEL.getManager().setTopic(topic).queue();
 
@@ -693,7 +693,7 @@ public class Utils {
 		try {
 			String quoted = mapper.writeValueAsString(in);
 			return quoted.substring(1, quoted.length() - 1);
-		} catch(JsonProcessingException a) {
+		} catch (JsonProcessingException a) {
 			return a.toString();
 		}
 	}

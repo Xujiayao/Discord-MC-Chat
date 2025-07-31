@@ -43,7 +43,7 @@ public class Translations {
 		translations = new HashMap<>();
 
 		Optional<Path> optional = FabricLoader.getInstance().getModContainer("discord-mc-chat").orElseThrow()
-				.findPath("/lang/" + CONFIG.generic.language + ".json");
+			.findPath("/lang/" + CONFIG.generic.language + ".json");
 
 		if (optional.isEmpty()) {
 			LOGGER.warn("-----------------------------------------");
@@ -54,7 +54,7 @@ public class Translations {
 			LOGGER.warn("-----------------------------------------");
 
 			optional = FabricLoader.getInstance().getModContainer("discord-mc-chat").orElseThrow()
-					.findPath("/lang/en_us.json");
+				.findPath("/lang/en_us.json");
 		}
 
 		if (optional.isPresent()) {
@@ -72,9 +72,9 @@ public class Translations {
 
 				if (minecraftLangFile.length() == 0) {
 					Request request1 = new Request.Builder()
-							.url("https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@" + DetectedVersion.tryDetectVersion().name() + "/assets/minecraft/lang/" + CONFIG.generic.language + ".json")
-							.cacheControl(CacheControl.FORCE_NETWORK)
-							.build();
+						.url("https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@" + DetectedVersion.tryDetectVersion().name() + "/assets/minecraft/lang/" + CONFIG.generic.language + ".json")
+						.cacheControl(CacheControl.FORCE_NETWORK)
+						.build();
 
 					try (Response response1 = HTTP_CLIENT.newCall(request1).execute()) {
 						if (response1.body() != null && response1.code() == 200) {
@@ -85,9 +85,9 @@ public class Translations {
 							minecraftLangFile = new File(FabricLoader.getInstance().getConfigDir().toFile(), "/discord-mc-chat/latest-" + CONFIG.generic.language + ".json");
 
 							Request request2 = new Request.Builder()
-									.url("https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@latest/assets/minecraft/lang/" + CONFIG.generic.language + ".json")
-									.cacheControl(CacheControl.FORCE_NETWORK)
-									.build();
+								.url("https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@latest/assets/minecraft/lang/" + CONFIG.generic.language + ".json")
+								.cacheControl(CacheControl.FORCE_NETWORK)
+								.build();
 
 							try (Response response2 = HTTP_CLIENT.newCall(request2).execute()) {
 								if (response2.body() != null && response2.code() == 200) {

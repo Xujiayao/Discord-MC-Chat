@@ -162,7 +162,7 @@ public class MinecraftEventListener {
 
 						String hyperlinkInsert;
 						if (StringUtils.containsIgnoreCase(link, "gif")
-								&& StringUtils.containsIgnoreCase(link, "tenor.com")) {
+							&& StringUtils.containsIgnoreCase(link, "tenor.com")) {
 							hyperlinkInsert = "\"},{\"text\":\"<gif>\",\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{\"text\":\"";
 						} else {
 							hyperlinkInsert = "\"},{\"text\":\"" + protocol + link + "\",\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{\"text\":\"";
@@ -208,7 +208,7 @@ public class MinecraftEventListener {
 					//#endif
 
 					SERVER.getPlayerList().getPlayers().forEach(
-							player1 -> player1.displayClientMessage(message, false));
+						player1 -> player1.displayClientMessage(message, false));
 					//#if MC >= 11900
 					SERVER.sendSystemMessage(message);
 					//#elseif MC > 11502
@@ -239,9 +239,9 @@ public class MinecraftEventListener {
 			//#endif
 
 			if (CONFIG.generic.announceAdvancements
-					&& isDone
-					&& display.shouldAnnounceChat()
-					&& player.level().getGameRules().getBoolean(GameRules.RULE_ANNOUNCE_ADVANCEMENTS)) {
+				&& isDone
+				&& display.shouldAnnounceChat()
+				&& player.level().getGameRules().getBoolean(GameRules.RULE_ANNOUNCE_ADVANCEMENTS)) {
 				String message = "null";
 
 				switch (display.getType()) {
@@ -254,9 +254,9 @@ public class MinecraftEventListener {
 				String description = Translations.translate("advancements." + advancementHolder.id().getPath().replace("/", ".") + ".description");
 
 				message = message
-						.replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString()))
-						.replace("%advancement%", title.contains("TranslateError") ? display.getTitle().getString() : title)
-						.replace("%description%", description.contains("TranslateError") ? display.getDescription().getString() : description);
+					.replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString()))
+					.replace("%advancement%", title.contains("TranslateError") ? display.getTitle().getString() : title)
+					.replace("%description%", description.contains("TranslateError") ? display.getDescription().getString() : description);
 
 				CHANNEL.sendMessage(message).queue();
 				if (CONFIG.multiServer.enable) {
@@ -275,12 +275,12 @@ public class MinecraftEventListener {
 				String key = deathMessage.getKey();
 
 				CHANNEL.sendMessage(Translations.translateMessage("message.deathMessage")
-						.replace("%deathMessage%", MarkdownSanitizer.escape(Translations.translate(key, deathMessage.getArgs())))
-						.replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString()))).queue();
+					.replace("%deathMessage%", MarkdownSanitizer.escape(Translations.translate(key, deathMessage.getArgs())))
+					.replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString()))).queue();
 				if (CONFIG.multiServer.enable) {
 					MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.deathMessage")
-							.replace("%deathMessage%", MarkdownSanitizer.escape(Translations.translate(key, deathMessage.getArgs())))
-							.replace("%playerName%", MarkdownSanitizer.escape(player.getDisplayName().getString())));
+						.replace("%deathMessage%", MarkdownSanitizer.escape(Translations.translate(key, deathMessage.getArgs())))
+						.replace("%playerName%", MarkdownSanitizer.escape(player.getDisplayName().getString())));
 				}
 			}
 		});
@@ -290,10 +290,10 @@ public class MinecraftEventListener {
 
 			if (CONFIG.generic.announcePlayerJoinLeave) {
 				CHANNEL.sendMessage(Translations.translateMessage("message.joinServer")
-						.replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString()))).queue();
+					.replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString()))).queue();
 				if (CONFIG.multiServer.enable) {
 					MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.joinServer")
-							.replace("%playerName%", MarkdownSanitizer.escape(player.getDisplayName().getString())));
+						.replace("%playerName%", MarkdownSanitizer.escape(player.getDisplayName().getString())));
 				}
 			}
 		});
@@ -303,10 +303,10 @@ public class MinecraftEventListener {
 
 			if (CONFIG.generic.announcePlayerJoinLeave) {
 				CHANNEL.sendMessage(Translations.translateMessage("message.leftServer")
-						.replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString()))).queue();
+					.replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString()))).queue();
 				if (CONFIG.multiServer.enable) {
 					MULTI_SERVER.sendMessage(false, false, false, null, Translations.translateMessage("message.leftServer")
-							.replace("%playerName%", MarkdownSanitizer.escape(player.getDisplayName().getString())));
+						.replace("%playerName%", MarkdownSanitizer.escape(player.getDisplayName().getString())));
 				}
 			}
 		});
@@ -316,13 +316,13 @@ public class MinecraftEventListener {
 		if (!CONFIG.generic.useWebhook) {
 			if (CONFIG.multiServer.enable) {
 				CHANNEL.sendMessage(Translations.translateMessage("message.messageWithoutWebhookForMultiServer")
-						.replace("%server%", CONFIG.multiServer.name)
-						.replace("%name%", username)
-						.replace("%message%", content)).queue();
+					.replace("%server%", CONFIG.multiServer.name)
+					.replace("%name%", username)
+					.replace("%message%", content)).queue();
 			} else {
 				CHANNEL.sendMessage(Translations.translateMessage("message.messageWithoutWebhook")
-						.replace("%name%", username)
-						.replace("%message%", content)).queue();
+					.replace("%name%", username)
+					.replace("%message%", content)).queue();
 			}
 		} else {
 			JsonObject body = new JsonObject();
@@ -335,9 +335,9 @@ public class MinecraftEventListener {
 			body.add("allowed_mentions", allowedMentions);
 
 			Request request = new Request.Builder()
-					.url(WEBHOOK.getUrl())
-					.post(RequestBody.create(body.toString(), MediaType.get("application/json")))
-					.build();
+				.url(WEBHOOK.getUrl())
+				.post(RequestBody.create(body.toString(), MediaType.get("application/json")))
+				.build();
 
 			ExecutorService executor = Executors.newFixedThreadPool(1);
 			executor.submit(() -> {
@@ -378,8 +378,8 @@ public class MinecraftEventListener {
 		}
 
 		return CONFIG.generic.avatarApi
-				.replace("{player_uuid}", player.getUUID().toString())
-				.replace("{player_name}", player.getName().getString())
-				.replace("{player_textures}", hash);
+			.replace("{player_uuid}", player.getUUID().toString())
+			.replace("{player_name}", player.getName().getString())
+			.replace("{player_textures}", hash);
 	}
 }

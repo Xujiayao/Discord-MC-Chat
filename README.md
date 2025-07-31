@@ -18,7 +18,8 @@ Language: English <a href="/README_CN.md">中文</a>
 [![CurseForge Downloads](https://cf.way2muchnoise.eu/full_548539_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/discord-mc-chat)
 [![Versions Supported](https://cf.way2muchnoise.eu/versions/548539.svg)](https://www.curseforge.com/minecraft/mc-mods/discord-mc-chat)
 
-Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCDC), is a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric
+Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCDC), is a practical and powerful Fabric
+and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric
 
 More information + Docs: [Discord-MC-Chat Docs | Xujiayao's Blog](https://blog.xujiayao.com/posts/4ba0a17a/)
 
@@ -26,7 +27,9 @@ DMCC Discord Server is now public! Join now through: https://discord.gg/kbXkV6k2
 
 ## Introduction
 
-[Discord-MC-Chat](https://github.com/Xujiayao/Discord-MC-Chat) (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCDC), is a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric.
+[Discord-MC-Chat](https://github.com/Xujiayao/Discord-MC-Chat) (DMCC), formerly known as MC-Discord-Chat and
+MCDiscordChat (MCDC), is a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by
+BRForgers/DisFabric.
 
 ![0001.png](https://cdn.jsdelivr.net/gh/Xujiayao/BlogSource@master/source/file/posts/4ba0a17a/0001.png)
 
@@ -44,7 +47,8 @@ You can find the latest build JAR files at [GitHub Actions](https://github.com/X
 
 ## Support
 
-If there is a bug or suggestion, or something you don't understand, you can [submit an issue](https://github.com/Xujiayao/Discord-MC-Chat/issues/new/choose) on GitHub.
+If there is a bug or suggestion, or something you don't understand, you
+can [submit an issue](https://github.com/Xujiayao/Discord-MC-Chat/issues/new/choose) on GitHub.
 
 DMCC Discord Server is now public! Join now through: https://discord.gg/kbXkV6k2XU
 
@@ -56,7 +60,9 @@ If you are interested in contributing to DMCC, you can submit a pull request on 
 
 For code contributions, the build file is located in the `/build/` folder.
 
-For translation contributions, language files are located in the `/wrapper/src/main/resources/lang/` folder. Copy `en_us.json` and rename the new one to your language code to get started. Please provide translations for the entire file for all keys.
+For translation contributions, language files are located in the `/wrapper/src/main/resources/lang/` folder. Copy
+`en_us.json` and rename the new one to your language code to get started. Please provide translations for the entire
+file for all keys.
 
 ## Features
 
@@ -171,7 +177,8 @@ Languages currently available:
 
 This project is licensed under the [MIT license](https://github.com/Xujiayao/Discord-MC-Chat/blob/master/LICENSE).
 
-Exceptionally, the `src/main/java/com/xujiayao/discord_mc_chat/utils/MarkdownParser.java` file was obtained from BRForgers/DisFabric on December 31, 2020, licensed under the Mozilla Public License 2.0 (MPL-2.0).
+Exceptionally, the `src/main/java/com/xujiayao/discord_mc_chat/utils/MarkdownParser.java` file was obtained from
+BRForgers/DisFabric on December 31, 2020, licensed under the Mozilla Public License 2.0 (MPL-2.0).
 
 > More details of the `src/main/java/com/xujiayao/discord_mc_chat/utils/MarkdownParser.java` file:
 >
@@ -183,9 +190,11 @@ Exceptionally, the `src/main/java/com/xujiayao/discord_mc_chat/utils/MarkdownPar
 > Link to the license:
 > https://github.com/BRForgers/DisFabric/blob/e0c7601405ee1b3f1de3c3168bc4ddd520501565/LICENSE
 >
-> Note that the "Don't Be a Jerk" license used in the newly created project BRForgers/DisFabric-and-DisForge is separate from the old project BRForgers/DisFabric.
+> Note that the "Don't Be a Jerk" license used in the newly created project BRForgers/DisFabric-and-DisForge is separate
+> from the old project BRForgers/DisFabric.
 >
-> - Any recent changes in the project name and license do not retroactively affect the license terms of the code obtained at a specific moment before, that is, December 31, 2020.
+> - Any recent changes in the project name and license do not retroactively affect the license terms of the code
+    obtained at a specific moment before, that is, December 31, 2020.
 > - Any files obtained from BRForgers/DisFabric continue to be subject to the terms of the MPL-2.0 license only.
 >
 > Link to the "Don't Be a Jerk" license:
