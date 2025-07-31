@@ -1,2 +1,0 @@
-net.minecraft.advancements.Advancement net.minecraft.advancements.AdvancementHolder
-net.minecraft.advancements.Advancement getId() id()
