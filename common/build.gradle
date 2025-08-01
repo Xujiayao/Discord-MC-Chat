@@ -5,7 +5,7 @@ plugins {
 version = mod_version
 
 base {
-    archivesName = mod_name + "-common"
+    archivesName = mod_name
 }
 
 dependencies {
@@ -20,4 +20,44 @@ tasks.withType(JavaCompile).configureEach {
 java {
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
+}
+
+//========== Merge JARs ==========
+
+def otherSubprojects = rootProject.subprojects.findAll { it.name != project.name }
+
+tasks.register('mergeJars') {
+    dependsOn otherSubprojects.collect { ":$it.name:jar" }
+    doLast {
+        def commonJar = tasks.jar.archiveFile.get().asFile
+        def tempDir = file("$buildDir/merged_temp")
+        tempDir.mkdirs()
+        def addedFiles = [:]
+        otherSubprojects.each { subproj ->
+            def jarFile = subproj.tasks.named('jar').get().archiveFile.get().asFile
+            copy {
+                from zipTree(jarFile)
+                into tempDir
+                exclude 'META-INF/MANIFEST.MF'
+                eachFile { fcd ->
+                    def relPath = fcd.relativePath.toString()
+                    if (addedFiles.containsKey(relPath)) {
+                        logger.warn("Warning: Duplicate file found: $relPath in ${subproj.name} and ${addedFiles[relPath]}")
+                    } else {
+                        addedFiles[relPath] = subproj.name
+                    }
+                }
+            }
+        }
+        // 将解压后的内容加入 common 的 jar
+        ant.zip(update: "true", destfile: commonJar) {
+            fileset(dir: tempDir)
+        }
+//        tempDir.deleteDir()
+    }
+}
+
+// 保证 mergeJars 在 jar 之后执行
+tasks.named('assemble').configure {
+    dependsOn mergeJars
 }

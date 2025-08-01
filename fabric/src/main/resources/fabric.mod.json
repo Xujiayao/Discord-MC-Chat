@@ -16,12 +16,10 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "com.xujiayao.discord_mc_chat.fabric.DiscordMCChat"
+      "com.xujiayao.discord_mc_chat.fabric.FabricDMCC"
     ]
   },
-  "mixins": [
-    "discord_mc_chat.fabric.mixins.json"
-  ],
+  "mixins": [],
   "depends": {
     "fabricloader": ">=0.16.14",
     "minecraft": "~1.21.8",

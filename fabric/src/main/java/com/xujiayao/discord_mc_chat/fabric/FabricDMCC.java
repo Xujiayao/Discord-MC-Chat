@@ -1,10 +1,12 @@
 package com.xujiayao.discord_mc_chat.fabric;
 
+import com.xujiayao.discord_mc_chat.common.DMCC;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DiscordMCChat implements ModInitializer {
+public class FabricDMCC implements ModInitializer {
+
 	public static final String MOD_ID = "discord_mc_chat";
 
 	// This logger is used to write text to the console and the log file.
@@ -19,5 +21,7 @@ public class DiscordMCChat implements ModInitializer {
 		// Proceed with mild caution.
 
 		LOGGER.info("Hello Fabric world!");
+
+		DMCC.init("Fabric");
 	}
 }
