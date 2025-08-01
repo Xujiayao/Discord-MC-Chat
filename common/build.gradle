@@ -28,9 +28,11 @@ def otherSubprojects = rootProject.subprojects.findAll { it.name != project.name
 
 tasks.register('mergeJars') {
     dependsOn otherSubprojects.collect { ":$it.name:jar" }
+
+    def commonJar = tasks.jar.archiveFile.get().asFile
+    def tempDir = project.layout.buildDirectory.dir("merged_temp").get().asFile
+
     doLast {
-        def commonJar = tasks.jar.archiveFile.get().asFile
-        def tempDir = file("$buildDir/merged_temp")
         tempDir.mkdirs()
         def addedFiles = [:]
         otherSubprojects.each { subproj ->
