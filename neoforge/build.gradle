@@ -1,5 +1,5 @@
 plugins {
-    id 'net.neoforged.moddev' version '2.0.105'
+    id "net.neoforged.moddev" version "2.0.105"
 }
 
 version = mod_version

@@ -1,0 +1,23 @@
+plugins {
+    id "java"
+}
+
+version = mod_version
+
+base {
+    archivesName = mod_name + "-common"
+}
+
+dependencies {
+    implementation "com.google.code.gson:gson:2.13.1"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 21
+    options.encoding = "UTF-8"
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
