@@ -20,7 +20,7 @@
     ]
   },
   "mixins": [
-    "discord_mc_chat.mixins.json"
+    "fabric.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.16.14",
