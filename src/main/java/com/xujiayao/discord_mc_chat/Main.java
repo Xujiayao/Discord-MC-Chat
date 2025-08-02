@@ -87,12 +87,12 @@ public class Main implements DedicatedServerModInitializer {
 			LOGGER.info("-----------------------------------------");
 
 			JDA = JDABuilder.createDefault(CONFIG.generic.botToken)
-				.setChunkingFilter(ChunkingFilter.ALL)
-				.setMemberCachePolicy(MemberCachePolicy.ALL)
-				.enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT)
-				.addEventListeners(new DiscordEventListener())
-				.setStatus(CONFIG.generic.showServerStatusInBotStatus ? OnlineStatus.DO_NOT_DISTURB : OnlineStatus.ONLINE)
-				.build();
+					.setChunkingFilter(ChunkingFilter.ALL)
+					.setMemberCachePolicy(MemberCachePolicy.ALL)
+					.enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT)
+					.addEventListeners(new DiscordEventListener())
+					.setStatus(CONFIG.generic.showServerStatusInBotStatus ? OnlineStatus.DO_NOT_DISTURB : OnlineStatus.ONLINE)
+					.build();
 
 			JDA.awaitReady();
 
@@ -144,8 +144,8 @@ public class Main implements DedicatedServerModInitializer {
 
 				if (webhookName.equals(webhook.getName())) {
 					if (CONFIG.generic.useWebhook
-						&& webhook.getOwnerAsUser() == JDA.getSelfUser()
-						&& webhook.getChannel().asTextChannel() == CHANNEL) {
+							&& webhook.getOwnerAsUser() == JDA.getSelfUser()
+							&& webhook.getChannel().asTextChannel() == CHANNEL) {
 						WEBHOOK = webhook;
 					} else {
 						webhook.delete().queue();
@@ -222,7 +222,7 @@ public class Main implements DedicatedServerModInitializer {
 
 			if (CONFIG.generic.updateChannelTopic) {
 				String topic = Translations.translateMessage("message.offlineChannelTopic")
-					.replace("%lastUpdateTime%", Long.toString(Instant.now().getEpochSecond()));
+						.replace("%lastUpdateTime%", Long.toString(Instant.now().getEpochSecond()));
 
 				CHANNEL.getManager().setTopic(topic).queue();
 				if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
@@ -240,8 +240,8 @@ public class Main implements DedicatedServerModInitializer {
 
 			if (CONFIG.generic.announceServerStartStop) {
 				CHANNEL.sendMessage(Translations.translateMessage("message.serverStopped"))
-					.submit()
-					.whenComplete((v, ex) -> shutdown());
+						.submit()
+						.whenComplete((v, ex) -> shutdown());
 			} else {
 				shutdown();
 			}

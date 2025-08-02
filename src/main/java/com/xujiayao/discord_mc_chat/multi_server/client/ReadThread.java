@@ -81,43 +81,43 @@ public class ReadThread extends Thread {
 
 					if (json.get("isChat").getAsBoolean()) {
 						LOGGER.info(Translations.translateMessage("message.unformattedChatMessage")
-							.replace("%server%", json.get("serverName").getAsString())
-							.replace("%name%", json.get("playerName").getAsString())
-							.replace("%message%", json.get("message").getAsString()));
+								.replace("%server%", json.get("serverName").getAsString())
+								.replace("%name%", json.get("playerName").getAsString())
+								.replace("%message%", json.get("message").getAsString()));
 
 						MutableComponent text = Utils.fromJson(Translations.translateMessage("message.formattedChatMessage")
-							.replace("%server%", json.get("serverName").getAsString())
-							.replace("%name%", json.get("playerName").getAsString())
-							.replace("%roleColor%", "white")
-							.replace("%message%", MarkdownParser.parseMarkdown(json.get("message").getAsString())));
+								.replace("%server%", json.get("serverName").getAsString())
+								.replace("%name%", json.get("playerName").getAsString())
+								.replace("%roleColor%", "white")
+								.replace("%message%", MarkdownParser.parseMarkdown(json.get("message").getAsString())));
 
 						SERVER.getPlayerList().getPlayers().forEach(
-							player -> player.displayClientMessage(text, false));
+								player -> player.displayClientMessage(text, false));
 					} else {
 						if (json.get("isText").getAsBoolean()) {
 							LOGGER.info(Translations.translateMessage("message.unformattedOtherMessage")
-								.replace("%server%", json.get("serverName").getAsString())
-								.replace("%message%", Objects.requireNonNull(Utils.fromJson(json.get("message").getAsString())).getString()));
+									.replace("%server%", json.get("serverName").getAsString())
+									.replace("%message%", Objects.requireNonNull(Utils.fromJson(json.get("message").getAsString())).getString()));
 
 							MutableComponent text = Utils.fromJson(Translations.translateMessage("message.formattedOtherMessage")
-								.replace("%server%", json.get("serverName").getAsString())
-								.replace("%message%", ""));
+									.replace("%server%", json.get("serverName").getAsString())
+									.replace("%message%", ""));
 
 							Objects.requireNonNull(text).append(Utils.fromJson(json.get("message").getAsString()));
 
 							SERVER.getPlayerList().getPlayers().forEach(
-								player -> player.displayClientMessage(text, false));
+									player -> player.displayClientMessage(text, false));
 						} else {
 							LOGGER.info(Translations.translateMessage("message.unformattedOtherMessage")
-								.replace("%server%", json.get("serverName").getAsString())
-								.replace("%message%", json.get("message").getAsString()));
+									.replace("%server%", json.get("serverName").getAsString())
+									.replace("%message%", json.get("message").getAsString()));
 
 							MutableComponent text = Utils.fromJson(Translations.translateMessage("message.formattedOtherMessage")
-								.replace("%server%", json.get("serverName").getAsString())
-								.replace("%message%", MarkdownParser.parseMarkdown(json.get("message").getAsString())));
+									.replace("%server%", json.get("serverName").getAsString())
+									.replace("%message%", MarkdownParser.parseMarkdown(json.get("message").getAsString())));
 
 							SERVER.getPlayerList().getPlayers().forEach(
-								player -> player.displayClientMessage(text, false));
+									player -> player.displayClientMessage(text, false));
 						}
 					}
 				} catch (Exception e) {

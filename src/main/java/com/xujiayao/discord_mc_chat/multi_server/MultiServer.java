@@ -107,14 +107,14 @@ public class MultiServer extends Thread {
 				long epochSecond = Instant.now().getEpochSecond();
 
 				String topic = Translations.translateMessage("message.onlineChannelTopicForMultiServer")
-					.replace("%onlinePlayerCount%", Integer.toString(onlinePlayerCount))
-					.replace("%maxPlayerCount%", Integer.toString(maxPlayerCount))
-					.replace("%uniquePlayerCount%", Integer.toString(uniquePlayers.size()))
-					.replace("%onlineServerCount%", Integer.toString(onlineServerCount))
-					.replace("%onlineServerList%", String.join(", ", onlineServerList))
-					.replace("%serverStartedTime%", Long.toString(Collections.min(serverStartedTime)))
-					.replace("%lastUpdateTime%", Long.toString(epochSecond))
-					.replace("%nextUpdateTime%", Long.toString(epochSecond + CONFIG.generic.channelTopicUpdateInterval / 1000));
+						.replace("%onlinePlayerCount%", Integer.toString(onlinePlayerCount))
+						.replace("%maxPlayerCount%", Integer.toString(maxPlayerCount))
+						.replace("%uniquePlayerCount%", Integer.toString(uniquePlayers.size()))
+						.replace("%onlineServerCount%", Integer.toString(onlineServerCount))
+						.replace("%onlineServerList%", String.join(", ", onlineServerList))
+						.replace("%serverStartedTime%", Long.toString(Collections.min(serverStartedTime)))
+						.replace("%lastUpdateTime%", Long.toString(epochSecond))
+						.replace("%nextUpdateTime%", Long.toString(epochSecond + CONFIG.generic.channelTopicUpdateInterval / 1000));
 
 				CHANNEL.getManager().setTopic(topic).queue();
 
