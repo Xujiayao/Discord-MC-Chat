@@ -83,4 +83,12 @@ tasks.register("mergeJars") {
 build {
     dependsOn shadowJar
     dependsOn tasks.named("mergeJars")
+
+    doLast {
+        copy {
+            from "build/libs"
+            into "../build"
+            exclude "*common*"
+        }
+    }
 }

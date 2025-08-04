@@ -25,3 +25,7 @@ subprojects {
         }
     }
 }
+
+project.afterEvaluate {
+    delete file("build")
+}
