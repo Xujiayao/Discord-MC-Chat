@@ -10,5 +10,6 @@
   },
   "overwrites": {
     "requireAnnotations": true
-  }
+  },
+  "refmap": "fabric.dmcc.refmap.json"
 }
