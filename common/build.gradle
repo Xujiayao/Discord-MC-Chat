@@ -9,13 +9,12 @@ base {
 
 dependencies {
     shadow("net.dv8tion:JDA:5.6.1") {
-         exclude module: "opus-java" // required for encoding audio into opus, not needed if audio is already provided in opus encoding
-         exclude module: "tink" // required for encrypting and decrypting audio
+        exclude module: "opus-java" // for encoding audio into opus
+        exclude module: "tink" // for encrypting and decrypting audio
     }
 }
 
 neoForge {
-    // For mixin and minecraft dependency
     version = "21.8.23"
 }
 
@@ -36,9 +35,20 @@ jar {
 }
 
 shadowJar {
+    dependsOn assemble
+
     archiveClassifier.set("")
     configurations = [project.configurations.shadow]
     minimize()
+
+    def commonJar = tasks.jar.archiveFile.get().asFile
+    from(zipTree(commonJar)) {
+        exclude 'META-INF/MANIFEST.MF'
+    }
+}
+
+build {
+    dependsOn shadowJar
 }
 
 //========== Merge JARs ==========
