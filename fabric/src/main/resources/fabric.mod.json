@@ -20,7 +20,7 @@
     ]
   },
   "mixins": [
-    "fabric.mixins.json"
+    "fabric.dmcc.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.16.14",
