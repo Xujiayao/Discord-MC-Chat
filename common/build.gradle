@@ -37,18 +37,10 @@ jar {
 shadowJar {
     dependsOn assemble
 
+    archiveBaseName.set("${mod_name}")
     archiveClassifier.set("")
     configurations = [project.configurations.shadow]
     minimize()
-
-    def commonJar = tasks.jar.archiveFile.get().asFile
-    from(zipTree(commonJar)) {
-        exclude 'META-INF/MANIFEST.MF'
-    }
-}
-
-build {
-    dependsOn shadowJar
 }
 
 //========== Merge JARs ==========
@@ -57,8 +49,9 @@ def otherSubprojects = rootProject.subprojects.findAll { it.name != project.name
 
 tasks.register("mergeJars") {
     dependsOn otherSubprojects.collect { ":$it.name:jar" }
+    dependsOn shadowJar
 
-    def commonJar = tasks.jar.archiveFile.get().asFile
+    def shadowJarFile = tasks.shadowJar.archiveFile.get().asFile
     def tempDir = project.layout.buildDirectory.dir("merged_temp").get().asFile
 
     doLast {
@@ -81,13 +74,13 @@ tasks.register("mergeJars") {
             }
         }
         // 将解压后的内容加入 common 的 jar
-        ant.zip(update: "true", destfile: commonJar) {
+        ant.zip(update: "true", destfile: shadowJarFile) {
             fileset(dir: tempDir)
         }
     }
 }
 
-// 保证 mergeJars 在 jar 之后执行
-tasks.named("assemble").configure {
-    dependsOn mergeJars
+build {
+    dependsOn shadowJar
+    dependsOn tasks.named("mergeJars")
 }
