@@ -1,5 +1,5 @@
 plugins {
-    id "java"
+    id "net.neoforged.moddev" version "2.0.105"
 }
 
 version = mod_version
@@ -9,7 +9,12 @@ base {
 }
 
 dependencies {
-    implementation "com.google.code.gson:gson:2.13.1"
+//    implementation "com.google.code.gson:gson:2.13.1"
+}
+
+neoForge {
+    // For mixin and minecraft dependency
+    version = "21.8.23"
 }
 
 tasks.withType(JavaCompile).configureEach {

@@ -19,7 +19,9 @@
       "com.xujiayao.discord_mc_chat.fabric.FabricDMCC"
     ]
   },
-  "mixins": [],
+  "mixins": [
+    "fabric.mixins.json"
+  ],
   "depends": {
     "fabricloader": ">=0.16.14",
     "minecraft": "~1.21.8",
