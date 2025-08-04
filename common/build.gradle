@@ -1,15 +1,17 @@
-plugins {
-    id "net.neoforged.moddev" version "2.0.105"
-}
+apply plugin: "com.gradleup.shadow"
+apply plugin: "net.neoforged.moddev"
 
 version = mod_version
 
 base {
-    archivesName = mod_name
+    archivesName = mod_name + "-common"
 }
 
 dependencies {
-//    implementation "com.google.code.gson:gson:2.13.1"
+    shadow("net.dv8tion:JDA:5.6.1") {
+         exclude module: "opus-java" // required for encoding audio into opus, not needed if audio is already provided in opus encoding
+         exclude module: "tink" // required for encrypting and decrypting audio
+    }
 }
 
 neoForge {
@@ -31,6 +33,12 @@ jar {
     manifest {
         attributes "Main-Class": "com.xujiayao.discord_mc_chat.common.DMCC"
     }
+}
+
+shadowJar {
+    archiveClassifier.set("")
+    configurations = [project.configurations.shadow]
+    minimize()
 }
 
 //========== Merge JARs ==========
@@ -66,7 +74,6 @@ tasks.register("mergeJars") {
         ant.zip(update: "true", destfile: commonJar) {
             fileset(dir: tempDir)
         }
-//        tempDir.deleteDir()
     }
 }
 

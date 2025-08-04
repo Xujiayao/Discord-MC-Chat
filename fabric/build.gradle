@@ -1,6 +1,4 @@
-plugins {
-    id "fabric-loom" version "${loom_version}"
-}
+apply plugin: "fabric-loom"
 
 version = mod_version
 
