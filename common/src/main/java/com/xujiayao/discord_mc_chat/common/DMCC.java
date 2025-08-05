@@ -12,14 +12,15 @@ public class DMCC {
 
 	public static void main(String[] args) {
 		LOGGER.info("Hello, World!");
+
+		init("Standalone");
 	}
 
 	public static void init(String loader) {
 		LOGGER.info("Initializing DMCC with loader: {}", loader);
 
 		try {
-			// TOKEN should be replaced with your Discord bot token
-			String token = "";
+			String token = ""; // intended to be empty
 			JDA jda = JDABuilder.createDefault(token)
 					.enableIntents(GatewayIntent.MESSAGE_CONTENT)
 					.addEventListeners(new Discord())

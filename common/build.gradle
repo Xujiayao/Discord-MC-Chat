@@ -11,7 +11,11 @@ dependencies {
     shadow("net.dv8tion:JDA:5.6.1") {
         exclude module: "opus-java" // for encoding audio into opus
         exclude module: "tink" // for encrypting and decrypting audio
+        exclude module: "slf4j-api"
     }
+
+    shadow("org.slf4j:slf4j-api:2.0.17")
+    shadow("org.apache.logging.log4j:log4j-slf4j2-impl:2.25.1")
 }
 
 neoForge {
@@ -42,7 +46,7 @@ shadowJar {
     configurations = [project.configurations.shadow]
     minimize()
 
-//    exclude "**/*-info.class"
+    exclude "**/*-info.class"
 
 //    relocate "net", "dmcc_dep.net"
 //    relocate "org", "dmcc_dep.org"

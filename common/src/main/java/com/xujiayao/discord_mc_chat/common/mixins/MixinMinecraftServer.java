@@ -6,11 +6,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
+
 @Mixin(MinecraftServer.class)
 public class MixinMinecraftServer {
 	@Inject(at = @At("HEAD"), method = "loadLevel")
 	private void init(CallbackInfo info) {
 		// This code is injected into the start of MinecraftServer.loadLevel()V
-		System.out.println("This line is printed by an example mod mixin!");
+		LOGGER.info("This line is printed by an example mod mixin!");
 	}
 }
