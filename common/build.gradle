@@ -44,7 +44,10 @@ shadowJar {
     archiveBaseName.set("${mod_name}")
     archiveClassifier.set("")
     configurations = [project.configurations.shadow]
-    minimize()
+    mergeServiceFiles()
+    minimize {
+        exclude(dependency("org.apache.logging.log4j:log4j-slf4j2-impl"))
+    }
 
     exclude "**/*-info.class"
 
