@@ -41,6 +41,17 @@ shadowJar {
     archiveClassifier.set("")
     configurations = [project.configurations.shadow]
     minimize()
+
+//    exclude "**/*-info.class"
+
+//    relocate "net", "dmcc_dep.net"
+//    relocate "org", "dmcc_dep.org"
+//    relocate "kotlin", "dmcc_dep.kotlin"
+//    relocate "okhttp3", "dmcc_dep.okhttp3"
+//    relocate "okio", "dmcc_dep.okio"
+//    relocate "gnu", "dmcc_dep.gnu"
+//    relocate "com.neovisionaries", "dmcc_dep.com.neovisionaries"
+//    relocate "com.fasterxml", "dmcc_dep.com.fasterxml"
 }
 
 //========== Merge JARs ==========

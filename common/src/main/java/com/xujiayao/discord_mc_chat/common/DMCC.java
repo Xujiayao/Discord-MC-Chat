@@ -2,29 +2,34 @@ package com.xujiayao.discord_mc_chat.common;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.requests.GatewayIntent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DMCC {
 
+	public static final Logger LOGGER = LoggerFactory.getLogger("discord_mc_chat");
+
 	public static void main(String[] args) {
-		System.out.println("Hello, World!");
+		LOGGER.info("Hello, World!");
 	}
 
 	public static void init(String loader) {
-		System.out.println("Initializing DMCC with loader: " + loader);
+		LOGGER.info("Initializing DMCC with loader: {}", loader);
 
 		try {
 			// TOKEN should be replaced with your Discord bot token
 			String token = "";
 			JDA jda = JDABuilder.createDefault(token)
+					.enableIntents(GatewayIntent.MESSAGE_CONTENT)
 					.addEventListeners(new Discord())
 					.build();
 			jda.awaitReady();
-			System.out.println("PingPongBot is ready!");
+			LOGGER.info("PingPongBot is ready!");
 		} catch (Exception e) {
-			System.err.println("Failed to initialize DMCC: " + e.getMessage());
-			e.printStackTrace();
+			LOGGER.error("Failed to initialize DMCC: {}", e.getMessage());
 		} finally {
-			System.out.println("DMCC initialization complete.");
+			LOGGER.info("DMCC initialization complete.");
 		}
 	}
 }
