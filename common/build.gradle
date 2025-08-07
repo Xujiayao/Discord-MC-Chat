@@ -53,6 +53,17 @@ shadowJar {
 
     exclude "**/*-info.class"
     exclude "META-INF/maven/"
+    exclude "META-INF/proguard/"
+    exclude "META-INF/versions/11/"
+    exclude "META-INF/versions/17/"
+    exclude {
+        def path = it.path
+        path.startsWith("META-INF/") &&
+                path.contains("LICENSE") &&
+                path != "META-INF/THIRD-PARTY-LICENSES.txt"
+    }
+    exclude "META-INF/*NOTICE*"
+    exclude "META-INF/*kotlin_module*"
 
     transform(Log4j2PluginsCacheFileTransformer.class)
 
@@ -67,6 +78,8 @@ shadowJar {
     relocate "org.intellij", "dmcc_dep.org.intellij"
     relocate "org.jetbrains", "dmcc_dep.org.jetbrains"
     relocate "org.slf4j", "dmcc_dep.org.slf4j"
+
+    from "../LICENSE"
 }
 
 //========== Merge JARs ==========

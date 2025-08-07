@@ -1,0 +1,19 @@
+THIRD-PARTY LICENSES
+
+This project includes the following third-party libraries. Each is distributed under its respective license.
+
+---
+
+1. JDA (net.dv8tion:JDA:5.6.1)
+   License: Apache License 2.0
+   Homepage: https://github.com/discord-jda/JDA
+
+2. SLF4J (org.slf4j:slf4j-api:2.0.17, org.slf4j:slf4j-jdk14:2.0.17)
+   License: MIT License
+   Homepage: https://www.slf4j.org/
+
+---
+
+All third-party dependencies have been relocated to the "dmcc_dep" package and may themselves contain additional transitive dependencies, which are distributed under their own respective licenses. For details, please refer to the relevant library's homepage or distribution package.
+
+For the full license text of each library, please refer to their respective homepages.
