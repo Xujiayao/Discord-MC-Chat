@@ -1,14 +1,13 @@
 package com.xujiayao.discord_mc_chat.common;
 
+import com.xujiayao.discord_mc_chat.common.utils.Logger;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.GatewayIntent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class DMCC {
 
-	public static final Logger LOGGER = LoggerFactory.getLogger("discord_mc_chat");
+	public static final Logger LOGGER = new Logger();
 
 	public static void main(String[] args) {
 		LOGGER.info("Hello, World!");

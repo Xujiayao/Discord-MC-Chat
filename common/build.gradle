@@ -17,7 +17,6 @@ dependencies {
     }
 
     shadow("org.slf4j:slf4j-api:2.0.17")
-    shadow("org.apache.logging.log4j:log4j-slf4j2-impl:2.25.1")
 }
 
 neoForge {
@@ -47,9 +46,7 @@ shadowJar {
     archiveClassifier.set("")
     configurations = [project.configurations.shadow]
     mergeServiceFiles()
-    minimize {
-        exclude(dependency("org.apache.logging.log4j:log4j-slf4j2-impl"))
-    }
+    minimize()
 
     exclude "**/*-info.class"
     exclude "META-INF/maven/"
@@ -63,7 +60,10 @@ shadowJar {
     relocate "net.dv8tion", "dmcc_dep.net.dv8tion"
     relocate "okhttp3", "dmcc_dep.okhttp3"
     relocate "okio", "dmcc_dep.okio"
-    relocate "org", "dmcc_dep.org"
+    relocate "org.apache", "dmcc_dep.org.apache"
+    relocate "org.intellij", "dmcc_dep.org.intellij"
+    relocate "org.jetbrains", "dmcc_dep.org.jetbrains"
+    relocate "org.slf4j", "dmcc_dep.org.slf4j"
 }
 
 //========== Merge JARs ==========
