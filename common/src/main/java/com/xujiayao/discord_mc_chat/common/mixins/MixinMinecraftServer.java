@@ -8,6 +8,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
 
+/**
+ * @author Xujiayao
+ */
 @Mixin(MinecraftServer.class)
 public class MixinMinecraftServer {
 	@Inject(at = @At("HEAD"), method = "loadLevel")
