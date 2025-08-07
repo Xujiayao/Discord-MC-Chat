@@ -17,6 +17,7 @@ dependencies {
     }
 
     shadow("org.slf4j:slf4j-api:2.0.17")
+    shadow("org.slf4j:slf4j-jdk14:2.0.17")
 }
 
 neoForge {
@@ -46,7 +47,9 @@ shadowJar {
     archiveClassifier.set("")
     configurations = [project.configurations.shadow]
     mergeServiceFiles()
-    minimize()
+    minimize {
+        exclude(dependency("org.slf4j:slf4j-jdk14"))
+    }
 
     exclude "**/*-info.class"
     exclude "META-INF/maven/"
