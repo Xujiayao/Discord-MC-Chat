@@ -56,14 +56,14 @@ shadowJar {
 
     transform(Log4j2PluginsCacheFileTransformer.class)
 
-    relocate "net", "dmcc_dep.net"
-    relocate "org", "dmcc_dep.org"
+    relocate "com.fasterxml", "dmcc_dep.com.fasterxml"
+    relocate "com.neovisionaries", "dmcc_dep.com.neovisionaries"
+    relocate "gnu", "dmcc_dep.gnu"
     relocate "kotlin", "dmcc_dep.kotlin"
+    relocate "net.dv8tion", "dmcc_dep.net.dv8tion"
     relocate "okhttp3", "dmcc_dep.okhttp3"
     relocate "okio", "dmcc_dep.okio"
-    relocate "gnu", "dmcc_dep.gnu"
-    relocate "com.neovisionaries", "dmcc_dep.com.neovisionaries"
-    relocate "com.fasterxml", "dmcc_dep.com.fasterxml"
+    relocate "org", "dmcc_dep.org"
 }
 
 //========== Merge JARs ==========
