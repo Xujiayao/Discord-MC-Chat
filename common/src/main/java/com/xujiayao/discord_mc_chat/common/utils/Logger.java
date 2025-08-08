@@ -44,9 +44,9 @@ public class Logger {
 			this.infoMethod = loggerClass.getMethod("info", String.class, Object[].class);
 			this.warnMethod = loggerClass.getMethod("warn", String.class, Object[].class);
 			this.errorMethod = loggerClass.getMethod("error", String.class, Object[].class);
-		} catch (NoSuchMethodException | ClassNotFoundException | InvocationTargetException |
-				 IllegalAccessException e) {
-			throw new RuntimeException("TODO", e);
+		} catch (ClassNotFoundException | IllegalAccessException | InvocationTargetException |
+				 NoSuchMethodException e) {
+			throw new RuntimeException("Failed to initialize DMCC Logger", e);
 		}
 	}
 
@@ -71,31 +71,28 @@ public class Logger {
 	public void info(String message, Object... args) {
 		try {
 			infoMethod.invoke(logger, message, args);
-		} catch (IllegalAccessException | InvocationTargetException e) {
-			throw new RuntimeException("TODO", e);
+		} catch (Exception ignored) {  // Inaccessible
 		}
 	}
 
 	public void warn(String message, Object... args) {
 		try {
 			warnMethod.invoke(logger, message, args);
-		} catch (IllegalAccessException | InvocationTargetException e) {
-			throw new RuntimeException("TODO", e);
+		} catch (Exception ignored) {  // Inaccessible
 		}
 	}
 
 	public void error(String message, Object... args) {
 		try {
 			errorMethod.invoke(logger, message, args);
-		} catch (IllegalAccessException | InvocationTargetException e) {
-			throw new RuntimeException("TODO", e);
+		} catch (Exception ignored) {  // Inaccessible
 		}
 	}
 
 	private static class CustomFormatter extends Formatter {
 		@Override
 		public String format(LogRecord record) {
-			String time = new SimpleDateFormat("HH:mm:ss").format(System.currentTimeMillis());
+			String time = new SimpleDateFormat("HH:mm:ss").format(record.getMillis());
 			String thread = Thread.currentThread().getName();
 			String level = record.getLevel().getName().replace("SEVERE", "ERROR");
 			String msg = formatMessage(record);
