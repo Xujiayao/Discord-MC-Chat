@@ -1,18 +1,19 @@
 {
   "schemaVersion": 1,
   "id": "discord_mc_chat",
-  "version": "${version}",
+  "version": "${mod_version}",
   "name": "Discord-MC-Chat",
-  "description": "Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCDC), is a practical and powerful Fabric and Quilt Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric",
+  "description": "Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCDC), is a practical and powerful Fabric and NeoForge Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric",
   "authors": [
-    "Me!"
+    "Xujiayao"
   ],
   "contact": {
-    "homepage": "https://fabricmc.net/",
-    "sources": "https://github.com/FabricMC/fabric-example-mod"
+    "homepage": "https://blog.xujiayao.com/posts/4ba0a17a/",
+    "sources": "https://github.com/Xujiayao/Discord-MC-Chat",
+    "issues": "https://github.com/Xujiayao/Discord-MC-Chat/issues"
   },
   "license": "MIT",
-  "icon": "assets/discord_mc_chat/icon.png",
+  "icon": "icon/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
@@ -29,5 +30,15 @@
   },
   "suggests": {
     "another-mod": "*"
+  },
+  "custom": {
+    "modmenu": {
+      "links": {
+        "modmenu.wiki": "https://blog.xujiayao.com/posts/4ba0a17a/",
+        "modmenu.discord": "https://discord.gg/kbXkV6k2XU",
+        "modmenu.modrinth": "https://modrinth.com/mod/discord-mc-chat",
+        "modmenu.curseforge": "https://www.curseforge.com/minecraft/mc-mods/discord-mc-chat"
+      }
+    }
   }
 }

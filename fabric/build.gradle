@@ -3,23 +3,24 @@ apply plugin: "fabric-loom"
 version = mod_version
 
 base {
-    archivesName = mod_name + "-fabric"
+    archivesName = "Discord-MC-Chat-fabric"
 }
 
 dependencies {
     implementation project(":common")
 
-    // To change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${minecraft_version}"
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${loader_version}"
 }
 
 processResources {
-    inputs.property "version", version
-
+    var replaceProperties = [
+            mod_version: mod_version
+    ]
+    inputs.properties replaceProperties
     filesMatching("fabric.mod.json") {
-        expand "version": inputs.properties.version
+        expand replaceProperties
     }
 }
 

@@ -6,7 +6,7 @@ apply plugin: "net.neoforged.moddev"
 version = mod_version
 
 base {
-    archivesName = mod_name + "-common"
+    archivesName = "Discord-MC-Chat-common"
 }
 
 dependencies {
@@ -43,7 +43,7 @@ jar {
 shadowJar {
     dependsOn assemble
 
-    archiveBaseName.set("${mod_name}")
+    archiveBaseName.set("Discord-MC-Chat")
     archiveClassifier.set("")
     configurations = [project.configurations.shadow]
     mergeServiceFiles()
