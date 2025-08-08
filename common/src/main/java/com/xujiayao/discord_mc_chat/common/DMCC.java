@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.common;
 
 import com.xujiayao.discord_mc_chat.common.utils.Logger;
+import com.xujiayao.discord_mc_chat.common.utils.Utils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -10,6 +11,7 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
  */
 public class DMCC {
 
+	public static final String VERSION = Utils.getVersion();
 	public static final Logger LOGGER = new Logger();
 
 	public static void main(String[] args) {
@@ -19,7 +21,7 @@ public class DMCC {
 	}
 
 	public static void init(String loader) {
-		LOGGER.info("Initializing DMCC with loader: {}", loader);
+		LOGGER.info("Initializing DMCC {} with loader: {}", VERSION, loader);
 
 		try {
 			String token = ""; // intended to be empty
