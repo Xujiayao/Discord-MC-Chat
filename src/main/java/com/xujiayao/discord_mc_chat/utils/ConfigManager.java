@@ -10,6 +10,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 import static com.xujiayao.discord_mc_chat.Main.CONFIG;
 import static com.xujiayao.discord_mc_chat.Main.CONFIG_BACKUP_FILE;
@@ -44,6 +45,10 @@ public class ConfigManager {
 				}
 
 				update();
+
+				if (!Objects.equals(new Gson().toJson(CONFIG), new Gson().toJson(new Config()))) {
+					return;
+				}
 			} catch (Exception e) {
 				if (throwException) {
 					throw e;
@@ -51,20 +56,20 @@ public class ConfigManager {
 
 				LOGGER.error(ExceptionUtils.getStackTrace(e));
 			}
-		} else {
-			create();
-
-			LOGGER.error("-----------------------------------------");
-			LOGGER.error("Error: The config file cannot be found or is empty!");
-			LOGGER.error("");
-			LOGGER.error("Please follow the documentation to configure Discord-MC-Chat before restarting the server!");
-			LOGGER.error("More information + Docs: https://blog.xujiayao.com/posts/4ba0a17a/");
-			LOGGER.error("");
-			LOGGER.error("Stopping the server...");
-			LOGGER.error("-----------------------------------------");
-
-			System.exit(0);
 		}
+
+		create();
+
+		LOGGER.error("-----------------------------------------");
+		LOGGER.error("Error: The config file cannot be found or is empty!");
+		LOGGER.error("");
+		LOGGER.error("Please follow the documentation to configure Discord-MC-Chat before restarting the server!");
+		LOGGER.error("More information + Docs: https://blog.xujiayao.com/posts/4ba0a17a/");
+		LOGGER.error("");
+		LOGGER.error("Stopping the server...");
+		LOGGER.error("-----------------------------------------");
+
+		System.exit(0);
 	}
 
 	private static void create() {
