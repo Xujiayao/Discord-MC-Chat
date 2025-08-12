@@ -63,7 +63,20 @@ public class Config {
 
 		public boolean shutdownImmediately = false;
 
-		public List<String> excludedCommands = List.of("\\/msg ([^@].*)", "\\/tell ([^@].*)", "\\/tellraw ([^@].*)", "\\/w ([^@].*)", "\\/teammsg (.*)", "\\/tm (.*)");
+		public List<String> excludedCommands = List.of(
+				"\\/msg ([^@].*)",
+				"\\/tell ([^@].*)",
+				"\\/tellraw ([^@].*)",
+				"\\/w ([^@].*)",
+				"\\/teammsg (.*)",
+				"\\/tm (.*)",
+				"\\/login (.*)",
+				"\\/l (.*)",
+				"\\/register (.*)",
+				"\\/reg (.*)",
+				"\\/account (.*)",
+				"\\/auth (.*)"
+		);
 
 		public List<String> adminsIds = List.of("");
 	}
