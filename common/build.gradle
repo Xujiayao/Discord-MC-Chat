@@ -23,6 +23,7 @@ dependencies {
     shadow("org.slf4j:slf4j-jdk14:2.0.17")
 
     shadow("com.fasterxml.jackson.core:jackson-databind:2.19.2")
+    shadow("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.19.2")
 }
 
 neoForge {
