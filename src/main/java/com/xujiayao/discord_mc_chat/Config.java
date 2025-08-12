@@ -1,6 +1,5 @@
 package com.xujiayao.discord_mc_chat;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.xujiayao.discord_mc_chat.Main.VERSION;
@@ -66,7 +65,7 @@ public class Config {
 
 		public List<String> excludedCommands = List.of("\\/msg ([^@].*)", "\\/tell ([^@].*)", "\\/tellraw ([^@].*)", "\\/w ([^@].*)", "\\/teammsg (.*)", "\\/tm (.*)");
 
-		public List<String> adminsIds = new ArrayList<>();
+		public List<String> adminsIds = List.of("");
 	}
 
 	public static class MultiServer {
@@ -74,7 +73,7 @@ public class Config {
 		public String host = "127.0.0.1";
 		public int port = 5000;
 		public String name = "SMP";
-		public List<String> botIds = new ArrayList<>();
+		public List<String> botIds = List.of("");
 	}
 
 	@SuppressWarnings("unused")
