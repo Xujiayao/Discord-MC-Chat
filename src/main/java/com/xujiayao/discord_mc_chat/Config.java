@@ -64,10 +64,10 @@ public class Config {
 		public boolean shutdownImmediately = false;
 
 		public List<String> excludedCommands = List.of(
-				"\\/msg ([^@].*)",
-				"\\/tell ([^@].*)",
-				"\\/tellraw ([^@].*)",
-				"\\/w ([^@].*)",
+				"\\/msg (?!@a)(.*)",
+				"\\/tell (?!@a)(.*)",
+				"\\/tellraw (?!@a)(.*)",
+				"\\/w (?!@a)(.*)",
 				"\\/teammsg (.*)",
 				"\\/tm (.*)",
 				"\\/login (.*)",
