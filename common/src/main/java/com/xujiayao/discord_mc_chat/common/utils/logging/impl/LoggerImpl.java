@@ -168,30 +168,30 @@ public class LoggerImpl implements Logger {
 		return true;
 	}
 
-	// TRACE
+	// TRACE (no-operation)
 	@Override
 	public void trace(String msg) {
-		log("TRACE", msg);
+		// log("TRACE", msg);
 	}
 
 	@Override
 	public void trace(String format, Object arg) {
-		log("TRACE", format(format, arg));
+		// log("TRACE", format(format, arg));
 	}
 
 	@Override
 	public void trace(String format, Object arg1, Object arg2) {
-		log("TRACE", format(format, arg1, arg2));
+		// log("TRACE", format(format, arg1, arg2));
 	}
 
 	@Override
 	public void trace(String format, Object... arguments) {
-		log("TRACE", format(format, arguments));
+		// log("TRACE", format(format, arguments));
 	}
 
 	@Override
 	public void trace(String msg, Throwable t) {
-		log("TRACE", msg, t);
+		// log("TRACE", msg, t);
 	}
 
 	@Override
@@ -219,30 +219,30 @@ public class LoggerImpl implements Logger {
 		trace(msg, t);
 	}
 
-	// DEBUG
+	// DEBUG (no-operation)
 	@Override
 	public void debug(String msg) {
-		log("DEBUG", msg);
+		// log("DEBUG", msg);
 	}
 
 	@Override
 	public void debug(String format, Object arg) {
-		log("DEBUG", format(format, arg));
+		// log("DEBUG", format(format, arg));
 	}
 
 	@Override
 	public void debug(String format, Object arg1, Object arg2) {
-		log("DEBUG", format(format, arg1, arg2));
+		// log("DEBUG", format(format, arg1, arg2));
 	}
 
 	@Override
 	public void debug(String format, Object... arguments) {
-		log("DEBUG", format(format, arguments));
+		// log("DEBUG", format(format, arguments));
 	}
 
 	@Override
 	public void debug(String msg, Throwable t) {
-		log("DEBUG", msg, t);
+		// log("DEBUG", msg, t);
 	}
 
 	@Override
