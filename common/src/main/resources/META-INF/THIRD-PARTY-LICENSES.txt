@@ -13,7 +13,6 @@ This project includes the following third-party libraries. Each is distributed u
 2. SLF4J
    - Maven coordinates:
      - org.slf4j:slf4j-api:2.0.17
-     - org.slf4j:slf4j-jdk14:2.0.17
    - License: MIT License
    - Homepage: https://www.slf4j.org/
 

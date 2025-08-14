@@ -1,7 +1,7 @@
 package com.xujiayao.discord_mc_chat.common;
 
-import com.xujiayao.discord_mc_chat.common.utils.Logger;
 import com.xujiayao.discord_mc_chat.common.utils.Utils;
+import com.xujiayao.discord_mc_chat.common.utils.logging.Logger;
 
 /**
  * @author Xujiayao
