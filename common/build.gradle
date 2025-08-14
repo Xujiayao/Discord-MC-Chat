@@ -55,6 +55,7 @@ shadowJar {
     exclude "**/*-info.class"
     exclude "META-INF/maven/"
     exclude "META-INF/proguard/"
+    exclude "META-INF/versions/9/"
     exclude "META-INF/versions/11/"
     exclude "META-INF/versions/17/"
     exclude {
@@ -77,6 +78,7 @@ shadowJar {
     relocate "org.intellij", "dmcc_dep.org.intellij"
     relocate "org.jetbrains", "dmcc_dep.org.jetbrains"
     relocate "org.slf4j", "dmcc_dep.org.slf4j"
+    relocate "org.yaml", "dmcc_dep.org.yaml"
 
     from "../LICENSE"
 }
