@@ -27,7 +27,7 @@ dependencies {
 }
 
 neoForge {
-    version = "21.8.23"
+    version = neo_version
 }
 
 tasks.withType(JavaCompile).configureEach {
