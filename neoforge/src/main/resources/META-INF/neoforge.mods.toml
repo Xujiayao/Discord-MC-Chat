@@ -19,13 +19,13 @@ description = '''Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat and M
 
 config = "neoforge.dmcc.mixins.json"
 
-[[dependencies.discord_mc_chat]]
+#[[dependencies.discord_mc_chat]]
 
-modId = "neoforge"
-type = "required"
-versionRange = "[${neo_version},)"
-ordering = "NONE"
-side = "BOTH"
+#modId = "neoforge"
+#type = "required"
+#versionRange = "[${neo_version},)"
+#ordering = "NONE"
+#side = "BOTH"
 
 [[dependencies.discord_mc_chat]]
 
