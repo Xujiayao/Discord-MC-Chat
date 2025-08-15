@@ -12,8 +12,6 @@ public class DMCC {
 	public static final Logger LOGGER = new Logger();
 
 	public static void main(String[] args) {
-		LOGGER.info("Hello, World!");
-
 		init("Standalone");
 	}
 
