@@ -55,27 +55,27 @@
   "message.unformattedResponseMessage": "    ┌──── <%name%> %message%",
   "message.unformattedChatMessage": "[%server%] <%name%> %message%",
   "message.unformattedOtherMessage": "[%server%] %message%",
-  "message.unformattedCommandNotice": "%name% executed %command% command!",
+  "message.unformattedCommandNotice": "%name% %command% komutunu kullandı!",
   
   "message.formattedResponseMessage": "[{\"text\":\"    ┌──── \",\"bold\":true,\"color\":\"dark_gray\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"dark_gray\"}]",
   "message.formattedChatMessage": "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"<%name%> \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]",
   "message.formattedOtherMessage": "[{\"text\":\"[%server%] \",\"bold\":true,\"color\":\"blue\"},{\"text\":\"%message%\",\"bold\":false,\"color\":\"gray\"}]",
-  "message.formattedCommandNotice": "[{\"text\":\"%name% \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"executed %command% command!\",\"bold\":false,\"color\":\"gray\"}]",
+  "message.formattedCommandNotice": "[{\"text\":\"%name% \",\"bold\":false,\"color\":\"%roleColor%\"},{\"text\":\"%command% komutunu kullandı!\",\"bold\":false,\"color\":\"gray\"}]",
   
   "message.messageWithoutWebhook": "<%name%> %message%",
   "message.messageWithoutWebhookForMultiServer": "[%server%] <%name%> %message%",
   
-  "message.serverStarted": "**Server started!**",
-  "message.serverStopped": "**Server stopped!**",
+  "message.serverStarted": "**Sunucu başlatıldı!**",
+  "message.serverStopped": "**Sunucu durduruldu!**",
   
-  "message.joinServer": "**%playerName% joined the game**",
-  "message.leftServer": "**%playerName% left the game**",
+  "message.joinServer": "**%playerName% oyuna katıldı**",
+  "message.leftServer": "**%playerName% oyundan ayrıldı**",
   
   "message.deathMessage": "**%deathMessage%**",
   
-  "message.advancementTask": "**%playerName% has made the advancement [%advancement%]**\n*%description%*",
-  "message.advancementChallenge": "**%playerName% has completed the challenge [%advancement%]**\n*%description%*",
-  "message.advancementGoal": "**%playerName% has reached the goal [%advancement%]**\n*%description%*",
+  "message.advancementTask": "**%playerName%, [%advancement%] başarımını yaptı**\n*%description%*",
+  "message.advancementChallenge": "**%playerName%, [%advancement%] mücadelesini tamamladı**\n*%description%*",
+  "message.advancementGoal": "**%playerName%, [%advancement%] hedefine ulaştı**\n*%description%*",
   
   "message.highMspt": "**Sunucu MSPT (%mspt%), %msptLimit% değerinin üzerinde!**",
   
