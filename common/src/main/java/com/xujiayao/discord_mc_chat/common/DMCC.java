@@ -11,10 +11,6 @@ public class DMCC {
 	public static final String VERSION = Utils.getVersion();
 	public static final Logger LOGGER = new Logger();
 
-	public static void main(String[] args) {
-		init("Standalone");
-	}
-
 	public static void init(String loader) {
 		LOGGER.info("Initializing DMCC {} with loader: {}", VERSION, loader);
 	}
