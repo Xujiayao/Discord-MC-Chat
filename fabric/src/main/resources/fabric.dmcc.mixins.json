@@ -6,7 +6,8 @@
     "MixinPlayerAdvancements",
     "MixinPlayerList",
     "MixinSayCommand",
-    "MixinServerPlayer"
+    "MixinServerPlayer",
+    "MixinTellRawCommand"
   ],
   "injectors": {
     "defaultRequire": 1
