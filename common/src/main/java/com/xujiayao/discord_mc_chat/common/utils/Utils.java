@@ -10,7 +10,7 @@ import java.io.Reader;
 
 public class Utils {
 
-	public static String getVersion() {
+	public static String getVersionByResource() {
 		InputStream stream = Utils.class.getResourceAsStream("/fabric.mod.json");
 		if (stream == null) {
 			throw new RuntimeException("File \"fabric.mod.json\" not found");
