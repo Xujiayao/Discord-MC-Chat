@@ -2,6 +2,7 @@ package com.xujiayao.discord_mc_chat.common;
 
 import com.xujiayao.discord_mc_chat.common.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.common.core.RunModeManager;
+import com.xujiayao.discord_mc_chat.common.discord.DiscordClient;
 import com.xujiayao.discord_mc_chat.common.i18n.TranslationService;
 import com.xujiayao.discord_mc_chat.common.monitoring.MonitoringService;
 import com.xujiayao.discord_mc_chat.common.utils.Utils;
@@ -139,7 +140,9 @@ public class DMCC {
 		// 初始化监控服务
 		initializeMonitoringService();
 		
-		// TODO: 初始化Discord模块
+		// 初始化Discord模块
+		initializeDiscordModule();
+		
 		// TODO: 初始化Minecraft模块（仅模组模式）
 		// TODO: 初始化账户链接系统
 		
@@ -171,6 +174,28 @@ public class DMCC {
 	}
 	
 	/**
+	 * 初始化Discord模块
+	 */
+	private void initializeDiscordModule() {
+		LOGGER.info("初始化Discord模块...");
+		DiscordClient discordClient = DiscordClient.getInstance();
+		
+		// 异步初始化Discord连接
+		discordClient.initialize().thenAccept(success -> {
+			if (success) {
+				LOGGER.info("Discord模块初始化成功");
+				// 发送服务器启动通知
+				discordClient.sendServerStartNotification();
+			} else {
+				LOGGER.error("Discord模块初始化失败");
+			}
+		}).exceptionally(throwable -> {
+			LOGGER.error("Discord模块初始化异常", throwable);
+			return null;
+		});
+	}
+	
+	/**
 	 * 注册JVM关闭钩子
 	 */
 	private void registerShutdownHook() {
@@ -197,13 +222,17 @@ public class DMCC {
 		running = false;
 		
 		try {
-			// 1. 停止监控服务
+			// 1. 关闭Discord连接
+			LOGGER.info("关闭Discord连接...");
+			DiscordClient.getInstance().shutdown();
+			
+			// 2. 停止监控服务
 			if (MonitoringService.getInstance() != null) {
 				LOGGER.info("关闭监控服务...");
 				MonitoringService.getInstance().stop();
 			}
 			
-			// 2. 停止定时任务
+			// 3. 停止定时任务
 			if (scheduledExecutor != null && !scheduledExecutor.isShutdown()) {
 				LOGGER.info("关闭定时任务...");
 				scheduledExecutor.shutdown();
@@ -213,8 +242,7 @@ public class DMCC {
 				}
 			}
 			
-			// 3. 关闭其他组件
-			// TODO: 关闭Discord连接
+			// 4. 关闭其他组件
 			// TODO: 关闭Minecraft组件（仅模组模式）
 			// TODO: 关闭其他服务
 			
