@@ -6,6 +6,7 @@
     "MixinPlayerAdvancements",
     "MixinPlayerList",
     "MixinSayCommand",
+    "MixinServerGamePacketListenerImpl",
     "MixinServerPlayer",
     "MixinTellRawCommand"
   ],
