@@ -18,6 +18,6 @@ public class MixinServerPlayer {
 	@Inject(method = "die", at = @At("HEAD"))
 	private void die(DamageSource damageSource, CallbackInfo ci) {
 		// PlayerDie Event
-		LOGGER.info("Player {} has died", ((ServerPlayer) (Object) this).getName().getString());
+		LOGGER.info("[DMCC] Player {} has died", ((ServerPlayer) (Object) this).getDisplayName().getString());
 	}
 }

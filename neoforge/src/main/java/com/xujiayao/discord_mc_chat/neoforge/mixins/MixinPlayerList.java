@@ -20,12 +20,12 @@ public class MixinPlayerList {
 	@Inject(method = "placeNewPlayer", at = @At("RETURN"))
 	private void placeNewPlayer(Connection connection, ServerPlayer serverPlayer, CommonListenerCookie commonListenerCookie, CallbackInfo ci) {
 		// PlayerJoin Event
-		LOGGER.info("Player {} joined the game", serverPlayer.getName().getString());
+		LOGGER.info("[DMCC] Player {} joined the game", serverPlayer.getDisplayName().getString());
 	}
 
 	@Inject(method = "remove", at = @At("HEAD"))
 	private void remove(ServerPlayer serverPlayer, CallbackInfo ci) {
 		// PlayerQuit Event
-		LOGGER.info("Player {} left the game", serverPlayer.getName().getString());
+		LOGGER.info("[DMCC] Player {} left the game", serverPlayer.getDisplayName().getString());
 	}
 }

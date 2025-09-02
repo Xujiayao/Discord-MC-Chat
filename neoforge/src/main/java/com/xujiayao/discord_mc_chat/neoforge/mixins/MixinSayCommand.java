@@ -2,12 +2,12 @@ package com.xujiayao.discord_mc_chat.neoforge.mixins;
 
 import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.arguments.MessageArgument;
+import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.server.commands.SayCommand;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
 
@@ -17,9 +17,9 @@ import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
 @Mixin(SayCommand.class)
 public class MixinSayCommand {
 
-	@Inject(method = "lambda$register$1", at = @At("HEAD"))
-	private static void lambda$register$1(CommandContext<CommandSourceStack> commandContext, CallbackInfoReturnable<Integer> cir) {
+	@Inject(method = "lambda$register$0", at = @At("HEAD"))
+	private static void lambda$register$0(CommandContext<CommandSourceStack> commandContext, PlayerChatMessage playerChatMessage, CallbackInfo ci) {
 		// PlayerSay Event
-		LOGGER.info("Player {} said: {}", commandContext.getSource().getTextName(), commandContext.getArgument("message", MessageArgument.class));
+		LOGGER.info("[DMCC] Player {} said: {}", commandContext.getSource().getDisplayName().getString(), playerChatMessage.decoratedContent().getString());
 	}
 }
