@@ -12,15 +12,15 @@ dependencies {
         exclude module: "opus-java" // for encoding audio into opus
         exclude module: "tink" // for encrypting and decrypting audio
         exclude module: "slf4j-api"
-        exclude module: "jackson-core"
-        exclude module: "jackson-databind"
-        exclude module: "jackson-annotations"
+//        exclude module: "jackson-core"
+//        exclude module: "jackson-databind"
+//        exclude module: "jackson-annotations"
     }
 
     shadow("org.slf4j:slf4j-api:2.0.17")
 
-    shadow("com.fasterxml.jackson.core:jackson-databind:2.19.2")
-    shadow("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.19.2")
+//    shadow("com.fasterxml.jackson.core:jackson-databind:2.19.2")
+//    shadow("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.19.2")
 }
 
 neoForge {

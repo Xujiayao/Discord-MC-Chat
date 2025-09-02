@@ -20,8 +20,10 @@ public class DMCC {
 	}
 
 	public static void init(String loader, String version) {
-		VERSION = version;
+		new Thread(() -> {
+			VERSION = version;
 
-		LOGGER.info("Initializing DMCC {} with loader: {}", VERSION, loader);
+			LOGGER.info("Initializing DMCC {} with loader: {}", VERSION, loader);
+		}, "DMCC-Main").start();
 	}
 }

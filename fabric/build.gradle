@@ -38,26 +38,6 @@ jar {
     inputs.property "archivesName", base.archivesName
 }
 
-//========== Fabric Mixins ==========
-
-def commonMixins = file("../common/src/main/java/com/xujiayao/discord_mc_chat/common/mixins")
-def fabricMixins = file("src/main/java/com/xujiayao/discord_mc_chat/common/mixins")
-def fabricCommon = file("src/main/java/com/xujiayao/discord_mc_chat/common")
-
-tasks.compileJava.doFirst {
-    if (commonMixins.exists()) {
-        ant.copy(todir: fabricMixins) {
-            fileset(dir: commonMixins)
-        }
-    }
-}
-
-tasks.compileJava.doLast {
-    if (fabricCommon.exists()) {
-        ant.delete(dir: fabricCommon)
-    }
-}
-
 loom {
     mixin {
         defaultRefmapName = "fabric.dmcc.refmap.json"
