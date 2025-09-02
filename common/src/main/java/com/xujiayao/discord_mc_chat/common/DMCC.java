@@ -2,6 +2,8 @@ package com.xujiayao.discord_mc_chat.common;
 
 import com.xujiayao.discord_mc_chat.common.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.common.core.RunModeManager;
+import com.xujiayao.discord_mc_chat.common.i18n.TranslationService;
+import com.xujiayao.discord_mc_chat.common.monitoring.MonitoringService;
 import com.xujiayao.discord_mc_chat.common.utils.Utils;
 import com.xujiayao.discord_mc_chat.common.utils.logging.Logger;
 
@@ -131,11 +133,15 @@ public class DMCC {
 	private void initializeCoreComponents() {
 		LOGGER.info("初始化核心组件...");
 		
+		// 初始化国际化服务
+		initializeInternationalization();
+		
+		// 初始化监控服务
+		initializeMonitoringService();
+		
 		// TODO: 初始化Discord模块
 		// TODO: 初始化Minecraft模块（仅模组模式）
-		// TODO: 初始化工具模块
 		// TODO: 初始化账户链接系统
-		// TODO: 启动监控服务
 		
 		RunModeManager runModeManager = RunModeManager.getInstance();
 		if (runModeManager.isModMode()) {
@@ -144,6 +150,24 @@ public class DMCC {
 		} else {
 			LOGGER.info("独立模式：跳过Minecraft集成组件");
 		}
+	}
+	
+	/**
+	 * 初始化国际化服务
+	 */
+	private void initializeInternationalization() {
+		LOGGER.info("初始化国际化服务...");
+		TranslationService translationService = TranslationService.getInstance();
+		translationService.setLanguage(configManager.getConfig().getLanguage());
+	}
+	
+	/**
+	 * 初始化监控服务
+	 */
+	private void initializeMonitoringService() {
+		LOGGER.info("初始化监控服务...");
+		MonitoringService.initialize(scheduledExecutor);
+		MonitoringService.getInstance().start();
 	}
 	
 	/**
@@ -173,7 +197,13 @@ public class DMCC {
 		running = false;
 		
 		try {
-			// 1. 停止定时任务
+			// 1. 停止监控服务
+			if (MonitoringService.getInstance() != null) {
+				LOGGER.info("关闭监控服务...");
+				MonitoringService.getInstance().stop();
+			}
+			
+			// 2. 停止定时任务
 			if (scheduledExecutor != null && !scheduledExecutor.isShutdown()) {
 				LOGGER.info("关闭定时任务...");
 				scheduledExecutor.shutdown();
@@ -183,7 +213,7 @@ public class DMCC {
 				}
 			}
 			
-			// 2. 关闭其他组件
+			// 3. 关闭其他组件
 			// TODO: 关闭Discord连接
 			// TODO: 关闭Minecraft组件（仅模组模式）
 			// TODO: 关闭其他服务
