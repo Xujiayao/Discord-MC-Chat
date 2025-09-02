@@ -4,6 +4,7 @@ import com.xujiayao.discord_mc_chat.common.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.common.core.RunModeManager;
 import com.xujiayao.discord_mc_chat.common.discord.DiscordClient;
 import com.xujiayao.discord_mc_chat.common.i18n.TranslationService;
+import com.xujiayao.discord_mc_chat.common.minecraft.MinecraftIntegration;
 import com.xujiayao.discord_mc_chat.common.monitoring.MonitoringService;
 import com.xujiayao.discord_mc_chat.common.utils.Utils;
 import com.xujiayao.discord_mc_chat.common.utils.logging.Logger;
@@ -143,13 +144,14 @@ public class DMCC {
 		// 初始化Discord模块
 		initializeDiscordModule();
 		
-		// TODO: 初始化Minecraft模块（仅模组模式）
+		// 初始化Minecraft模块（仅模组模式）
+		initializeMinecraftModule();
+		
 		// TODO: 初始化账户链接系统
 		
 		RunModeManager runModeManager = RunModeManager.getInstance();
 		if (runModeManager.isModMode()) {
-			LOGGER.info("模组模式：初始化Minecraft集成组件");
-			// 初始化Minecraft相关组件
+			LOGGER.info("模组模式：所有组件初始化完成");
 		} else {
 			LOGGER.info("独立模式：跳过Minecraft集成组件");
 		}
@@ -193,6 +195,19 @@ public class DMCC {
 			LOGGER.error("Discord模块初始化异常", throwable);
 			return null;
 		});
+	}
+	
+	/**
+	 * 初始化Minecraft模块
+	 */
+	private void initializeMinecraftModule() {
+		RunModeManager runModeManager = RunModeManager.getInstance();
+		if (runModeManager.isModMode()) {
+			LOGGER.info("初始化Minecraft模块...");
+			// Minecraft集成将在服务器启动时通过Mixin自动初始化
+			// 这里只是确保相关组件可用
+			MinecraftIntegration.getInstance(); // 创建实例
+		}
 	}
 	
 	/**
