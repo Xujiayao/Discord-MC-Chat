@@ -18,7 +18,7 @@ public class MixinTellRawCommand {
 
 	@Inject(method = "lambda$register$0", at = @At("HEAD"))
 	private static void lambda$register$0(CommandContext<CommandSourceStack> commandContext, CallbackInfoReturnable<Integer> cir) {
-		// PlayerSay Event
+		// SourceTellRaw Event
 		LOGGER.info("[DMCC] Player {} said: {}", commandContext.getSource().getDisplayName().getString(), commandContext);
 	}
 }

@@ -19,7 +19,7 @@ public class MixinSayCommand {
 
 	@Inject(method = "method_43657", at = @At("HEAD"))
 	private static void method_43657(CommandContext<CommandSourceStack> commandContext, PlayerChatMessage playerChatMessage, CallbackInfo ci) {
-		// PlayerSay Event
+		// SourceSay Event
 		LOGGER.info("[DMCC] Player {} said: {}", commandContext.getSource().getDisplayName().getString(), playerChatMessage.decoratedContent().getString());
 	}
 }
