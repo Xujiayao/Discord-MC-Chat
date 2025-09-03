@@ -81,6 +81,8 @@ public class LoggerImpl implements Logger {
 
 	// Helper methods
 	private void log(String level, String msg, Throwable t) {
+		msg = escape(msg);
+
 		if (isMinecraftEnvironment) {
 			try {
 				if (t == null) {
@@ -97,6 +99,8 @@ public class LoggerImpl implements Logger {
 			String time = new SimpleDateFormat("HH:mm:ss").format(System.currentTimeMillis());
 			String thread = Thread.currentThread().getName();
 
+			msg = msg.replace("\\", "\\\\");
+
 			System.out.println(format("[{}] [{}/{}]: {}", time, thread, level, msg));
 
 			if (t != null) {
@@ -107,6 +111,15 @@ public class LoggerImpl implements Logger {
 
 	private void log(String level, String msg) {
 		log(level, msg, null);
+	}
+
+	// Escape special characters in strings
+	private String escape(String s) {
+		return s.replace("\t", "\\t")
+				.replace("\b", "\\b")
+				.replace("\n", "\\n")
+				.replace("\r", "\\r")
+				.replace("\f", "\\f");
 	}
 
 	// Simple {} placeholder replacement

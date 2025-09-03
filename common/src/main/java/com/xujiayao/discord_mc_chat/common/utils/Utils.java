@@ -10,6 +10,7 @@ import java.io.Reader;
 
 public class Utils {
 
+	// Get version from fabric.mod.json
 	public static String getVersionByResource() {
 		InputStream stream = Utils.class.getResourceAsStream("/fabric.mod.json");
 		if (stream == null) {
