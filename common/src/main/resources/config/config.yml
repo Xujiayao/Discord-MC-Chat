@@ -86,6 +86,7 @@ mspt_monitoring:
 # 控制台转发设置
 console_forwarding:
   enable: true
+  execute_command: true
   channel: console_forwarding
 
 # 账户绑定设置
