@@ -8,9 +8,41 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
+/**
+ * Utility class
+ *
+ * @author Xujiayao
+ */
 public class Utils {
 
-	// Get version from fabric.mod.json
+	/**
+	 * Check if running in a Minecraft environment (Fabric or NeoForge)
+	 *
+	 * @return True if running in a Minecraft environment, false otherwise
+	 */
+	public static boolean isMinecraftEnvironment() {
+		// Fabric
+		try {
+			Class.forName("net.fabricmc.loader.api.FabricLoader");
+			return true;
+		} catch (ClassNotFoundException ignored) {
+		}
+
+		// NeoForge
+		try {
+			Class.forName("net.neoforged.fml.loading.FMLLoader");
+			return true;
+		} catch (ClassNotFoundException ignored) {
+		}
+
+		return false;
+	}
+
+	/**
+	 * Get DMCC version from resource file "fabric.mod.json"
+	 *
+	 * @return DMCC version in string
+	 */
 	public static String getVersionByResource() {
 		InputStream stream = Utils.class.getResourceAsStream("/fabric.mod.json");
 		if (stream == null) {

@@ -12,6 +12,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
+ * An implementation of {@link ILoggerFactory} which always returns
+ * {@link LoggerImpl} instances.
+ *
  * @author Ceki G&uuml;lc&uuml;
  * @author Xujiayao
  */
@@ -23,15 +26,26 @@ public class LoggerFactory implements ILoggerFactory {
 		loggerMap = new ConcurrentHashMap<>();
 	}
 
+	/**
+	 * Return an appropriate {@link LoggerImpl} instance by name.
+	 * <p>
+	 * This method will call {@link #createLogger(String)} if the logger
+	 * has not been created yet.
+	 *
+	 * @param name The name of the logger to retrieve
+	 * @return The logger instance
+	 */
 	public Logger getLogger(String name) {
 		return loggerMap.computeIfAbsent(name, this::createLogger);
 	}
 
+	/**
+	 * Actually creates the logger for the given name.
+	 *
+	 * @param name The name of the logger to create
+	 * @return The newly created logger
+	 */
 	protected Logger createLogger(String name) {
 		return new LoggerImpl(name);
-	}
-
-	protected void reset() {
-		loggerMap.clear();
 	}
 }

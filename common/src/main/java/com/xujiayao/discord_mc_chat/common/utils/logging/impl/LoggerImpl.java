@@ -9,24 +9,34 @@ import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.xujiayao.discord_mc_chat.common.DMCC.IS_MINECRAFT_ENV;
+
 /**
+ * DMCC Logger implementation.
+ *
  * @author Xujiayao
  */
 public class LoggerImpl implements Logger {
 
 	private final String name;
-	private final boolean isMinecraftEnvironment;
 
 	private final Object minecraftLogger;
 
 	private final Map<String, Method> logMethods = new HashMap<>();
 	private final Map<String, Method> logThrowMethods = new HashMap<>();
 
+	/**
+	 * Create a new Logger instance.
+	 * <p>
+	 * If running in a Minecraft environment, initializes the Minecraft logger via reflection.
+	 * Otherwise, sets up for standard output logging.
+	 *
+	 * @param name Logger name
+	 */
 	public LoggerImpl(String name) {
 		this.name = name;
-		this.isMinecraftEnvironment = isMinecraftEnvironment();
 
-		if (isMinecraftEnvironment) {
+		if (IS_MINECRAFT_ENV) {
 			try {
 				String loggerClassName = "dmcc_dep.org.slf4j.Logger";
 				String loggerFactoryClassName = "dmcc_dep.org.slf4j.LoggerFactory";
@@ -56,34 +66,27 @@ public class LoggerImpl implements Logger {
 		}
 	}
 
-	private boolean isMinecraftEnvironment() {
-		// Fabric
-		try {
-			Class.forName("net.fabricmc.loader.api.FabricLoader");
-			return true;
-		} catch (ClassNotFoundException ignored) {
-		}
-
-		// NeoForge
-		try {
-			Class.forName("net.neoforged.fml.loading.FMLLoader");
-			return true;
-		} catch (ClassNotFoundException ignored) {
-		}
-
-		return false;
-	}
-
 	@Override
 	public String getName() {
 		return name;
 	}
 
 	// Helper methods
+
+	/**
+	 * Log a message at the specified level, optionally with a throwable.
+	 * <p>
+	 * If running in a Minecraft environment, uses the Minecraft logger via reflection.
+	 * Otherwise, logs to standard output in Minecraft style.
+	 *
+	 * @param level Logging level (TRACE, DEBUG, INFO, WARN, ERROR)
+	 * @param msg   Message to log
+	 * @param t     Throwable to log (can be null)
+	 */
 	private void log(String level, String msg, Throwable t) {
 		msg = escape(msg);
 
-		if (isMinecraftEnvironment) {
+		if (IS_MINECRAFT_ENV) {
 			try {
 				if (t == null) {
 					Method m = logMethods.get(level);
@@ -109,11 +112,22 @@ public class LoggerImpl implements Logger {
 		}
 	}
 
+	/**
+	 * Log a message at the specified level without a throwable.
+	 *
+	 * @param level Logging level (TRACE, DEBUG, INFO, WARN, ERROR)
+	 * @param msg   Message to log
+	 */
 	private void log(String level, String msg) {
 		log(level, msg, null);
 	}
 
-	// Escape special characters in strings
+	/**
+	 * Escape special characters in strings.
+	 *
+	 * @param s String to escape
+	 * @return Escaped string
+	 */
 	private String escape(String s) {
 		return s.replace("\t", "\\t")
 				.replace("\b", "\\b")
@@ -122,7 +136,13 @@ public class LoggerImpl implements Logger {
 				.replace("\f", "\\f");
 	}
 
-	// Simple {} placeholder replacement
+	/**
+	 * Simple {} placeholder replacement.
+	 *
+	 * @param str  String with {} placeholders
+	 * @param args Arguments to replace the placeholders
+	 * @return String with placeholders replaced
+	 */
 	private String format(String str, Object... args) {
 		for (Object arg : args) {
 			str = str.replaceFirst("\\{}", arg == null ? "null" : arg.toString());
@@ -131,6 +151,7 @@ public class LoggerImpl implements Logger {
 	}
 
 	// Logging level checks
+
 	@Override
 	public boolean isTraceEnabled() {
 		return true;
@@ -182,6 +203,7 @@ public class LoggerImpl implements Logger {
 	}
 
 	// TRACE (no-operation)
+
 	@Override
 	public void trace(String msg) {
 		// log("TRACE", msg);
@@ -233,6 +255,7 @@ public class LoggerImpl implements Logger {
 	}
 
 	// DEBUG (no-operation)
+
 	@Override
 	public void debug(String msg) {
 		// log("DEBUG", msg);

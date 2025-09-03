@@ -13,12 +13,21 @@ import org.slf4j.spi.MDCAdapter;
 import org.slf4j.spi.SLF4JServiceProvider;
 
 /**
+ * slf4j-simple's implementation of {@link SLF4JServiceProvider}.
+ *
  * @author Ceki G&uuml;lc&uuml;
  * @author Xujiayao
  */
 public class ServiceProvider implements SLF4JServiceProvider {
 
+	/**
+	 * Declare the version of the SLF4J API this implementation is compiled against.
+	 * The value of this field is modified with each major release.
+	 * <p>
+	 * To avoid constant folding by the compiler, this field must *not* be final.
+	 */
 	public static String REQUESTED_API_VERSION = "2.0.99"; // !final
+
 	private final IMarkerFactory markerFactory;
 	private final MDCAdapter mdcAdapter;
 	private ILoggerFactory loggerFactory;
