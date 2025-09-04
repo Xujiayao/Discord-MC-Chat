@@ -1,5 +1,6 @@
 package com.xujiayao.discord_mc_chat.common.utils.logging.impl;
 
+import com.xujiayao.discord_mc_chat.common.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.Marker;
 
@@ -9,8 +10,6 @@ import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.xujiayao.discord_mc_chat.common.DMCC.IS_MINECRAFT_ENV;
-
 /**
  * DMCC Logger implementation.
  *
@@ -19,6 +18,7 @@ import static com.xujiayao.discord_mc_chat.common.DMCC.IS_MINECRAFT_ENV;
 public class LoggerImpl implements Logger {
 
 	private final String name;
+	private final boolean isMinecraftEnvironment;
 
 	private final Object minecraftLogger;
 
@@ -35,8 +35,9 @@ public class LoggerImpl implements Logger {
 	 */
 	public LoggerImpl(String name) {
 		this.name = name;
+		this.isMinecraftEnvironment = Utils.isMinecraftEnvironment();
 
-		if (IS_MINECRAFT_ENV) {
+		if (isMinecraftEnvironment) {
 			try {
 				String loggerClassName = "dmcc_dep.org.slf4j.Logger";
 				String loggerFactoryClassName = "dmcc_dep.org.slf4j.LoggerFactory";
@@ -86,7 +87,7 @@ public class LoggerImpl implements Logger {
 	private void log(String level, String msg, Throwable t) {
 		msg = escape(msg);
 
-		if (IS_MINECRAFT_ENV) {
+		if (isMinecraftEnvironment) {
 			try {
 				if (t == null) {
 					Method m = logMethods.get(level);

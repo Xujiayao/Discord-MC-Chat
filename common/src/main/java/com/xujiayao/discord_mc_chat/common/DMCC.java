@@ -12,7 +12,6 @@ import com.xujiayao.discord_mc_chat.common.utils.logging.Logger;
 public class DMCC {
 
 	public static final Logger LOGGER = new Logger();
-	public static final boolean IS_MINECRAFT_ENV = Utils.isMinecraftEnvironment();
 	public static String VERSION;
 
 	public static void main(String[] args) {

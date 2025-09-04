@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+import com.xujiayao.discord_mc_chat.common.utils.Utils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,7 +18,6 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.function.Function;
 
-import static com.xujiayao.discord_mc_chat.common.DMCC.IS_MINECRAFT_ENV;
 import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
 
 /**
@@ -63,7 +63,7 @@ public class ConfigManager {
 				copyDefaultConfig(configPath);
 
 				LOGGER.info("Created default configuration file at \"{}\"", configPath);
-				LOGGER.info("Please edit the configuration file before restarting {}", (IS_MINECRAFT_ENV ? "the Minecraft server" : "DMCC"));
+				LOGGER.info("Please edit the configuration file before restarting {}", (Utils.isMinecraftEnvironment() ? "the Minecraft server" : "DMCC"));
 				return false;
 			}
 
