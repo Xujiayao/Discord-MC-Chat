@@ -125,8 +125,18 @@ public class ConfigManager {
 			return false;
 		}
 
+		// Check for extra keys in the user's config
+		Set<String> extraKeys = findExtraKeys(templateConfig, config, "");
+		if (!extraKeys.isEmpty()) {
+			LOGGER.warn("Your configuration file contains the following unrecognized keys:");
+			for (String key : extraKeys) {
+				LOGGER.warn("  - {}", key);
+			}
+			LOGGER.warn("These keys will be ignored. However, you are recommended to remove them to avoid confusion!");
+		}
+
 		// Check if the structure of the config matches the template
-		Set<String> missingKeys = validateStructure(templateConfig, config, "");
+		Set<String> missingKeys = findMissingKeys(templateConfig, config, "");
 		if (!missingKeys.isEmpty()) {
 			LOGGER.error("Your configuration file is missing the following required keys:");
 			for (String key : missingKeys) {
@@ -146,7 +156,7 @@ public class ConfigManager {
 	 * @param path     The current path in the configuration hierarchy
 	 * @return A set of missing keys in dot notation
 	 */
-	private static Set<String> validateStructure(JsonNode template, JsonNode config, String path) {
+	private static Set<String> findMissingKeys(JsonNode template, JsonNode config, String path) {
 		Set<String> missingKeys = new HashSet<>();
 
 		if (template.isObject()) {
@@ -163,7 +173,7 @@ public class ConfigManager {
 					missingKeys.add(currentPath);
 				} else if (templateValue.isObject() && !templateValue.isEmpty()) {
 					// Recursively check nested objects
-					missingKeys.addAll(validateStructure(templateValue, configValue, currentPath));
+					missingKeys.addAll(findMissingKeys(templateValue, configValue, currentPath));
 				} else if (templateValue.isArray() && !templateValue.isEmpty() &&
 						templateValue.get(0).isObject() && !configValue.isArray()) {
 					// Check if an array of objects in template is missing in config
@@ -173,6 +183,39 @@ public class ConfigManager {
 		}
 
 		return missingKeys;
+	}
+
+	/**
+	 * Recursively finds extra keys in the user config that are not present in the template.
+	 *
+	 * @param template The template node
+	 * @param config   The user config node
+	 * @param path     The current path in the configuration hierarchy
+	 * @return A set of extra keys in dot notation
+	 */
+	private static Set<String> findExtraKeys(JsonNode template, JsonNode config, String path) {
+		Set<String> extraKeys = new HashSet<>();
+
+		if (config.isObject()) {
+			Iterator<String> fieldNames = config.fieldNames();
+			while (fieldNames.hasNext()) {
+				String fieldName = fieldNames.next();
+				String currentPath = path.isEmpty() ? fieldName : path + "." + fieldName;
+
+				JsonNode templateValue = template.path(fieldName);
+				JsonNode configValue = config.get(fieldName);
+
+				if (templateValue.isMissingNode()) {
+					// This key exists in config but not in template
+					extraKeys.add(currentPath);
+				} else if (configValue.isObject() && templateValue.isObject()) {
+					// Recursively check nested objects
+					extraKeys.addAll(findExtraKeys(templateValue, configValue, currentPath));
+				}
+			}
+		}
+
+		return extraKeys;
 	}
 
 	/**
