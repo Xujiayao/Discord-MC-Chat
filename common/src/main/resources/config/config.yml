@@ -127,18 +127,18 @@ formatting: # TODO
 
 # 命令过滤设置
 excluded_commands:
-  - "\/msg (?!@a)(.*)",
-  - "\/tell (?!@a)(.*)",
-  - "\/tellraw (?!@a)(.*)",
-  - "\/w (?!@a)(.*)",
-  - "\/teammsg (.*)",
-  - "\/tm (.*)",
-  - "\/login (.*)",
-  - "\/l (.*)",
-  - "\/register (.*)",
-  - "\/reg (.*)",
-  - "\/account (.*)",
-  - "\/auth (.*)"
+  - /msg (?!@a)(.*)
+  - /tell (?!@a)(.*)
+  - /tellraw (?!@a)(.*)
+  - /w (?!@a)(.*)
+  - /teammsg (.*)
+  - /tm (.*)
+  - /login (.*)
+  - /l (.*)
+  - /register (.*)
+  - /reg (.*)
+  - /account (.*)
+  - /auth (.*)
 
 # --------------------------------------------------
 # Only edit the items below if you know what you are doing!
