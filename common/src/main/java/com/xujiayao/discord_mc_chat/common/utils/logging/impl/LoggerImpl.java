@@ -102,8 +102,6 @@ public class LoggerImpl implements Logger {
 			String time = new SimpleDateFormat("HH:mm:ss").format(System.currentTimeMillis());
 			String thread = Thread.currentThread().getName();
 
-			msg = msg.replace("\\", "\\\\");
-
 			System.out.println(format("[{}] [{}/{}]: {}", time, thread, level, msg));
 
 			if (t != null) {
@@ -145,7 +143,7 @@ public class LoggerImpl implements Logger {
 	 */
 	private String format(String str, Object... args) {
 		for (Object arg : args) {
-			str = str.replaceFirst("\\{}", arg == null ? "null" : arg.toString());
+			str = str.replaceFirst("\\{}", arg == null ? "null" : arg.toString().replace("\\", "\\\\"));
 		}
 		return str;
 	}

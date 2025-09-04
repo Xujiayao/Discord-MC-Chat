@@ -18,7 +18,7 @@ public class Utils {
 	/**
 	 * Check if running in a Minecraft environment (Fabric or NeoForge)
 	 *
-	 * @return True if running in a Minecraft environment, false otherwise
+	 * @return true if running in a Minecraft environment, false otherwise
 	 */
 	public static boolean isMinecraftEnvironment() {
 		// Fabric
