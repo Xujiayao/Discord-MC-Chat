@@ -147,17 +147,17 @@ excluded_commands:
 # 自定义消息
 custom_messages:
   templates: # You can add your own templates here
-    - default:
-        with_webhook:
-          multi_server_enabled:
-            username: "[{server}] {display_name}"
-            content: "{message}"
-          multi_server_disabled:
-            username: "{display_name}"
-            content: "{message}"
-        without_webhook:
-          multi_server_enabled: "[{server}] <{display_name}> {message}"
-          multi_server_disabled: "<{display_name}> {message}"
+    - name: default
+      with_webhook:
+        multi_server_enabled:
+          username: "[{server}] {display_name}"
+          content: "{message}"
+        multi_server_disabled:
+          username: "{display_name}"
+          content: "{message}"
+      without_webhook:
+        multi_server_enabled: "[{server}] <{display_name}> {message}"
+        multi_server_disabled: "<{display_name}> {message}"
   discord_to_minecraft:
     chat: "<bold><blue>[Discord]<clear> <color {role_color}><{name}><clear> <gray>{message}<clear>"
     response: "<bold><dark_gray>    ┌────<clear> <color {role_color}><{name}><clear> <dark_gray>{message}<clear>"
