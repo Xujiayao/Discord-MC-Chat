@@ -16,6 +16,7 @@ bot:
   token: # Discord 机器人令牌
   rich_presence: # TODO
     enable: true
+    todo: true
 
 # 关闭设置
 shutdown:
@@ -31,11 +32,11 @@ webhook:
     - roles
 
 # 频道设置
-channels:
+channels: # You can add your own channels here
   - name: chat
-    id:
+    id: 1234567890
   - name: console_forwarding
-    id:
+    id: 1234567890
 
 # 检查更新设置
 check_for_updates:
@@ -65,8 +66,8 @@ broadcasts:
 
 # 管理员设置
 admins:
-  - username: xujiayao
-    op_level: 4
+  - discord_username: xujiayao
+    minecraft_op_level: 4
 
 # 多服务器功能
 multi_server:
@@ -122,6 +123,7 @@ command_permissions:
 # 消息格式设置
 formatting: # TODO
   format_chat_messages: true
+  todo: true
 
 # 命令过滤设置
 excluded_commands:
@@ -144,7 +146,7 @@ excluded_commands:
 
 # 自定义消息
 custom_messages:
-  templates:
+  templates: # You can add your own templates here
     - default:
         with_webhook:
           multi_server_enabled:
@@ -178,10 +180,10 @@ custom_messages:
       say: default
       tell_raw: default
   channel_topic_updating:
-    offline: ":x: Server offline | Last updated: <t:%lastUpdateTime%:f>"
+    offline: ":x: Server offline | Last updated: <t:{lastUpdateTime}:f>"
     online:
-      multi_server_enabled: ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% player(s) online | %uniquePlayerCount% unique player(s) ever joined | %onlineServerCount% server(s) online [%onlineServerList%] | Server started <t:%serverStartedTime%:R> | Last updated: <t:%lastUpdateTime%:f>"
-      multi_server_disabled: ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% player(s) online | %uniquePlayerCount% unique player(s) ever joined | Server started <t:%serverStartedTime%:R> | Last updated: <t:%lastUpdateTime%:f>"
+      multi_server_enabled: ":white_check_mark: {onlinePlayerCount}/{maxPlayerCount} player(s) online | {uniquePlayerCount} unique player(s) ever joined | {onlineServerCount} server(s) online [{onlineServerList}] | Server started <t:{serverStartedTime}:R> | Last updated: <t:{lastUpdateTime}:f>"
+      multi_server_disabled: ":white_check_mark: {onlinePlayerCount}/{maxPlayerCount} player(s) online | {uniquePlayerCount} unique player(s) ever joined | Server started <t:{serverStartedTime}:R> | Last updated: <t:{lastUpdateTime}:f>"
   mspt_monitoring:
     high_mspt: "**Server MSPT ({mspt}) is above {msptLimit}!**"
 

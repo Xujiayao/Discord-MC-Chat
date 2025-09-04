@@ -8,20 +8,24 @@ This project includes the following third-party libraries. Each is distributed u
    - Maven coordinates:
      - net.dv8tion:JDA:5.6.1
    - License: Apache License 2.0
-   - Homepage: https://github.com/discord-jda/JDA
+   - Homepage:
+     - https://github.com/discord-jda/JDA
 
 2. SLF4J
    - Maven coordinates:
      - org.slf4j:slf4j-api:2.0.17
    - License: MIT License
-   - Homepage: https://www.slf4j.org/
+   - Homepage:
+     - https://www.slf4j.org/
 
 3. Jackson
    - Maven coordinates:
      - com.fasterxml.jackson.core:jackson-databind:2.19.2
      - com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.19.2
    - License: Apache License 2.0
-   - Homepage: https://github.com/FasterXML/jackson-databind, https://github.com/FasterXML/jackson-dataformats-text
+   - Homepage:
+     - https://github.com/FasterXML/jackson-databind
+     - https://github.com/FasterXML/jackson-dataformats-text
 
 ---
 

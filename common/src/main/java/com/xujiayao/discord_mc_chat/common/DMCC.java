@@ -21,7 +21,7 @@ public class DMCC {
 	/**
 	 * Initialize DMCC with DMCC version auto-detected.
 	 * <p>
-	 * NeoForge and Standalone use this method.
+	 * This method is invoked by NeoForge and Standalone.
 	 *
 	 * @param loader The name of the loader
 	 */
@@ -32,7 +32,10 @@ public class DMCC {
 	/**
 	 * Initialize DMCC with specified DMCC version.
 	 * <p>
-	 * Fabric uses this method.
+	 * This method is invoked by Fabric.
+	 * <p>
+	 * NeoForge and Standalone use {@link #init(String)},
+	 * which redirects to this method.
 	 *
 	 * @param loader  The name of the loader
 	 * @param version The version of DMCC
