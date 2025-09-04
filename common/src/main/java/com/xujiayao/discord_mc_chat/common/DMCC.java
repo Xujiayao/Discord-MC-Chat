@@ -57,12 +57,6 @@ public class DMCC {
 				// In standalone mode, the process would terminate here
 				return;
 			}
-
-			configExamples();
 		}, "DMCC-Main").start();
-	}
-
-	private static void configExamples() {
-
 	}
 }
