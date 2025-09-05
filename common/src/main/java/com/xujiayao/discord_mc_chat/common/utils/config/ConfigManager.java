@@ -125,8 +125,11 @@ public class ConfigManager {
 			return false;
 		}
 
-		// Check for extra keys in the user's config
-		Set<String> extraKeys = findExtraKeys(templateConfig, config, "");
+		// Check for missing and extra keys in the user's config
+		Set<String> missingKeys = new HashSet<>();
+		Set<String> extraKeys = new HashSet<>();
+		findKeyDiffs(templateConfig, config, "", missingKeys, extraKeys);
+
 		if (!extraKeys.isEmpty()) {
 			LOGGER.warn("Your configuration file contains the following unrecognized keys:");
 			for (String key : extraKeys) {
@@ -135,8 +138,6 @@ public class ConfigManager {
 			LOGGER.warn("These keys will be ignored. However, you are recommended to remove them to avoid confusion!");
 		}
 
-		// Check if the structure of the config matches the template
-		Set<String> missingKeys = findMissingKeys(templateConfig, config, "");
 		if (!missingKeys.isEmpty()) {
 			LOGGER.error("Your configuration file is missing the following required keys:");
 			for (String key : missingKeys) {
@@ -159,73 +160,43 @@ public class ConfigManager {
 	}
 
 	/**
-	 * Recursively validates that all required keys in the template are present in the user config.
+	 * Recursively finds missing and extra keys between the template and the user config.
 	 *
-	 * @param template The template node
-	 * @param config   The user config node
-	 * @param path     The current path in the configuration hierarchy
-	 * @return A set of missing keys in dot notation
+	 * @param template    The template node
+	 * @param config      The user config node
+	 * @param path        The current path in the configuration hierarchy
+	 * @param missingKeys Set to accumulate missing keys (present in template but not in config)
+	 * @param extraKeys   Set to accumulate extra keys (present in config but not in template)
 	 */
-	private static Set<String> findMissingKeys(JsonNode template, JsonNode config, String path) {
-		Set<String> missingKeys = new HashSet<>();
-
-		if (template.isObject()) {
-			Iterator<String> fieldNames = template.fieldNames();
-			while (fieldNames.hasNext()) {
-				String fieldName = fieldNames.next();
-				String currentPath = path.isEmpty() ? fieldName : path + "." + fieldName;
-
-				JsonNode templateValue = template.get(fieldName);
-				JsonNode configValue = config.path(fieldName);
-
-				if (configValue.isMissingNode()) {
-					// This key is missing in the user's config
+	private static void findKeyDiffs(JsonNode template, JsonNode config, String path, Set<String> missingKeys, Set<String> extraKeys) {
+		if (template.isObject() && config.isObject()) {
+			// Check for missing keys (in template but not in config)
+			Iterator<String> templateFields = template.fieldNames();
+			while (templateFields.hasNext()) {
+				String field = templateFields.next();
+				String currentPath = path.isEmpty() ? field : path + "." + field;
+				if (!config.has(field)) {
 					missingKeys.add(currentPath);
-				} else if (templateValue.isObject() && !templateValue.isEmpty()) {
-					// Recursively check nested objects
-					missingKeys.addAll(findMissingKeys(templateValue, configValue, currentPath));
-				} else if (templateValue.isArray() && !templateValue.isEmpty() &&
-						templateValue.get(0).isObject() && !configValue.isArray()) {
-					// Check if an array of objects in template is missing in config
-					missingKeys.add(currentPath);
+				} else {
+					findKeyDiffs(template.get(field), config.get(field), currentPath, missingKeys, extraKeys);
 				}
 			}
-		}
-
-		return missingKeys;
-	}
-
-	/**
-	 * Recursively finds extra keys in the user config that are not present in the template.
-	 *
-	 * @param template The template node
-	 * @param config   The user config node
-	 * @param path     The current path in the configuration hierarchy
-	 * @return A set of extra keys in dot notation
-	 */
-	private static Set<String> findExtraKeys(JsonNode template, JsonNode config, String path) {
-		Set<String> extraKeys = new HashSet<>();
-
-		if (config.isObject()) {
-			Iterator<String> fieldNames = config.fieldNames();
-			while (fieldNames.hasNext()) {
-				String fieldName = fieldNames.next();
-				String currentPath = path.isEmpty() ? fieldName : path + "." + fieldName;
-
-				JsonNode templateValue = template.path(fieldName);
-				JsonNode configValue = config.get(fieldName);
-
-				if (templateValue.isMissingNode()) {
-					// This key exists in config but not in template
+			// Check for extra keys (in config but not in template)
+			Iterator<String> configFields = config.fieldNames();
+			while (configFields.hasNext()) {
+				String field = configFields.next();
+				String currentPath = path.isEmpty() ? field : path + "." + field;
+				if (!template.has(field)) {
 					extraKeys.add(currentPath);
-				} else if (configValue.isObject() && templateValue.isObject()) {
-					// Recursively check nested objects
-					extraKeys.addAll(findExtraKeys(templateValue, configValue, currentPath));
 				}
 			}
+		} else if (template.isArray() && config.isArray() && !template.isEmpty()) {
+			// For arrays, check elements recursively by using the first template element as the reference
+			JsonNode templateItem = template.get(0);
+			for (int i = 0; i < config.size(); i++) {
+				findKeyDiffs(templateItem, config.get(i), path + "[" + i + "]", missingKeys, extraKeys);
+			}
 		}
-
-		return extraKeys;
 	}
 
 	/**
