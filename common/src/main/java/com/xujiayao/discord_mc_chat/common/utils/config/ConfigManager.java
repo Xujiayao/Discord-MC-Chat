@@ -200,8 +200,7 @@ public class ConfigManager {
 	}
 
 	/**
-	 * Recursively validates all node types in the config against the template, for both objects and arrays.
-	 * For arrays of objects, also checks for required fields and extra fields.
+	 * Recursively validates all node types in the config against the template.
 	 *
 	 * @param template The template node
 	 * @param config   The user config node
@@ -244,32 +243,6 @@ public class ConfigManager {
 
 				// Recursively validate each array element
 				issues.addAll(validateNodeTypes(templateItem, configItem, currentPath));
-
-				// For arrays of objects, check for required and extra fields
-				if (templateItem.isObject() && configItem.isObject()) {
-					Set<String> requiredFields = new HashSet<>();
-					templateItem.fieldNames().forEachRemaining(requiredFields::add);
-
-					// Check for missing required fields
-					for (String requiredField : requiredFields) {
-						if (configItem.path(requiredField).isMissingNode()) {
-							issues.add(currentPath + ": Missing required field '" + requiredField + "'");
-						}
-					}
-
-					// Check for extra fields
-					Set<String> extraFields = new HashSet<>();
-					configItem.fieldNames().forEachRemaining(field -> {
-						if (!requiredFields.contains(field)) {
-							extraFields.add(field);
-						}
-					});
-
-					if (!extraFields.isEmpty()) {
-						issues.add(currentPath + ": Contains unrecognized fields: "
-								+ String.join(", ", extraFields));
-					}
-				}
 			}
 		}
 
