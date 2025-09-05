@@ -145,6 +145,16 @@ public class ConfigManager {
 			return false;
 		}
 
+		// Check arrays for required field structure
+		Set<String> arrayStructureIssues = validateArrayStructures(templateConfig, config, "");
+		if (!arrayStructureIssues.isEmpty()) {
+			LOGGER.error("Your configuration file has issues in array structures:");
+			for (String issue : arrayStructureIssues) {
+				LOGGER.error("  - {}", issue);
+			}
+			return false;
+		}
+
 		return true;
 	}
 
@@ -216,6 +226,86 @@ public class ConfigManager {
 		}
 
 		return extraKeys;
+	}
+
+	/**
+	 * Validates the structure of arrays in the configuration, ensuring each array item
+	 * has all required fields as specified in the template.
+	 *
+	 * @param template The template node
+	 * @param config   The user config node
+	 * @param path     The current path in the configuration hierarchy
+	 * @return A set of issues found in array structures
+	 */
+	private static Set<String> validateArrayStructures(JsonNode template, JsonNode config, String path) {
+		Set<String> issues = new HashSet<>();
+
+		// Known arrays of objects that need field validation
+		Set<String> arrayPathsToValidate = new HashSet<>();
+		arrayPathsToValidate.add("channels");
+		arrayPathsToValidate.add("custom_messages.templates");
+
+		if (template.isObject()) {
+			Iterator<String> fieldNames = template.fieldNames();
+			while (fieldNames.hasNext()) {
+				String fieldName = fieldNames.next();
+				String currentPath = path.isEmpty() ? fieldName : path + "." + fieldName;
+
+				JsonNode templateValue = template.get(fieldName);
+				JsonNode configValue = config.path(fieldName);
+
+				if (configValue.isMissingNode()) {
+					continue; // Skip missing nodes, they're already reported by findMissingKeys
+				}
+
+				if (templateValue.isObject()) {
+					// Recursively check nested objects
+					issues.addAll(validateArrayStructures(templateValue, configValue, currentPath));
+				} else if (templateValue.isArray() && configValue.isArray() &&
+						!templateValue.isEmpty() && templateValue.get(0).isObject() &&
+						arrayPathsToValidate.contains(currentPath)) {
+
+					// Validate arrays of objects
+					JsonNode templateItem = templateValue.get(0); // Use first item as template
+
+					// Get required fields from template item
+					Set<String> requiredFields = new HashSet<>();
+					templateItem.fieldNames().forEachRemaining(requiredFields::add);
+
+					// Check each item in user's config array
+					for (int i = 0; i < configValue.size(); i++) {
+						JsonNode configItem = configValue.get(i);
+						if (!configItem.isObject()) {
+							issues.add(currentPath + "[" + i + "]: Expected an object but found " +
+									configItem.getNodeType());
+							continue;
+						}
+
+						// Check for missing required fields
+						for (String requiredField : requiredFields) {
+							if (configItem.path(requiredField).isMissingNode()) {
+								issues.add(currentPath + "[" + i + "]: Missing required field '" + requiredField + "'");
+							}
+						}
+
+						// Check for extra fields
+						Set<String> extraFields = new HashSet<>();
+						configItem.fieldNames().forEachRemaining(field -> {
+							if (!requiredFields.contains(field)) {
+								extraFields.add(field);
+							}
+						});
+
+						if (!extraFields.isEmpty()) {
+							issues.add(currentPath + "[" + i + "]: Contains unrecognized fields: " +
+									String.join(", ", extraFields));
+						}
+					}
+				}
+			}
+		}
+
+		return issues;
 	}
 
 	/**
