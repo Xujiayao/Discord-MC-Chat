@@ -145,7 +145,7 @@ public class ConfigManager {
 			return false;
 		}
 
-		// Check arrays for required field structure
+		// Check arrays for required field structure, including type validation
 		Set<String> arrayStructureIssues = validateArrayStructures(templateConfig, config, "");
 		if (!arrayStructureIssues.isEmpty()) {
 			LOGGER.error("Your configuration file has issues in array structures:");
@@ -230,7 +230,7 @@ public class ConfigManager {
 
 	/**
 	 * Validates the structure of arrays in the configuration, ensuring each array item
-	 * has all required fields as specified in the template.
+	 * has all required fields as specified in the template, and each field matches the expected type.
 	 *
 	 * @param template The template node
 	 * @param config   The user config node
@@ -240,7 +240,7 @@ public class ConfigManager {
 	private static Set<String> validateArrayStructures(JsonNode template, JsonNode config, String path) {
 		Set<String> issues = new HashSet<>();
 
-		// Known arrays of objects that need field validation
+		// Paths to arrays of objects that should be validated
 		Set<String> arrayPathsToValidate = new HashSet<>();
 		arrayPathsToValidate.add("channels");
 		arrayPathsToValidate.add("custom_messages.templates");
@@ -255,15 +255,15 @@ public class ConfigManager {
 				JsonNode configValue = config.path(fieldName);
 
 				if (configValue.isMissingNode()) {
-					continue; // Skip missing nodes, they're already reported by findMissingKeys
+					continue; // Skip missing nodes, already reported elsewhere
 				}
 
 				if (templateValue.isObject()) {
 					// Recursively check nested objects
 					issues.addAll(validateArrayStructures(templateValue, configValue, currentPath));
-				} else if (templateValue.isArray() && configValue.isArray() &&
-						!templateValue.isEmpty() && templateValue.get(0).isObject() &&
-						arrayPathsToValidate.contains(currentPath)) {
+				} else if (templateValue.isArray() && configValue.isArray()
+						&& !templateValue.isEmpty() && templateValue.get(0).isObject()
+						&& arrayPathsToValidate.contains(currentPath)) {
 
 					// Validate arrays of objects
 					JsonNode templateItem = templateValue.get(0); // Use first item as template
@@ -281,10 +281,19 @@ public class ConfigManager {
 							continue;
 						}
 
-						// Check for missing required fields
+						// Check for required fields
 						for (String requiredField : requiredFields) {
-							if (configItem.path(requiredField).isMissingNode()) {
+							JsonNode templateField = templateItem.get(requiredField);
+							JsonNode configField = configItem.path(requiredField);
+
+							if (configField.isMissingNode()) {
 								issues.add(currentPath + "[" + i + "]: Missing required field '" + requiredField + "'");
+							} else if (templateField != null &&
+									templateField.getNodeType() != configField.getNodeType()) {
+								// Dynamically check type
+								issues.add(currentPath + "[" + i + "]." + requiredField +
+										": Expected type " + templateField.getNodeType() +
+										" but found " + configField.getNodeType());
 							}
 						}
 
