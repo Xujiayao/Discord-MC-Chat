@@ -145,11 +145,11 @@ public class ConfigManager {
 			return false;
 		}
 
-		// Check arrays for required field structure, including type validation
-		Set<String> arrayStructureIssues = validateArrayStructures(templateConfig, config, "");
-		if (!arrayStructureIssues.isEmpty()) {
-			LOGGER.error("Your configuration file has issues in array structures:");
-			for (String issue : arrayStructureIssues) {
+		// Check all node types for all items recursively
+		Set<String> typeIssues = validateNodeTypes(templateConfig, config, "");
+		if (!typeIssues.isEmpty()) {
+			LOGGER.error("Your configuration file has type mismatch issues:");
+			for (String issue : typeIssues) {
 				LOGGER.error("  - {}", issue);
 			}
 			return false;
@@ -229,22 +229,25 @@ public class ConfigManager {
 	}
 
 	/**
-	 * Validates the structure of arrays in the configuration, ensuring each array item
-	 * has all required fields as specified in the template, and each field matches the expected type.
+	 * Recursively validates all node types in the config against the template, for both objects and arrays.
+	 * For arrays of objects, also checks for required fields and extra fields.
 	 *
 	 * @param template The template node
 	 * @param config   The user config node
 	 * @param path     The current path in the configuration hierarchy
-	 * @return A set of issues found in array structures
+	 * @return A set of type mismatch or structural issues
 	 */
-	private static Set<String> validateArrayStructures(JsonNode template, JsonNode config, String path) {
+	private static Set<String> validateNodeTypes(JsonNode template, JsonNode config, String path) {
 		Set<String> issues = new HashSet<>();
 
-		// Paths to arrays of objects that should be validated
-		Set<String> arrayPathsToValidate = new HashSet<>();
-		arrayPathsToValidate.add("channels");
-		arrayPathsToValidate.add("custom_messages.templates");
+		// Check for direct node type mismatch (covers string/object/array/etc.)
+		if (template.getNodeType() != config.getNodeType()) {
+			issues.add((path.isEmpty() ? "(root)" : path) + ": Expected type " + template.getNodeType()
+					+ " but found " + config.getNodeType());
+			return issues; // If types mismatch, don't recurse further at this node
+		}
 
+		// If the node is an object, recurse for each field
 		if (template.isObject()) {
 			Iterator<String> fieldNames = template.fieldNames();
 			while (fieldNames.hasNext()) {
@@ -254,61 +257,46 @@ public class ConfigManager {
 				JsonNode templateValue = template.get(fieldName);
 				JsonNode configValue = config.path(fieldName);
 
-				if (configValue.isMissingNode()) {
-					continue; // Skip missing nodes, already reported elsewhere
+				if (!configValue.isMissingNode()) {
+					issues.addAll(validateNodeTypes(templateValue, configValue, currentPath));
 				}
+			}
+		}
 
-				if (templateValue.isObject()) {
-					// Recursively check nested objects
-					issues.addAll(validateArrayStructures(templateValue, configValue, currentPath));
-				} else if (templateValue.isArray() && configValue.isArray()
-						&& !templateValue.isEmpty() && templateValue.get(0).isObject()
-						&& arrayPathsToValidate.contains(currentPath)) {
+		// If the node is an array, check each element against the template's first element (if present)
+		else if (template.isArray() && !template.isEmpty() && config.isArray()) {
+			JsonNode templateItem = template.get(0);
 
-					// Validate arrays of objects
-					JsonNode templateItem = templateValue.get(0); // Use first item as template
+			for (int i = 0; i < config.size(); i++) {
+				JsonNode configItem = config.get(i);
+				String currentPath = path + "[" + i + "]";
 
-					// Get required fields from template item
+				// Recursively validate each array element
+				issues.addAll(validateNodeTypes(templateItem, configItem, currentPath));
+
+				// For arrays of objects, check for required and extra fields
+				if (templateItem.isObject() && configItem.isObject()) {
 					Set<String> requiredFields = new HashSet<>();
 					templateItem.fieldNames().forEachRemaining(requiredFields::add);
 
-					// Check each item in user's config array
-					for (int i = 0; i < configValue.size(); i++) {
-						JsonNode configItem = configValue.get(i);
-						if (!configItem.isObject()) {
-							issues.add(currentPath + "[" + i + "]: Expected an object but found " +
-									configItem.getNodeType());
-							continue;
+					// Check for missing required fields
+					for (String requiredField : requiredFields) {
+						if (configItem.path(requiredField).isMissingNode()) {
+							issues.add(currentPath + ": Missing required field '" + requiredField + "'");
 						}
+					}
 
-						// Check for required fields
-						for (String requiredField : requiredFields) {
-							JsonNode templateField = templateItem.get(requiredField);
-							JsonNode configField = configItem.path(requiredField);
-
-							if (configField.isMissingNode()) {
-								issues.add(currentPath + "[" + i + "]: Missing required field '" + requiredField + "'");
-							} else if (templateField != null &&
-									templateField.getNodeType() != configField.getNodeType()) {
-								// Dynamically check type
-								issues.add(currentPath + "[" + i + "]." + requiredField +
-										": Expected type " + templateField.getNodeType() +
-										" but found " + configField.getNodeType());
-							}
+					// Check for extra fields
+					Set<String> extraFields = new HashSet<>();
+					configItem.fieldNames().forEachRemaining(field -> {
+						if (!requiredFields.contains(field)) {
+							extraFields.add(field);
 						}
+					});
 
-						// Check for extra fields
-						Set<String> extraFields = new HashSet<>();
-						configItem.fieldNames().forEachRemaining(field -> {
-							if (!requiredFields.contains(field)) {
-								extraFields.add(field);
-							}
-						});
-
-						if (!extraFields.isEmpty()) {
-							issues.add(currentPath + "[" + i + "]: Contains unrecognized fields: " +
-									String.join(", ", extraFields));
-						}
+					if (!extraFields.isEmpty()) {
+						issues.add(currentPath + ": Contains unrecognized fields: "
+								+ String.join(", ", extraFields));
 					}
 				}
 			}
