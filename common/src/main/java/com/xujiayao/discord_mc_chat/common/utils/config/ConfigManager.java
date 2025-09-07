@@ -105,21 +105,21 @@ public class ConfigManager {
 		}
 
 		// Check config version
-		int configVersion = config.path("config_version").asInt(-1);
-		int templateVersion = templateConfig.path("config_version").asInt(-1);
+		String configVersion = config.path("version").asText(null);
+		String templateVersion = templateConfig.path("version").asText(null);
 
-		if (configVersion == -1 && templateVersion == -1) {
-			LOGGER.error("Failed to find valid \"config_version\" in both user config and template config");
+		if (configVersion == null && templateVersion == null) {
+			LOGGER.error("Failed to find valid \"version\" in both user config and template config");
 			LOGGER.error("This is a bug in DMCC. Please report this issue!");
 			return false;
-		} else if (configVersion == -1) {
-			LOGGER.error("User configuration file is missing the required \"config_version\" field");
+		} else if (configVersion == null) {
+			LOGGER.error("User configuration file is missing the required \"version\" field");
 			return false;
-		} else if (templateVersion == -1) {
-			LOGGER.error("Template configuration file is missing the required \"config_version\" field");
+		} else if (templateVersion == null) {
+			LOGGER.error("Template configuration file is missing the required \"version\" field");
 			LOGGER.error("This is a bug in DMCC. Please report this issue!");
 			return false;
-		} else if (configVersion != templateVersion) {
+		} else if (!templateVersion.equals(configVersion)) {
 			LOGGER.error("Configuration version mismatch. Expected version: {}, Found version: {}", templateVersion, configVersion);
 			LOGGER.info("Please upgrade your configuration file");
 			return false;

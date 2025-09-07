@@ -2,7 +2,8 @@
 # Discord-MC-Chat (DMCC)
 # By Xujiayao
 #
-# Config file for DMCC version: 3.0.0-beta.0
+# Config file for DMCC version:
+version: 3.0.0-beta.0
 #
 # More information + Docs:
 # https://blog.xujiayao.com/posts/4ba0a17a/
@@ -186,6 +187,3 @@ custom_messages:
       multi_server_disabled: ":white_check_mark: {onlinePlayerCount}/{maxPlayerCount} player(s) online | {uniquePlayerCount} unique player(s) ever joined | Server started <t:{serverStartedTime}:R> | Last updated: <t:{lastUpdateTime}:f>"
   mspt_monitoring:
     high_mspt: "**Server MSPT ({mspt}) is above {msptLimit}!**"
-
-# 配置文件版本，自行修改此项会导致无法正常初始化DMCC
-config_version: 1
