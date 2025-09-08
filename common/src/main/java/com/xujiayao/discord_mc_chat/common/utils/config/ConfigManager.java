@@ -36,12 +36,12 @@ public class ConfigManager {
 	private static JsonNode config;
 
 	/**
-	 * Initializes the configuration system.
-	 * Copies the default config if none exists, loads and validates the config.
+	 * Loads the configuration file.
+	 * If the config file does not exist or is empty, it copies the default template.
 	 *
-	 * @return true if initialization was successful, false otherwise
+	 * @return true if the config was loaded and validated successfully, false otherwise
 	 */
-	public static boolean initialize() {
+	public static boolean load() {
 		try {
 			// Create directories if they do not exist
 			Path configDir = Paths.get(CONFIG_DIR);
@@ -68,7 +68,7 @@ public class ConfigManager {
 			}
 
 			// Load the user's config
-			config = mapper.readTree(Files.newBufferedReader(configPath, StandardCharsets.UTF_8));
+			JsonNode config = mapper.readTree(Files.newBufferedReader(configPath, StandardCharsets.UTF_8));
 
 			// Load the template config for validation
 			JsonNode templateConfig;
@@ -81,11 +81,17 @@ public class ConfigManager {
 			}
 
 			// Validate config
-			return validateConfig(templateConfig);
+			if (validateConfig(config, templateConfig)) {
+				ConfigManager.config = config;
+				LOGGER.info("Configuration loaded successfully!");
+
+				return true;
+			}
 		} catch (IOException e) {
-			LOGGER.error("Failed to initialize configuration", e);
-			return false;
+			LOGGER.error("Failed to load configuration", e);
 		}
+
+		return false;
 	}
 
 	/**
@@ -93,10 +99,11 @@ public class ConfigManager {
 	 * Checks if config is identical to template or if versions do not match.
 	 * Also verifies that the structure of the config matches the template.
 	 *
+	 * @param config         The user-loaded config to validate
 	 * @param templateConfig The template config to validate against
 	 * @return true if the config is valid, false otherwise
 	 */
-	private static boolean validateConfig(JsonNode templateConfig) {
+	private static boolean validateConfig(JsonNode config, JsonNode templateConfig) {
 		// Check if config is identical to template (user made no changes)
 		if (config.equals(templateConfig)) {
 			LOGGER.error("Configuration file has not been modified from default template");

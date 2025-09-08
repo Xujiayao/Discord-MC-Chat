@@ -61,11 +61,9 @@ public class DMCC {
 
 			LOGGER.info("Initializing DMCC {} with loader: {}", VERSION, loader);
 
-			// Initialize configuration
+			// Load configuration
 			// If configuration fails to load, exit the DMCC-Main thread gracefully
-			if (ConfigManager.initialize()) {
-				LOGGER.info("Configuration loaded successfully!");
-			} else {
+			if (!ConfigManager.load()) {
 				LOGGER.warn("DMCC will not continue initialization due to configuration issues");
 				LOGGER.info("Exiting...");
 
