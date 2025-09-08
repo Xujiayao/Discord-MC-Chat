@@ -12,15 +12,13 @@ import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
 public class MinecraftEventHandler {
 
 	/**
-	 * Initializes the Minecraft event listeners.
+	 * Initializes the Minecraft event handlers.
 	 */
 	public static void init() {
-		LOGGER.info("Initializing Minecraft event listeners...");
-
 		EventManager.register(MinecraftEvents.PlayerJoin.class, event -> {
 			LOGGER.info("[DMCC] Player {} joined the game", event.serverPlayer().getDisplayName());
 		});
 
-		LOGGER.info("Minecraft event listeners initialized");
+		LOGGER.info("Initialized all Minecraft event handlers");
 	}
 }
