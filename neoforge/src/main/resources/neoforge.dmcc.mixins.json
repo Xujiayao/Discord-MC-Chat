@@ -3,6 +3,7 @@
   "package": "com.xujiayao.discord_mc_chat.neoforge.mixins",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "MixinMinecraftServer",
     "MixinPlayerAdvancements",
     "MixinPlayerList",
     "MixinSayCommand",
