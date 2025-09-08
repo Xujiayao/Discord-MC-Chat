@@ -1,5 +1,7 @@
 package com.xujiayao.discord_mc_chat.fabric.mixins;
 
+import com.xujiayao.discord_mc_chat.common.minecraft.MinecraftEvents;
+import com.xujiayao.discord_mc_chat.common.utils.events.EventManager;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.server.PlayerAdvancements;
@@ -9,8 +11,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
 
 /**
  * @author Xujiayao
@@ -27,6 +27,12 @@ public abstract class MixinPlayerAdvancements {
 	@Inject(method = "award", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/AdvancementRewards;grant(Lnet/minecraft/server/level/ServerPlayer;)V", shift = At.Shift.AFTER))
 	private void award(AdvancementHolder advancementHolder, String string, CallbackInfoReturnable<Boolean> cir) {
 		// PlayerAdvancement Event
-		LOGGER.info("[DMCC] Player {} has made the advancement [{}, {}]", player.getDisplayName().getString(), getOrStartProgress(advancementHolder).isDone(), advancementHolder.value().name());
+		EventManager.dispatch(new MinecraftEvents.PlayerAdvancement(
+				advancementHolder,
+				string,
+				player,
+				getOrStartProgress(advancementHolder),
+				cir
+		));
 	}
 }

@@ -1,5 +1,6 @@
 package com.xujiayao.discord_mc_chat.common;
 
+import com.xujiayao.discord_mc_chat.common.minecraft.MinecraftEventHandler;
 import com.xujiayao.discord_mc_chat.common.utils.Utils;
 import com.xujiayao.discord_mc_chat.common.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.common.utils.logging.Logger;
@@ -71,6 +72,9 @@ public class DMCC {
 				// In standalone mode, the process would terminate here
 				return;
 			}
+
+			// Initialize Minecraft event handlers
+			MinecraftEventHandler.init();
 		}, "DMCC-Main").start();
 	}
 }

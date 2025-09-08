@@ -1,13 +1,13 @@
 package com.xujiayao.discord_mc_chat.neoforge.mixins;
 
+import com.xujiayao.discord_mc_chat.common.minecraft.MinecraftEvents;
+import com.xujiayao.discord_mc_chat.common.utils.events.EventManager;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
 
 /**
  * @author Xujiayao
@@ -18,6 +18,10 @@ public class MixinServerPlayer {
 	@Inject(method = "die", at = @At("HEAD"))
 	private void die(DamageSource damageSource, CallbackInfo ci) {
 		// PlayerDie Event
-		LOGGER.info("[DMCC] Player {} has died", ((ServerPlayer) (Object) this).getDisplayName().getString());
+		EventManager.dispatch(new MinecraftEvents.PlayerDie(
+				damageSource,
+				(ServerPlayer) (Object) this,
+				ci
+		));
 	}
 }
