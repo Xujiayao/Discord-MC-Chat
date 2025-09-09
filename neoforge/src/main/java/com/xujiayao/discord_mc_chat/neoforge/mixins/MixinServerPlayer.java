@@ -18,7 +18,7 @@ public class MixinServerPlayer {
 	@Inject(method = "die", at = @At("HEAD"))
 	private void die(DamageSource damageSource, CallbackInfo ci) {
 		// PlayerDie Event
-		EventManager.dispatch(new MinecraftEvents.PlayerDie(
+		EventManager.post(new MinecraftEvents.PlayerDie(
 				damageSource,
 				(ServerPlayer) (Object) this,
 				ci

@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MinecraftEvents {
 
 	/**
-	 * Dispatched when a player joins the server.
+	 * Posted when a player joins the server.
 	 */
 	public record PlayerJoin(
 			Connection connection,
@@ -31,7 +31,7 @@ public class MinecraftEvents {
 	}
 
 	/**
-	 * Dispatched when a player leaves the server.
+	 * Posted when a player leaves the server.
 	 */
 	public record PlayerQuit(
 			ServerPlayer serverPlayer,
@@ -40,7 +40,7 @@ public class MinecraftEvents {
 	}
 
 	/**
-	 * Dispatched when a player sends a chat message.
+	 * Posted when a player sends a chat message.
 	 */
 	public record PlayerChat(
 			PlayerChatMessage playerChatMessage,
@@ -50,7 +50,7 @@ public class MinecraftEvents {
 	}
 
 	/**
-	 * Dispatched when a player executes a command.
+	 * Posted when a player executes a command.
 	 */
 	public record PlayerCommand(
 			String command,
@@ -60,7 +60,7 @@ public class MinecraftEvents {
 	}
 
 	/**
-	 * Dispatched when a player dies.
+	 * Posted when a player dies.
 	 */
 	public record PlayerDie(
 			DamageSource damageSource,
@@ -70,7 +70,7 @@ public class MinecraftEvents {
 	}
 
 	/**
-	 * Dispatched when a player makes an advancement.
+	 * Posted when a player makes an advancement.
 	 */
 	public record PlayerAdvancement(
 			AdvancementHolder advancementHolder,
@@ -82,7 +82,7 @@ public class MinecraftEvents {
 	}
 
 	/**
-	 * Dispatched when the /say command is used.
+	 * Posted when the /say command is used.
 	 */
 	public record SourceSay(
 			CommandContext<CommandSourceStack> commandContext,
@@ -92,7 +92,7 @@ public class MinecraftEvents {
 	}
 
 	/**
-	 * Dispatched when the /tellraw command is used.
+	 * Posted when the /tellraw command is used.
 	 */
 	public record SourceTellRaw(
 			CommandContext<CommandSourceStack> commandContext,

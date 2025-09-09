@@ -27,7 +27,7 @@ public abstract class MixinPlayerAdvancements {
 	@Inject(method = "award", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/AdvancementRewards;grant(Lnet/minecraft/server/level/ServerPlayer;)V", shift = At.Shift.AFTER))
 	private void award(AdvancementHolder advancementHolder, String string, CallbackInfoReturnable<Boolean> cir) {
 		// PlayerAdvancement Event
-		EventManager.dispatch(new MinecraftEvents.PlayerAdvancement(
+		EventManager.post(new MinecraftEvents.PlayerAdvancement(
 				advancementHolder,
 				string,
 				player,

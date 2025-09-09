@@ -5,7 +5,7 @@ import com.xujiayao.discord_mc_chat.common.utils.events.EventManager;
 import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
 
 /**
- * Handles Minecraft events dispatched from the event manager.
+ * Handles Minecraft events posted from the event manager.
  *
  * @author Xujiayao
  */

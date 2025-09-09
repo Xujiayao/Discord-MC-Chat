@@ -20,7 +20,7 @@ public class MixinPlayerList {
 	@Inject(method = "placeNewPlayer", at = @At("RETURN"))
 	private void placeNewPlayer(Connection connection, ServerPlayer serverPlayer, CommonListenerCookie commonListenerCookie, CallbackInfo ci) {
 		// PlayerJoin Event
-		EventManager.dispatch(new MinecraftEvents.PlayerJoin(
+		EventManager.post(new MinecraftEvents.PlayerJoin(
 				connection,
 				serverPlayer,
 				commonListenerCookie,
@@ -31,7 +31,7 @@ public class MixinPlayerList {
 	@Inject(method = "remove", at = @At("HEAD"))
 	private void remove(ServerPlayer serverPlayer, CallbackInfo ci) {
 		// PlayerQuit Event
-		EventManager.dispatch(new MinecraftEvents.PlayerQuit(
+		EventManager.post(new MinecraftEvents.PlayerQuit(
 				serverPlayer,
 				ci
 		));

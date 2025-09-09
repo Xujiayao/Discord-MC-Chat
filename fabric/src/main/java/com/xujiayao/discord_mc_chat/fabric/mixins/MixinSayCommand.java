@@ -20,7 +20,7 @@ public class MixinSayCommand {
 	@Inject(method = "method_43657", at = @At("HEAD"))
 	private static void method_43657(CommandContext<CommandSourceStack> commandContext, PlayerChatMessage playerChatMessage, CallbackInfo ci) {
 		// SourceSay Event
-		EventManager.dispatch(new MinecraftEvents.SourceSay(
+		EventManager.post(new MinecraftEvents.SourceSay(
 				commandContext,
 				playerChatMessage,
 				ci

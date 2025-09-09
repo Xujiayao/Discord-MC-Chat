@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
- * A simple event manager to handle event handling and dispatching.
+ * A simple event manager to handle event handling and posting.
  *
  * @author Xujiayao
  */
@@ -26,13 +26,13 @@ public class EventManager {
 	}
 
 	/**
-	 * Dispatch an event and notify all registered handlers.
+	 * Post an event and notify all registered handlers.
 	 *
-	 * @param event The event object to be dispatched
+	 * @param event The event object to be posted
 	 * @param <T>   The type of the event
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> void dispatch(T event) {
+	public static <T> void post(T event) {
 		List<Consumer<?>> eventHandlers = handlers.get(event.getClass());
 		if (eventHandlers != null) {
 			for (Consumer<?> handler : eventHandlers) {
