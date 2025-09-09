@@ -20,6 +20,30 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MinecraftEvents {
 
 	/**
+	 * Posted when the server is started.
+	 */
+	public record ServerStarted(
+			CallbackInfo ci
+	) {
+	}
+
+	/**
+	 * Posted when the server is stopping.
+	 */
+	public record ServerStopping(
+			CallbackInfo ci
+	) {
+	}
+
+	/**
+	 * Posted when the server is stopped.
+	 */
+	public record ServerStopped(
+			CallbackInfo ci
+	) {
+	}
+
+	/**
 	 * Posted when a player joins the server.
 	 */
 	public record PlayerJoin(
