@@ -52,8 +52,8 @@ broadcasts:
     command: true
   minecraft_to_discord: # channel name, empty = disable
     server:
-      start: chat
-      stop: chat
+      started: chat
+      stopped: chat
     player:
       join: chat
       quit: chat
