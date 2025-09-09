@@ -77,6 +77,7 @@ multi_server:
     host: localhost
     port: 5000
   server_name: SMP
+  server_color: yellow
 
 # MSPT 监控设置
 mspt_monitoring:
@@ -159,10 +160,45 @@ custom_messages:
       without_webhook:
         multi_server_enabled: "[{server}] <{display_name}> {message}"
         multi_server_disabled: "<{display_name}> {message}"
+  common:
+    chat:
+      - text: "[{server}] "
+        bold: true
+        color: {server_color}
+      - text: "<{name}> "
+        bold: false
+        color: {role_color}
+      - text: "{message}"
+        bold: false
+        color: gray
+    others:
+      - text: "[{server}] "
+        bold: true
+        color: {server_color}
+      - text: "{message}"
+        bold: false
+        color: gray
   discord_to_minecraft:
-    chat: "<bold><blue>[Discord]<clear> <color {role_color}><{name}><clear> <gray>{message}<clear>"
-    response: "<bold><dark_gray>    ┌────<clear> <color {role_color}><{name}><clear> <dark_gray>{message}<clear>"
-    command: "<bold><blue>[Discord]<clear> <color {role_color}><{name}><clear> <gray>executed {message} command!<clear>"
+    response:
+      - text: "    ┌──── "
+        bold: true
+        color: dark_gray
+      - text: "<{name}> "
+        bold: false
+        color: {role_color}
+      - text: "{message}"
+        bold: false
+        color: dark_gray
+    command:
+      - text: "[Discord] "
+        bold: true
+        color: blue
+      - text: "<{name}> "
+        bold: false
+        color: {role_color}
+      - text: "executed {command} command!"
+        bold: false
+        color: gray
   minecraft_to_discord:
     server:
       start: "**Server started!**"
