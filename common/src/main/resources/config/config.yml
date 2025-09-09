@@ -65,11 +65,6 @@ broadcasts:
       say: chat
       tell_raw: chat
 
-# 管理员设置
-admins:
-  - discord_username: xujiayao
-    minecraft_op_level: 4
-
 # 多服务器功能
 multi_server:
   enable: false
@@ -93,8 +88,9 @@ console_forwarding:
   channel: console_forwarding
 
 # 账户绑定设置
+# 强制启用，若MC里为某op_level，自动成为DMCC管理员，允许使用管理命令
 account_linking:
-  enable: true
+  dmcc_admin_op_level_requirement: 4
   link_code_expires_in_seconds: 600
   features:
     sync_role_colors: true
