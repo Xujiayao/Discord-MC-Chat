@@ -15,8 +15,20 @@ import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
 public class MixinMinecraftServer {
 
 	@Inject(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/Util;getNanos()J", ordinal = 0))
-	private void afterSetupServer(CallbackInfo ci) {
-		// ServerStart Event
+	private void serverStarted(CallbackInfo ci) {
+		// ServerStarted Event
 		LOGGER.info("[DMCC] Server started");
+	}
+
+	@Inject(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;stopServer()V"))
+	private void serverStopping(CallbackInfo ci) {
+		// ServerStopping Event
+		LOGGER.info("[DMCC] Server stopping");
+	}
+
+	@Inject(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;onServerExit()V"))
+	private void serverStopped(CallbackInfo ci) {
+		// ServerStopped Event
+		LOGGER.info("[DMCC] Server stopped");
 	}
 }
