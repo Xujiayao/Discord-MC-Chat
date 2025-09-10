@@ -17,7 +17,6 @@ bot:
   token: # Discord 机器人令牌
   rich_presence: # TODO
     enable: true
-    todo: true
 
 # 关闭设置
 shutdown:
@@ -115,15 +114,15 @@ channel_topic_updating:
 command_permissions:
   help: everyone
   info: everyone
-  stats: everyone
   link: everyone
+  stats: everyone
   update: everyone
-  whitelist: admin
   console: admin
   log: admin
   reload: admin
   start: admin
   stop: admin
+  whitelist: admin
 
 # 消息格式设置
 formatting: # TODO
