@@ -27,6 +27,13 @@ This project includes the following third-party libraries. Each is distributed u
      - https://github.com/FasterXML/jackson-databind
      - https://github.com/FasterXML/jackson-dataformats-text
 
+4. OkHttp
+   - Maven coordinates:
+     - com.squareup.okhttp3:okhttp:5.1.0
+   - License: Apache License 2.0
+   - Homepage:
+     - https://square.github.io/okhttp/
+
 ---
 
 All third-party dependencies have been relocated to the "dmcc_dep" package and may themselves contain additional transitive dependencies, which are distributed under their own respective licenses. For details, please refer to the relevant library's homepage or distribution package.
