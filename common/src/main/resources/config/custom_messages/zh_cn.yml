@@ -5,8 +5,8 @@
 # Custom Messages file for DMCC version:
 version: 3.0.0-beta.0
 #
-# Code:     en_us
-# Language: English (US)
+# Code:     zh_cn
+# Language: 简体中文（中国大陆）
 #
 # More information + Docs:
 # https://dmcc.xujiayao.com/
@@ -64,33 +64,33 @@ discord_to_minecraft:
     - text: "<{name}> "
       bold: false
       color: {role_color}
-    - text: "executed {command} command!"
+    - text: "执行了 {command} 命令！"
       bold: false
       color: gray
 
 minecraft_to_discord:
   server:
-    start: "**Server started!**"
-    stop: "**Server stopped!**"
+    start: "**服务器已启动！**"
+    stop: "**服务器已关闭！**"
   player:
-    join: "**{display_name} joined the game**"
-    quit: "**{display_name} left the game**"
+    join: "**{display_name} 加入了游戏**"
+    quit: "**{display_name} 离开了游戏**"
     chat: default
     command: default
     die: "**{death_message}**"
     advancement:
-      task: "**{display_name} has made the advancement [{advancement}]**\n*{description}*"
-      challenge: "**{display_name} has completed the challenge [{advancement}]**\n*{description}*"
-      goal: "**{display_name} has reached the goal [{advancement}]**\n*{description}*"
+      task: "**{display_name} 达成了进度 [{advancement}]**\n*{description}*"
+      challenge: "**{display_name} 完成了挑战 [{advancement}]**\n*{description}*"
+      goal: "**{display_name} 达成了目标 [{advancement}]**\n*{description}*"
   source:
     say: default
     tell_raw: default
 
 channel_topic_updating:
-  offline: ":x: Server offline | Last updated: <t:{last_update_time}:f>"
+  offline: ":x: 服务器离线 | 最后更新于：<t:{last_update_time}:f>"
   online:
-    multi_server_enabled: ":white_check_mark: {online_player_count}/{max_player_count} player(s) online | {total_player_count} player(s) ever joined | {online_server_count} server(s) online [{online_server_list}] | Server started <t:{server_started_time}:R> | Last updated: <t:{last_update_time}:f>"
-    multi_server_disabled: ":white_check_mark: {online_player_count}/{max_player_count} player(s) online | {total_player_count} player(s) ever joined | Server started <t:{server_started_time}:R> | Last updated: <t:{last_update_time}:f>"
+    multi_server_enabled: ":white_check_mark: {online_player_count}/{max_player_count} 位玩家在线 | {total_player_count} 位玩家曾加入过 | {online_server_count} 个服务器在线 [{online_server_list}] | 服务器启动于 <t:{server_started_time}:R> | 最后更新于：<t:{last_update_time}:f>"
+    multi_server_disabled: ":white_check_mark: {online_player_count}/{max_player_count} 位玩家在线 | {total_player_count} 位玩家曾加入过 | 服务器启动于 <t:{server_started_time}:R> | 最后更新于：<t:{last_update_time}:f>"
 
 mspt_monitoring:
-  high_mspt: "**Server MSPT ({mspt}) is above {mspt_limit}!**"
+  high_mspt: "**服务器 MSPT ({mspt}) 高于 {mspt_limit}！**"
