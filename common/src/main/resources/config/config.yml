@@ -61,6 +61,7 @@ broadcasts:
 multi_server:
   for_standalone_mode_only:
     port: 5000
+    minecraft_version: 1.21.8
     servers:
       - name: SMP
         color: yellow
