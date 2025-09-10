@@ -1,0 +1,96 @@
+# ==================================================
+# Discord-MC-Chat (DMCC)
+# By Xujiayao
+#
+# Custom Messages file for DMCC version:
+version: 3.0.0-beta.0
+#
+# Code:     en_us
+# Language: English (US)
+#
+# More information + Docs:
+# https://dmcc.xujiayao.com/
+#
+# Only edit the items below if you know what you are doing!
+# ==================================================
+
+templates: # You can add your own templates here
+  - name: default
+    with_webhook:
+      multi_server_enabled:
+        username: "[{server}] {display_name}"
+        content: "{message}"
+      multi_server_disabled:
+        username: "{display_name}"
+        content: "{message}"
+    without_webhook:
+      multi_server_enabled: "[{server}] <{display_name}> {message}"
+      multi_server_disabled: "<{display_name}> {message}"
+
+common:
+  chat:
+    - text: "[{server}] "
+      bold: true
+      color: {server_color}
+    - text: "<{name}> "
+      bold: false
+      color: {role_color}
+    - text: "{message}"
+      bold: false
+      color: gray
+  others:
+    - text: "[{server}] "
+      bold: true
+      color: {server_color}
+    - text: "{message}"
+      bold: false
+      color: gray
+
+discord_to_minecraft:
+  response:
+    - text: "    ┌──── "
+      bold: true
+      color: dark_gray
+    - text: "<{name}> "
+      bold: false
+      color: {role_color}
+    - text: "{message}"
+      bold: false
+      color: dark_gray
+  command:
+    - text: "[Discord] "
+      bold: true
+      color: blue
+    - text: "<{name}> "
+      bold: false
+      color: {role_color}
+    - text: "executed {command} command!"
+      bold: false
+      color: gray
+
+minecraft_to_discord:
+  server:
+    start: "**Server started!**"
+    stop: "**Server stopped!**"
+  player:
+    join: "**{display_name} joined the game**"
+    quit: "**{display_name} left the game**"
+    chat: default
+    command: default
+    die: "**{death_message}**"
+    advancement:
+      task: "**{display_name} has made the advancement [{advancement}]**\n*{description}*"
+      challenge: "**{display_name} has completed the challenge [{advancement}]**\n*{description}*"
+      goal: "**{display_name} has reached the goal [{advancement}]**\n*{description}*"
+  source:
+    say: default
+    tell_raw: default
+
+channel_topic_updating:
+  offline: ":x: Server offline | Last updated: <t:{last_update_time}:f>"
+  online:
+    multi_server_enabled: ":white_check_mark: {online_player_count}/{max_player_count} player(s) online | {unique_player_count} unique player(s) ever joined | {online_server_count} server(s) online [{online_server_list}] | Server started <t:{server_started_time}:R> | Last updated: <t:{last_update_time}:f>"
+    multi_server_disabled: ":white_check_mark: {online_player_count}/{max_player_count} player(s) online | {unique_player_count} unique player(s) ever joined | Server started <t:{server_started_time}:R> | Last updated: <t:{last_update_time}:f>"
+
+mspt_monitoring:
+  high_mspt: "**Server MSPT ({mspt}) is above {mspt_limit}!**"

@@ -6,7 +6,7 @@
 version: 3.0.0-beta.0
 #
 # More information + Docs:
-# https://blog.xujiayao.com/posts/4ba0a17a/
+# https://dmcc.xujiayao.com/
 # ==================================================
 
 # 语言设置
@@ -32,18 +32,11 @@ webhook:
     - users
     - roles
 
-# 频道设置
-channels: # You can add your own channels here
-  - name: chat
-    id: 1234567890
-  - name: console_forwarding
-    id: 1234567890
-
 # 检查更新设置
 check_for_updates:
   enable: true # 是否检查更新
   mention_admins: true # 是否在更新通知中提及管理员
-  channel: chat
+  channel: in-game-chat
 
 # 消息广播设置
 broadcasts:
@@ -52,34 +45,40 @@ broadcasts:
     command: true
   minecraft_to_discord: # channel name, empty = disable
     server:
-      started: chat
-      stopped: chat
+      started: in-game-chat
+      stopped: in-game-chat
     player:
-      join: chat
-      quit: chat
-      chat: chat
-      command: chat
-      die: chat
-      advancement: chat
+      join: in-game-chat
+      quit: in-game-chat
+      chat: in-game-chat
+      command: in-game-chat
+      die: in-game-chat
+      advancement: in-game-chat
     source:
-      say: chat
-      tell_raw: chat
+      say: in-game-chat
+      tell_raw: in-game-chat
 
 # 多服务器功能
 multi_server:
-  enable: false
-  connection:
-    host: localhost
+  for_standalone_mode_only:
     port: 5000
-  server_name: SMP
-  server_color: yellow
+    servers:
+      - name: SMP
+        color: yellow
+        start_command: ./SMP/start.bat # command or url
+  for_minecraft_mod_mode_only:
+    enable: false
+    connection:
+      host: localhost
+      port: 5000
+    server_name: SMP
 
 # MSPT 监控设置
 mspt_monitoring:
   enable: true
   interval_seconds: 5
   threshold: 50
-  channel: chat
+  channel: in-game-chat
 
 # 控制台转发设置
 console_forwarding:
@@ -87,13 +86,21 @@ console_forwarding:
   execute_command: true
   channel: console_forwarding
 
+# 管理员设置
+dmcc_admin:
+  minecraft_op_level_requirement: 4
+
 # 账户绑定设置
 # 强制启用，若MC里为某op_level，自动成为DMCC管理员，允许使用管理命令
 account_linking:
-  dmcc_admin_op_level_requirement: 4
   link_code_expires_in_seconds: 600
   features:
     sync_role_colors: true
+    sync_op_level_based_on_discord_roles:
+      enable: true
+      list:
+        - role_name: Admins
+          op_level: 4
     discord_mention_notifications:
       enable: true
       style: action_bar # action_bar, title, or chat
@@ -102,7 +109,7 @@ account_linking:
 channel_topic_updating:
   enable: true
   interval_seconds: 600
-  channel: chat
+  channel: in-game-chat
 
 # 命令权限设置
 command_permissions:
@@ -137,85 +144,3 @@ excluded_commands:
   - /reg (.*)
   - /account (.*)
   - /auth (.*)
-
-# --------------------------------------------------
-# Only edit the items below if you know what you are doing!
-# --------------------------------------------------
-
-# 自定义消息
-custom_messages:
-  templates: # You can add your own templates here
-    - name: default
-      with_webhook:
-        multi_server_enabled:
-          username: "[{server}] {display_name}"
-          content: "{message}"
-        multi_server_disabled:
-          username: "{display_name}"
-          content: "{message}"
-      without_webhook:
-        multi_server_enabled: "[{server}] <{display_name}> {message}"
-        multi_server_disabled: "<{display_name}> {message}"
-  common:
-    chat:
-      - text: "[{server}] "
-        bold: true
-        color: {server_color}
-      - text: "<{name}> "
-        bold: false
-        color: {role_color}
-      - text: "{message}"
-        bold: false
-        color: gray
-    others:
-      - text: "[{server}] "
-        bold: true
-        color: {server_color}
-      - text: "{message}"
-        bold: false
-        color: gray
-  discord_to_minecraft:
-    response:
-      - text: "    ┌──── "
-        bold: true
-        color: dark_gray
-      - text: "<{name}> "
-        bold: false
-        color: {role_color}
-      - text: "{message}"
-        bold: false
-        color: dark_gray
-    command:
-      - text: "[Discord] "
-        bold: true
-        color: blue
-      - text: "<{name}> "
-        bold: false
-        color: {role_color}
-      - text: "executed {command} command!"
-        bold: false
-        color: gray
-  minecraft_to_discord:
-    server:
-      start: "**Server started!**"
-      stop: "**Server stopped!**"
-    player:
-      join: "**{display_name} joined the game**"
-      quit: "**{display_name} left the game**"
-      chat: default
-      command: default
-      die: "**{death_message}**"
-      advancement:
-        task: "**{display_name} has made the advancement [{advancement}]**\n*{description}*"
-        challenge: "**{display_name} has completed the challenge [{advancement}]**\n*{description}*"
-        goal: "**{display_name} has reached the goal [{advancement}]**\n*{description}*"
-    source:
-      say: default
-      tell_raw: default
-  channel_topic_updating:
-    offline: ":x: Server offline | Last updated: <t:{lastUpdateTime}:f>"
-    online:
-      multi_server_enabled: ":white_check_mark: {onlinePlayerCount}/{maxPlayerCount} player(s) online | {uniquePlayerCount} unique player(s) ever joined | {onlineServerCount} server(s) online [{onlineServerList}] | Server started <t:{serverStartedTime}:R> | Last updated: <t:{lastUpdateTime}:f>"
-      multi_server_disabled: ":white_check_mark: {onlinePlayerCount}/{maxPlayerCount} player(s) online | {uniquePlayerCount} unique player(s) ever joined | Server started <t:{serverStartedTime}:R> | Last updated: <t:{lastUpdateTime}:f>"
-  mspt_monitoring:
-    high_mspt: "**Server MSPT ({mspt}) is above {msptLimit}!**"
