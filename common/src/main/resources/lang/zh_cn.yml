@@ -1,0 +1,6 @@
+commands:
+  stop: "停止服务器"
+  update: "检查更新"
+
+whitelist:
+  success: "**已将 {} 添加至服务器白名单！**"

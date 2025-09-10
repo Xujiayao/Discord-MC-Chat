@@ -1,0 +1,6 @@
+commands:
+  stop: "Stop the server"
+  update: "Check for updates"
+
+whitelist:
+  success: "**Added {} to the whitelist!**"
