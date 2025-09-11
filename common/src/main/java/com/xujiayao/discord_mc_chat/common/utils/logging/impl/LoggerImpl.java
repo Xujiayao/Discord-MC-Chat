@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.common.utils.logging.impl;
 
-import com.xujiayao.discord_mc_chat.common.utils.Utils;
+import com.xujiayao.discord_mc_chat.common.utils.EnvironmentUtils;
+import com.xujiayao.discord_mc_chat.common.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.Marker;
 
@@ -35,7 +36,7 @@ public class LoggerImpl implements Logger {
 	 */
 	public LoggerImpl(String name) {
 		this.name = name;
-		this.isMinecraftEnvironment = Utils.isMinecraftEnvironment();
+		this.isMinecraftEnvironment = EnvironmentUtils.isMinecraftEnvironment();
 
 		if (isMinecraftEnvironment) {
 			try {
@@ -85,7 +86,7 @@ public class LoggerImpl implements Logger {
 	 * @param t     Throwable to log (can be null)
 	 */
 	private void log(String level, String msg, Throwable t) {
-		msg = escape(msg);
+		msg = StringUtils.escape(msg);
 
 		if (isMinecraftEnvironment) {
 			try {
@@ -103,7 +104,7 @@ public class LoggerImpl implements Logger {
 			String time = new SimpleDateFormat("HH:mm:ss").format(System.currentTimeMillis());
 			String thread = Thread.currentThread().getName();
 
-			System.out.println(format("[{}] [{}/{}]: {}", time, thread, level, msg));
+			System.out.println(StringUtils.format("[{}] [{}/{}]: {}", time, thread, level, msg));
 
 			if (t != null) {
 				t.printStackTrace(System.out);
@@ -119,34 +120,6 @@ public class LoggerImpl implements Logger {
 	 */
 	private void log(String level, String msg) {
 		log(level, msg, null);
-	}
-
-	/**
-	 * Escape special characters in strings.
-	 *
-	 * @param s String to escape
-	 * @return Escaped string
-	 */
-	private String escape(String s) {
-		return s.replace("\t", "\\t")
-				.replace("\b", "\\b")
-				.replace("\n", "\\n")
-				.replace("\r", "\\r")
-				.replace("\f", "\\f");
-	}
-
-	/**
-	 * Simple {} placeholder replacement.
-	 *
-	 * @param str  String with {} placeholders
-	 * @param args Arguments to replace the placeholders
-	 * @return String with placeholders replaced
-	 */
-	private String format(String str, Object... args) {
-		for (Object arg : args) {
-			str = str.replaceFirst("\\{}", arg == null ? "null" : arg.toString().replace("\\", "\\\\"));
-		}
-		return str;
 	}
 
 	// Logging level checks
@@ -210,17 +183,17 @@ public class LoggerImpl implements Logger {
 
 	@Override
 	public void trace(String format, Object arg) {
-		// log("TRACE", format(format, arg));
+		// log("TRACE", StringUtils.format(format, arg));
 	}
 
 	@Override
 	public void trace(String format, Object arg1, Object arg2) {
-		// log("TRACE", format(format, arg1, arg2));
+		// log("TRACE", StringUtils.format(format, arg1, arg2));
 	}
 
 	@Override
 	public void trace(String format, Object... arguments) {
-		// log("TRACE", format(format, arguments));
+		// log("TRACE", StringUtils.format(format, arguments));
 	}
 
 	@Override
@@ -262,17 +235,17 @@ public class LoggerImpl implements Logger {
 
 	@Override
 	public void debug(String format, Object arg) {
-		// log("DEBUG", format(format, arg));
+		// log("DEBUG", StringUtils.format(format, arg));
 	}
 
 	@Override
 	public void debug(String format, Object arg1, Object arg2) {
-		// log("DEBUG", format(format, arg1, arg2));
+		// log("DEBUG", StringUtils.format(format, arg1, arg2));
 	}
 
 	@Override
 	public void debug(String format, Object... arguments) {
-		// log("DEBUG", format(format, arguments));
+		// log("DEBUG", StringUtils.format(format, arguments));
 	}
 
 	@Override
@@ -313,17 +286,17 @@ public class LoggerImpl implements Logger {
 
 	@Override
 	public void info(String format, Object arg) {
-		log("INFO", format(format, arg));
+		log("INFO", StringUtils.format(format, arg));
 	}
 
 	@Override
 	public void info(String format, Object arg1, Object arg2) {
-		log("INFO", format(format, arg1, arg2));
+		log("INFO", StringUtils.format(format, arg1, arg2));
 	}
 
 	@Override
 	public void info(String format, Object... arguments) {
-		log("INFO", format(format, arguments));
+		log("INFO", StringUtils.format(format, arguments));
 	}
 
 	@Override
@@ -364,17 +337,17 @@ public class LoggerImpl implements Logger {
 
 	@Override
 	public void warn(String format, Object arg) {
-		log("WARN", format(format, arg));
+		log("WARN", StringUtils.format(format, arg));
 	}
 
 	@Override
 	public void warn(String format, Object arg1, Object arg2) {
-		log("WARN", format(format, arg1, arg2));
+		log("WARN", StringUtils.format(format, arg1, arg2));
 	}
 
 	@Override
 	public void warn(String format, Object... arguments) {
-		log("WARN", format(format, arguments));
+		log("WARN", StringUtils.format(format, arguments));
 	}
 
 	@Override
@@ -415,17 +388,17 @@ public class LoggerImpl implements Logger {
 
 	@Override
 	public void error(String format, Object arg) {
-		log("ERROR", format(format, arg));
+		log("ERROR", StringUtils.format(format, arg));
 	}
 
 	@Override
 	public void error(String format, Object arg1, Object arg2) {
-		log("ERROR", format(format, arg1, arg2));
+		log("ERROR", StringUtils.format(format, arg1, arg2));
 	}
 
 	@Override
 	public void error(String format, Object... arguments) {
-		log("ERROR", format(format, arguments));
+		log("ERROR", StringUtils.format(format, arguments));
 	}
 
 	@Override

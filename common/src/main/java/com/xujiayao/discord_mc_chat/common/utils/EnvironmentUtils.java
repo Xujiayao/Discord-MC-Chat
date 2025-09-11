@@ -9,11 +9,11 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 
 /**
- * Utility class
+ * Environment utility class.
  *
  * @author Xujiayao
  */
-public class Utils {
+public class EnvironmentUtils {
 
 	/**
 	 * Check if running in a Minecraft environment (Fabric or NeoForge)
@@ -44,7 +44,7 @@ public class Utils {
 	 * @return DMCC version in string
 	 */
 	public static String getVersionByResource() {
-		InputStream stream = Utils.class.getResourceAsStream("/fabric.mod.json");
+		InputStream stream = EnvironmentUtils.class.getResourceAsStream("/fabric.mod.json");
 		if (stream == null) {
 			throw new RuntimeException("File \"fabric.mod.json\" not found");
 		}

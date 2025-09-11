@@ -1,7 +1,7 @@
 package com.xujiayao.discord_mc_chat.common;
 
 import com.xujiayao.discord_mc_chat.common.minecraft.MinecraftEventHandler;
-import com.xujiayao.discord_mc_chat.common.utils.Utils;
+import com.xujiayao.discord_mc_chat.common.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.common.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.common.utils.logging.Logger;
 
@@ -27,7 +27,7 @@ public class DMCC {
 	 * @param loader The name of the loader
 	 */
 	public static void init(String loader) {
-		init(loader, Utils.getVersionByResource());
+		init(loader, EnvironmentUtils.getVersionByResource());
 	}
 
 	/**
@@ -62,14 +62,15 @@ public class DMCC {
 
 			LOGGER.info("Initializing DMCC {} with loader: {}", VERSION, loader);
 
-			// Load configuration
 			// If configuration fails to load, exit the DMCC-Main thread gracefully
+			// In a Minecraft environment, we just return and let the server continue running
+			// In standalone mode, the process would terminate after returning
+
+			// Load configuration
 			if (!ConfigManager.load()) {
 				LOGGER.warn("DMCC will not continue initialization due to configuration issues");
 				LOGGER.info("Exiting...");
 
-				// In a Minecraft environment, we just return and let the server continue running
-				// In standalone mode, the process would terminate here
 				return;
 			}
 
