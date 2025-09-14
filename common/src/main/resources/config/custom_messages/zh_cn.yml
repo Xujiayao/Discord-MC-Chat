@@ -31,42 +31,42 @@ common:
   chat:
     - text: "[{server}] "
       bold: true
-      color: {server_color}
+      color: "{server_color}"
     - text: "<{name}> "
       bold: false
-      color: {role_color}
+      color: "{role_color}"
     - text: "{message}"
       bold: false
-      color: gray
+      color: "gray"
   others:
     - text: "[{server}] "
       bold: true
-      color: {server_color}
+      color: "{server_color}"
     - text: "{message}"
       bold: false
-      color: gray
+      color: "gray"
 
 discord_to_minecraft:
   response:
     - text: "    ┌──── "
       bold: true
-      color: dark_gray
+      color: "dark_gray"
     - text: "<{name}> "
       bold: false
-      color: {role_color}
+      color: "{role_color}"
     - text: "{message}"
       bold: false
-      color: dark_gray
+      color: "dark_gray"
   command:
     - text: "[Discord] "
       bold: true
-      color: blue
+      color: "blue"
     - text: "<{name}> "
       bold: false
-      color: {role_color}
+      color: "{role_color}"
     - text: "执行了 {command} 命令！"
       bold: false
-      color: gray
+      color: "gray"
 
 minecraft_to_discord:
   server:
