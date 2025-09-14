@@ -1,5 +1,6 @@
 package com.xujiayao.discord_mc_chat.common.utils.i18n;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -21,7 +22,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.MessageFormat;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
@@ -190,7 +190,8 @@ public class I18nManager {
 			// If a valid cached file exists, use it.
 			if (Files.exists(langCachePath) && isValidJson(langCachePath)) {
 				JsonNode root = JSON_MAPPER.readTree(Files.newBufferedReader(langCachePath, StandardCharsets.UTF_8));
-				minecraftTranslations.putAll(JSON_MAPPER.convertValue(root, Map.class));
+				minecraftTranslations.putAll(JSON_MAPPER.convertValue(root, new TypeReference<Map<String, String>>() {
+				}));
 				LOGGER.info("Loaded Minecraft translations from cache for version {}", mcVersion);
 				return true;
 			}
@@ -210,7 +211,8 @@ public class I18nManager {
 				Files.writeString(langCachePath, jsonContent);
 
 				JsonNode root = JSON_MAPPER.readTree(jsonContent);
-				minecraftTranslations.putAll(JSON_MAPPER.convertValue(root, Map.class));
+				minecraftTranslations.putAll(JSON_MAPPER.convertValue(root, new TypeReference<Map<String, String>>() {
+				}));
 
 				LOGGER.info("Downloaded and cached Minecraft translations, file size: {} bytes", jsonContent.length());
 				return true;
@@ -287,10 +289,8 @@ public class I18nManager {
 	 */
 	private static void flattenJsonToMap(JsonNode node, String path, Map<String, String> map) {
 		if (node.isObject()) {
-			Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
 			String prefix = path.isEmpty() ? "" : path + ".";
-			while (fields.hasNext()) {
-				Map.Entry<String, JsonNode> field = fields.next();
+			for (Map.Entry<String, JsonNode> field : node.properties()) {
 				flattenJsonToMap(field.getValue(), prefix + field.getKey(), map);
 			}
 		} else if (node.isTextual()) {
