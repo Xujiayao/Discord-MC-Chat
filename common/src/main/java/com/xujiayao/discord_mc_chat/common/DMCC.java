@@ -3,6 +3,7 @@ package com.xujiayao.discord_mc_chat.common;
 import com.xujiayao.discord_mc_chat.common.minecraft.MinecraftEventHandler;
 import com.xujiayao.discord_mc_chat.common.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.common.utils.config.ConfigManager;
+import com.xujiayao.discord_mc_chat.common.utils.i18n.I18nManager;
 import com.xujiayao.discord_mc_chat.common.utils.logging.Logger;
 
 /**
@@ -69,6 +70,14 @@ public class DMCC {
 			// Load configuration
 			if (!ConfigManager.load()) {
 				LOGGER.warn("DMCC will not continue initialization due to configuration issues");
+				LOGGER.info("Exiting...");
+
+				return;
+			}
+
+			// Load language files
+			if (!I18nManager.load()) {
+				LOGGER.warn("DMCC will not continue initialization due to language file issues");
 				LOGGER.info("Exiting...");
 
 				return;
