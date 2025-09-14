@@ -2,6 +2,7 @@ package com.xujiayao.discord_mc_chat.common.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.xujiayao.discord_mc_chat.common.utils.config.ConfigManager;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -55,5 +56,33 @@ public class EnvironmentUtils {
 		} catch (IOException e) {
 			throw new RuntimeException("Failed to identify DMCC version", e);
 		}
+	}
+
+	/**
+	 * Determines the current Minecraft version based on the environment.
+	 *
+	 * @return The Minecraft version string.
+	 */
+	public static String getMinecraftVersion() {
+		if (EnvironmentUtils.isMinecraftEnvironment()) {
+			// Fabric
+			try {
+				Class<?> fabricLoaderClass = Class.forName("net.fabricmc.loader.api.FabricLoader");
+				Object loaderInstance = fabricLoaderClass.getMethod("getInstance").invoke(null);
+				return (String) loaderInstance.getClass().getMethod("getRawGameVersion").invoke(loaderInstance);
+			} catch (Exception ignored) {
+			}
+
+			// NeoForge
+			try {
+				Class<?> fmlLoaderClass = Class.forName("net.neoforged.fml.loading.FMLLoader");
+				Object versionInfo = fmlLoaderClass.getMethod("versionInfo").invoke(null);
+				return (String) versionInfo.getClass().getMethod("mcVersion").invoke(versionInfo);
+			} catch (Exception ignored) {
+			}
+		}
+
+		// Standalone or fallback
+		return ConfigManager.getString("multi_server.for_standalone_mode_only.minecraft_version", "1.21.8");
 	}
 }
