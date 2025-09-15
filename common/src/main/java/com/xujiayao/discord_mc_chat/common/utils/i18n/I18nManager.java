@@ -14,7 +14,6 @@ import okhttp3.Response;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -188,12 +187,17 @@ public class I18nManager {
 			String mcVersion = EnvironmentUtils.getMinecraftVersion();
 
 			// If a valid cached file exists, use it.
-			if (Files.exists(langCachePath) && isValidJson(langCachePath)) {
-				JsonNode root = JSON_MAPPER.readTree(Files.newBufferedReader(langCachePath, StandardCharsets.UTF_8));
-				minecraftTranslations.putAll(JSON_MAPPER.convertValue(root, new TypeReference<Map<String, String>>() {
-				}));
-				LOGGER.info("Loaded Minecraft translations from cache for version {}", mcVersion);
-				return true;
+			if (Files.exists(langCachePath)) {
+				try {
+					JsonNode root = JSON_MAPPER.readTree(Files.newBufferedReader(langCachePath, StandardCharsets.UTF_8));
+					minecraftTranslations.putAll(JSON_MAPPER.convertValue(root, new TypeReference<Map<String, String>>() {
+					}));
+
+					LOGGER.info("Loaded Minecraft translations from cache for version {}", mcVersion);
+					return true;
+				} catch (Exception e) {
+					LOGGER.error("Failed to read cached Minecraft translations, will attempt to re-download", e);
+				}
 			}
 
 			// Otherwise, download the file.
@@ -263,21 +267,6 @@ public class I18nManager {
 	 */
 	public static JsonNode getCustomMessages() {
 		return customMessages;
-	}
-
-	/**
-	 * Checks if a file contains valid JSON content.
-	 *
-	 * @param path The path to the file.
-	 * @return true if the file content is valid JSON.
-	 */
-	private static boolean isValidJson(Path path) {
-		try (InputStreamReader reader = new InputStreamReader(Files.newInputStream(path), StandardCharsets.UTF_8)) {
-			JSON_MAPPER.readTree(reader);
-			return true;
-		} catch (IOException e) {
-			return false;
-		}
 	}
 
 	/**
