@@ -5,9 +5,15 @@ import com.xujiayao.discord_mc_chat.common.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.Marker;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,6 +31,9 @@ public class LoggerImpl implements Logger {
 
 	private final Map<String, Method> logMethods = new HashMap<>();
 	private final Map<String, Method> logThrowMethods = new HashMap<>();
+
+	private static volatile PrintWriter fileWriter;
+	private static boolean fileWriterInitialized = false;
 
 	/**
 	 * Create a new Logger instance.
@@ -65,6 +74,29 @@ public class LoggerImpl implements Logger {
 			}
 		} else {
 			minecraftLogger = null;
+			synchronized (LoggerImpl.class) {
+				if (!fileWriterInitialized) {
+					try {
+						Files.createDirectories(Paths.get("logs"));
+						String fileName = "logs/DMCC_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".log";
+						fileWriter = new PrintWriter(new FileWriter(fileName, true), true);
+					} catch (IOException e) {
+						System.out.println("Failed to create log file: " + e.getMessage());
+						e.printStackTrace(System.out);
+					} finally {
+						fileWriterInitialized = true;
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Closes the file writer if it was initialized.
+	 */
+	public static void closeFileWriter() {
+		if (fileWriter != null) {
+			fileWriter.close();
 		}
 	}
 
@@ -104,10 +136,18 @@ public class LoggerImpl implements Logger {
 			String time = new SimpleDateFormat("HH:mm:ss").format(System.currentTimeMillis());
 			String thread = Thread.currentThread().getName();
 
-			System.out.println(StringUtils.format("[{}] [{}/{}]: {}", time, thread, level, msg));
+			String formattedMessage = StringUtils.format("[{}] [{}/{}]: {}", time, thread, level, msg);
+
+			System.out.println(formattedMessage);
+			if (fileWriter != null) {
+				fileWriter.println(formattedMessage);
+			}
 
 			if (t != null) {
 				t.printStackTrace(System.out);
+				if (fileWriter != null) {
+					t.printStackTrace(fileWriter);
+				}
 			}
 		}
 	}

@@ -9,6 +9,7 @@ import com.xujiayao.discord_mc_chat.common.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.common.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.common.utils.i18n.I18nManager;
 import com.xujiayao.discord_mc_chat.common.utils.logging.Logger;
+import com.xujiayao.discord_mc_chat.common.utils.logging.impl.LoggerImpl;
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
 
@@ -62,6 +63,18 @@ public class DMCC {
 	public static void init(String loader, String version) {
 		new Thread(() -> {
 			VERSION = version;
+
+			// Check if running in headless mode
+			if (System.console() == null) {
+				// The user likely started the application by double-clicking the JAR file
+				// Generates a warning to remind the user to start DMCC from the command line
+				LOGGER.warn("No console detected, indicating DMCC is running in headless mode");
+				LOGGER.warn("DMCC does not support being started by double-clicking the JAR file");
+				LOGGER.warn("Please start DMCC from the command line \"java -jar Discord-MC-Chat-{}.jar\"", VERSION);
+				LOGGER.info("Exiting...");
+
+				return;
+			}
 
 			// Pad the version string to ensure consistent formatting in the banner
 			String versionString = VERSION + " ".repeat(Math.max(0, 31 - VERSION.length()));
@@ -142,6 +155,9 @@ public class DMCC {
 			LOGGER.info("DMCC shutdown successfully. Goodbye!");
 		} catch (Exception e) {
 			LOGGER.error("An error occurred during DMCC shutdown", e);
+		} finally {
+			// Close the file logger
+			LoggerImpl.closeFileWriter();
 		}
 	}
 }
