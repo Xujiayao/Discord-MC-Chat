@@ -14,7 +14,7 @@ language: en_us
 
 # 机器人设置
 bot:
-  token: # Discord 机器人令牌
+  token: your_token_here # Discord 机器人令牌
   rich_presence: # TODO
     enable: true
 
