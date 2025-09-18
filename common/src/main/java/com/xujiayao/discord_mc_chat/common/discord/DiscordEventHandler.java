@@ -5,6 +5,8 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
+import javax.annotation.Nonnull;
+
 import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
 
 /**
@@ -13,19 +15,19 @@ import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
 public class DiscordEventHandler extends ListenerAdapter {
 
 	@Override
-	public void onReady(ReadyEvent event) {
+	public void onReady(@Nonnull ReadyEvent event) {
 		LOGGER.info("Discord bot is ready. Logged in as tag: \"{}\"", event.getJDA().getSelfUser().getAsTag());
 		// TODO: Register slash commands
 		// TODO: Initialize Rich Presence Manager
 	}
 
 	@Override
-	public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
+	public void onSlashCommandInteraction(@Nonnull SlashCommandInteractionEvent event) {
 		// TODO: Handle slash commands
 	}
 
 	@Override
-	public void onMessageReceived(MessageReceivedEvent event) {
+	public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
 		if (event.getAuthor().isBot() || event.isWebhookMessage()) {
 			return;
 		}
