@@ -1,5 +1,8 @@
 package com.xujiayao.discord_mc_chat.common.standalone;
 
+import com.xujiayao.discord_mc_chat.common.commands.CommandManager;
+
+import java.util.List;
 import java.util.Scanner;
 
 import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
@@ -25,39 +28,15 @@ public class TerminalManager {
 			while (running) {
 				if (scanner.hasNextLine()) {
 					String line = scanner.nextLine();
-					handleCommand(line);
+					List<String> response = CommandManager.handleCommand(line);
+					for (String message : response) {
+						LOGGER.info(message);
+					}
 				}
 			}
 		}, "DMCC-Terminal");
 
 		consoleThread.start();
-	}
-
-	/**
-	 * Handles a command from the terminal.
-	 *
-	 * @param commandLine The full command line entered by the user.
-	 */
-	private static void handleCommand(String commandLine) {
-		String[] parts = commandLine.trim().split("\\s+");
-		String command = parts[0].toLowerCase();
-
-		switch (command) {
-			case "help" -> {
-				LOGGER.info("Available DMCC commands:");
-				LOGGER.info("  - help   | Shows this help message");
-				LOGGER.info("  - reload | Reloads the config.yml and custom message files.");
-				LOGGER.info("  - stop   | Shuts down DMCC");
-			}
-			case "reload" -> {
-				LOGGER.info("Reloading DMCC...");
-			}
-			case "stop" -> {
-				LOGGER.info("Stopping DMCC...");
-				System.exit(0);
-			}
-			default -> LOGGER.warn("Unknown command: \"{}\". Type \"help\" for a list of commands", command);
-		}
 	}
 
 	/**
