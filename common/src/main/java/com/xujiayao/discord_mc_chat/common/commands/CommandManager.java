@@ -1,5 +1,7 @@
 package com.xujiayao.discord_mc_chat.common.commands;
 
+import com.xujiayao.discord_mc_chat.common.utils.events.EventManager;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,13 +31,14 @@ public class CommandManager {
 				response.add("- stop   | Shuts down DMCC.");
 			}
 			case "reload" -> {
-				response.add("Reloading DMCC...");
+				response.add("Reloading DMCC in 5 seconds...");
+				EventManager.post(new CommandEvents.ReloadEvent());
 			}
 			case "stop" -> {
-				response.add("Stopping DMCC...");
-				System.exit(0);
+				response.add("Stopping DMCC in 5 seconds...");
+				EventManager.post(new CommandEvents.StopEvent());
 			}
-			default -> response.add("Unknown command: \"" + command + "\". Type `help` for a list of commands");
+			default -> response.add("Unknown command: \"" + command + "\". Type \"help\" for a list of commands");
 		}
 
 		return response;

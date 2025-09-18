@@ -3,6 +3,7 @@ package com.xujiayao.discord_mc_chat.common;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+import com.xujiayao.discord_mc_chat.common.commands.CommandEventHandler;
 import com.xujiayao.discord_mc_chat.common.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.common.minecraft.MinecraftEventHandler;
 import com.xujiayao.discord_mc_chat.common.standalone.TerminalManager;
@@ -113,6 +114,9 @@ public class DMCC {
 
 				return;
 			}
+
+			// Initialize Command event handlers
+			CommandEventHandler.init();
 
 			// Check environment
 			if (EnvironmentUtils.isMinecraftEnvironment()) {
