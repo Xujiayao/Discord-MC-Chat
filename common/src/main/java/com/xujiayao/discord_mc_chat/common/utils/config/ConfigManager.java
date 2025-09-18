@@ -17,6 +17,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.function.Function;
 
 import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
+import static com.xujiayao.discord_mc_chat.common.DMCC.YAML_MAPPER;
 
 /**
  * Configuration manager for DMCC.
@@ -44,12 +45,6 @@ public class ConfigManager {
 			Path configDir = Paths.get(CONFIG_DIR);
 			Files.createDirectories(configDir);
 
-			// Setup YAML mapper
-			YAMLFactory yamlFactory = new YAMLFactory()
-					.enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
-					.disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER);
-			ObjectMapper mapper = new ObjectMapper(yamlFactory);
-
 			Path configPath = configDir.resolve(CONFIG_FILE);
 			boolean configExists = Files.exists(configPath);
 
@@ -70,7 +65,7 @@ public class ConfigManager {
 			}
 
 			// Load the user's config
-			JsonNode config = mapper.readTree(Files.newBufferedReader(configPath, StandardCharsets.UTF_8));
+			JsonNode config = YAML_MAPPER.readTree(Files.newBufferedReader(configPath, StandardCharsets.UTF_8));
 
 			// Load the template config for validation
 			JsonNode templateConfig;
@@ -79,7 +74,7 @@ public class ConfigManager {
 					LOGGER.error("Could not find configuration template in resources: {}", CONFIG_TEMPLATE);
 					return false;
 				}
-				templateConfig = mapper.readTree(templateStream);
+				templateConfig = YAML_MAPPER.readTree(templateStream);
 			}
 
 			// Validate config

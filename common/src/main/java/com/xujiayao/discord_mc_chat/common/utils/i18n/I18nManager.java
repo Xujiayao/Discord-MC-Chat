@@ -2,13 +2,10 @@ package com.xujiayao.discord_mc_chat.common.utils.i18n;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.xujiayao.discord_mc_chat.common.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.common.utils.StringUtils;
 import com.xujiayao.discord_mc_chat.common.utils.YamlUtils;
 import com.xujiayao.discord_mc_chat.common.utils.config.ConfigManager;
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -23,7 +20,10 @@ import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.xujiayao.discord_mc_chat.common.DMCC.HTTP_CLIENT;
+import static com.xujiayao.discord_mc_chat.common.DMCC.JSON_MAPPER;
 import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
+import static com.xujiayao.discord_mc_chat.common.DMCC.YAML_MAPPER;
 
 /**
  * Manages internationalization (i18n) for DMCC.
@@ -32,10 +32,6 @@ import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
  * @author Xujiayao
  */
 public class I18nManager {
-
-	private static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
-	private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
-	private static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory());
 
 	private static final Path CUSTOM_MESSAGES_DIR = Paths.get("./config/discord_mc_chat/custom_messages");
 	private static final Path CACHE_DIR = Paths.get("./config/discord_mc_chat/cache/lang");

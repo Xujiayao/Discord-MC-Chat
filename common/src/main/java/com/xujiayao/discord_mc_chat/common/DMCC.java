@@ -1,10 +1,19 @@
 package com.xujiayao.discord_mc_chat.common;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+import com.xujiayao.discord_mc_chat.common.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.common.minecraft.MinecraftEventHandler;
 import com.xujiayao.discord_mc_chat.common.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.common.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.common.utils.i18n.I18nManager;
 import com.xujiayao.discord_mc_chat.common.utils.logging.Logger;
+import okhttp3.Cache;
+import okhttp3.OkHttpClient;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The main class of Discord MC Chat (DMCC).
@@ -15,6 +24,14 @@ public class DMCC {
 
 	public static final Logger LOGGER = new Logger();
 	public static String VERSION;
+
+	public static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory()
+			.enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
+			.disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
+	public static final ObjectMapper JSON_MAPPER = new ObjectMapper();
+
+
+	public static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
 
 	public static void main(String[] args) {
 		init("Standalone");
@@ -83,8 +100,48 @@ public class DMCC {
 				return;
 			}
 
-			// Initialize Minecraft event handlers
-			MinecraftEventHandler.init();
+			// Check environment
+			if (EnvironmentUtils.isMinecraftEnvironment()) {
+				// Initialize Minecraft event handlers
+				LOGGER.info("Minecraft environment detected. Initializing Minecraft event handlers...");
+				MinecraftEventHandler.init();
+			} else {
+				LOGGER.warn("No Minecraft environment detected. DMCC will run in standalone mode.");
+
+				// Register shutdown hook for standalone mode
+				Runtime.getRuntime().addShutdownHook(new Thread(DMCC::shutdown, "DMCC-Shutdown"));
+			}
+
+			// Initialize Discord
+			if (!DiscordManager.init()) {
+				LOGGER.warn("DMCC will not continue initialization due to Discord connection issues");
+				LOGGER.info("Exiting...");
+
+				return;
+			}
 		}, "DMCC-Main").start();
+	}
+
+	public static void shutdown() {
+		// TODO should broadcast shutdown message
+
+		LOGGER.info("Shutting down DMCC...");
+
+		try (ExecutorService executorService = HTTP_CLIENT.dispatcher().executorService(); Cache ignored = HTTP_CLIENT.cache()) {
+			// Shutdown Discord
+			DiscordManager.shutdown();
+
+			// Shutdown OkHttpClient
+			executorService.shutdown();
+			if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
+				executorService.shutdownNow(); // Force shutdown if not terminated gracefully
+			}
+			HTTP_CLIENT.connectionPool().evictAll();
+
+			// End of whole process
+			LOGGER.info("DMCC shutdown successfully. Goodbye!");
+		} catch (Exception e) {
+			LOGGER.error("An error occurred during DMCC shutdown", e);
+		}
 	}
 }
