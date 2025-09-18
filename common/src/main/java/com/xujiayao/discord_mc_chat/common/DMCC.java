@@ -5,6 +5,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.xujiayao.discord_mc_chat.common.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.common.minecraft.MinecraftEventHandler;
+import com.xujiayao.discord_mc_chat.common.standalone.TerminalManager;
 import com.xujiayao.discord_mc_chat.common.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.common.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.common.utils.i18n.I18nManager;
@@ -123,6 +124,9 @@ public class DMCC {
 
 				// Register shutdown hook for standalone mode
 				Runtime.getRuntime().addShutdownHook(new Thread(DMCC::shutdown, "DMCC-Shutdown"));
+
+				// Initialize interactive terminal for standalone mode
+				TerminalManager.init();
 			}
 
 			// Initialize Discord
@@ -141,6 +145,11 @@ public class DMCC {
 		LOGGER.info("Shutting down DMCC...");
 
 		try (ExecutorService executorService = HTTP_CLIENT.dispatcher().executorService(); Cache ignored = HTTP_CLIENT.cache()) {
+			// Shutdown TerminalManager if in standalone mode
+			if (!EnvironmentUtils.isMinecraftEnvironment()) {
+				TerminalManager.shutdown();
+			}
+
 			// Shutdown Discord
 			DiscordManager.shutdown();
 
