@@ -40,6 +40,8 @@ public class YamlUtils {
 	 * @return true if the config is valid, false otherwise
 	 */
 	public static boolean validate(JsonNode config, JsonNode templateConfig, Path configPath, boolean errorOnUnmodified) {
+		LOGGER.info("Validating configuration file at \"{}\"...", configPath);
+
 		// Check if config is identical to template (user made no changes)
 		if (errorOnUnmodified && config.equals(templateConfig)) {
 			LOGGER.error("Configuration file has not been modified from default template");
