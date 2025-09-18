@@ -54,7 +54,7 @@ public class I18nManager {
 		}
 
 		// Load custom messages (e.g., zh_cn.yml)
-		if (!reloadCustomMessages()) {
+		if (!loadCustomMessages()) {
 			return false;
 		}
 
@@ -95,12 +95,11 @@ public class I18nManager {
 	}
 
 	/**
-	 * Loads or reloads the custom messages configuration file.
-	 * This method can be used for hot-reloading.
+	 * Loads the custom messages configuration file.
 	 *
 	 * @return true if the custom messages were loaded and validated successfully.
 	 */
-	public static boolean reloadCustomMessages() {
+	public static boolean loadCustomMessages() {
 		try {
 			Files.createDirectories(CUSTOM_MESSAGES_DIR);
 			Path customMessagesPath = CUSTOM_MESSAGES_DIR.resolve(language + ".yml");

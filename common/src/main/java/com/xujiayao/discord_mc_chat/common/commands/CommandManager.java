@@ -27,7 +27,7 @@ public class CommandManager {
 			case "help" -> {
 				response.add("==================== Help ====================");
 				response.add("- help   | Shows this help message.");
-				response.add("- reload | Reloads the config.yml and custom message files.");
+				response.add("- reload | Reloads DMCC.");
 				response.add("- stop   | Shuts down DMCC.");
 			}
 			case "reload" -> {

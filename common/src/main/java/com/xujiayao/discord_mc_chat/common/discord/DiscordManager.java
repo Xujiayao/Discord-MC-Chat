@@ -11,6 +11,8 @@ import java.time.Duration;
 import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
 
 /**
+ * Manages Discord using JDA (Java Discord API).
+ *
  * @author Xujiayao
  */
 public class DiscordManager {

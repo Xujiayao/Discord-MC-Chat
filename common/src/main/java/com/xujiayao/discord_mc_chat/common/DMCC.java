@@ -9,6 +9,7 @@ import com.xujiayao.discord_mc_chat.common.minecraft.MinecraftEventHandler;
 import com.xujiayao.discord_mc_chat.common.standalone.TerminalManager;
 import com.xujiayao.discord_mc_chat.common.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.common.utils.config.ConfigManager;
+import com.xujiayao.discord_mc_chat.common.utils.events.EventManager;
 import com.xujiayao.discord_mc_chat.common.utils.i18n.I18nManager;
 import com.xujiayao.discord_mc_chat.common.utils.logging.Logger;
 import com.xujiayao.discord_mc_chat.common.utils.logging.impl.LoggerImpl;
@@ -26,7 +27,9 @@ import java.util.concurrent.TimeUnit;
 public class DMCC {
 
 	public static final Logger LOGGER = new Logger();
+
 	public static String VERSION;
+	public static String LOADER;
 
 	public static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory()
 			.enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
@@ -36,6 +39,13 @@ public class DMCC {
 
 	public static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
 
+	private static boolean shutdownHookAdded = false;
+
+	/**
+	 * Main method for standalone execution.
+	 *
+	 * @param args Command line arguments
+	 */
 	public static void main(String[] args) {
 		init("Standalone");
 	}
@@ -65,6 +75,7 @@ public class DMCC {
 	public static void init(String loader, String version) {
 		new Thread(() -> {
 			VERSION = version;
+			LOADER = loader;
 
 			// Check if running in headless mode
 			if (System.console() == null) {
@@ -93,7 +104,7 @@ public class DMCC {
 			LOGGER.info("│ By Xujiayao                                          https://dmcc.xujiayao.com/ │");
 			LOGGER.info("└─────────────────────────────────────────────────────────────────────────────────┘");
 
-			LOGGER.info("Initializing DMCC {} with loader: {}", VERSION, loader);
+			LOGGER.info("Initializing DMCC {} with loader: {}", VERSION, LOADER);
 
 			// If configuration fails to load, exit the DMCC-Main thread gracefully
 			// In a Minecraft environment, we just return and let the server continue running
@@ -126,8 +137,11 @@ public class DMCC {
 			} else {
 				LOGGER.warn("No Minecraft environment detected. DMCC will run in standalone mode.");
 
-				// Register shutdown hook for standalone mode
-				Runtime.getRuntime().addShutdownHook(new Thread(DMCC::shutdown, "DMCC-Shutdown"));
+				if (!shutdownHookAdded) {
+					// Register shutdown hook for standalone mode
+					Runtime.getRuntime().addShutdownHook(new Thread(DMCC::shutdown, "DMCC-Shutdown"));
+					shutdownHookAdded = true;
+				}
 
 				// Initialize interactive terminal for standalone mode
 				TerminalManager.init();
@@ -143,9 +157,10 @@ public class DMCC {
 		}, "DMCC-Main").start();
 	}
 
+	/**
+	 * Shuts down DMCC.
+	 */
 	public static void shutdown() {
-		// TODO should broadcast shutdown message
-
 		LOGGER.info("Shutting down DMCC...");
 
 		try (ExecutorService executorService = HTTP_CLIENT.dispatcher().executorService(); Cache ignored = HTTP_CLIENT.cache()) {
@@ -156,6 +171,9 @@ public class DMCC {
 
 			// Shutdown Discord
 			DiscordManager.shutdown();
+
+			// Clear all event handlers
+			EventManager.clear();
 
 			// Shutdown OkHttpClient
 			executorService.shutdown();
@@ -172,5 +190,14 @@ public class DMCC {
 			// Close the file logger
 			LoggerImpl.closeFileWriter();
 		}
+	}
+
+	/**
+	 * Reloads DMCC by shutting it down and re-initializing.
+	 */
+	public static void reload() {
+		LOGGER.info("Reloading DMCC...");
+		shutdown();
+		init(LOADER, VERSION);
 	}
 }

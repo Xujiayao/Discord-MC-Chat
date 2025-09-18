@@ -21,6 +21,8 @@ public class TerminalManager {
 	 * Initializes and starts the terminal manager.
 	 */
 	public static void init() {
+		running = true;
+
 		consoleThread = new Thread(() -> {
 			LOGGER.info("Interactive terminal started. Type \"help\" for a list of commands");
 			Scanner scanner = new Scanner(System.in);

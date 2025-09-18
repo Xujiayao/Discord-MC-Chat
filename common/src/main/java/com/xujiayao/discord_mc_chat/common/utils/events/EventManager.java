@@ -40,4 +40,11 @@ public class EventManager {
 			}
 		}
 	}
+
+	/**
+	 * Clears all registered event handlers.
+	 */
+	public static void clear() {
+		handlers.clear();
+	}
 }

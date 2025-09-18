@@ -10,6 +10,8 @@ import javax.annotation.Nonnull;
 import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
 
 /**
+ * Handles Discord JDA events.
+ *
  * @author Xujiayao
  */
 public class DiscordEventHandler extends ListenerAdapter {

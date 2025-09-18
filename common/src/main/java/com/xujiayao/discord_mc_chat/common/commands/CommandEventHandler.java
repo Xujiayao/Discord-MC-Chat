@@ -1,8 +1,7 @@
 package com.xujiayao.discord_mc_chat.common.commands;
 
-import com.xujiayao.discord_mc_chat.common.utils.config.ConfigManager;
+import com.xujiayao.discord_mc_chat.common.DMCC;
 import com.xujiayao.discord_mc_chat.common.utils.events.EventManager;
-import com.xujiayao.discord_mc_chat.common.utils.i18n.I18nManager;
 
 import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
 
@@ -24,11 +23,7 @@ public class CommandEventHandler {
 				LOGGER.error("Failed to sleep the thread", e);
 			}
 
-			if (ConfigManager.load() && I18nManager.load()) {
-				LOGGER.info("Configurations reloaded successfully!");
-			} else {
-				LOGGER.error("Failed to reload configurations. Please check the console for errors.");
-			}
+			DMCC.reload();
 		}, "DMCC-Command").start());
 
 		EventManager.register(CommandEvents.StopEvent.class, event -> new Thread(() -> {
