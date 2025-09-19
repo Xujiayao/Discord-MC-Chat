@@ -27,13 +27,19 @@ public class TerminalManager {
 			LOGGER.info("Interactive terminal started. Type \"help\" for a list of commands");
 			Scanner scanner = new Scanner(System.in);
 
-			while (running) {
-				if (scanner.hasNextLine()) {
-					String line = scanner.nextLine();
-					List<String> response = CommandManager.handleCommand(line);
-					for (String message : response) {
-						LOGGER.info(message);
+			while (running && !Thread.currentThread().isInterrupted()) {
+				try {
+					if (scanner.hasNextLine()) {
+						String line = scanner.nextLine();
+						List<String> response = CommandManager.handleCommand(line);
+						for (String message : response) {
+							LOGGER.info(message);
+						}
 					}
+				} catch (IllegalStateException e) {
+					// This can happen if the scanner is closed concurrently.
+					// We can break the loop if this happens.
+					break;
 				}
 			}
 		}, "DMCC-Terminal");
