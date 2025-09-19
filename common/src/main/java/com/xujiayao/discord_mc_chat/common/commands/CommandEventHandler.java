@@ -1,9 +1,9 @@
 package com.xujiayao.discord_mc_chat.common.commands;
 
 import com.xujiayao.discord_mc_chat.common.DMCC;
-import com.xujiayao.discord_mc_chat.common.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.common.utils.events.EventManager;
 
+import static com.xujiayao.discord_mc_chat.common.DMCC.IS_MINECRAFT_ENV;
 import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
 
 /**
@@ -25,7 +25,7 @@ public class CommandEventHandler {
 		EventManager.register(CommandEvents.StopEvent.class, event -> new Thread(() -> {
 			LOGGER.info("Stopping DMCC...");
 
-			if (EnvironmentUtils.isMinecraftEnvironment()) {
+			if (IS_MINECRAFT_ENV) {
 				LOGGER.info("Run \"/dmcc start\" to start DMCC again");
 				DMCC.shutdown();
 			} else {

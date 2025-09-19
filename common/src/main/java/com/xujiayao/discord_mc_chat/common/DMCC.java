@@ -31,13 +31,15 @@ public class DMCC {
 	public static String VERSION;
 	public static String LOADER;
 
+	public static final boolean IS_MINECRAFT_ENV = EnvironmentUtils.isMinecraftEnvironment();
+
 	public static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory()
 			.enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
 			.disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
 	public static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
 
-	public static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
+	public static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
 
 	private static boolean shutdownHookAdded = false;
 
@@ -86,7 +88,7 @@ public class DMCC {
 				LOGGER.warn("Please start DMCC from the command line \"java -jar Discord-MC-Chat-{}.jar\"", VERSION);
 				LOGGER.info("Exiting...");
 
-				if (!EnvironmentUtils.isMinecraftEnvironment()) {
+				if (!IS_MINECRAFT_ENV) {
 					System.exit(0);
 				}
 				return;
@@ -118,7 +120,7 @@ public class DMCC {
 				LOGGER.warn("DMCC will not continue initialization due to configuration issues");
 				LOGGER.info("Exiting...");
 
-				if (!EnvironmentUtils.isMinecraftEnvironment()) {
+				if (!IS_MINECRAFT_ENV) {
 					System.exit(0);
 				}
 				return;
@@ -129,7 +131,7 @@ public class DMCC {
 				LOGGER.warn("DMCC will not continue initialization due to language file issues");
 				LOGGER.info("Exiting...");
 
-				if (!EnvironmentUtils.isMinecraftEnvironment()) {
+				if (!IS_MINECRAFT_ENV) {
 					System.exit(0);
 				}
 				return;
@@ -139,7 +141,7 @@ public class DMCC {
 			CommandEventHandler.init();
 
 			// Check environment
-			if (EnvironmentUtils.isMinecraftEnvironment()) {
+			if (IS_MINECRAFT_ENV) {
 				// Initialize Minecraft event handlers
 				LOGGER.info("Minecraft environment detected. Initializing Minecraft event handlers...");
 				MinecraftEventHandler.init();
@@ -161,7 +163,7 @@ public class DMCC {
 				LOGGER.warn("DMCC will not continue initialization due to Discord connection issues");
 				LOGGER.info("Exiting...");
 
-				if (!EnvironmentUtils.isMinecraftEnvironment()) {
+				if (!IS_MINECRAFT_ENV) {
 					System.exit(0);
 				}
 				return;
@@ -175,10 +177,10 @@ public class DMCC {
 	public static void shutdown() {
 		LOGGER.info("Shutting down DMCC...");
 
-		try (ExecutorService executorService = HTTP_CLIENT.dispatcher().executorService();
-			 Cache cache = HTTP_CLIENT.cache()) {
+		try (ExecutorService executorService = OK_HTTP_CLIENT.dispatcher().executorService();
+			 Cache cache = OK_HTTP_CLIENT.cache()) {
 			// Shutdown TerminalManager if in standalone mode
-			if (!EnvironmentUtils.isMinecraftEnvironment()) {
+			if (!IS_MINECRAFT_ENV) {
 				TerminalManager.shutdown();
 			}
 
@@ -193,7 +195,7 @@ public class DMCC {
 			if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
 				executorService.shutdownNow(); // Force shutdown if not terminated gracefully
 			}
-			HTTP_CLIENT.connectionPool().evictAll();
+			OK_HTTP_CLIENT.connectionPool().evictAll();
 			if (cache != null) {
 				cache.close();
 			}

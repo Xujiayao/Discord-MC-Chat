@@ -1,10 +1,6 @@
 package com.xujiayao.discord_mc_chat.common.utils.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
-import com.xujiayao.discord_mc_chat.common.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.common.utils.YamlUtils;
 
 import java.io.IOException;
@@ -16,6 +12,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.function.Function;
 
+import static com.xujiayao.discord_mc_chat.common.DMCC.IS_MINECRAFT_ENV;
 import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
 import static com.xujiayao.discord_mc_chat.common.DMCC.YAML_MAPPER;
 
@@ -60,7 +57,8 @@ public class ConfigManager {
 				}
 
 				LOGGER.info("Created default configuration file at \"{}\"", configPath);
-				LOGGER.info("Please edit the configuration file before restarting {}", (EnvironmentUtils.isMinecraftEnvironment() ? "the Minecraft server" : "DMCC"));
+				LOGGER.info("Please edit the configuration file before restarting {}", (IS_MINECRAFT_ENV ? "the Minecraft server" : "DMCC"));
+				// TODO 如果提前注册好命令，是不是就不用restart mc server了？
 				return false;
 			}
 

@@ -20,7 +20,7 @@ import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.xujiayao.discord_mc_chat.common.DMCC.HTTP_CLIENT;
+import static com.xujiayao.discord_mc_chat.common.DMCC.OK_HTTP_CLIENT;
 import static com.xujiayao.discord_mc_chat.common.DMCC.JSON_MAPPER;
 import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
 import static com.xujiayao.discord_mc_chat.common.DMCC.YAML_MAPPER;
@@ -175,11 +175,11 @@ public class I18nManager {
 		minecraftTranslations.clear();
 
 		try {
-			String fileName = StringUtils.format("{}-{}.json", language, EnvironmentUtils.getMinecraftVersion());
+			String mcVersion = EnvironmentUtils.getMinecraftVersion();
+			String fileName = StringUtils.format("{}-{}.json", language, mcVersion);
 
 			Files.createDirectories(CACHE_DIR);
 			Path langCachePath = CACHE_DIR.resolve(fileName);
-			String mcVersion = EnvironmentUtils.getMinecraftVersion();
 
 			// If a valid cached file exists, use it.
 			if (Files.exists(langCachePath)) {
@@ -200,7 +200,7 @@ public class I18nManager {
 			String url = "https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@" + mcVersion + "/assets/minecraft/lang/" + language + ".json";
 			Request request = new Request.Builder().url(url).build();
 
-			try (Response response = HTTP_CLIENT.newCall(request).execute()) {
+			try (Response response = OK_HTTP_CLIENT.newCall(request).execute()) {
 				if (!response.isSuccessful()) {
 					LOGGER.error("Failed to download Minecraft translations. HTTP Status: {}", response.code());
 					return false;

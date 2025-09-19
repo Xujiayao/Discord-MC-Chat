@@ -9,6 +9,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
+import static com.xujiayao.discord_mc_chat.common.DMCC.IS_MINECRAFT_ENV;
+
 /**
  * Environment utility class.
  *
@@ -64,7 +66,7 @@ public class EnvironmentUtils {
 	 * @return The Minecraft version string.
 	 */
 	public static String getMinecraftVersion() {
-		if (EnvironmentUtils.isMinecraftEnvironment()) {
+		if (IS_MINECRAFT_ENV) {
 			// Fabric
 			try {
 				Class<?> fabricLoaderClass = Class.forName("net.fabricmc.loader.api.FabricLoader");
