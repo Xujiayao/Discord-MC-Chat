@@ -17,22 +17,11 @@ public class CommandEventHandler {
 	 */
 	public static void init() {
 		EventManager.register(CommandEvents.ReloadEvent.class, event -> new Thread(() -> {
-			try {
-				Thread.sleep(5000);
-			} catch (InterruptedException e) {
-				LOGGER.error("Failed to sleep the thread", e);
-			}
-
 			DMCC.reload();
 		}, "DMCC-Command").start());
 
 		EventManager.register(CommandEvents.StopEvent.class, event -> new Thread(() -> {
-			try {
-				Thread.sleep(5000);
-			} catch (InterruptedException e) {
-				LOGGER.error("Failed to sleep the thread", e);
-			}
-
+			// TODO different actions for different environments
 			System.exit(0);
 		}, "DMCC-Command").start());
 
