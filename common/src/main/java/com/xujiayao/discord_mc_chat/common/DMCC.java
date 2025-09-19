@@ -163,7 +163,8 @@ public class DMCC {
 	public static void shutdown() {
 		LOGGER.info("Shutting down DMCC...");
 
-		try (ExecutorService executorService = HTTP_CLIENT.dispatcher().executorService(); Cache ignored = HTTP_CLIENT.cache()) {
+		try (ExecutorService executorService = HTTP_CLIENT.dispatcher().executorService();
+			 Cache cache = HTTP_CLIENT.cache()) {
 			// Shutdown TerminalManager if in standalone mode
 			if (!EnvironmentUtils.isMinecraftEnvironment()) {
 				TerminalManager.shutdown();
@@ -181,6 +182,9 @@ public class DMCC {
 				executorService.shutdownNow(); // Force shutdown if not terminated gracefully
 			}
 			HTTP_CLIENT.connectionPool().evictAll();
+			if (cache != null) {
+				cache.close();
+			}
 
 			// End of whole process
 			LOGGER.info("DMCC shutdown successfully. Goodbye!");
