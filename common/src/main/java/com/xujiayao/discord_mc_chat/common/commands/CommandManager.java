@@ -30,14 +30,8 @@ public class CommandManager {
 				response.add("- reload | Reloads DMCC.");
 				response.add("- stop   | Shuts down DMCC.");
 			}
-			case "reload" -> {
-				response.add("Reloading DMCC...");
-				EventManager.post(new CommandEvents.ReloadEvent());
-			}
-			case "stop" -> {
-				response.add("Stopping DMCC...");
-				EventManager.post(new CommandEvents.StopEvent());
-			}
+			case "reload" -> EventManager.post(new CommandEvents.ReloadEvent());
+			case "stop" -> EventManager.post(new CommandEvents.StopEvent());
 			default -> response.add("Unknown command: \"" + command + "\". Type \"help\" for a list of commands");
 		}
 

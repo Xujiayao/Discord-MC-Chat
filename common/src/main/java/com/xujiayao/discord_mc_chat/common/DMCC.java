@@ -212,8 +212,8 @@ public class DMCC {
 	 * Reloads DMCC by shutting it down and re-initializing.
 	 */
 	public static void reload() {
-		LOGGER.info("Reloading DMCC...");
 		shutdown();
 		init(LOADER, VERSION);
+		LOGGER.info("DMCC reloaded!");
 	}
 }

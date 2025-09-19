@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.common.commands;
 
 import com.xujiayao.discord_mc_chat.common.DMCC;
+import com.xujiayao.discord_mc_chat.common.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.common.utils.events.EventManager;
 
 import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
@@ -17,12 +18,19 @@ public class CommandEventHandler {
 	 */
 	public static void init() {
 		EventManager.register(CommandEvents.ReloadEvent.class, event -> new Thread(() -> {
+			LOGGER.info("Reloading DMCC...");
 			DMCC.reload();
 		}, "DMCC-Command").start());
 
 		EventManager.register(CommandEvents.StopEvent.class, event -> new Thread(() -> {
-			// TODO different actions for different environments
-			System.exit(0);
+			LOGGER.info("Stopping DMCC...");
+
+			if (EnvironmentUtils.isMinecraftEnvironment()) {
+				LOGGER.info("Run \"/dmcc start\" to start DMCC again");
+				DMCC.shutdown();
+			} else {
+				System.exit(0);
+			}
 		}, "DMCC-Command").start());
 
 		LOGGER.info("Initialized all Command event handlers");
