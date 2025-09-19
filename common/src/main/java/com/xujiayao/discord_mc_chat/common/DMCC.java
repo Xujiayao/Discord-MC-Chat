@@ -86,6 +86,9 @@ public class DMCC {
 				LOGGER.warn("Please start DMCC from the command line \"java -jar Discord-MC-Chat-{}.jar\"", VERSION);
 				LOGGER.info("Exiting...");
 
+				if (!EnvironmentUtils.isMinecraftEnvironment()) {
+					System.exit(0);
+				}
 				return;
 			}
 
@@ -115,6 +118,9 @@ public class DMCC {
 				LOGGER.warn("DMCC will not continue initialization due to configuration issues");
 				LOGGER.info("Exiting...");
 
+				if (!EnvironmentUtils.isMinecraftEnvironment()) {
+					System.exit(0);
+				}
 				return;
 			}
 
@@ -123,6 +129,9 @@ public class DMCC {
 				LOGGER.warn("DMCC will not continue initialization due to language file issues");
 				LOGGER.info("Exiting...");
 
+				if (!EnvironmentUtils.isMinecraftEnvironment()) {
+					System.exit(0);
+				}
 				return;
 			}
 
@@ -152,6 +161,9 @@ public class DMCC {
 				LOGGER.warn("DMCC will not continue initialization due to Discord connection issues");
 				LOGGER.info("Exiting...");
 
+				if (!EnvironmentUtils.isMinecraftEnvironment()) {
+					System.exit(0);
+				}
 				return;
 			}
 		}, "DMCC-Main").start();
