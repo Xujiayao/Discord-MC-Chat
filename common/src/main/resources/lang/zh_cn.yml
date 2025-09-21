@@ -17,6 +17,6 @@ commands:
     success: "已将 {} 添加到白名单！"
   link:
     description: "将你的 Minecraft 账户与 Discord 账户绑定"
-    code_generated: "你的绑定码是：\"{}\"。请在 Discord 中执行 \"/link <code>\" 命令以绑定你的账户。此绑定码将在 10 分钟后失效。"
+    code_generated: "你的绑定码是：\"{}\"。不要将其泄露给其他人！请在 Discord 中执行 \"/link <code>\" 命令以绑定你的账户。此绑定码将在 10 分钟后失效。"
     success: "你的账户已成功绑定！"
     invalid_code: "无效或已过期的绑定码。"
