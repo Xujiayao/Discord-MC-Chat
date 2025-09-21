@@ -70,27 +70,27 @@ discord_to_minecraft:
 
 minecraft_to_discord:
   server:
-    start: "**Server started!**"
-    stop: "**Server stopped!**"
+    start: ":white_check_mark: **Server started!**"
+    stop: ":octagonal_sign: **Server stopped!**"
   player:
-    join: "**{display_name} joined the game**"
-    quit: "**{display_name} left the game**"
+    join: ":grinning: **{display_name} joined the server**"
+    quit: ":cry: **{display_name} left the server**"
     chat: default
     command: default
-    die: "**{death_message}**"
+    die: ":skull_and_crossbones: **{death_message}**"
     advancement:
-      task: "**{display_name} has made the advancement [{advancement}]**\n*{description}*"
-      challenge: "**{display_name} has completed the challenge [{advancement}]**\n*{description}*"
-      goal: "**{display_name} has reached the goal [{advancement}]**\n*{description}*"
+      task: ":partying_face: **{display_name} has made the advancement [{advancement}]**\n*{description}*"
+      challenge: ":partying_face: **{display_name} has completed the challenge [{advancement}]**\n*{description}*"
+      goal: ":partying_face: **{display_name} has reached the goal [{advancement}]**\n*{description}*"
   source:
     say: default
     tell_raw: default
 
 channel_topic_updating:
-  offline: ":x: Server offline | Last updated: <t:{last_update_time}:f>"
+  offline: ":octagonal_sign: Server offline | Last updated: <t:{last_update_time}:f>"
   online:
     multi_server_enabled: ":white_check_mark: {online_player_count}/{max_player_count} player(s) online | {total_player_count} player(s) ever joined | {online_server_count} server(s) online [{online_server_list}] | Server started <t:{server_started_time}:R> | Last updated: <t:{last_update_time}:f>"
     multi_server_disabled: ":white_check_mark: {online_player_count}/{max_player_count} player(s) online | {total_player_count} player(s) ever joined | Server started <t:{server_started_time}:R> | Last updated: <t:{last_update_time}:f>"
 
 mspt_monitoring:
-  high_mspt: "**Server MSPT ({mspt}) is above {mspt_limit}!**"
+  high_mspt: ":warning: **Server MSPT has reached {mspt}!**"
