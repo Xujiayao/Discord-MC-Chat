@@ -58,7 +58,7 @@ public class ConfigManager {
 
 				LOGGER.info("Created default configuration file at \"{}\"", configPath);
 				LOGGER.info("Please edit the configuration file before restarting {}", (IS_MINECRAFT_ENV ? "the Minecraft server" : "DMCC"));
-				// TODO 如果提前注册好命令，是不是就不用restart mc server了？
+				// TODO 不需要重启，写完配置文件后直接热加载
 				return false;
 			}
 
