@@ -3,6 +3,7 @@ commands:
   no_permission: "你没有权限执行此命令！"
   help:
     description: "显示可用命令列表"
+    help: "帮助"
   reload:
     description: "重新加载 DMCC"
     reloading: "正在重新加载 DMCC..."

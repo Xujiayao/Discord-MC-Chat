@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.common.commands;
 
 import com.xujiayao.discord_mc_chat.common.utils.events.EventManager;
+import com.xujiayao.discord_mc_chat.common.utils.i18n.I18nManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,16 +26,18 @@ public class CommandManager {
 
 		switch (command) {
 			case "help" -> {
-				response.add("==================== Help ====================");
-				response.add("- help   | Shows this help message.");
-				response.add("- reload | Reloads DMCC.");
-				response.add("- stop   | Shuts down DMCC.");
+				response.add("==================== " + I18nManager.getDmccTranslation("commands.help.help") + " ====================");
+				response.add("- help   | " + I18nManager.getDmccTranslation("commands.help.description"));
+				response.add("- reload | " + I18nManager.getDmccTranslation("commands.reload.description"));
+				response.add("- stop   | " + I18nManager.getDmccTranslation("commands.stop.description"));
 			}
 			case "reload" -> EventManager.post(new CommandEvents.ReloadEvent());
 			case "stop" -> EventManager.post(new CommandEvents.StopEvent());
-			default -> response.add("Unknown command: \"" + command + "\". Type \"help\" for a list of commands");
+			default -> response.add(I18nManager.getDmccTranslation("commands.unknown_command", command));
 		}
 
 		return response;
+
+		// TODO 斜杠的话也算一个命令
 	}
 }

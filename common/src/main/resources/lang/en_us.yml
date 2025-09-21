@@ -3,6 +3,7 @@ commands:
   no_permission: "You do not have permission to execute this command!"
   help:
     description: "Show a list of available commands"
+    help: "Help"
   reload:
     description: "Reload DMCC"
     reloading: "Reloading DMCC..."
