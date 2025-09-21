@@ -233,7 +233,7 @@ public class I18nManager {
 	 */
 	public static String getDmccTranslation(String key, Object... args) {
 		String translation = dmccTranslations.getOrDefault(key, key);
-		return com.xujiayao.discord_mc_chat.common.utils.StringUtils.format(translation, args);
+		return StringUtils.format(translation, args);
 	}
 
 	/**
