@@ -1,6 +1,15 @@
 commands:
-  stop: "停止服务器"
-  update: "检查更新"
-
-whitelist:
-  success: "**已将 {} 添加至服务器白名单！**"
+  no_permission: "你没有权限执行此命令！"
+  stop:
+    description: "关闭 DMCC"
+    stopping: "正在关闭 DMCC..."
+  update:
+    description: "检查更新"
+  whitelist:
+    description: "将玩家添加到服务器白名单"
+    success: "已将 {} 添加到白名单！"
+  link:
+    description: "将你的 Minecraft 账户与 Discord 账户绑定"
+    generated: "你的绑定码是：\"{}\"。请在 Discord 中执行 \"/link <code>\" 命令以绑定你的账户。此绑定码将在 10 分钟后失效。"
+    success: "你的账户已成功绑定！"
+    invalid: "无效或已过期的绑定码。"
