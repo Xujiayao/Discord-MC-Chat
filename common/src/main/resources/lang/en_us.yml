@@ -1,5 +1,11 @@
 commands:
+  unknown_command: "Unknown command: \"{command}\". Type \"help\" for a list of available commands."
   no_permission: "You do not have permission to execute this command!"
+  help:
+    description: "Show a list of available commands"
+  reload:
+    description: "Reload DMCC"
+    reloading: "Reloading DMCC..."
   stop:
     description: "Shut down DMCC"
     stopping: "Shutting down DMCC..."
@@ -10,6 +16,6 @@ commands:
     success: "Added {} to the server whitelist!"
   link:
     description: "Link your Minecraft account with your Discord account"
-    generated: "Your link code is: \"{}\". Please use \"/link <code>\" command in Discord to link your account. This code will expire in 10 minutes."
+    code_generated: "Your link code is: \"{}\". Please use \"/link <code>\" command in Discord to link your account. This code will expire in 10 minutes."
     success: "Your account has been successfully linked!"
-    invalid: "Invalid or expired link code."
+    invalid_code: "Invalid or expired link code."
