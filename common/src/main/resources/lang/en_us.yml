@@ -19,6 +19,8 @@ commands:
     success: "Added {} to the server whitelist!"
   link:
     description: "Link your Minecraft account with your Discord account"
+    params:
+      code: "The link code you received in game"
     code_generated: "Your link code is: \"{}\". Do not share it with anyone! Please execute \"/link <code>\" command in Discord to link your account. This code will expire in 10 minutes."
     success: "Your account has been successfully linked!"
     invalid_code: "Invalid or expired link code."
