@@ -1,26 +1,51 @@
 commands:
-  unknown_command: "未知命令：\"{}\"。输入 \"help\" 获取可用命令列表。"
+  unknown_command: "未知命令：\"{}\"。输入 \"help\" 查看可用命令列表。"
   no_permission: "你没有权限执行此命令！"
+  console:
+    description: "在服务器上执行 Minecraft 命令"
+    params:
+      command: "要执行的 Minecraft 命令"
+    executing: "正在执行命令..."
+  execute:
+    description: "在子服务器上执行 DMCC 命令"
+    params:
+      server: "子服务器的名称"
+      command: "要执行的 DMCC 命令"
   help:
     description: "显示可用命令列表"
     help: "帮助"
+  info:
+    description: "显示 DMCC 和已连接的 Minecraft 服务器的状态"
+  link:
+    description: "将你的 Discord 账户与你的 Minecraft 账户关联"
+    params:
+      code: "你在游戏中收到的关联码"
+    code_generated: "你的关联码是：\"{}\"。请勿与任何人分享！请在 Discord 中执行 \"/link <code>\" 命令来关联你的账户。此代码将在 10 分钟后失效。"
+    success: "你的账户已成功关联！"
+    invalid_code: "无效或已过期的关联码。"
+  log:
+    description: "查看日志文件"
+    params:
+      file: "要查看的日志文件"
   reload:
     description: "重新加载 DMCC"
     reloading: "正在重新加载 DMCC..."
+  start:
+    description: "启动一个子服务器"
+    params:
+      server: "要启动的子服务器的名称"
+  stats:
+    description: "查询统计数据的排行榜"
+    params:
+      type: "统计数据的类型"
+      name: "统计数据的名称"
   stop:
     description: "关闭 DMCC"
     stopping: "正在关闭 DMCC..."
   update:
-    description: "检查更新"
+    description: "检查 DMCC 更新"
   whitelist:
-    description: "将玩家添加到服务器白名单"
+    description: "将一名玩家添加至服务器白名单"
     params:
       player: "玩家的 Minecraft 用户名"
-    success: "已将 {} 添加到白名单！"
-  link:
-    description: "将你的 Minecraft 账户与 Discord 账户绑定"
-    params:
-      code: "你在游戏中收到的绑定码"
-    code_generated: "你的绑定码是：\"{}\"。不要将其泄露给其他人！请在 Discord 中执行 \"/link <code>\" 命令以绑定你的账户。此绑定码将在 10 分钟后失效。"
-    success: "你的账户已成功绑定！"
-    invalid_code: "无效或已过期的绑定码。"
+    success: "已将 {} 添加至服务器白名单！"

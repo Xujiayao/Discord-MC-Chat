@@ -1,26 +1,51 @@
 commands:
   unknown_command: "Unknown command: \"{}\". Type \"help\" for a list of available commands."
   no_permission: "You do not have permission to execute this command!"
+  console:
+    description: "Execute a Minecraft command on the server"
+    params:
+      command: "The Minecraft command to execute"
+    executing: "Executing command..."
+  execute:
+    description: "Execute a DMCC command on a sub-server"
+    params:
+      server: "The name of the sub-server"
+      command: "The DMCC command to execute"
   help:
     description: "Show a list of available commands"
     help: "Help"
+  info:
+    description: "Show status of DMCC and connected Minecraft servers"
+  link:
+    description: "Link your Discord account with your Minecraft account"
+    params:
+      code: "The link code you received in-game"
+    code_generated: "Your link code is: \"{}\". Do not share it with anyone! Please execute \"/link <code>\" command in Discord to link your account. This code will expire in 10 minutes."
+    success: "Your account has been successfully linked!"
+    invalid_code: "Invalid or expired link code."
+  log:
+    description: "View a log file"
+    params:
+      file: "The log file to view"
   reload:
     description: "Reload DMCC"
     reloading: "Reloading DMCC..."
+  start:
+    description: "Start a sub-server"
+    params:
+      server: "The name of the sub-server to start"
+  stats:
+    description: "Query leaderboard of a statistic"
+    params:
+      type: "The type of the statistic"
+      name: "The name of the statistic"
   stop:
     description: "Shut down DMCC"
     stopping: "Shutting down DMCC..."
   update:
-    description: "Check for updates"
+    description: "Check for DMCC updates"
   whitelist:
     description: "Add a player to the server whitelist"
     params:
       player: "The player's Minecraft username"
     success: "Added {} to the server whitelist!"
-  link:
-    description: "Link your Minecraft account with your Discord account"
-    params:
-      code: "The link code you received in game"
-    code_generated: "Your link code is: \"{}\". Do not share it with anyone! Please execute \"/link <code>\" command in Discord to link your account. This code will expire in 10 minutes."
-    success: "Your account has been successfully linked!"
-    invalid_code: "Invalid or expired link code."

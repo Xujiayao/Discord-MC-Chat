@@ -93,7 +93,6 @@ dmcc_admin:
 # 账户绑定设置
 # 强制启用，若MC里为某op_level，自动成为DMCC管理员，允许使用管理命令
 account_linking:
-  link_code_expires_in_seconds: 600
   features:
     sync_role_colors: true
     sync_op_level_based_on_discord_roles:
