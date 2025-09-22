@@ -1,5 +1,6 @@
 package com.xujiayao.discord_mc_chat.common.discord;
 
+import com.xujiayao.discord_mc_chat.common.utils.i18n.I18nManager;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
@@ -24,35 +25,35 @@ public class DiscordEventHandler extends ListenerAdapter {
 
 		// Register common slash commands
 		commandListUpdateAction = commandListUpdateAction.addCommands(
-				Commands.slash("help", "Show a list of available commands"),
-				Commands.slash("info", "Show server status"),
-				Commands.slash("link", "Link your Discord account with your Minecraft account")
-						.addOption(OptionType.STRING, "code", "The link code you received in-game", true),
-				Commands.slash("log", "View a log file")
-						.addOption(OptionType.STRING, "file", "The log file to view", true),
-				Commands.slash("reload", "Reload DMCC"),
-				Commands.slash("stats", "Show specific statistics leaderboard")
-						.addOption(OptionType.STRING, "type", "The type of statistics", true)
-						.addOption(OptionType.STRING, "name", "The name of the statistics", true),
-				Commands.slash("stop", "Stop DMCC"),
-				Commands.slash("update", "Check for DMCC updates"),
-				Commands.slash("whitelist", "Add a player to the server whitelist")
-						.addOption(OptionType.STRING, "player", "The player's Minecraft username", true)
+				Commands.slash("help", I18nManager.getDmccTranslation("commands.help.description")),
+				Commands.slash("info", I18nManager.getDmccTranslation("commands.info.description")),
+				Commands.slash("link", I18nManager.getDmccTranslation("commands.link.description"))
+						.addOption(OptionType.STRING, "code", I18nManager.getDmccTranslation("commands.link.params.code"), true),
+				Commands.slash("log", I18nManager.getDmccTranslation("commands.log.description"))
+						.addOption(OptionType.STRING, "file", I18nManager.getDmccTranslation("commands.log.params.file"), true),
+				Commands.slash("reload", I18nManager.getDmccTranslation("commands.reload.description")),
+				Commands.slash("stats", I18nManager.getDmccTranslation("commands.stats.description"))
+						.addOption(OptionType.STRING, "type", I18nManager.getDmccTranslation("commands.stats.params.type"), true)
+						.addOption(OptionType.STRING, "name", I18nManager.getDmccTranslation("commands.stats.params.name"), true),
+				Commands.slash("stop", I18nManager.getDmccTranslation("commands.stop.description")),
+				Commands.slash("update", I18nManager.getDmccTranslation("commands.update.description")),
+				Commands.slash("whitelist", I18nManager.getDmccTranslation("commands.whitelist.description"))
+						.addOption(OptionType.STRING, "player", I18nManager.getDmccTranslation("commands.whitelist.params.player"), true)
 		);
 
 		// Register Minecraft-only slash commands
 		commandListUpdateAction = commandListUpdateAction.addCommands(
-				Commands.slash("console", "Execute a Minecraft command on the server")
-						.addOption(OptionType.STRING, "command", "The command to execute", true)
+				Commands.slash("console", I18nManager.getDmccTranslation("commands.console.description"))
+						.addOption(OptionType.STRING, "command", I18nManager.getDmccTranslation("commands.console.params.command"), true)
 		);
 
 		// Register Standalone-only slash commands
 		commandListUpdateAction = commandListUpdateAction.addCommands(
-				Commands.slash("execute", "Execute a DMCC command on a sub-server")
-						.addOption(OptionType.STRING, "server", "The name of the server", true)
-						.addOption(OptionType.STRING, "command", "The DMCC command to execute", true),
-				Commands.slash("start", "Start a sub-server")
-						.addOption(OptionType.STRING, "server", "The name of the server to start", true)
+				Commands.slash("execute", I18nManager.getDmccTranslation("commands.execute.description"))
+						.addOption(OptionType.STRING, "server", I18nManager.getDmccTranslation("commands.execute.params.server"), true)
+						.addOption(OptionType.STRING, "command", I18nManager.getDmccTranslation("commands.execute.params.command"), true),
+				Commands.slash("start", I18nManager.getDmccTranslation("commands.start.description"))
+						.addOption(OptionType.STRING, "server", I18nManager.getDmccTranslation("commands.start.params.server"), true)
 		);
 
 		commandListUpdateAction.queue();
