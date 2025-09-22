@@ -13,8 +13,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
-
 /**
  * @author Xujiayao
  */
@@ -25,13 +23,11 @@ public class MixinCommands {
 	@Final
 	private CommandDispatcher<CommandSourceStack> dispatcher;
 
-	@Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lcom/mojang/brigadier/CommandDispatcher;setConsumer(Lcom/mojang/brigadier/ResultConsumer;)V"))
+	@Inject(method = "<init>", at = @At("RETURN"))
 	private void init(Commands.CommandSelection commandSelection, CommandBuildContext commandBuildContext, CallbackInfo ci) {
 		// CommandRegister Event
 		EventManager.post(new MinecraftEvents.CommandRegister(
 				dispatcher,
-				commandSelection,
-				commandBuildContext,
 				ci
 		));
 	}

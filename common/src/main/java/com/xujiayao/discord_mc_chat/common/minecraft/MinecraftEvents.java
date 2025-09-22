@@ -4,9 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementProgress;
-import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.server.level.ServerPlayer;
@@ -132,8 +130,6 @@ public class MinecraftEvents {
 	 */
 	public record CommandRegister(
 			CommandDispatcher<CommandSourceStack> dispatcher,
-			Commands.CommandSelection commandSelection,
-			CommandBuildContext commandBuildContext,
 			CallbackInfo ci
 	) {
 	}
