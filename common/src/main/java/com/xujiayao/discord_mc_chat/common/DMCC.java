@@ -31,13 +31,12 @@ public class DMCC {
 	public static String VERSION;
 	public static String LOADER;
 
-	public static final boolean IS_MINECRAFT_ENV = EnvironmentUtils.isMinecraftEnvironment();
+	public static boolean IS_MINECRAFT_ENV = false;
 
 	public static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory()
 			.enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
 			.disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
 	public static final ObjectMapper JSON_MAPPER = new ObjectMapper();
-
 
 	public static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
 
@@ -78,6 +77,12 @@ public class DMCC {
 		new Thread(() -> {
 			VERSION = version;
 			LOADER = loader;
+
+			IS_MINECRAFT_ENV = switch (LOADER) {
+				case "Fabric", "NeoForge" -> true;
+				case "Standalone" -> false;
+				default -> throw new IllegalStateException("Unknown loader: " + LOADER);
+			};
 
 			// Check if running in headless mode
 			if (System.console() == null) {
