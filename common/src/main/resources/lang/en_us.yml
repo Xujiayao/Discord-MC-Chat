@@ -14,6 +14,8 @@ commands:
     description: "Check for updates"
   whitelist:
     description: "Add a player to the server whitelist"
+    params:
+      player: "The player's Minecraft username"
     success: "Added {} to the server whitelist!"
   link:
     description: "Link your Minecraft account with your Discord account"

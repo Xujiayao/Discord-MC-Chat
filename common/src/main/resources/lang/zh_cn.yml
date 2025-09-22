@@ -14,6 +14,8 @@ commands:
     description: "检查更新"
   whitelist:
     description: "将玩家添加到服务器白名单"
+    params:
+      player: "玩家的 Minecraft 用户名"
     success: "已将 {} 添加到白名单！"
   link:
     description: "将你的 Minecraft 账户与 Discord 账户绑定"
