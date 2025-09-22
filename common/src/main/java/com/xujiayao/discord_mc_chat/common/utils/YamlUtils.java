@@ -101,6 +101,21 @@ public class YamlUtils {
 			return false;
 		}
 
+		// A hard-coded list of keys that should be modified by the user
+		// This is to catch cases where the user leaves a key unchanged from the template
+		String[] keysToCheck = {
+				"bot.token"
+		};
+		Set<String> unmodifiedKeys = findUnmodifiedKeys(config, templateConfig, keysToCheck);
+		if (!unmodifiedKeys.isEmpty()) {
+			LOGGER.error("The following configuration keys are still unchanged from the template:");
+			for (String key : unmodifiedKeys) {
+				LOGGER.error("  - {}", key);
+			}
+			LOGGER.info("Please modify them in the configuration file at \"{}\"", configPath);
+			return false;
+		}
+
 		return true;
 	}
 
@@ -192,5 +207,40 @@ public class YamlUtils {
 		}
 
 		return issues;
+	}
+
+	/**
+	 * Finds keys from a given list that have not been changed from the template config.
+	 *
+	 * @param config         The user config node
+	 * @param templateConfig The template config node
+	 * @param keysToCheck    An array of dot-separated keys to check for modifications
+	 * @return A set of keys that are unmodified
+	 */
+	private static Set<String> findUnmodifiedKeys(JsonNode config, JsonNode templateConfig, String[] keysToCheck) {
+		Set<String> unmodifiedKeys = new HashSet<>();
+
+		for (String key : keysToCheck) {
+			String[] parts = key.split("\\.");
+			JsonNode configNode = config;
+			JsonNode templateNode = templateConfig;
+
+			for (String part : parts) {
+				configNode = configNode.path(part);
+				templateNode = templateNode.path(part);
+			}
+
+			// If either node is missing, it's not an "unmodified" key in the sense we're checking.
+			// The missing key itself is handled by findKeyDiffs.
+			if (configNode.isMissingNode() || templateNode.isMissingNode()) {
+				continue;
+			}
+
+			if (configNode.equals(templateNode)) {
+				unmodifiedKeys.add(key);
+			}
+		}
+
+		return unmodifiedKeys;
 	}
 }
