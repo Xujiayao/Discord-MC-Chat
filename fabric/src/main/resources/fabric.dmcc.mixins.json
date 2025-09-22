@@ -3,6 +3,7 @@
   "package": "com.xujiayao.discord_mc_chat.fabric.mixins",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "MixinCommands",
     "MixinMinecraftServer",
     "MixinPlayerAdvancements",
     "MixinPlayerList",
