@@ -1,0 +1,31 @@
+# ==================================================
+# Discord-MC-Chat (DMCC)
+# By Xujiayao
+#
+# Mode file for DMCC version:
+version: 3.0.0-beta.0      # Do NOT change this value manually
+#
+# Please choose how this instance of DMCC will operate by removing the "#"
+# in front of one of the available mode options in the "mode" field below.
+#
+# Run "/dmcc reload" command in Minecraft after changing this file.
+# A corresponding "config.yml" will be generated.
+#
+# Discord-MC-Chat Wiki:
+# https://dmcc.xujiayao.com/
+#
+# Available mode options:
+#
+#   single_server:
+#     This is the standard, all-in-one mode. This Minecraft server will connect
+#     directly to Discord. This is the recommended mode for most users.
+#
+#   multi_server_client:
+#     This is for advanced users running multiple Minecraft servers. In this mode,
+#     this mod will act as a "client". It will not connect to Discord directly.
+#     Instead, it will connect to a "standalone" DMCC instance that centralizes
+#     all DMCC activities and communicates with Discord.
+# ==================================================
+
+# mode: single_server
+# mode: multi_server_client

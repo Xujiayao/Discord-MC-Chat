@@ -1,10 +1,10 @@
-# ==================================================
+ # ==================================================
 # Discord-MC-Chat (DMCC)
 # By Xujiayao
 #
 # Config file for DMCC version & mode:
 version: 3.0.0-beta.0      # Do NOT change this value manually
-mode: single_server        # Do NOT change this value manually
+mode: standalone           # Do NOT change this value manually
 #
 # Discord-MC-Chat Wiki:
 # https://dmcc.xujiayao.com/
@@ -57,6 +57,15 @@ broadcasts:
     source:
       say: in-game-chat
       tell_raw: in-game-chat
+
+# 多服务器功能
+multi_server:
+  port: 5000
+  minecraft_version: 1.21.8
+  servers:
+    - name: SMP
+      color: yellow
+      start_command: ./SMP/start.bat # command or url
 
 # MSPT 监控设置
 mspt_monitoring:

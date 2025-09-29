@@ -1,0 +1,21 @@
+# ==================================================
+# Discord-MC-Chat (DMCC)
+# By Xujiayao
+#
+# Config file for DMCC version & mode:
+version: 3.0.0-beta.0      # Do NOT change this value manually
+mode: multi_server_client  # Do NOT change this value manually
+#
+# Discord-MC-Chat Wiki:
+# https://dmcc.xujiayao.com/
+# ==================================================
+
+# 语言设置
+language: en_us
+
+# 多服务器功能
+multi_server:
+  connection:
+    host: localhost
+    port: 5000
+  server_name: SMP
