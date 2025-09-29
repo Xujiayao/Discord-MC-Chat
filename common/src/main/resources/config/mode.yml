@@ -10,6 +10,7 @@ version: 3.0.0-beta.0      # Do NOT change this value manually
 #
 # Run "/dmcc reload" command in Minecraft after changing this file.
 # A corresponding "config.yml" will be generated.
+# After editing "config.yml", run "/dmcc reload" again to apply the changes.
 #
 # Discord-MC-Chat Wiki:
 # https://dmcc.xujiayao.com/
