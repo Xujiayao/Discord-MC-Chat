@@ -364,7 +364,7 @@ public class MinecraftEventListener {
 		if (CONFIG.generic.avatarApi.contains("{player_textures}")) {
 			try {
 				//#if MC > 12001
-				String textures = player.getGameProfile().getProperties().get("textures").iterator().next().value();
+				String textures = player.getGameProfile().properties().get("textures").iterator().next().value();
 				//#else
 				//$$ String textures = player.getGameProfile().getProperties().get("textures").iterator().next().getValue();
 				//#endif

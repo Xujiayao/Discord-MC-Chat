@@ -7,7 +7,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.mojang.authlib.GameProfile;
+//#if MC < 12109
+//$$ import com.mojang.authlib.GameProfile;
+//#endif
 //#if MC >= 12005
 import com.mojang.serialization.JsonOps;
 //#endif
@@ -35,6 +37,9 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.ServerTickRateManager;
 //#endif
 import net.minecraft.server.level.ServerPlayer;
+//#if MC >= 12109
+import net.minecraft.server.players.NameAndId;
+//#endif
 import net.minecraft.server.players.UserWhiteList;
 import net.minecraft.server.players.UserWhiteListEntry;
 //#if MC > 11502
@@ -253,7 +258,11 @@ public class Utils {
 				UUID uuid = UUID.fromString(String.format("%s-%s-%s-%s-%s", id.substring(0, 8), id.substring(8, 12), id.substring(12, 16), id.substring(16, 20), id.substring(20, 32)));
 				String name = json.get("name").getAsString();
 
-				GameProfile profile = new GameProfile(uuid, name);
+				//#if MC >= 12109
+				NameAndId profile = new NameAndId(uuid, name);
+				//#else
+				//$$ GameProfile profile = new GameProfile(uuid, name);
+				//#endif
 				if (whitelist.isWhiteListed(profile)) {
 					return Translations.translate("utils.utils.whitelist.whitelistFailed");
 				} else {
