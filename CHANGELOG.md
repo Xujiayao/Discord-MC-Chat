@@ -32,8 +32,8 @@ DMCC Discord 服务器现已公开！通过以下链接加入：https://discord.
 - Add string-expected hints to all empty lists in the config file
   为配置文件中所有空列表添加预期为字符串的提示
 
-- Change excludedCommands list to only exclude @a selector
-  命令排除列表改为只排除 @a 选择器
+- Change excludedCommands list to only exclude `@a` selector
+  命令排除列表改为只排除 `@a` 选择器
 
 ## Removed 移除
 
