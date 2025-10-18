@@ -117,7 +117,7 @@ tasks.register("mergeJars") {
                 }
             }
         }
-        // 将解压后的内容加入 common 的 jar
+        // Add the decompressed content to the common jar
         ant.zip(update: "true", destfile: shadowJarFile) {
             fileset(dir: tempDir)
         }
