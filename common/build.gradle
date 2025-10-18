@@ -47,11 +47,10 @@ jar {
 }
 
 shadowJar {
-    dependsOn assemble
-
     archiveBaseName.set("Discord-MC-Chat")
-    archiveClassifier.set("")
+    archiveClassifier.set(null)
     configurations = [project.configurations.shadow]
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     mergeServiceFiles()
     minimize()
 
