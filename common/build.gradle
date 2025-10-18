@@ -8,7 +8,7 @@ base {
 }
 
 dependencies {
-    shadow("net.dv8tion:JDA:5.6.1") {
+    shadow("net.dv8tion:JDA:6.0.0") {
         exclude module: "opus-java" // for encoding audio into opus
         exclude module: "tink" // for encrypting and decrypting audio
         exclude module: "slf4j-api"
@@ -20,10 +20,10 @@ dependencies {
 
     shadow("org.slf4j:slf4j-api:2.0.17")
 
-    shadow("com.fasterxml.jackson.core:jackson-databind:2.19.2")
-    shadow("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.19.2")
+    shadow("com.fasterxml.jackson.core:jackson-databind:2.20.0")
+    shadow("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.20.0")
 
-    shadow("com.squareup.okhttp3:okhttp:5.1.0")
+    shadow("com.squareup.okhttp3:okhttp:5.2.1")
 }
 
 neoForge {
