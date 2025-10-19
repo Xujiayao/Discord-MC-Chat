@@ -60,13 +60,13 @@ shadowJar {
     exclude "META-INF/versions/9/"
     exclude "META-INF/versions/11/"
     exclude "META-INF/versions/17/"
+    exclude "META-INF/rewrite/"
     exclude {
         def path = it.path
         path.startsWith("META-INF/") &&
                 path.contains("LICENSE") &&
                 path != "META-INF/THIRD-PARTY-LICENSES.txt"
     }
-    exclude "META-INF/rewrite/"
     exclude "META-INF/*NOTICE*"
     exclude "META-INF/*kotlin_module*"
 
