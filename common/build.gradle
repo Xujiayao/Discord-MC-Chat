@@ -66,6 +66,7 @@ shadowJar {
                 path.contains("LICENSE") &&
                 path != "META-INF/THIRD-PARTY-LICENSES.txt"
     }
+    exclude "META-INF/rewrite/"
     exclude "META-INF/*NOTICE*"
     exclude "META-INF/*kotlin_module*"
 
