@@ -24,7 +24,7 @@ public class TerminalManager {
 		running = true;
 
 		consoleThread = new Thread(() -> {
-			LOGGER.info("Interactive terminal started. Type \"help\" for a list of commands");
+			LOGGER.info("Interactive terminal started. Type \"help\" for a list of available commands.");
 			Scanner scanner = new Scanner(System.in);
 
 			while (running && !Thread.currentThread().isInterrupted()) {
