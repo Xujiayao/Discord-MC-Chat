@@ -6,22 +6,22 @@ This project includes the following third-party libraries. Each is distributed u
 
 1. JDA
    - Maven coordinates:
-     - net.dv8tion:JDA:6.0.0
+     - net.dv8tion:JDA:${jda_version}
    - License: Apache License 2.0
    - Homepage:
      - https://github.com/discord-jda/JDA
 
 2. SLF4J
    - Maven coordinates:
-     - org.slf4j:slf4j-api:2.0.17
+     - org.slf4j:slf4j-api:${slf4j_api_version}
    - License: MIT License
    - Homepage:
      - https://www.slf4j.org/
 
 3. Jackson
    - Maven coordinates:
-     - com.fasterxml.jackson.core:jackson-databind:2.20.0
-     - com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.20.0
+     - com.fasterxml.jackson.core:jackson-databind:${jackson_databind_version}
+     - com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jackson_dataformat_yaml_version}
    - License: Apache License 2.0
    - Homepage:
      - https://github.com/FasterXML/jackson-databind
@@ -29,7 +29,7 @@ This project includes the following third-party libraries. Each is distributed u
 
 4. OkHttp
    - Maven coordinates:
-     - com.squareup.okhttp3:okhttp:5.2.1
+     - com.squareup.okhttp3:okhttp:${okhttp_version}
    - License: Apache License 2.0
    - Homepage:
      - https://square.github.io/okhttp/
