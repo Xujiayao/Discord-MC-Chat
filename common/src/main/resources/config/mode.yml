@@ -5,15 +5,15 @@
 # Mode file for DMCC version:
 version: 3.0.0-beta.0      # Do NOT change this value manually
 #
-# Please choose how this instance of DMCC will operate by removing the "#"
-# in front of one of the available mode options in the "mode" field below.
+# Discord-MC-Chat Wiki:
+# https://dmcc.xujiayao.com/
+#
+# Please choose how this instance of DMCC will operate by setting the "mode" option
+# at the bottom of this file to one of the available mode options listed below.
 #
 # Run "/dmcc reload" command in Minecraft after changing this file.
 # A corresponding "config.yml" will be generated.
 # After editing "config.yml", run "/dmcc reload" again to apply the changes.
-#
-# Discord-MC-Chat Wiki:
-# https://dmcc.xujiayao.com/
 #
 # Available mode options:
 #
@@ -28,5 +28,4 @@ version: 3.0.0-beta.0      # Do NOT change this value manually
 #     all DMCC activities and communicates with Discord.
 # ==================================================
 
-# mode: single_server
-# mode: multi_server_client
+mode: your_option_here
