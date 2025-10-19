@@ -102,13 +102,13 @@ command_permissions:
   link: everyone
   stats: everyone
   update: everyone
-  whitelist: everyone
   console: admin
   execute: admin
   log: admin
   reload: admin
   start: admin
   stop: admin
+  whitelist: admin
 
 # 消息格式设置
 formatting: # TODO
