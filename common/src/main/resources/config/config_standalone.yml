@@ -27,7 +27,7 @@ shutdown:
 webhook:
   enable: true # 是否使用 Webhook 发送聊天消息
   avatar_url: https://mc-heads.net/avatar/{player_uuid}.png
-  allowed_mentions: # 允许 Webhook 触发提及的对象
+  allowed_mentions: # TODO 允许 Webhook 触发提及的对象
     - everyone
     - users
     - roles
