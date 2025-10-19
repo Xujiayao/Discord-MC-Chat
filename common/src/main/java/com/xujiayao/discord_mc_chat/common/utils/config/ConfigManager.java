@@ -24,78 +24,91 @@ import static com.xujiayao.discord_mc_chat.common.DMCC.YAML_MAPPER;
  */
 public class ConfigManager {
 
-	private static final String CONFIG_DIR = "./config/discord_mc_chat";
-	private static final String CONFIG_FILE = "config.yml";
-	private static final String CONFIG_TEMPLATE = "/config/config.yml";
-
+	private static final Path CONFIG_PATH = Paths.get("./config/discord_mc_chat/config.yml");
 	private static JsonNode config;
 
 	/**
-	 * Loads the configuration file.
-	 * If the config file does not exist or is empty, it copies the default template.
+	 * Loads the configuration file based on the determined operating mode.
 	 *
-	 * @return true if the config was loaded and validated successfully, false otherwise
+	 * @return true if the config was loaded and validated successfully, false otherwise.
 	 */
 	public static boolean load() {
 		try {
 			// Create directories if they do not exist
-			Path configDir = Paths.get(CONFIG_DIR);
-			Files.createDirectories(configDir);
+			Files.createDirectories(CONFIG_PATH.getParent());
 
-			Path configPath = configDir.resolve(CONFIG_FILE);
-			boolean configExists = Files.exists(configPath);
-
-			// If config does not exist or is empty, copy the template
-			if (!configExists || Files.size(configPath) == 0) {
-				LOGGER.warn("Configuration file does not exist or is empty");
-
-				try (InputStream inputStream = ConfigManager.class.getResourceAsStream(CONFIG_TEMPLATE)) {
-					if (inputStream == null) {
-						throw new IOException("Default config template not found: " + CONFIG_TEMPLATE);
-					}
-					Files.copy(inputStream, configPath, StandardCopyOption.REPLACE_EXISTING);
+			String expectedMode;
+			if (IS_MINECRAFT_ENV) {
+				expectedMode = ModeManager.load();
+				if (expectedMode == null) {
+					// ModeManager handles logging, so we just return false to stop initialization.
+					return false;
 				}
+			} else {
+				expectedMode = "standalone";
+			}
 
-				LOGGER.info("Created default configuration file at \"{}\"", configPath);
-				LOGGER.info("Please edit the configuration file before restarting {}", (IS_MINECRAFT_ENV ? "the Minecraft server" : "DMCC"));
-				// TODO 不需要重启，写完配置文件后直接热加载
+			// If config.yml does not exist or is empty, create it from the appropriate template.
+			if (!Files.exists(CONFIG_PATH) || Files.size(CONFIG_PATH) == 0) {
+				createDefaultConfig(expectedMode);
 				return false;
 			}
 
-			// Load the user's config
-			JsonNode config = YAML_MAPPER.readTree(Files.newBufferedReader(configPath, StandardCharsets.UTF_8));
+			// Load the user's config.yml
+			JsonNode userConfig = YAML_MAPPER.readTree(Files.newBufferedReader(CONFIG_PATH, StandardCharsets.UTF_8));
 
-			// Load the template config for validation
+			// Check for mode consistency
+			String configMode = userConfig.path("mode").asText();
+			if (!expectedMode.equals(configMode)) {
+				LOGGER.error("Mode mismatch detected!");
+				LOGGER.error("Mode in mode.yml is \"{}\", but config.yml is for \"{}\"", expectedMode, configMode);
+				LOGGER.error("Please backup and delete your existing config.yml to allow DMCC to generate a new and correct one");
+				return false;
+			}
+
+			// Load the corresponding template for validation
+			String templatePath = "/config/config_" + expectedMode + ".yml";
 			JsonNode templateConfig;
-			try (InputStream templateStream = ConfigManager.class.getResourceAsStream(CONFIG_TEMPLATE)) {
+			try (InputStream templateStream = ConfigManager.class.getResourceAsStream(templatePath)) {
 				if (templateStream == null) {
-					LOGGER.error("Could not find configuration template in resources: {}", CONFIG_TEMPLATE);
+					LOGGER.error("Could not find configuration template in resources: {}", templatePath);
 					return false;
 				}
 				templateConfig = YAML_MAPPER.readTree(templateStream);
 			}
 
 			// Validate config
-			if (YamlUtils.validate(config, templateConfig, configPath)) {
-				ConfigManager.config = config;
+			if (YamlUtils.validate(userConfig, templateConfig, CONFIG_PATH)) {
+				ConfigManager.config = userConfig;
 				LOGGER.info("Configuration loaded successfully!");
 
 				return true;
 			}
 		} catch (IOException e) {
-			LOGGER.error("Failed to load configuration", e);
+			LOGGER.error("Failed to load or validate configuration", e);
 		}
 
 		return false;
 	}
 
 	/**
-	 * Gets the root JsonNode of the configuration.
+	 * Creates a default config.yml from a template based on the mode.
 	 *
-	 * @return The root JsonNode
+	 * @param mode The operating mode which determines the template to use.
 	 */
-	public static JsonNode getConfig() {
-		return config;
+	private static void createDefaultConfig(String mode) throws IOException {
+		String templateName = "/config/config_" + mode + ".yml";
+		LOGGER.warn("Configuration file not found or is empty. Creating a new one for \"{}\" mode.", mode);
+
+		try (InputStream inputStream = ConfigManager.class.getResourceAsStream(templateName)) {
+			if (inputStream == null) {
+				throw new IOException("Default config template not found: " + templateName);
+			}
+			Files.copy(inputStream, CONFIG_PATH, StandardCopyOption.REPLACE_EXISTING);
+		}
+
+		LOGGER.info("Created default configuration file at \"{}\"", CONFIG_PATH);
+		LOGGER.info("Please edit the configuration file before reloading DMCC");
 	}
 
 	/**
