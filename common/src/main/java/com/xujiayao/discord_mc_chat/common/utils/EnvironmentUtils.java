@@ -84,7 +84,7 @@ public class EnvironmentUtils {
 			}
 		}
 
-		// Standalone or fallback
-		return ConfigManager.getString("multi_server.for_standalone_mode_only.minecraft_version", "1.21.8");
+		// Standalone or error
+		return ConfigManager.getString("multi_server.minecraft_version", "error");
 	}
 }
