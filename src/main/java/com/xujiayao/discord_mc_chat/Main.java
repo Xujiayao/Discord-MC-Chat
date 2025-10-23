@@ -102,6 +102,11 @@ public class Main implements DedicatedServerModInitializer {
 			if (CHANNEL == null) {
 				throw new NullPointerException("Invalid Channel ID");
 			}
+			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
+				PLAYER_COUNT_VOICE_CHANNEL = JDA.getVoiceChannelById(CONFIG.generic.playerCountVoiceChannelId);
+				if (PLAYER_COUNT_VOICE_CHANNEL == null) {
+					throw new NullPointerException("Invalid Player Count Voice Channel ID");
+				}
 			if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
 				CONSOLE_LOG_CHANNEL = JDA.getTextChannelById(CONFIG.generic.consoleLogChannelId);
 				if (CONSOLE_LOG_CHANNEL == null) {
