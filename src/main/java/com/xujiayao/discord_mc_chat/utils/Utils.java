@@ -675,13 +675,9 @@ public class Utils {
 					Properties properties = new Properties();
 					properties.load(new FileInputStream("server.properties"));
 
-					int uniquePlayerCount = 0;
-					try {
-						uniquePlayerCount = FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).size();
-					} catch (Exception ignored) {
-					}
-
-					String voiceChannelName = "Players: %uniquePlayerCount%".replace("%uniquePlayerCount%", Integer.toString(uniquePlayerCount));
+					String voiceChannelName = "Players: %onlinePlayerCount% / %maxPlayerCount%"
+										.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerCount()))
+										.replace("%maxPlayerCount%", Integer.toString(SERVER.getMaxPlayers()));
 
 					PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
 
