@@ -222,7 +222,7 @@ public class Main implements DedicatedServerModInitializer {
 			}
 
 			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
-				String voiceChannelName = "Server Status: Online";
+				String voiceChannelName = "Status: Online";
 				SERVER_STATUS_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
 			}
 		});
@@ -262,7 +262,7 @@ public class Main implements DedicatedServerModInitializer {
 			}
 
 			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
-				String voiceChannelName = "Server Status: Offline";
+				String voiceChannelName = "Status: Offline";
 				SERVER_STATUS_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
 			}
 
