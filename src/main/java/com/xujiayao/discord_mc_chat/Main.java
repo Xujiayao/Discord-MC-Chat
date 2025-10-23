@@ -222,7 +222,7 @@ public class Main implements DedicatedServerModInitializer {
 			}
 
 			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
-				String voiceChannelName = "Status: Online";
+				String voiceChannelName = Translations.translateMessage("message.onlineServerStatusVoiceChannelName");
 				SERVER_STATUS_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
 			}
 		});
@@ -256,13 +256,15 @@ public class Main implements DedicatedServerModInitializer {
 				}
 			}
 
+			/**
 			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
 				String voiceChannelName = "Players: 0";
 				PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
 			}
+			*/
 
 			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
-				String voiceChannelName = "Status: Offline";
+				String voiceChannelName = Translations.translateMessage("message.offlineServerStatusVoiceChannelName");
 				SERVER_STATUS_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
 			}
 
