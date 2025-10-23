@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
@@ -59,6 +60,7 @@ public class Main implements DedicatedServerModInitializer {
 	public static Config CONFIG;
 	public static JDA JDA;
 	public static TextChannel CHANNEL;
+	public static VoiceChannel PLAYER_COUNT_VOICE_CHANNEL;
 	public static Webhook WEBHOOK;
 	public static TextChannel CONSOLE_LOG_CHANNEL;
 	public static Thread CONSOLE_LOG_THREAD = new Thread(new ConsoleLogListener(true));
