@@ -32,7 +32,10 @@ public class Config {
 		public String channelId = "";
 		public String consoleLogChannelId = "";
 		public String updateNotificationChannelId = "";
+
+		public boolean updatePlayerCountVoiceChannel = false;
 		public String playerCountVoiceChannelId = "";
+		public int playerCountVoiceChannelUpdateInterval = 600000;
 
 		public String avatarApi = "https://mc-heads.net/avatar/{player_uuid}.png";
 
