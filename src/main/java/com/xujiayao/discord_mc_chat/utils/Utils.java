@@ -675,7 +675,7 @@ public class Utils {
 					Properties properties = new Properties();
 					properties.load(new FileInputStream("server.properties"));
 
-					String voiceChannelName = "Players: %onlinePlayerCount% / %maxPlayerCount%"
+					String voiceChannelName = Translations.translateMessage("message.playerCountVoiceChannelName")
 										.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerCount()))
 										.replace("%maxPlayerCount%", Integer.toString(SERVER.getMaxPlayers()));
 
