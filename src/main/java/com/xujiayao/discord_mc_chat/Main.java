@@ -218,7 +218,7 @@ public class Main implements DedicatedServerModInitializer {
 			}
 
 			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
-				Utils.playerCountVoiceChannelMonitor();
+				Utils.initPlayerCountVoiceChannelMonitor();
 			}
 
 			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
