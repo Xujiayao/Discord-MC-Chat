@@ -32,6 +32,7 @@ public class Config {
 		public String channelId = "";
 		public String consoleLogChannelId = "";
 		public String updateNotificationChannelId = "";
+		public String playerCountVoiceChannelId = "";
 
 		public String avatarApi = "https://mc-heads.net/avatar/{player_uuid}.png";
 
