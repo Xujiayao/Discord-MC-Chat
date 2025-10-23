@@ -80,6 +80,7 @@ import static com.xujiayao.discord_mc_chat.Main.JDA;
 import static com.xujiayao.discord_mc_chat.Main.LOGGER;
 import static com.xujiayao.discord_mc_chat.Main.MSPT_MONITOR_TIMER;
 import static com.xujiayao.discord_mc_chat.Main.MULTI_SERVER;
+import static com.xujiayao.discord_mc_chat.Main.PLAYER_COUNT_VOICE_CHANNEL;
 import static com.xujiayao.discord_mc_chat.Main.SERVER;
 import static com.xujiayao.discord_mc_chat.Main.SERVER_STARTED_TIME;
 import static com.xujiayao.discord_mc_chat.Main.UPDATE_NOTIFICATION_CHANNEL;
@@ -284,6 +285,7 @@ public class Utils {
 			MSPT_MONITOR_TIMER.cancel();
 			CHANNEL_TOPIC_MONITOR_TIMER.cancel();
 			CHECK_UPDATE_TIMER.cancel();
+			PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER.cancel();
 
 			if (CONFIG.multiServer.enable) {
 				MULTI_SERVER.bye();
@@ -385,6 +387,9 @@ public class Utils {
 					}
 				}, 2000);
 			}
+
+			PLAYER_COUNT_VOICE_CHANNEL_TIMER = new Timer();
+			Utils.initPlayerCountVoiceChannelMonitor();
 
 			return Translations.translate("utils.utils.reload.success");
 		} catch (Exception ex) {
@@ -659,6 +664,31 @@ public class Utils {
 				}
 			}
 		}, 0, 21600000);
+	}
+
+	public static void initPlayerCountVoiceChannelMonitor() {
+		PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					Properties properties = new Properties();
+					properties.load(new FileInputStream("server.properties"));
+
+					int uniquePlayerCount = 0;
+					try {
+						uniquePlayerCount = FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).size();
+					} catch (Exception ignored) {
+					}
+
+					String voiceChannelName = "Players: %uniquePlayerCount%".replace("%uniquePlayerCount%", Integer.toString(uniquePlayerCount))
+
+					PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue()
+
+				} catch (Exception e) {
+					LOGGER.error(ExceptionUtils.getStackTrace(e));
+				}
+			}
+		}, 0, CONFIG.generic.playerCountVoiceChannelUpdateInterval);
 	}
 
 	private static Tuple<Double, Double> getTickInfo() {
