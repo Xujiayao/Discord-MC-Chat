@@ -220,6 +220,7 @@ public class Main implements DedicatedServerModInitializer {
 			MSPT_MONITOR_TIMER.cancel();
 			CHANNEL_TOPIC_MONITOR_TIMER.cancel();
 			CHECK_UPDATE_TIMER.cancel();
+			PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER.cancel();
 
 			CONSOLE_LOG_THREAD.interrupt();
 			try {
