@@ -389,7 +389,7 @@ public class Utils {
 				}, 2000);
 			}
 
-			PLAYER_COUNT_VOICE_CHANNEL_TIMER = new Timer();
+			PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER = new Timer();
 			Utils.initPlayerCountVoiceChannelMonitor();
 
 			return Translations.translate("utils.utils.reload.success");
