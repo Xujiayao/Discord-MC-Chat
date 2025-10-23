@@ -71,6 +71,7 @@ public class Main implements DedicatedServerModInitializer {
 	public static Timer MSPT_MONITOR_TIMER = new Timer();
 	public static Timer CHANNEL_TOPIC_MONITOR_TIMER = new Timer();
 	public static Timer CHECK_UPDATE_TIMER = new Timer();
+	public static Timer PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER = new Timer();
 	public static MultiServer MULTI_SERVER;
 	public static String SERVER_STARTED_TIME;
 
