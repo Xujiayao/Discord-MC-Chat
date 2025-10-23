@@ -61,6 +61,7 @@ public class Main implements DedicatedServerModInitializer {
 	public static JDA JDA;
 	public static TextChannel CHANNEL;
 	public static VoiceChannel PLAYER_COUNT_VOICE_CHANNEL;
+	public static VoiceChannel SERVER_STATUS_VOICE_CHANNEL;
 	public static Webhook WEBHOOK;
 	public static TextChannel CONSOLE_LOG_CHANNEL;
 	public static Thread CONSOLE_LOG_THREAD = new Thread(new ConsoleLogListener(true));
@@ -108,6 +109,13 @@ public class Main implements DedicatedServerModInitializer {
 				if (PLAYER_COUNT_VOICE_CHANNEL == null) {
 					throw new NullPointerException("Invalid Player Count Voice Channel ID");
 				}
+			}
+			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
+				SERVER_STATUS_VOICE_CHANNEL = JDA.getVoiceChannelById(CONFIG.generic.serverStatusVoiceChannelId);
+				if (SERVER_STATUS_VOICE_CHANNEL == null) {
+					throw new NullPointerException("Invalid Server Status Voice Channel ID");
+				}
+			}
 			if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
 				CONSOLE_LOG_CHANNEL = JDA.getTextChannelById(CONFIG.generic.consoleLogChannelId);
 				if (CONSOLE_LOG_CHANNEL == null) {
@@ -212,6 +220,11 @@ public class Main implements DedicatedServerModInitializer {
 			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
 				Utils.playerCountVoiceChannelMonitor();
 			}
+
+			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
+				String voiceChannelName = "Server Status: Online";
+				SERVER_STATUS_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
+			}
 		});
 
 		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
@@ -246,6 +259,11 @@ public class Main implements DedicatedServerModInitializer {
 			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
 				String voiceChannelName = "Players: 0";
 				PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
+			}
+
+			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
+				String voiceChannelName = "Server Status: Offline";
+				SERVER_STATUS_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
 			}
 
 			if (CONFIG.multiServer.enable) {
