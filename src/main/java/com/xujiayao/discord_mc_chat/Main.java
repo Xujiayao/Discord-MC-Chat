@@ -208,6 +208,10 @@ public class Main implements DedicatedServerModInitializer {
 					MULTI_SERVER.initMultiServerChannelTopicMonitor();
 				}
 			}
+
+			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
+				Utils.playerCountVoiceChannelMonitor();
+			}
 		});
 
 		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
@@ -237,6 +241,11 @@ public class Main implements DedicatedServerModInitializer {
 				if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
 					CONSOLE_LOG_CHANNEL.getManager().setTopic(topic).queue();
 				}
+			}
+
+			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
+				String voiceChannelName = "Players: 0";
+				PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
 			}
 
 			if (CONFIG.multiServer.enable) {
