@@ -681,9 +681,9 @@ public class Utils {
 					} catch (Exception ignored) {
 					}
 
-					String voiceChannelName = "Players: %uniquePlayerCount%".replace("%uniquePlayerCount%", Integer.toString(uniquePlayerCount))
+					String voiceChannelName = "Players: %uniquePlayerCount%".replace("%uniquePlayerCount%", Integer.toString(uniquePlayerCount));
 
-					PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue()
+					PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
 
 				} catch (Exception e) {
 					LOGGER.error(ExceptionUtils.getStackTrace(e));
