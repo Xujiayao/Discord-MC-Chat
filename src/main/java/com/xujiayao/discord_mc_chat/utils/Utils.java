@@ -84,6 +84,8 @@ import static com.xujiayao.discord_mc_chat.Main.PLAYER_COUNT_VOICE_CHANNEL;
 import static com.xujiayao.discord_mc_chat.Main.PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER;
 import static com.xujiayao.discord_mc_chat.Main.SERVER;
 import static com.xujiayao.discord_mc_chat.Main.SERVER_STARTED_TIME;
+import static com.xujiayao.discord_mc_chat.Main.SERVER_STATUS_VOICE_CHANNEL;
+import static com.xujiayao.discord_mc_chat.Main.SERVER_STATUS_VOICE_CHANNEL_MONITOR_TIMER;
 import static com.xujiayao.discord_mc_chat.Main.UPDATE_NOTIFICATION_CHANNEL;
 import static com.xujiayao.discord_mc_chat.Main.VERSION;
 import static com.xujiayao.discord_mc_chat.Main.WEBHOOK;
@@ -287,6 +289,7 @@ public class Utils {
 			CHANNEL_TOPIC_MONITOR_TIMER.cancel();
 			CHECK_UPDATE_TIMER.cancel();
 			PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER.cancel();
+			SERVER_STATUS_VOICE_CHANNEL_MONITOR_TIMER.cancel();
 
 			if (CONFIG.multiServer.enable) {
 				MULTI_SERVER.bye();
