@@ -189,7 +189,7 @@ public class MultiServer extends Thread {
 					LOGGER.error(ExceptionUtils.getStackTrace(e));
 				}
 
-				int onlinePlayerCount = 0;
+				int onlineServerCount = 0;
 
 				for (JsonObject infoJson : serverStatusVoiceChannelInfoList) {
 					onlineServerCount++;
