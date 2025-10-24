@@ -20,6 +20,10 @@ import static com.xujiayao.discord_mc_chat.Main.CHANNEL_TOPIC_MONITOR_TIMER;
 import static com.xujiayao.discord_mc_chat.Main.CONFIG;
 import static com.xujiayao.discord_mc_chat.Main.CONSOLE_LOG_CHANNEL;
 import static com.xujiayao.discord_mc_chat.Main.LOGGER;
+import static com.xujiayao.discord_mc_chat.Main.PLAYER_COUNT_VOICE_CHANNEL;
+import static com.xujiayao.discord_mc_chat.Main.PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER;
+import static com.xujiayao.discord_mc_chat.Main.SERVER_STATUS_VOICE_CHANNEL;
+import static com.xujiayao.discord_mc_chat.Main.SERVER_STATUS_VOICE_CHANNEL_MONITOR_TIMER;
 
 /**
  * @author Xujiayao
@@ -29,6 +33,8 @@ public class MultiServer extends Thread {
 	public Server server;
 	public Client client;
 	public Set<JsonObject> channelTopicInfoList;
+	public Set<JsonObject> playerCountVoiceChannelInfoList;
+	public Set<JsonObject> serverStatusVoiceChannelInfoList;
 
 	@Override
 	public void run() {
@@ -129,6 +135,8 @@ public class MultiServer extends Thread {
 		PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER.schedule(new TimerTask() {
 			@Override
 			public void run() {
+				playerCountVoiceChannelInfoList = new HashSet<>();
+
 				JsonObject json = new JsonObject();
 				json.addProperty("special", true);
 				json.addProperty("isChat", false);
@@ -146,7 +154,7 @@ public class MultiServer extends Thread {
 				int onlinePlayerCount = 0;
 				int maxPlayerCount = 0;
 
-				for (JsonObject infoJson : channelTopicInfoList) {
+				for (JsonObject infoJson : playerCountVoiceChannelInfoList) {
 					onlinePlayerCount += infoJson.get("onlinePlayerCount").getAsInt();
 
 					maxPlayerCount += infoJson.get("maxPlayerCount").getAsInt();
@@ -159,6 +167,40 @@ public class MultiServer extends Thread {
 				PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
 			}
 		}, 0, CONFIG.generic.playerCountVoiceChannelUpdateInterval);
+	}
+
+	public void initMultiServerServerStatusVoiceChannelMonitor() {
+		SERVER_STATUS_VOICE_CHANNEL_MONITOR_TIMER.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				serverStatusVoiceChannelInfoList = new HashSet<>();
+
+				JsonObject json = new JsonObject();
+				json.addProperty("special", true);
+				json.addProperty("isChat", false);
+				json.addProperty("playerName", "null");
+				json.addProperty("message", "{\"type\":\"updateChannelTopic\"}");
+
+				server.broadcast(json.toString());
+
+				try {
+					Thread.sleep(2000);
+				} catch (Exception e) {
+					LOGGER.error(ExceptionUtils.getStackTrace(e));
+				}
+
+				int onlinePlayerCount = 0;
+
+				for (JsonObject infoJson : serverStatusVoiceChannelInfoList) {
+					onlineServerCount++;
+				}
+
+				String voiceChannelName = Translations.translateMessage("message.onlineServerStatusVoiceChannelNameForMultiServer")
+							.replace("%onlineServerCount%", Integer.toString(onlineServerCount));
+
+				SERVER_STATUS_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
+			}
+		}, 0, CONFIG.generic.serverStatusVoiceChannelUpdateInterval);
 	}
 
 	public void bye() {
