@@ -125,6 +125,42 @@ public class MultiServer extends Thread {
 		}, 0, CONFIG.generic.channelTopicUpdateInterval);
 	}
 
+	public void initMultiServerPlayerCountVoiceChannelMonitor() {
+		PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				JsonObject json = new JsonObject();
+				json.addProperty("special", true);
+				json.addProperty("isChat", false);
+				json.addProperty("playerName", "null");
+				json.addProperty("message", "{\"type\":\"updateChannelTopic\"}");
+
+				server.broadcast(json.toString());
+
+				try {
+					Thread.sleep(2000);
+				} catch (Exception e) {
+					LOGGER.error(ExceptionUtils.getStackTrace(e));
+				}
+
+				int onlinePlayerCount = 0;
+				int maxPlayerCount = 0;
+
+				for (JsonObject infoJson : channelTopicInfoList) {
+					onlinePlayerCount += infoJson.get("onlinePlayerCount").getAsInt();
+
+					maxPlayerCount += infoJson.get("maxPlayerCount").getAsInt();
+				}
+
+				String voiceChannelName = Translations.translateMessage("message.onlinePlayerCountVoiceChannelName")
+							.replace("%onlinePlayerCount%", Integer.toString(onlinePlayerCount))
+							.replace("%maxPlayerCount%", Integer.toString(maxPlayerCount));
+
+				PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
+			}
+		}, 0, CONFIG.generic.playerCountVoiceChannelUpdateInterval);
+	}
+
 	public void bye() {
 		client.writeThread.write("bye");
 	}
