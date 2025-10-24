@@ -256,12 +256,10 @@ public class Main implements DedicatedServerModInitializer {
 				}
 			}
 
-			/**
 			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
-				String voiceChannelName = "Players: 0";
+				String voiceChannelName = Translations.translateMessage("message.offlinePlayerCountVoiceChannelName");
 				PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
 			}
-			*/
 
 			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
 				String voiceChannelName = Translations.translateMessage("message.offlineServerStatusVoiceChannelName");
