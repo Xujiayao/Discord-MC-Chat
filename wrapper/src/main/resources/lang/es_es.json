@@ -85,5 +85,6 @@
   "message.onlinePlayerCountVoiceChannelName": "Jugador(es): %onlinePlayerCount% / %maxPlayerCount%",
   "message.offlinePlayerCountVoiceChannelName": "Jugador(es): 0",
   "message.onlineServerStatusVoiceChannelName": "Estado: Conectado",
-  "message.offlineServerStatusVoiceChannelName": "Estado: Desconectado"
+  "message.offlineServerStatusVoiceChannelName": "Estado: Desconectado",
+  "message.onlineServerStatusVoiceChannelNameForMultiServer": "Estado: %onlineServerCount% Servidor(es) Conectado"
 }
