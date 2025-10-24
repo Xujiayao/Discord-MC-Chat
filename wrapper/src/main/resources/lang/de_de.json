@@ -85,5 +85,6 @@
   "message.onlinePlayerCountVoiceChannelName": "Spieler: %onlinePlayerCount% / %maxPlayerCount%",
   "message.offlinePlayerCountVoiceChannelName": "Spieler: 0",
   "message.onlineServerStatusVoiceChannelName": "Status: Online",
-  "message.offlineServerStatusVoiceChannelName": "Status: Inaktiv"
+  "message.offlineServerStatusVoiceChannelName": "Status: Inaktiv",
+  "message.onlineServerStatusVoiceChannelNameForMultiServer": "Status: %onlineServerCount% Server(s) Online"
 }
