@@ -73,6 +73,7 @@ public class Main implements DedicatedServerModInitializer {
 	public static Timer CHANNEL_TOPIC_MONITOR_TIMER = new Timer();
 	public static Timer CHECK_UPDATE_TIMER = new Timer();
 	public static Timer PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER = new Timer();
+	public static Timer SERVER_STATUS_VOICE_CHANNEL_MONITOR_TIMER = new Timer();
 	public static MultiServer MULTI_SERVER;
 	public static String SERVER_STARTED_TIME;
 
@@ -226,8 +227,12 @@ public class Main implements DedicatedServerModInitializer {
 			}
 
 			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
-				String voiceChannelName = Translations.translateMessage("message.onlineServerStatusVoiceChannelName");
-				SERVER_STATUS_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
+				if (!CONFIG.multiServer.enable) {
+					String voiceChannelName = Translations.translateMessage("message.onlineServerStatusVoiceChannelName");
+					SERVER_STATUS_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
+				} else if (MULTI_SERVER.server != null) {
+					MULTI_SERVER.initMultiServerServerStatusVoiceChannelMonitor();
+				}
 			}
 		});
 
@@ -242,6 +247,7 @@ public class Main implements DedicatedServerModInitializer {
 			CHANNEL_TOPIC_MONITOR_TIMER.cancel();
 			CHECK_UPDATE_TIMER.cancel();
 			PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER.cancel();
+			SERVER_STATUS_VOICE_CHANNEL_MONITOR_TIMER.cancel();
 
 			CONSOLE_LOG_THREAD.interrupt();
 			try {
