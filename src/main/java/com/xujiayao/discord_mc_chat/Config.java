@@ -127,6 +127,12 @@ public class Config {
 		public String offlineChannelTopic = "";
 		public String onlineChannelTopic = "";
 		public String onlineChannelTopicForMultiServer = "";
+
+		public String onlinePlayerCountVoiceChannelName = "";
+		public String offlinePlayerCountVoiceChannelName = "";
+		public String onlineServerStatusVoiceChannelName = "";
+		public String offlineServerStatusVoiceChannelName = "";
+		public String onlineServerStatusVoiceChannelNameForMultiServer = "";
 	}
 }
 
