@@ -228,7 +228,7 @@ public class Main implements DedicatedServerModInitializer {
 
 			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
 				if (!CONFIG.multiServer.enable) {
-					String voiceChannelName = Translations.translate("message.onlineServerStatusVoiceChannelName");
+					String voiceChannelName = Translations.translateMessage("message.onlineServerStatusVoiceChannelName");
 					SERVER_STATUS_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
 				} else if (MULTI_SERVER.server != null) {
 					MULTI_SERVER.initMultiServerServerStatusVoiceChannelMonitor();
@@ -267,12 +267,12 @@ public class Main implements DedicatedServerModInitializer {
 			}
 
 			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
-				String voiceChannelName = Translations.translate("message.offlinePlayerCountVoiceChannelName");
+				String voiceChannelName = Translations.translateMessage("message.offlinePlayerCountVoiceChannelName");
 				PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
 			}
 
 			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
-				String voiceChannelName = Translations.translate("message.offlineServerStatusVoiceChannelName");
+				String voiceChannelName = Translations.translateMessage("message.offlineServerStatusVoiceChannelName");
 				SERVER_STATUS_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
 			}
 
