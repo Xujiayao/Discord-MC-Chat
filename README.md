@@ -93,6 +93,7 @@ file for all keys.
         - Exclude broadcasts for execution of specific commands (support regular expression)
     - Support broadcasting messages sent using /tellraw and /say command
     - Send all console log messages to Discord
+    - Supports voice channels that show the player count and server status (online or offline)
 - Discord Commands available
     - Use Discord to manage channels that can execute DMCC commands
     - Notify in-game players when someone executes an DMCC command
@@ -155,16 +156,16 @@ Languages currently available:
 | `es_es` | Español (España)      |
 | `fr_fr` | Français (France)     |
 | `it_it` | Italiano (Italia)     |
-| `ja_jp` | 日本語（日本）               |
-| `ko_kr` | 한국어（대한민국）             |
+| `ja_jp` | 日本語 (日本)           |
+| `ko_kr` | 한국어 (대한민국)         |
 | `no_no` | Norsk Bokmål (Norge)  |
 | `pl_pl` | Polski (Polska)       |
 | `pt_br` | Português (Brasil)    |
 | `ru_ru` | Русский (Россия)      |
 | `tr_tr` | Türkçe (Türkiye)      |
-| `zh_cn` | 简体中文（中国大陆）            |
-| `zh_hk` | 繁體中文（香港特別行政區）         |
-| `zh_tw` | 繁體中文（台灣）              |
+| `zh_cn` | 简体中文 (中国大陆)      |
+| `zh_hk` | 繁體中文 (香港特別行政區) |
+| `zh_tw` | 繁體中文 (台灣)         |
 
 ## Contributors
 
