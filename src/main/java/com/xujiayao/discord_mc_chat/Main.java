@@ -121,7 +121,7 @@ public class Main implements DedicatedServerModInitializer {
 				}
 			}
 			if (CONFIG.generic.serverStatusVoiceChannelUpdateInterval < 600000) {
-				LOGGER.warn("The Server Status Voice Channel Update Interval is below 5 minutes; rate limits might occur.");
+				LOGGER.warn("The Server Status Voice Channel Update Interval is below 10 minutes; rate limits might occur.");
 			}
 			if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
 				CONSOLE_LOG_CHANNEL = JDA.getTextChannelById(CONFIG.generic.consoleLogChannelId);
