@@ -268,7 +268,11 @@ public class Main implements DedicatedServerModInitializer {
 
 			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
 				String voiceChannelName = Translations.translateMessage("message.offlinePlayerCountVoiceChannelName");
-				PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
+				if (!CONFIG.generic.updatePlayerCountVoiceChannelStatus) {
+					PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
+				} else {
+					PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).modifyStatus("").queue();
+				}
 			}
 
 			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
