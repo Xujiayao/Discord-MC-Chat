@@ -24,7 +24,7 @@ public class Config {
 		public String botToken = "";
 
 		public boolean showServerStatusInBotStatus = true;
-		public String botPlayingActivity = "Minecraft (%onlinePlayerCount%/%maxPlayerCount%)";
+		public String botPlayingActivity = "Minecraft (%onlinePlayerCount% / %maxPlayerCount%)";
 		public String botListeningActivity = "";
 
 		public boolean useWebhook = true;
@@ -36,6 +36,7 @@ public class Config {
 		public String playerCountVoiceChannelId = "";
 		public int playerCountVoiceChannelUpdateInterval = 300000;
 		public boolean updatePlayerCountVoiceChannelStatus = true;
+		public String playerCountVoiceChannelStatus = "Minecraft (%onlinePlayerCount% / %maxPlayerCount%)";
 
 		public String serverStatusVoiceChannelId = "";
 		public int serverStatusVoiceChannelUpdateInterval = 300000;
