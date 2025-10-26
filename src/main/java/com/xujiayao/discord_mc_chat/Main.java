@@ -111,8 +111,8 @@ public class Main implements DedicatedServerModInitializer {
 					throw new NullPointerException("Invalid Player Count Voice Channel ID");
 				}
 			}
-			if (CONFIG.generic.playerCountVoiceChannelUpdateInterval < 300000) {
-				LOGGER.warn("The Player Count Voice Channel Update Interval is below 5 minutes, rate limits WILL occur.")
+			if (CONFIG.generic.playerCountVoiceChannelUpdateInterval < 600000) {
+				LOGGER.warn("The Player Count Voice Channel Update Interval is below 10 minutes, rate limits might occur.");
 			}
 			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
 				SERVER_STATUS_VOICE_CHANNEL = JDA.getVoiceChannelById(CONFIG.generic.serverStatusVoiceChannelId);
@@ -120,8 +120,8 @@ public class Main implements DedicatedServerModInitializer {
 					throw new NullPointerException("Invalid Server Status Voice Channel ID");
 				}
 			}
-			if (CONFIG.generic.serverStatusVoiceChannelUpdateInterval < 300000) {
-				LOGGER.warn("The Server Status Voice Channel Update Interval is below 5 minutes; rate limits WILL occur.")
+			if (CONFIG.generic.serverStatusVoiceChannelUpdateInterval < 600000) {
+				LOGGER.warn("The Server Status Voice Channel Update Interval is below 5 minutes; rate limits might occur.");
 			}
 			if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
 				CONSOLE_LOG_CHANNEL = JDA.getTextChannelById(CONFIG.generic.consoleLogChannelId);
