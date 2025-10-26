@@ -36,7 +36,7 @@ public class Config {
 		public String playerCountVoiceChannelId = "";
 		public int playerCountVoiceChannelUpdateInterval = 300000;
 		public boolean updatePlayerCountVoiceChannelStatus = true;
-		public String playerCountVoiceChannelStatus = "Minecraft (%onlinePlayerCount% / %maxPlayerCount%)";
+		public String playerCountVoiceChannelStatus = "Playing **Minecraft**";
 
 		public String serverStatusVoiceChannelId = "";
 		public int serverStatusVoiceChannelUpdateInterval = 300000;
