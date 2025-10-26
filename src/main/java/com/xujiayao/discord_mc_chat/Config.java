@@ -34,10 +34,10 @@ public class Config {
 		public String updateNotificationChannelId = "";
 
 		public String playerCountVoiceChannelId = "";
-		public int playerCountVoiceChannelUpdateInterval = 600000;
+		public int playerCountVoiceChannelUpdateInterval = 300000;
 
 		public String serverStatusVoiceChannelId = "";
-		public int serverStatusVoiceChannelUpdateInterval = 600000;
+		public int serverStatusVoiceChannelUpdateInterval = 300000;
 
 		public String avatarApi = "https://mc-heads.net/avatar/{player_uuid}.png";
 
