@@ -21,6 +21,11 @@ public class CommandManager {
 	 */
 	public static List<String> handleCommand(String commandLine) {
 		List<String> response = new ArrayList<>();
+
+		if (commandLine.startsWith("/")) {
+			commandLine = commandLine.substring(1);
+		}
+
 		String[] parts = commandLine.trim().split("\\s+");
 		String command = parts[0];
 
@@ -37,7 +42,5 @@ public class CommandManager {
 		}
 
 		return response;
-
-		// TODO 斜杠的话也算一个命令
 	}
 }
