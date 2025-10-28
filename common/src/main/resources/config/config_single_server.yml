@@ -106,7 +106,6 @@ command_permissions:
   execute: admin
   log: admin
   reload: admin
-  start: admin
   stop: admin
   whitelist: admin
 

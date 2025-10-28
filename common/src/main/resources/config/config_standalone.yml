@@ -82,6 +82,8 @@ console_forwarding:
 
 # 管理员设置
 dmcc_admin:
+  # 任何在游戏内拥有此 OP 等级的玩家，将自动被视为 DMCC 管理员，从而可以使用所有 DMCC 管理命令。
+  # 注意：如果某 Discord 用户想使用 DMCC 管理命令，他必须先将账户与一个满足此 OP 等级的 MC 账户链接，否则仅可在游戏内使用管理命令。
   minecraft_op_level_requirement: 4
 
 # 账户绑定设置
@@ -90,8 +92,11 @@ account_linking:
   features:
     sync_role_colors: true
     sync_op_level_based_on_discord_roles:
+      # 根据用户的 Discord 角色，来自动地为他们在游戏内授予或撤销 OP 权限。
       enable: true
       list:
+        # 示例：任何拥有 "Admins" Discord 角色的已链接玩家，都将被 DMCC 自动设置为 4 级 OP。
+        # 一旦他们成为 4 级 OP，他们也会因为上面的 minecraft_op_level_requirement 规则而自动成为 DMCC 管理员。
         - role_name: Admins
           op_level: 4
     discord_mention_notifications:
