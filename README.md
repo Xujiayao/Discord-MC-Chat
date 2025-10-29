@@ -71,6 +71,7 @@ file for all keys.
 - Minecraft <> Discord cross server chat
     - Support disabling Discord and in-game chat broadcasts
     - Support displaying server status using Discord channel topic feature
+    - Support displaying server status and player count using voice channels
     - Support displaying server status in bot's Discord online status
     - Support displaying server player count in bot's Discord activity status
     - Support Discord Webhook feature
@@ -93,7 +94,6 @@ file for all keys.
         - Exclude broadcasts for execution of specific commands (support regular expression)
     - Support broadcasting messages sent using /tellraw and /say command
     - Send all console log messages to Discord
-    - Supports voice channels that show the player count and server status (online or offline)
 - Discord Commands available
     - Use Discord to manage channels that can execute DMCC commands
     - Notify in-game players when someone executes an DMCC command
@@ -163,9 +163,9 @@ Languages currently available:
 | `pt_br` | Português (Brasil)    |
 | `ru_ru` | Русский (Россия)      |
 | `tr_tr` | Türkçe (Türkiye)      |
-| `zh_cn` | 简体中文 (中国大陆)      |
-| `zh_hk` | 繁體中文 (香港特別行政區) |
-| `zh_tw` | 繁體中文 (台灣)         |
+| `zh_cn` | 简体中文（中国大陆）            |
+| `zh_hk` | 繁體中文（香港特別行政區）         |
+| `zh_tw` | 繁體中文（台灣）              |
 
 ## Contributors
 
