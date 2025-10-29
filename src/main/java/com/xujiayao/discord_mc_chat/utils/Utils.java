@@ -696,7 +696,9 @@ public class Utils {
 			public void run() {
 				try {
 					Properties properties = new Properties();
-					properties.load(new FileInputStream("server.properties"));
+					try (FileInputStream fis = new FileInputStream("server.properties")) {
+						properties.load(fis);
+					}
 
 					String voiceChannelName = Translations.translateMessage("message.onlinePlayerCountVoiceChannelName")
 										.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerCount()))
