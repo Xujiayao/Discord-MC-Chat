@@ -696,11 +696,7 @@ public class Utils {
 										.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerCount()))
 										.replace("%maxPlayerCount%", Integer.toString(SERVER.getMaxPlayers()));
 
-					if (!CONFIG.generic.updatePlayerCountVoiceChannelStatus) {
-						PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
-					} else {
-						PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).modifyStatus(CONFIG.generic.playerCountVoiceChannelStatus).queue();
-					}
+					PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
 
 				} catch (Exception e) {
 					LOGGER.error(ExceptionUtils.getStackTrace(e));
