@@ -313,7 +313,7 @@ public class Utils {
 			}
 			if (CONFIG.generic.playerCountVoiceChannelUpdateInterval < 600000) {
 				LOGGER.warn("The Player Count Voice Channel Update Interval is below 10 minutes; rate limits might occur.");
-			}		
+			}
 			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
 				SERVER_STATUS_VOICE_CHANNEL = JDA.getVoiceChannelById(CONFIG.generic.serverStatusVoiceChannelId);
 				if (SERVER_STATUS_VOICE_CHANNEL == null) {
