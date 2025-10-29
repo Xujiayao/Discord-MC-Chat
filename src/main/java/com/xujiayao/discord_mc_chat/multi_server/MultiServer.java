@@ -189,12 +189,7 @@ public class MultiServer extends Thread {
 					LOGGER.error(ExceptionUtils.getStackTrace(e));
 				}
 
-				int onlineServerCount = 0;
-
-				for (JsonObject infoJson : serverStatusVoiceChannelInfoList) {
-					onlineServerCount++;
-				}
-
+				int onlineServerCount = serverStatusVoiceChannelInfoList.size();
 				String voiceChannelName = Translations.translateMessage("message.onlineServerStatusVoiceChannelNameForMultiServer")
 							.replace("%onlineServerCount%", Integer.toString(onlineServerCount));
 
