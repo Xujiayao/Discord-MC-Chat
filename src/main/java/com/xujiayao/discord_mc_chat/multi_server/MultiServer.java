@@ -164,11 +164,7 @@ public class MultiServer extends Thread {
 							.replace("%onlinePlayerCount%", Integer.toString(onlinePlayerCount))
 							.replace("%maxPlayerCount%", Integer.toString(maxPlayerCount));
 
-				if (!CONFIG.generic.updatePlayerCountVoiceChannelStatus) {
-					PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
-				} else {
-					PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).modifyStatus(CONFIG.generic.playerCountVoiceChannelStatus).queue();
-				}
+				PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
 			}
 		}, 0, CONFIG.generic.playerCountVoiceChannelUpdateInterval);
 	}
