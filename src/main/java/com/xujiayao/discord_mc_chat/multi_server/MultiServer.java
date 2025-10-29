@@ -190,6 +190,7 @@ public class MultiServer extends Thread {
 				}
 
 				int onlineServerCount = serverStatusVoiceChannelInfoList.size();
+
 				String voiceChannelName = Translations.translateMessage("message.onlineServerStatusVoiceChannelNameForMultiServer")
 							.replace("%onlineServerCount%", Integer.toString(onlineServerCount));
 
