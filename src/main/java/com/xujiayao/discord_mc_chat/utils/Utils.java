@@ -311,11 +311,17 @@ public class Utils {
 					throw new NullPointerException("Invalid Player Count Voice Channel ID");
 				}
 			}
+			if (CONFIG.generic.playerCountVoiceChannelUpdateInterval < 600000) {
+				LOGGER.warn("The Player Count Voice Channel Update Interval is below 10 minutes; rate limits might occur.");
+			}		
 			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
 				SERVER_STATUS_VOICE_CHANNEL = JDA.getVoiceChannelById(CONFIG.generic.serverStatusVoiceChannelId);
 				if (SERVER_STATUS_VOICE_CHANNEL == null) {
 					throw new NullPointerException("Invalid Server Status Voice Channel ID");
 				}
+			}
+			if (CONFIG.generic.serverStatusVoiceChannelUpdateInterval < 600000) {
+				LOGGER.warn("The Server Status Voice Channel Update Interval is below 10 minutes; rate limits might occur.");
 			}
 			CONSOLE_LOG_THREAD.interrupt();
 			CONSOLE_LOG_THREAD.join(5000);
