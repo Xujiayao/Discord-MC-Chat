@@ -81,5 +81,12 @@
 
   "message.offlineChannelTopic": ":x: Server er offline | Sist oppdatert: <t:%lastUpdateTime%:f>",
   "message.onlineChannelTopic": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% player(s) online | %uniquePlayerCount% unike spiller(e) | Serveren startet <t:%serverStartedTime%:R> | Sist oppdatert: <t:%lastUpdateTime%:f>",
-  "message.onlineChannelTopicForMultiServer": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% spiller(e) online | %uniquePlayerCount% unike spiller(e) | %onlineServerCount% server(s) online [%onlineServerList%] | Serveren startet <t:%serverStartedTime%:R> | Sist oppdatert: <t:%lastUpdateTime%:f>"
+  "message.onlineChannelTopicForMultiServer": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% spiller(e) online | %uniquePlayerCount% unike spiller(e) | %onlineServerCount% server(s) online [%onlineServerList%] | Serveren startet <t:%serverStartedTime%:R> | Sist oppdatert: <t:%lastUpdateTime%:f>",
+
+  "message.offlineServerStatusVoiceChannelName": "Status: Frakoblet",
+  "message.onlineServerStatusVoiceChannelName": "Status: Pålogget",
+  "message.onlineServerStatusVoiceChannelNameForMultiServer": "Status: %onlineServerCount% server(e) pålogget",
+
+  "message.offlinePlayerCountVoiceChannelName": "Spillere: 0",
+  "message.onlinePlayerCountVoiceChannelName": "Spillere: %onlinePlayerCount%/%maxPlayerCount%"
 }

@@ -81,5 +81,12 @@
 
   "message.offlineChannelTopic": ":x: Serveur hors ligne | Dernière actualisation : <t:%lastUpdateTime%:f>",
   "message.onlineChannelTopic": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% joueur(s) en ligne | %uniquePlayerCount% joueur(s) unique(s) a(ont) rejoint le serveur | Serveur en ligne : <t:%serverStartedTime%:R> | Dernière actualisation : <t:%lastUpdateTime%:f>",
-  "message.onlineChannelTopicForMultiServer": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% joueur(s) en ligne | %uniquePlayerCount% joueur(s) unique(s) a(ont) rejoint le serveur | %onlineServerCount% serveur(s) en ligne [%onlineServerList%] | Serveur en ligne : <t:%serverStartedTime%:R> | Dernière actualisation : <t:%lastUpdateTime%:f>"
+  "message.onlineChannelTopicForMultiServer": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% joueur(s) en ligne | %uniquePlayerCount% joueur(s) unique(s) a(ont) rejoint le serveur | %onlineServerCount% serveur(s) en ligne [%onlineServerList%] | Serveur en ligne : <t:%serverStartedTime%:R> | Dernière actualisation : <t:%lastUpdateTime%:f>",
+
+  "message.offlineServerStatusVoiceChannelName": "Statut : Hors ligne",
+  "message.onlineServerStatusVoiceChannelName": "Statut : En ligne",
+  "message.onlineServerStatusVoiceChannelNameForMultiServer": "Statut : %onlineServerCount% serveur(s) en ligne",
+
+  "message.offlinePlayerCountVoiceChannelName": "Joueurs : 0",
+  "message.onlinePlayerCountVoiceChannelName": "Joueurs : %onlinePlayerCount%/%maxPlayerCount%"
 }
