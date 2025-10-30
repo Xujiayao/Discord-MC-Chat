@@ -120,7 +120,7 @@ public class MultiServer extends Thread {
 						.replace("%onlineServerList%", String.join(", ", onlineServerList))
 						.replace("%serverStartedTime%", Long.toString(Collections.min(serverStartedTime)))
 						.replace("%lastUpdateTime%", Long.toString(epochSecond))
-						.replace("%nextUpdateTime%", Long.toString(epochSecond + CONFIG.generic.channelTopicUpdateInterval / 1000));
+						.replace("%nextUpdateTime%", Long.toString(epochSecond + CONFIG.generic.channelUpdateInterval / 1000));
 
 				CHANNEL.getManager().setTopic(topic).queue();
 
@@ -128,7 +128,7 @@ public class MultiServer extends Thread {
 					CONSOLE_LOG_CHANNEL.getManager().setTopic(topic).queue();
 				}
 			}
-		}, 0, CONFIG.generic.channelTopicUpdateInterval);
+		}, 0, CONFIG.generic.channelUpdateInterval);
 	}
 
 	public void initMultiServerPlayerCountVoiceChannelMonitor() {
@@ -166,7 +166,7 @@ public class MultiServer extends Thread {
 
 				PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
 			}
-		}, 0, CONFIG.generic.playerCountVoiceChannelUpdateInterval);
+		}, 0, CONFIG.generic.channelUpdateInterval);
 	}
 
 	public void initMultiServerServerStatusVoiceChannelMonitor() {
@@ -196,7 +196,7 @@ public class MultiServer extends Thread {
 
 				SERVER_STATUS_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
 			}
-		}, 0, CONFIG.generic.serverStatusVoiceChannelUpdateInterval);
+		}, 0, CONFIG.generic.channelUpdateInterval);
 	}
 
 	public void bye() {

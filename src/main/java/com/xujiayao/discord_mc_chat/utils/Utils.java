@@ -305,24 +305,6 @@ public class Utils {
 			if (CHANNEL == null) {
 				throw new NullPointerException("Invalid Channel ID");
 			}
-			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
-				PLAYER_COUNT_VOICE_CHANNEL = JDA.getVoiceChannelById(CONFIG.generic.playerCountVoiceChannelId);
-				if (PLAYER_COUNT_VOICE_CHANNEL == null) {
-					throw new NullPointerException("Invalid Player Count Voice Channel ID");
-				}
-			}
-			if (CONFIG.generic.playerCountVoiceChannelUpdateInterval < 600000) {
-				LOGGER.warn("The Player Count Voice Channel Update Interval is below 10 minutes; rate limits might occur.");
-			}
-			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
-				SERVER_STATUS_VOICE_CHANNEL = JDA.getVoiceChannelById(CONFIG.generic.serverStatusVoiceChannelId);
-				if (SERVER_STATUS_VOICE_CHANNEL == null) {
-					throw new NullPointerException("Invalid Server Status Voice Channel ID");
-				}
-			}
-			if (CONFIG.generic.serverStatusVoiceChannelUpdateInterval < 600000) {
-				LOGGER.warn("The Server Status Voice Channel Update Interval is below 10 minutes; rate limits might occur.");
-			}
 			CONSOLE_LOG_THREAD.interrupt();
 			CONSOLE_LOG_THREAD.join(5000);
 			if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
@@ -345,6 +327,22 @@ public class Utils {
 				}
 			} else {
 				UPDATE_NOTIFICATION_CHANNEL = CHANNEL;
+			}
+			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
+				PLAYER_COUNT_VOICE_CHANNEL = JDA.getVoiceChannelById(CONFIG.generic.playerCountVoiceChannelId);
+				if (PLAYER_COUNT_VOICE_CHANNEL == null) {
+					throw new NullPointerException("Invalid Player Count Voice Channel ID");
+				}
+			}
+			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
+				SERVER_STATUS_VOICE_CHANNEL = JDA.getVoiceChannelById(CONFIG.generic.serverStatusVoiceChannelId);
+				if (SERVER_STATUS_VOICE_CHANNEL == null) {
+					throw new NullPointerException("Invalid Server Status Voice Channel ID");
+				}
+			}
+
+			if (CONFIG.generic.channelUpdateInterval < 600000) {
+				LOGGER.warn("The Channel Update Interval is below 10 minutes; rate limits might occur.");
 			}
 
 			String webhookName = "DMCC Webhook" + " (" + JDA.getSelfUser().getApplicationId() + ")";
@@ -659,7 +657,7 @@ public class Utils {
 							.replace("%uniquePlayerCount%", Integer.toString(uniquePlayerCount))
 							.replace("%serverStartedTime%", SERVER_STARTED_TIME)
 							.replace("%lastUpdateTime%", Long.toString(epochSecond))
-							.replace("%nextUpdateTime%", Long.toString(epochSecond + CONFIG.generic.channelTopicUpdateInterval / 1000));
+							.replace("%nextUpdateTime%", Long.toString(epochSecond + CONFIG.generic.channelUpdateInterval / 1000));
 
 					CHANNEL.getManager().setTopic(topic).queue();
 
@@ -670,7 +668,7 @@ public class Utils {
 					LOGGER.error(ExceptionUtils.getStackTrace(e));
 				}
 			}
-		}, 0, CONFIG.generic.channelTopicUpdateInterval);
+		}, 0, CONFIG.generic.channelUpdateInterval);
 	}
 
 	public static void initCheckUpdateTimer() {
@@ -695,22 +693,16 @@ public class Utils {
 			@Override
 			public void run() {
 				try {
-					Properties properties = new Properties();
-					try (FileInputStream fis = new FileInputStream("server.properties")) {
-						properties.load(fis);
-					}
-
 					String voiceChannelName = Translations.translateMessage("message.onlinePlayerCountVoiceChannelName")
 										.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerCount()))
 										.replace("%maxPlayerCount%", Integer.toString(SERVER.getMaxPlayers()));
 
 					PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
-
 				} catch (Exception e) {
 					LOGGER.error(ExceptionUtils.getStackTrace(e));
 				}
 			}
-		}, 0, CONFIG.generic.playerCountVoiceChannelUpdateInterval);
+		}, 0, CONFIG.generic.channelUpdateInterval);
 	}
 
 	private static Tuple<Double, Double> getTickInfo() {
