@@ -637,7 +637,9 @@ public class Utils {
 						long epochSecond = Instant.now().getEpochSecond();
 
 						Properties properties = new Properties();
-						properties.load(new FileInputStream("server.properties"));
+						try (FileInputStream fis = new FileInputStream("server.properties")) {
+							properties.load(fis);
+						}
 
 						int uniquePlayerCount = 0;
 						try {
