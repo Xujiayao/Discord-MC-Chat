@@ -82,7 +82,7 @@
   "message.offlineChannelTopic": ":x: Server offline | Last updated: <t:%lastUpdateTime%:f>",
   "message.onlineChannelTopic": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% player(s) online | %uniquePlayerCount% unique player(s) ever joined | Server started <t:%serverStartedTime%:R> | Last updated: <t:%lastUpdateTime%:f>",
   "message.onlineChannelTopicForMultiServer": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% player(s) online | %uniquePlayerCount% unique player(s) ever joined | %onlineServerCount% server(s) online [%onlineServerList%] | Server started <t:%serverStartedTime%:R> | Last updated: <t:%lastUpdateTime%:f>",
-  "message.onlinePlayerCountVoiceChannelName": "Players: %onlinePlayerCount% / %maxPlayerCount%",
+  "message.onlinePlayerCountVoiceChannelName": "Players: %onlinePlayerCount%/%maxPlayerCount%",
   "message.offlinePlayerCountVoiceChannelName": "Players: 0",
   "message.onlineServerStatusVoiceChannelName": "Status: Online",
   "message.offlineServerStatusVoiceChannelName": "Status: Offline",

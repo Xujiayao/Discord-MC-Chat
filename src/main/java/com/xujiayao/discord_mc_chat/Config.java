@@ -24,7 +24,7 @@ public class Config {
 		public String botToken = "";
 
 		public boolean showServerStatusInBotStatus = true;
-		public String botPlayingActivity = "Minecraft (%onlinePlayerCount% / %maxPlayerCount%)";
+		public String botPlayingActivity = "Minecraft (%onlinePlayerCount%/%maxPlayerCount%)";
 		public String botListeningActivity = "";
 
 		public boolean useWebhook = true;
