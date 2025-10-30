@@ -70,7 +70,7 @@ import java.util.TimerTask;
 import java.util.UUID;
 
 import static com.xujiayao.discord_mc_chat.Main.CHANNEL;
-import static com.xujiayao.discord_mc_chat.Main.CHANNEL_TOPIC_MONITOR_TIMER;
+import static com.xujiayao.discord_mc_chat.Main.CHANNEL_MONITOR_TIMER;
 import static com.xujiayao.discord_mc_chat.Main.CHECK_UPDATE_TIMER;
 import static com.xujiayao.discord_mc_chat.Main.CONFIG;
 import static com.xujiayao.discord_mc_chat.Main.CONSOLE_LOG_CHANNEL;
@@ -81,11 +81,9 @@ import static com.xujiayao.discord_mc_chat.Main.LOGGER;
 import static com.xujiayao.discord_mc_chat.Main.MSPT_MONITOR_TIMER;
 import static com.xujiayao.discord_mc_chat.Main.MULTI_SERVER;
 import static com.xujiayao.discord_mc_chat.Main.PLAYER_COUNT_VOICE_CHANNEL;
-import static com.xujiayao.discord_mc_chat.Main.PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER;
 import static com.xujiayao.discord_mc_chat.Main.SERVER;
 import static com.xujiayao.discord_mc_chat.Main.SERVER_STARTED_TIME;
 import static com.xujiayao.discord_mc_chat.Main.SERVER_STATUS_VOICE_CHANNEL;
-import static com.xujiayao.discord_mc_chat.Main.SERVER_STATUS_VOICE_CHANNEL_MONITOR_TIMER;
 import static com.xujiayao.discord_mc_chat.Main.UPDATE_NOTIFICATION_CHANNEL;
 import static com.xujiayao.discord_mc_chat.Main.VERSION;
 import static com.xujiayao.discord_mc_chat.Main.WEBHOOK;
@@ -286,10 +284,8 @@ public class Utils {
 	public static String reload() {
 		try {
 			MSPT_MONITOR_TIMER.cancel();
-			CHANNEL_TOPIC_MONITOR_TIMER.cancel();
+			CHANNEL_MONITOR_TIMER.cancel();
 			CHECK_UPDATE_TIMER.cancel();
-			SERVER_STATUS_VOICE_CHANNEL_MONITOR_TIMER.cancel();
-			PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER.cancel();
 
 			if (CONFIG.multiServer.enable) {
 				MULTI_SERVER.bye();
@@ -394,23 +390,20 @@ public class Utils {
 				MULTI_SERVER.start();
 			}
 
-			CHANNEL_TOPIC_MONITOR_TIMER = new Timer();
-			if (CONFIG.generic.updateChannelTopic) {
+			CHANNEL_MONITOR_TIMER = new Timer();
+			if (CONFIG.generic.updateChannelTopic
+					|| !CONFIG.generic.serverStatusVoiceChannelId.isEmpty()
+					|| !CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
 				new Timer().schedule(new TimerTask() {
 					@Override
 					public void run() {
 						if (!CONFIG.multiServer.enable) {
-							Utils.initChannelTopicMonitor();
+							Utils.initChannelMonitor();
 						} else if (MULTI_SERVER.server != null) {
-							MULTI_SERVER.initMultiServerChannelTopicMonitor();
+							MULTI_SERVER.initMultiServerChannelMonitor();
 						}
 					}
 				}, 2000);
-			}
-
-			PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER = new Timer();
-			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
-				Utils.initPlayerCountVoiceChannelMonitor();
 			}
 
 			return Translations.translate("utils.utils.reload.success");
@@ -635,34 +628,48 @@ public class Utils {
 		}, CONFIG.generic.msptCheckInterval, CONFIG.generic.msptCheckInterval);
 	}
 
-	public static void initChannelTopicMonitor() {
-		CHANNEL_TOPIC_MONITOR_TIMER.schedule(new TimerTask() {
+	public static void initChannelMonitor() {
+		CHANNEL_MONITOR_TIMER.schedule(new TimerTask() {
 			@Override
 			public void run() {
 				try {
-					long epochSecond = Instant.now().getEpochSecond();
+					if (CONFIG.generic.updateChannelTopic) {
+						long epochSecond = Instant.now().getEpochSecond();
 
-					Properties properties = new Properties();
-					properties.load(new FileInputStream("server.properties"));
+						Properties properties = new Properties();
+						properties.load(new FileInputStream("server.properties"));
 
-					int uniquePlayerCount = 0;
-					try {
-						uniquePlayerCount = FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).size();
-					} catch (Exception ignored) {
+						int uniquePlayerCount = 0;
+						try {
+							uniquePlayerCount = FileUtils.listFiles(new File((properties.getProperty("level-name") + "/stats/")), null, false).size();
+						} catch (Exception ignored) {
+						}
+
+						String topic = Translations.translateMessage("message.onlineChannelTopic")
+								.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerCount()))
+								.replace("%maxPlayerCount%", Integer.toString(SERVER.getMaxPlayers()))
+								.replace("%uniquePlayerCount%", Integer.toString(uniquePlayerCount))
+								.replace("%serverStartedTime%", SERVER_STARTED_TIME)
+								.replace("%lastUpdateTime%", Long.toString(epochSecond))
+								.replace("%nextUpdateTime%", Long.toString(epochSecond + CONFIG.generic.channelUpdateInterval / 1000));
+
+						CHANNEL.getManager().setTopic(topic).queue();
+
+						if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
+							CONSOLE_LOG_CHANNEL.getManager().setTopic(topic).queue();
+						}
 					}
 
-					String topic = Translations.translateMessage("message.onlineChannelTopic")
-							.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerCount()))
-							.replace("%maxPlayerCount%", Integer.toString(SERVER.getMaxPlayers()))
-							.replace("%uniquePlayerCount%", Integer.toString(uniquePlayerCount))
-							.replace("%serverStartedTime%", SERVER_STARTED_TIME)
-							.replace("%lastUpdateTime%", Long.toString(epochSecond))
-							.replace("%nextUpdateTime%", Long.toString(epochSecond + CONFIG.generic.channelUpdateInterval / 1000));
+					if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
+						String name = Translations.translateMessage("message.onlineServerStatusVoiceChannelName");
+						SERVER_STATUS_VOICE_CHANNEL.getManager().setName(name).queue();
+					}
 
-					CHANNEL.getManager().setTopic(topic).queue();
-
-					if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
-						CONSOLE_LOG_CHANNEL.getManager().setTopic(topic).queue();
+					if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
+						String name = Translations.translateMessage("message.onlinePlayerCountVoiceChannelName")
+								.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerCount()))
+								.replace("%maxPlayerCount%", Integer.toString(SERVER.getMaxPlayers()));
+						PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(name).queue();
 					}
 				} catch (Exception e) {
 					LOGGER.error(ExceptionUtils.getStackTrace(e));
@@ -686,23 +693,6 @@ public class Utils {
 				}
 			}
 		}, 0, 21600000);
-	}
-
-	public static void initPlayerCountVoiceChannelMonitor() {
-		PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				try {
-					String voiceChannelName = Translations.translateMessage("message.onlinePlayerCountVoiceChannelName")
-										.replace("%onlinePlayerCount%", Integer.toString(SERVER.getPlayerCount()))
-										.replace("%maxPlayerCount%", Integer.toString(SERVER.getMaxPlayers()));
-
-					PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
-				} catch (Exception e) {
-					LOGGER.error(ExceptionUtils.getStackTrace(e));
-				}
-			}
-		}, 0, CONFIG.generic.channelUpdateInterval);
 	}
 
 	private static Tuple<Double, Double> getTickInfo() {

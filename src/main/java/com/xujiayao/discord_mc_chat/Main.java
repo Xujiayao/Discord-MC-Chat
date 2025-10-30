@@ -70,10 +70,8 @@ public class Main implements DedicatedServerModInitializer {
 	public static int MINECRAFT_SEND_COUNT = 0;
 	public static MinecraftServer SERVER;
 	public static Timer MSPT_MONITOR_TIMER = new Timer();
-	public static Timer CHANNEL_TOPIC_MONITOR_TIMER = new Timer();
+	public static Timer CHANNEL_MONITOR_TIMER = new Timer();
 	public static Timer CHECK_UPDATE_TIMER = new Timer();
-	public static Timer SERVER_STATUS_VOICE_CHANNEL_MONITOR_TIMER = new Timer();
-	public static Timer PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER = new Timer();
 	public static MultiServer MULTI_SERVER;
 	public static String SERVER_STARTED_TIME;
 
@@ -214,28 +212,13 @@ public class Main implements DedicatedServerModInitializer {
 				Utils.initMsptMonitor();
 			}
 
-			if (CONFIG.generic.updateChannelTopic) {
+			if (CONFIG.generic.updateChannelTopic
+					|| !CONFIG.generic.serverStatusVoiceChannelId.isEmpty()
+					|| !CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
 				if (!CONFIG.multiServer.enable) {
-					Utils.initChannelTopicMonitor();
+					Utils.initChannelMonitor();
 				} else if (MULTI_SERVER.server != null) {
-					MULTI_SERVER.initMultiServerChannelTopicMonitor();
-				}
-			}
-
-			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
-				if (!CONFIG.multiServer.enable) {
-					String voiceChannelName = Translations.translateMessage("message.onlineServerStatusVoiceChannelName");
-					SERVER_STATUS_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
-				} else if (MULTI_SERVER.server != null) {
-					MULTI_SERVER.initMultiServerServerStatusVoiceChannelMonitor();
-				}
-			}
-
-			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
-				if (!CONFIG.multiServer.enable) {
-					Utils.initPlayerCountVoiceChannelMonitor();
-				} else if (MULTI_SERVER.server != null) {
-					MULTI_SERVER.initMultiServerPlayerCountVoiceChannelMonitor();
+					MULTI_SERVER.initMultiServerChannelMonitor();
 				}
 			}
 		});
@@ -248,10 +231,8 @@ public class Main implements DedicatedServerModInitializer {
 
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			MSPT_MONITOR_TIMER.cancel();
-			CHANNEL_TOPIC_MONITOR_TIMER.cancel();
+			CHANNEL_MONITOR_TIMER.cancel();
 			CHECK_UPDATE_TIMER.cancel();
-			SERVER_STATUS_VOICE_CHANNEL_MONITOR_TIMER.cancel();
-			PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER.cancel();
 
 			CONSOLE_LOG_THREAD.interrupt();
 			try {
