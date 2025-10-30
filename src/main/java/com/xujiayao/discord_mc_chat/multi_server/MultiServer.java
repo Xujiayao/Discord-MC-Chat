@@ -33,8 +33,8 @@ public class MultiServer extends Thread {
 	public Server server;
 	public Client client;
 	public Set<JsonObject> channelTopicInfoList;
-	public Set<JsonObject> playerCountVoiceChannelInfoList;
 	public Set<JsonObject> serverStatusVoiceChannelInfoList;
+	public Set<JsonObject> playerCountVoiceChannelInfoList;
 
 	@Override
 	public void run() {

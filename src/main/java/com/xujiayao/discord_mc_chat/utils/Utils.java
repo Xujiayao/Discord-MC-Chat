@@ -288,8 +288,8 @@ public class Utils {
 			MSPT_MONITOR_TIMER.cancel();
 			CHANNEL_TOPIC_MONITOR_TIMER.cancel();
 			CHECK_UPDATE_TIMER.cancel();
-			PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER.cancel();
 			SERVER_STATUS_VOICE_CHANNEL_MONITOR_TIMER.cancel();
+			PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER.cancel();
 
 			if (CONFIG.multiServer.enable) {
 				MULTI_SERVER.bye();
@@ -328,16 +328,16 @@ public class Utils {
 			} else {
 				UPDATE_NOTIFICATION_CHANNEL = CHANNEL;
 			}
-			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
-				PLAYER_COUNT_VOICE_CHANNEL = JDA.getVoiceChannelById(CONFIG.generic.playerCountVoiceChannelId);
-				if (PLAYER_COUNT_VOICE_CHANNEL == null) {
-					throw new NullPointerException("Invalid Player Count Voice Channel ID");
-				}
-			}
 			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
 				SERVER_STATUS_VOICE_CHANNEL = JDA.getVoiceChannelById(CONFIG.generic.serverStatusVoiceChannelId);
 				if (SERVER_STATUS_VOICE_CHANNEL == null) {
 					throw new NullPointerException("Invalid Server Status Voice Channel ID");
+				}
+			}
+			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
+				PLAYER_COUNT_VOICE_CHANNEL = JDA.getVoiceChannelById(CONFIG.generic.playerCountVoiceChannelId);
+				if (PLAYER_COUNT_VOICE_CHANNEL == null) {
+					throw new NullPointerException("Invalid Player Count Voice Channel ID");
 				}
 			}
 

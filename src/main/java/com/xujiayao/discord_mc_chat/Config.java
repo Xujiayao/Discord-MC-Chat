@@ -33,8 +33,8 @@ public class Config {
 		public String consoleLogChannelId = "";
 		public String updateNotificationChannelId = "";
 
-		public String playerCountVoiceChannelId = "";
 		public String serverStatusVoiceChannelId = "";
+		public String playerCountVoiceChannelId = "";
 
 		public String avatarApi = "https://mc-heads.net/avatar/{player_uuid}.png";
 
@@ -125,12 +125,11 @@ public class Config {
 		public String onlineChannelTopic = "";
 		public String onlineChannelTopicForMultiServer = "";
 
-		public String offlinePlayerCountVoiceChannelName = "";
-		public String onlinePlayerCountVoiceChannelName = "";
-
 		public String offlineServerStatusVoiceChannelName = "";
 		public String onlineServerStatusVoiceChannelName = "";
 		public String onlineServerStatusVoiceChannelNameForMultiServer = "";
+
+		public String offlinePlayerCountVoiceChannelName = "";
+		public String onlinePlayerCountVoiceChannelName = "";
 	}
 }
-

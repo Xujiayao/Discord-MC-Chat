@@ -60,8 +60,8 @@ public class Main implements DedicatedServerModInitializer {
 	public static Config CONFIG;
 	public static JDA JDA;
 	public static TextChannel CHANNEL;
-	public static VoiceChannel PLAYER_COUNT_VOICE_CHANNEL;
 	public static VoiceChannel SERVER_STATUS_VOICE_CHANNEL;
+	public static VoiceChannel PLAYER_COUNT_VOICE_CHANNEL;
 	public static Webhook WEBHOOK;
 	public static TextChannel CONSOLE_LOG_CHANNEL;
 	public static Thread CONSOLE_LOG_THREAD = new Thread(new ConsoleLogListener(true));
@@ -72,8 +72,8 @@ public class Main implements DedicatedServerModInitializer {
 	public static Timer MSPT_MONITOR_TIMER = new Timer();
 	public static Timer CHANNEL_TOPIC_MONITOR_TIMER = new Timer();
 	public static Timer CHECK_UPDATE_TIMER = new Timer();
-	public static Timer PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER = new Timer();
 	public static Timer SERVER_STATUS_VOICE_CHANNEL_MONITOR_TIMER = new Timer();
+	public static Timer PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER = new Timer();
 	public static MultiServer MULTI_SERVER;
 	public static String SERVER_STARTED_TIME;
 
@@ -126,16 +126,16 @@ public class Main implements DedicatedServerModInitializer {
 			} else {
 				UPDATE_NOTIFICATION_CHANNEL = CHANNEL;
 			}
-			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
-				PLAYER_COUNT_VOICE_CHANNEL = JDA.getVoiceChannelById(CONFIG.generic.playerCountVoiceChannelId);
-				if (PLAYER_COUNT_VOICE_CHANNEL == null) {
-					throw new NullPointerException("Invalid Player Count Voice Channel ID");
-				}
-			}
 			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
 				SERVER_STATUS_VOICE_CHANNEL = JDA.getVoiceChannelById(CONFIG.generic.serverStatusVoiceChannelId);
 				if (SERVER_STATUS_VOICE_CHANNEL == null) {
 					throw new NullPointerException("Invalid Server Status Voice Channel ID");
+				}
+			}
+			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
+				PLAYER_COUNT_VOICE_CHANNEL = JDA.getVoiceChannelById(CONFIG.generic.playerCountVoiceChannelId);
+				if (PLAYER_COUNT_VOICE_CHANNEL == null) {
+					throw new NullPointerException("Invalid Player Count Voice Channel ID");
 				}
 			}
 
@@ -222,20 +222,20 @@ public class Main implements DedicatedServerModInitializer {
 				}
 			}
 
-			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
-				if (!CONFIG.multiServer.enable) {
-					Utils.initPlayerCountVoiceChannelMonitor();
-				} else if (MULTI_SERVER.server != null) {
-					MULTI_SERVER.initMultiServerPlayerCountVoiceChannelMonitor();
-				}
-			}
-
 			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
 				if (!CONFIG.multiServer.enable) {
 					String voiceChannelName = Translations.translateMessage("message.onlineServerStatusVoiceChannelName");
 					SERVER_STATUS_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
 				} else if (MULTI_SERVER.server != null) {
 					MULTI_SERVER.initMultiServerServerStatusVoiceChannelMonitor();
+				}
+			}
+
+			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
+				if (!CONFIG.multiServer.enable) {
+					Utils.initPlayerCountVoiceChannelMonitor();
+				} else if (MULTI_SERVER.server != null) {
+					MULTI_SERVER.initMultiServerPlayerCountVoiceChannelMonitor();
 				}
 			}
 		});
@@ -250,8 +250,8 @@ public class Main implements DedicatedServerModInitializer {
 			MSPT_MONITOR_TIMER.cancel();
 			CHANNEL_TOPIC_MONITOR_TIMER.cancel();
 			CHECK_UPDATE_TIMER.cancel();
-			PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER.cancel();
 			SERVER_STATUS_VOICE_CHANNEL_MONITOR_TIMER.cancel();
+			PLAYER_COUNT_VOICE_CHANNEL_MONITOR_TIMER.cancel();
 
 			CONSOLE_LOG_THREAD.interrupt();
 			try {
@@ -270,14 +270,14 @@ public class Main implements DedicatedServerModInitializer {
 				}
 			}
 
-			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
-				String voiceChannelName = Translations.translateMessage("message.offlinePlayerCountVoiceChannelName");
-				PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
-			}
-
 			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
 				String voiceChannelName = Translations.translateMessage("message.offlineServerStatusVoiceChannelName");
 				SERVER_STATUS_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
+			}
+
+			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
+				String voiceChannelName = Translations.translateMessage("message.offlinePlayerCountVoiceChannelName");
+				PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
 			}
 
 			if (CONFIG.multiServer.enable) {
