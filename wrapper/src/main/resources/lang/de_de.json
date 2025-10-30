@@ -80,11 +80,6 @@
   "message.highMspt": "**Server MSPT (%mspt%) ist über %msptLimit%!**",
 
   "message.offlineChannelTopic": ":x: Server inaktiv | Zuletzt aktualisiert: <t:%lastUpdateTime%:f>",
-  "message.onlineChannelTopic": ":white_check_mark: %onlinePlayerCount% / %maxPlayerCount% Spieler online | %uniquePlayerCount% unterschiedliche spieler sind jemals beigetreten | Server gestartet <t:%serverStartedTime%:R> | Zuletzt aktualisiert: <t:%lastUpdateTime%:f>",
-  "message.onlineChannelTopicForMultiServer": ":white_check_mark: %onlinePlayerCount% / %maxPlayerCount% Spieler online | %uniquePlayerCount% unterschiedliche spieler sind jemals beigetreten | %onlineServerCount% Server online [%onlineServerList%] | Server gestartet: <t:%serverStartedTime%:R> | Zuletzt aktualisiert: <t:%lastUpdateTime%:f>",
-  "message.onlinePlayerCountVoiceChannelName": "Spieler: %onlinePlayerCount% / %maxPlayerCount%",
-  "message.offlinePlayerCountVoiceChannelName": "Spieler: 0",
-  "message.onlineServerStatusVoiceChannelName": "Status: Online",
-  "message.offlineServerStatusVoiceChannelName": "Status: Inaktiv",
-  "message.onlineServerStatusVoiceChannelNameForMultiServer": "Status: %onlineServerCount% Server(s) Online"
+  "message.onlineChannelTopic": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% Spieler online | %uniquePlayerCount% unterschiedliche spieler sind jemals beigetreten | Server gestartet <t:%serverStartedTime%:R> | Zuletzt aktualisiert: <t:%lastUpdateTime%:f>",
+  "message.onlineChannelTopicForMultiServer": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% Spieler online | %uniquePlayerCount% unterschiedliche spieler sind jemals beigetreten | %onlineServerCount% Server online [%onlineServerList%] | Server gestartet: <t:%serverStartedTime%:R> | Zuletzt aktualisiert: <t:%lastUpdateTime%:f>"
 }

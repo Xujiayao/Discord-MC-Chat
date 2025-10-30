@@ -80,11 +80,6 @@
   "message.highMspt": "**¡Los MSPT del servidor (%mspt%) están por encima de %msptLimit%!**",
 
   "message.offlineChannelTopic": ":x: Servidor desconectado | Última actualización: <t:%lastUpdateTime%:f>",
-  "message.onlineChannelTopic": ":white_check_mark: %onlinePlayerCount% / %maxPlayerCount% jugador(es) conectados | %uniquePlayerCount% jugador(es) únicos que se han unido | Servidor iniciado <t:%serverStartedTime%:R> | Última actualización: <t:%lastUpdateTime%:f>",
-  "message.onlineChannelTopicForMultiServer": ":white_check_mark: %onlinePlayerCount% / %maxPlayerCount% jugador(es) conectados | %uniquePlayerCount% jugador(es) únicos que se han unido | %onlineServerCount% servidor(es) en línea [%onlineServerList%] | Servidor iniciado <t:%serverStartedTime%:R> | Última actualización: <t:%lastUpdateTime%:f>",
-  "message.onlinePlayerCountVoiceChannelName": "Jugador(es): %onlinePlayerCount% / %maxPlayerCount%",
-  "message.offlinePlayerCountVoiceChannelName": "Jugador(es): 0",
-  "message.onlineServerStatusVoiceChannelName": "Estado: Conectado",
-  "message.offlineServerStatusVoiceChannelName": "Estado: Desconectado",
-  "message.onlineServerStatusVoiceChannelNameForMultiServer": "Estado: %onlineServerCount% Servidor(es) Conectado"
+  "message.onlineChannelTopic": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% jugador(es) conectados | %uniquePlayerCount% jugador(es) únicos que se han unido | Servidor iniciado <t:%serverStartedTime%:R> | Última actualización: <t:%lastUpdateTime%:f>",
+  "message.onlineChannelTopicForMultiServer": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% jugador(es) conectados | %uniquePlayerCount% jugador(es) únicos que se han unido | %onlineServerCount% servidor(es) en línea [%onlineServerList%] | Servidor iniciado <t:%serverStartedTime%:R> | Última actualización: <t:%lastUpdateTime%:f>"
 }
