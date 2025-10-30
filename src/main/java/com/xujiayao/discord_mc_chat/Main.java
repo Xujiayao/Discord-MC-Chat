@@ -105,24 +105,6 @@ public class Main implements DedicatedServerModInitializer {
 			if (CHANNEL == null) {
 				throw new NullPointerException("Invalid Channel ID");
 			}
-			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
-				PLAYER_COUNT_VOICE_CHANNEL = JDA.getVoiceChannelById(CONFIG.generic.playerCountVoiceChannelId);
-				if (PLAYER_COUNT_VOICE_CHANNEL == null) {
-					throw new NullPointerException("Invalid Player Count Voice Channel ID");
-				}
-			}
-			if (CONFIG.generic.playerCountVoiceChannelUpdateInterval < 600000) {
-				LOGGER.warn("The Player Count Voice Channel Update Interval is below 10 minutes; rate limits might occur.");
-			}
-			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
-				SERVER_STATUS_VOICE_CHANNEL = JDA.getVoiceChannelById(CONFIG.generic.serverStatusVoiceChannelId);
-				if (SERVER_STATUS_VOICE_CHANNEL == null) {
-					throw new NullPointerException("Invalid Server Status Voice Channel ID");
-				}
-			}
-			if (CONFIG.generic.serverStatusVoiceChannelUpdateInterval < 600000) {
-				LOGGER.warn("The Server Status Voice Channel Update Interval is below 10 minutes; rate limits might occur.");
-			}
 			if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
 				CONSOLE_LOG_CHANNEL = JDA.getTextChannelById(CONFIG.generic.consoleLogChannelId);
 				if (CONSOLE_LOG_CHANNEL == null) {
@@ -139,10 +121,26 @@ public class Main implements DedicatedServerModInitializer {
 				// TODO This (including other messages, /reload) should be checked every time before sending!
 				if (!UPDATE_NOTIFICATION_CHANNEL.canTalk()) {
 					UPDATE_NOTIFICATION_CHANNEL = CHANNEL;
-					LOGGER.warn("Unable to send messages in the Update Notification Channel; using the default channel instead.");
+					LOGGER.warn("Unable to send messages in the Update Notification Channel; Using the default channel instead.");
 				}
 			} else {
 				UPDATE_NOTIFICATION_CHANNEL = CHANNEL;
+			}
+			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
+				PLAYER_COUNT_VOICE_CHANNEL = JDA.getVoiceChannelById(CONFIG.generic.playerCountVoiceChannelId);
+				if (PLAYER_COUNT_VOICE_CHANNEL == null) {
+					throw new NullPointerException("Invalid Player Count Voice Channel ID");
+				}
+			}
+			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
+				SERVER_STATUS_VOICE_CHANNEL = JDA.getVoiceChannelById(CONFIG.generic.serverStatusVoiceChannelId);
+				if (SERVER_STATUS_VOICE_CHANNEL == null) {
+					throw new NullPointerException("Invalid Server Status Voice Channel ID");
+				}
+			}
+
+			if (CONFIG.generic.channelUpdateInterval < 600000) {
+				LOGGER.warn("The Channel Update Interval is below 10 minutes; rate limits might occur.");
 			}
 
 			String webhookName = "DMCC Webhook" + " (" + JDA.getSelfUser().getApplicationId() + ")";
