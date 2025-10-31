@@ -71,6 +71,7 @@ file for all keys.
 - Minecraft <> Discord cross server chat
     - Support disabling Discord and in-game chat broadcasts
     - Support displaying server status using Discord channel topic feature
+    - Support displaying server status and player count using voice channels
     - Support displaying server status in bot's Discord online status
     - Support displaying server player count in bot's Discord activity status
     - Support Discord Webhook feature

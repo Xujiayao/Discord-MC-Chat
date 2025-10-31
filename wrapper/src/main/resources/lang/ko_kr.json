@@ -81,5 +81,12 @@
 
   "message.offlineChannelTopic": ":x: 서버 오프라인 | 최근 변경: <t:%lastUpdateTime%:f>",
   "message.onlineChannelTopic": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% 접속 중 | 누적 사용자 %uniquePlayerCount% | 서버 실행 <t:%serverStartedTime%:R> | 최근 변경: <t:%lastUpdateTime%:f>",
-  "message.onlineChannelTopicForMultiServer": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% 접속 중 | 누적 사용자 %uniquePlayerCount% | %onlineServerCount% 서버 실행 중 [%onlineServerList%] | 서버 실행 <t:%serverStartedTime%:R> | 최근 변경: <t:%lastUpdateTime%:f>"
+  "message.onlineChannelTopicForMultiServer": ":white_check_mark: %onlinePlayerCount%/%maxPlayerCount% 접속 중 | 누적 사용자 %uniquePlayerCount% | %onlineServerCount% 서버 실행 중 [%onlineServerList%] | 서버 실행 <t:%serverStartedTime%:R> | 최근 변경: <t:%lastUpdateTime%:f>",
+
+  "message.offlineServerStatusVoiceChannelName": "상태: 오프라인",
+  "message.onlineServerStatusVoiceChannelName": "상태: 온라인",
+  "message.onlineServerStatusVoiceChannelNameForMultiServer": "상태: %onlineServerCount% 서버 온라인",
+
+  "message.offlinePlayerCountVoiceChannelName": "플레이어: 0",
+  "message.onlinePlayerCountVoiceChannelName": "플레이어: %onlinePlayerCount%/%maxPlayerCount%"
 }

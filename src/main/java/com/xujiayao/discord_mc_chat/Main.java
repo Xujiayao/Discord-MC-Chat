@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
@@ -59,6 +60,8 @@ public class Main implements DedicatedServerModInitializer {
 	public static Config CONFIG;
 	public static JDA JDA;
 	public static TextChannel CHANNEL;
+	public static VoiceChannel SERVER_STATUS_VOICE_CHANNEL;
+	public static VoiceChannel PLAYER_COUNT_VOICE_CHANNEL;
 	public static Webhook WEBHOOK;
 	public static TextChannel CONSOLE_LOG_CHANNEL;
 	public static Thread CONSOLE_LOG_THREAD = new Thread(new ConsoleLogListener(true));
@@ -67,7 +70,7 @@ public class Main implements DedicatedServerModInitializer {
 	public static int MINECRAFT_SEND_COUNT = 0;
 	public static MinecraftServer SERVER;
 	public static Timer MSPT_MONITOR_TIMER = new Timer();
-	public static Timer CHANNEL_TOPIC_MONITOR_TIMER = new Timer();
+	public static Timer CHANNEL_MONITOR_TIMER = new Timer();
 	public static Timer CHECK_UPDATE_TIMER = new Timer();
 	public static MultiServer MULTI_SERVER;
 	public static String SERVER_STARTED_TIME;
@@ -120,6 +123,22 @@ public class Main implements DedicatedServerModInitializer {
 				}
 			} else {
 				UPDATE_NOTIFICATION_CHANNEL = CHANNEL;
+			}
+			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
+				SERVER_STATUS_VOICE_CHANNEL = JDA.getVoiceChannelById(CONFIG.generic.serverStatusVoiceChannelId);
+				if (SERVER_STATUS_VOICE_CHANNEL == null) {
+					throw new NullPointerException("Invalid Server Status Voice Channel ID");
+				}
+			}
+			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
+				PLAYER_COUNT_VOICE_CHANNEL = JDA.getVoiceChannelById(CONFIG.generic.playerCountVoiceChannelId);
+				if (PLAYER_COUNT_VOICE_CHANNEL == null) {
+					throw new NullPointerException("Invalid Player Count Voice Channel ID");
+				}
+			}
+
+			if (CONFIG.generic.channelUpdateInterval < 600000) {
+				LOGGER.warn("The Channel Update Interval is below 10 minutes; rate limits might occur.");
 			}
 
 			String webhookName = "DMCC Webhook" + " (" + JDA.getSelfUser().getApplicationId() + ")";
@@ -193,11 +212,13 @@ public class Main implements DedicatedServerModInitializer {
 				Utils.initMsptMonitor();
 			}
 
-			if (CONFIG.generic.updateChannelTopic) {
+			if (CONFIG.generic.updateChannelTopic
+					|| !CONFIG.generic.serverStatusVoiceChannelId.isEmpty()
+					|| !CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
 				if (!CONFIG.multiServer.enable) {
-					Utils.initChannelTopicMonitor();
+					Utils.initChannelMonitor();
 				} else if (MULTI_SERVER.server != null) {
-					MULTI_SERVER.initMultiServerChannelTopicMonitor();
+					MULTI_SERVER.initMultiServerChannelMonitor();
 				}
 			}
 		});
@@ -210,7 +231,7 @@ public class Main implements DedicatedServerModInitializer {
 
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			MSPT_MONITOR_TIMER.cancel();
-			CHANNEL_TOPIC_MONITOR_TIMER.cancel();
+			CHANNEL_MONITOR_TIMER.cancel();
 			CHECK_UPDATE_TIMER.cancel();
 
 			CONSOLE_LOG_THREAD.interrupt();
@@ -228,6 +249,16 @@ public class Main implements DedicatedServerModInitializer {
 				if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
 					CONSOLE_LOG_CHANNEL.getManager().setTopic(topic).queue();
 				}
+			}
+
+			if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
+				String voiceChannelName = Translations.translateMessage("message.offlineServerStatusVoiceChannelName");
+				SERVER_STATUS_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
+			}
+
+			if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
+				String voiceChannelName = Translations.translateMessage("message.offlinePlayerCountVoiceChannelName");
+				PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(voiceChannelName).queue();
 			}
 
 			if (CONFIG.multiServer.enable) {

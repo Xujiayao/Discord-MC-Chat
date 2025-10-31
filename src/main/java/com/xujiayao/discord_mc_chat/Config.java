@@ -33,6 +33,9 @@ public class Config {
 		public String consoleLogChannelId = "";
 		public String updateNotificationChannelId = "";
 
+		public String serverStatusVoiceChannelId = "";
+		public String playerCountVoiceChannelId = "";
+
 		public String avatarApi = "https://mc-heads.net/avatar/{player_uuid}.png";
 
 		public boolean broadcastPlayerCommandExecution = true;
@@ -59,7 +62,7 @@ public class Config {
 		public boolean mentionAdminsForUpdates = true;
 
 		public boolean updateChannelTopic = true;
-		public int channelTopicUpdateInterval = 600000;
+		public int channelUpdateInterval = 600000;
 
 		public boolean shutdownImmediately = false;
 
@@ -121,6 +124,12 @@ public class Config {
 		public String offlineChannelTopic = "";
 		public String onlineChannelTopic = "";
 		public String onlineChannelTopicForMultiServer = "";
+
+		public String offlineServerStatusVoiceChannelName = "";
+		public String onlineServerStatusVoiceChannelName = "";
+		public String onlineServerStatusVoiceChannelNameForMultiServer = "";
+
+		public String offlinePlayerCountVoiceChannelName = "";
+		public String onlinePlayerCountVoiceChannelName = "";
 	}
 }
-

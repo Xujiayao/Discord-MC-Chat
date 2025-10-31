@@ -16,10 +16,12 @@ import java.util.Set;
 import java.util.TimerTask;
 
 import static com.xujiayao.discord_mc_chat.Main.CHANNEL;
-import static com.xujiayao.discord_mc_chat.Main.CHANNEL_TOPIC_MONITOR_TIMER;
+import static com.xujiayao.discord_mc_chat.Main.CHANNEL_MONITOR_TIMER;
 import static com.xujiayao.discord_mc_chat.Main.CONFIG;
 import static com.xujiayao.discord_mc_chat.Main.CONSOLE_LOG_CHANNEL;
 import static com.xujiayao.discord_mc_chat.Main.LOGGER;
+import static com.xujiayao.discord_mc_chat.Main.PLAYER_COUNT_VOICE_CHANNEL;
+import static com.xujiayao.discord_mc_chat.Main.SERVER_STATUS_VOICE_CHANNEL;
 
 /**
  * @author Xujiayao
@@ -62,8 +64,8 @@ public class MultiServer extends Thread {
 		client.writeThread.write(json.toString());
 	}
 
-	public void initMultiServerChannelTopicMonitor() {
-		CHANNEL_TOPIC_MONITOR_TIMER.schedule(new TimerTask() {
+	public void initMultiServerChannelMonitor() {
+		CHANNEL_MONITOR_TIMER.schedule(new TimerTask() {
 			@Override
 			public void run() {
 				channelTopicInfoList = new HashSet<>();
@@ -82,47 +84,71 @@ public class MultiServer extends Thread {
 					LOGGER.error(ExceptionUtils.getStackTrace(e));
 				}
 
-				int onlinePlayerCount = 0;
-				int maxPlayerCount = 0;
-				Set<String> uniquePlayers = new HashSet<>();
-				int onlineServerCount = 0;
-				Set<String> onlineServerList = new HashSet<>();
-				Set<Long> serverStartedTime = new HashSet<>();
+				if (CONFIG.generic.updateChannelTopic) {
+					int onlinePlayerCount = 0;
+					int maxPlayerCount = 0;
+					Set<String> uniquePlayers = new HashSet<>();
+					int onlineServerCount = 0;
+					Set<String> onlineServerList = new HashSet<>();
+					Set<Long> serverStartedTime = new HashSet<>();
 
-				for (JsonObject infoJson : channelTopicInfoList) {
-					onlineServerCount++;
+					for (JsonObject infoJson : channelTopicInfoList) {
+						onlineServerCount++;
 
-					onlinePlayerCount += infoJson.get("onlinePlayerCount").getAsInt();
+						onlinePlayerCount += infoJson.get("onlinePlayerCount").getAsInt();
 
-					maxPlayerCount += infoJson.get("maxPlayerCount").getAsInt();
+						maxPlayerCount += infoJson.get("maxPlayerCount").getAsInt();
 
-					String[] uniquePlayersList = new Gson().fromJson(infoJson.get("uniquePlayers").getAsJsonArray(), String[].class);
-					uniquePlayers.addAll(List.of(uniquePlayersList));
+						String[] uniquePlayersList = new Gson().fromJson(infoJson.get("uniquePlayers").getAsJsonArray(), String[].class);
+						uniquePlayers.addAll(List.of(uniquePlayersList));
 
-					onlineServerList.add(infoJson.get("serverName").getAsString());
+						onlineServerList.add(infoJson.get("serverName").getAsString());
 
-					serverStartedTime.add(Long.parseLong(infoJson.get("serverStartedTime").getAsString()));
+						serverStartedTime.add(Long.parseLong(infoJson.get("serverStartedTime").getAsString()));
+					}
+
+					long epochSecond = Instant.now().getEpochSecond();
+
+					String topic = Translations.translateMessage("message.onlineChannelTopicForMultiServer")
+							.replace("%onlinePlayerCount%", Integer.toString(onlinePlayerCount))
+							.replace("%maxPlayerCount%", Integer.toString(maxPlayerCount))
+							.replace("%uniquePlayerCount%", Integer.toString(uniquePlayers.size()))
+							.replace("%onlineServerCount%", Integer.toString(onlineServerCount))
+							.replace("%onlineServerList%", String.join(", ", onlineServerList))
+							.replace("%serverStartedTime%", Long.toString(Collections.min(serverStartedTime)))
+							.replace("%lastUpdateTime%", Long.toString(epochSecond))
+							.replace("%nextUpdateTime%", Long.toString(epochSecond + CONFIG.generic.channelUpdateInterval / 1000));
+
+					CHANNEL.getManager().setTopic(topic).queue();
+
+					if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
+						CONSOLE_LOG_CHANNEL.getManager().setTopic(topic).queue();
+					}
 				}
 
-				long epochSecond = Instant.now().getEpochSecond();
+				if (!CONFIG.generic.serverStatusVoiceChannelId.isEmpty()) {
+					int onlineServerCount = channelTopicInfoList.size();
+					String name = Translations.translateMessage("message.onlineServerStatusVoiceChannelNameForMultiServer")
+							.replace("%onlineServerCount%", Integer.toString(onlineServerCount));
+					SERVER_STATUS_VOICE_CHANNEL.getManager().setName(name).queue();
+				}
 
-				String topic = Translations.translateMessage("message.onlineChannelTopicForMultiServer")
-						.replace("%onlinePlayerCount%", Integer.toString(onlinePlayerCount))
-						.replace("%maxPlayerCount%", Integer.toString(maxPlayerCount))
-						.replace("%uniquePlayerCount%", Integer.toString(uniquePlayers.size()))
-						.replace("%onlineServerCount%", Integer.toString(onlineServerCount))
-						.replace("%onlineServerList%", String.join(", ", onlineServerList))
-						.replace("%serverStartedTime%", Long.toString(Collections.min(serverStartedTime)))
-						.replace("%lastUpdateTime%", Long.toString(epochSecond))
-						.replace("%nextUpdateTime%", Long.toString(epochSecond + CONFIG.generic.channelTopicUpdateInterval / 1000));
+				if (!CONFIG.generic.playerCountVoiceChannelId.isEmpty()) {
+					int onlinePlayerCount = 0;
+					int maxPlayerCount = 0;
 
-				CHANNEL.getManager().setTopic(topic).queue();
+					for (JsonObject infoJson : channelTopicInfoList) {
+						onlinePlayerCount += infoJson.get("onlinePlayerCount").getAsInt();
+						maxPlayerCount += infoJson.get("maxPlayerCount").getAsInt();
+					}
 
-				if (!CONFIG.generic.consoleLogChannelId.isEmpty()) {
-					CONSOLE_LOG_CHANNEL.getManager().setTopic(topic).queue();
+					String name = Translations.translateMessage("message.onlinePlayerCountVoiceChannelName")
+							.replace("%onlinePlayerCount%", Integer.toString(onlinePlayerCount))
+							.replace("%maxPlayerCount%", Integer.toString(maxPlayerCount));
+					PLAYER_COUNT_VOICE_CHANNEL.getManager().setName(name).queue();
 				}
 			}
-		}, 0, CONFIG.generic.channelTopicUpdateInterval);
+		}, 0, CONFIG.generic.channelUpdateInterval);
 	}
 
 	public void bye() {
