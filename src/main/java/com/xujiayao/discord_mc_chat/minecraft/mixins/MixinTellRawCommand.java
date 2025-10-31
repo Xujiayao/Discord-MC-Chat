@@ -14,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import static com.xujiayao.discord_mc_chat.Main.CONFIG;
 import static com.xujiayao.discord_mc_chat.Main.LOGGER;
 
 /**
@@ -28,6 +29,10 @@ public class MixinTellRawCommand {
 
 		if (input.startsWith("/tellraw @a ") || input.startsWith("tellraw @a ")) {
 			try {
+				if (!CONFIG.generic.broadcastTellRawMessages) {
+					return;
+				}
+
 				//#if MC >= 12105
 				MinecraftEvents.COMMAND_MESSAGE.invoker().message(ComponentArgument.getResolvedComponent(context, "message").getString(), context.getSource());
 				//#else
