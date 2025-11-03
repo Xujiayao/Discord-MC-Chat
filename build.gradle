@@ -8,10 +8,6 @@ allprojects {
     repositories {
         mavenCentral()
         maven {
-            name = "IntelliJ Release"
-            url = "https://www.jetbrains.com/intellij-repository/releases"
-        }
-        maven {
             name = "Fabric"
             url = "https://maven.fabricmc.net/"
         }
