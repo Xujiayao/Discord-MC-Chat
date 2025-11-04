@@ -17,7 +17,7 @@ description = '''Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat and M
 
 [[mixins]]
 
-config = "neoforge.dmcc.mixins.json"
+config = "dmcc.mixins.json"
 
 #[[dependencies.discord_mc_chat]]
 
