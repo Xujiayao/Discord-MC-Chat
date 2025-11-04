@@ -29,9 +29,7 @@ public class DMCC {
 	public static final Logger LOGGER = new Logger();
 
 	public static String VERSION;
-	public static String LOADER;
-
-	public static boolean IS_MINECRAFT_ENV = false;
+	public static boolean IS_MINECRAFT_ENV;
 
 	public static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory()
 			.enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
@@ -43,46 +41,21 @@ public class DMCC {
 	private static boolean shutdownHookAdded = false;
 
 	/**
-	 * Main method for standalone execution.
+	 * Start Standalone DMCC.
 	 *
 	 * @param args Command line arguments
 	 */
 	public static void main(String[] args) {
-		init("Standalone");
+		init();
 	}
 
 	/**
-	 * Initialize DMCC with DMCC version auto-detected.
-	 * <p>
-	 * This method is invoked by NeoForge and Standalone.
-	 *
-	 * @param loader The name of the loader
+	 * Initialize DMCC.
 	 */
-	public static void init(String loader) {
-		init(loader, EnvironmentUtils.getVersionByResource());
-	}
-
-	/**
-	 * Initialize DMCC with specified DMCC version.
-	 * <p>
-	 * This method is invoked by Fabric.
-	 * <p>
-	 * NeoForge and Standalone use {@link #init(String)},
-	 * which redirects to this method.
-	 *
-	 * @param loader  The name of the loader
-	 * @param version The version of DMCC
-	 */
-	public static void init(String loader, String version) {
+	public static void init() {
 		new Thread(() -> {
-			VERSION = version;
-			LOADER = loader;
-
-			IS_MINECRAFT_ENV = switch (LOADER) {
-				case "Fabric", "NeoForge" -> true;
-				case "Standalone" -> false;
-				default -> throw new IllegalStateException("Unknown loader: " + LOADER);
-			};
+			VERSION = EnvironmentUtils.getDmccVersion();
+			IS_MINECRAFT_ENV = EnvironmentUtils.isMinecraftEnvironment();
 
 			// Check if running in headless mode
 			if (System.console() == null) {
@@ -114,7 +87,7 @@ public class DMCC {
 			LOGGER.info("│ By Xujiayao                                          https://dmcc.xujiayao.com/ │");
 			LOGGER.info("└─────────────────────────────────────────────────────────────────────────────────┘");
 
-			LOGGER.info("Initializing DMCC {} with loader: {}", VERSION, LOADER);
+			LOGGER.info("Initializing DMCC {} with IS_MINECRAFT_ENV: {}", VERSION, IS_MINECRAFT_ENV);
 
 			// If configuration fails to load, exit the DMCC-Main thread gracefully
 			// In a Minecraft environment, we just return and let the server continue running
@@ -220,7 +193,7 @@ public class DMCC {
 	 */
 	public static void reload() {
 		shutdown();
-		init(LOADER, VERSION);
+		init();
 		LOGGER.info("DMCC reloaded!");
 	}
 }

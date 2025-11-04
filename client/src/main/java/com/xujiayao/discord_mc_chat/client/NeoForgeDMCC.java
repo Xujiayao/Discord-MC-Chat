@@ -9,7 +9,10 @@ import net.neoforged.fml.common.Mod;
 @Mod("discord_mc_chat")
 public class NeoForgeDMCC {
 
+	/**
+	 * Start NeoForge DMCC.
+	 */
 	public NeoForgeDMCC() {
-		DMCC.init("NeoForge");
+		DMCC.init();
 	}
 }
