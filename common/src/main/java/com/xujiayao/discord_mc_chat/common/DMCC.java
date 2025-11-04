@@ -124,7 +124,7 @@ public class DMCC {
 				LOGGER.info("Minecraft environment detected. Initializing Minecraft event handlers...");
 				MinecraftEventHandler.init();
 			} else {
-				LOGGER.warn("No Minecraft environment detected. DMCC will run in standalone mode.");
+				LOGGER.info("No Minecraft environment detected. DMCC will run in standalone mode.");
 
 				if (!shutdownHookAdded) {
 					// Register shutdown hook for standalone mode
