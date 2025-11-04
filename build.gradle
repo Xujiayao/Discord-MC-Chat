@@ -1,16 +1,11 @@
 plugins {
     id "com.gradleup.shadow" version "${shadow_version}" apply false
     id "net.neoforged.moddev" version "${moddev_version}" apply false
-    id "fabric-loom" version "${loom_version}" apply false
 }
 
 allprojects {
     repositories {
         mavenCentral()
-        maven {
-            name = "Fabric"
-            url = "https://maven.fabricmc.net/"
-        }
     }
 }
 
