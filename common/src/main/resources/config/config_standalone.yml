@@ -61,7 +61,7 @@ broadcasts:
 # 多服务器功能
 multi_server:
   port: 5000
-  minecraft_version: 1.21.8
+  minecraft_version: 1.21.10
   servers:
     - name: SMP
       color: yellow
