@@ -93,6 +93,7 @@ account_linking:
     discord_mention_notifications:
       enable: true
       style: action_bar # action_bar, title, or chat
+    discord_user_avatar_for_webhooks: true
 
 # 频道主题更新设置
 channel_topic_updating:
