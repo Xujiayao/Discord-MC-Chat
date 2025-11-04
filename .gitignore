@@ -28,10 +28,6 @@ bin/
 
 *.DS_Store
 
-# Fabric
-
-run/
-
 # Java
 
 hs_err_*.log

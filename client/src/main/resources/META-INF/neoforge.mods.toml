@@ -1,0 +1,36 @@
+license = "MIT"
+issueTrackerURL="https://github.com/Xujiayao/Discord-MC-Chat/issues"
+
+[[mods]]
+
+modId = "discord_mc_chat"
+version = "${mod_version}"
+displayName = "Discord-MC-Chat"
+
+# A URL to query for updates for this mod. See the JSON update specification https://docs.neoforged.net/docs/misc/updatechecker/
+#updateJSONURL="https://change.me.example.invalid/updates.json" #optional
+
+displayURL="https://dmcc.xujiayao.com/"
+logoFile="icon/icon.png"
+authors = "Xujiayao"
+description = '''Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCDC), is a practical and powerful Fabric and NeoForge Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric'''
+
+[[mixins]]
+
+config = "neoforge.dmcc.mixins.json"
+
+#[[dependencies.discord_mc_chat]]
+
+#modId = "client"
+#type = "required"
+#versionRange = "[${neo_version},)"
+#ordering = "NONE"
+#side = "BOTH"
+
+[[dependencies.discord_mc_chat]]
+
+modId = "minecraft"
+type = "required"
+versionRange = "${minecraft_version_range}"
+ordering = "NONE"
+side = "BOTH"

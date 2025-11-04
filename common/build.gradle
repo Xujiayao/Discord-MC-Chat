@@ -98,8 +98,8 @@ shadowJar {
 def otherSubprojects = rootProject.subprojects.findAll { it.name != project.name }
 
 tasks.register("mergeJars") {
-    dependsOn ":neoforge:jar"
-    dependsOn ":fabric:remapJar"
+    //dependsOn ":server:jar"
+    dependsOn ":client:jar"
     dependsOn shadowJar
 
     def shadowJarFile = tasks.shadowJar.archiveFile.get().asFile
@@ -109,7 +109,7 @@ tasks.register("mergeJars") {
         tempDir.mkdirs()
         def addedFiles = [:]
         otherSubprojects.each { subproj ->
-            def jarTask = subproj.tasks.names.contains("remapJar") ? subproj.tasks.named("remapJar").get() : subproj.tasks.named("jar").get()
+            def jarTask = subproj.tasks.named("jar").get()
             def jarFile = jarTask.archiveFile.get().asFile
             copy {
                 from zipTree(jarFile)

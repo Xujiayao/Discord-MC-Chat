@@ -1,0 +1,34 @@
+apply plugin: "net.neoforged.moddev"
+
+version = mod_version
+
+base {
+    archivesName = "Discord-MC-Chat-client"
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+neoForge {
+    version = neo_version
+}
+
+dependencies {
+    implementation project(":common")
+}
+
+processResources {
+    var replaceProperties = [
+            minecraft_version_range: minecraft_version_range,
+            neo_version            : neo_version,
+            mod_version            : mod_version
+    ]
+    inputs.properties replaceProperties
+    filesMatching("META-INF/neoforge.mods.toml") {
+        expand replaceProperties
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 21
+    options.encoding = "UTF-8"
+}
