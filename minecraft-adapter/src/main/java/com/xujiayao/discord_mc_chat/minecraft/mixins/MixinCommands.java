@@ -1,7 +1,7 @@
 package com.xujiayao.discord_mc_chat.minecraft.mixins;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.xujiayao.discord_mc_chat.minecraft.MinecraftEvents;
+import com.xujiayao.discord_mc_chat.minecraft.events.MinecraftEvents;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;

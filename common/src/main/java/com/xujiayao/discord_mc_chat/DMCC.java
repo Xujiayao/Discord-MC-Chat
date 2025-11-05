@@ -2,7 +2,6 @@ package com.xujiayao.discord_mc_chat;
 
 import com.xujiayao.discord_mc_chat.commands.CommandEventHandler;
 import com.xujiayao.discord_mc_chat.discord.DiscordManager;
-import com.xujiayao.discord_mc_chat.minecraft.MinecraftEventHandler;
 import com.xujiayao.discord_mc_chat.standalone.TerminalManager;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
@@ -97,7 +96,7 @@ public class DMCC {
 			if (IS_MINECRAFT_ENV) {
 				// Initialize Minecraft event handlers
 				LOGGER.info("Minecraft environment detected. Initializing Minecraft event handlers...");
-				MinecraftEventHandler.init();
+//				MinecraftEventHandler.init();
 			} else {
 				LOGGER.info("No Minecraft environment detected. DMCC will run in standalone mode.");
 

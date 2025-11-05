@@ -1,4 +1,4 @@
-package com.xujiayao.discord_mc_chat.minecraft;
+package com.xujiayao.discord_mc_chat.minecraft.events;
 
 import com.xujiayao.discord_mc_chat.DMCC;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;

@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.minecraft.mixins;
 
-import com.xujiayao.discord_mc_chat.minecraft.MinecraftEvents;
+import com.xujiayao.discord_mc_chat.minecraft.events.MinecraftEvents;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import net.minecraft.network.chat.LastSeenMessages;
 import net.minecraft.network.chat.PlayerChatMessage;

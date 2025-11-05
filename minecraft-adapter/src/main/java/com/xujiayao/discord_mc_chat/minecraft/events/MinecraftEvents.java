@@ -1,4 +1,4 @@
-package com.xujiayao.discord_mc_chat.minecraft;
+package com.xujiayao.discord_mc_chat.minecraft.events;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;

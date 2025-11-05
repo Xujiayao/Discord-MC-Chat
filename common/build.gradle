@@ -1,5 +1,4 @@
 apply plugin: "com.gradleup.shadow"
-apply plugin: "net.neoforged.moddev"
 
 base {
     archivesName = "Discord-MC-Chat-common"
@@ -28,10 +27,6 @@ jar {
     manifest {
         attributes "Main-Class": "com.xujiayao.discord_mc_chat.standalone.StandaloneDMCC"
     }
-}
-
-neoForge {
-    version = neo_version
 }
 
 shadowJar {
