@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.client;
 
-import com.xujiayao.discord_mc_chat.common.DMCC;
+import com.xujiayao.discord_mc_chat.common.CommonDMCC;
 import net.neoforged.fml.common.Mod;
 
 /**
@@ -15,6 +15,6 @@ public class NeoForgeDMCC {
 	 * Start NeoForge DMCC.
 	 */
 	public NeoForgeDMCC() {
-		DMCC.init();
+		CommonDMCC.init();
 	}
 }
