@@ -10,7 +10,7 @@ import okhttp3.OkHttpClient;
 /**
  * Static final constants used across the project.
  *
- * @author XuJiayao
+ * @author Xujiayao
  */
 public class Constants {
 
