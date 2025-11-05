@@ -13,13 +13,8 @@ dependencies {
 }
 
 processResources {
-    var replaceProperties = [
-            minecraft_version_range: minecraft_version_range,
-            neo_version            : neo_version,
-            mod_version            : mod_version
-    ]
-    inputs.properties replaceProperties
+    def propertiesToExpand = new HashMap<String, Object>(project.properties)
     filesMatching("META-INF/neoforge.mods.toml") {
-        expand replaceProperties
+        expand(propertiesToExpand)
     }
 }

@@ -1,3 +1,131 @@
+apply plugin: "com.gradleup.shadow"
+apply plugin: "net.neoforged.moddev"
+
 base {
     archivesName = "Discord-MC-Chat-common"
+}
+
+dependencies {
+    shadow("net.dv8tion:JDA:${jda_version}") {
+        exclude module: "opus-java" // for encoding audio into opus
+        exclude module: "tink" // for encrypting and decrypting audio
+        exclude module: "slf4j-api"
+        exclude module: "jackson-core"
+        exclude module: "jackson-databind"
+        exclude module: "jackson-annotations"
+        exclude module: "okhttp"
+    }
+
+    shadow("org.slf4j:slf4j-api:${slf4j_api_version}")
+
+    shadow("com.fasterxml.jackson.core:jackson-databind:${jackson_databind_version}")
+    shadow("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jackson_dataformat_yaml_version}")
+
+    shadow("com.squareup.okhttp3:okhttp:${okhttp_version}")
+}
+
+neoForge {
+    version = neo_version
+}
+
+processResources {
+    def propertiesToExpand = new HashMap<String, Object>(project.properties)
+    filesMatching("**/*.yml") {
+        expand(propertiesToExpand)
+    }
+    filesMatching("META-INF/THIRD-PARTY-LICENSES.txt") {
+        expand(propertiesToExpand)
+    }
+}
+
+shadowJar {
+    archiveBaseName.set("Discord-MC-Chat")
+    archiveClassifier.set(null)
+    configurations = [project.configurations.shadow]
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    mergeServiceFiles()
+    minimize()
+
+    exclude "**/*-info.class"
+    exclude "META-INF/maven/"
+    exclude "META-INF/proguard/"
+    exclude "META-INF/versions/9/"
+    exclude "META-INF/versions/11/"
+    exclude "META-INF/versions/17/"
+    exclude "META-INF/rewrite/"
+    exclude {
+        def path = it.path
+        path.startsWith("META-INF/") &&
+                path.contains("LICENSE") &&
+                path != "META-INF/THIRD-PARTY-LICENSES.txt"
+    }
+    exclude "META-INF/*NOTICE*"
+    exclude "META-INF/*kotlin_module*"
+
+    relocate "com.fasterxml", "dmcc_dep.com.fasterxml"
+    relocate "com.neovisionaries", "dmcc_dep.com.neovisionaries"
+    relocate "gnu", "dmcc_dep.gnu"
+    relocate "kotlin", "dmcc_dep.kotlin"
+    relocate "net.dv8tion", "dmcc_dep.net.dv8tion"
+    relocate "okhttp3", "dmcc_dep.okhttp3"
+    relocate "okio", "dmcc_dep.okio"
+    relocate "org.apache", "dmcc_dep.org.apache"
+    relocate "org.intellij", "dmcc_dep.org.intellij"
+    relocate "org.jetbrains", "dmcc_dep.org.jetbrains"
+    relocate "org.slf4j", "dmcc_dep.org.slf4j"
+    relocate "org.yaml", "dmcc_dep.org.yaml"
+
+    from "../LICENSE"
+}
+
+//========== Merge JARs ==========
+
+def otherSubprojects = rootProject.subprojects.findAll { it.name != project.name }
+
+tasks.register("mergeJars") {
+    dependsOn ":server:jar"
+    dependsOn ":client:jar"
+    dependsOn shadowJar
+
+    def shadowJarFile = tasks.shadowJar.archiveFile.get().asFile
+    def tempDir = project.layout.buildDirectory.dir("merged_temp").get().asFile
+
+    doLast {
+        tempDir.mkdirs()
+        def addedFiles = [:]
+        otherSubprojects.each { subproj ->
+            def jarTask = subproj.tasks.named("jar").get()
+            def jarFile = jarTask.archiveFile.get().asFile
+            copy {
+                from zipTree(jarFile)
+                into tempDir
+                exclude "META-INF/MANIFEST.MF"
+                eachFile { fcd ->
+                    def relPath = fcd.relativePath.toString()
+                    if (addedFiles.containsKey(relPath)) {
+                        logger.warn("Warning: Duplicate file found: $relPath in ${subproj.name} and ${addedFiles[relPath]}")
+                    } else {
+                        addedFiles[relPath] = subproj.name
+                    }
+                }
+            }
+        }
+        // Add the decompressed content to the common jar
+        ant.zip(update: "true", destfile: shadowJarFile) {
+            fileset(dir: tempDir)
+        }
+    }
+}
+
+build {
+    dependsOn shadowJar
+    dependsOn tasks.named("mergeJars")
+
+    doLast {
+        copy {
+            from "build/libs"
+            into "../build"
+            exclude "*common*"
+        }
+    }
 }
