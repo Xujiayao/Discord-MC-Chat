@@ -1,3 +1,13 @@
+# ==================================================
+# Discord-MC-Chat (DMCC)
+# By Xujiayao
+#
+# Internal Translations
+#
+# Code:     zh_cn
+# Language: 简体中文（中国大陆）
+# ==================================================
+
 commands:
   unknown_command: "未知命令：\"{}\"。输入 \"help\" 查看可用命令列表。"
   no_permission: "你没有权限执行此命令！"

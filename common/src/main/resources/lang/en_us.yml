@@ -1,3 +1,13 @@
+# ==================================================
+# Discord-MC-Chat (DMCC)
+# By Xujiayao
+#
+# Internal Translations
+#
+# Code:     en_us
+# Language: English (US)
+# ==================================================
+
 commands:
   unknown_command: "Unknown command: \"{}\". Type \"help\" for a list of available commands."
   no_permission: "You do not have permission to execute this command!"
