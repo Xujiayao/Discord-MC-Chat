@@ -3,7 +3,8 @@
 # By Xujiayao
 #
 # Custom Messages file for DMCC version:
-version: 3.0.0-beta.0
+# Do NOT change this value manually!
+version: ${mod_version}
 #
 # Code:     zh_cn
 # Language: 简体中文（中国大陆）

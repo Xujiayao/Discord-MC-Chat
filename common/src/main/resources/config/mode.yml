@@ -3,7 +3,8 @@
 # By Xujiayao
 #
 # Mode file for DMCC version:
-version: 3.0.0-beta.0      # Do NOT change this value manually
+# Do NOT change this value manually!
+version: ${mod_version}
 #
 # Discord-MC-Chat Wiki:
 # https://dmcc.xujiayao.com/

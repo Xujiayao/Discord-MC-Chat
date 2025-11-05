@@ -3,8 +3,9 @@
 # By Xujiayao
 #
 # Config file for DMCC version & mode:
-version: 3.0.0-beta.0      # Do NOT change this value manually
-mode: multi_server_client  # Do NOT change this value manually
+# Do NOT change these values manually!
+version: ${mod_version}
+mode: multi_server_client
 #
 # Discord-MC-Chat Wiki:
 # https://dmcc.xujiayao.com/
