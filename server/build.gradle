@@ -5,9 +5,3 @@ base {
 dependencies {
     implementation project(":common")
 }
-
-jar {
-    manifest {
-        attributes "Main-Class": "com.xujiayao.discord_mc_chat.server.StandaloneDMCC"
-    }
-}

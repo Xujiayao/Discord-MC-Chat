@@ -24,6 +24,12 @@ dependencies {
     shadow("com.squareup.okhttp3:okhttp:${okhttp_version}")
 }
 
+jar {
+    manifest {
+        attributes "Main-Class": "com.xujiayao.discord_mc_chat.server.StandaloneDMCC"
+    }
+}
+
 neoForge {
     version = neo_version
 }
