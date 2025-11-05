@@ -26,6 +26,13 @@ subprojects {
         options.encoding = "UTF-8"
     }
 
+    processResources {
+        def propertiesToExpand = new HashMap<String, Object>(project.properties)
+        filesMatching(["**/*.txt", "**/*.yml", "**/*.toml"]) {
+            expand(propertiesToExpand)
+        }
+    }
+
     configurations.configureEach {
         resolutionStrategy {
             force "org.slf4j:slf4j-api:${slf4j_api_version}"

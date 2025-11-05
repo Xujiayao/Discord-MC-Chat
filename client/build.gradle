@@ -11,10 +11,3 @@ neoForge {
 dependencies {
     implementation project(":common")
 }
-
-processResources {
-    def propertiesToExpand = new HashMap<String, Object>(project.properties)
-    filesMatching("META-INF/neoforge.mods.toml") {
-        expand(propertiesToExpand)
-    }
-}

@@ -28,16 +28,6 @@ neoForge {
     version = neo_version
 }
 
-processResources {
-    def propertiesToExpand = new HashMap<String, Object>(project.properties)
-    filesMatching("**/*.yml") {
-        expand(propertiesToExpand)
-    }
-    filesMatching("META-INF/THIRD-PARTY-LICENSES.txt") {
-        expand(propertiesToExpand)
-    }
-}
-
 shadowJar {
     archiveBaseName.set("Discord-MC-Chat")
     archiveClassifier.set(null)
