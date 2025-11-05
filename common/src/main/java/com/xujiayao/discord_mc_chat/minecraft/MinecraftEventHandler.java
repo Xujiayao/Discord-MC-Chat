@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.minecraft;
 
-import com.xujiayao.discord_mc_chat.CommonDMCC;
+import com.xujiayao.discord_mc_chat.DMCC;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
@@ -18,7 +18,7 @@ public class MinecraftEventHandler {
 	public static void init() {
 		EventManager.register(MinecraftEvents.ServerStopped.class, event -> {
 			// Shutdown DMCC when the server is stopped
-			new Thread(CommonDMCC::shutdown, "DMCC-Shutdown").start();
+			new Thread(DMCC::shutdown, "DMCC-Shutdown").start();
 		});
 
 		EventManager.register(MinecraftEvents.CommandRegister.class, event -> {

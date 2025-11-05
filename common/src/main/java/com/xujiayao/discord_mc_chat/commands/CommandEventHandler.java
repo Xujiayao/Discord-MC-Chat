@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.commands;
 
-import com.xujiayao.discord_mc_chat.CommonDMCC;
+import com.xujiayao.discord_mc_chat.DMCC;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
@@ -20,7 +20,7 @@ public class CommandEventHandler {
 	public static void init() {
 		EventManager.register(CommandEvents.ReloadEvent.class, event -> new Thread(() -> {
 			LOGGER.info(I18nManager.getDmccTranslation("commands.reload.reloading"));
-			CommonDMCC.reload();
+			DMCC.reload();
 		}, "DMCC-Command").start());
 
 		EventManager.register(CommandEvents.StopEvent.class, event -> new Thread(() -> {
@@ -28,7 +28,7 @@ public class CommandEventHandler {
 
 			if (IS_MINECRAFT_ENV) {
 				LOGGER.info("Run \"/dmcc start\" to start DMCC again");
-				CommonDMCC.shutdown();
+				DMCC.shutdown();
 			} else {
 				System.exit(0);
 			}

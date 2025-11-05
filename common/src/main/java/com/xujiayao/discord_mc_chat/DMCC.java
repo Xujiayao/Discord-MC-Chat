@@ -23,7 +23,7 @@ import static com.xujiayao.discord_mc_chat.Constants.VERSION;
  *
  * @author Xujiayao
  */
-public class CommonDMCC {
+public class DMCC {
 
 	private static boolean shutdownHookAdded = false;
 
@@ -103,7 +103,7 @@ public class CommonDMCC {
 
 				if (!shutdownHookAdded) {
 					// Register shutdown hook for standalone mode
-					Runtime.getRuntime().addShutdownHook(new Thread(CommonDMCC::shutdown, "DMCC-Shutdown"));
+					Runtime.getRuntime().addShutdownHook(new Thread(DMCC::shutdown, "DMCC-Shutdown"));
 					shutdownHookAdded = true;
 				}
 

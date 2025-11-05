@@ -13,6 +13,6 @@ public class StandaloneDMCC {
 	 * @param args Command line arguments
 	 */
 	public static void main(String[] args) {
-		CommonDMCC.init();
+		DMCC.init();
 	}
 }
