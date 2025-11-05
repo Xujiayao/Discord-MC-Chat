@@ -16,5 +16,8 @@ public class StandaloneDMCC {
 	 */
 	public static void main(String[] args) {
 		DMCC.init();
+
+		// Register shutdown hook for standalone mode
+		Runtime.getRuntime().addShutdownHook(new Thread(DMCC::shutdown, "DMCC-Shutdown"));
 	}
 }

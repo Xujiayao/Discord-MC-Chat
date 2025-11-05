@@ -24,8 +24,6 @@ import static com.xujiayao.discord_mc_chat.Constants.VERSION;
  */
 public class DMCC {
 
-	private static boolean shutdownHookAdded = false;
-
 	/**
 	 * Initialize DMCC.
 	 */
@@ -99,12 +97,6 @@ public class DMCC {
 //				MinecraftEventHandler.init();
 			} else {
 				LOGGER.info("No Minecraft environment detected. DMCC will run in standalone mode.");
-
-				if (!shutdownHookAdded) {
-					// Register shutdown hook for standalone mode
-					Runtime.getRuntime().addShutdownHook(new Thread(DMCC::shutdown, "DMCC-Shutdown"));
-					shutdownHookAdded = true;
-				}
 
 				// Initialize interactive terminal for standalone mode
 				TerminalManager.init();
