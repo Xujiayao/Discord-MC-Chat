@@ -8,7 +8,7 @@ import com.xujiayao.discord_mc_chat.common.utils.logging.Logger;
 import okhttp3.OkHttpClient;
 
 /**
- * Static final constants used in the project.
+ * Static final constants used across the project.
  *
  * @author XuJiayao
  */
