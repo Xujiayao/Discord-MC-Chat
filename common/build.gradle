@@ -1,4 +1,5 @@
 apply plugin: "com.gradleup.shadow"
+apply plugin: "net.neoforged.moddev"
 
 base {
     archivesName = "Discord-MC-Chat-common"
@@ -27,6 +28,10 @@ jar {
     manifest {
         attributes "Main-Class": "com.xujiayao.discord_mc_chat.server.StandaloneDMCC"
     }
+}
+
+neoForge {
+    version = neo_version
 }
 
 shadowJar {
@@ -74,7 +79,6 @@ shadowJar {
 def otherSubprojects = rootProject.subprojects.findAll { it.name != project.name }
 
 tasks.register("mergeJars") {
-    dependsOn ":server:jar"
     dependsOn ":client:jar"
     dependsOn shadowJar
 

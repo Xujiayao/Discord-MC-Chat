@@ -1,7 +1,7 @@
 package com.xujiayao.discord_mc_chat.client.mixins;
 
-import com.xujiayao.discord_mc_chat.common.minecraft.MinecraftEvents;
-import com.xujiayao.discord_mc_chat.common.utils.events.EventManager;
+import com.xujiayao.discord_mc_chat.minecraft.MinecraftEvents;
+import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import net.minecraft.network.chat.LastSeenMessages;
 import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.network.protocol.game.ServerboundChatCommandSignedPacket;

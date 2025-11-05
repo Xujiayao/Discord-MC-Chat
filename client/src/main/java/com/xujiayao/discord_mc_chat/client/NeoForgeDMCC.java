@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.client;
 
-import com.xujiayao.discord_mc_chat.common.CommonDMCC;
+import com.xujiayao.discord_mc_chat.CommonDMCC;
 import net.neoforged.fml.common.Mod;
 
 /**

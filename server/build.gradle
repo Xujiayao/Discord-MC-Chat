@@ -1,7 +1,0 @@
-base {
-    archivesName = "Discord-MC-Chat-server"
-}
-
-dependencies {
-    implementation project(":common")
-}

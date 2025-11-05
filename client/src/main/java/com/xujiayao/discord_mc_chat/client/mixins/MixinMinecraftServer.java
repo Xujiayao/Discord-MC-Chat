@@ -1,7 +1,7 @@
 package com.xujiayao.discord_mc_chat.client.mixins;
 
-import com.xujiayao.discord_mc_chat.common.minecraft.MinecraftEvents;
-import com.xujiayao.discord_mc_chat.common.utils.events.EventManager;
+import com.xujiayao.discord_mc_chat.minecraft.MinecraftEvents;
+import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import net.minecraft.server.MinecraftServer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

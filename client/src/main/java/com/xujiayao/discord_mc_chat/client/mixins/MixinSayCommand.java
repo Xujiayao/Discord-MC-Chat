@@ -1,8 +1,8 @@
 package com.xujiayao.discord_mc_chat.client.mixins;
 
 import com.mojang.brigadier.context.CommandContext;
-import com.xujiayao.discord_mc_chat.common.minecraft.MinecraftEvents;
-import com.xujiayao.discord_mc_chat.common.utils.events.EventManager;
+import com.xujiayao.discord_mc_chat.minecraft.MinecraftEvents;
+import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.server.commands.SayCommand;
