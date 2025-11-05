@@ -1,7 +1,7 @@
 apply plugin: "net.neoforged.moddev"
 
 base {
-    archivesName = "Discord-MC-Chat-client"
+    archivesName = "Discord-MC-Chat-minecraft-adapter"
 }
 
 neoForge {

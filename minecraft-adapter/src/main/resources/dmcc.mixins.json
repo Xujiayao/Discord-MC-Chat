@@ -1,6 +1,6 @@
 {
   "required": true,
-  "package": "com.xujiayao.discord_mc_chat.client.mixins",
+  "package": "com.xujiayao.discord_mc_chat.minecraft.mixins",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "MixinCommands",

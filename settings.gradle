@@ -6,4 +6,4 @@ pluginManagement {
 }
 
 include(":common")
-include(":client")
+include(":minecraft-adapter")

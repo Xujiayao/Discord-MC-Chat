@@ -79,7 +79,7 @@ shadowJar {
 def otherSubprojects = rootProject.subprojects.findAll { it.name != project.name }
 
 tasks.register("mergeJars") {
-    dependsOn ":client:jar"
+    dependsOn ":minecraft-adapter:jar"
     dependsOn shadowJar
 
     def shadowJarFile = tasks.shadowJar.archiveFile.get().asFile

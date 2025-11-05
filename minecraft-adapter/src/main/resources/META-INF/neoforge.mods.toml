@@ -21,7 +21,7 @@ config = "dmcc.mixins.json"
 
 #[[dependencies.discord_mc_chat]]
 
-#modId = "client"
+#modId = "neoforge"
 #type = "required"
 #versionRange = "[${neo_version},)"
 #ordering = "NONE"

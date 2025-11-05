@@ -1,4 +1,4 @@
-package com.xujiayao.discord_mc_chat.client;
+package com.xujiayao.discord_mc_chat.minecraft;
 
 /**
  * The entry point for Fabric environment.

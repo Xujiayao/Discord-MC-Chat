@@ -1,4 +1,4 @@
-package com.xujiayao.discord_mc_chat.client.mixins;
+package com.xujiayao.discord_mc_chat.minecraft.mixins;
 
 import com.mojang.brigadier.context.CommandContext;
 import com.xujiayao.discord_mc_chat.minecraft.MinecraftEvents;

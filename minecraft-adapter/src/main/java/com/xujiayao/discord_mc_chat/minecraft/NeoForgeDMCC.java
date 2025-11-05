@@ -1,4 +1,4 @@
-package com.xujiayao.discord_mc_chat.client;
+package com.xujiayao.discord_mc_chat.minecraft;
 
 import com.xujiayao.discord_mc_chat.DMCC;
 import net.neoforged.fml.common.Mod;
