@@ -1,23 +1,22 @@
 package com.xujiayao.discord_mc_chat.common;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.xujiayao.discord_mc_chat.common.commands.CommandEventHandler;
 import com.xujiayao.discord_mc_chat.common.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.common.minecraft.MinecraftEventHandler;
 import com.xujiayao.discord_mc_chat.common.standalone.TerminalManager;
-import com.xujiayao.discord_mc_chat.common.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.common.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.common.utils.events.EventManager;
 import com.xujiayao.discord_mc_chat.common.utils.i18n.I18nManager;
-import com.xujiayao.discord_mc_chat.common.utils.logging.Logger;
 import com.xujiayao.discord_mc_chat.common.utils.logging.impl.LoggerImpl;
 import okhttp3.Cache;
-import okhttp3.OkHttpClient;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import static com.xujiayao.discord_mc_chat.common.Constants.IS_MINECRAFT_ENV;
+import static com.xujiayao.discord_mc_chat.common.Constants.LOGGER;
+import static com.xujiayao.discord_mc_chat.common.Constants.OK_HTTP_CLIENT;
+import static com.xujiayao.discord_mc_chat.common.Constants.VERSION;
 
 /**
  * The main class of Discord MC Chat (DMCC).
@@ -26,29 +25,13 @@ import java.util.concurrent.TimeUnit;
  */
 public class DMCC {
 
-	public static final Logger LOGGER = new Logger();
-
-	public static String VERSION;
-	public static boolean IS_MINECRAFT_ENV;
-
-	public static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory()
-			.enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
-			.disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
-	public static final ObjectMapper JSON_MAPPER = new ObjectMapper();
-
-	public static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
-
 	private static boolean shutdownHookAdded = false;
-
 
 	/**
 	 * Initialize DMCC.
 	 */
 	public static void init() {
 		new Thread(() -> {
-			VERSION = EnvironmentUtils.getDmccVersion();
-			IS_MINECRAFT_ENV = EnvironmentUtils.isMinecraftEnvironment();
-
 			// Check if running in headless mode
 			if (System.console() == null) {
 				// The user likely started the application by double-clicking the JAR file

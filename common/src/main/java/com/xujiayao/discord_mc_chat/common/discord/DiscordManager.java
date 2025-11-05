@@ -8,7 +8,7 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 
 import java.time.Duration;
 
-import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
+import static com.xujiayao.discord_mc_chat.common.Constants.LOGGER;
 
 /**
  * Manages Discord using JDA (Java Discord API).

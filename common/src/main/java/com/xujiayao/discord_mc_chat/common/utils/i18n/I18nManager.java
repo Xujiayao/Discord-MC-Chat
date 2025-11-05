@@ -20,10 +20,10 @@ import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.xujiayao.discord_mc_chat.common.DMCC.OK_HTTP_CLIENT;
-import static com.xujiayao.discord_mc_chat.common.DMCC.JSON_MAPPER;
-import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
-import static com.xujiayao.discord_mc_chat.common.DMCC.YAML_MAPPER;
+import static com.xujiayao.discord_mc_chat.common.Constants.OK_HTTP_CLIENT;
+import static com.xujiayao.discord_mc_chat.common.Constants.JSON_MAPPER;
+import static com.xujiayao.discord_mc_chat.common.Constants.LOGGER;
+import static com.xujiayao.discord_mc_chat.common.Constants.YAML_MAPPER;
 
 /**
  * Manages internationalization (i18n) for DMCC.

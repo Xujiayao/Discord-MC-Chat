@@ -10,8 +10,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
-import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
-import static com.xujiayao.discord_mc_chat.common.DMCC.YAML_MAPPER;
+import static com.xujiayao.discord_mc_chat.common.Constants.LOGGER;
+import static com.xujiayao.discord_mc_chat.common.Constants.YAML_MAPPER;
 
 /**
  * Manages the mode.yml file to determine the operating mode of DMCC.

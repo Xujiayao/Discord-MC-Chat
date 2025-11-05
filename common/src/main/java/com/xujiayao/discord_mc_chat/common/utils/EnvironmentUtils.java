@@ -6,8 +6,8 @@ import com.xujiayao.discord_mc_chat.common.utils.config.ConfigManager;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static com.xujiayao.discord_mc_chat.common.DMCC.IS_MINECRAFT_ENV;
-import static com.xujiayao.discord_mc_chat.common.DMCC.YAML_MAPPER;
+import static com.xujiayao.discord_mc_chat.common.Constants.IS_MINECRAFT_ENV;
+import static com.xujiayao.discord_mc_chat.common.Constants.YAML_MAPPER;
 
 /**
  * Environment utility class.

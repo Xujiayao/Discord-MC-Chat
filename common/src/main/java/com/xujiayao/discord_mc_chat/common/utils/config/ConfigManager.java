@@ -12,9 +12,9 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.function.Function;
 
-import static com.xujiayao.discord_mc_chat.common.DMCC.IS_MINECRAFT_ENV;
-import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
-import static com.xujiayao.discord_mc_chat.common.DMCC.YAML_MAPPER;
+import static com.xujiayao.discord_mc_chat.common.Constants.IS_MINECRAFT_ENV;
+import static com.xujiayao.discord_mc_chat.common.Constants.LOGGER;
+import static com.xujiayao.discord_mc_chat.common.Constants.YAML_MAPPER;
 
 /**
  * Configuration manager for DMCC.

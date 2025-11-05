@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
+import static com.xujiayao.discord_mc_chat.common.Constants.LOGGER;
 
 /**
  * YAML utility class.

@@ -4,8 +4,8 @@ import com.xujiayao.discord_mc_chat.common.DMCC;
 import com.xujiayao.discord_mc_chat.common.utils.events.EventManager;
 import com.xujiayao.discord_mc_chat.common.utils.i18n.I18nManager;
 
-import static com.xujiayao.discord_mc_chat.common.DMCC.IS_MINECRAFT_ENV;
-import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
+import static com.xujiayao.discord_mc_chat.common.Constants.IS_MINECRAFT_ENV;
+import static com.xujiayao.discord_mc_chat.common.Constants.LOGGER;
 
 /**
  * Handles Command events posted from the event manager.

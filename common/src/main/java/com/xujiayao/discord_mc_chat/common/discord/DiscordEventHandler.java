@@ -1,6 +1,5 @@
 package com.xujiayao.discord_mc_chat.common.discord;
 
-import com.xujiayao.discord_mc_chat.common.utils.i18n.I18nManager;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
@@ -8,7 +7,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 import javax.annotation.Nonnull;
 
-import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
+import static com.xujiayao.discord_mc_chat.common.Constants.LOGGER;
 
 /**
  * Handles Discord JDA events.

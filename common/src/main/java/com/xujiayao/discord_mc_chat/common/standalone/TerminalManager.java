@@ -5,7 +5,7 @@ import com.xujiayao.discord_mc_chat.common.commands.CommandManager;
 import java.util.List;
 import java.util.Scanner;
 
-import static com.xujiayao.discord_mc_chat.common.DMCC.LOGGER;
+import static com.xujiayao.discord_mc_chat.common.Constants.LOGGER;
 
 /**
  * Handles interactive terminal commands for standalone mode.
