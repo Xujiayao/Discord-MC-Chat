@@ -10,6 +10,22 @@ allprojects {
 }
 
 subprojects {
+    apply plugin: "java"
+
+    version = mod_version
+
+    java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.release = 21
+        options.encoding = "UTF-8"
+    }
+
     configurations.configureEach {
         resolutionStrategy {
             force "org.slf4j:slf4j-api:${slf4j_api_version}"

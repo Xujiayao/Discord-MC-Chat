@@ -1,7 +1,5 @@
 apply plugin: "com.gradleup.shadow"
 
-version = mod_version
-
 base {
     archivesName = "Discord-MC-Chat-server"
 }
@@ -10,8 +8,8 @@ dependencies {
     implementation project(":common")
 
     shadow("net.dv8tion:JDA:${jda_version}") {
-        exclude module: "opus-java"
-        exclude module: "tink"
+        exclude module: "opus-java" // for encoding audio into opus
+        exclude module: "tink" // for encrypting and decrypting audio
         exclude module: "slf4j-api"
         exclude module: "jackson-core"
         exclude module: "jackson-databind"
@@ -25,6 +23,13 @@ dependencies {
     shadow("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jackson_dataformat_yaml_version}")
 
     shadow("com.squareup.okhttp3:okhttp:${okhttp_version}")
+}
+
+processResources {
+    def propertiesToExpand = new HashMap<String, Object>(project.properties)
+    filesMatching("META-INF/THIRD-PARTY-LICENSES.txt") {
+        expand(propertiesToExpand)
+    }
 }
 
 jar {
@@ -44,7 +49,9 @@ shadowJar {
     exclude "**/*-info.class"
     exclude "META-INF/maven/"
     exclude "META-INF/proguard/"
-    exclude "META-INF/versions/**"
+    exclude "META-INF/versions/9/"
+    exclude "META-INF/versions/11/"
+    exclude "META-INF/versions/17/"
     exclude "META-INF/rewrite/"
     exclude {
         def path = it.path
@@ -72,8 +79,12 @@ shadowJar {
 }
 
 //========== Merge JARs ==========
+
+def otherSubprojects = rootProject.subprojects.findAll { it.name != project.name }
+
 tasks.register("mergeJars") {
-    dependsOn project(":client").tasks.jar
+    dependsOn ":server:jar"
+    dependsOn ":client:jar"
     dependsOn shadowJar
 
     def shadowJarFile = tasks.shadowJar.archiveFile.get().asFile
@@ -82,24 +93,24 @@ tasks.register("mergeJars") {
     doLast {
         tempDir.mkdirs()
         def addedFiles = [:]
-        
-        // Merge Client JAR
-        def clientJarTask = project(":client").tasks.named("jar").get()
-        def clientJarFile = clientJarTask.archiveFile.get().asFile
-        copy {
-            from zipTree(clientJarFile)
-            into tempDir
-            exclude "META-INF/MANIFEST.MF"
-            eachFile { fcd ->
-                def relPath = fcd.relativePath.toString()
-                if (addedFiles.containsKey(relPath)) {
-                    logger.warn("Warning: Duplicate file found: $relPath in client and ${addedFiles[relPath]}")
-                } else {
-                    addedFiles[relPath] = "client"
+        otherSubprojects.each { subproj ->
+            def jarTask = subproj.tasks.named("jar").get()
+            def jarFile = jarTask.archiveFile.get().asFile
+            copy {
+                from zipTree(jarFile)
+                into tempDir
+                exclude "META-INF/MANIFEST.MF"
+                eachFile { fcd ->
+                    def relPath = fcd.relativePath.toString()
+                    if (addedFiles.containsKey(relPath)) {
+                        logger.warn("Warning: Duplicate file found: $relPath in ${subproj.name} and ${addedFiles[relPath]}")
+                    } else {
+                        addedFiles[relPath] = subproj.name
+                    }
                 }
             }
         }
-        
+
         // Add the decompressed content to the server's shadow jar
         ant.zip(update: "true", destfile: shadowJarFile) {
             fileset(dir: tempDir)

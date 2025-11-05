@@ -7,5 +7,5 @@ pluginManagement {
 
 include(":common")
 
-//include(":server")
+include(":server")
 include(":client")
