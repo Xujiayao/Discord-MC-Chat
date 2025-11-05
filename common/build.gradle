@@ -5,7 +5,7 @@ base {
 }
 
 dependencies {
-    shadow("net.dv8tion:JDA:${jda_version}") {
+    shadow api("net.dv8tion:JDA:${jda_version}") {
         exclude module: "opus-java" // for encoding audio into opus
         exclude module: "tink" // for encrypting and decrypting audio
         exclude module: "slf4j-api"
@@ -15,12 +15,12 @@ dependencies {
         exclude module: "okhttp"
     }
 
-    shadow("org.slf4j:slf4j-api:${slf4j_api_version}")
+    shadow api("org.slf4j:slf4j-api:${slf4j_api_version}")
 
-    shadow("com.fasterxml.jackson.core:jackson-databind:${jackson_databind_version}")
-    shadow("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jackson_dataformat_yaml_version}")
+    shadow api("com.fasterxml.jackson.core:jackson-databind:${jackson_databind_version}")
+    shadow api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jackson_dataformat_yaml_version}")
 
-    shadow("com.squareup.okhttp3:okhttp:${okhttp_version}")
+    shadow api("com.squareup.okhttp3:okhttp:${okhttp_version}")
 }
 
 jar {
