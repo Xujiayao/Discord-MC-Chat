@@ -1,4 +1,6 @@
-package com.xujiayao.discord_mc_chat;
+package com.xujiayao.discord_mc_chat.standalone;
+
+import com.xujiayao.discord_mc_chat.DMCC;
 
 /**
  * The entry point for Standalone environment.
