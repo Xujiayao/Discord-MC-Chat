@@ -26,7 +26,7 @@ public class DiscordManager {
 	 */
 	public static boolean init() {
 		String token = ConfigManager.getString("bot.token", "");
-		if (token.isBlank()) {
+		if (token.isBlank() || "your_token_here".equals(token)) {
 			LOGGER.error("Discord bot token is not set in the config file!");
 			return false;
 		}
