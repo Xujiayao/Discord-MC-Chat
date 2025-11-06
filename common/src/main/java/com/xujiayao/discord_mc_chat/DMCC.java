@@ -1,5 +1,6 @@
 package com.xujiayao.discord_mc_chat;
 
+import com.xujiayao.discord_mc_chat.client.ClientDMCC;
 import com.xujiayao.discord_mc_chat.commands.CommandEventHandler;
 import com.xujiayao.discord_mc_chat.server.ServerDMCC;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
@@ -25,7 +26,7 @@ import static com.xujiayao.discord_mc_chat.Constants.VERSION;
 public class DMCC {
 
 	private static ServerDMCC serverInstance;
-	// private static ClientDMCC clientInstance;
+	private static ClientDMCC clientInstance;
 
 	/**
 	 * Initialize DMCC.
@@ -97,15 +98,15 @@ public class DMCC {
 					LOGGER.info("Running in single_server mode. Starting internal server and client...");
 					serverInstance = new ServerDMCC();
 					serverInstance.start();
-					// clientInstance = new ClientDMCC();
-					// clientInstance.start("localhost", ConfigManager.getInt("multi_server.port", 5000));
+					clientInstance = new ClientDMCC();
+					clientInstance.start("localhost", ConfigManager.getInt("multi_server.port", 5000));
 				}
 				case "multi_server_client" -> {
 					LOGGER.info("Running in multi_server_client mode. Starting client only.");
-					// clientInstance = new ClientDMCC();
-					// String host = ConfigManager.getString("multi_server.connection.host", "localhost");
-					// int port = ConfigManager.getInt("multi_server.connection.port", 5000);
-					// clientInstance.start(host, port);
+					clientInstance = new ClientDMCC();
+					String host = ConfigManager.getString("multi_server.connection.host", "localhost");
+					int port = ConfigManager.getInt("multi_server.connection.port", 5000);
+					clientInstance.start(host, port);
 				}
 				case "standalone" -> {
 					LOGGER.info("Running in standalone mode. Starting server only.");
@@ -125,9 +126,9 @@ public class DMCC {
 		if (serverInstance != null) {
 			serverInstance.shutdown();
 		}
-//		if (clientInstance != null) {
-//			clientInstance.shutdown();
-//		}
+		if (clientInstance != null) {
+			clientInstance.shutdown();
+		}
 
 		// Shutdown Command event handler
 		CommandEventHandler.shutdown();
