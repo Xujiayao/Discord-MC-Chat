@@ -22,10 +22,10 @@ import java.util.concurrent.TimeUnit;
  */
 public class ClientChannelInitializer extends ChannelInitializer<SocketChannel> {
 
-	private final NettyClient nettyClient;
+	private final NettyClient client;
 
-	public ClientChannelInitializer(NettyClient nettyClient) {
-		this.nettyClient = nettyClient;
+	public ClientChannelInitializer(NettyClient client) {
+		this.client = client;
 	}
 
 	@Override
@@ -42,10 +42,11 @@ public class ClientChannelInitializer extends ChannelInitializer<SocketChannel> 
 		pipeline.addLast(new StringEncoder(StandardCharsets.UTF_8));
 		pipeline.addLast(new JsonPacketEncoder());
 
+		// Heartbeat and Reconnect
+		pipeline.addLast(new IdleStateHandler(0, 40, 0, TimeUnit.SECONDS));
+		pipeline.addLast(new HeartbeatHandler(client));
+
 		// Business Logic
-		pipeline.addLast(new IdleStateHandler(0, 45, 0, TimeUnit.SECONDS));
-		pipeline.addLast(new HeartbeatHandler());
-		pipeline.addLast(new ReconnectHandler(nettyClient));
 		pipeline.addLast(new ClientBusinessHandler());
 	}
 }

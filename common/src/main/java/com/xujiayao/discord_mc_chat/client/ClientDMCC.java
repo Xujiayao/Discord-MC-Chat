@@ -1,8 +1,5 @@
 package com.xujiayao.discord_mc_chat.client;
 
-import com.xujiayao.discord_mc_chat.interfaces.IPlatformInitializer;
-import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
-
 import java.util.ServiceLoader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -19,20 +16,14 @@ public class ClientDMCC {
 
 	private final ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Client"));
 	private NettyClient nettyClient;
-	public static String serverName;
 
 	public void start(String host, int port) {
 		executor.submit(() -> {
 			LOGGER.info("Starting DMCC Client component...");
 
-			// Discover and run platform-specific initializers (e.g., MinecraftEventHandler)
-			ServiceLoader<IPlatformInitializer> initializers = ServiceLoader.load(IPlatformInitializer.class);
-			for (IPlatformInitializer initializer : initializers) {
-				LOGGER.info("Executing platform initializer: " + initializer.getClass().getSimpleName());
-				initializer.initialize();
-			}
-
-			serverName = ConfigManager.getString("multi_server.server_name", "Minecraft");
+			// Use ServiceLoader to initialize Minecraft-specific components
+			ServiceLoader<MinecraftService> services = ServiceLoader.load(MinecraftService.class);
+			services.forEach(MinecraftService::initialize);
 
 			nettyClient = new NettyClient(host, port);
 			nettyClient.start();

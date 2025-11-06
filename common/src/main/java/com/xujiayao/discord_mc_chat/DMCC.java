@@ -96,13 +96,16 @@ public class DMCC {
 			switch (mode) {
 				case "single_server" -> {
 					LOGGER.info("Running in single_server mode. Starting internal server and client...");
+
 					serverInstance = new ServerDMCC();
 					serverInstance.start();
+
 					clientInstance = new ClientDMCC();
 					clientInstance.start("localhost", ConfigManager.getInt("multi_server.port", 5000));
 				}
 				case "multi_server_client" -> {
 					LOGGER.info("Running in multi_server_client mode. Starting client only.");
+
 					clientInstance = new ClientDMCC();
 					String host = ConfigManager.getString("multi_server.connection.host", "localhost");
 					int port = ConfigManager.getInt("multi_server.connection.port", 5000);
@@ -110,6 +113,7 @@ public class DMCC {
 				}
 				case "standalone" -> {
 					LOGGER.info("Running in standalone mode. Starting server only.");
+
 					serverInstance = new ServerDMCC();
 					serverInstance.start();
 				}

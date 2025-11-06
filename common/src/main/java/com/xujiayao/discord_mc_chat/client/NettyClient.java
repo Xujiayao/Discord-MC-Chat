@@ -2,6 +2,7 @@ package com.xujiayao.discord_mc_chat.client;
 
 import com.xujiayao.discord_mc_chat.client.handlers.ClientChannelInitializer;
 import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.EventLoopGroup;
@@ -13,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
 /**
- * Encapsulates the Netty client setup, connection and reconnection logic.
+ * Encapsulates the Netty client, connection, and reconnection logic.
  *
  * @author Xujiayao
  */
@@ -21,14 +22,9 @@ public class NettyClient {
 
 	private final String host;
 	private final int port;
+	private Channel channel;
+
 	private final EventLoopGroup group = new NioEventLoopGroup();
-
-	private static final int INITIAL_RECONNECT_DELAY_SECONDS = 2;
-	private static final int MAX_RECONNECT_DELAY_SECONDS = 256;
-	private int currentReconnectDelay = INITIAL_RECONNECT_DELAY_SECONDS;
-
-	private Bootstrap bootstrap;
-	private volatile boolean running = false;
 
 	public NettyClient(String host, int port) {
 		this.host = host;
@@ -36,39 +32,48 @@ public class NettyClient {
 	}
 
 	public void start() {
-		running = true;
-		bootstrap = new Bootstrap();
-		bootstrap.group(group)
-				.channel(NioSocketChannel.class)
-				.handler(new ClientChannelInitializer(this));
-
-		LOGGER.info("Netty client started. Attempting to connect to " + host + ":" + port);
-		doConnect();
+		connect();
 	}
 
-	public void doConnect() {
-		if (!running) {
-			return;
+	public void connect() {
+		try {
+			Bootstrap b = new Bootstrap();
+			b.group(group)
+					.channel(NioSocketChannel.class)
+					.handler(new ClientChannelInitializer(this));
+
+			LOGGER.info("Attempting to connect to server at " + host + ":" + port);
+			ChannelFuture future = b.connect(host, port);
+
+			future.addListener((ChannelFutureListener) f -> {
+				if (f.isSuccess()) {
+					channel = f.channel();
+					LOGGER.info("Successfully connected to server.");
+				} else {
+					LOGGER.warn("Failed to connect to server. Retrying...");
+					scheduleReconnect(f.channel(), 2); // Start with a 2-second delay
+				}
+			});
+		} catch (Exception e) {
+			LOGGER.error("Netty client failed to start connection attempt.", e);
+		}
+	}
+
+	public void scheduleReconnect(Channel ch, long delay) {
+		if (group.isShuttingDown() || group.isShutdown()) {
+			return; // Do not attempt to reconnect if the client is shutting down
 		}
 
-		ChannelFuture future = bootstrap.connect(host, port);
-		future.addListener((ChannelFutureListener) futureListener -> {
-			if (futureListener.isSuccess()) {
-				LOGGER.info("Successfully connected to the server.");
-				// On successful connection, reset the reconnect delay
-				currentReconnectDelay = INITIAL_RECONNECT_DELAY_SECONDS;
-			} else {
-				LOGGER.warn("Failed to connect to the server. Retrying in {} seconds...", currentReconnectDelay);
-				futureListener.channel().eventLoop().schedule(this::doConnect, currentReconnectDelay, TimeUnit.SECONDS);
+		final long nextDelay = Math.min(delay * 2, 256); // Exponential backoff, capped at 256 seconds
 
-				// Apply exponential backoff for the next attempt
-				currentReconnectDelay = Math.min(currentReconnectDelay * 2, MAX_RECONNECT_DELAY_SECONDS);
-			}
-		});
+		ch.eventLoop().schedule(() -> {
+			LOGGER.info("Reconnecting... (next attempt in " + nextDelay + "s)");
+			connect();
+		}, delay, TimeUnit.SECONDS);
 	}
 
 	public void stop() {
-		running = false;
+		LOGGER.info("Stopping Netty client...");
 		group.shutdownGracefully();
 		LOGGER.info("Netty client stopped.");
 	}
