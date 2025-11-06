@@ -125,6 +125,9 @@ public class DMCC {
 				TerminalManager.shutdown();
 			}
 
+			// Shutdown Command event handler
+			CommandEventHandler.shutdown();
+
 			// Shutdown Discord
 			DiscordManager.shutdown();
 

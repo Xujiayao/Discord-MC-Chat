@@ -4,6 +4,10 @@ import com.xujiayao.discord_mc_chat.DMCC;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
 import static com.xujiayao.discord_mc_chat.Constants.IS_MINECRAFT_ENV;
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
@@ -14,26 +18,49 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  */
 public class CommandEventHandler {
 
+	private static ExecutorService commandExecutor;
+
 	/**
 	 * Initializes the Command event handlers.
 	 */
 	public static void init() {
-		EventManager.register(CommandEvents.ReloadEvent.class, event -> new Thread(() -> {
+		commandExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Command"));
+
+		EventManager.register(CommandEvents.ReloadEvent.class, event -> commandExecutor.submit(() -> {
 			LOGGER.info(I18nManager.getDmccTranslation("commands.reload.reloading"));
 			DMCC.reload();
-		}, "DMCC-Command").start());
+		}));
 
-		EventManager.register(CommandEvents.StopEvent.class, event -> new Thread(() -> {
+		EventManager.register(CommandEvents.StopEvent.class, event -> commandExecutor.submit(() -> {
 			LOGGER.info(I18nManager.getDmccTranslation("commands.stop.stopping"));
 
-			if (IS_MINECRAFT_ENV) {
-				LOGGER.info("Run \"/dmcc start\" to start DMCC again");
-				DMCC.shutdown();
-			} else {
-				System.exit(0);
-			}
-		}, "DMCC-Command").start());
+			new Thread(() -> {
+				if (IS_MINECRAFT_ENV) {
+					LOGGER.info("Run \"/dmcc start\" to start DMCC again");
+					DMCC.shutdown();
+				} else {
+					System.exit(0);
+				}
+			}, "DMCC-Shutdown").start();
+		}));
 
 		LOGGER.info("Initialized all Command event handlers");
+	}
+
+	/**
+	 * Shuts down the command executor service.
+	 */
+	public static void shutdown() {
+		if (commandExecutor != null && !commandExecutor.isShutdown()) {
+			commandExecutor.shutdown();
+			try {
+				if (!commandExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
+					commandExecutor.shutdownNow();
+				}
+			} catch (InterruptedException e) {
+				commandExecutor.shutdownNow();
+				Thread.currentThread().interrupt();
+			}
+		}
 	}
 }
