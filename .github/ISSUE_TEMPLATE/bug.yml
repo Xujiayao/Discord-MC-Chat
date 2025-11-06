@@ -69,6 +69,7 @@ body:
       multiple: false
       options:
         - "Latest Build (GitHub Actions)"
+        - "2.7.0"
         - "2.6.0"
         - "2.5.0"
         - "2.4.1"

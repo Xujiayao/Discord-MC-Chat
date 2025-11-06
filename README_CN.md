@@ -68,7 +68,8 @@ DMCC Discord 服务器现已公开！通过以下链接加入：https://discord.
 - Minecraft <> Discord 跨服聊天
     - 支持禁用 Discord 和游戏内聊天广播
     - 支持使用 Discord 频道主题功能显示服务器状态
-    - 支持使用机器人 Discord 在线状态中显示服务器状态
+    - 支持使用语音频道显示服务器状态和玩家数量
+    - 支持使用机器人 Discord 在线状态显示服务器状态
     - 支持使用机器人 Discord 活动状态显示服务器玩家数
     - 支持 Discord Webhook 功能
         - 动态创建 DMCC Webhook
