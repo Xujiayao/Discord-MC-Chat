@@ -87,6 +87,9 @@ public class DMCC {
 				return;
 			}
 
+			// TODO ===== From now on should separate ServerDMCC and ClientDMCC =====
+			// Threads name DMCC-Server and DMCC-Client respectively
+
 			// Initialize Command event handlers
 			CommandEventHandler.init();
 
