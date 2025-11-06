@@ -127,11 +127,11 @@ public class DMCC {
 	public static void shutdown() {
 		LOGGER.info("Shutting down DMCC...");
 
-		if (serverInstance != null) {
-			serverInstance.shutdown();
-		}
 		if (clientInstance != null) {
 			clientInstance.shutdown();
+		}
+		if (serverInstance != null) {
+			serverInstance.shutdown();
 		}
 
 		// Shutdown Command event handler

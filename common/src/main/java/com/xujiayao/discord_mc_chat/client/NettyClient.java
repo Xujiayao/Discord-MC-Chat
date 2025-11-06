@@ -10,6 +10,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
@@ -25,6 +26,7 @@ public class NettyClient {
 	private Channel channel;
 
 	private final EventLoopGroup group = new NioEventLoopGroup();
+	private final AtomicBoolean running = new AtomicBoolean(false);
 
 	public NettyClient(String host, int port) {
 		this.host = host;
@@ -32,10 +34,15 @@ public class NettyClient {
 	}
 
 	public void start() {
+		running.set(true);
 		connect();
 	}
 
 	public void connect() {
+		if (!running.get()) {
+			return; // Do not attempt to connect if the client is stopped
+		}
+
 		try {
 			Bootstrap b = new Bootstrap();
 			b.group(group)
@@ -60,8 +67,8 @@ public class NettyClient {
 	}
 
 	public void scheduleReconnect(Channel ch, long delay) {
-		if (group.isShuttingDown() || group.isShutdown()) {
-			return; // Do not attempt to reconnect if the client is shutting down
+		if (!running.get()) {
+			return; // Do not schedule reconnect if the client is stopping
 		}
 
 		final long nextDelay = Math.min(delay * 2, 256); // Exponential backoff, capped at 256 seconds
@@ -73,8 +80,19 @@ public class NettyClient {
 	}
 
 	public void stop() {
+		if (!running.compareAndSet(true, false)) {
+			// Already stopped or stopping
+			return;
+		}
+
 		LOGGER.info("Stopping Netty client...");
-		group.shutdownGracefully();
-		LOGGER.info("Netty client stopped.");
+		try {
+			if (channel != null && channel.isOpen()) {
+				channel.close().syncUninterruptibly();
+			}
+			group.shutdownGracefully().syncUninterruptibly();
+		} finally {
+			LOGGER.info("Netty client stopped.");
+		}
 	}
 }
