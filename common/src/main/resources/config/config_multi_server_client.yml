@@ -16,4 +16,4 @@ multi_server:
   connection:
     host: localhost
     port: 5000
-  server_name: SMP
+  server_name: your_server_name_here

@@ -4,6 +4,7 @@ import com.xujiayao.discord_mc_chat.commands.CommandEventHandler;
 import com.xujiayao.discord_mc_chat.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.standalone.TerminalManager;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
+import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import com.xujiayao.discord_mc_chat.utils.logging.impl.LoggerImpl;
@@ -30,17 +31,13 @@ public class DMCC {
 	public static void init() {
 		new Thread(() -> {
 			// Check if running in headless mode
-			if (System.console() == null) {
-				// The user likely started the application by double-clicking the JAR file
+			if (System.console() == null && !IS_MINECRAFT_ENV) {
+				// The user likely started the application by double-clicking the JAR file in a GUI environment
 				// Generates a warning to remind the user to start DMCC from the command line
 				LOGGER.warn("No console detected, indicating DMCC is running in headless mode");
 				LOGGER.warn("DMCC does not support being started by double-clicking the JAR file");
 				LOGGER.warn("Please start DMCC from the command line \"java -jar Discord-MC-Chat-{}.jar\"", VERSION);
-				LOGGER.info("Exiting...");
 
-				if (!IS_MINECRAFT_ENV) {
-					System.exit(0);
-				}
 				return;
 			}
 
@@ -65,25 +62,27 @@ public class DMCC {
 			// In a Minecraft environment, we just return and let the server continue running
 			// In standalone mode, the process would terminate after returning
 
-			// Load configuration
-			if (!ConfigManager.load()) {
-				LOGGER.warn("DMCC will not continue initialization due to configuration issues");
-				LOGGER.info("Exiting...");
-
-				if (!IS_MINECRAFT_ENV) {
-					System.exit(0);
+			// Determine operating mode
+			String mode;
+			if (IS_MINECRAFT_ENV) {
+				mode = ModeManager.load();
+				if (mode == null) {
+					LOGGER.warn("DMCC initialization halted because an operating mode needs to be selected");
+					return;
 				}
+			} else {
+				mode = "standalone";
+			}
+
+			// Load configuration
+			if (!ConfigManager.load(mode)) {
+				LOGGER.warn("DMCC will not continue initialization due to configuration issues");
 				return;
 			}
 
 			// Load language files
 			if (!I18nManager.load()) {
 				LOGGER.warn("DMCC will not continue initialization due to language file issues");
-				LOGGER.info("Exiting...");
-
-				if (!IS_MINECRAFT_ENV) {
-					System.exit(0);
-				}
 				return;
 			}
 
@@ -108,11 +107,6 @@ public class DMCC {
 			// Initialize Discord
 			if (!DiscordManager.init()) {
 				LOGGER.warn("DMCC will not continue initialization due to Discord connection issues");
-				LOGGER.info("Exiting...");
-
-				if (!IS_MINECRAFT_ENV) {
-					System.exit(0);
-				}
 				return;
 			}
 		}, "DMCC-Main").start();
@@ -161,8 +155,10 @@ public class DMCC {
 	 * Reloads DMCC by shutting it down and re-initializing.
 	 */
 	public static void reload() {
-		shutdown();
-		init();
-		LOGGER.info("DMCC reloaded!");
+		new Thread(() -> {
+			shutdown();
+			init();
+			LOGGER.info("DMCC reloaded!");
+		}, "DMCC-Reload").start();
 	}
 }

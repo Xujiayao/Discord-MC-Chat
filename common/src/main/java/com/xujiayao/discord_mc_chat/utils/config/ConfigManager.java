@@ -12,7 +12,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.function.Function;
 
-import static com.xujiayao.discord_mc_chat.Constants.IS_MINECRAFT_ENV;
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
 
@@ -30,23 +29,13 @@ public class ConfigManager {
 	/**
 	 * Loads the configuration file based on the determined operating mode.
 	 *
+	 * @param expectedMode The mode DMCC is expected to run in.
 	 * @return true if the config was loaded and validated successfully, false otherwise.
 	 */
-	public static boolean load() {
+	public static boolean load(String expectedMode) {
 		try {
 			// Create directories if they do not exist
 			Files.createDirectories(CONFIG_PATH.getParent());
-
-			String expectedMode;
-			if (IS_MINECRAFT_ENV) {
-				expectedMode = ModeManager.load();
-				if (expectedMode == null) {
-					// ModeManager handles logging, so we just return false to stop initialization.
-					return false;
-				}
-			} else {
-				expectedMode = "standalone";
-			}
 
 			// If config.yml does not exist or is empty, create it from the appropriate template.
 			if (!Files.exists(CONFIG_PATH) || Files.size(CONFIG_PATH) == 0) {
@@ -61,8 +50,8 @@ public class ConfigManager {
 			String configMode = userConfig.path("mode").asText();
 			if (!expectedMode.equals(configMode)) {
 				LOGGER.error("Mode mismatch detected!");
-				LOGGER.error("Mode in mode.yml is \"{}\", but config.yml is for \"{}\"", expectedMode, configMode);
-				LOGGER.error("Please backup and delete your existing config.yml to allow DMCC to generate a new and correct one");
+				LOGGER.error("The expected mode is \"{}\" (from mode.yml or environment), but config.yml is for \"{}\".", expectedMode, configMode);
+				LOGGER.error("Please backup and delete your existing config.yml to allow DMCC to generate a new and correct one, then run \"/dmcc reload\".");
 				return false;
 			}
 
@@ -108,7 +97,7 @@ public class ConfigManager {
 		}
 
 		LOGGER.info("Created default configuration file at \"{}\"", CONFIG_PATH);
-		LOGGER.info("Please edit the configuration file before reloading DMCC");
+		LOGGER.info("Please edit the configuration file before reloading or restarting DMCC");
 	}
 
 	/**
@@ -118,15 +107,26 @@ public class ConfigManager {
 	 * @return The JsonNode at the specified path
 	 */
 	public static JsonNode getConfigNode(String path) {
+		if (config == null) {
+			// This can happen if config is not loaded yet.
+			// Returning a missing node is safer than a NullPointerException.
+			try {
+				return YAML_MAPPER.missingNode();
+			} catch (Exception e) {
+				// Should not happen, but as a fallback
+				return null;
+			}
+		}
+
 		String[] parts = path.split("\\.");
 		JsonNode node = config;
 
 		for (String part : parts) {
-			node = node.path(part);
-			if (node.isMissingNode()) {
+			if (node == null || node.isMissingNode()) {
 				LOGGER.warn("Configuration path not found: {}", path);
 				return node;
 			}
+			node = node.path(part);
 		}
 
 		return node;
@@ -143,7 +143,7 @@ public class ConfigManager {
 	 */
 	public static <T> T getValue(String path, T defaultValue, Function<JsonNode, T> converter) {
 		JsonNode node = getConfigNode(path);
-		return node.isMissingNode() ? defaultValue : converter.apply(node);
+		return (node == null || node.isMissingNode()) ? defaultValue : converter.apply(node);
 	}
 
 	/**

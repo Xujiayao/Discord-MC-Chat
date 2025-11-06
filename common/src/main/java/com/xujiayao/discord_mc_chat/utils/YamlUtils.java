@@ -104,7 +104,8 @@ public class YamlUtils {
 		// A hard-coded list of keys that should be modified by the user
 		// This is to catch cases where the user leaves a key unchanged from the template
 		String[] keysToCheck = {
-				"bot.token"
+				"bot.token",
+				"multi_server.server_name"
 		};
 		Set<String> unmodifiedKeys = findUnmodifiedKeys(config, templateConfig, keysToCheck);
 		if (!unmodifiedKeys.isEmpty()) {
@@ -232,6 +233,8 @@ public class YamlUtils {
 
 			// If either node is missing, it's not an "unmodified" key in the sense we're checking.
 			// The missing key itself is handled by findKeyDiffs.
+			// Or it is the case that config files of different modes have different keys.
+			// Or it is the case that language files and config files have different keys.
 			if (configNode.isMissingNode() || templateNode.isMissingNode()) {
 				continue;
 			}

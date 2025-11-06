@@ -29,4 +29,5 @@ version: ${mod_version}
 #     all DMCC activities and communicates with Discord.
 # ==================================================
 
+# Set your desired mode here. Replace "your_option_here" with one of the available modes.
 mode: your_option_here

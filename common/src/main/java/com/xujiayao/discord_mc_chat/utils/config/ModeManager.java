@@ -57,15 +57,15 @@ public class ModeManager {
 			}
 
 			// Validate the mode file
-			if (!YamlUtils.validate(modeConfig, templateConfig, MODE_FILE_PATH, false)) {
-				LOGGER.error("Validation of mode.yml failed. Please correct the errors.");
+			if (!YamlUtils.validate(modeConfig, templateConfig, MODE_FILE_PATH, true)) {
+				LOGGER.error("Validation of mode.yml failed. Please correct the errors mentioned above.");
 				return null;
 			}
 
 			String loadedMode = modeConfig.path("mode").asText(null);
 
-			if (loadedMode == null || loadedMode.trim().isEmpty() || loadedMode.startsWith("#")) {
-				LOGGER.error("No mode selected in \"{}\". Please uncomment one of the mode options.", MODE_FILE_PATH);
+			if (loadedMode == null || loadedMode.trim().isEmpty()) {
+				LOGGER.error("No mode selected in \"{}\"", MODE_FILE_PATH);
 				return null;
 			}
 
@@ -77,7 +77,6 @@ public class ModeManager {
 
 			LOGGER.info("Operating mode set to \"{}\"", loadedMode);
 			return loadedMode;
-
 		} catch (IOException e) {
 			LOGGER.error("Failed to load or create mode.yml", e);
 			return null;
