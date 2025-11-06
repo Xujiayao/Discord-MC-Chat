@@ -21,6 +21,8 @@ dependencies {
     shadow api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jackson_dataformat_yaml_version}")
 
     shadow api("com.squareup.okhttp3:okhttp:${okhttp_version}")
+
+    shadow api("io.netty:netty-all:${netty_version}")
 }
 
 jar {
