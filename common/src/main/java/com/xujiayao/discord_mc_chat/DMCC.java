@@ -144,7 +144,7 @@ public class DMCC {
 		try (ExecutorService executorService = OK_HTTP_CLIENT.dispatcher().executorService();
 			 Cache ignored = OK_HTTP_CLIENT.cache()) {
 			executorService.shutdown();
-			if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
+			if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
 				executorService.shutdownNow(); // Force shutdown if not terminated gracefully
 			}
 			OK_HTTP_CLIENT.connectionPool().evictAll();

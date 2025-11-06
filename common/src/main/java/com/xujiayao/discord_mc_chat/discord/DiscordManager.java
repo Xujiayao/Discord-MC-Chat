@@ -59,7 +59,7 @@ public class DiscordManager {
 		if (jda != null) {
 			jda.shutdown();
 
-			if (!jda.awaitShutdown(Duration.ofSeconds(10))) {
+			if (!jda.awaitShutdown(Duration.ofSeconds(5))) {
 				if (!ConfigManager.getBoolean("shutdown.graceful_shutdown", true)) {
 					jda.shutdownNow();
 				}

@@ -54,7 +54,7 @@ public class CommandEventHandler {
 		if (commandExecutor != null && !commandExecutor.isShutdown()) {
 			commandExecutor.shutdown();
 			try {
-				if (!commandExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
+				if (!commandExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
 					commandExecutor.shutdownNow();
 				}
 			} catch (InterruptedException e) {
