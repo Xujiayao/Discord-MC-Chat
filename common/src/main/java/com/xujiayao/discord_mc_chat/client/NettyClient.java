@@ -22,6 +22,11 @@ public class NettyClient {
 	private final String host;
 	private final int port;
 	private final EventLoopGroup group = new NioEventLoopGroup();
+
+	private static final int INITIAL_RECONNECT_DELAY_SECONDS = 2;
+	private static final int MAX_RECONNECT_DELAY_SECONDS = 256;
+	private int currentReconnectDelay = INITIAL_RECONNECT_DELAY_SECONDS;
+
 	private Bootstrap bootstrap;
 	private volatile boolean running = false;
 
@@ -50,9 +55,14 @@ public class NettyClient {
 		future.addListener((ChannelFutureListener) futureListener -> {
 			if (futureListener.isSuccess()) {
 				LOGGER.info("Successfully connected to the server.");
+				// On successful connection, reset the reconnect delay
+				currentReconnectDelay = INITIAL_RECONNECT_DELAY_SECONDS;
 			} else {
-				LOGGER.warn("Failed to connect to the server. Retrying in 10 seconds...");
-				futureListener.channel().eventLoop().schedule(this::doConnect, 10, TimeUnit.SECONDS);
+				LOGGER.warn("Failed to connect to the server. Retrying in {} seconds...", currentReconnectDelay);
+				futureListener.channel().eventLoop().schedule(this::doConnect, currentReconnectDelay, TimeUnit.SECONDS);
+
+				// Apply exponential backoff for the next attempt
+				currentReconnectDelay = Math.min(currentReconnectDelay * 2, MAX_RECONNECT_DELAY_SECONDS);
 			}
 		});
 	}

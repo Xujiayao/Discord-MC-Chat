@@ -1,8 +1,9 @@
 package com.xujiayao.discord_mc_chat.client;
 
-import com.xujiayao.discord_mc_chat.minecraft.events.MinecraftEventHandler;
+import com.xujiayao.discord_mc_chat.interfaces.IPlatformInitializer;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 
+import java.util.ServiceLoader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -24,7 +25,12 @@ public class ClientDMCC {
 		executor.submit(() -> {
 			LOGGER.info("Starting DMCC Client component...");
 
-			MinecraftEventHandler.init();
+			// Discover and run platform-specific initializers (e.g., MinecraftEventHandler)
+			ServiceLoader<IPlatformInitializer> initializers = ServiceLoader.load(IPlatformInitializer.class);
+			for (IPlatformInitializer initializer : initializers) {
+				LOGGER.info("Executing platform initializer: " + initializer.getClass().getSimpleName());
+				initializer.initialize();
+			}
 
 			serverName = ConfigManager.getString("multi_server.server_name", "Minecraft");
 
