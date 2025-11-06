@@ -54,10 +54,12 @@ shadowJar {
     }
     exclude "META-INF/*NOTICE*"
     exclude "META-INF/*kotlin_module*"
+    exclude "META-INF/io.netty.versions.properties"
 
     relocate "com.fasterxml", "dmcc_dep.com.fasterxml"
     relocate "com.neovisionaries", "dmcc_dep.com.neovisionaries"
     relocate "gnu", "dmcc_dep.gnu"
+    relocate "io", "dmcc_dep.io"
     relocate "kotlin", "dmcc_dep.kotlin"
     relocate "net.dv8tion", "dmcc_dep.net.dv8tion"
     relocate "okhttp3", "dmcc_dep.okhttp3"
