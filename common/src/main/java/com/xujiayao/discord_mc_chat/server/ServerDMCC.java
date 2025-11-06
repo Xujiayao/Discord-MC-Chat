@@ -49,7 +49,12 @@ public class ServerDMCC {
 			nettyServer.stop();
 		}
 
-		DiscordManager.shutdown();
+		try {
+			DiscordManager.shutdown();
+		} catch (InterruptedException e) {
+			LOGGER.error("Discord manager shutdown was interrupted.", e);
+			Thread.currentThread().interrupt();
+		}
 
 		if (!IS_MINECRAFT_ENV) {
 			TerminalManager.shutdown();

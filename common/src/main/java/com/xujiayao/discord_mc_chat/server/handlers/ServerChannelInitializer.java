@@ -12,6 +12,7 @@ import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.timeout.IdleStateHandler;
 
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Initializes the channel pipeline for each new client connection on the server.
@@ -25,7 +26,7 @@ public class ServerChannelInitializer extends ChannelInitializer<SocketChannel> 
 		ChannelPipeline pipeline = ch.pipeline();
 
 		// Decoders (Inbound)
-		pipeline.addLast(new IdleStateHandler(45, 0, 0));
+		pipeline.addLast(new IdleStateHandler(60, 0, 0, TimeUnit.SECONDS));
 		pipeline.addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 4, 0, 4));
 		pipeline.addLast(new StringDecoder(StandardCharsets.UTF_8));
 		pipeline.addLast(new JsonPacketDecoder());

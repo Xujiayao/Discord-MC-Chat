@@ -36,9 +36,17 @@ subprojects {
     configurations.configureEach {
         resolutionStrategy {
             force "org.slf4j:slf4j-api:${slf4j_api_version}"
+
             force "com.fasterxml.jackson.core:jackson-core:${jackson_core_version}"
             force "com.fasterxml.jackson.core:jackson-databind:${jackson_databind_version}"
             force "com.fasterxml.jackson.core:jackson-annotations:${jackson_annotations_version}"
+
+            force "io.netty:netty-handler:${netty_version}"
+            force "io.netty:netty-common:${netty_version}"
+            force "io.netty:netty-resolver:${netty_version}"
+            force "io.netty:netty-buffer:${netty_version}"
+            force "io.netty:netty-transport:${netty_version}"
+            force "io.netty:netty-transport-native-unix-common:${netty_version}"
         }
     }
 }
