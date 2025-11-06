@@ -1,8 +1,7 @@
 package com.xujiayao.discord_mc_chat;
 
 import com.xujiayao.discord_mc_chat.commands.CommandEventHandler;
-import com.xujiayao.discord_mc_chat.discord.DiscordManager;
-import com.xujiayao.discord_mc_chat.standalone.TerminalManager;
+import com.xujiayao.discord_mc_chat.server.ServerDMCC;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
@@ -24,6 +23,9 @@ import static com.xujiayao.discord_mc_chat.Constants.VERSION;
  * @author Xujiayao
  */
 public class DMCC {
+
+	private static ServerDMCC serverInstance;
+	// private static ClientDMCC clientInstance;
 
 	/**
 	 * Initialize DMCC.
@@ -86,28 +88,30 @@ public class DMCC {
 				return;
 			}
 
-			// TODO ===== From now on should separate ServerDMCC and ClientDMCC =====
-			// Threads name DMCC-Server and DMCC-Client respectively
-
 			// Initialize Command event handlers
 			CommandEventHandler.init();
 
-			// Check environment
-			if (IS_MINECRAFT_ENV) {
-				// Initialize Minecraft event handlers
-				LOGGER.info("Minecraft environment detected. Initializing Minecraft event handlers...");
-//				MinecraftEventHandler.init();
-			} else {
-				LOGGER.info("No Minecraft environment detected. DMCC will run in standalone mode.");
-
-				// Initialize interactive terminal for standalone mode
-				TerminalManager.init();
-			}
-
-			// Initialize Discord
-			if (!DiscordManager.init()) {
-				LOGGER.warn("DMCC will not continue initialization due to Discord connection issues");
-				return;
+			// From now on should separate ServerDMCC and ClientDMCC initialization based on mode
+			switch (mode) {
+				case "single_server" -> {
+					LOGGER.info("Running in single_server mode. Starting internal server and client...");
+					serverInstance = new ServerDMCC();
+					serverInstance.start();
+					// clientInstance = new ClientDMCC();
+					// clientInstance.start("localhost", ConfigManager.getInt("multi_server.port", 5000));
+				}
+				case "multi_server_client" -> {
+					LOGGER.info("Running in multi_server_client mode. Starting client only.");
+					// clientInstance = new ClientDMCC();
+					// String host = ConfigManager.getString("multi_server.connection.host", "localhost");
+					// int port = ConfigManager.getInt("multi_server.connection.port", 5000);
+					// clientInstance.start(host, port);
+				}
+				case "standalone" -> {
+					LOGGER.info("Running in standalone mode. Starting server only.");
+					serverInstance = new ServerDMCC();
+					serverInstance.start();
+				}
 			}
 		}, "DMCC-Main").start();
 	}
@@ -118,40 +122,35 @@ public class DMCC {
 	public static void shutdown() {
 		LOGGER.info("Shutting down DMCC...");
 
+		if (serverInstance != null) {
+			serverInstance.shutdown();
+		}
+//		if (clientInstance != null) {
+//			clientInstance.shutdown();
+//		}
+
+		// Shutdown Command event handler
+		CommandEventHandler.shutdown();
+
+		// Clear all event handlers
+		EventManager.clear();
+
+		// Shutdown OkHttpClient
 		try (ExecutorService executorService = OK_HTTP_CLIENT.dispatcher().executorService();
-			 Cache cache = OK_HTTP_CLIENT.cache()) {
-			// Shutdown TerminalManager if in standalone mode
-			if (!IS_MINECRAFT_ENV) {
-				TerminalManager.shutdown();
-			}
-
-			// Shutdown Command event handler
-			CommandEventHandler.shutdown();
-
-			// Shutdown Discord
-			DiscordManager.shutdown();
-
-			// Clear all event handlers
-			EventManager.clear();
-
-			// Shutdown OkHttpClient
+			 Cache ignored = OK_HTTP_CLIENT.cache()) {
 			executorService.shutdown();
 			if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
 				executorService.shutdownNow(); // Force shutdown if not terminated gracefully
 			}
 			OK_HTTP_CLIENT.connectionPool().evictAll();
-			if (cache != null) {
-				cache.close();
-			}
-
-			// End of whole process
-			LOGGER.info("DMCC shutdown successfully. Goodbye!");
 		} catch (Exception e) {
-			LOGGER.error("An error occurred during DMCC shutdown", e);
-		} finally {
-			// Close the file logger
-			LoggerImpl.closeFileWriter();
+			LOGGER.error("An error occurred during OkHttpClient shutdown", e);
 		}
+
+		LOGGER.info("DMCC shutdown successfully. Goodbye!");
+
+		// Close the file logger
+		LoggerImpl.closeFileWriter();
 	}
 
 	/**
