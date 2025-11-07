@@ -69,6 +69,7 @@ public class NettyClient {
 						LOGGER.warn("Connection failed! First reconnect attempt in {}s", currentDelay);
 					}
 
+					//noinspection resource
 					f.channel().eventLoop().schedule(() -> this.connect(true), currentDelay, TimeUnit.SECONDS);
 				}
 			});
