@@ -43,7 +43,7 @@ public class ClientChannelInitializer extends ChannelInitializer<SocketChannel> 
 		pipeline.addLast(new JsonPacketEncoder());
 
 		// Heartbeat and Reconnect
-		pipeline.addLast(new IdleStateHandler(0, 40, 0, TimeUnit.SECONDS));
+		pipeline.addLast(new IdleStateHandler(0, 30, 0, TimeUnit.SECONDS));
 		pipeline.addLast(new HeartbeatHandler(client));
 
 		// Business Logic
