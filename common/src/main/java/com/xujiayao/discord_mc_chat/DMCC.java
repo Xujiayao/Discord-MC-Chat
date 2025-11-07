@@ -11,6 +11,7 @@ import com.xujiayao.discord_mc_chat.utils.logging.impl.LoggerImpl;
 import okhttp3.Cache;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static com.xujiayao.discord_mc_chat.Constants.IS_MINECRAFT_ENV;
@@ -97,13 +98,20 @@ public class DMCC {
 			// From now on should separate ServerDMCC and ClientDMCC initialization based on mode
 			switch (mode) {
 				case "single_server" -> {
-					LOGGER.info("Running in single_server mode. Starting internal server and client...");
+					try {
+						LOGGER.info("Running in single_server mode. Starting internal server and client...");
 
-					serverInstance = new ServerDMCC();
-					serverInstance.start(5000);
+						serverInstance = new ServerDMCC();
+						Future<Integer> portFuture = serverInstance.start(0); // Bind to a random port
+						int port = portFuture.get();
 
-					clientInstance = new ClientDMCC();
-					clientInstance.start("localhost", 5000);
+						if (port != -1) {
+							clientInstance = new ClientDMCC();
+							clientInstance.start("localhost", port);
+						}
+					} catch (Exception e) {
+						LOGGER.error("Failed to start single_server mode", e);
+					}
 				}
 				case "multi_server_client" -> {
 					LOGGER.info("Running in multi_server_client mode. Starting client only.");

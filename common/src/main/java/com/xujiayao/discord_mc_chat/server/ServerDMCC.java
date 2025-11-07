@@ -2,10 +2,10 @@ package com.xujiayao.discord_mc_chat.server;
 
 import com.xujiayao.discord_mc_chat.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.standalone.TerminalManager;
-import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static com.xujiayao.discord_mc_chat.Constants.IS_MINECRAFT_ENV;
@@ -21,13 +21,13 @@ public class ServerDMCC {
 	private final ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Server"));
 	private NettyServer nettyServer;
 
-	public void start(int port) {
-		executor.submit(() -> {
+	public Future<Integer> start(int port) {
+		return executor.submit(() -> {
 			LOGGER.info("Starting DMCC Server component...");
 
 			if (!DiscordManager.init()) {
 				LOGGER.error("Failed to initialize Discord Manager. Server component will not start.");
-				return;
+				return -1;
 			}
 
 			if (!IS_MINECRAFT_ENV) {
@@ -35,9 +35,7 @@ public class ServerDMCC {
 			}
 
 			nettyServer = new NettyServer();
-			nettyServer.start(port);
-
-			LOGGER.info("DMCC Server component started successfully.");
+			return nettyServer.start(port);
 		});
 	}
 

@@ -18,7 +18,6 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 public class HeartbeatHandler extends ChannelInboundHandlerAdapter {
 
 	private final NettyClient client;
-	private long lastDelay = 2;
 
 	public HeartbeatHandler(NettyClient client) {
 		this.client = client;
@@ -27,7 +26,7 @@ public class HeartbeatHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
 		// Reset delay on successful connection
-		lastDelay = 2;
+		client.resetReconnectDelay();
 		super.channelActive(ctx);
 	}
 
@@ -47,12 +46,8 @@ public class HeartbeatHandler extends ChannelInboundHandlerAdapter {
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 		LOGGER.warn("Connection to server lost. Attempting to reconnect...");
 
-		// Calculate next delay for exponential backoff
-		long currentDelay = lastDelay;
-		lastDelay = Math.min(lastDelay * 2, 256);
-
 		// Pass the reconnect task to the client, which will check the running state
-		client.scheduleReconnect(ctx.channel(), currentDelay);
+		client.scheduleReconnect(ctx.channel());
 		super.channelInactive(ctx);
 	}
 }

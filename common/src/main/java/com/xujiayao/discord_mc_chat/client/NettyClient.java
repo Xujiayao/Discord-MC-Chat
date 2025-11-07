@@ -12,6 +12,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
@@ -28,6 +29,7 @@ public class NettyClient {
 
 	private final EventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
 	private final AtomicBoolean running = new AtomicBoolean(false);
+	private final AtomicLong reconnectDelay = new AtomicLong(2);
 
 	public NettyClient(String host, int port) {
 		this.host = host;
@@ -59,7 +61,7 @@ public class NettyClient {
 					LOGGER.info("Successfully connected to server.");
 				} else {
 					LOGGER.warn("Failed to connect to server. Retrying...");
-					scheduleReconnect(f.channel(), 2); // Start with a 2-second delay
+					scheduleReconnect(f.channel());
 				}
 			});
 		} catch (Exception e) {
@@ -67,17 +69,22 @@ public class NettyClient {
 		}
 	}
 
-	public void scheduleReconnect(Channel ch, long delay) {
+	public void scheduleReconnect(Channel ch) {
 		if (!running.get()) {
 			return; // Do not schedule reconnect if the client is stopping
 		}
 
-		final long nextDelay = Math.min(delay * 2, 256); // Exponential backoff, capped at 256 seconds
+		long currentDelay = reconnectDelay.get();
+		reconnectDelay.set(Math.min(currentDelay * 2, 256)); // Exponential backoff for next attempt
 
 		ch.eventLoop().schedule(() -> {
-			LOGGER.info("Reconnecting... (next attempt in " + nextDelay + "s)");
+			LOGGER.info("Reconnecting... (next attempt in " + currentDelay + "s)");
 			connect();
-		}, nextDelay, TimeUnit.SECONDS);
+		}, currentDelay, TimeUnit.SECONDS);
+	}
+
+	public void resetReconnectDelay() {
+		reconnectDelay.set(2);
 	}
 
 	public void stop() {

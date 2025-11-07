@@ -8,6 +8,8 @@ import io.netty.channel.MultiThreadIoEventLoopGroup;
 import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
+import java.net.InetSocketAddress;
+
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
 /**
@@ -21,7 +23,7 @@ public class NettyServer {
 	private final EventLoopGroup workerGroup = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
 	private Channel channel;
 
-	public void start(int port) {
+	public int start(int port) {
 		try {
 			ServerBootstrap b = new ServerBootstrap();
 			b.group(bossGroup, workerGroup)
@@ -29,12 +31,15 @@ public class NettyServer {
 					.childHandler(new ServerChannelInitializer());
 
 			channel = b.bind(port).sync().channel();
-			LOGGER.info("Netty server started and listening on port " + port);
+			int boundPort = ((InetSocketAddress) channel.localAddress()).getPort();
+			LOGGER.info("Netty server started and listening on port " + boundPort);
+			return boundPort;
 
 		} catch (InterruptedException e) {
 			LOGGER.error("Netty server startup was interrupted.", e);
 			Thread.currentThread().interrupt();
 		}
+		return -1;
 	}
 
 	public void stop() {
