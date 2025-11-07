@@ -32,7 +32,7 @@ public class NettyServer {
 
 			channel = b.bind(port).sync().channel();
 			int boundPort = ((InetSocketAddress) channel.localAddress()).getPort();
-			LOGGER.info("Netty server started and listening on port " + boundPort);
+			LOGGER.info("Netty server started and listening on port {}", boundPort);
 			return boundPort;
 
 		} catch (InterruptedException e) {

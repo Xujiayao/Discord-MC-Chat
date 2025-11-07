@@ -17,7 +17,7 @@ public class ClientBusinessHandler extends SimpleChannelInboundHandler<Packet> {
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, Packet packet) {
 		if (packet instanceof DisplayMessagePacket(String jsonMessage)) {
-			LOGGER.info("Received message from server: " + jsonMessage);
+			LOGGER.info("Received message from server: {}", jsonMessage);
 			// TODO: Use Minecraft API to display the message in-game
 		}
 		// TODO: Handle other packet types
