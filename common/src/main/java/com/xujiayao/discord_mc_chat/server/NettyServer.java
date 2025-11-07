@@ -4,7 +4,8 @@ import com.xujiayao.discord_mc_chat.server.handlers.ServerChannelInitializer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.MultiThreadIoEventLoopGroup;
+import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
@@ -16,8 +17,8 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  */
 public class NettyServer {
 
-	private final EventLoopGroup bossGroup = new NioEventLoopGroup();
-	private final EventLoopGroup workerGroup = new NioEventLoopGroup();
+	private final EventLoopGroup bossGroup = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
+	private final EventLoopGroup workerGroup = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
 	private Channel channel;
 
 	public void start(int port) {

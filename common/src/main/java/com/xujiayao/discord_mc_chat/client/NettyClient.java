@@ -6,7 +6,8 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.MultiThreadIoEventLoopGroup;
+import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
 import java.util.concurrent.TimeUnit;
@@ -25,7 +26,7 @@ public class NettyClient {
 	private final int port;
 	private Channel channel;
 
-	private final EventLoopGroup group = new NioEventLoopGroup();
+	private final EventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
 	private final AtomicBoolean running = new AtomicBoolean(false);
 
 	public NettyClient(String host, int port) {
