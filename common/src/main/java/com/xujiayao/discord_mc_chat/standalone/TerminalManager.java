@@ -25,10 +25,9 @@ public class TerminalManager {
 
 		consoleThread = new Thread(() -> {
 			LOGGER.info("Interactive terminal started. Type \"help\" for a list of available commands.");
-			Scanner scanner = new Scanner(System.in);
 
-			while (running && !Thread.currentThread().isInterrupted()) {
-				try {
+			try (Scanner scanner = new Scanner(System.in)) {
+				while (running && !Thread.currentThread().isInterrupted()) {
 					if (scanner.hasNextLine()) {
 						String line = scanner.nextLine();
 						List<String> response = CommandManager.handleCommand(line);
@@ -36,10 +35,11 @@ public class TerminalManager {
 							LOGGER.info(message);
 						}
 					}
-				} catch (IllegalStateException e) {
-					// This can happen if the scanner is closed concurrently.
-					// We can break the loop if this happens.
-					break;
+				}
+			} catch (IllegalStateException e) {
+				// This can happen if System.in is closed, which is expected during shutdown.
+				if (running) {
+					LOGGER.warn("Scanner closed unexpectedly.", e);
 				}
 			}
 		}, "DMCC-Terminal");

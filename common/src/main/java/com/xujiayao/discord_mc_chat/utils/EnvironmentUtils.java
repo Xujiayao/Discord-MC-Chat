@@ -75,7 +75,7 @@ public class EnvironmentUtils {
 			}
 		}
 
-		// Standalone or error
-		return ConfigManager.getString("multi_server.minecraft_version", "error");
+		// Standalone
+		return ConfigManager.getString("multi_server.minecraft_version");
 	}
 }

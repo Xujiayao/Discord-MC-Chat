@@ -39,6 +39,7 @@ public class CommandEventHandler {
 					LOGGER.info("Run \"/dmcc start\" to start DMCC again");
 					DMCC.shutdown();
 				} else {
+					// This will trigger the shutdown hook in StandaloneDMCC
 					System.exit(0);
 				}
 			}, "DMCC-Shutdown").start();

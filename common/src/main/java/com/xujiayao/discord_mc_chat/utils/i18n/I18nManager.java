@@ -46,7 +46,7 @@ public class I18nManager {
 	 * @return true if all files were loaded successfully, false otherwise.
 	 */
 	public static boolean load() {
-		language = ConfigManager.getString("language", "en_us");
+		language = ConfigManager.getString("language");
 
 		// Check if required resource files exist for the selected language
 		if (!checkLanguageResources()) {

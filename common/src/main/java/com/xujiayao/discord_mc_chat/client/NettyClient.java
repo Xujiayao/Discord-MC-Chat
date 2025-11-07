@@ -77,7 +77,7 @@ public class NettyClient {
 		ch.eventLoop().schedule(() -> {
 			LOGGER.info("Reconnecting... (next attempt in " + nextDelay + "s)");
 			connect();
-		}, delay, TimeUnit.SECONDS);
+		}, nextDelay, TimeUnit.SECONDS);
 	}
 
 	public void stop() {

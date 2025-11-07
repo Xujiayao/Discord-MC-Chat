@@ -135,47 +135,43 @@ public class ConfigManager {
 	/**
 	 * Generic method to get a configuration value with specified conversion function.
 	 *
-	 * @param <T>          The type to convert the configuration value to
-	 * @param path         The path to the configuration value
-	 * @param defaultValue The default value to return if the path does not exist
-	 * @param converter    Function to convert JsonNode to the desired type
-	 * @return The value at the specified path converted to type T, or defaultValue if not found
+	 * @param <T>       The type to convert the configuration value to
+	 * @param path      The path to the configuration value
+	 * @param converter Function to convert JsonNode to the desired type
+	 * @return The value at the specified path converted to type T, or null if not found
 	 */
-	public static <T> T getValue(String path, T defaultValue, Function<JsonNode, T> converter) {
+	public static <T> T getValue(String path, Function<JsonNode, T> converter) {
 		JsonNode node = getConfigNode(path);
-		return (node == null || node.isMissingNode()) ? defaultValue : converter.apply(node);
+		return (node == null || node.isMissingNode()) ? null : converter.apply(node);
 	}
 
 	/**
 	 * Gets a configuration value as a string.
 	 *
-	 * @param path         The path to the configuration value
-	 * @param defaultValue The default value to return if the path does not exist
-	 * @return The string value at the specified path, or defaultValue if not found
+	 * @param path The path to the configuration value
+	 * @return The string value at the specified path, or null if not found
 	 */
-	public static String getString(String path, String defaultValue) {
-		return getValue(path, defaultValue, JsonNode::asText);
+	public static String getString(String path) {
+		return getValue(path, JsonNode::asText);
 	}
 
 	/**
 	 * Gets a configuration value as an integer.
 	 *
-	 * @param path         The path to the configuration value
-	 * @param defaultValue The default value to return if the path does not exist
-	 * @return The integer value at the specified path, or defaultValue if not found
+	 * @param path The path to the configuration value
+	 * @return The integer value at the specified path, or null if not found
 	 */
-	public static int getInt(String path, int defaultValue) {
-		return getValue(path, defaultValue, JsonNode::asInt);
+	public static Integer getInt(String path) {
+		return getValue(path, JsonNode::asInt);
 	}
 
 	/**
 	 * Gets a configuration value as a boolean.
 	 *
-	 * @param path         The path to the configuration value
-	 * @param defaultValue The default value to return if the path does not exist
-	 * @return The boolean value at the specified path, or defaultValue if not found
+	 * @param path The path to the configuration value
+	 * @return The boolean value at the specified path, or null if not found
 	 */
-	public static boolean getBoolean(String path, boolean defaultValue) {
-		return getValue(path, defaultValue, JsonNode::asBoolean);
+	public static Boolean getBoolean(String path) {
+		return getValue(path, JsonNode::asBoolean);
 	}
 }

@@ -22,7 +22,7 @@ public class JsonPacketDecoder extends MessageToMessageDecoder<String> {
 			Packet packet = JSON_MAPPER.readValue(msg, Packet.class);
 			out.add(packet);
 		} catch (Exception e) {
-			LOGGER.error("Failed to decode JSON packet: " + msg, e);
+			LOGGER.error("Failed to decode JSON to packet: " + msg, e);
 		}
 	}
 }

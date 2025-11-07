@@ -25,8 +25,8 @@ public class DiscordManager {
 	 * @return true if initialization is successful, false otherwise.
 	 */
 	public static boolean init() {
-		String token = ConfigManager.getString("bot.token", "");
-		if (token.isBlank() || "your_token_here".equals(token)) {
+		String token = ConfigManager.getString("bot.token");
+		if (token.isBlank()) {
 			LOGGER.error("Discord bot token is not set in the config file!");
 			return false;
 		}
@@ -60,7 +60,7 @@ public class DiscordManager {
 			jda.shutdown();
 
 			if (!jda.awaitShutdown(Duration.ofSeconds(5))) {
-				if (!ConfigManager.getBoolean("shutdown.graceful_shutdown", true)) {
+				if (!ConfigManager.getBoolean("shutdown.graceful_shutdown")) {
 					jda.shutdownNow();
 				}
 			}

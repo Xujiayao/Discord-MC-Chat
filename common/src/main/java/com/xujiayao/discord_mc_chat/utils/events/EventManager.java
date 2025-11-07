@@ -1,8 +1,8 @@
 package com.xujiayao.discord_mc_chat.utils.events;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 /**
@@ -22,7 +22,7 @@ public class EventManager {
 	 * @param <T>        The type of the event
 	 */
 	public static <T> void register(Class<T> eventClass, Consumer<T> handler) {
-		handlers.computeIfAbsent(eventClass, k -> new ArrayList<>()).add(handler);
+		handlers.computeIfAbsent(eventClass, k -> new CopyOnWriteArrayList<>()).add(handler);
 	}
 
 	/**
