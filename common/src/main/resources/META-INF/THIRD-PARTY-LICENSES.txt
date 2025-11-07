@@ -34,6 +34,13 @@ This project includes the following third-party libraries. Each is distributed u
    - Homepage:
      - https://square.github.io/okhttp/
 
+5. Netty
+   - Maven coordinates:
+     - io.netty:netty-handler:${netty_version}
+   - License: Apache License 2.0
+   - Homepage:
+     - https://netty.io/
+
 ---
 
 All third-party dependencies have been relocated to the "dmcc_dep" package and may themselves contain additional transitive dependencies, which are distributed under their own respective licenses. For details, please refer to the relevant library's homepage or distribution package.
