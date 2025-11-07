@@ -21,7 +21,7 @@ public class ServerDMCC {
 	private final ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Server"));
 	private NettyServer nettyServer;
 
-	public void start() {
+	public void start(int port) {
 		executor.submit(() -> {
 			LOGGER.info("Starting DMCC Server component...");
 
@@ -35,7 +35,6 @@ public class ServerDMCC {
 			}
 
 			nettyServer = new NettyServer();
-			int port = ConfigManager.getInt("multi_server.port", 5000);
 			nettyServer.start(port);
 
 			LOGGER.info("DMCC Server component started successfully.");
