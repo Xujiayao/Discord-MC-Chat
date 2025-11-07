@@ -52,7 +52,7 @@ public class NettyClient {
 					.channel(NioSocketChannel.class)
 					.handler(new ClientChannelInitializer(this));
 
-			LOGGER.info("Attempting to connect to server at " + host + ":" + port);
+			LOGGER.info("Attempting to connect to server at {}:{}", host, port);
 			ChannelFuture future = b.connect(host, port);
 
 			future.addListener((ChannelFutureListener) f -> {

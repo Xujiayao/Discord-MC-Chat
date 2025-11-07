@@ -44,7 +44,7 @@ public class ServerBusinessHandler extends SimpleChannelInboundHandler<Packet> {
 	public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
 		if (evt instanceof IdleStateEvent e) {
 			if (e.state() == IdleState.READER_IDLE) {
-				LOGGER.warn("Did not receive heartbeat from client " + ctx.channel().remoteAddress() + ". Closing connection.");
+				LOGGER.warn("Did not receive heartbeat from client {}. Closing connection.", ctx.channel().remoteAddress());
 				ctx.close();
 			}
 		}
