@@ -44,10 +44,11 @@ public class HeartbeatHandler extends ChannelInboundHandlerAdapter {
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-		LOGGER.warn("Connection to server lost. Attempting to reconnect...");
+		if (client.isRunning()) {
+			LOGGER.warn("Connection to server lost. Reconnecting...");
+			client.connect(true); // Attempt to reconnect immediately
+		}
 
-		// Pass the reconnect task to the client, which will check the running state
-		client.scheduleReconnect(ctx.channel());
 		super.channelInactive(ctx);
 	}
 }

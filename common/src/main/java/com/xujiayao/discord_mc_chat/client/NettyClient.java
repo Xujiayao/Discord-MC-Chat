@@ -38,10 +38,10 @@ public class NettyClient {
 
 	public void start() {
 		running.set(true);
-		connect();
+		connect(false);
 	}
 
-	public void connect() {
+	public void connect(boolean isReconnect) {
 		if (!running.get()) {
 			return; // Do not attempt to connect if the client is stopped
 		}
@@ -59,28 +59,22 @@ public class NettyClient {
 				if (f.isSuccess()) {
 					channel = f.channel();
 					LOGGER.info("Successfully connected to server.");
-				} else {
-					LOGGER.warn("Failed to connect to server. Retrying...");
-					scheduleReconnect(f.channel());
+				} else if (running.get()) {
+					long currentDelay = reconnectDelay.get();
+					reconnectDelay.set(Math.min(currentDelay * 2, 256)); // Exponential backoff for next attempt
+
+					if (isReconnect) {
+						LOGGER.warn("Reconnect failed! Next attempt in {}s", currentDelay);
+					} else {
+						LOGGER.warn("Connection failed! First reconnect attempt in {}s", currentDelay);
+					}
+
+					f.channel().eventLoop().schedule(() -> this.connect(true), currentDelay, TimeUnit.SECONDS);
 				}
 			});
 		} catch (Exception e) {
 			LOGGER.error("Netty client failed to start connection attempt.", e);
 		}
-	}
-
-	public void scheduleReconnect(Channel ch) {
-		if (!running.get()) {
-			return; // Do not schedule reconnect if the client is stopping
-		}
-
-		long currentDelay = reconnectDelay.get();
-		reconnectDelay.set(Math.min(currentDelay * 2, 256)); // Exponential backoff for next attempt
-
-		ch.eventLoop().schedule(() -> {
-			LOGGER.info("Reconnecting... (next attempt in " + currentDelay + "s)");
-			connect();
-		}, currentDelay, TimeUnit.SECONDS);
 	}
 
 	public void resetReconnectDelay() {
@@ -102,5 +96,9 @@ public class NettyClient {
 		} finally {
 			LOGGER.info("Netty client stopped.");
 		}
+	}
+
+	public boolean isRunning() {
+		return running.get();
 	}
 }
