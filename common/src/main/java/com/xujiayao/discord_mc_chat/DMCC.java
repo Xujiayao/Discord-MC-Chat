@@ -84,7 +84,9 @@ public class DMCC {
 			}
 
 			// Load language files
-			if (!I18nManager.load()) {
+			if ("multi_server_client".equals(mode)) {
+				LOGGER.info("I18n is disabled in multi_server_client mode");
+			} else if (!I18nManager.load()) {
 				LOGGER.warn("DMCC will not continue initialization due to language file issues");
 				return;
 			}
@@ -98,10 +100,10 @@ public class DMCC {
 					LOGGER.info("Running in single_server mode. Starting internal server and client...");
 
 					serverInstance = new ServerDMCC();
-					serverInstance.start(0);
+					serverInstance.start(5000);
 
 					clientInstance = new ClientDMCC();
-					clientInstance.start("localhost", 0);
+					clientInstance.start("localhost", 5000);
 				}
 				case "multi_server_client" -> {
 					LOGGER.info("Running in multi_server_client mode. Starting client only.");
