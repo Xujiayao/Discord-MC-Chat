@@ -71,7 +71,8 @@ public class EnvironmentUtils {
 				Class<?> sharedConstantsClass = Class.forName("net.minecraft.SharedConstants");
 				Object worldVersionObject = sharedConstantsClass.getMethod("getCurrentVersion").invoke(null);
 				return (String) worldVersionObject.getClass().getMethod("name").invoke(worldVersionObject);
-			} catch (Exception ignored) {
+			} catch (Exception e) {
+				throw new RuntimeException("Failed to get Minecraft version in Minecraft environment", e);
 			}
 		}
 
