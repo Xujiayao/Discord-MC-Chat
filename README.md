@@ -44,14 +44,14 @@ DMCC 所有运行模式都基于一个统一的通信模型，该模型包含两
 1.  **服务端 (Server)**: 整个系统的“大脑”。它作为后台服务运行，是**唯一**负责与 Discord API (通过 JDA) 直接通信的组件。它处理所有核心逻辑，如消息格式化、命令解析和权限验证。**此组件在任何情况下都不得包含任何 `net.minecraft` 的导入（反射除外）**，以确保其可以在没有 Minecraft 环境的情况下独立运行。
 2.  **客户端 (Client)**: 部署在每个 Minecraft 服务器上的“触手”。它作为 Minecraft 模组运行，负责捕获游戏内的所有事件，并将其发送给 **服务端 (Server)**。同时，它也接收并执行来自 **服务端 (Server)** 的指令。
 
-两者之间通过一个定义好的、基于 TCP Sockets 的网络协议进行通信。
+两者之间通过基于 **Netty** 的 TCP 协议进行通信，使用 **JSON** 对数据包进行序列化和反序列化。
 
 ### 3.2 运行模式与部署
 
-DMCC 支持三种运行模式，这三种模式只是上述统一架构的不同部署方式：
+DMCC 支持三种运行模式，它们是统一架构的不同部署方式：
 
 1.  **单体服务器模式 (`single_server`)**:
-    -   在此模式下，DMCC 在后台**同时启动一个内部服务端和一个内部客户端**。内部客户端会自动通过本地回环地址 (localhost) 连接到内部服务端。
+    -   在此模式下，DMCC 在后台**同时启动一个内部服务端和一个内部客户端**。内部客户端自动通过本地回环地址 (localhost) 连接到内部服务端。
     -   这是为单个 Minecraft 服务器提供的开箱即用的解决方案。
     -   支持停止 DMCC 自身的命令，但不支持管理子服务器。
 
@@ -70,62 +70,47 @@ DMCC 支持三种运行模式，这三种模式只是上述统一架构的不同
 
 为了降低用户心智负担并保证配置的准确性，采用两步配置流程：
 
-1.  **`mode.yml`**: 用户首先在此文件中选择一种运行模式。这是唯一需要手动选择的文件。（仅作为 Minecraft 模组运行时需要，若不是 Minecraft 环境，则自动选择 standalone 模式）
-2.  **`config.yml`**: DMCC 会根据 `mode.yml` 中选择的模式，从内部模板生成一份对应的、最小化的 `config.yml`。此配置文件将被严格验证，其注释会清晰地解释所有配置项，特别是双轨权限模型。
+1.  **`mode.yml`**: 在 Minecraft 环境中，用户首先在此文件选择一种运行模式。DMCC 会在启动时检查此文件。若在非 Minecraft 环境下直接运行 JAR，则自动认定为 `standalone` 模式。
+2.  **`config.yml`**: DMCC 会根据 `mode.yml` 中选择的模式，从内部模板生成一份对应的 `config.yml`。此配置文件将被严格验证（版本、结构、数据类型），其注释会清晰地解释所有配置项。
 
 ## 4. 模块化设计
 
-为了保持结构清晰，项目将主要划分为三个逻辑模块。
+项目在物理上划分为两个 Gradle 子项目，最终合并为一个 JAR 文件进行分发。
 
-### 4.1 通用模块 (Common)
+### 4.1 通用模块 (`:common`)
 
-此模块没有 Minecraft 依赖，
+此模块是项目的核心，**完全不依赖 Minecraft**。它包含了服务端、网络客户端框架、以及所有共享代码。
 
-此模块包含被服务端和客户端共享的代码，是整个项目的基础。
+-   **网络框架 (Netty)**:
+    -   **服务端**: `ServerDMCC`, `NettyServer`, `ServerChannelInitializer` 负责监听连接和处理入站数据。
+    -   **客户端**: `ClientDMCC`, `NettyClient`, `ClientChannelInitializer` 负责建立和维持与服务端的连接。
+    -   **协议**: 定义了 `Packet` 接口和具体的数据包（如 `PlayerChatPacket`），并使用 `JsonPacketEncoder`/`Decoder` 进行 JSON 序列化。
+-   **Discord 集成 (`DiscordManager`)**:
+    -   初始化并管理 JDA 实例，监听 Discord 事件（消息、命令）。
+    -   处理所有与 Discord API 的底层交互。
+-   **命令系统 (`CommandManager`, `CommandEventHandler`)**:
+    -   提供一个统一的命令处理入口，支持来自 Discord、游戏内和独立终端的命令。
+    -   通过 `CommandEvents` 进行解耦。
+-   **配置与国际化**:
+    -   `ConfigManager`, `ModeManager`: 提供健壮的配置加载和验证机制。
+    -   `I18nManager`: 支持从本地和网络加载语言文件，并提供统一的翻译接口。
+-   **日志系统 (`LoggerImpl`, `ServiceProvider`)**:
+    -   实现了 SLF4J `ServiceProvider`，可在独立运行时输出到文件和控制台，在 Minecraft 环境中则桥接到游戏日志系统。
+-   **事件总线 (`EventManager`)**:
+    -   提供一个轻量级的发布-订阅事件总线，用于项目内部各组件的解耦。
 
--   **主要职责**:
-    -   定义服务端和客户端之间通信的网络协议和数据结构。
-    -   提供统一的日志系统 (`Logger`)，能同时兼容 Minecraft 和独立环境。
-    -   提供强大的国际化（i18n）管理器，支持从本地和网络加载语言文件。
-    -   提供健壮的配置管理器 (`ConfigManager`, `ModeManager`)。
-    -   提供事件总线 (`EventManager`) 用于内部解耦。
-    -   提供其他通用工具类（字符串处理、时间工具等）。
+### 4.2 Minecraft 适配器模块 (`:minecraft-adapter`)
 
-此模块同时实现了“大脑”的所有功能，完全独立于 Minecraft。
+此模块是连接 `:common` 模块与 Minecraft 的桥梁，包含了所有与 Minecraft 相关的代码。
 
--   **主要职责**:
-    -   **Discord 连接**: 初始化并管理 JDA 实例，处理所有与 Discord API 的底层交互。
-    -   **事件处理**: 监听 Discord 事件（如消息接收、斜杠命令）。
-    -   **命令系统**:
-        -   注册所有 Discord 斜杠命令。
-        -   解析并分派命令到对应的处理器。
-        -   根据模式（`standalone` vs `single_server`）动态启用/禁用命令（如 `start`/`stop <server>`, `execute`）。
-    -   **权限管理**:
-        -   实现完整的双轨权限模型（见 5.1 节）。
-    -   **消息处理与转发**:
-        -   接收来自所有客户端的数据，进行格式化、聚合后，通过普通消息或 Webhook 发送到 Discord。
-        -   接收来自 Discord 的消息，解析后向指定的客户端派发“显示消息”指令。
-    -   **账户链接**: 管理账户链接数据（建议使用 JSON 文件存储），并处理链接请求的验证逻辑。
-    -   **定时任务与监控**:
-        -   管理所有定时任务（如检查更新、更新频道主题）。
-        -   接收客户端上报的性能数据（MSPT），并在超过阈值时触发警告。
-    -   **状态管理**: 管理 Discord Rich Presence，显示服务器状态、在线人数等信息。
-
-### 4.2 客户端模块 (Client)
-
-此模块有 Minecraft 依赖，是连接 Minecraft 的桥梁。
-
--   **主要职责**:
-    -   **模组初始化**: 作为 NeoForge（未来为 Fabric）的入口点，初始化客户端组件。
-    -   **事件捕获**:
-        -   通过 Mixin 注入 Minecraft，捕获所有相关事件：
-            -   **玩家事件**: `PlayerJoin`, `PlayerQuit`, `PlayerChat`, `PlayerCommand`, `PlayerDie`, `PlayerAdvancement`。
-            -   **服务器事件**: `ServerStarted`, `ServerStopping`, `ServerStopped`。
-            -   **命令输出**: 拦截 `/say`, `/tellraw` 等命令的输出。
-    -   **数据上报**: 将捕获到的事件和性能数据（MSPT）打包，通过网络协议发送给服务端。
-    -   **指令执行**:
-        -   接收并执行来自服务端的指令，如在游戏聊天框显示格式化后的消息、执行控制台命令。
-    -   **游戏内命令**: 注册并处理 `/dmcc` 相关子命令（如 `/dmcc link` 用于生成链接码）。
+-   **模组入口 (`NeoForgeDMCC`)**: 作为 NeoForge 模组的入口点，调用 `DMCC.init()` 启动程序。
+-   **事件捕获 (Mixins)**:
+    -   通过一系列 Mixin (`MixinPlayerList`, `MixinServerGamePacketListenerImpl`, `MixinMinecraftServer` 等) 注入 Minecraft，以非侵入式的方式捕获游戏事件。
+-   **事件发布与处理**:
+    -   Mixin 捕获到事件后，通过 `EventManager.post()` 发布一个 `MinecraftEvents` 中的具体事件。
+    -   `MinecraftEventHandler` 订阅这些事件，并将事件数据打包通过网络客户端发送给服务端。
+-   **服务提供者 (`MinecraftServiceImpl`)**:
+    -   实现了 `MinecraftService` 接口，通过 Java `ServiceLoader` 机制被 `ClientDMCC` 在运行时发现和调用，实现了与 Minecraft 的完全解耦。
 
 ## 5. 关键设计详解
 
@@ -152,10 +137,12 @@ DMCC 采用一个灵活的双轨权限模型来确定谁是“DMCC 管理员”�
 
 ### 5.3 数据流示例 (Minecraft -> Discord)
 
-1.  **[客户端]** 玩家在 Minecraft 中发送消息 "Hello World"。
-2.  **[客户端]** `MixinServerGamePacketListenerImpl` 捕获聊天事件。
-3.  **[客户端]** 将事件数据（玩家UUID, 玩家名, 消息内容）打包，通过网络发送给 **服务端**。
-4.  **[服务端]** 接收到数据包，解析出内容。
-5.  **[服务端]** 检查该玩家是否已链接账户，获取其 Discord 角色颜色（如果启用了该功能）。
-6.  **[服务端]** 根据 `config.yml` 中的消息格式模板，生成最终的字符串，例如 `[SMP-1] <Xujiayao> Hello World`。
-7.  **[服务端]** 通过 JDA 将格式化后的消息发送到指定的 Discord 频道。
+1.  **[minecraft-adapter]** `MixinServerGamePacketListenerImpl` 捕获玩家 "Xujiayao" 的聊天事件，消息为 "Hello World"。
+2.  **[minecraft-adapter]** `EventManager` 发布一个 `MinecraftEvents.PlayerChat` 事件。
+3.  **[minecraft-adapter]** `MinecraftEventHandler` 订阅此事件，并从事件中提取数据。
+4.  **[common: Client]** `NettyClient` 将数据（玩家名、消息内容等）封装成一个 `PlayerChatPacket`。
+5.  **[common: Client]** `JsonPacketEncoder` 将 `PlayerChatPacket` 序列化为 JSON 字符串，通过 Netty 发送给 **服务端**。
+6.  **[common: Server]** `NettyServer` 接收到数据，`JsonPacketDecoder` 将其反序列化为 `PlayerChatPacket` 对象。
+7.  **[common: Server]** `ServerBusinessHandler` 处理此数据包，检查该玩家是否已链接账户，获取其 Discord 角色颜色等信息。
+8.  **[common: Server]** 根据 `config.yml` 和 `custom_messages` 中的模板，生成最终要发送到 Discord 的字符串。
+9.  **[common: Server]** `DiscordManager` 通过 JDA 将格式化后的消息发送到指定的 Discord 频道。
