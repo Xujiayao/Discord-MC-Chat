@@ -11,6 +11,9 @@ mode: multi_server_client
 # https://dmcc.xujiayao.com/
 # ==================================================
 
+# 语言设置
+language: en_us
+
 # 多服务器功能
 multi_server:
   connection:

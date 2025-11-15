@@ -47,13 +47,7 @@ public class I18nManager {
 	 * @return true if all files were loaded successfully, false otherwise.
 	 */
 	public static boolean load() {
-		// For client-only mode, we don't need the full suite of message formatting files.
-		if ("multi_server_client".equals(ModeManager.getMode())) {
-			// For modes without a language config, default to "en_us" for internal messages.
-			language = "en_us";
-		} else {
-			language = ConfigManager.getString("language");
-		}
+		language = ConfigManager.getString("language");
 
 		// Check if required resource files exist for the selected language
 		if (!checkLanguageResources()) {
