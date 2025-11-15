@@ -25,11 +25,11 @@ public class NettyClient {
 
 	private final String host;
 	private final int port;
-	private Channel channel;
-
 	private final EventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
 	private final AtomicBoolean running = new AtomicBoolean(false);
 	private final AtomicLong reconnectDelay = new AtomicLong(2);
+
+	private Channel channel;
 
 	public NettyClient(String host, int port) {
 		this.host = host;

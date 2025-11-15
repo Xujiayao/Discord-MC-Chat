@@ -24,15 +24,15 @@ import java.util.Map;
  */
 public class LoggerImpl implements Logger {
 
+	private static volatile PrintWriter fileWriter;
+	private static boolean fileWriterInitialized = false;
+
 	private final String name;
 
 	private final Object minecraftLogger;
 
 	private final Map<String, Method> logMethods = new HashMap<>();
 	private final Map<String, Method> logThrowMethods = new HashMap<>();
-
-	private static volatile PrintWriter fileWriter;
-	private static boolean fileWriterInitialized = false;
 
 	/**
 	 * Create a new Logger instance.

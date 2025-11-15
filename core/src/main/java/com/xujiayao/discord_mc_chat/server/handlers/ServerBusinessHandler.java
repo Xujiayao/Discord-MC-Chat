@@ -3,7 +3,6 @@ package com.xujiayao.discord_mc_chat.server.handlers;
 import com.xujiayao.discord_mc_chat.network.Packet;
 import com.xujiayao.discord_mc_chat.network.Packets;
 import com.xujiayao.discord_mc_chat.server.ChannelManager;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;

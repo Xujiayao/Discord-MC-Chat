@@ -1,5 +1,5 @@
 license = "MIT"
-issueTrackerURL="https://github.com/Xujiayao/Discord-MC-Chat/issues"
+issueTrackerURL = "https://github.com/Xujiayao/Discord-MC-Chat/issues"
 
 [[mods]]
 
@@ -10,8 +10,8 @@ displayName = "Discord-MC-Chat"
 # A URL to query for updates for this mod. See the JSON update specification https://docs.neoforged.net/docs/misc/updatechecker/
 #updateJSONURL="https://change.me.example.invalid/updates.json" #optional
 
-displayURL="https://dmcc.xujiayao.com/"
-logoFile="icon/icon.png"
+displayURL = "https://dmcc.xujiayao.com/"
+logoFile = "icon/icon.png"
 authors = "Xujiayao"
 description = '''Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCDC), is a practical and powerful Fabric and NeoForge Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric'''
 
