@@ -67,25 +67,19 @@ public class DMCC {
 			// In standalone mode, the process would terminate after returning
 
 			// Determine operating mode
-			String mode;
-			if (IS_MINECRAFT_ENV) {
-				mode = ModeManager.load();
-				if (mode == null) {
-					LOGGER.warn("DMCC initialization halted because an operating mode needs to be selected");
-					return;
-				}
-			} else {
-				mode = "standalone";
+			if (!ModeManager.load()) {
+				LOGGER.warn("DMCC initialization halted because an operating mode needs to be selected");
+				return;
 			}
 
 			// Load configuration
-			if (!ConfigManager.load(mode)) {
+			if (!ConfigManager.load(ModeManager.getMode())) {
 				LOGGER.warn("DMCC will not continue initialization due to configuration issues");
 				return;
 			}
 
 			// Load language files
-			if ("multi_server_client".equals(mode)) {
+			if ("multi_server_client".equals(ModeManager.getMode())) {
 				LOGGER.info("I18n is disabled in multi_server_client mode");
 			} else if (!I18nManager.load()) {
 				LOGGER.warn("DMCC will not continue initialization due to language file issues");
@@ -96,7 +90,7 @@ public class DMCC {
 			CommandEventHandler.init();
 
 			// From now on should separate ServerDMCC and ClientDMCC initialization based on mode
-			switch (mode) {
+			switch (ModeManager.getMode()) {
 				case "single_server" -> {
 					try {
 						LOGGER.info("Running in single_server mode. Starting internal server and client...");

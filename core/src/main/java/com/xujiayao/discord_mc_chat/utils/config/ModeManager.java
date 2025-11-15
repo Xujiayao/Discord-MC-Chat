@@ -10,11 +10,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
+import static com.xujiayao.discord_mc_chat.Constants.IS_MINECRAFT_ENV;
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
 
 /**
- * Manages the mode.yml file to determine the operating mode of DMCC.
+ * Manages the mode.yml file to determine and provide the operating mode of DMCC.
  *
  * @author Xujiayao
  */
@@ -23,14 +24,22 @@ public class ModeManager {
 	private static final Path MODE_FILE_PATH = Paths.get("./config/discord_mc_chat/mode.yml");
 	private static final String MODE_TEMPLATE_PATH = "/config/mode.yml";
 
+	private static String mode = "";
+
 	/**
 	 * Loads and validates the mode from mode.yml. If the file does not exist,
 	 * it creates a default one and returns false to halt initialization.
 	 *
-	 * @return The loaded mode as a string, or null if loading fails or requires user action.
+	 * @return true if the mode was loaded and validated successfully, false otherwise.
 	 */
-	public static String load() {
+	public static boolean load() {
 		try {
+			if (!IS_MINECRAFT_ENV) {
+				mode = "standalone";
+				LOGGER.info("Operating mode set to \"{}\"", mode);
+				return true;
+			}
+
 			// Create directories if they do not exist
 			Files.createDirectories(MODE_FILE_PATH.getParent());
 
@@ -44,7 +53,7 @@ public class ModeManager {
 					}
 					Files.copy(inputStream, MODE_FILE_PATH, StandardCopyOption.REPLACE_EXISTING);
 				}
-				return null; // Halt initialization, requires user action
+				return false; // Halt initialization, requires user action
 			}
 
 			// Load the user's mode.yml
@@ -59,27 +68,38 @@ public class ModeManager {
 			// Validate the mode file
 			if (!YamlUtils.validate(modeConfig, templateConfig, MODE_FILE_PATH, true)) {
 				LOGGER.error("Validation of mode.yml failed. Please correct the errors mentioned above.");
-				return null;
+				return false;
 			}
 
 			String loadedMode = modeConfig.path("mode").asText(null);
 
-			if (loadedMode == null || loadedMode.trim().isEmpty()) {
+			if (loadedMode == null || loadedMode.trim().isEmpty() || "your_option_here".equals(loadedMode)) {
 				LOGGER.error("No mode selected in \"{}\"", MODE_FILE_PATH);
-				return null;
+				LOGGER.error("Please edit the file to select an operating mode, then run \"/dmcc reload\"");
+				return false;
 			}
 
 			if (!"single_server".equals(loadedMode) && !"multi_server_client".equals(loadedMode)) {
 				LOGGER.error("Invalid mode \"{}\" selected in \"{}\".", loadedMode, MODE_FILE_PATH);
 				LOGGER.error("Available modes are: single_server, multi_server_client");
-				return null;
+				return false;
 			}
 
 			LOGGER.info("Operating mode set to \"{}\"", loadedMode);
-			return loadedMode;
+			mode = loadedMode;
+			return true;
 		} catch (IOException e) {
 			LOGGER.error("Failed to load or create mode.yml", e);
-			return null;
+			return false;
 		}
+	}
+
+	/**
+	 * Gets the currently active operating mode.
+	 *
+	 * @return The current mode as a string, or null if not loaded.
+	 */
+	public static String getMode() {
+		return mode;
 	}
 }
