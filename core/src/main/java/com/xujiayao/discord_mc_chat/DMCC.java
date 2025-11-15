@@ -79,9 +79,7 @@ public class DMCC {
 			}
 
 			// Load language files
-			if ("multi_server_client".equals(ModeManager.getMode())) {
-				LOGGER.info("I18n is disabled in multi_server_client mode");
-			} else if (!I18nManager.load()) {
+			if (!I18nManager.load()) {
 				LOGGER.warn("DMCC will not continue initialization due to language file issues");
 				return;
 			}

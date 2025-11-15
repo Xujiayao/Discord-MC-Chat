@@ -6,6 +6,7 @@ import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
 import com.xujiayao.discord_mc_chat.utils.YamlUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
+import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -20,9 +21,9 @@ import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.xujiayao.discord_mc_chat.Constants.OK_HTTP_CLIENT;
 import static com.xujiayao.discord_mc_chat.Constants.JSON_MAPPER;
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
+import static com.xujiayao.discord_mc_chat.Constants.OK_HTTP_CLIENT;
 import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
 
 /**
@@ -46,20 +47,33 @@ public class I18nManager {
 	 * @return true if all files were loaded successfully, false otherwise.
 	 */
 	public static boolean load() {
-		language = ConfigManager.getString("language");
+		// For client-only mode, we don't need the full suite of message formatting files.
+		if ("multi_server_client".equals(ModeManager.getMode())) {
+			// For modes without a language config, default to "en_us" for internal messages.
+			language = "en_us";
+		} else {
+			language = ConfigManager.getString("language");
+		}
 
 		// Check if required resource files exist for the selected language
 		if (!checkLanguageResources()) {
 			return false;
 		}
 
-		// Load custom messages (e.g., zh_cn.yml)
-		if (!loadCustomMessages()) {
+		// Load DMCC internal translations
+		if (!loadDmccTranslations()) {
 			return false;
 		}
 
-		// Load DMCC's internal translations (e.g., lang/zh_cn.yml)
-		if (!loadDmccTranslations()) {
+		// For client-only mode, we don't need the full suite of message formatting files.
+		// For server-enabled modes, load the full I18n suite.
+		if ("multi_server_client".equals(ModeManager.getMode())) {
+			LOGGER.info("DMCC internal translations for \"{}\" loaded successfully!", language);
+			return true;
+		}
+
+		// Load custom messages
+		if (!loadCustomMessages()) {
 			return false;
 		}
 
@@ -151,7 +165,7 @@ public class I18nManager {
 		try (InputStream inputStream = I18nManager.class.getResourceAsStream(resourcePath)) {
 			if (inputStream == null) {
 				// This check is technically redundant due to checkLanguageResources, but good for safety.
-				LOGGER.error("DMCC translation file not found in resources: {}", resourcePath);
+				LOGGER.error("DMCC internal translation file not found in resources: {}", resourcePath);
 				return false;
 			}
 

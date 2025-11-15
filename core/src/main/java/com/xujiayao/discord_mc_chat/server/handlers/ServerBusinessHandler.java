@@ -37,10 +37,9 @@ public class ServerBusinessHandler extends SimpleChannelInboundHandler<Packet> {
 					ctx.channel().attr(IS_LOGGED_IN).set(true);
 					ctx.writeAndFlush(new Packets.HandshakeResponse(true, "Handshake successful."));
 				} else {
-					// Duplicate server name, send rejection and close
+					// Duplicate server name, send rejection but do not close. The client will close itself.
 					String reason = "Duplicate server name: " + serverName;
-					ctx.writeAndFlush(new Packets.HandshakeResponse(false, reason))
-							.addListener(ChannelFutureListener.CLOSE); // Close connection after sending the response
+					ctx.writeAndFlush(new Packets.HandshakeResponse(false, reason));
 				}
 			} else {
 				// First packet must be a Handshake packet

@@ -23,10 +23,9 @@ public class ClientBusinessHandler extends SimpleChannelInboundHandler<Packet> {
 				LOGGER.info("Handshake with server successful with message: \"{}\"", message);
 			} else {
 				LOGGER.error("Handshake with server failed with message: \"{}\"", message);
-				LOGGER.error("This is a fatal error. DMCC client will now shut down.");
+				LOGGER.error("This is a fatal error. DMCC will now shut down.");
 
 				// Post a StopEvent to trigger a graceful, application-wide shutdown.
-				// This reuses the existing shutdown logic in CommandEventHandler.
 				EventManager.post(new CommandEvents.StopEvent());
 			}
 		}
