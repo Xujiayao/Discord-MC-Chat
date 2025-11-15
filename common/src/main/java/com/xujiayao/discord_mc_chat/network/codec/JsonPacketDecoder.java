@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.network.codec;
 
-import com.xujiayao.discord_mc_chat.network.packets.Packet;
+import com.xujiayao.discord_mc_chat.network.Packet;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 

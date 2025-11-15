@@ -1,7 +1,7 @@
 package com.xujiayao.discord_mc_chat.client.handlers;
 
 import com.xujiayao.discord_mc_chat.client.NettyClient;
-import com.xujiayao.discord_mc_chat.network.packets.HeartbeatPacket;
+import com.xujiayao.discord_mc_chat.network.Packets;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
@@ -35,7 +35,7 @@ public class HeartbeatHandler extends ChannelInboundHandlerAdapter {
 		if (evt instanceof IdleStateEvent e) {
 			if (e.state() == IdleState.WRITER_IDLE) {
 				// Connection is idle, send a heartbeat
-				ctx.writeAndFlush(new HeartbeatPacket());
+				ctx.writeAndFlush(new Packets.Heartbeat());
 			}
 		} else {
 			super.userEventTriggered(ctx, evt);

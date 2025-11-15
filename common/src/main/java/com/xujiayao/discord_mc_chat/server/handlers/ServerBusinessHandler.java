@@ -1,8 +1,7 @@
 package com.xujiayao.discord_mc_chat.server.handlers;
 
-import com.xujiayao.discord_mc_chat.network.packets.HeartbeatPacket;
-import com.xujiayao.discord_mc_chat.network.packets.Packet;
-import com.xujiayao.discord_mc_chat.network.packets.PlayerChatPacket;
+import com.xujiayao.discord_mc_chat.network.Packet;
+import com.xujiayao.discord_mc_chat.network.Packets;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
@@ -25,10 +24,10 @@ public class ServerBusinessHandler extends SimpleChannelInboundHandler<Packet> {
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, Packet packet) {
-		if (packet instanceof PlayerChatPacket(String serverName, String playerName, String message)) {
+		if (packet instanceof Packets.PlayerChat(String serverName, String playerName, String message)) {
 			LOGGER.info(String.format("[%s] <%s> %s", serverName, playerName, message));
 			// TODO: Format and send to Discord
-		} else if (packet instanceof HeartbeatPacket) {
+		} else if (packet instanceof Packets.Heartbeat) {
 			// Heartbeat received, connection is alive. No action needed.
 		}
 		// TODO: Handle other packet types
