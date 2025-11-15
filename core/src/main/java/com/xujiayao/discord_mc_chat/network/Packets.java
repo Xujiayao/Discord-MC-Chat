@@ -10,18 +10,24 @@ public class Packets {
 	/**
 	 * Packet sent by the client immediately after connection to identify itself.
 	 */
-	public record Handshake(String serverName) implements Packet {
+	public record Handshake(
+			String serverName
+	) implements Packet {
 	}
 
 	/**
 	 * Packet sent by the server in response to a Handshake packet.
 	 */
-	public record HandshakeResponse(boolean success, String message) implements Packet {
+	public record HandshakeResponse(
+			boolean success,
+			String message
+	) implements Packet {
 	}
 
 	/**
 	 * A packet sent periodically to keep the connection alive.
 	 */
-	public record Heartbeat() implements Packet {
+	public record Heartbeat(
+	) implements Packet {
 	}
 }
