@@ -13,9 +13,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 		use = JsonTypeInfo.Id.NAME,
 		property = "type")
 @JsonSubTypes({
-		@JsonSubTypes.Type(value = Packets.Heartbeat.class, name = "heartbeat"),
-		@JsonSubTypes.Type(value = Packets.PlayerChat.class, name = "playerChat"),
-		@JsonSubTypes.Type(value = Packets.DisplayMessage.class, name = "displayMessage")
+		@JsonSubTypes.Type(value = Packets.Handshake.class, name = "handshake"),
+		@JsonSubTypes.Type(value = Packets.HandshakeResponse.class, name = "handshakeResponse"),
+		@JsonSubTypes.Type(value = Packets.Heartbeat.class, name = "heartbeat")
 })
 public interface Packet {
 }

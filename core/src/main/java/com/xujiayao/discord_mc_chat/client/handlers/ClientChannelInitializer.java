@@ -47,6 +47,6 @@ public class ClientChannelInitializer extends ChannelInitializer<SocketChannel> 
 		pipeline.addLast(new HeartbeatHandler(client));
 
 		// Business Logic
-		pipeline.addLast(new ClientBusinessHandler());
+		pipeline.addLast(new ClientBusinessHandler(client));
 	}
 }

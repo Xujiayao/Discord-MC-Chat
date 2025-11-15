@@ -2,6 +2,8 @@ package com.xujiayao.discord_mc_chat.client.handlers;
 
 import com.xujiayao.discord_mc_chat.client.NettyClient;
 import com.xujiayao.discord_mc_chat.network.Packets;
+import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
+import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
@@ -11,7 +13,7 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
 /**
  * Handles sending heartbeats when the connection is idle and triggers
- * reconnection when the connection is lost.
+ * reconnection when the connection is lost. Also handles the initial handshake.
  *
  * @author Xujiayao
  */
@@ -25,7 +27,15 @@ public class HeartbeatHandler extends ChannelInboundHandlerAdapter {
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
-		// Reset delay on successful connection
+		// Connection is active, send handshake packet
+		String serverName = "single_server".equals(ModeManager.getMode())
+				? "local"
+				: ConfigManager.getString("multi_server.server_name");
+
+		LOGGER.info("Connected to server. Sending handshake with server name: \"{}\"", serverName);
+		ctx.writeAndFlush(new Packets.Handshake(serverName));
+
+		// Reset reconnect delay on successful connection
 		client.resetReconnectDelay();
 		super.channelActive(ctx);
 	}

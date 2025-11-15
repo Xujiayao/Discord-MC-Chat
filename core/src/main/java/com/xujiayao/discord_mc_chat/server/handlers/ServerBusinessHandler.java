@@ -2,10 +2,13 @@ package com.xujiayao.discord_mc_chat.server.handlers;
 
 import com.xujiayao.discord_mc_chat.network.Packet;
 import com.xujiayao.discord_mc_chat.network.Packets;
+import com.xujiayao.discord_mc_chat.server.ChannelManager;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.util.AttributeKey;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
@@ -16,18 +19,39 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  */
 public class ServerBusinessHandler extends SimpleChannelInboundHandler<Packet> {
 
+	private static final AttributeKey<Boolean> IS_LOGGED_IN = AttributeKey.valueOf("isLoggedIn");
+
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) {
-		LOGGER.info("Client connected: " + ctx.channel().remoteAddress());
-		// Here you can add the channel to a managed list
+		ctx.channel().attr(IS_LOGGED_IN).set(false);
+		LOGGER.info("Client connected from {}, waiting for handshake...", ctx.channel().remoteAddress());
 	}
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, Packet packet) {
-		if (packet instanceof Packets.PlayerChat(String serverName, String playerName, String message)) {
-			LOGGER.info(String.format("[%s] <%s> %s", serverName, playerName, message));
-			// TODO: Format and send to Discord
-		} else if (packet instanceof Packets.Heartbeat) {
+		Boolean isLoggedIn = ctx.channel().attr(IS_LOGGED_IN).get();
+
+		if (!isLoggedIn) {
+			if (packet instanceof Packets.Handshake(String serverName)) {
+				if (ChannelManager.registerChannel(serverName, ctx.channel())) {
+					ctx.channel().attr(IS_LOGGED_IN).set(true);
+					ctx.writeAndFlush(new Packets.HandshakeResponse(true, "Handshake successful."));
+				} else {
+					// Duplicate server name, send rejection and close
+					String reason = "Duplicate server name: " + serverName;
+					ctx.writeAndFlush(new Packets.HandshakeResponse(false, reason))
+							.addListener(ChannelFutureListener.CLOSE); // Close connection after sending the response
+				}
+			} else {
+				// First packet must be a Handshake packet
+				LOGGER.warn("First packet from {} was not a Handshake packet. Closing connection.", ctx.channel().remoteAddress());
+				ctx.close();
+			}
+			return;
+		}
+
+		// From here, the client is logged in.
+		if (packet instanceof Packets.Heartbeat) {
 			// Heartbeat received, connection is alive. No action needed.
 		}
 		// TODO: Handle other packet types
@@ -35,8 +59,8 @@ public class ServerBusinessHandler extends SimpleChannelInboundHandler<Packet> {
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) {
-		LOGGER.info("Client disconnected: " + ctx.channel().remoteAddress());
-		// Here you can remove the channel from the managed list
+		ChannelManager.unregisterChannel(ctx.channel());
+		LOGGER.info("Client disconnected: {}", ctx.channel().remoteAddress());
 	}
 
 	@Override
@@ -51,7 +75,7 @@ public class ServerBusinessHandler extends SimpleChannelInboundHandler<Packet> {
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-		LOGGER.error("Exception caught in server handler", cause);
+		LOGGER.error("Exception caught in server handler for {}", ctx.channel().remoteAddress(), cause);
 		ctx.close();
 	}
 }
