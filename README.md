@@ -5,9 +5,9 @@
 Discord-MC-Chat (DMCC) 是一个 Minecraft 模组，旨在为 Discord 和 Minecraft 服务器之间建立一个功能强大、可高度定制的双向通信桥梁。
 
 本次重构的核心目标是实现一个**统一的、基于“服务端-客户端 (Server-Client)”的通信架构**
-。在此架构下，所有模式都将复用同一套核心逻辑，以达到最大程度的代码复用和架构一致性。
+。在此架构下，所有运行模式都将复用同一套核心逻辑，以达到最大程度的代码复用、架构一致性和未来的可扩展性。
 
-项目初期将优先实现对 **NeoForge 1.21.10** 的兼容。但为了未来能够无缝支持 Fabric，整体架构设计依然严格遵循平台无关原则，所有核心代码中
+项目初期将优先实现对 **NeoForge 1.21.10** 的兼容。但为了未来能够无缝支持 Fabric，整体架构设计严格遵循平台无关原则，所有核心代码中
 **不得含有任何启动器专属的调用**，仅通过 Mixin 进行注入。
 
 ## 2. 核心功能需求
@@ -27,12 +27,11 @@ Discord-MC-Chat (DMCC) 是一个 Minecraft 模组，旨在为 Discord 和 Minecr
 
 ### 2.3 管理功能
 
-- 通过 Discord 查询服务器状态（TPS, MSPT, 在线玩家等）。
-- 通过 Discord 执行 Minecraft 控制台命令。
-- 通过 Discord 管理白名单。
-- 通过 Discord 查看和过滤服务器日志。
-- 通过 Discord 重载 DMCC 配置文件。
-- 通过 Discord 远程启动/关闭子服务器（仅限多服务器模式）。
+- 通过 Discord 和游戏内命令查询服务器状态。
+- 通过 Discord 和游戏内命令执行 Minecraft 控制台命令。
+- 查看和过滤服务器日志。
+- 重载 DMCC 配置文件。
+- 远程启动/关闭/重启子服务器（仅限多服务器模式）。
 
 ### 2.4 账户链接功能
 
@@ -50,109 +49,136 @@ DMCC 所有运行模式都基于一个统一的通信模型，该模型包含两
 1. **服务端 (Server)**: 整个系统的“大脑”。它作为后台服务运行，是**唯一**负责与 Discord API (通过 JDA)
    直接通信的组件。它处理所有核心逻辑，如消息格式化、命令解析和权限验证。**此组件在任何情况下都不得包含任何 `net.minecraft`
    的导入（反射除外）**，以确保其可以在没有 Minecraft 环境的情况下独立运行。
-2. **客户端 (Client)**: 部署在每个 Minecraft 服务器上的“触手”。它作为 Minecraft 模组运行，负责捕获游戏内的所有事件，并将其发送给
-   **服务端 (Server)**。同时，它也接收并执行来自 **服务端 (Server)** 的指令。
+2. **客户端 (Client)**: 部署在每个 Minecraft 服务器上的“触手”。它作为 Minecraft 模组运行，负责捕获游戏内的所有事件，将其发送给
+   **服务端 (Server)**。并执行来自 **服务端 (Server)** 的指令和本地命令。
 
-两者之间通过基于 **Netty** 的 TCP 协议进行通信，使用 **JSON** 对数据包进行序列化和反序列化。
+两者之间通过基于 **Netty** 的 TCP 协议进行通信，使用 **JSON** 对数据包进行序列化和反序列化，并采用**哈希质询-响应机制**
+进行安全认证。
 
 ### 3.2 运行模式与部署
 
-DMCC 支持三种运行模式，它们是统一架构的不同部署方式：
-
-1. **单体服务器模式 (`single_server`)**:
-    - 在此模式下，DMCC 在后台**同时启动一个内部服务端和一个内部客户端**。内部客户端自动通过本地回环地址 (localhost)
-      连接到内部服务端。
-    - 这是为单个 Minecraft 服务器提供的开箱即用的解决方案。
-    - 支持停止 DMCC 自身的命令，但不支持管理子服务器。
-
-2. **多服务器-客户端模式 (`multi_server_client`)**:
-    - 在此模式下，DMCC **只启动一个客户端**。
-    - 此客户端会连接到一个外部独立运行的服务端。
-    - 用于将多个 Minecraft 服务器连接到一个中央服务端。
-
-3. **独立模式 (`standalone`)**:
-    - 在此模式下，DMCC **只启动一个服务端**。
-    - 此服务端会监听一个网络端口，等待一个或多个外部的客户端连接。
-    - 作为多服务器架构的中央“大脑”而存在，提供最强的稳定性和隔离性。
-    - 支持管理子服务器的命令（如 `/start <server>`, `/stop <server>`）以及停止自身进程的命令。
+1. **单体服务器模式 (`single_server`)**: 在后台**同时启动一个内部服务端和一个内部客户端**。内部客户端自动通过本地回环地址连接到内部服务端。这是为单个
+   Minecraft 服务器提供的开箱即用的解决方案。
+2. **多服务器-客户端模式 (`multi_server_client`)**: **只启动一个客户端**，此客户端会连接到一个外部独立运行的服务端。用于将多个
+   Minecraft 服务器连接到一个中央服务端。
+3. **独立模式 (`standalone`)**: **只启动一个服务端**，监听网络端口，等待一个或多个外部客户端连接。作为多服务器架构的中央“大脑”而存在。
 
 ### 3.3 配置文件策略
 
-为了降低用户心智负担并保证配置的准确性，采用两步配置流程：
+1. **`mode.yml`**: 用户首先在此文件选择一种运行模式。若在非 Minecraft 环境下直接运行 JAR，则自动认定为 `standalone` 模式。
+2. **`config.yml`**: DMCC 会根据选择的模式，从内部模板生成一份对应的 `config.yml`。此配置文件将被严格验证。`standalone`
+   模式首次启动时，会自动在 `config.yml` 中生成一个高强度的 `shared_secret`，用户需将其手动同步到所有 `client` 的配置文件中。
 
-1. **`mode.yml`**: 在 Minecraft 环境中，用户首先在此文件选择一种运行模式。DMCC 会在启动时检查此文件。若在非 Minecraft
-   环境下直接运行 JAR，则自动认定为 `standalone` 模式。
-2. **`config.yml`**: DMCC 会根据 `mode.yml` 中选择的模式，从内部模板生成一份对应的 `config.yml`
-   。此配置文件将被严格验证（版本、结构、数据类型），其注释会清晰地解释所有配置项。
+## 4. 网络协议与安全
 
-## 4. 模块化设计
+### 4.1 哈希质询-响应认证机制
 
-项目在物理上划分为两个 Gradle 子项目，最终合并为一个 JAR 文件进行分发。
+为保证通信安全，防止共享密钥在传输中被窃取及防止重放攻击，系统采用一次性的哈希质询-响应机制进行认证。
 
-### 4.1 通用模块 (`:common`)
+**核心协议包 (`Packets.java`):**
 
-此模块是项目的核心，**完全不依赖 Minecraft**。它包含了服务端、网络客户端框架、以及所有共享代码。
+```java
+// 客户端发起连接，表明身份和版本
+public record ClientHello(String serverName, String version) implements Packet {
+}
 
-- **网络框架**:
-    - **服务端**: 负责监听连接和处理入站数据。
-    - **客户端**: 负责建立和维持与服务端的连接。
-    - **协议**: 定义了数据包接口和具体的数据包，并使用编码器/解码器进行 JSON 序列化。
-- **Discord 集成**:
-    - 初始化并管理 JDA 实例，监听 Discord 事件（消息、命令）。
-    - 处理所有与 Discord API 的底层交互。
-- **命令系统**:
-    - 提供一个统一的命令处理入口，支持来自 Discord、游戏内和独立终端的命令。
-    - 通过事件机制进行解耦。
-- **配置与国际化**:
-    - 提供健壮的配置加载和验证机制。
-    - 支持从本地和网络加载语言文件，并提供统一的翻译接口。
-- **日志系统**:
-    - 实现了 SLF4J `ServiceProvider`，可在独立运行时输出到文件和控制台，在 Minecraft 环境中则桥接到游戏日志系统。
-- **事件总线**:
-    - 提供一个轻量级的发布-订阅事件总线，用于项目内部各组件的解耦。
+// 服务端收到ClientHello后，发送随机质询
+public record ServerChallenge(String challenge) implements Packet {
+}
 
-### 4.2 Minecraft 适配器模块 (`:minecraft-adapter`)
+// 客户端收到质询后，计算并发送响应
+public record ClientResponse(String responseHash) implements Packet {
+}
 
-此模块是连接 `:common` 模块与 Minecraft 的桥梁，包含了所有与 Minecraft 相关的代码。
+// 服务端验证通过后，发送最终的成功响应
+public record HandshakeSuccess(String messageKey, String language) implements Packet {
+}
 
-- **模组入口**: 作为模组的入口点，调用初始化方法启动程序。
-- **事件捕获**:
-    - 通过一系列 Mixin 注入点注入 Minecraft，以非侵入式的方式捕获游戏事件。
-- **事件发布与处理**:
-    - Mixin 捕获到事件后，通过事件总线发布一个具体的事件。
-    - 事件处理器订阅这些事件，并将事件数据打包通过网络客户端发送给服务端。
-- **服务提供者**:
-    - 实现了服务接口，通过 Java `ServiceLoader` 机制在运行时被发现和调用，实现了与 Minecraft 的完全解耦。
+// 任何阶段失败，都可以发送一个失败响应
+public record HandshakeFailure(String messageKey) implements Packet {
+}
+```
 
-## 5. 关键设计详解
+**认证流程:**
 
-### 5.1 权限管理模型 (双轨制)
+1. **客户端发起连接**: `Client` 连接成功后，立即发送 `ClientHello` 包，包含其在 `config.yml` 中配置的 `serverName` 和自身的
+   DMCC 版本号。
+2. **服务端版本验证与质询**: `Server` 收到 `ClientHello` 后：
+   a. **版本检查**: 对比 `Client` 版本和自身版本。如果不兼容，立即返回
+   `HandshakeFailure("handshake.error.invalid_version")` 并断开连接。
+   b. **生成质询**: 如果版本兼容，`Server` 生成一个唯一的、一次性的随机字符串作为 `challenge`，并暂存于内存中。
+   c. **发送质询**: `Server` 向 `Client` 发送 `ServerChallenge` 包。
+3. **客户端计算响应**: `Client` 收到 `ServerChallenge` 后：
+   a. 从 `config.yml` 读取 `shared_secret`。
+   b. 使用 **HMAC-SHA256** 算法计算哈希值: `responseHash = hmac_sha256(key = shared_secret, data = challenge)`。
+   c. 向 `Server` 发送 `ClientResponse` 包。
+4. **服务端验证响应**: `Server` 收到 `ClientResponse` 后：
+   a. 取出内存中为该 `Client` 暂存的 `challenge`。
+   b. 以完全相同的方式计算出 `expectedResponseHash`。
+   c. **比对哈希**: 如果不一致，返回 `HandshakeFailure("handshake.error.authentication_failed")` 并断开连接。
+5. **握手成功**: 如果哈希一致，认证通过。`Server` 发送 `HandshakeSuccess` 包，其中包含配置的全局 `language`。
 
-DMCC 采用一个灵活的双轨权限模型来确定谁是“DMCC 管理员”。
+### 4.2 全局语言同步
 
-1. **路径一：原生继承模型 (Minecraft -> DMCC)**
-    - **来源**: 玩家在 Minecraft 中的 OP 等级。
-    - **运作方式**: 在配置中定义 OP 等级要求。任何在游戏中拥有等于或高于此 OP 等级的玩家，都将**自动被视为“DMCC 管理员”**。
-    - **目的**: 这是成为 DMCC 管理员的基础方式。若 Discord 用户想使用管理命令，其链接的 MC 账户必须满足此要求。
+为确保所有实例的输出信息语言统一，系统采用握手时同步的策略：
 
-2. **路径二：角色同步模型 (Discord -> Minecraft)**
-    - **来源**: 用户在 Discord 中的角色。
-    - **运作方式**: 这是一个可选功能。用户可在配置中定义一个 Discord 角色到游戏 OP 等级的映射。服务端模块会周期性地检查已链接用户的角色，并
-      **通过向客户端发送指令**来自动授予或撤销其在游戏中的 OP 权限。
-    - **协同作用**: 一旦一个玩家通过此路径被授予了足够的 OP 等级，他也会因为**路径一**的规则而自动成为“DMCC 管理员”。
+1. `Client` 启动时，默认加载 `en_us` 语言文件。
+2. 当 `Client` 收到 `Server` 发来的 `HandshakeSuccess` 包后，它会解析出 `language` 字段（如 `zh_cn`）。
+3. 如果该语言与当前加载的语言不同，`Client` 会调用 `I18nManager.load("zh_cn")` 重新加载对应的语言文件。
+4. 从此，该 `Client` 生成的所有消息都将使用与 `Server` 统一的语言。
 
-### 5.2 账户链接流程
+## 5. 命令系统设计
 
-（此部分待我们内部人员商榷，暂时不做）
+### 5.1 统一命令入口与异步处理
 
-### 5.3 数据流示例 (Minecraft -> Discord)
+- **`CommandSource` 抽象接口**: 所有命令处理逻辑都将面向一个 `CommandSource`
+  接口，该接口封装了命令来源的特有信息（如来源名称、权限检查、响应方法），使其与具体实现（玩家、控制台、Discord用户）解耦。
+- **异步执行**: 所有可能耗时的命令（如 `reload`, `start`, `stats`）都将异步执行，并返回一个
+  `CompletableFuture<CommandResult>`，避免阻塞主线程。
 
-1. **[minecraft-adapter]** 注入点捕获玩家聊天事件。
-2. **[minecraft-adapter]** 事件总线发布一个玩家聊天事件。
-3. **[minecraft-adapter]** 事件处理器订阅此事件，并从事件中提取数据。
-4. **[common: Client]** 网络客户端将数据封装成一个聊天数据包。
-5. **[common: Client]** 编码器将数据包序列化为 JSON 字符串，通过网络发送给 **服务端**。
-6. **[common: Server]** 服务端接收到数据，解码器将其反序列化为数据包对象。
-7. **[common: Server]** 业务逻辑处理器处理此数据包，检查该玩家是否已链接账户，获取其 Discord 角色颜色等信息。
-8. **[common: Server]** 根据配置中的模板，生成最终要发送到 Discord 的字符串。
-9. **[common: Server]** Discord 管理器将格式化后的消息发送到指定的 Discord 频道。
+### 5.2 命令可用性矩阵
+
+| 命令        | 权限 (默认)    | `multi_server_client` | `standalone` (终端) | `single_server` | Discord | 说明与行为差异                                                                                                    |
+|:----------|:-----------|:----------------------|:------------------|:----------------|:--------|:-----------------------------------------------------------------------------------------------------------|
+| `help`    | `everyone` | ✅                     | ✅                 | ✅               | ✅       | 动态显示当前环境可用且有权执行的命令。                                                                                        |
+| `info`    | `everyone` | ✅                     | ✅                 | ✅               | ✅       | **行为**: `client` 只显示自身状态。`server` 端显示全局信息，包括所有 `client` 的摘要。                                               |
+| `update`  | `everyone` | ✅                     | ✅                 | ✅               | ✅       | **本地执行**: 每个实例独立检查自身DMCC的版本更新。此命令**不**进行跨实例转发。                                                             |
+| `stats`   | `everyone` | ✅                     | ✅                 | ✅               | ✅       | **服务端聚合**: `client` 收到命令后，将**命令请求**转发给 `server`。`server` 再向所有 `client` **实时请求**统计数据，聚合后将结果返回给最初的 `client`。 |
+| `console` | `admin`    | ✅                     | ❌                 | ✅               | ✅       | 执行**所在MC服务器**的命令。`standalone` 无此命令。在Discord执行时，对 `standalone` 模式相当于 `execute`。                             |
+| `execute` | `admin`    | ✅                     | ✅                 | ❌               | ✅       | **`multi-server` 核心**: 用于远程执行命令。`single_server` 无此命令。`client` 端执行此命令时，会将请求转发给 `server` 处理。                 |
+| `log`     | `admin`    | ✅                     | ✅                 | ✅               | ✅       | `client` 可获取自身日志，`server` 可获取自身日志。可通过 `execute` 获取远程日志。                                                    |
+| `restart` | `admin`    | ✅                     | ✅                 | ✅               | ✅       | **应用内重启**: 通过 `shutdown()` + `init()` 实现，无需重启JVM。`standalone` 模式下，Bot会短暂离线后重连。                             |
+| `start`   | `admin`    | ❌                     | ✅                 | ❌               | ✅       | **`standalone` 独有**: 启动 `config.yml` 中定义的子服务器进程。                                                           |
+| `stop`    | `admin`    | ✅                     | ✅                 | ✅               | ✅       | 停止**当前DMCC实例**。高危操作，建议增加二次确认。                                                                              |
+
+### 5.3 关键命令逻辑详解
+
+#### `stats` (纯实时查询模型)
+
+1. **转发请求**: `client` 收到命令后，封装 `ForwardedCommandPacket` 发送给 `server`。
+2. **广播数据请求**: `server` 收到请求后，**立即**向所有 `client` 广播 `StatsRequestPacket`。
+3. **响应数据**: 各 `client` 查询本地统计数据，并回传 `StatsDataPacket`。
+4. **聚合与返回**: `server` 在短暂超时时间内聚合所有响应，生成排行榜，并通过 `CommandResponsePacket` 定向返回给最初请求的
+   `client`。
+
+#### `update` (本地独立检查模型)
+
+- 此命令**始终在接收到命令的实例上本地执行**。
+- 逻辑（获取自身版本、请求 GitHub API、比较版本）位于 `:common` 模块，`client` 和 `server` 均可调用。
+- 返回的更新信息将明确指出这是一个**手动操作**，需要管理员在所有实例（`standalone` 和所有 `client`）上手动替换 `.jar` 文件。
+
+#### `start` (事件驱动反馈模型)
+
+1. 管理员在 `standalone` 或 Discord 执行 `/start SMP`。
+2. `standalone` 回复临时消息（“正在启动...”）并执行预设的 `start_command`。
+3. 子服务器的 DMCC `client` 启动并自动连接 `standalone`。
+4. `standalone` 将“新客户端注册成功”的内部事件作为该服务器成功启动的信号。
+5. `standalone` 更新之前的临时消息为最终的成功状态（“服务器 SMP 已成功启动并连接！”）。
+
+## 6. 权限管理模型 (双轨制)
+
+1. **原生继承模型 (Minecraft -> DMCC)**: 游戏内 OP 等级高于 `minecraft_op_level_requirement` 的玩家，自动成为“DMCC
+   管理员”。这是权限的基础来源。
+2. **角色同步模型 (Discord -> Minecraft)**: 可选功能。可配置 Discord 角色到游戏内 OP 等级的映射。`Server` 组件会周期性检查并
+   **通过向 `Client` 发送指令**来自动授予/撤销玩家的游戏内 OP 权限。一旦玩家因此获得足够 OP 等级，也将通过路径一成为“DMCC
+   管理员”。
