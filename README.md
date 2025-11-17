@@ -31,7 +31,7 @@ Discord-MC-Chat (DMCC) 是一个 Minecraft 模组，旨在为 Discord 和 Minecr
 - 通过 Discord 和游戏内命令执行 Minecraft 控制台命令。
 - 查看和过滤服务器日志。
 - 重载 DMCC 配置文件。
-- 远程启动/关闭/重启子服务器（仅限多服务器模式）。
+- 远程启动/关闭子服务器（仅限多服务器模式）。
 
 ### 2.4 账户链接功能
 
@@ -103,11 +103,12 @@ public record HandshakeFailure(String messageKey) implements Packet {
 
 1. **客户端发起连接**: `Client` 连接成功后，立即发送 `ClientHello` 包，包含其在 `config.yml` 中配置的 `serverName` 和自身的
    DMCC 版本号。
-2. **服务端版本验证与质询**: `Server` 收到 `ClientHello` 后：
-   a. **版本检查**: 对比 `Client` 版本和自身版本。如果不兼容，立即返回
-   `HandshakeFailure("handshake.error.invalid_version")` 并断开连接。
-   b. **生成质询**: 如果版本兼容，`Server` 生成一个唯一的、一次性的随机字符串作为 `challenge`，并暂存于内存中。
-   c. **发送质询**: `Server` 向 `Client` 发送 `ServerChallenge` 包。
+2. **服务端验证与质询**: `Server` 收到 `ClientHello` 后：
+   a. **白名单检查**: `Server` 检查 `serverName` 是否在 `config.yml` 的 `multi_server.servers` 列表中。如果不在，拒绝连接。
+   b. **版本检查**: 对比 `Client` 版本和自身版本。如果不兼容，返回 `HandshakeFailure("handshake.error.invalid_version")`
+   并断开连接。
+   c. **生成质询**: 如果通过，`Server` 生成一个唯一的、一次性的随机字符串作为 `challenge`，并暂存于内存中。
+   d. **发送质询**: `Server` 向 `Client` 发送 `ServerChallenge` 包。
 3. **客户端计算响应**: `Client` 收到 `ServerChallenge` 后：
    a. 从 `config.yml` 读取 `shared_secret`。
    b. 使用 **HMAC-SHA256** 算法计算哈希值: `responseHash = hmac_sha256(key = shared_secret, data = challenge)`。
@@ -129,27 +130,34 @@ public record HandshakeFailure(String messageKey) implements Packet {
 
 ## 5. 命令系统设计
 
-### 5.1 统一命令入口与异步处理
+### 5.1 命令职责划分
 
-- **`CommandSource` 抽象接口**: 所有命令处理逻辑都将面向一个 `CommandSource`
-  接口，该接口封装了命令来源的特有信息（如来源名称、权限检查、响应方法），使其与具体实现（玩家、控制台、Discord用户）解耦。
-- **异步执行**: 所有可能耗时的命令（如 `reload`, `start`, `stats`）都将异步执行，并返回一个
-  `CompletableFuture<CommandResult>`，避免阻塞主线程。
+为消除歧义，命令根据其作用域和目标被严格划分：
+
+| 意图                | `standalone`/Discord 命令       | 游戏内命令 (`/dmcc ...`) | 说明                           |
+|:------------------|:------------------------------|:--------------------|:-----------------------------|
+| 启动/停止**远程MC服务器**  | `start <name>`, `stop <name>` | （不可用）               | 管理 `config.yml` 中定义的外部服务器进程。 |
+| 启用/禁用**本地DMCC功能** | （不可用）                         | `enable`, `disable` | 管理当前 MC 服务器上 DMCC 模组自身的运行状态。 |
+| 重启**本地DMCC功能**    | `restart`                     | `restart`           | 重载配置并重启所有服务，Bot 会短暂离线。       |
+| 关闭**整个DMCC应用**    | `shutdown`                    | （不可用）               | 彻底关闭 `standalone` 的 JVM 进程。  |
 
 ### 5.2 命令可用性矩阵
 
-| 命令        | 权限 (默认)    | `multi_server_client` | `standalone` (终端) | `single_server` | Discord | 说明与行为差异                                                                                                    |
-|:----------|:-----------|:----------------------|:------------------|:----------------|:--------|:-----------------------------------------------------------------------------------------------------------|
-| `help`    | `everyone` | ✅                     | ✅                 | ✅               | ✅       | 动态显示当前环境可用且有权执行的命令。                                                                                        |
-| `info`    | `everyone` | ✅                     | ✅                 | ✅               | ✅       | **行为**: `client` 只显示自身状态。`server` 端显示全局信息，包括所有 `client` 的摘要。                                               |
-| `update`  | `everyone` | ✅                     | ✅                 | ✅               | ✅       | **本地执行**: 每个实例独立检查自身DMCC的版本更新。此命令**不**进行跨实例转发。                                                             |
-| `stats`   | `everyone` | ✅                     | ✅                 | ✅               | ✅       | **服务端聚合**: `client` 收到命令后，将**命令请求**转发给 `server`。`server` 再向所有 `client` **实时请求**统计数据，聚合后将结果返回给最初的 `client`。 |
-| `console` | `admin`    | ✅                     | ❌                 | ✅               | ✅       | 执行**所在MC服务器**的命令。`standalone` 无此命令。在Discord执行时，对 `standalone` 模式相当于 `execute`。                             |
-| `execute` | `admin`    | ✅                     | ✅                 | ❌               | ✅       | **`multi-server` 核心**: 用于远程执行命令。`single_server` 无此命令。`client` 端执行此命令时，会将请求转发给 `server` 处理。                 |
-| `log`     | `admin`    | ✅                     | ✅                 | ✅               | ✅       | `client` 可获取自身日志，`server` 可获取自身日志。可通过 `execute` 获取远程日志。                                                    |
-| `restart` | `admin`    | ✅                     | ✅                 | ✅               | ✅       | **应用内重启**: 通过 `shutdown()` + `init()` 实现，无需重启JVM。`standalone` 模式下，Bot会短暂离线后重连。                             |
-| `start`   | `admin`    | ❌                     | ✅                 | ❌               | ✅       | **`standalone` 独有**: 启动 `config.yml` 中定义的子服务器进程。                                                           |
-| `stop`    | `admin`    | ✅                     | ✅                 | ✅               | ✅       | 停止**当前DMCC实例**。高危操作，建议增加二次确认。                                                                              |
+| 命令            | 权限 (默认)    | `multi_server_client` | `standalone` (终端) | `single_server` | Discord | 说明与行为差异                                                                    |
+|:--------------|:-----------|:----------------------|:------------------|:----------------|:--------|:---------------------------------------------------------------------------|
+| `help`        | `everyone` | ✅                     | ✅                 | ✅               | ✅       | 动态显示当前环境可用且有权执行的命令。                                                        |
+| `info`        | `everyone` | ✅                     | ✅                 | ✅               | ✅       | **行为**: `client` 只显示自身状态。`server` 端显示全局信息。                                 |
+| `update`      | `everyone` | ✅                     | ✅                 | ✅               | ✅       | **本地执行**: 每个实例独立检查自身版本。                                                    |
+| `stats`       | `everyone` | ✅                     | ✅                 | ✅               | ✅       | **服务端聚合**: `client` 收到命令后，将请求转发给 `server` 实时处理。                            |
+| `console`     | `admin`    | ✅                     | ❌                 | ✅               | ✅       | 执行**所在MC服务器**的命令。`standalone` 无此命令。                                        |
+| `execute`     | `admin`    | ✅                     | ✅                 | ❌               | ✅       | **`multi-server` 核心**: `single_server` 无此命令。`client` 端执行时会将请求转发给 `server`。 |
+| `log`         | `admin`    | ✅                     | ✅                 | ✅               | ✅       | 获取各自实例的日志。可通过 `execute` 获取远程日志。                                            |
+| `enable`      | `admin`    | ✅                     | ❌                 | ✅               | ❌       | 启用当前服务器上的 DMCC 模组。                                                         |
+| `disable`     | `admin`    | ✅                     | ❌                 | ✅               | ❌       | 禁用当前服务器上的 DMCC 模组。                                                         |
+| `restart`     | `admin`    | ✅                     | ✅                 | ✅               | ✅       | **应用内重启**: 通过 `disable()` + `init()` 实现。                                   |
+| `start <srv>` | `admin`    | ❌                     | ✅                 | ❌               | ✅       | **`standalone` 独有**: 启动 `config.yml` 中定义的子服务器。                             |
+| `stop <srv>`  | `admin`    | ❌                     | ✅                 | ❌               | ✅       | **`standalone` 独有**: 停止子服务器（通常通过 `execute` 执行 `console stop` 实现）。          |
+| `shutdown`    | `admin`    | ❌                     | ✅                 | ❌               | ✅       | **`standalone` 独有**: 关闭 `standalone` 进程。                                   |
 
 ### 5.3 关键命令逻辑详解
 
@@ -164,16 +172,14 @@ public record HandshakeFailure(String messageKey) implements Packet {
 #### `update` (本地独立检查模型)
 
 - 此命令**始终在接收到命令的实例上本地执行**。
-- 逻辑（获取自身版本、请求 GitHub API、比较版本）位于 `:common` 模块，`client` 和 `server` 均可调用。
-- 返回的更新信息将明确指出这是一个**手动操作**，需要管理员在所有实例（`standalone` 和所有 `client`）上手动替换 `.jar` 文件。
+- 返回的更新信息将明确指出这是一个**手动操作**，需要管理员在所有实例上手动替换 `.jar` 文件。
 
-#### `start` (事件驱动反馈模型)
+#### `start <server>` (事件驱动反馈模型)
 
 1. 管理员在 `standalone` 或 Discord 执行 `/start SMP`。
 2. `standalone` 回复临时消息（“正在启动...”）并执行预设的 `start_command`。
 3. 子服务器的 DMCC `client` 启动并自动连接 `standalone`。
-4. `standalone` 将“新客户端注册成功”的内部事件作为该服务器成功启动的信号。
-5. `standalone` 更新之前的临时消息为最终的成功状态（“服务器 SMP 已成功启动并连接！”）。
+4. `standalone` 将“新客户端注册成功”的内部事件作为该服务器成功启动的信号，并更新状态消息。
 
 ## 6. 权限管理模型 (双轨制)
 
