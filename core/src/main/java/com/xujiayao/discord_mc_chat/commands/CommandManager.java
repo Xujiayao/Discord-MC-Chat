@@ -37,7 +37,7 @@ public class CommandManager {
 				response.add("- shutdown | " + I18nManager.getDmccTranslation("commands.shutdown.description"));
 			}
 			case "reload" -> EventManager.post(new CommandEvents.ReloadEvent());
-			case "shutdown" -> EventManager.post(new CommandEvents.StopEvent());
+			case "shutdown" -> EventManager.post(new CommandEvents.ShutdownEvent());
 			default -> response.add(I18nManager.getDmccTranslation("commands.unknown_command", command));
 		}
 

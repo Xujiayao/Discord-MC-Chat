@@ -39,7 +39,7 @@ public class ClientBusinessHandler extends SimpleChannelInboundHandler<Packet> {
 
 			// Post a StopEvent to trigger a graceful, application-wide shutdown.
 			ctx.close(); // Close the connection first
-			EventManager.post(new CommandEvents.StopEvent());
+			EventManager.post(new CommandEvents.ShutdownEvent());
 		}
 		// TODO: Handle other packet types
 	}

@@ -31,7 +31,7 @@ public class CommandEventHandler {
 			DMCC.reload();
 		}));
 
-		EventManager.register(CommandEvents.StopEvent.class, event -> commandExecutor.submit(() -> {
+		EventManager.register(CommandEvents.ShutdownEvent.class, event -> commandExecutor.submit(() -> {
 			LOGGER.info(I18nManager.getDmccTranslation("commands.shutdown.shutting_down"));
 
 			new Thread(() -> {

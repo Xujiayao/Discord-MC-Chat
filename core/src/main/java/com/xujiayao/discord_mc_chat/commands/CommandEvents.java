@@ -14,8 +14,8 @@ public class CommandEvents {
 	}
 
 	/**
-	 * Posted when a stop is requested.
+	 * Posted when a shutdown is requested.
 	 */
-	public record StopEvent() {
+	public record ShutdownEvent() {
 	}
 }
