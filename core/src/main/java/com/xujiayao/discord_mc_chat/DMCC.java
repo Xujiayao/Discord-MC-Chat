@@ -117,7 +117,7 @@ public class DMCC {
 					LOGGER.info("Running in standalone mode. Starting server only.");
 
 					serverInstance = new ServerDMCC();
-					int port = ConfigManager.getInt("multi_server.port");
+					int port = ConfigManager.getInt("multi_server.connection.port");
 					serverInstance.start(port);
 				}
 			}
