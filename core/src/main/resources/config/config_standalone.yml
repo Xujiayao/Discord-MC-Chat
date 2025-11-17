@@ -72,6 +72,7 @@ multi_server:
     # You MUST copy this exact key to all your multi-server clients.
     shared_secret: will_be_auto_generated
   servers:
+    # This list acts as a whitelist. Only clients with a serverName defined here are allowed to connect.
     - name: SMP
       color: yellow
       start_command: ./SMP/start.bat # command or url
@@ -123,15 +124,18 @@ channel_topic_updating:
 command_permissions:
   help: everyone
   info: everyone
-  # link: everyone
   stats: everyone
   update: everyone
   console: admin
+  disable: admin
+  enable: admin
   execute: admin
   log: admin
   restart: admin
   start: admin
+  shutdown: admin
   stop: admin
+  # link: everyone
   # whitelist: admin
 
 # 消息格式设置

@@ -26,19 +26,23 @@ commands:
     help: "Help"
   info:
     description: "Show status of DMCC and connected Minecraft servers"
-  link:
-    description: "Link your Discord account with your Minecraft account"
-    params:
-      code: "The link code you received in-game"
-    code_generated: "Your link code is: \"{}\". Do not share it with anyone! Please execute \"/link <code>\" command in Discord to link your account. This code will expire in 10 minutes."
-    success: "Your account has been successfully linked!"
-    invalid_code: "Invalid or expired link code."
+#  link:
+#    description: "Link your Discord account with your Minecraft account"
+#    params:
+#      code: "The link code you received in-game"
+#    code_generated: "Your link code is: \"{}\". Do not share it with anyone! Please execute \"/link <code>\" command in Discord to link your account. This code will expire in 10 minutes."
+#    success: "Your account has been successfully linked!"
+#    invalid_code: "Invalid or expired link code."
   log:
     description: "View a log file"
     params:
       file: "The log file to view"
+  enable:
+    description: "Enable the DMCC module on the current server"
+  disable:
+    description: "Disable the DMCC module on the current server"
   restart:
-    description: "Restart DMCC to reload all configurations"
+    description: "Restart the DMCC module to reload all configurations"
     restarting: "Restarting DMCC..."
   start:
     description: "Start a sub-server"
@@ -50,12 +54,16 @@ commands:
       type: "The type of the statistic"
       name: "The name of the statistic"
   stop:
-    description: "Shut down DMCC"
-    stopping: "Shutting down DMCC..."
-  update:
-    description: "Check for DMCC updates"
-  whitelist:
-    description: "Add a player to the server whitelist"
+    description: "Stop a sub-server"
     params:
-      player: "The player's Minecraft username"
-    success: "Added {} to the server whitelist!"
+      server: "The name of the sub-server to stop"
+  shutdown:
+    description: "Shut down the Standalone DMCC application"
+    shutting_down: "Shutting down Standalone DMCC application..."
+  update:
+    description: "Check for DMCC updates for the current instance"
+#  whitelist:
+#    description: "Add a player to the server whitelist"
+#    params:
+#      player: "The player's Minecraft username"
+#    success: "Added {} to the server whitelist!"
