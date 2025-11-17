@@ -1,10 +1,12 @@
 package com.xujiayao.discord_mc_chat.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
@@ -15,6 +17,15 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  * @author Xujiayao
  */
 public class YamlUtils {
+
+	private static final List<String> AUTO_GENERATED_KEYS = List.of(
+			"multi_server.security.shared_secret"
+	);
+
+	private static final List<String> REQUIRED_MODIFIED_KEYS = List.of(
+			"bot.token",
+			"multi_server.server_name"
+	);
 
 	/**
 	 * Validates the loaded config against the template.
@@ -43,7 +54,7 @@ public class YamlUtils {
 		LOGGER.info("Validating configuration file at \"{}\"...", configPath);
 
 		// Check if config is identical to template (user made no changes)
-		if (errorOnUnmodified && config.equals(templateConfig)) {
+		if (errorOnUnmodified && isEffectivelyIdentical(config, templateConfig)) {
 			LOGGER.error("Configuration file has not been modified from default template");
 			LOGGER.info("Please edit the file at \"{}\"", configPath);
 			return false;
@@ -103,11 +114,7 @@ public class YamlUtils {
 
 		// A hard-coded list of keys that should be modified by the user
 		// This is to catch cases where the user leaves a key unchanged from the template
-		String[] keysToCheck = {
-				"bot.token",
-				"multi_server.server_name"
-		};
-		Set<String> unmodifiedKeys = findUnmodifiedKeys(config, templateConfig, keysToCheck);
+		Set<String> unmodifiedKeys = findUnmodifiedKeys(config, templateConfig);
 		if (!unmodifiedKeys.isEmpty()) {
 			LOGGER.error("The following configuration keys are still unchanged from the template:");
 			for (String key : unmodifiedKeys) {
@@ -118,6 +125,51 @@ public class YamlUtils {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Checks if two JsonNodes are effectively identical, ignoring auto-generated keys.
+	 *
+	 * @param config         The user config node.
+	 * @param templateConfig The template config node.
+	 * @return true if they are identical after ignoring specified keys.
+	 */
+	private static boolean isEffectivelyIdentical(JsonNode config, JsonNode templateConfig) {
+		if (config.equals(templateConfig)) {
+			return true;
+		}
+
+		// Create copies to avoid modifying original nodes
+		ObjectNode configCopy = config.deepCopy();
+		ObjectNode templateCopy = templateConfig.deepCopy();
+
+		// Remove auto-generated keys from both copies before comparison
+		for (String key : AUTO_GENERATED_KEYS) {
+			removeNestedKey(configCopy, key);
+			removeNestedKey(templateCopy, key);
+		}
+
+		return configCopy.equals(templateCopy);
+	}
+
+	/**
+	 * Recursively removes a nested key (e.g., "a.b.c") from an ObjectNode.
+	 *
+	 * @param node The node to modify.
+	 * @param key  The dot-separated key to remove.
+	 */
+	private static void removeNestedKey(ObjectNode node, String key) {
+		String[] parts = key.split("\\.");
+		JsonNode currentNode = node;
+		for (int i = 0; i < parts.length - 1; i++) {
+			currentNode = currentNode.path(parts[i]);
+			if (currentNode.isMissingNode() || !currentNode.isObject()) {
+				return; // Parent path doesn't exist
+			}
+		}
+		if (currentNode instanceof ObjectNode parentNode) {
+			parentNode.remove(parts[parts.length - 1]);
+		}
 	}
 
 	/**
@@ -215,13 +267,12 @@ public class YamlUtils {
 	 *
 	 * @param config         The user config node
 	 * @param templateConfig The template config node
-	 * @param keysToCheck    An array of dot-separated keys to check for modifications
 	 * @return A set of keys that are unmodified
 	 */
-	private static Set<String> findUnmodifiedKeys(JsonNode config, JsonNode templateConfig, String[] keysToCheck) {
+	private static Set<String> findUnmodifiedKeys(JsonNode config, JsonNode templateConfig) {
 		Set<String> unmodifiedKeys = new HashSet<>();
 
-		for (String key : keysToCheck) {
+		for (String key : YamlUtils.REQUIRED_MODIFIED_KEYS) {
 			String[] parts = key.split("\\.");
 			JsonNode configNode = config;
 			JsonNode templateNode = templateConfig;

@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.utils.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.xujiayao.discord_mc_chat.utils.CryptoUtils;
 import com.xujiayao.discord_mc_chat.utils.YamlUtils;
 
 import java.io.IOException;
@@ -82,6 +83,7 @@ public class ConfigManager {
 
 	/**
 	 * Creates a default config.yml from a template based on the mode.
+	 * For standalone mode, it also generates and injects a random shared_secret.
 	 *
 	 * @param mode The operating mode which determines the template to use.
 	 */
@@ -93,7 +95,20 @@ public class ConfigManager {
 			if (inputStream == null) {
 				throw new IOException("Default config template not found: " + templateName);
 			}
-			Files.copy(inputStream, CONFIG_PATH, StandardCopyOption.REPLACE_EXISTING);
+
+			if ("standalone".equals(mode)) {
+				// For standalone mode, read the template as a string, replace the placeholder, and write it back.
+				// This preserves all comments and formatting.
+				String templateContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+				String secret = CryptoUtils.generateRandomString(64);
+
+				String newContent = templateContent.replace("will_be_auto_generated", secret);
+
+				Files.writeString(CONFIG_PATH, newContent, StandardCharsets.UTF_8);
+			} else {
+				// For other modes, simply copy the template file as is.
+				Files.copy(inputStream, CONFIG_PATH, StandardCopyOption.REPLACE_EXISTING);
+			}
 		}
 
 		LOGGER.info("Created default configuration file at \"{}\"", CONFIG_PATH);
@@ -110,12 +125,7 @@ public class ConfigManager {
 		if (config == null) {
 			// This can happen if config is not loaded yet.
 			// Returning a missing node is safer than a NullPointerException.
-			try {
-				return YAML_MAPPER.missingNode();
-			} catch (Exception e) {
-				// Should not happen, but as a fallback
-				return null;
-			}
+			return YAML_MAPPER.missingNode();
 		}
 
 		String[] parts = path.split("\\.");
@@ -142,7 +152,12 @@ public class ConfigManager {
 	 */
 	public static <T> T getValue(String path, Function<JsonNode, T> converter) {
 		JsonNode node = getConfigNode(path);
-		return (node == null || node.isMissingNode()) ? null : converter.apply(node);
+
+		if (node == null || node.isMissingNode() || node.isNull()) {
+			return null;
+		}
+
+		return converter.apply(node);
 	}
 
 	/**
@@ -159,7 +174,7 @@ public class ConfigManager {
 	 * Gets a configuration value as an integer.
 	 *
 	 * @param path The path to the configuration value
-	 * @return The integer value at the specified path, or null if not found
+	 * @return The integer value at the specified path
 	 */
 	public static Integer getInt(String path) {
 		return getValue(path, JsonNode::asInt);
@@ -169,7 +184,7 @@ public class ConfigManager {
 	 * Gets a configuration value as a boolean.
 	 *
 	 * @param path The path to the configuration value
-	 * @return The boolean value at the specified path, or null if not found
+	 * @return The boolean value at the specified path
 	 */
 	public static Boolean getBoolean(String path) {
 		return getValue(path, JsonNode::asBoolean);
