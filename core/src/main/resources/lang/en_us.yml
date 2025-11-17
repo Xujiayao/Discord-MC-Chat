@@ -37,9 +37,9 @@ commands:
     description: "View a log file"
     params:
       file: "The log file to view"
-  reload:
-    description: "Reload DMCC"
-    reloading: "Reloading DMCC..."
+  restart:
+    description: "Restart DMCC to reload all configurations"
+    restarting: "Restarting DMCC..."
   start:
     description: "Start a sub-server"
     params:

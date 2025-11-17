@@ -37,9 +37,9 @@ commands:
     description: "查看日志文件"
     params:
       file: "要查看的日志文件"
-  reload:
-    description: "重新加载 DMCC"
-    reloading: "正在重新加载 DMCC..."
+  restart:
+    description: "重新启动 DMCC 以重新加载所有配置"
+    restarting: "正在重新启动 DMCC..."
   start:
     description: "启动一个子服务器"
     params:

@@ -115,16 +115,16 @@ channel_topic_updating:
 command_permissions:
   help: everyone
   info: everyone
-  link: everyone
+  # link: everyone
   stats: everyone
   update: everyone
   console: admin
   execute: admin
   log: admin
-  reload: admin
+  restart: admin
   start: admin
   stop: admin
-  whitelist: admin
+  # whitelist: admin
 
 # 消息格式设置
 formatting: # TODO
