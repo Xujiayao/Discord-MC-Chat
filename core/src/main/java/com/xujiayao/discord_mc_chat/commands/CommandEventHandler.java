@@ -32,7 +32,7 @@ public class CommandEventHandler {
 		}));
 
 		EventManager.register(CommandEvents.StopEvent.class, event -> commandExecutor.submit(() -> {
-			LOGGER.info(I18nManager.getDmccTranslation("commands.stop.stopping"));
+			LOGGER.info(I18nManager.getDmccTranslation("commands.shutdown.shutting_down"));
 
 			new Thread(() -> {
 				if (IS_MINECRAFT_ENV) {

@@ -8,6 +8,14 @@
 # Language: English (US)
 # ==================================================
 
+handshake:
+  success: "Handshake with server successful. DMCC is now operational."
+  error:
+    not_whitelisted: "This server is not whitelisted on the standalone server."
+    invalid_version: "Incompatible DMCC version."
+    duplicate_name: "A client with the same server name is already connected."
+    authentication_failed: "Authentication failed. The shared_secret does not match."
+
 commands:
   unknown_command: "Unknown command: \"{}\". Type \"help\" for a list of available commands."
   no_permission: "You do not have permission to execute this command!"

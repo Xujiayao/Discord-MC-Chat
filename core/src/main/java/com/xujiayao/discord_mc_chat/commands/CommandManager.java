@@ -32,12 +32,12 @@ public class CommandManager {
 		switch (command) {
 			case "help" -> {
 				response.add("==================== " + I18nManager.getDmccTranslation("commands.help.help") + " ====================");
-				response.add("- help   | " + I18nManager.getDmccTranslation("commands.help.description"));
-				response.add("- reload | " + I18nManager.getDmccTranslation("commands.reload.description"));
-				response.add("- stop   | " + I18nManager.getDmccTranslation("commands.stop.description"));
+				response.add("- help     | " + I18nManager.getDmccTranslation("commands.help.description"));
+				response.add("- reload   | " + I18nManager.getDmccTranslation("commands.reload.description"));
+				response.add("- shutdown | " + I18nManager.getDmccTranslation("commands.shutdown.description"));
 			}
 			case "reload" -> EventManager.post(new CommandEvents.ReloadEvent());
-			case "stop" -> EventManager.post(new CommandEvents.StopEvent());
+			case "shutdown" -> EventManager.post(new CommandEvents.StopEvent());
 			default -> response.add(I18nManager.getDmccTranslation("commands.unknown_command", command));
 		}
 
