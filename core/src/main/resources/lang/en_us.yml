@@ -29,10 +29,10 @@ commands:
       command: "The Minecraft command to execute"
     executing: "Executing command..."
   disable:
-    description: "Disable the DMCC module on the current server"
+    description: "Disable DMCC on the current Minecraft server"
     disabling: "Disabling DMCC..."
   enable:
-    description: "Enable the DMCC module on the current server"
+    description: "Enable DMCC on the current Minecraft server"
     enabling: "Enabling DMCC..."
   execute:
     description: "Execute a DMCC command on a sub-server"
@@ -43,9 +43,9 @@ commands:
     description: "View a log file"
     params:
       file: "The log file to view"
-  restart:
-    description: "Restart the DMCC module to reload all configurations"
-    restarting: "Restarting DMCC..."
+  reload:
+    description: "Reload DMCC to apply latest configuration changes"
+    reloading: "Reloading DMCC..."
   shutdown:
     description: "Shut down the Standalone DMCC application"
     shutting_down: "Shutting down Standalone DMCC application..."

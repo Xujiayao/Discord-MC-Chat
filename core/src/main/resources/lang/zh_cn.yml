@@ -29,10 +29,10 @@ commands:
       command: "要执行的 Minecraft 命令"
     executing: "正在执行命令..."
   disable:
-    description: "在当前服务器上禁用 DMCC 模块"
+    description: "在当前 Minecraft 服务器上禁用 DMCC"
     disabling: "正在禁用 DMCC..."
   enable:
-    description: "在当前服务器上启用 DMCC 模块"
+    description: "在当前 Minecraft 服务器上启用 DMCC"
     enabling: "正在启用 DMCC..."
   execute:
     description: "在子服务器上执行 DMCC 命令"
@@ -43,9 +43,9 @@ commands:
     description: "查看日志文件"
     params:
       file: "要查看的日志文件"
-  restart:
-    description: "重新启动 DMCC 模块以重新加载所有配置"
-    restarting: "正在重新启动 DMCC..."
+  reload:
+    description: "重新加载 DMCC 模块以应用最新配置"
+    reloading: "正在重新加载 DMCC..."
   shutdown:
     description: "关闭 DMCC 独立应用程序"
     shutting_down: "正在关闭 DMCC 应用程序..."

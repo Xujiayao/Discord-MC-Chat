@@ -131,7 +131,7 @@ command_permissions:
   enable: admin
   execute: admin
   log: admin
-  restart: admin
+  reload: admin
   shutdown: admin
   start: admin
   stop: admin

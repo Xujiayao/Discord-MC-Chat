@@ -112,7 +112,7 @@ command_permissions:
   disable: admin
   enable: admin
   log: admin
-  restart: admin
+  reload: admin
   # link: everyone
   # whitelist: admin
 

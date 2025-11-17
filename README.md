@@ -104,7 +104,8 @@ public record HandshakeFailure(String messageKey) implements Packet {
 1. **客户端发起连接**: `Client` 连接成功后，立即发送 `ClientHello` 包，包含其在 `config.yml` 中配置的 `serverName` 和自身的
    DMCC 版本号。
 2. **服务端验证与质询**: `Server` 收到 `ClientHello` 后：
-   a. **白名单检查**: `Server` 检查 `serverName` 是否在 `config.yml` 的 `multi_server.servers` 列表中。如果不在，拒绝连接。
+   a. **白名单检查**: `Server` 检查 `serverName` 是否在 `config.yml` 的 `multi_server.servers` 列表中。如果不在，返回
+   `HandshakeFailure("handshake.error.not_whitelisted")` 并断开连接。
    b. **版本检查**: 对比 `Client` 版本和自身版本。如果不兼容，返回 `HandshakeFailure("handshake.error.invalid_version")`
    并断开连接。
    c. **生成质询**: 如果通过，`Server` 生成一个唯一的、一次性的随机字符串作为 `challenge`，并暂存于内存中。
@@ -138,7 +139,7 @@ public record HandshakeFailure(String messageKey) implements Packet {
 |:------------------|:------------------------------|:--------------------|:-----------------------------|
 | 启动/停止**远程MC服务器**  | `start <name>`, `stop <name>` | （不可用）               | 管理 `config.yml` 中定义的外部服务器进程。 |
 | 启用/禁用**本地DMCC功能** | （不可用）                         | `enable`, `disable` | 管理当前 MC 服务器上 DMCC 模组自身的运行状态。 |
-| 重启**本地DMCC功能**    | `restart`                     | `restart`           | 重载配置并重启所有服务，Bot 会短暂离线。       |
+| 重载**本地DMCC配置**    | `reload`                      | `reload`            | 应用内重载配置并重启所有服务，Bot 会短暂离线。    |
 | 关闭**整个DMCC应用**    | `shutdown`                    | （不可用）               | 彻底关闭 `standalone` 的 JVM 进程。  |
 
 ### 5.2 命令可用性矩阵
@@ -152,9 +153,9 @@ public record HandshakeFailure(String messageKey) implements Packet {
 | `console`     | `admin`    | ✅                     | ❌                 | ✅               | ✅       | 执行**所在MC服务器**的命令。`standalone` 无此命令。                                        |
 | `execute`     | `admin`    | ✅                     | ✅                 | ❌               | ✅       | **`multi-server` 核心**: `single_server` 无此命令。`client` 端执行时会将请求转发给 `server`。 |
 | `log`         | `admin`    | ✅                     | ✅                 | ✅               | ✅       | 获取各自实例的日志。可通过 `execute` 获取远程日志。                                            |
-| `enable`      | `admin`    | ✅                     | ❌                 | ✅               | ❌       | 启用当前服务器上的 DMCC 模组。                                                         |
-| `disable`     | `admin`    | ✅                     | ❌                 | ✅               | ❌       | 禁用当前服务器上的 DMCC 模组。                                                         |
-| `restart`     | `admin`    | ✅                     | ✅                 | ✅               | ✅       | **应用内重启**: 通过 `disable()` + `init()` 实现。                                   |
+| `enable`      | `admin`    | ✅                     | ❌                 | ✅               | ❌       | **本地作用**: 启用当前服务器上的 DMCC 模组。                                               |
+| `disable`     | `admin`    | ✅                     | ❌                 | ✅               | ❌       | **本地作用**: 禁用当前服务器上的 DMCC 模组。                                               |
+| `reload`      | `admin`    | ✅                     | ✅                 | ✅               | ✅       | **应用内重启**: 通过 `shutdown()` + `init()` 实现。                                  |
 | `start <srv>` | `admin`    | ❌                     | ✅                 | ❌               | ✅       | **`standalone` 独有**: 启动 `config.yml` 中定义的子服务器。                             |
 | `stop <srv>`  | `admin`    | ❌                     | ✅                 | ❌               | ✅       | **`standalone` 独有**: 停止子服务器（通常通过 `execute` 执行 `console stop` 实现）。          |
 | `shutdown`    | `admin`    | ❌                     | ✅                 | ❌               | ✅       | **`standalone` 独有**: 关闭 `standalone` 进程。                                   |
