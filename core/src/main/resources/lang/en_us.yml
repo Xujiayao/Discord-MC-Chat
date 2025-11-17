@@ -11,21 +11,52 @@
 commands:
   unknown_command: "Unknown command: \"{}\". Type \"help\" for a list of available commands."
   no_permission: "You do not have permission to execute this command!"
-  console:
-    description: "Execute a Minecraft command on the server"
-    params:
-      command: "The Minecraft command to execute"
-    executing: "Executing command..."
-  execute:
-    description: "Execute a DMCC command on a sub-server"
-    params:
-      server: "The name of the sub-server"
-      command: "The DMCC command to execute"
   help:
     description: "Show a list of available commands"
     help: "Help"
   info:
     description: "Show status of DMCC and connected Minecraft servers"
+  stats:
+    description: "Query leaderboard of a statistic"
+    params:
+      type: "The type of the statistic"
+      name: "The name of the statistic"
+  update:
+    description: "Check for DMCC updates for the current instance"
+  console:
+    description: "Execute a Minecraft command on the server"
+    params:
+      command: "The Minecraft command to execute"
+    executing: "Executing command..."
+  disable:
+    description: "Disable the DMCC module on the current server"
+    disabling: "Disabling DMCC..."
+  enable:
+    description: "Enable the DMCC module on the current server"
+    enabling: "Enabling DMCC..."
+  execute:
+    description: "Execute a DMCC command on a sub-server"
+    params:
+      server: "The name of the sub-server"
+      command: "The DMCC command to execute"
+  log:
+    description: "View a log file"
+    params:
+      file: "The log file to view"
+  restart:
+    description: "Restart the DMCC module to reload all configurations"
+    restarting: "Restarting DMCC..."
+  shutdown:
+    description: "Shut down the Standalone DMCC application"
+    shutting_down: "Shutting down Standalone DMCC application..."
+  start:
+    description: "Start a sub-server"
+    params:
+      server: "The name of the sub-server to start"
+  stop:
+    description: "Stop a sub-server"
+    params:
+      server: "The name of the sub-server to stop"
 #  link:
 #    description: "Link your Discord account with your Minecraft account"
 #    params:
@@ -33,35 +64,6 @@ commands:
 #    code_generated: "Your link code is: \"{}\". Do not share it with anyone! Please execute \"/link <code>\" command in Discord to link your account. This code will expire in 10 minutes."
 #    success: "Your account has been successfully linked!"
 #    invalid_code: "Invalid or expired link code."
-  log:
-    description: "View a log file"
-    params:
-      file: "The log file to view"
-  enable:
-    description: "Enable the DMCC module on the current server"
-  disable:
-    description: "Disable the DMCC module on the current server"
-  restart:
-    description: "Restart the DMCC module to reload all configurations"
-    restarting: "Restarting DMCC..."
-  start:
-    description: "Start a sub-server"
-    params:
-      server: "The name of the sub-server to start"
-  stats:
-    description: "Query leaderboard of a statistic"
-    params:
-      type: "The type of the statistic"
-      name: "The name of the statistic"
-  stop:
-    description: "Stop a sub-server"
-    params:
-      server: "The name of the sub-server to stop"
-  shutdown:
-    description: "Shut down the Standalone DMCC application"
-    shutting_down: "Shutting down Standalone DMCC application..."
-  update:
-    description: "Check for DMCC updates for the current instance"
 #  whitelist:
 #    description: "Add a player to the server whitelist"
 #    params:
