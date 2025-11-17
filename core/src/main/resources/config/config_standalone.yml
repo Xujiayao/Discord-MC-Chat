@@ -132,8 +132,8 @@ command_permissions:
   execute: admin
   log: admin
   restart: admin
-  start: admin
   shutdown: admin
+  start: admin
   stop: admin
   # link: everyone
   # whitelist: admin
