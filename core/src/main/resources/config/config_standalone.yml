@@ -14,6 +14,10 @@ mode: standalone
 # 语言设置
 language: en_us
 
+# Minecraft 版本设置
+# 取你所有子服务器中最高的版本
+minecraft_version: ${minecraft_version}
+
 # 机器人设置
 bot:
   token: your_token_here # Discord 机器人令牌
@@ -61,8 +65,12 @@ broadcasts:
 
 # 多服务器功能
 multi_server:
-  port: 5000
-  minecraft_version: ${minecraft_version}
+  connection:
+    port: 5000
+  security:
+    # This secret key is automatically generated on first startup.
+    # You MUST copy this exact key to all your multi-server clients.
+    shared_secret: will_be_auto_generated
   servers:
     - name: SMP
       color: yellow

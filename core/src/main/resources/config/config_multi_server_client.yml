@@ -16,7 +16,11 @@ language: en_us
 
 # 多服务器功能
 multi_server:
+  server_name: your_server_name_here
   connection:
     host: localhost
     port: 5000
-  server_name: your_server_name_here
+  security:
+    # This secret key must be identical to the one in the standalone server's config.yml.
+    # It is used to authenticate this client to the standalone server.
+    shared_secret: your_shared_secret_here
