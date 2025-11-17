@@ -20,6 +20,7 @@ import java.nio.file.StandardCopyOption;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static com.xujiayao.discord_mc_chat.Constants.JSON_MAPPER;
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
@@ -43,11 +44,30 @@ public class I18nManager {
 
 	/**
 	 * Loads and validates all language files based on the configuration.
+	 * This method is typically called during DMCC initialization and reloads.
 	 *
 	 * @return true if all files were loaded successfully, false otherwise.
 	 */
 	public static boolean load() {
-		language = ConfigManager.getString("language");
+		return load(ConfigManager.getString("language"));
+	}
+
+	/**
+	 * Loads and validates all language files for a specific language.
+	 * This method can be called to reload translations for a different language.
+	 * <p>
+	 * This method is only called on the client side when the server instructs a language change.
+	 *
+	 * @param newLanguage The language to load (e.g., "en_us", "zh_cn").
+	 * @return true if all files were loaded successfully, false otherwise.
+	 */
+	public static boolean load(String newLanguage) {
+		// If the language is the same as the currently loaded one, no need to reload.
+		if (Objects.equals(language, newLanguage)) {
+			return true;
+		}
+
+		language = newLanguage;
 
 		// Check if required resource files exist for the selected language
 		if (!checkLanguageResources()) {
@@ -59,14 +79,14 @@ public class I18nManager {
 			return false;
 		}
 
-		// For client-only mode, we don't need the full suite of message formatting files.
-		// For server-enabled modes, load the full I18n suite.
-		if ("multi_server_client".equals(ModeManager.getMode())) {
-			LOGGER.info("DMCC internal translations for \"{}\" loaded successfully!", language);
+		// For client-only mode, we only need DMCC translations for logs and basic messages.
+		// The server will provide the language, and this method will be called again if needed.
+		if ("multi_server_client".equals(ModeManager.getMode()) && customMessages == null) {
+			LOGGER.info("DMCC internal translations for \"{}\" loaded successfully! Full I18n suite will be loaded after handshake.", language);
 			return true;
 		}
 
-		// Load custom messages
+		// For server-enabled modes, or after a client has been instructed to change lang, load the full I18n suite.
 		if (!loadCustomMessages()) {
 			return false;
 		}

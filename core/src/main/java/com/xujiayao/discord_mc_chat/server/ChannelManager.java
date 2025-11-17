@@ -25,24 +25,17 @@ public class ChannelManager {
 
 	/**
 	 * Registers a new channel with its server name.
-	 * Rejects the connection if the server name is already in use.
+	 * This should only be called after successful authentication.
 	 *
 	 * @param serverName The unique name of the client server.
 	 * @param channel    The channel to register.
-	 * @return true if registration was successful, false otherwise.
 	 */
-	public static boolean registerChannel(String serverName, Channel channel) {
-		if (NAME_TO_CHANNEL_MAP.containsKey(serverName)) {
-			LOGGER.warn("Rejecting connection from {} with duplicate server name: {}", channel.remoteAddress(), serverName);
-			return false;
-		}
-
+	public static void registerChannel(String serverName, Channel channel) {
 		ALL_CHANNELS.add(channel);
 		NAME_TO_CHANNEL_MAP.put(serverName, channel);
 		CHANNEL_TO_NAME_MAP.put(channel, serverName);
 
 		LOGGER.info("Client \"{}\" registered from {}", serverName, channel.remoteAddress());
-		return true;
 	}
 
 	/**
@@ -57,6 +50,16 @@ public class ChannelManager {
 			LOGGER.info("Client \"{}\" from {} unregistered", serverName, channel.remoteAddress());
 		}
 		// The channel is automatically removed from the ChannelGroup when closed.
+	}
+
+	/**
+	 * Checks if a server name is already registered.
+	 *
+	 * @param serverName The server name to check.
+	 * @return true if the name is already in use, false otherwise.
+	 */
+	public static boolean isNameRegistered(String serverName) {
+		return NAME_TO_CHANNEL_MAP.containsKey(serverName);
 	}
 
 	/**

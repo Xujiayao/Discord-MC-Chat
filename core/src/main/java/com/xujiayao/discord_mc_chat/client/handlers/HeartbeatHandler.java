@@ -10,6 +10,7 @@ import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
+import static com.xujiayao.discord_mc_chat.Constants.VERSION;
 
 /**
  * Handles sending heartbeats when the connection is idle and triggers
@@ -27,13 +28,13 @@ public class HeartbeatHandler extends ChannelInboundHandlerAdapter {
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
-		// Connection is active, send handshake packet
+		// Connection is active, send ClientHello packet
 		String serverName = "single_server".equals(ModeManager.getMode())
 				? "local"
 				: ConfigManager.getString("multi_server.server_name");
 
 		LOGGER.info("Connected to server. Sending handshake with server name: \"{}\"", serverName);
-		ctx.writeAndFlush(new Packets.Handshake(serverName));
+		ctx.writeAndFlush(new Packets.ClientHello(serverName, VERSION));
 
 		// Reset reconnect delay on successful connection
 		client.resetReconnectDelay();
