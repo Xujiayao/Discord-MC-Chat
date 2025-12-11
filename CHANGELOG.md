@@ -1,6 +1,6 @@
 # Changelog 更新日志
 
-## Discord-MC-Chat 2.7.0 for Minecraft 1.14.4+ - 2025/11/6
+## Discord-MC-Chat 2.7.1 for Minecraft 1.14.4+ - 2025/12/11
 
 To use the new voice channel features, please grant your Discord bot the "Connect" permission in the "Voice Channel Permissions" section at your Discord server's "Roles" menu.
 
@@ -16,11 +16,8 @@ DMCC Discord 服务器现已公开！通过以下链接加入：https://discord.
 
 ## New Features 新特性
 
-- Support displaying server status and player count using voice channels (#248 and #301)
-  支持使用语音频道显示服务器状态和玩家数量
-
-- Able to disable forwarding of chat messages sent via `/tellraw @a` command
-  可禁用转发通过 `/tellraw @a` 命令发送的聊天消息
+- Compatible with Minecraft 1.21.11
+  兼容 Minecraft 1.21.11
 
 ## Changes 更改
 
@@ -33,8 +30,7 @@ N/A
 ## Contributors 贡献者
 
 - @Xujiayao
-- @ok-coder1
 
 ## Detailed Information 详细信息
 
-https://github.com/Xujiayao/Discord-MC-Chat/compare/2.6.0...2.7.0
+https://github.com/Xujiayao/Discord-MC-Chat/compare/2.7.0...2.7.1
