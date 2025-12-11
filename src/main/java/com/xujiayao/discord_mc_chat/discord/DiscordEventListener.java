@@ -31,10 +31,14 @@ import net.minecraft.network.chat.MutableComponent;
 //#if MC <= 11502
 //$$ import net.minecraft.world.level.dimension.DimensionType;
 //#endif
+//#if MC >= 12111
+import net.minecraft.server.permissions.LevelBasedPermissionSet;
+//#endif
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -141,8 +145,10 @@ public class DiscordEventListener extends ListenerAdapter {
 						e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.executingCommand"))
 								.submit()
 								.whenComplete((v, ex) -> {
-									//#if MC >= 11900
-									CommandSourceStack source = new CommandSourceStack(new DiscordCommandSource(e), Vec3.ZERO, Vec2.ZERO, SERVER.overworld(), 4, "Discord-MC-Chat", Component.literal("Discord-MC-Chat"), SERVER, null);
+									//#if MC >= 12111
+									CommandSourceStack source = new CommandSourceStack(new DiscordCommandSource(e), Vec3.ZERO, Vec2.ZERO, SERVER.overworld(), LevelBasedPermissionSet.OWNER, "Discord-MC-Chat", Component.literal("Discord-MC-Chat"), SERVER, null);
+									//#elseif MC >= 11900
+									//$$ CommandSourceStack source = new CommandSourceStack(new DiscordCommandSource(e), Vec3.ZERO, Vec2.ZERO, SERVER.overworld(), 4, "Discord-MC-Chat", Component.literal("Discord-MC-Chat"), SERVER, null);
 									//#elseif MC > 11502
 									//$$ CommandSourceStack source = new CommandSourceStack(new DiscordCommandSource(e), Vec3.ZERO, Vec2.ZERO, SERVER.overworld(), 4, "Discord-MC-Chat", new TextComponent("Discord-MC-Chat"), SERVER, null);
 									//#else
@@ -392,7 +398,7 @@ public class DiscordEventListener extends ListenerAdapter {
 					for (String emojiName : emojiNames) {
 						List<RichCustomEmoji> emojis = JDA.getEmojisByName(emojiName, true);
 						if (!emojis.isEmpty() || EmojiManager.getByAlias(emojiName).isPresent()) {
-							referencedMessage = new StringBuilder(StringUtils.replaceIgnoreCase(referencedMessage.toString(), (":" + emojiName + ":"), (ChatFormatting.YELLOW + ":" + emojiName + ":" + ChatFormatting.RESET)));
+							referencedMessage = new StringBuilder(Strings.CI.replace(referencedMessage.toString(), (":" + emojiName + ":"), (ChatFormatting.YELLOW + ":" + emojiName + ":" + ChatFormatting.RESET)));
 						}
 					}
 				}
@@ -404,21 +410,21 @@ public class DiscordEventListener extends ListenerAdapter {
 						String usernameMention = "@" + member.getUser().getName();
 						String displayNameMention = "@" + member.getUser().getEffectiveName();
 						String formattedMention = ChatFormatting.YELLOW + "@" + member.getEffectiveName() + ChatFormatting.RESET;
-						temp = StringUtils.replaceIgnoreCase(temp, usernameMention, MarkdownSanitizer.escape(formattedMention));
-						temp = StringUtils.replaceIgnoreCase(temp, displayNameMention, MarkdownSanitizer.escape(formattedMention));
+						temp = Strings.CI.replace(temp, usernameMention, MarkdownSanitizer.escape(formattedMention));
+						temp = Strings.CI.replace(temp, displayNameMention, MarkdownSanitizer.escape(formattedMention));
 
 						if (member.getNickname() != null) {
 							String nicknameMention = "@" + member.getNickname();
-							temp = StringUtils.replaceIgnoreCase(temp, nicknameMention, MarkdownSanitizer.escape(formattedMention));
+							temp = Strings.CI.replace(temp, nicknameMention, MarkdownSanitizer.escape(formattedMention));
 						}
 					}
 					for (Role role : CHANNEL.getGuild().getRoles()) {
 						String roleMention = "@" + role.getName();
 						String formattedMention = ChatFormatting.YELLOW + "@" + role.getName() + ChatFormatting.RESET;
-						temp = StringUtils.replaceIgnoreCase(temp, roleMention, MarkdownSanitizer.escape(formattedMention));
+						temp = Strings.CI.replace(temp, roleMention, MarkdownSanitizer.escape(formattedMention));
 					}
-					temp = StringUtils.replaceIgnoreCase(temp, "@everyone", ChatFormatting.YELLOW + "@everyone" + ChatFormatting.RESET);
-					temp = StringUtils.replaceIgnoreCase(temp, "@here", ChatFormatting.YELLOW + "@here" + ChatFormatting.RESET);
+					temp = Strings.CI.replace(temp, "@everyone", ChatFormatting.YELLOW + "@everyone" + ChatFormatting.RESET);
+					temp = Strings.CI.replace(temp, "@here", ChatFormatting.YELLOW + "@here" + ChatFormatting.RESET);
 
 					referencedMessage = new StringBuilder(temp);
 				}
@@ -437,13 +443,13 @@ public class DiscordEventListener extends ListenerAdapter {
 							}
 
 							String hyperlinkInsert;
-							if (StringUtils.containsIgnoreCase(link, "gif")
-									&& StringUtils.containsIgnoreCase(link, "tenor.com")) {
+							if (Strings.CI.contains(link, "gif")
+									&& Strings.CI.contains(link, "tenor.com")) {
 								hyperlinkInsert = textAfterPlaceholder[0] + "},{\"text\":\"<gif>\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder[0];
 							} else {
 								hyperlinkInsert = textAfterPlaceholder[0] + "},{\"text\":\"" + protocol + link + "\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder[0];
 							}
-							finalReferencedMessage = StringUtils.replaceIgnoreCase(finalReferencedMessage, (protocol + link), hyperlinkInsert);
+							finalReferencedMessage = Strings.CI.replace(finalReferencedMessage, (protocol + link), hyperlinkInsert);
 						}
 					}
 				}
@@ -481,7 +487,7 @@ public class DiscordEventListener extends ListenerAdapter {
 				for (String emojiName : emojiNames) {
 					List<RichCustomEmoji> emojis = JDA.getEmojisByName(emojiName, true);
 					if (!emojis.isEmpty() || EmojiManager.getByAlias(emojiName).isPresent()) {
-						message = new StringBuilder(StringUtils.replaceIgnoreCase(message.toString(), (":" + emojiName + ":"), (ChatFormatting.YELLOW + ":" + MarkdownSanitizer.escape(emojiName) + ":" + ChatFormatting.RESET)));
+						message = new StringBuilder(Strings.CI.replace(message.toString(), (":" + emojiName + ":"), (ChatFormatting.YELLOW + ":" + MarkdownSanitizer.escape(emojiName) + ":" + ChatFormatting.RESET)));
 					}
 				}
 			}
@@ -493,21 +499,21 @@ public class DiscordEventListener extends ListenerAdapter {
 					String usernameMention = "@" + member.getUser().getName();
 					String displayNameMention = "@" + member.getUser().getEffectiveName();
 					String formattedMention = ChatFormatting.YELLOW + "@" + member.getEffectiveName() + ChatFormatting.RESET;
-					temp = StringUtils.replaceIgnoreCase(temp, usernameMention, MarkdownSanitizer.escape(formattedMention));
-					temp = StringUtils.replaceIgnoreCase(temp, displayNameMention, MarkdownSanitizer.escape(formattedMention));
+					temp = Strings.CI.replace(temp, usernameMention, MarkdownSanitizer.escape(formattedMention));
+					temp = Strings.CI.replace(temp, displayNameMention, MarkdownSanitizer.escape(formattedMention));
 
 					if (member.getNickname() != null) {
 						String nicknameMention = "@" + member.getNickname();
-						temp = StringUtils.replaceIgnoreCase(temp, nicknameMention, MarkdownSanitizer.escape(formattedMention));
+						temp = Strings.CI.replace(temp, nicknameMention, MarkdownSanitizer.escape(formattedMention));
 					}
 				}
 				for (Role role : CHANNEL.getGuild().getRoles()) {
 					String roleMention = "@" + role.getName();
 					String formattedMention = ChatFormatting.YELLOW + "@" + role.getName() + ChatFormatting.RESET;
-					temp = StringUtils.replaceIgnoreCase(temp, roleMention, MarkdownSanitizer.escape(formattedMention));
+					temp = Strings.CI.replace(temp, roleMention, MarkdownSanitizer.escape(formattedMention));
 				}
-				temp = StringUtils.replaceIgnoreCase(temp, "@everyone", ChatFormatting.YELLOW + "@everyone" + ChatFormatting.RESET);
-				temp = StringUtils.replaceIgnoreCase(temp, "@here", ChatFormatting.YELLOW + "@here" + ChatFormatting.RESET);
+				temp = Strings.CI.replace(temp, "@everyone", ChatFormatting.YELLOW + "@everyone" + ChatFormatting.RESET);
+				temp = Strings.CI.replace(temp, "@here", ChatFormatting.YELLOW + "@here" + ChatFormatting.RESET);
 
 				message = new StringBuilder(temp);
 			}
@@ -526,13 +532,13 @@ public class DiscordEventListener extends ListenerAdapter {
 						}
 
 						String hyperlinkInsert;
-						if (StringUtils.containsIgnoreCase(link, "gif")
-								&& StringUtils.containsIgnoreCase(link, "tenor.com")) {
+						if (Strings.CI.contains(link, "gif")
+								&& Strings.CI.contains(link, "tenor.com")) {
 							hyperlinkInsert = textAfterPlaceholder[1] + "},{\"text\":\"<gif>\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder[1];
 						} else {
 							hyperlinkInsert = textAfterPlaceholder[1] + "},{\"text\":\"" + protocol + link + "\",\"bold\":false,\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{" + textBeforePlaceholder[1];
 						}
-						finalMessage = StringUtils.replaceIgnoreCase(finalMessage, (protocol + link), hyperlinkInsert);
+						finalMessage = Strings.CI.replace(finalMessage, (protocol + link), hyperlinkInsert);
 					}
 				}
 			}

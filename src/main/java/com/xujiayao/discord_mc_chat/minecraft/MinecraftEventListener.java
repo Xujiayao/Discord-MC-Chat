@@ -22,13 +22,18 @@ import net.minecraft.network.chat.contents.TranslatableContents;
 //$$ import net.minecraft.server.level.ServerPlayer;
 //#endif
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.GameRules;
+//#if MC >= 12111
+import net.minecraft.world.level.gamerules.GameRules;
+//#else
+//$$ import net.minecraft.world.level.GameRules;
+//#endif
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.nio.charset.StandardCharsets;
@@ -87,10 +92,10 @@ public class MinecraftEventListener {
 				for (String emojiName : emojiNames) {
 					List<RichCustomEmoji> emojis = JDA.getEmojisByName(emojiName, true);
 					if (!emojis.isEmpty()) {
-						contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, (":" + emojiName + ":"), emojis.getFirst().getAsMention());
-						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, (":" + emojiName + ":"), (ChatFormatting.YELLOW + ":" + MarkdownSanitizer.escape(emojiName) + ":" + ChatFormatting.RESET));
+						contentToDiscord = Strings.CI.replace(contentToDiscord, (":" + emojiName + ":"), emojis.getFirst().getAsMention());
+						contentToMinecraft = Strings.CI.replace(contentToMinecraft, (":" + emojiName + ":"), (ChatFormatting.YELLOW + ":" + MarkdownSanitizer.escape(emojiName) + ":" + ChatFormatting.RESET));
 					} else if (EmojiManager.getByAlias(emojiName).isPresent()) {
-						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, (":" + emojiName + ":"), (ChatFormatting.YELLOW + ":" + MarkdownSanitizer.escape(emojiName) + ":" + ChatFormatting.RESET));
+						contentToMinecraft = Strings.CI.replace(contentToMinecraft, (":" + emojiName + ":"), (ChatFormatting.YELLOW + ":" + MarkdownSanitizer.escape(emojiName) + ":" + ChatFormatting.RESET));
 					}
 				}
 			}
@@ -102,16 +107,16 @@ public class MinecraftEventListener {
 						String displayNameMention = "@" + member.getUser().getEffectiveName();
 						String formattedMention = ChatFormatting.YELLOW + "@" + member.getEffectiveName() + ChatFormatting.RESET;
 
-						contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, usernameMention, member.getAsMention());
-						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, usernameMention, MarkdownSanitizer.escape(formattedMention));
+						contentToDiscord = Strings.CI.replace(contentToDiscord, usernameMention, member.getAsMention());
+						contentToMinecraft = Strings.CI.replace(contentToMinecraft, usernameMention, MarkdownSanitizer.escape(formattedMention));
 
-						contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, displayNameMention, member.getAsMention());
-						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, displayNameMention, MarkdownSanitizer.escape(formattedMention));
+						contentToDiscord = Strings.CI.replace(contentToDiscord, displayNameMention, member.getAsMention());
+						contentToMinecraft = Strings.CI.replace(contentToMinecraft, displayNameMention, MarkdownSanitizer.escape(formattedMention));
 
 						if (member.getNickname() != null) {
 							String nicknameMention = "@" + member.getNickname();
-							contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, nicknameMention, member.getAsMention());
-							contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, nicknameMention, MarkdownSanitizer.escape(formattedMention));
+							contentToDiscord = Strings.CI.replace(contentToDiscord, nicknameMention, member.getAsMention());
+							contentToMinecraft = Strings.CI.replace(contentToMinecraft, nicknameMention, MarkdownSanitizer.escape(formattedMention));
 						}
 					}
 				}
@@ -120,14 +125,14 @@ public class MinecraftEventListener {
 					for (Role role : CHANNEL.getGuild().getRoles()) {
 						String roleMention = "@" + role.getName();
 						String formattedMention = ChatFormatting.YELLOW + "@" + role.getName() + ChatFormatting.RESET;
-						contentToDiscord = StringUtils.replaceIgnoreCase(contentToDiscord, roleMention, role.getAsMention());
-						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, roleMention, MarkdownSanitizer.escape(formattedMention));
+						contentToDiscord = Strings.CI.replace(contentToDiscord, roleMention, role.getAsMention());
+						contentToMinecraft = Strings.CI.replace(contentToMinecraft, roleMention, MarkdownSanitizer.escape(formattedMention));
 					}
 				}
 
 				if (CONFIG.generic.allowedMentions.contains("everyone")) {
-					contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, "@everyone", ChatFormatting.YELLOW + "@everyone" + ChatFormatting.RESET);
-					contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, "@here", ChatFormatting.YELLOW + "@here" + ChatFormatting.RESET);
+					contentToMinecraft = Strings.CI.replace(contentToMinecraft, "@everyone", ChatFormatting.YELLOW + "@everyone" + ChatFormatting.RESET);
+					contentToMinecraft = Strings.CI.replace(contentToMinecraft, "@here", ChatFormatting.YELLOW + "@here" + ChatFormatting.RESET);
 				}
 			}
 
@@ -161,13 +166,13 @@ public class MinecraftEventListener {
 						}
 
 						String hyperlinkInsert;
-						if (StringUtils.containsIgnoreCase(link, "gif")
-								&& StringUtils.containsIgnoreCase(link, "tenor.com")) {
+						if (Strings.CI.contains(link, "gif")
+								&& Strings.CI.contains(link, "tenor.com")) {
 							hyperlinkInsert = "\"},{\"text\":\"<gif>\",\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{\"text\":\"";
 						} else {
 							hyperlinkInsert = "\"},{\"text\":\"" + protocol + link + "\",\"underlined\":true,\"color\":\"yellow\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + protocol + link + "\"},\"hoverEvent\":{\"action\":\"show_text\",\"contents\":[{\"text\":\"Open URL\"}]}},{\"text\":\"";
 						}
-						contentToMinecraft = StringUtils.replaceIgnoreCase(contentToMinecraft, (protocol + link), hyperlinkInsert);
+						contentToMinecraft = Strings.CI.replace(contentToMinecraft, (protocol + link), hyperlinkInsert);
 					}
 				}
 			}
@@ -241,7 +246,12 @@ public class MinecraftEventListener {
 			if (CONFIG.generic.announceAdvancements
 					&& isDone
 					&& display.shouldAnnounceChat()
-					&& player.level().getGameRules().getBoolean(GameRules.RULE_ANNOUNCE_ADVANCEMENTS)) {
+					//#if MC >= 12111
+					&& player.level().getGameRules().get(GameRules.SHOW_ADVANCEMENT_MESSAGES)
+					//#else
+					//$$ && player.level().getGameRules().getBoolean(GameRules.RULE_ANNOUNCE_ADVANCEMENTS)
+					//#endif
+			) {
 				String message = "null";
 
 				switch (display.getType()) {

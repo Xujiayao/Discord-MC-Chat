@@ -7,6 +7,10 @@ import com.xujiayao.discord_mc_chat.utils.Translations;
 import com.xujiayao.discord_mc_chat.utils.Utils;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
+//#if MC >= 12111
+import net.minecraft.server.permissions.Permission;
+import net.minecraft.server.permissions.PermissionLevel;
+//#endif
 //#if MC < 11900
 //$$ import net.minecraft.network.chat.TextComponent;
 //#endif
@@ -92,7 +96,11 @@ public class MinecraftCommands {
 					return 1;
 				}))
 				.then(literal("whitelist")
-						.requires(source -> source.hasPermission(CONFIG.generic.whitelistRequiresAdmin ? 4 : 0))
+						//#if MC >= 12111
+						.requires(source -> source.permissions().hasPermission(new Permission.HasCommandLevel(CONFIG.generic.whitelistRequiresAdmin ? PermissionLevel.OWNERS : PermissionLevel.ALL)))
+						//#else
+						//$$ .requires(source -> source.hasPermission(CONFIG.generic.whitelistRequiresAdmin ? 4 : 0))
+						//#endif
 						.then(argument("player", StringArgumentType.word())
 								.executes(context -> {
 									String player = StringArgumentType.getString(context, "player");
@@ -109,7 +117,11 @@ public class MinecraftCommands {
 									return 1;
 								})))
 				.then(literal("reload")
-						.requires(source -> source.hasPermission(4))
+						//#if MC >= 12111
+						.requires(source -> source.permissions().hasPermission(new Permission.HasCommandLevel(PermissionLevel.OWNERS)))
+						//#else
+						//$$ .requires(source -> source.hasPermission(4))
+						//#endif
 						.executes(context -> {
 							//#if MC > 11904
 							context.getSource().sendSuccess(() ->

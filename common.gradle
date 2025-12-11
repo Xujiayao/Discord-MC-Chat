@@ -39,6 +39,8 @@ dependencies {
     modImplementation("com.squareup.okio:okio-jvm:3.6.0")
     modImplementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.10")
 
+    modImplementation("org.apache.commons:commons-lang3:3.20.0")
+
     modImplementation("net.fellbaum:jemoji:1.7.4")
 
     modImplementation("com.google.code.gson:gson:2.13.1")
