@@ -6,4 +6,4 @@ pluginManagement {
 }
 
 include(":core")
-include(":minecraft-adapter")
+include(":minecraft")
