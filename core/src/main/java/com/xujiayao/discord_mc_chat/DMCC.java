@@ -94,12 +94,12 @@ public class DMCC {
 						LOGGER.info("Running in single_server mode. Starting internal server and client...");
 
 						serverInstance = new ServerDMCC();
-						Future<Integer> portFuture = serverInstance.start(0); // Bind to a random port
+						Future<Integer> portFuture = serverInstance.start("127.0.0.1", 0); // Bind to a random port
 						int port = portFuture.get();
 
 						if (port != -1) {
 							clientInstance = new ClientDMCC();
-							clientInstance.start("localhost", port);
+							clientInstance.start("127.0.0.1", port);
 						}
 					} catch (Exception e) {
 						LOGGER.error("Failed to start single_server mode", e);
@@ -117,8 +117,9 @@ public class DMCC {
 					LOGGER.info("Running in standalone mode. Starting server only.");
 
 					serverInstance = new ServerDMCC();
+					String host = ConfigManager.getString("multi_server.connection.host");
 					int port = ConfigManager.getInt("multi_server.connection.port");
-					serverInstance.start(port);
+					serverInstance.start(host, port);
 				}
 			}
 		}, "DMCC-Main").start();

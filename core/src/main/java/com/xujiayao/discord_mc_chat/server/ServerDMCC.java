@@ -21,7 +21,7 @@ public class ServerDMCC {
 	private final ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Server"));
 	private NettyServer nettyServer;
 
-	public Future<Integer> start(int port) {
+	public Future<Integer> start(String host, int port) {
 		return executor.submit(() -> {
 			LOGGER.info("Starting DMCC Server component...");
 
@@ -35,7 +35,7 @@ public class ServerDMCC {
 			}
 
 			nettyServer = new NettyServer();
-			return nettyServer.start(port);
+			return nettyServer.start(host, port);
 		});
 	}
 

@@ -15,5 +15,5 @@ mode: multi_server_client
 multi_server:
   server_name: "your_server_name_here"
   connection:
-    host: "localhost"
+    host: "127.0.0.1"
     port: 5000

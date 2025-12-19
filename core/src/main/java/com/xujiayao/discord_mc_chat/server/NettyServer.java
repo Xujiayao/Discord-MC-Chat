@@ -23,14 +23,14 @@ public class NettyServer {
 	private final EventLoopGroup workerGroup = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
 	private Channel channel;
 
-	public int start(int port) {
+	public int start(String host, int port) {
 		try {
 			ServerBootstrap b = new ServerBootstrap();
 			b.group(bossGroup, workerGroup)
 					.channel(NioServerSocketChannel.class)
 					.childHandler(new ServerChannelInitializer());
 
-			channel = b.bind(port).sync().channel();
+			channel = b.bind(host, port).sync().channel();
 			int boundPort = ((InetSocketAddress) channel.localAddress()).getPort();
 			LOGGER.info("Netty server started and listening on port {}", boundPort);
 			return boundPort;

@@ -17,7 +17,7 @@ language: "en_us"
 # 多服务器功能
 multi_server:
   connection:
-    host: "0.0.0.0"  # Limit accessibility
+    host: "127.0.0.1"  # Limit accessibility, change to "0.0.0.0" if allow external connections
     port: 5000
   servers:
     # This list acts as a whitelist. Only clients with a server name defined here are allowed to connect.
