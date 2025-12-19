@@ -4,158 +4,180 @@
 #
 # Config file for DMCC version & mode:
 # Do NOT change these values manually!
-version: ${mod_version}
-mode: standalone
+version: "${mod_version}"
+mode: "standalone"
 #
 # Discord-MC-Chat Wiki:
 # https://dmcc.xujiayao.com/
 # ==================================================
 
 # 语言设置
-language: en_us
-
-# Minecraft 版本设置
-# 取你所有子服务器中最高的版本
-minecraft_version: ${minecraft_version}
-
-# 机器人设置
-bot:
-  token: your_token_here # Discord 机器人令牌
-  rich_presence: # TODO
-    enable: true
-
-# 关闭设置
-shutdown:
-  graceful_shutdown: true # 是否优雅关闭服务器
-
-# Webhook 设置
-webhook:
-  enable: true # 是否使用 Webhook 发送聊天消息
-  avatar_url: https://mc-heads.net/avatar/{player_uuid}.png
-  allowed_mentions: # TODO 允许 Webhook 触发提及的对象
-    - everyone
-    - users
-    - roles
-
-# 检查更新设置
-check_for_updates:
-  enable: true # 是否检查更新
-  mention_admins: true # 是否在更新通知中提及管理员
-  channel: in-game-chat
-
-# 消息广播设置
-broadcasts:
-  discord_to_minecraft: # true or false
-    chat: true
-    command: true
-  minecraft_to_discord: # channel name, empty = disable
-    server:
-      started: in-game-chat
-      stopped: in-game-chat
-    player:
-      join: in-game-chat
-      quit: in-game-chat
-      chat: in-game-chat
-      command: in-game-chat
-      die: in-game-chat
-      advancement: in-game-chat
-    source:
-      say: in-game-chat
-      tell_raw: in-game-chat
+language: "en_us"
 
 # 多服务器功能
 multi_server:
   connection:
-    # Limit accessibility
-    ip: 0.0.0.0
+    host: "0.0.0.0"  # Limit accessibility
     port: 5000
-  security:
-    # This secret key is automatically generated on first startup.
-    # You MUST copy this exact key to all your multi-server clients.
-    shared_secret: will_be_auto_generated
   servers:
-    # This list acts as a whitelist. Only clients with a serverName defined here are allowed to connect.
-    - name: SMP
-      color: yellow
-      start_command: ./SMP/start.bat # command or url
+    # This list acts as a whitelist. Only clients with a server name defined here are allowed to connect.
+    - name: "SMP"
+      color: "yellow"
+      start_command: "./SMP/start.bat"  # command or url
 
-# MSPT 监控设置
-mspt_monitoring:
-  enable: true
-  interval_seconds: 5
-  threshold: 50
-  channel: in-game-chat
-
-# 控制台转发设置
-console_forwarding:
-  enable: true
-  execute_command: true
-  channel: console_forwarding
-
-# 管理员设置
-dmcc_admin:
-  # 任何在游戏内拥有此 OP 等级的玩家，将自动被视为 DMCC 管理员，从而可以使用所有 DMCC 管理命令。
-  # 注意：如果某 Discord 用户想使用 DMCC 管理命令，他必须先将账户与一个满足此 OP 等级的 MC 账户链接，否则仅可在游戏内使用管理命令。
-  minecraft_op_level_requirement: 4
-
-# 账户绑定设置
-# 强制启用，若MC里为某op_level，自动成为DMCC管理员，允许使用管理命令
-account_linking:
-  features:
-    sync_role_colors: true
-    sync_op_level_based_on_discord_roles:
-      # 根据用户的 Discord 角色，来自动地为他们在游戏内授予或撤销 OP 权限。
+# Discord 设置
+discord:
+  # 机器人设置
+  bot:
+    token: "your_token_here"  # Discord 机器人令牌
+    rich_presence: # TODO
       enable: true
-      list:
-        # 示例：任何拥有 "Admins" Discord 角色的已链接玩家，都将被 DMCC 自动设置为 4 级 OP。
-        # 一旦他们成为 4 级 OP，他们也会因为上面的 minecraft_op_level_requirement 规则而自动成为 DMCC 管理员。
-        - role_name: Admins
-          op_level: 4
-    discord_mention_notifications:
-      enable: true
-      style: action_bar # action_bar, title, or chat
-    discord_user_avatar_for_webhooks: true
+  # Webhook 设置
+  webhook:
+    enable: true  # 是否使用 Webhook 发送聊天消息
+    avatar_url: "https://mc-heads.net/avatar/{player_name}.png"
+    allowed_mentions: # TODO 允许 Webhook 触发提及的对象
+      - "everyone"
+      - "users"
+      - "roles"
 
-# 频道主题更新设置
-channel_topic_updating:
-  enable: true
-  interval_seconds: 600
-  channel: in-game-chat
-
-# 命令权限设置
-command_permissions:
-  help: everyone
-  info: everyone
-  stats: everyone
-  update: everyone
-  console: admin
-  disable: admin
-  enable: admin
-  execute: admin
-  log: admin
-  reload: admin
-  shutdown: admin
-  start: admin
-  stop: admin
-  # link: everyone
-  # whitelist: admin
+# 消息广播设置
+broadcasts:
+  discord_to_minecraft:  # true or false
+    chat: true
+    command: true
+  minecraft_to_discord:  # channel name, empty = disable
+    server:
+      started: "in-game-chat"
+      stopped: "in-game-chat"
+    player:
+      join: "in-game-chat"
+      quit: "in-game-chat"
+      chat: "in-game-chat"
+      command: "in-game-chat"
+      die: "in-game-chat"
+      advancement: "in-game-chat"
+    source:
+      say: "in-game-chat"
+      tell_raw: "in-game-chat"
 
 # 消息格式设置
-formatting: # TODO
+formatting:  # TODO
   format_chat_messages: true
   todo: true
 
 # 命令过滤设置
 excluded_commands:
-  - /msg (?!@a)(.*)
-  - /tell (?!@a)(.*)
-  - /tellraw (?!@a)(.*)
-  - /w (?!@a)(.*)
-  - /teammsg (.*)
-  - /tm (.*)
-  - /login (.*)
-  - /l (.*)
-  - /register (.*)
-  - /reg (.*)
-  - /account (.*)
-  - /auth (.*)
+  - "/msg (?!@a)(.*)"
+  - "/tell (?!@a)(.*)"
+  - "/tellraw (?!@a)(.*)"
+  - "/w (?!@a)(.*)"
+  - "/teammsg (.*)"
+  - "/tm (.*)"
+  - "/login (.*)"
+  - "/l (.*)"
+  - "/register (.*)"
+  - "/reg (.*)"
+  - "/account (.*)"
+  - "/auth (.*)"
+
+# MSPT 监控设置
+mspt_monitoring:
+  enable: true
+  interval_seconds: 10
+  threshold: 50
+  channel: "in-game-chat"
+
+# 控制台转发设置
+console_forwarding:
+  enable: true
+  execute_messages_from_channel: true
+  channels:
+    - server: "SMP"
+      channel: "console-smp"
+
+# 频道主题更新设置
+channel_topic_updating:
+  enable: true
+  interval_minutes: 10
+  channel: "in-game-chat"
+
+# 语音频道状态更新设置
+voice_channels_updating:
+  enable: true
+  interval_minutes: 10
+  server_status_channel_id: "111111"
+  player_count_channel_id: "222222"
+
+# 账户绑定设置
+# 强制启用
+account_linking:
+  # Discord 用户的 DMCC 命令权限是根据其已绑定的 Minecraft 账户的 OP 等级来决定的
+  role_op_sync:
+    # 根据用户的 Discord 角色，来自动地为他们在游戏内授予或撤销 OP 权限。
+    sync_op_level_based_on_discord_roles: true
+    role_mappings:
+      # 示例：任何拥有 "Admins" Discord 角色的已链接玩家，都将被 DMCC 自动设置为 3 级 OP。
+      # 同时，他们也会自动成为等级 4 的 DMCC 管理员。
+      # OP 等级对应的官方 Minecraft 权限级别：
+      #   Level 0 (normal)
+      #     Player has no special permissions.
+      #   Level 1 (moderator)
+      #     Player can bypass spawn protection.
+      #   Level 2 (gamemaster)
+      #     Player or executor can use more commands and player can use command blocks.
+      #   Level 3 (admin)
+      #     Player or executor can use commands related to multiplayer management.
+      #   Level 4 (owner)
+      #     Player or executor can use all the commands, including commands related to server management.
+      - role_name: "Admins"
+        op_level: 3
+  use_role_colors_in_chat: true
+  discord_mention_notifications:
+    enable: true
+    style: "action_bar"  # action_bar, title, or chat
+  discord_user_avatar_for_webhooks: false
+
+# DMCC 命令权限设置
+# OP 等级对应的官方 Minecraft 权限级别：
+#   Level 0 (normal)
+#     Player has no special permissions.
+#   Level 1 (moderator)
+#     Player can bypass spawn protection.
+#   Level 2 (gamemaster)
+#     Player or executor can use more commands and player can use command blocks.
+#   Level 3 (admin)
+#     Player or executor can use commands related to multiplayer management.
+#   Level 4 (owner)
+#     Player or executor can use all the commands, including commands related to server management.
+command_permission_levels:
+  disable: 4
+  enable: 4
+  execute: 2  # Commands are executed as a fake user with same permission level as the user
+  help: 0
+  info: 0
+  link: 0
+  log: 4
+  reload: 4
+  shutdown: 4
+  start: 4
+  stats: 0
+  stop: 4
+  update: 0
+  whitelist: 3
+
+# 检查更新设置
+check_for_updates:
+  enable: true  # 是否检查更新
+  mention_admins: true  # 是否在更新通知中提及管理员
+  channel: "in-game-chat"
+
+# 关闭设置
+shutdown:
+  graceful_shutdown: true  # 是否优雅关闭 DMCC
+
+# 统计数据收集设置
+# 收集匿名的使用数据以帮助改进 DMCC
+# 包括模组版本、服务器软件类型和版本、已启用的功能、各设置的选项、所属国家等信息
+telemetry:
+  enable: true

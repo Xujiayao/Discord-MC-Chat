@@ -4,23 +4,16 @@
 #
 # Config file for DMCC version & mode:
 # Do NOT change these values manually!
-version: ${mod_version}
-mode: multi_server_client
+version: "${mod_version}"
+mode: "multi_server_client"
 #
 # Discord-MC-Chat Wiki:
 # https://dmcc.xujiayao.com/
 # ==================================================
 
-# 语言设置
-language: en_us
-
 # 多服务器功能
 multi_server:
-  server_name: your_server_name_here
+  server_name: "your_server_name_here"
   connection:
-    host: localhost
+    host: "localhost"
     port: 5000
-  security:
-    # This secret key must be identical to the one in the standalone server's config.yml.
-    # It is used to authenticate this client to the standalone server.
-    shared_secret: your_shared_secret_here
