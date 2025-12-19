@@ -79,8 +79,8 @@ public class LoggerImpl implements Logger {
 						String fileName = "logs/DMCC_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".log";
 						fileWriter = new PrintWriter(new FileWriter(fileName, true), true);
 					} catch (IOException e) {
-						System.out.println("Failed to create log file: " + e.getMessage());
-						e.printStackTrace(System.out);
+						System.err.println("Failed to create log file: " + e.getMessage());
+						e.printStackTrace(System.err);
 					} finally {
 						fileWriterInitialized = true;
 					}

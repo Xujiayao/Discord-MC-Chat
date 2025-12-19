@@ -20,7 +20,7 @@ import static com.xujiayao.discord_mc_chat.Constants.OK_HTTP_CLIENT;
 import static com.xujiayao.discord_mc_chat.Constants.VERSION;
 
 /**
- * The main class of Discord MC Chat (DMCC).
+ * The main class of Discord-MC-Chat (DMCC).
  *
  * @author Xujiayao
  */
