@@ -66,6 +66,8 @@ broadcasts:
 # 多服务器功能
 multi_server:
   connection:
+    # Limit accessibility
+    ip: 0.0.0.0
     port: 5000
   security:
     # This secret key is automatically generated on first startup.
