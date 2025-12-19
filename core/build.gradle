@@ -1,7 +1,7 @@
 apply plugin: "com.gradleup.shadow"
 
 base {
-    archivesName = "Discord-MC-Chat-common"
+    archivesName = "Discord-MC-Chat-core"
 }
 
 dependencies {
@@ -78,7 +78,7 @@ shadowJar {
 def otherSubprojects = rootProject.subprojects.findAll { it.name != project.name }
 
 tasks.register("mergeJars") {
-    dependsOn ":minecraft-adapter:jar"
+    dependsOn ":minecraft:jar"
     dependsOn shadowJar
 
     def shadowJarFile = tasks.shadowJar.archiveFile.get().asFile
@@ -104,7 +104,7 @@ tasks.register("mergeJars") {
                 }
             }
         }
-        // Add the decompressed content to the common jar
+        // Add the decompressed content to the core jar
         ant.zip(update: "true", destfile: shadowJarFile) {
             fileset(dir: tempDir)
         }
@@ -119,7 +119,7 @@ build {
         copy {
             from "build/libs"
             into "../build"
-            exclude "*common*"
+            exclude "*core*"
         }
     }
 }
