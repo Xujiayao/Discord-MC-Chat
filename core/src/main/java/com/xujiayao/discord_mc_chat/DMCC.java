@@ -146,11 +146,16 @@ public class DMCC {
 
 		// Shutdown OkHttpClient
 		try (ExecutorService executorService = OK_HTTP_CLIENT.dispatcher().executorService();
-			 Cache ignored = OK_HTTP_CLIENT.cache()) {
+			 Cache ignored1 = OK_HTTP_CLIENT.cache()) {
 			executorService.shutdown();
-			if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
-				executorService.shutdownNow(); // Force shutdown if not terminated gracefully
+			if (ConfigManager.getBoolean("shutdown.graceful_shutdown")) {
+				// Allow up to 30 minutes for ongoing requests to complete
+				boolean ignored2 = executorService.awaitTermination(30, TimeUnit.MINUTES);
+			} else {
+				// Allow up to 5 seconds for ongoing requests to complete
+				boolean ignored2 = executorService.awaitTermination(5, TimeUnit.SECONDS);
 			}
+			executorService.shutdownNow();
 			OK_HTTP_CLIENT.connectionPool().evictAll();
 		} catch (Exception e) {
 			LOGGER.error("An error occurred during OkHttpClient shutdown", e);
