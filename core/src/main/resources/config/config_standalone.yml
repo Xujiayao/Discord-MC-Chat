@@ -4,8 +4,8 @@
 #
 # Config file for DMCC version & mode:
 # Do NOT change these values manually!
-version: "${mod_version}"
-mode: "standalone"
+version: ${mod_version}
+mode: standalone
 #
 # Discord-MC-Chat Wiki:
 # https://dmcc.xujiayao.com/

@@ -4,7 +4,7 @@
 #
 # Mode file for DMCC version:
 # Do NOT change this value manually!
-version: "${mod_version}"
+version: ${mod_version}
 #
 # Discord-MC-Chat Wiki:
 # https://dmcc.xujiayao.com/
@@ -18,11 +18,11 @@ version: "${mod_version}"
 #
 # Available mode options:
 #
-# - "single_server":
+# - single_server:
 #     This is the standard, all-in-one mode. This DMCC instance will connect
 #     directly to Discord. This is the recommended mode for most users.
 #
-# - "multi_server_client":
+# - multi_server_client:
 #     This is for advanced users running multiple Minecraft servers. In this mode,
 #     this DMCC instance will act as a "client". It will not connect to Discord
 #     directly. Instead, it will connect to a "standalone" DMCC instance that
@@ -31,4 +31,4 @@ version: "${mod_version}"
 
 # Set your desired mode here.
 # Replace "your_option_here" with one of the available modes.
-mode: "your_option_here"
+mode: your_option_here
