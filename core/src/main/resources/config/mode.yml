@@ -19,15 +19,16 @@ version: ${mod_version}
 # Available mode options:
 #
 #   single_server:
-#     This is the standard, all-in-one mode. This Minecraft server will connect
+#     This is the standard, all-in-one mode. This DMCC instance will connect
 #     directly to Discord. This is the recommended mode for most users.
 #
 #   multi_server_client:
 #     This is for advanced users running multiple Minecraft servers. In this mode,
-#     this mod will act as a "client". It will not connect to Discord directly.
-#     Instead, it will connect to a "standalone" DMCC instance that centralizes
-#     all DMCC activities and communicates with Discord.
+#     this DMCC instance will act as a "client". It will not connect to Discord
+#     directly. Instead, it will connect to a "standalone" DMCC instance that
+#     centralizes all DMCC activities and communicates with Discord.
 # ==================================================
 
-# Set your desired mode here. Replace "your_option_here" with one of the available modes.
+# Set your desired mode here.
+# Replace "your_option_here" with one of the available modes.
 mode: your_option_here
