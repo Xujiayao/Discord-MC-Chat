@@ -1,7 +1,6 @@
 package com.xujiayao.discord_mc_chat.utils.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.xujiayao.discord_mc_chat.utils.CryptoUtils;
 import com.xujiayao.discord_mc_chat.utils.YamlUtils;
 
 import java.io.IOException;
@@ -96,19 +95,8 @@ public class ConfigManager {
 				throw new IOException("Default config template not found: " + templateName);
 			}
 
-			if ("standalone".equals(mode)) {
-				// For standalone mode, read the template as a string, replace the placeholder, and write it back.
-				// This preserves all comments and formatting.
-				String templateContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-				String secret = CryptoUtils.generateRandomString(64);
-
-				String newContent = templateContent.replace("will_be_auto_generated", secret);
-
-				Files.writeString(CONFIG_PATH, newContent, StandardCharsets.UTF_8);
-			} else {
-				// For other modes, simply copy the template file as is.
-				Files.copy(inputStream, CONFIG_PATH, StandardCopyOption.REPLACE_EXISTING);
-			}
+			// Copy the template config file as is
+			Files.copy(inputStream, CONFIG_PATH, StandardCopyOption.REPLACE_EXISTING);
 		}
 
 		LOGGER.info("Created default configuration file at \"{}\"", CONFIG_PATH);

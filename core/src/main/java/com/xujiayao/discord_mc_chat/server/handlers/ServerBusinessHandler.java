@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.network.Packet;
 import com.xujiayao.discord_mc_chat.network.Packets;
 import com.xujiayao.discord_mc_chat.server.ChannelManager;
-import com.xujiayao.discord_mc_chat.utils.CryptoUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -84,46 +83,8 @@ public class ServerBusinessHandler extends SimpleChannelInboundHandler<Packet> {
 						ctx.writeAndFlush(new Packets.HandshakeFailure("handshake.error.duplicate_name")).addListener(future -> ctx.close());
 						return;
 					}
-
-					// Generate and send challenge
-					String challenge = CryptoUtils.generateRandomString(32);
-					CHALLENGE_MAP.put(ctx.channel(), challenge);
-					ctx.channel().attr(SERVER_NAME).set(serverName);
-					ctx.channel().attr(HANDSHAKE_STATE).set(HandshakeState.WAITING_FOR_RESPONSE);
-					ctx.writeAndFlush(new Packets.ServerChallenge(challenge));
 				} else {
 					LOGGER.warn("First packet from {} was not a ClientHello packet. Closing connection.", ctx.channel().remoteAddress());
-					ctx.close();
-				}
-			}
-			case WAITING_FOR_RESPONSE -> {
-				if (packet instanceof Packets.ClientResponse(String responseHash)) {
-					String serverName = ctx.channel().attr(SERVER_NAME).get();
-					String challenge = CHALLENGE_MAP.remove(ctx.channel());
-
-					if (challenge == null) {
-						LOGGER.warn("No challenge found for client {}. Closing connection.", ctx.channel().remoteAddress());
-						ctx.close();
-						return;
-					}
-
-					String sharedSecret = ConfigManager.getString("multi_server.security.shared_secret");
-					String expectedHash = CryptoUtils.hmacSha256(sharedSecret, challenge);
-
-					if (Objects.equals(responseHash, expectedHash)) {
-						// Authentication successful
-						ctx.channel().attr(HANDSHAKE_STATE).set(HandshakeState.COMPLETED);
-						ChannelManager.registerChannel(serverName, ctx.channel());
-						String language = ConfigManager.getString("language");
-						ctx.writeAndFlush(new Packets.HandshakeSuccess("handshake.success", language));
-						LOGGER.info("Client \"{}\" from {} authenticated successfully.", serverName, ctx.channel().remoteAddress());
-					} else {
-						// Authentication failed
-						LOGGER.warn("Authentication failed for client \"{}\" from {}. Closing connection.", serverName, ctx.channel().remoteAddress());
-						ctx.writeAndFlush(new Packets.HandshakeFailure("handshake.error.authentication_failed")).addListener(future -> ctx.close());
-					}
-				} else {
-					LOGGER.warn("Expected ClientResponse packet from {}, but got {}. Closing connection.", ctx.channel().remoteAddress(), packet.getClass().getSimpleName());
 					ctx.close();
 				}
 			}
