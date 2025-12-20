@@ -18,7 +18,6 @@ handshake:
 
 commands:
   unknown_command: "未知命令：\"{}\"。输入 \"/help\" 查看可用命令列表。"
-  no_permission: "你没有权限执行此命令！"
   help:
     description: "显示可用命令列表"
     help: "帮助"
