@@ -160,8 +160,8 @@ public class DMCC {
 			executorService.shutdown();
 			try {
 				if (ConfigManager.getBoolean("shutdown.graceful_shutdown")) {
-					// Allow up to 30 minutes for ongoing requests to complete
-					boolean ignored2 = executorService.awaitTermination(30, TimeUnit.MINUTES);
+					// Allow up to 10 minutes for ongoing requests to complete
+					boolean ignored2 = executorService.awaitTermination(10, TimeUnit.MINUTES);
 				}
 			} catch (NullPointerException ignored) {
 			} finally {
