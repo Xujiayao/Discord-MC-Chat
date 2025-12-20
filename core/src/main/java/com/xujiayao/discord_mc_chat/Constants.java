@@ -18,6 +18,7 @@ public class Constants {
 
 	public static final Logger LOGGER = new Logger();
 
+	// YAML_MAPPER has to be initialized before VERSION because getDmccVersion() uses it.
 	public static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory()
 			.enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
 			.disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));

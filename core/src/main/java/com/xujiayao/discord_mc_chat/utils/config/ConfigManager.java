@@ -12,8 +12,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.function.Function;
 
-import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
-import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
+import static com.xujiayao.discord_mc_chat.Constants.*;
 
 /**
  * Configuration manager for DMCC.
@@ -23,84 +22,75 @@ import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
  */
 public class ConfigManager {
 
-	private static final Path CONFIG_PATH = Paths.get("./config/discord_mc_chat/config.yml");
+	private static final Path CONFIG_FILE_PATH = Paths.get("./config/discord_mc_chat/config.yml");
 	private static JsonNode config;
 
 	/**
 	 * Loads the configuration file based on the determined operating mode.
 	 *
-	 * @param expectedMode The mode DMCC is expected to run in.
 	 * @return true if the config was loaded and validated successfully, false otherwise.
 	 */
-	public static boolean load(String expectedMode) {
+	public static boolean load() {
+		String expectedMode = ModeManager.getMode();
+		String configTemplatePath = "/config/config_" + expectedMode + ".yml";
+
 		try {
 			// Create directories if they do not exist
-			Files.createDirectories(CONFIG_PATH.getParent());
+			Files.createDirectories(CONFIG_FILE_PATH.getParent());
 
 			// If config.yml does not exist or is empty, create it from the appropriate template.
-			if (!Files.exists(CONFIG_PATH) || Files.size(CONFIG_PATH) == 0) {
-				createDefaultConfig(expectedMode);
+			if (!Files.exists(CONFIG_FILE_PATH) || Files.size(CONFIG_FILE_PATH) == 0) {
+				LOGGER.warn("Configuration file not found or is empty");
+				LOGGER.warn("Creating a default one at \"{}\"", CONFIG_FILE_PATH);
+				LOGGER.warn("Please edit \"{}\" before reloading DMCC", CONFIG_FILE_PATH);
+
+				try (InputStream inputStream = ConfigManager.class.getResourceAsStream(configTemplatePath)) {
+					if (inputStream == null) {
+						throw new IOException("Default config template not found: " + configTemplatePath);
+					}
+
+					// Copy the template config file as is
+					Files.copy(inputStream, CONFIG_FILE_PATH, StandardCopyOption.REPLACE_EXISTING);
+				}
+
 				return false;
 			}
 
 			// Load the user's config.yml
-			JsonNode userConfig = YAML_MAPPER.readTree(Files.newBufferedReader(CONFIG_PATH, StandardCharsets.UTF_8));
+			JsonNode userConfig = YAML_MAPPER.readTree(Files.newBufferedReader(CONFIG_FILE_PATH, StandardCharsets.UTF_8));
 
 			// Check for mode consistency
 			String configMode = userConfig.path("mode").asText();
 			if (!expectedMode.equals(configMode)) {
 				LOGGER.error("Mode mismatch detected!");
 				LOGGER.error("The expected mode is \"{}\" (from mode.yml or environment), but config.yml is for \"{}\".", expectedMode, configMode);
-				LOGGER.error("Please backup and delete your existing config.yml to allow DMCC to generate a new and correct one, then run \"/dmcc reload\".");
+				LOGGER.error("Please backup and delete your existing config.yml to allow DMCC to generate a new and correct one.");
 				return false;
 			}
 
 			// Load the corresponding template for validation
-			String templatePath = "/config/config_" + expectedMode + ".yml";
 			JsonNode templateConfig;
-			try (InputStream templateStream = ConfigManager.class.getResourceAsStream(templatePath)) {
+			try (InputStream templateStream = ConfigManager.class.getResourceAsStream(configTemplatePath)) {
 				if (templateStream == null) {
-					LOGGER.error("Could not find configuration template in resources: {}", templatePath);
-					return false;
+					throw new IOException("Default config template not found: " + configTemplatePath);
 				}
 				templateConfig = YAML_MAPPER.readTree(templateStream);
 			}
 
 			// Validate config
-			if (YamlUtils.validate(userConfig, templateConfig, CONFIG_PATH)) {
-				ConfigManager.config = userConfig;
-				LOGGER.info("Configuration loaded successfully!");
-
-				return true;
+			if (!YamlUtils.validate(userConfig, templateConfig, CONFIG_FILE_PATH, true)) {
+				LOGGER.error("Validation of config.yml failed");
+				return false;
 			}
+
+			ConfigManager.config = userConfig;
+			LOGGER.info("Configuration loaded successfully!");
+
+			return true;
 		} catch (IOException e) {
 			LOGGER.error("Failed to load or validate configuration", e);
+			return false;
 		}
-
-		return false;
-	}
-
-	/**
-	 * Creates a default config.yml from a template based on the mode.
-	 * For standalone mode, it also generates and injects a random shared_secret.
-	 *
-	 * @param mode The operating mode which determines the template to use.
-	 */
-	private static void createDefaultConfig(String mode) throws IOException {
-		String templateName = "/config/config_" + mode + ".yml";
-		LOGGER.warn("Configuration file not found or is empty. Creating a new one for \"{}\" mode.", mode);
-
-		try (InputStream inputStream = ConfigManager.class.getResourceAsStream(templateName)) {
-			if (inputStream == null) {
-				throw new IOException("Default config template not found: " + templateName);
-			}
-
-			// Copy the template config file as is
-			Files.copy(inputStream, CONFIG_PATH, StandardCopyOption.REPLACE_EXISTING);
-		}
-
-		LOGGER.info("Created default configuration file at \"{}\"", CONFIG_PATH);
-		LOGGER.info("Please edit the configuration file before reloading or restarting DMCC");
 	}
 
 	/**
@@ -120,7 +110,7 @@ public class ConfigManager {
 		JsonNode node = config;
 
 		for (String part : parts) {
-			if (node == null || node.isMissingNode()) {
+			if (node == null || node.isMissingNode() || node.isNull()) {
 				LOGGER.warn("Configuration path not found: {}", path);
 				return node;
 			}

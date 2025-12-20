@@ -1,14 +1,10 @@
 package com.xujiayao.discord_mc_chat.utils.i18n;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
+import com.xujiayao.discord_mc_chat.DMCC;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
 import com.xujiayao.discord_mc_chat.utils.YamlUtils;
-import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
-import okhttp3.Request;
-import okhttp3.Response;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,14 +13,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
-import static com.xujiayao.discord_mc_chat.Constants.JSON_MAPPER;
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
-import static com.xujiayao.discord_mc_chat.Constants.OK_HTTP_CLIENT;
 import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
 
 /**
@@ -35,39 +27,37 @@ import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
  */
 public class I18nManager {
 
+	private static String language = "en_us";
+
+	private static final Map<String, String> DMCC_TRANSLATIONS = new HashMap<>();
+
 	private static final Path CUSTOM_MESSAGES_DIR = Paths.get("./config/discord_mc_chat/custom_messages");
-	private static final Path CACHE_DIR = Paths.get("./config/discord_mc_chat/cache/lang");
-	private static final Map<String, String> dmccTranslations = new HashMap<>();
-	private static final Map<String, String> minecraftTranslations = new HashMap<>();
-	private static String language;
 	private static JsonNode customMessages;
 
+	private static final Path CACHE_DIR = Paths.get("./config/discord_mc_chat/cache/lang");
+	private static final Map<String, String> minecraftTranslations = new HashMap<>();
+
 	/**
-	 * Loads and validates all language files based on the configuration.
-	 * This method is typically called during DMCC initialization and reloads.
+	 * Loads only DMCC's internal translations from resources.
 	 *
-	 * @return true if all files were loaded successfully, false otherwise.
+	 * @return true if DMCC translations were loaded successfully, false otherwise.
 	 */
-	public static boolean load() {
-		return load(ConfigManager.getString("language"));
+	public static boolean loadInternalTranslationsOnly() {
+		if (DMCC_TRANSLATIONS.isEmpty()) {
+			// Check if required resource files exist for the selected language
+			if (!checkLanguageResources()) {
+				return false;
+			}
+
+			// Load DMCC internal translations
+			return loadDmccTranslations();
+		}
+		return true;
 	}
 
-	/**
-	 * Loads and validates all language files for a specific language.
-	 * This method can be called to reload translations for a different language.
-	 * <p>
-	 * This method is only called on the client side when the server instructs a language change.
-	 *
-	 * @param newLanguage The language to load (e.g., "en_us", "zh_cn").
-	 * @return true if all files were loaded successfully, false otherwise.
-	 */
-	public static boolean load(String newLanguage) {
-		// If the language is the same as the currently loaded one, no need to reload.
-		if (Objects.equals(language, newLanguage)) {
-			return true;
-		}
 
-		language = newLanguage;
+	public static boolean load(String lang) {
+		language = lang;
 
 		// Check if required resource files exist for the selected language
 		if (!checkLanguageResources()) {
@@ -79,24 +69,22 @@ public class I18nManager {
 			return false;
 		}
 
-		// For client-only mode, we only need DMCC translations for logs and basic messages.
-		// The server will provide the language, and this method will be called again if needed.
-		if ("multi_server_client".equals(ModeManager.getMode()) && customMessages == null) {
-			LOGGER.info("DMCC internal translations for \"{}\" loaded successfully! Full I18n suite will be loaded after handshake.", language);
-			return true;
-		}
+		if ("multi_server_client".equals(ModeManager.getMode())) {
+			// For client-only mode, we only need DMCC translations for logs and basic messages.
+			LOGGER.info("DMCC internal translations for \"{}\" loaded successfully!", language);
+		} else {
+			// For server-enabled modes, load the full I18n suite.
+			if (!loadCustomMessages()) {
+				return false;
+			}
 
-		// For server-enabled modes, or after a client has been instructed to change lang, load the full I18n suite.
-		if (!loadCustomMessages()) {
-			return false;
-		}
+			// Load official Minecraft translations, from cache or by downloading
+			//		if (!loadMinecraftTranslations()) {
+			//			return false;
+			//		}
 
-		// Load official Minecraft translations, from cache or by downloading
-		if (!loadMinecraftTranslations()) {
-			return false;
+			LOGGER.info("All language files for \"{}\" loaded successfully!", language);
 		}
-
-		LOGGER.info("All language files for \"{}\" loaded successfully!", language);
 		return true;
 	}
 
@@ -123,11 +111,31 @@ public class I18nManager {
 	}
 
 	/**
+	 * Loads DMCC's internal translation file from resources.
+	 *
+	 * @return true if the translations were loaded successfully.
+	 */
+	private static boolean loadDmccTranslations() {
+		DMCC_TRANSLATIONS.clear();
+		String resourcePath = "/lang/" + language + ".yml";
+
+		try (InputStream inputStream = I18nManager.class.getResourceAsStream(resourcePath)) {
+			JsonNode rootNode = YAML_MAPPER.readTree(inputStream);
+			flattenJsonToMap(rootNode, "", DMCC_TRANSLATIONS);
+		} catch (IOException e) {
+			LOGGER.error("Failed to load DMCC translations from " + resourcePath, e);
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
 	 * Loads the custom messages configuration file.
 	 *
 	 * @return true if the custom messages were loaded and validated successfully.
 	 */
-	public static boolean loadCustomMessages() {
+	private static boolean loadCustomMessages() {
 		try {
 			Files.createDirectories(CUSTOM_MESSAGES_DIR);
 			Path customMessagesPath = CUSTOM_MESSAGES_DIR.resolve(language + ".yml");
@@ -140,7 +148,11 @@ public class I18nManager {
 						throw new IOException("Default custom messages template not found: " + templatePath);
 					}
 					Files.copy(inputStream, customMessagesPath, StandardCopyOption.REPLACE_EXISTING);
-					LOGGER.info("Created default custom messages file at \"{}\"", customMessagesPath);
+
+					LOGGER.warn("Custom messages file for \"{}\" not found or is empty", language);
+					LOGGER.warn("Creating a default one at \"{}\"", customMessagesPath);
+					LOGGER.warn("DMCC will continue using default values");
+					LOGGER.warn("If you wish to customize messages, please edit \"{}\" and reload DMCC.", customMessagesPath);
 				}
 			}
 
@@ -155,11 +167,14 @@ public class I18nManager {
 
 			// Validate the user's file against the template.
 			// The `errorOnUnmodified` flag is set to false because users might not need to customize messages.
-			if (YamlUtils.validate(userMessages, templateMessages, customMessagesPath, false)) {
-				customMessages = userMessages;
-				LOGGER.info("Custom messages for \"{}\" loaded successfully!", language);
-				return true;
+			if (!YamlUtils.validate(userMessages, templateMessages, customMessagesPath, false)) {
+				LOGGER.error("Validation of custom message config failed");
+				return false;
 			}
+
+			customMessages = userMessages;
+			LOGGER.info("Custom messages for \"{}\" loaded successfully!", language);
+			return true;
 		} catch (IOException e) {
 			LOGGER.error("Failed to load custom messages", e);
 		}
@@ -167,89 +182,63 @@ public class I18nManager {
 		return false;
 	}
 
-	/**
-	 * Loads DMCC's internal translation file from resources.
-	 *
-	 * @return true if the translations were loaded successfully.
-	 */
-	private static boolean loadDmccTranslations() {
-		dmccTranslations.clear();
-		String resourcePath = "/lang/" + language + ".yml";
-
-		try (InputStream inputStream = I18nManager.class.getResourceAsStream(resourcePath)) {
-			if (inputStream == null) {
-				// This check is technically redundant due to checkLanguageResources, but good for safety.
-				LOGGER.error("DMCC internal translation file not found in resources: {}", resourcePath);
-				return false;
-			}
-
-			JsonNode rootNode = YAML_MAPPER.readTree(inputStream);
-			flattenJsonToMap(rootNode, "", dmccTranslations);
-		} catch (IOException e) {
-			LOGGER.error("Failed to load DMCC translations from " + resourcePath, e);
-			return false;
-		}
-
-		return true;
-	}
-
-	/**
-	 * Loads the official Minecraft translation file for the current language.
-	 * It attempts to use a cached version before downloading a new one.
-	 *
-	 * @return true if the translations were loaded successfully.
-	 */
-	private static boolean loadMinecraftTranslations() {
-		minecraftTranslations.clear();
-
-		try {
-			String mcVersion = EnvironmentUtils.getMinecraftVersion();
-			String fileName = StringUtils.format("{}-{}.json", language, mcVersion);
-
-			Files.createDirectories(CACHE_DIR);
-			Path langCachePath = CACHE_DIR.resolve(fileName);
-
-			// If a valid cached file exists, use it.
-			if (Files.exists(langCachePath)) {
-				try {
-					JsonNode root = JSON_MAPPER.readTree(Files.newBufferedReader(langCachePath, StandardCharsets.UTF_8));
-					minecraftTranslations.putAll(JSON_MAPPER.convertValue(root, new TypeReference<Map<String, String>>() {
-					}));
-
-					LOGGER.info("Loaded Minecraft translations from cache for version {}", mcVersion);
-					return true;
-				} catch (Exception e) {
-					LOGGER.error("Failed to read cached Minecraft translations, will attempt to re-download", e);
-				}
-			}
-
-			// Otherwise, download the file.
-			LOGGER.info("Downloading Minecraft translations for version {}...", mcVersion);
-			String url = "https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@" + mcVersion + "/assets/minecraft/lang/" + language + ".json";
-			Request request = new Request.Builder().url(url).build();
-
-			try (Response response = OK_HTTP_CLIENT.newCall(request).execute()) {
-				if (!response.isSuccessful()) {
-					LOGGER.error("Failed to download Minecraft translations. HTTP Status: {}", response.code());
-					return false;
-				}
-
-				String jsonContent = response.body().string();
-				Files.writeString(langCachePath, jsonContent);
-
-				JsonNode root = JSON_MAPPER.readTree(jsonContent);
-				minecraftTranslations.putAll(JSON_MAPPER.convertValue(root, new TypeReference<Map<String, String>>() {
-				}));
-
-				LOGGER.info("Downloaded and cached Minecraft translations, file size: {} bytes", jsonContent.length());
-				return true;
-			}
-		} catch (IOException e) {
-			LOGGER.error("Failed to load or download Minecraft translations", e);
-		}
-
-		return false;
-	}
+//	/**
+//	 * Loads the official Minecraft translation file for the current language.
+//	 * It attempts to use a cached version before downloading a new one.
+//	 *
+//	 * @return true if the translations were loaded successfully.
+//	 */
+//	private static boolean loadMinecraftTranslations() {
+//		minecraftTranslations.clear();
+//
+//		try {
+//			String mcVersion = "EnvironmentUtils.getMinecraftVersion()";
+//			String fileName = StringUtils.format("{}-{}.json", language, mcVersion);
+//
+//			Files.createDirectories(CACHE_DIR);
+//			Path langCachePath = CACHE_DIR.resolve(fileName);
+//
+//			// If a valid cached file exists, use it.
+//			if (Files.exists(langCachePath)) {
+//				try {
+//					JsonNode root = JSON_MAPPER.readTree(Files.newBufferedReader(langCachePath, StandardCharsets.UTF_8));
+//					minecraftTranslations.putAll(JSON_MAPPER.convertValue(root, new TypeReference<Map<String, String>>() {
+//					}));
+//
+//					LOGGER.info("Loaded Minecraft translations from cache for version {}", mcVersion);
+//					return true;
+//				} catch (Exception e) {
+//					LOGGER.error("Failed to read cached Minecraft translations, will attempt to re-download", e);
+//				}
+//			}
+//
+//			// Otherwise, download the file.
+//			LOGGER.info("Downloading Minecraft translations for version {}...", mcVersion);
+//			String url = "https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@" + mcVersion + "/assets/minecraft/lang/" + language + ".json";
+//			Request request = new Request.Builder().url(url).build();
+//
+//			try (Response response = OK_HTTP_CLIENT.newCall(request).execute()) {
+//				if (!response.isSuccessful()) {
+//					LOGGER.error("Failed to download Minecraft translations. HTTP Status: {}", response.code());
+//					return false;
+//				}
+//
+//				String jsonContent = response.body().string();
+//				Files.writeString(langCachePath, jsonContent);
+//
+//				JsonNode root = JSON_MAPPER.readTree(jsonContent);
+//				minecraftTranslations.putAll(JSON_MAPPER.convertValue(root, new TypeReference<Map<String, String>>() {
+//				}));
+//
+//				LOGGER.info("Downloaded and cached Minecraft translations, file size: {} bytes", jsonContent.length());
+//				return true;
+//			}
+//		} catch (IOException e) {
+//			LOGGER.error("Failed to load or download Minecraft translations", e);
+//		}
+//
+//		return false;
+//	}
 
 	/**
 	 * Gets a translation from DMCC's internal translation files (lang/*.yml).
@@ -260,27 +249,8 @@ public class I18nManager {
 	 * @return The formatted translation string, or the key if not found.
 	 */
 	public static String getDmccTranslation(String key, Object... args) {
-		String translation = dmccTranslations.getOrDefault(key, key);
+		String translation = DMCC_TRANSLATIONS.getOrDefault(key, key);
 		return StringUtils.format(translation, args);
-	}
-
-	/**
-	 * Gets a translation from the official Minecraft translation files.
-	 * Placeholders are formatted using %s or %1$s.
-	 *
-	 * @param key  The translation key (e.g., "death.attack.drown").
-	 * @param args The arguments to format into the string.
-	 * @return The formatted translation string, or the key if not found.
-	 */
-	public static String getMinecraftTranslation(String key, Object... args) {
-		String translation = minecraftTranslations.getOrDefault(key, key);
-		try {
-			// MessageFormat handles both %s and %1$s style placeholders
-			return MessageFormat.format(translation.replace("'", "''"), args);
-		} catch (IllegalArgumentException e) {
-			LOGGER.warn("Failed to format Minecraft translation for key \"{}\": {}", key, e.getMessage());
-			return translation; // Return unformatted string on error
-		}
 	}
 
 	/**
@@ -291,6 +261,25 @@ public class I18nManager {
 	public static JsonNode getCustomMessages() {
 		return customMessages;
 	}
+
+//	/**
+//	 * Gets a translation from the official Minecraft translation files.
+//	 * Placeholders are formatted using %s or %1$s.
+//	 *
+//	 * @param key  The translation key (e.g., "death.attack.drown").
+//	 * @param args The arguments to format into the string.
+//	 * @return The formatted translation string, or the key if not found.
+//	 */
+//	public static String getMinecraftTranslation(String key, Object... args) {
+//		String translation = minecraftTranslations.getOrDefault(key, key);
+//		try {
+//			// MessageFormat handles both %s and %1$s style placeholders
+//			return MessageFormat.format(translation.replace("'", "''"), args);
+//		} catch (IllegalArgumentException e) {
+//			LOGGER.warn("Failed to format Minecraft translation for key \"{}\": {}", key, e.getMessage());
+//			return translation; // Return unformatted string on error
+//		}
+//	}
 
 	/**
 	 * Recursively flattens a JsonNode object into a Map with dot-separated keys.

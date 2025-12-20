@@ -22,10 +22,10 @@ public class ClientBusinessHandler extends SimpleChannelInboundHandler<Packet> {
 		if (packet instanceof Packets.HandshakeSuccess(String messageKey, String language)) {
 			LOGGER.info(I18nManager.getDmccTranslation(messageKey));
 
-			// Synchronize language with server
-			if (!I18nManager.load(language)) {
-				LOGGER.error("Failed to load language \"{}\" from server. DMCC may not function correctly.", language);
-			}
+//			// Synchronize language with server
+//			if (!I18nManager.load(language)) {
+//				LOGGER.error("Failed to load language \"{}\" from server. DMCC may not function correctly.", language);
+//			}
 
 		} else if (packet instanceof Packets.HandshakeFailure(String messageKey)) {
 			LOGGER.error("Handshake with server failed: {}", I18nManager.getDmccTranslation(messageKey));

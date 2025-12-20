@@ -3,6 +3,7 @@ package com.xujiayao.discord_mc_chat;
 import com.xujiayao.discord_mc_chat.client.ClientDMCC;
 import com.xujiayao.discord_mc_chat.commands.CommandEventHandler;
 import com.xujiayao.discord_mc_chat.server.ServerDMCC;
+import com.xujiayao.discord_mc_chat.standalone.TerminalManager;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
@@ -46,7 +47,7 @@ public class DMCC {
 			}
 
 			// Pad the version string to ensure consistent formatting in the banner
-			String versionString = VERSION + " ".repeat(Math.max(0, 31 - VERSION.length()));
+			String versionString = VERSION + " ".repeat(Math.max(0, 34 - VERSION.length()));
 
 			// Print the DMCC banner
 			LOGGER.info("┌─────────────────────────────────────────────────────────────────────────────────┐");
@@ -56,36 +57,41 @@ public class DMCC {
 			LOGGER.info("│ | |_| | \\__ \\ (_| (_) | | | (_| |_____| |  | | |__|_____| |___| | | | (_| | |_  │");
 			LOGGER.info("│ |____/|_|___/\\___\\___/|_|  \\__,_|     |_|  |_|\\____|     \\____|_| |_|\\__,_|\\__| │");
 			LOGGER.info("│                                                                                 │");
-			LOGGER.info("│ Discord-MC-Chat (DMCC) {} More Information + Docs: │", versionString);
+			LOGGER.info("│ Discord-MC-Chat (DMCC) {} Discord-MC-Chat Docs: │", versionString);
 			LOGGER.info("│ By Xujiayao                                          https://dmcc.xujiayao.com/ │");
 			LOGGER.info("└─────────────────────────────────────────────────────────────────────────────────┘");
 
 			LOGGER.info("Initializing DMCC {} with IS_MINECRAFT_ENV: {}", VERSION, IS_MINECRAFT_ENV);
 
+			// Initialize Command event handlers
+			CommandEventHandler.init();
+
+			// Initialize terminal manager for standalone mode
+			// Minecraft commands are initialized using ServiceLoader (MinecraftServiceImpl)
+			if (!IS_MINECRAFT_ENV) {
+				TerminalManager.init();
+			}
+
 			// If configuration fails to load, exit the DMCC-Main thread gracefully
 			// In a Minecraft environment, we just return and let the server continue running
-			// In standalone mode, the process would terminate after returning
+			// In standalone mode, the process will also remain alive awaiting user to reload
+			// User can run the reload command after fixing the issues
 
-			// Determine operating mode
-			if (!ModeManager.load()) {
-				LOGGER.warn("DMCC initialization halted because an operating mode needs to be selected");
-				return;
-			}
+			String reloadCommand = IS_MINECRAFT_ENV ? "/dmcc reload" : "/reload";
 
-			// Load configuration
-			if (!ConfigManager.load(ModeManager.getMode())) {
-				LOGGER.warn("DMCC will not continue initialization due to configuration issues");
-				return;
-			}
-
-			// Load language files
-			if (!I18nManager.load()) {
+			// Load DMCC internal translation
+			if (!I18nManager.loadInternalTranslationsOnly()) {
+				// Should not happen!
 				LOGGER.warn("DMCC will not continue initialization due to language file issues");
 				return;
 			}
 
-			// Initialize Command event handlers
-			CommandEventHandler.init();
+			if (!ModeManager.load() // Determine operating mode
+					|| !ConfigManager.load() // Load configuration
+					|| !I18nManager.load(ConfigManager.getString("language"))) { // Load all translations
+				LOGGER.warn("Please correct the errors mentioned above, then run \"{}\".", reloadCommand);
+				return;
+			}
 
 			// From now on should separate ServerDMCC and ClientDMCC initialization based on mode
 			switch (ModeManager.getMode()) {
@@ -138,6 +144,10 @@ public class DMCC {
 			serverInstance.shutdown();
 		}
 
+		if (!IS_MINECRAFT_ENV) {
+			TerminalManager.shutdown();
+		}
+
 		// Shutdown Command event handler
 		CommandEventHandler.shutdown();
 
@@ -148,14 +158,18 @@ public class DMCC {
 		try (ExecutorService executorService = OK_HTTP_CLIENT.dispatcher().executorService();
 			 Cache ignored1 = OK_HTTP_CLIENT.cache()) {
 			executorService.shutdown();
-			if (ConfigManager.getBoolean("shutdown.graceful_shutdown")) {
-				// Allow up to 30 minutes for ongoing requests to complete
-				boolean ignored2 = executorService.awaitTermination(30, TimeUnit.MINUTES);
-			} else {
+			try {
+				if (ConfigManager.getBoolean("shutdown.graceful_shutdown")) {
+					// Allow up to 30 minutes for ongoing requests to complete
+					boolean ignored2 = executorService.awaitTermination(30, TimeUnit.MINUTES);
+				}
+			} catch (NullPointerException ignored) {
+			} finally {
 				// Allow up to 5 seconds for ongoing requests to complete
 				boolean ignored2 = executorService.awaitTermination(5, TimeUnit.SECONDS);
 			}
 			executorService.shutdownNow();
+
 			OK_HTTP_CLIENT.connectionPool().evictAll();
 		} catch (Exception e) {
 			LOGGER.error("An error occurred during OkHttpClient shutdown", e);

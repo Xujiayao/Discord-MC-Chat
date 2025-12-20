@@ -31,19 +31,19 @@ public class CommandEventHandler {
 			DMCC.reload();
 		}));
 
-		EventManager.register(CommandEvents.ShutdownEvent.class, event -> commandExecutor.submit(() -> {
-			LOGGER.info(I18nManager.getDmccTranslation("commands.shutdown.shutting_down"));
-
-			new Thread(() -> {
-				if (IS_MINECRAFT_ENV) {
-					LOGGER.info("Run \"/dmcc start\" to start DMCC again");
-					DMCC.shutdown();
-				} else {
-					// This will trigger the shutdown hook in StandaloneDMCC
-					System.exit(0);
-				}
-			}, "DMCC-Shutdown").start();
-		}));
+//		EventManager.register(CommandEvents.ShutdownEvent.class, event -> commandExecutor.submit(() -> {
+//			LOGGER.info(I18nManager.getDmccTranslation("commands.shutdown.shutting_down"));
+//
+//			new Thread(() -> {
+//				if (IS_MINECRAFT_ENV) {
+//					LOGGER.info("Run \"/dmcc enable\" to start DMCC again");
+//					DMCC.shutdown();
+//				} else {
+//					// This will trigger the shutdown hook in StandaloneDMCC
+//					System.exit(0);
+//				}
+//			}, "DMCC-Shutdown").start();
+//		}));
 
 		LOGGER.info("Initialized all Command event handlers");
 	}

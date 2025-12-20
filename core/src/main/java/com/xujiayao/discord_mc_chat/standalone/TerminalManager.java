@@ -30,10 +30,10 @@ public class TerminalManager {
 			// The Scanner is created here and never closed, to keep System.in open.
 			// Only process commands if the TerminalManager is in a "running" state.
 			// This can happen if System.in is closed externally, which signals the end.
-			Thread consoleThread = new Thread(() -> {
+			Thread terminalThread = new Thread(() -> {
 				// The Scanner is created here and never closed, to keep System.in open.
 				Scanner scanner = new Scanner(System.in);
-				LOGGER.info("Interactive terminal started. Type \"help\" for a list of available commands.");
+				LOGGER.info("Interactive terminal started. Type \"/help\" for a list of available commands.");
 
 				while (!Thread.currentThread().isInterrupted()) {
 					try {
@@ -55,8 +55,7 @@ public class TerminalManager {
 				}
 			}, "DMCC-Terminal");
 
-			consoleThread.setDaemon(true); // Set as daemon so it doesn't prevent JVM exit
-			consoleThread.start();
+			terminalThread.start();
 		}
 
 		// Set the running state to true, allowing the loop to process commands.

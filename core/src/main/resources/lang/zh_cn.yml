@@ -17,7 +17,7 @@ handshake:
     authentication_failed: "身份验证失败。共享密钥 (shared_secret) 不匹配。"
 
 commands:
-  unknown_command: "未知命令：\"{}\"。输入 \"help\" 查看可用命令列表。"
+  unknown_command: "未知命令：\"{}\"。输入 \"/help\" 查看可用命令列表。"
   no_permission: "你没有权限执行此命令！"
   help:
     description: "显示可用命令列表"

@@ -43,10 +43,6 @@ public class ServerDMCC {
 				return -1;
 			}
 
-			if (!IS_MINECRAFT_ENV) {
-				TerminalManager.init();
-			}
-
 			nettyServer = new NettyServer();
 			this.port = nettyServer.start(host, port);
 			return this.port;
@@ -65,10 +61,6 @@ public class ServerDMCC {
 		} catch (InterruptedException e) {
 			LOGGER.error("Discord manager shutdown was interrupted.", e);
 			Thread.currentThread().interrupt();
-		}
-
-		if (!IS_MINECRAFT_ENV) {
-			TerminalManager.shutdown();
 		}
 
 		executor.shutdown();
