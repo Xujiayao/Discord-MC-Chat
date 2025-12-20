@@ -1,4 +1,4 @@
-package com.xujiayao.discord_mc_chat.discord;
+package com.xujiayao.discord_mc_chat.server.discord;
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;

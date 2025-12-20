@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.server;
 
-import com.xujiayao.discord_mc_chat.discord.DiscordManager;
+import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
