@@ -15,10 +15,9 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 public class ClientDMCC {
 
 	private final ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Client"));
-	private NettyClient nettyClient;
-
 	private final String host;
 	private final int port;
+	private NettyClient nettyClient;
 
 	public ClientDMCC(String host, int port) {
 		this.host = host;

@@ -1,7 +1,6 @@
 package com.xujiayao.discord_mc_chat.utils.i18n;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.xujiayao.discord_mc_chat.DMCC;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
 import com.xujiayao.discord_mc_chat.utils.YamlUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
@@ -27,15 +26,12 @@ import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
  */
 public class I18nManager {
 
-	private static String language = "en_us";
-
 	private static final Map<String, String> DMCC_TRANSLATIONS = new HashMap<>();
-
 	private static final Path CUSTOM_MESSAGES_DIR = Paths.get("./config/discord_mc_chat/custom_messages");
-	private static JsonNode customMessages;
-
 	private static final Path CACHE_DIR = Paths.get("./config/discord_mc_chat/cache/lang");
 	private static final Map<String, String> minecraftTranslations = new HashMap<>();
+	private static String language = "en_us";
+	private static JsonNode customMessages;
 
 	/**
 	 * Loads only DMCC's internal translations from resources.

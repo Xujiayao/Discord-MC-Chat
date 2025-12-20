@@ -12,7 +12,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.function.Function;
 
-import static com.xujiayao.discord_mc_chat.Constants.*;
+import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
+import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
 
 /**
  * Configuration manager for DMCC.

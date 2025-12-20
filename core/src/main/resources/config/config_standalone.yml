@@ -43,10 +43,10 @@ discord:
 
 # 消息广播设置
 broadcasts:
-  discord_to_minecraft:  # true or false
+  discord_to_minecraft: # true or false
     chat: true
     command: true
-  minecraft_to_discord:  # channel name, empty = disable
+  minecraft_to_discord: # channel name, empty = disable
     server:
       started: "in-game-chat"
       stopped: "in-game-chat"
@@ -62,7 +62,7 @@ broadcasts:
       tell_raw: "in-game-chat"
 
 # 消息格式设置
-formatting:  # TODO
+formatting: # TODO
   format_chat_messages: true
   todo: true
 

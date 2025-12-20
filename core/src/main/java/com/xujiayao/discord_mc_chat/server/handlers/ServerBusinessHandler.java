@@ -26,15 +26,8 @@ import static com.xujiayao.discord_mc_chat.Constants.VERSION;
  */
 public class ServerBusinessHandler extends SimpleChannelInboundHandler<Packet> {
 
-	private enum HandshakeState {
-		WAITING_FOR_HELLO,
-		WAITING_FOR_RESPONSE,
-		COMPLETED
-	}
-
 	private static final AttributeKey<HandshakeState> HANDSHAKE_STATE = AttributeKey.valueOf("handshakeState");
 	private static final AttributeKey<String> SERVER_NAME = AttributeKey.valueOf("serverName");
-
 	private static final Map<Channel, String> CHALLENGE_MAP = new ConcurrentHashMap<>();
 
 	@Override
@@ -129,5 +122,11 @@ public class ServerBusinessHandler extends SimpleChannelInboundHandler<Packet> {
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
 		LOGGER.error("Exception caught in server handler for {}", ctx.channel().remoteAddress(), cause);
 		ctx.close();
+	}
+
+	private enum HandshakeState {
+		WAITING_FOR_HELLO,
+		WAITING_FOR_RESPONSE,
+		COMPLETED
 	}
 }

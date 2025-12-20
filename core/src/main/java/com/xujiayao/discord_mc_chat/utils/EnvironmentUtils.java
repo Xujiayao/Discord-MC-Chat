@@ -1,12 +1,10 @@
 package com.xujiayao.discord_mc_chat.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-import static com.xujiayao.discord_mc_chat.Constants.IS_MINECRAFT_ENV;
 import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
 
 /**

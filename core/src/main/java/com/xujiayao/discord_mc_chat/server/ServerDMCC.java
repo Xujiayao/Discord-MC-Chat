@@ -1,14 +1,12 @@
 package com.xujiayao.discord_mc_chat.server;
 
 import com.xujiayao.discord_mc_chat.discord.DiscordManager;
-import com.xujiayao.discord_mc_chat.standalone.TerminalManager;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static com.xujiayao.discord_mc_chat.Constants.IS_MINECRAFT_ENV;
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
 /**
@@ -19,9 +17,8 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 public class ServerDMCC {
 
 	private final ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Server"));
-	private NettyServer nettyServer;
-
 	private final String host;
+	private NettyServer nettyServer;
 	private int port;
 
 	public ServerDMCC(String host, int port) {
