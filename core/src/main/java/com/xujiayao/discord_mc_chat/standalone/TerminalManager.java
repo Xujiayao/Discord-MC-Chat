@@ -1,7 +1,11 @@
 package com.xujiayao.discord_mc_chat.standalone;
 
-import com.xujiayao.discord_mc_chat.commands.CommandManager;
+import com.xujiayao.discord_mc_chat.commands.CommandEventHandler;
+import com.xujiayao.discord_mc_chat.commands.CommandEvents;
+import com.xujiayao.discord_mc_chat.utils.events.EventManager;
+import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -41,10 +45,7 @@ public class TerminalManager {
 							String line = scanner.nextLine();
 							// Only process commands if the TerminalManager is in a "running" state.
 							if (running.get()) {
-								List<String> response = CommandManager.handleCommand(line);
-								for (String message : response) {
-									LOGGER.info(message);
-								}
+								handleCommand(line);
 							}
 						}
 					} catch (IllegalStateException e) {
@@ -60,6 +61,49 @@ public class TerminalManager {
 
 		// Set the running state to true, allowing the loop to process commands.
 		running.set(true);
+	}
+
+	/**
+	 * Handles a command.
+	 *
+	 * @param commandLine The full command line.
+	 */
+	private static void handleCommand(String commandLine) {
+		if (commandLine == null || commandLine.trim().isEmpty()) {
+			return;
+		}
+
+		if (commandLine.startsWith("/")) {
+			commandLine = commandLine.substring(1);
+		}
+
+		String[] parts = commandLine.trim().split("\\s+");
+		if (parts.length == 0 || parts[0].isEmpty()) {
+			return;
+		}
+
+		String command = parts[0];
+
+		switch (command) {
+			case "disable" -> {
+				LOGGER.info(I18nManager.getDmccTranslation("commands.disable.disabling"));
+				EventManager.post(new CommandEvents.DisableEvent());
+			}
+			case "enable" -> {
+				LOGGER.info(I18nManager.getDmccTranslation("commands.enable.enabling"));
+				EventManager.post(new CommandEvents.EnableEvent());
+			}
+			case "help" -> LOGGER.info(CommandEventHandler.buildHelpMessage());
+			case "reload" -> {
+				LOGGER.info(I18nManager.getDmccTranslation("commands.reload.reloading"));
+				EventManager.post(new CommandEvents.ReloadEvent());
+			}
+			case "shutdown" -> {
+				LOGGER.info(I18nManager.getDmccTranslation("commands.shutdown.shutting_down"));
+				EventManager.post(new CommandEvents.ShutdownEvent());
+			}
+			default -> LOGGER.info(I18nManager.getDmccTranslation("commands.unknown_command", command));
+		}
 	}
 
 	/**

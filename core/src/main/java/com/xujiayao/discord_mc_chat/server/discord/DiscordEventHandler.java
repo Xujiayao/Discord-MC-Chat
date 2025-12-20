@@ -1,5 +1,8 @@
 package com.xujiayao.discord_mc_chat.server.discord;
 
+import com.xujiayao.discord_mc_chat.commands.CommandEventHandler;
+import com.xujiayao.discord_mc_chat.commands.CommandEvents;
+import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -34,7 +37,27 @@ public class DiscordEventHandler extends ListenerAdapter {
 
 	@Override
 	public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
-		// TODO: Handle slash commands
+		event.deferReply().queue();
+
+		switch (event.getName()) {
+			case "disable" -> {
+				event.getHook().editOriginal(I18nManager.getDmccTranslation("commands.disable.disabling")).queue();
+				EventManager.post(new CommandEvents.DisableEvent());
+			}
+			case "enable" -> {
+				event.getHook().editOriginal(I18nManager.getDmccTranslation("commands.enable.enabling")).queue();
+				EventManager.post(new CommandEvents.EnableEvent());
+			}
+			case "help" -> event.getHook().editOriginal(CommandEventHandler.buildHelpMessage()).queue();
+			case "reload" -> {
+				event.getHook().editOriginal(I18nManager.getDmccTranslation("commands.reload.reloading")).queue();
+				EventManager.post(new CommandEvents.ReloadEvent());
+			}
+			case "shutdown" -> {
+				event.getHook().editOriginal(I18nManager.getDmccTranslation("commands.shutdown.shutting_down")).queue();
+				EventManager.post(new CommandEvents.ShutdownEvent());
+			}
+		}
 	}
 
 	@Override

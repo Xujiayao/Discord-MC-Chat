@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.commands;
 
 import com.xujiayao.discord_mc_chat.DMCC;
+import com.xujiayao.discord_mc_chat.utils.StringUtils;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
@@ -25,26 +26,39 @@ public class CommandEventHandler {
 	public static void init() {
 		commandExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Command"));
 
-		EventManager.register(CommandEvents.ReloadEvent.class, event -> commandExecutor.submit(() -> {
-			LOGGER.info(I18nManager.getDmccTranslation("commands.reload.reloading"));
-			DMCC.reload();
+		EventManager.register(CommandEvents.DisableEvent.class, event -> commandExecutor.submit(DMCC::shutdown));
+
+		EventManager.register(CommandEvents.EnableEvent.class, event -> commandExecutor.submit(DMCC::init));
+
+		EventManager.register(CommandEvents.ReloadEvent.class, event -> commandExecutor.submit(DMCC::reload));
+
+		EventManager.register(CommandEvents.ShutdownEvent.class, event -> commandExecutor.submit(() -> {
+			System.exit(0);
 		}));
 
-//		EventManager.register(CommandEvents.ShutdownEvent.class, event -> commandExecutor.submit(() -> {
-//			LOGGER.info(I18nManager.getDmccTranslation("commands.shutdown.shutting_down"));
-//
-//			new Thread(() -> {
-//				if (IS_MINECRAFT_ENV) {
-//					LOGGER.info("Run \"/dmcc enable\" to start DMCC again");
-//					DMCC.shutdown();
-//				} else {
-//					// This will trigger the shutdown hook in StandaloneDMCC
-//					System.exit(0);
-//				}
-//			}, "DMCC-Shutdown").start();
-//		}));
-
 		LOGGER.info("Initialized all Command event handlers");
+	}
+
+	/**
+	 * Builds and returns the help message string (plain text without formatting).
+	 *
+	 * @return The plain help message
+	 */
+	public static String buildHelpMessage() {
+		return StringUtils.format("""
+						==================== {} ====================
+						/disable  | {}
+						/enable   | {}
+						/help     | {}
+						/reload   | {}
+						/shutdown | {}
+						""",
+				I18nManager.getDmccTranslation("commands.help.help"),
+				I18nManager.getDmccTranslation("commands.disable.description"),
+				I18nManager.getDmccTranslation("commands.enable.description"),
+				I18nManager.getDmccTranslation("commands.help.description"),
+				I18nManager.getDmccTranslation("commands.reload.description"),
+				I18nManager.getDmccTranslation("commands.shutdown.description"));
 	}
 
 	/**
