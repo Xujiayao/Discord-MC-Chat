@@ -51,7 +51,12 @@ public class I18nManager {
 		return true;
 	}
 
-
+	/**
+	 * Loads all necessary language files based on the selected language.
+	 *
+	 * @param lang The language code to load (e.g., "en_us").
+	 * @return true if all necessary language files were loaded successfully, false otherwise.
+	 */
 	public static boolean load(String lang) {
 		language = lang;
 
@@ -65,22 +70,20 @@ public class I18nManager {
 			return false;
 		}
 
-		if ("multi_server_client".equals(ModeManager.getMode())) {
-			// For client-only mode, we only need DMCC translations for logs and basic messages.
-			LOGGER.info("DMCC internal translations for \"{}\" loaded successfully!", language);
-		} else {
+		// For client-only mode, we only need DMCC translations for logs and basic messages.
+		if (!"multi_server_client".equals(ModeManager.getMode())) {
 			// For server-enabled modes, load the full I18n suite.
 			if (!loadCustomMessages()) {
 				return false;
 			}
 
 			// Load official Minecraft translations, from cache or by downloading
-			//		if (!loadMinecraftTranslations()) {
-			//			return false;
-			//		}
-
-			LOGGER.info("All language files for \"{}\" loaded successfully!", language);
+//			if (!loadMinecraftTranslations()) {
+//				return false;
+//			}
 		}
+
+		LOGGER.info("All necessary language files for \"{}\" loaded successfully!", language);
 		return true;
 	}
 
