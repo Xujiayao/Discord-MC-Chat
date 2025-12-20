@@ -43,6 +43,8 @@ public class ServerDMCC {
 
 			nettyServer = new NettyServer(host, port);
 			port = nettyServer.start();
+
+			LOGGER.info("DMCC Server component started successfully.");
 			return port;
 		});
 	}
