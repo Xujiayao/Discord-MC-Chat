@@ -17,7 +17,15 @@ public class ClientDMCC {
 	private final ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Client"));
 	private NettyClient nettyClient;
 
-	public void start(String host, int port) {
+	private final String host;
+	private final int port;
+
+	public ClientDMCC(String host, int port) {
+		this.host = host;
+		this.port = port;
+	}
+
+	public void start() {
 		executor.submit(() -> {
 			LOGGER.info("Starting DMCC Client component...");
 
