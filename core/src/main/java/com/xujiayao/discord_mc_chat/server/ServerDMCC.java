@@ -42,8 +42,8 @@ public class ServerDMCC {
 			}
 
 			nettyServer = new NettyServer();
-			this.port = nettyServer.start(host, port);
-			return this.port;
+			port = nettyServer.start(host, port);
+			return port;
 		});
 	}
 
