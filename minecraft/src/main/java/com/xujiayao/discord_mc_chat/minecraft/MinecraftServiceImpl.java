@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.minecraft;
 
-import com.xujiayao.discord_mc_chat.client.MinecraftService;
+import com.xujiayao.discord_mc_chat.MinecraftService;
 import com.xujiayao.discord_mc_chat.minecraft.events.MinecraftEventHandler;
 
 /**

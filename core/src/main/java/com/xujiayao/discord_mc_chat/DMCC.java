@@ -11,6 +11,7 @@ import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import com.xujiayao.discord_mc_chat.utils.logging.impl.LoggerImpl;
 import okhttp3.Cache;
 
+import java.util.ServiceLoader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -66,9 +67,12 @@ public class DMCC {
 			// Initialize Command event handlers
 			CommandEventHandler.init();
 
-			// Initialize terminal manager for standalone mode
-			// Minecraft commands are initialized using ServiceLoader (MinecraftServiceImpl)
-			if (!IS_MINECRAFT_ENV) {
+			if (IS_MINECRAFT_ENV) {
+				// Use ServiceLoader to initialize Minecraft-specific components
+				ServiceLoader<MinecraftService> services = ServiceLoader.load(MinecraftService.class);
+				services.forEach(MinecraftService::initialize);
+			} else {
+				// Initialize terminal manager for standalone mode
 				TerminalManager.init();
 			}
 

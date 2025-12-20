@@ -28,10 +28,6 @@ public class ClientDMCC {
 		executor.submit(() -> {
 			LOGGER.info("Starting DMCC Client component...");
 
-			// Use ServiceLoader to initialize Minecraft-specific components
-			ServiceLoader<MinecraftService> services = ServiceLoader.load(MinecraftService.class);
-			services.forEach(MinecraftService::initialize);
-
 			nettyClient = new NettyClient(host, port);
 			nettyClient.start();
 

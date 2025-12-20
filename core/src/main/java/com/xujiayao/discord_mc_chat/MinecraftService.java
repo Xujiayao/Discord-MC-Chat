@@ -1,8 +1,8 @@
-package com.xujiayao.discord_mc_chat.client;
+package com.xujiayao.discord_mc_chat;
 
 /**
  * A service interface to be implemented by the Minecraft adapter.
- * This allows the common module to initialize Minecraft-specific components
+ * This allows the core module to initialize Minecraft-specific components
  * without having a direct dependency on them.
  *
  * @author Xujiayao
