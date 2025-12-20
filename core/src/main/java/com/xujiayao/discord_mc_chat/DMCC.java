@@ -13,7 +13,6 @@ import okhttp3.Cache;
 
 import java.util.ServiceLoader;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static com.xujiayao.discord_mc_chat.Constants.IS_MINECRAFT_ENV;
@@ -105,9 +104,9 @@ public class DMCC {
 						LOGGER.info("Running in single_server mode. Starting internal server and client...");
 
 						serverInstance = new ServerDMCC("127.0.0.1"); // Bind to a random port
-						Future<Integer> portFuture = serverInstance.start();
-						int port = portFuture.get();
+						serverInstance.start();
 
+						int port = serverInstance.awaitStartedPort();
 						if (port != -1) {
 							clientInstance = new ClientDMCC("127.0.0.1", port);
 							clientInstance.start();

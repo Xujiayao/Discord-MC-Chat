@@ -20,6 +20,7 @@ public class ServerDMCC {
 	private final String host;
 	private NettyServer nettyServer;
 	private int port;
+	private Future<Integer> startFuture;
 
 	public ServerDMCC(String host, int port) {
 		this.host = host;
@@ -31,8 +32,8 @@ public class ServerDMCC {
 		this.port = 0;
 	}
 
-	public Future<Integer> start() {
-		return executor.submit(() -> {
+	public void start() {
+		startFuture = executor.submit(() -> {
 			LOGGER.info("Starting DMCC Server component...");
 
 			if (!DiscordManager.init()) {
@@ -44,6 +45,19 @@ public class ServerDMCC {
 			this.port = nettyServer.start(host, port);
 			return this.port;
 		});
+	}
+
+	/**
+	 * Waits for the server component to start and returns the bound port.
+	 *
+	 * @return The port the server is bound to, or -1 on failure.
+	 * @throws Exception If the startup future was interrupted or failed.
+	 */
+	public int awaitStartedPort() throws Exception {
+		if (startFuture == null) {
+			throw new IllegalStateException("Server has not been started yet.");
+		}
+		return startFuture.get();
 	}
 
 	public void shutdown() {
