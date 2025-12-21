@@ -4,6 +4,7 @@ import com.xujiayao.discord_mc_chat.client.ClientDMCC;
 import com.xujiayao.discord_mc_chat.commands.CommandEventHandler;
 import com.xujiayao.discord_mc_chat.server.ServerDMCC;
 import com.xujiayao.discord_mc_chat.standalone.TerminalManager;
+import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
@@ -160,16 +161,8 @@ public class DMCC {
 
 		// Shutdown OkHttpClient
 		try (ExecutorService executor = OK_HTTP_CLIENT.dispatcher().executorService();
-			 Cache ignored1 = OK_HTTP_CLIENT.cache()) {
-			executor.shutdown();
-			if (ConfigManager.getBoolean("shutdown.graceful_shutdown")) {
-				// Allow up to 10 minutes for ongoing requests to complete
-				boolean ignored2 = executor.awaitTermination(10, TimeUnit.MINUTES);
-			} else {
-				// Allow up to 5 seconds for ongoing requests to complete
-				boolean ignored2 = executor.awaitTermination(5, TimeUnit.SECONDS);
-			}
-			executor.shutdownNow();
+			 Cache ignored = OK_HTTP_CLIENT.cache()) {
+			ExecutorServiceUtils.shutdownAnExecutor(executor);
 
 			OK_HTTP_CLIENT.connectionPool().evictAll();
 		} catch (Exception e) {

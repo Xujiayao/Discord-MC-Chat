@@ -1,7 +1,9 @@
 package com.xujiayao.discord_mc_chat.commands;
 
 import com.xujiayao.discord_mc_chat.DMCC;
+import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
+import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
@@ -18,21 +20,19 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  */
 public class CommandEventHandler {
 
-	private static ExecutorService commandExecutor;
+	private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Command"));;
 
 	/**
 	 * Initializes the Command event handlers.
 	 */
 	public static void init() {
-		commandExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Command"));
+		EventManager.register(CommandEvents.DisableEvent.class, event -> EXECUTOR.submit(DMCC::shutdown));
 
-		EventManager.register(CommandEvents.DisableEvent.class, event -> commandExecutor.submit(DMCC::shutdown));
+		EventManager.register(CommandEvents.EnableEvent.class, event -> EXECUTOR.submit(DMCC::init));
 
-		EventManager.register(CommandEvents.EnableEvent.class, event -> commandExecutor.submit(DMCC::init));
+		EventManager.register(CommandEvents.ReloadEvent.class, event -> EXECUTOR.submit(DMCC::reload));
 
-		EventManager.register(CommandEvents.ReloadEvent.class, event -> commandExecutor.submit(DMCC::reload));
-
-		EventManager.register(CommandEvents.ShutdownEvent.class, event -> commandExecutor.submit(() -> {
+		EventManager.register(CommandEvents.ShutdownEvent.class, event -> EXECUTOR.submit(() -> {
 			System.exit(0);
 		}));
 
@@ -65,16 +65,6 @@ public class CommandEventHandler {
 	 * Shuts down the command executor service.
 	 */
 	public static void shutdown() {
-		if (commandExecutor != null && !commandExecutor.isShutdown()) {
-			commandExecutor.shutdown();
-			try {
-				if (!commandExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
-					commandExecutor.shutdownNow();
-				}
-			} catch (InterruptedException e) {
-				commandExecutor.shutdownNow();
-				Thread.currentThread().interrupt();
-			}
-		}
+		ExecutorServiceUtils.shutdownAnExecutor(EXECUTOR);
 	}
 }
