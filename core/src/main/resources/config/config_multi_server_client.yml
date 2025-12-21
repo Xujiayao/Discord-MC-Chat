@@ -33,3 +33,9 @@ multi_server:
 command_permission_levels:
   help: 0  # 可用命令根据用户的权限等级动态显示
   reload: 4
+
+# 统计数据收集设置
+# 收集匿名的使用数据以帮助改进 DMCC
+# 包括模组版本、服务器软件类型和版本、已启用的功能、各设置的选项、所属国家等信息
+telemetry:
+  enable: true
