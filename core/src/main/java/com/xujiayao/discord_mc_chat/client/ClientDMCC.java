@@ -1,5 +1,7 @@
 package com.xujiayao.discord_mc_chat.client;
 
+import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -43,13 +45,16 @@ public class ClientDMCC {
 
 		executor.shutdown();
 		try {
-			if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
-				executor.shutdownNow();
+			if (ConfigManager.getBoolean("shutdown.graceful_shutdown")) {
+				// Allow up to 10 minutes for ongoing requests to complete
+				boolean ignored = executor.awaitTermination(10, TimeUnit.MINUTES);
+			} else {
+				// Allow up to 5 seconds for ongoing requests to complete
+				boolean ignored = executor.awaitTermination(5, TimeUnit.SECONDS);
 			}
-		} catch (InterruptedException e) {
-			executor.shutdownNow();
-			Thread.currentThread().interrupt();
+		} catch (Exception ignored) {
 		}
+		executor.shutdownNow();
 
 		LOGGER.info("DMCC Client component shut down.");
 	}

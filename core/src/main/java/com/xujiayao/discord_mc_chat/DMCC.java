@@ -159,20 +159,17 @@ public class DMCC {
 		EventManager.clear();
 
 		// Shutdown OkHttpClient
-		try (ExecutorService executorService = OK_HTTP_CLIENT.dispatcher().executorService();
+		try (ExecutorService executor = OK_HTTP_CLIENT.dispatcher().executorService();
 			 Cache ignored1 = OK_HTTP_CLIENT.cache()) {
-			executorService.shutdown();
-			try {
-				if (ConfigManager.getBoolean("shutdown.graceful_shutdown")) {
-					// Allow up to 10 minutes for ongoing requests to complete
-					boolean ignored2 = executorService.awaitTermination(10, TimeUnit.MINUTES);
-				}
-			} catch (NullPointerException ignored) {
-			} finally {
+			executor.shutdown();
+			if (ConfigManager.getBoolean("shutdown.graceful_shutdown")) {
+				// Allow up to 10 minutes for ongoing requests to complete
+				boolean ignored2 = executor.awaitTermination(10, TimeUnit.MINUTES);
+			} else {
 				// Allow up to 5 seconds for ongoing requests to complete
-				boolean ignored2 = executorService.awaitTermination(5, TimeUnit.SECONDS);
+				boolean ignored2 = executor.awaitTermination(5, TimeUnit.SECONDS);
 			}
-			executorService.shutdownNow();
+			executor.shutdownNow();
 
 			OK_HTTP_CLIENT.connectionPool().evictAll();
 		} catch (Exception e) {

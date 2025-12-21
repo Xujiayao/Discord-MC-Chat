@@ -19,4 +19,5 @@ commands:
     failure: "DMCC 重新加载失败。原因：{}"
   shutdown:
     description: "关闭独立 DMCC 应用程序"
-    shutting_down: "正在关闭独立 DMCC 应用程序... 再见！"
+    success: "DMCC 关闭成功。再见！"
+    failure: "DMCC 关闭失败。原因：{}"

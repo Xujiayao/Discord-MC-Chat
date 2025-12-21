@@ -19,4 +19,5 @@ commands:
     failure: "DMCC reload failed. Reason: {}"
   shutdown:
     description: "Shut down the Standalone DMCC application"
-    shutting_down: "Shutting down the Standalone DMCC application... Goodbye!"
+    success: "DMCC shut down successfully. Goodbye!"
+    failure: "DMCC shutdown failed. Reason: {}"

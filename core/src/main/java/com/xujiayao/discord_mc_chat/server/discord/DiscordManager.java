@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
@@ -55,15 +56,20 @@ public class DiscordManager {
 	/**
 	 * Shuts down the Discord bot.
 	 */
-	public static void shutdown() throws InterruptedException {
+	public static void shutdown() {
 		if (jda != null) {
 			jda.shutdown();
-
-			if (!jda.awaitShutdown(Duration.ofSeconds(5))) {
-				if (!ConfigManager.getBoolean("shutdown.graceful_shutdown")) {
-					jda.shutdownNow();
+			try {
+				if (ConfigManager.getBoolean("shutdown.graceful_shutdown")) {
+					// Allow up to 10 minutes for ongoing requests to complete
+					boolean ignored = jda.awaitShutdown(Duration.ofMinutes(10));
+				} else {
+					// Allow up to 5 seconds for ongoing requests to complete
+					boolean ignored = jda.awaitShutdown(Duration.ofSeconds(5));
 				}
+			} catch (Exception ignored) {
 			}
+			jda.shutdownNow();
 
 			LOGGER.info("Discord bot shutdown successfully!");
 		}

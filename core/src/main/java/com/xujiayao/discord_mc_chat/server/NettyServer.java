@@ -16,6 +16,7 @@ public class NettyServer {
 	}
 
 	public int start() {
+		// The bound port would be returned here after starting the server.
 		return -1;
 	}
 
