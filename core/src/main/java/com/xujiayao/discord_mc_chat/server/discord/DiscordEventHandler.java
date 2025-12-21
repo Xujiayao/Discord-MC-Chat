@@ -40,14 +40,6 @@ public class DiscordEventHandler extends ListenerAdapter {
 		event.deferReply().queue();
 
 		switch (event.getName()) {
-			case "disable" -> {
-				event.getHook().editOriginal(I18nManager.getDmccTranslation("commands.disable.disabling")).queue();
-				EventManager.post(new CommandEvents.DisableEvent());
-			}
-			case "enable" -> {
-				event.getHook().editOriginal(I18nManager.getDmccTranslation("commands.enable.enabling")).queue();
-				EventManager.post(new CommandEvents.EnableEvent());
-			}
 			case "help" -> event.getHook().editOriginal(CommandEventHandler.buildHelpMessage()).queue();
 			case "reload" -> {
 				event.getHook().editOriginal(I18nManager.getDmccTranslation("commands.reload.reloading")).queue();

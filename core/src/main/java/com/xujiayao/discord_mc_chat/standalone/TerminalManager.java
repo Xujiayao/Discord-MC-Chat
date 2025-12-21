@@ -85,14 +85,6 @@ public class TerminalManager {
 		String command = parts[0];
 
 		switch (command) {
-			case "disable" -> {
-				LOGGER.info(I18nManager.getDmccTranslation("commands.disable.disabling"));
-				EventManager.post(new CommandEvents.DisableEvent());
-			}
-			case "enable" -> {
-				LOGGER.info(I18nManager.getDmccTranslation("commands.enable.enabling"));
-				EventManager.post(new CommandEvents.EnableEvent());
-			}
 			case "help" -> LOGGER.info(CommandEventHandler.buildHelpMessage());
 			case "reload" -> {
 				LOGGER.info(I18nManager.getDmccTranslation("commands.reload.reloading"));

@@ -26,10 +26,6 @@ public class CommandEventHandler {
 	 * Initializes the Command event handlers.
 	 */
 	public static void init() {
-		EventManager.register(CommandEvents.DisableEvent.class, event -> EXECUTOR.submit(DMCC::shutdown));
-
-		EventManager.register(CommandEvents.EnableEvent.class, event -> EXECUTOR.submit(DMCC::init));
-
 		EventManager.register(CommandEvents.ReloadEvent.class, event -> EXECUTOR.submit(DMCC::reload));
 
 		EventManager.register(CommandEvents.ShutdownEvent.class, event -> EXECUTOR.submit(() -> {
