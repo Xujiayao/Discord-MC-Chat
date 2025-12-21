@@ -8,71 +8,15 @@
 # Language: English (US)
 # ==================================================
 
-handshake:
-  success: "Handshake with server successful. DMCC is now operational."
-  error:
-    not_whitelisted: "This server is not whitelisted on the standalone server."
-    invalid_version: "Incompatible DMCC version."
-    duplicate_name: "A client with the same server name is already connected."
-    authentication_failed: "Authentication failed. The shared_secret does not match."
-
 commands:
-  unknown_command: "Unknown command: \"{}\". Type \"/help\" for a list of available commands."
+  terminal_unknown_command: "Unknown command: \"{}\". Type \"help\" for a list of available commands."
   help:
     description: "Show a list of available commands"
     help: "Help"
-  info:
-    description: "Show status of DMCC and connected Minecraft servers"
-  stats:
-    description: "Query leaderboard of a statistic"
-    params:
-      type: "The type of the statistic"
-      name: "The name of the statistic"
-  update:
-    description: "Check for DMCC updates for the current instance"
-  console:
-    description: "Execute a Minecraft command on the server"
-    params:
-      command: "The Minecraft command to execute"
-    executing: "Executing command..."
-  disable:
-    description: "Disable DMCC on the current Minecraft server"
-    disabling: "Disabling DMCC..."
-  enable:
-    description: "Enable DMCC on the current Minecraft server"
-    enabling: "Enabling DMCC..."
-  execute:
-    description: "Execute a DMCC command on a sub-server"
-    params:
-      server: "The name of the sub-server"
-      command: "The DMCC command to execute"
-  log:
-    description: "View a log file"
-    params:
-      file: "The log file to view"
   reload:
     description: "Reload DMCC to apply latest configuration changes"
-    reloading: "Reloading DMCC..."
+    success: "DMCC reloaded successfully!"
+    failure: "DMCC reload failed. Reason: {}"
   shutdown:
     description: "Shut down the Standalone DMCC application"
-    shutting_down: "Shutting down Standalone DMCC application..."
-  start:
-    description: "Start a sub-server"
-    params:
-      server: "The name of the sub-server to start"
-  stop:
-    description: "Stop a sub-server"
-    params:
-      server: "The name of the sub-server to stop"
-#  link:
-#    description: "Link your Discord account with your Minecraft account"
-#    params:
-#      code: "The link code you received in-game"
-#    code_generated: "Your link code is: \"{}\". Do not share it with anyone! Please execute \"/link <code>\" command in Discord to link your account. This code will expire in 10 minutes."
-#    success: "Your account has been successfully linked!"
-#    invalid_code: "Invalid or expired link code."
-#  whitelist:
-#    description: "Add a player to the server whitelist"
-#    params:
-#      player: "The player's Minecraft username"
-#    success: "Added {} to the server whitelist!"
+    shutting_down: "Shutting down the Standalone DMCC application... Goodbye!"

@@ -7,7 +7,7 @@
 version: ${mod_version}
 mode: standalone
 #
-# Discord-MC-Chat Wiki:
+# Discord-MC-Chat Docs:
 # https://dmcc.xujiayao.com/
 # ==================================================
 
@@ -151,20 +151,9 @@ account_linking:
 #   Level 4 (owner)
 #     Player or executor can use all the commands, including commands related to server management.
 command_permission_levels:
-  disable: 4
-  enable: 4
-  execute: 2  # Commands are executed as a fake user with same permission level as the user
-  help: 0
-  info: 0
-  link: 0
-  log: 4
+  help: 0  # 可用命令根据用户的权限等级动态显示
   reload: 4
-  shutdown: 4
-  start: 4
-  stats: 0
-  stop: 4
-  update: 0
-  whitelist: 3
+  shutdown: 4 # This is for standalone DMCC only, which will exit JVM
 
 # 检查更新设置
 check_for_updates:

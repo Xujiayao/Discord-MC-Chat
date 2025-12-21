@@ -8,71 +8,15 @@
 # Language: 简体中文（中国大陆）
 # ==================================================
 
-handshake:
-  success: "与服务端握手成功。DMCC 已成功连接并开始运行。"
-  error:
-    not_whitelisted: "此服务器未在独立服务端的白名单中。"
-    invalid_version: "DMCC 版本不兼容。"
-    duplicate_name: "一个使用相同服务器名称的客户端已经连接。"
-    authentication_failed: "身份验证失败。共享密钥 (shared_secret) 不匹配。"
-
 commands:
-  unknown_command: "未知命令：\"{}\"。输入 \"/help\" 查看可用命令列表。"
+  terminal_unknown_command: "未知命令：\"{}\"。输入 \"help\" 查看可用命令列表。"
   help:
     description: "显示可用命令列表"
     help: "帮助"
-  info:
-    description: "显示 DMCC 和已连接的 Minecraft 服务器的状态"
-  stats:
-    description: "查询统计数据的排行榜"
-    params:
-      type: "统计数据的类型"
-      name: "统计数据的名称"
-  update:
-    description: "为当前实例检查 DMCC 更新"
-  console:
-    description: "在服务器上执行 Minecraft 命令"
-    params:
-      command: "要执行的 Minecraft 命令"
-    executing: "正在执行命令..."
-  disable:
-    description: "在当前 Minecraft 服务器上禁用 DMCC"
-    disabling: "正在禁用 DMCC..."
-  enable:
-    description: "在当前 Minecraft 服务器上启用 DMCC"
-    enabling: "正在启用 DMCC..."
-  execute:
-    description: "在子服务器上执行 DMCC 命令"
-    params:
-      server: "子服务器的名称"
-      command: "要执行的 DMCC 命令"
-  log:
-    description: "查看日志文件"
-    params:
-      file: "要查看的日志文件"
   reload:
-    description: "重新加载 DMCC 模块以应用最新配置"
-    reloading: "正在重新加载 DMCC..."
+    description: "重新加载 DMCC 以应用最新配置"
+    success: "DMCC 重新加载成功！"
+    failure: "DMCC 重新加载失败。原因：{}"
   shutdown:
-    description: "关闭 DMCC 独立应用程序"
-    shutting_down: "正在关闭 DMCC 应用程序..."
-  start:
-    description: "启动一个子服务器"
-    params:
-      server: "要启动的子服务器的名称"
-  stop:
-    description: "停止一个子服务器"
-    params:
-      server: "要停止的子服务器的名称"
-#  link:
-#    description: "将你的 Discord 账户与你的 Minecraft 账户关联"
-#    params:
-#      code: "你在游戏中收到的关联码"
-#    code_generated: "你的关联码是：\"{}\"。请勿与任何人分享！请在 Discord 中执行 \"/link <code>\" 命令来关联你的账户。此代码将在 10 分钟后失效。"
-#    success: "你的账户已成功关联！"
-#    invalid_code: "无效或已过期的关联码。"
-#  whitelist:
-#    description: "将一名玩家添加至服务器白名单"
-#    params:
-#      player: "玩家的 Minecraft 用户名"
-#    success: "已将 {} 添加至服务器白名单！"
+    description: "关闭独立 DMCC 应用程序"
+    shutting_down: "正在关闭独立 DMCC 应用程序... 再见！"

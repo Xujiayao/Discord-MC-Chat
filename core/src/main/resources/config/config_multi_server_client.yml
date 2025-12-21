@@ -7,7 +7,7 @@
 version: ${mod_version}
 mode: multi_server_client
 #
-# Discord-MC-Chat Wiki:
+# Discord-MC-Chat Docs:
 # https://dmcc.xujiayao.com/
 # ==================================================
 
@@ -17,3 +17,19 @@ multi_server:
   connection:
     host: "127.0.0.1"
     port: 5000
+
+# DMCC 命令权限设置
+# OP 等级对应的官方 Minecraft 权限级别：
+#   Level 0 (normal)
+#     Player has no special permissions.
+#   Level 1 (moderator)
+#     Player can bypass spawn protection.
+#   Level 2 (gamemaster)
+#     Player or executor can use more commands and player can use command blocks.
+#   Level 3 (admin)
+#     Player or executor can use commands related to multiplayer management.
+#   Level 4 (owner)
+#     Player or executor can use all the commands, including commands related to server management.
+command_permission_levels:
+  help: 0  # 可用命令根据用户的权限等级动态显示
+  reload: 4
