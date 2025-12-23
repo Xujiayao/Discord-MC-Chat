@@ -29,8 +29,6 @@ public class CommandEventHandler {
 		EventManager.register(CommandEvents.ShutdownEvent.class, event -> EXECUTOR.submit(() -> {
 			System.exit(0);
 		}));
-
-		LOGGER.info("Initialized all Command event handlers");
 	}
 
 	/**

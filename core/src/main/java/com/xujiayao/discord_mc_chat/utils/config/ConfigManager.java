@@ -85,8 +85,6 @@ public class ConfigManager {
 			}
 
 			ConfigManager.config = userConfig;
-			LOGGER.info("Configuration loaded successfully!");
-
 			return true;
 		} catch (IOException e) {
 			LOGGER.error("Failed to load or validate configuration", e);

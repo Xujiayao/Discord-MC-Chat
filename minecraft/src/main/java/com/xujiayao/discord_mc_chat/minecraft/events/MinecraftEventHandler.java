@@ -33,7 +33,5 @@ public class MinecraftEventHandler {
 		EventManager.register(MinecraftEvents.CommandRegister.class, event -> {
 			LOGGER.info("[DMCC] Registering commands...");
 		});
-
-		LOGGER.info("Initialized all Minecraft event handlers");
 	}
 }

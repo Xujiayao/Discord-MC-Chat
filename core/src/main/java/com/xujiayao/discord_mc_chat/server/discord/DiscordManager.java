@@ -42,8 +42,6 @@ public class DiscordManager {
 					.build();
 
 			jda.awaitReady();
-
-			LOGGER.info("Discord bot initialized successfully!");
 			return true;
 		} catch (Exception e) {
 			LOGGER.error("Discord bot initialization was interrupted", e);
@@ -69,8 +67,6 @@ public class DiscordManager {
 			} catch (Exception ignored) {
 			}
 			jda.shutdownNow();
-
-			LOGGER.info("Discord bot shutdown successfully!");
 		}
 	}
 }

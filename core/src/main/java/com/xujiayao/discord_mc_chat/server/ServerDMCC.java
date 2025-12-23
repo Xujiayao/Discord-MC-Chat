@@ -34,8 +34,6 @@ public class ServerDMCC {
 
 	public void start() {
 		startFuture = executor.submit(() -> {
-			LOGGER.info("Starting DMCC Server component...");
-
 			if (!DiscordManager.init()) {
 				LOGGER.error("Failed to initialize Discord Manager. Server component will not start.");
 				return -1;
@@ -44,7 +42,6 @@ public class ServerDMCC {
 			nettyServer = new NettyServer(host, port);
 			port = nettyServer.start();
 
-			LOGGER.info("DMCC Server component started successfully.");
 			return port;
 		});
 	}
@@ -63,8 +60,6 @@ public class ServerDMCC {
 	}
 
 	public void shutdown() {
-		LOGGER.info("Shutting down DMCC Server component...");
-
 		if (nettyServer != null) {
 			nettyServer.stop();
 		}
@@ -72,7 +67,5 @@ public class ServerDMCC {
 		DiscordManager.shutdown();
 
 		ExecutorServiceUtils.shutdownAnExecutor(executor);
-
-		LOGGER.info("DMCC Server component shut down.");
 	}
 }

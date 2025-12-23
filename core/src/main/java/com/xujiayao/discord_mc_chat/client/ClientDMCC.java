@@ -26,24 +26,16 @@ public class ClientDMCC {
 
 	public void start() {
 		executor.submit(() -> {
-			LOGGER.info("Starting DMCC Client component...");
-
 			nettyClient = new NettyClient(host, port);
 			nettyClient.start();
-
-			LOGGER.info("DMCC Client component started successfully.");
 		});
 	}
 
 	public void shutdown() {
-		LOGGER.info("Shutting down DMCC Client component...");
-
 		if (nettyClient != null) {
 			nettyClient.stop();
 		}
 
 		ExecutorServiceUtils.shutdownAnExecutor(executor);
-
-		LOGGER.info("DMCC Client component shut down.");
 	}
 }

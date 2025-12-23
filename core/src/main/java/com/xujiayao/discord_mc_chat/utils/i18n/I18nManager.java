@@ -83,7 +83,6 @@ public class I18nManager {
 //			}
 		}
 
-		LOGGER.info("All necessary language files for \"{}\" loaded successfully!", language);
 		return true;
 	}
 
@@ -172,7 +171,6 @@ public class I18nManager {
 			}
 
 			customMessages = userMessages;
-			LOGGER.info("Custom messages for \"{}\" loaded successfully!", language);
 			return true;
 		} catch (IOException e) {
 			LOGGER.error("Failed to load custom messages", e);
