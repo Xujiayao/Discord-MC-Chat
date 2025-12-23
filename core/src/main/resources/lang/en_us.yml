@@ -8,8 +8,11 @@
 # Language: English (US)
 # ==================================================
 
+terminal:
+  started: "Interactive terminal started. Type \"help\" for a list of available commands."
+  unknown_command: "Unknown command: \"{}\". Type \"help\" for a list of available commands."
+
 commands:
-  terminal_unknown_command: "Unknown command: \"{}\". Type \"help\" for a list of available commands."
   help:
     description: "Show a list of available commands"
     help: "Help"

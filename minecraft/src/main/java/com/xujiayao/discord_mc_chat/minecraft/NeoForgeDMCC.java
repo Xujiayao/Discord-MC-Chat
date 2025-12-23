@@ -18,6 +18,7 @@ public class NeoForgeDMCC {
 	public NeoForgeDMCC() {
 		DMCC.init();
 
+		// TODO Maybe this line should come first
 		MinecraftEventHandler.init();
 	}
 }
