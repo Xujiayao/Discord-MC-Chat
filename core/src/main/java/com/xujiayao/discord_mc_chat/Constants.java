@@ -23,9 +23,9 @@ public class Constants {
 			.enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
 			.disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
 
-	public static final String VERSION = EnvironmentUtils.getDmccVersion();
-
 	public static final ObjectMapper JSON_MAPPER = new ObjectMapper();
+
+	public static final String VERSION = EnvironmentUtils.getDmccVersion();
 
 	public static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
 }
