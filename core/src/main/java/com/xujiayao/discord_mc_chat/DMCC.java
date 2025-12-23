@@ -1,9 +1,7 @@
 package com.xujiayao.discord_mc_chat;
 
 import com.xujiayao.discord_mc_chat.client.ClientDMCC;
-import com.xujiayao.discord_mc_chat.commands.CommandEventHandler;
 import com.xujiayao.discord_mc_chat.server.ServerDMCC;
-import com.xujiayao.discord_mc_chat.standalone.TerminalManager;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
@@ -12,7 +10,6 @@ import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import com.xujiayao.discord_mc_chat.utils.logging.impl.LoggerImpl;
 import okhttp3.Cache;
 
-import java.util.ServiceLoader;
 import java.util.concurrent.ExecutorService;
 
 import static com.xujiayao.discord_mc_chat.Constants.IS_MINECRAFT_ENV;
@@ -62,14 +59,6 @@ public class DMCC {
 			LOGGER.info("└─────────────────────────────────────────────────────────────────────────────────┘");
 
 			LOGGER.info("Initializing DMCC {} with IS_MINECRAFT_ENV: {}", VERSION, IS_MINECRAFT_ENV);
-
-			// Initialize Command event handlers
-			CommandEventHandler.init();
-
-			if (!IS_MINECRAFT_ENV) {
-				// Initialize terminal manager for standalone mode
-				TerminalManager.init();
-			}
 
 			// If configuration fails to load, exit the DMCC-Main thread gracefully
 			// In a Minecraft environment, we just return and let the server continue running
@@ -138,13 +127,6 @@ public class DMCC {
 		if (serverInstance != null) {
 			serverInstance.shutdown();
 		}
-
-		if (!IS_MINECRAFT_ENV) {
-			TerminalManager.shutdown();
-		}
-
-		// Shutdown Command event handler
-		CommandEventHandler.shutdown();
 
 		// Clear all event handlers
 		EventManager.clear();

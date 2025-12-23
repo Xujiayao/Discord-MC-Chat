@@ -17,6 +17,14 @@ public class StandaloneDMCC {
 	public static void main(String[] args) {
 		DMCC.init();
 
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+
+		TerminalManager.init();
+
 		// Register shutdown hook for standalone mode
 		Runtime.getRuntime().addShutdownHook(new Thread(DMCC::shutdown, "DMCC-Shutdown"));
 	}
