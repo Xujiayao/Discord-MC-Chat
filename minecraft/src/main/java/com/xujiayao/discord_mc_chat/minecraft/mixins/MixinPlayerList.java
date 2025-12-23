@@ -23,8 +23,7 @@ public class MixinPlayerList {
 		EventManager.post(new MinecraftEvents.PlayerJoin(
 				connection,
 				serverPlayer,
-				commonListenerCookie,
-				ci
+				commonListenerCookie
 		));
 	}
 
@@ -32,8 +31,7 @@ public class MixinPlayerList {
 	private void remove(ServerPlayer serverPlayer, CallbackInfo ci) {
 		// PlayerQuit Event
 		EventManager.post(new MinecraftEvents.PlayerQuit(
-				serverPlayer,
-				ci
+				serverPlayer
 		));
 	}
 }

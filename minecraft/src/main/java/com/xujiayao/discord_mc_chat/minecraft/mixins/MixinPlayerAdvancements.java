@@ -31,8 +31,7 @@ public abstract class MixinPlayerAdvancements {
 				advancementHolder,
 				string,
 				player,
-				getOrStartProgress(advancementHolder),
-				cir
+				getOrStartProgress(advancementHolder)
 		));
 	}
 }

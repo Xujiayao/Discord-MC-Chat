@@ -10,8 +10,6 @@ import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.world.damagesource.DamageSource;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * A container for all Minecraft-related event classes.
@@ -23,25 +21,19 @@ public class MinecraftEvents {
 	/**
 	 * Posted when the server is started.
 	 */
-	public record ServerStarted(
-			CallbackInfo ci
-	) {
+	public record ServerStarted() {
 	}
 
 	/**
 	 * Posted when the server is stopping.
 	 */
-	public record ServerStopping(
-			CallbackInfo ci
-	) {
+	public record ServerStopping() {
 	}
 
 	/**
 	 * Posted when the server is stopped.
 	 */
-	public record ServerStopped(
-			CallbackInfo ci
-	) {
+	public record ServerStopped() {
 	}
 
 	/**
@@ -50,8 +42,7 @@ public class MinecraftEvents {
 	public record PlayerJoin(
 			Connection connection,
 			ServerPlayer serverPlayer,
-			CommonListenerCookie commonListenerCookie,
-			CallbackInfo ci
+			CommonListenerCookie commonListenerCookie
 	) {
 	}
 
@@ -59,8 +50,7 @@ public class MinecraftEvents {
 	 * Posted when a player leaves the server.
 	 */
 	public record PlayerQuit(
-			ServerPlayer serverPlayer,
-			CallbackInfo ci
+			ServerPlayer serverPlayer
 	) {
 	}
 
@@ -69,8 +59,7 @@ public class MinecraftEvents {
 	 */
 	public record PlayerChat(
 			PlayerChatMessage playerChatMessage,
-			ServerPlayer serverPlayer,
-			CallbackInfo ci
+			ServerPlayer serverPlayer
 	) {
 	}
 
@@ -79,8 +68,7 @@ public class MinecraftEvents {
 	 */
 	public record PlayerCommand(
 			String command,
-			ServerPlayer serverPlayer,
-			CallbackInfo ci
+			ServerPlayer serverPlayer
 	) {
 	}
 
@@ -89,8 +77,7 @@ public class MinecraftEvents {
 	 */
 	public record PlayerDie(
 			DamageSource damageSource,
-			ServerPlayer serverPlayer,
-			CallbackInfo ci
+			ServerPlayer serverPlayer
 	) {
 	}
 
@@ -101,8 +88,7 @@ public class MinecraftEvents {
 			AdvancementHolder advancementHolder,
 			String string,
 			ServerPlayer player,
-			AdvancementProgress advancementProgress,
-			CallbackInfoReturnable<Boolean> cir
+			AdvancementProgress advancementProgress
 	) {
 	}
 
@@ -111,8 +97,7 @@ public class MinecraftEvents {
 	 */
 	public record SourceSay(
 			CommandContext<CommandSourceStack> commandContext,
-			PlayerChatMessage playerChatMessage,
-			CallbackInfo ci
+			PlayerChatMessage playerChatMessage
 	) {
 	}
 
@@ -120,8 +105,7 @@ public class MinecraftEvents {
 	 * Posted when the /tellraw command is used.
 	 */
 	public record SourceTellRaw(
-			CommandContext<CommandSourceStack> commandContext,
-			CallbackInfoReturnable<Integer> cir
+			CommandContext<CommandSourceStack> commandContext
 	) {
 	}
 
@@ -129,8 +113,7 @@ public class MinecraftEvents {
 	 * Posted when commands are being registered.
 	 */
 	public record CommandRegister(
-			CommandDispatcher<CommandSourceStack> dispatcher,
-			CallbackInfo ci
+			CommandDispatcher<CommandSourceStack> dispatcher
 	) {
 	}
 }

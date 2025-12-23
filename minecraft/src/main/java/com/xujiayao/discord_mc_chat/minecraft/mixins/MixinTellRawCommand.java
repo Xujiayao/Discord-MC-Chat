@@ -20,8 +20,7 @@ public class MixinTellRawCommand {
 	private static void lambda$register$0(CommandContext<CommandSourceStack> commandContext, CallbackInfoReturnable<Integer> cir) {
 		// SourceTellRaw Event
 		EventManager.post(new MinecraftEvents.SourceTellRaw(
-				commandContext,
-				cir
+				commandContext
 		));
 	}
 }

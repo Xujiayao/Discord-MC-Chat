@@ -27,8 +27,7 @@ public class MixinCommands {
 	private void init(Commands.CommandSelection commandSelection, CommandBuildContext commandBuildContext, CallbackInfo ci) {
 		// CommandRegister Event
 		EventManager.post(new MinecraftEvents.CommandRegister(
-				dispatcher,
-				ci
+				dispatcher
 		));
 	}
 }

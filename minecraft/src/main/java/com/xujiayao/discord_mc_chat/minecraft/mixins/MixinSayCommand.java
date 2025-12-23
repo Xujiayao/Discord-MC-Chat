@@ -22,8 +22,7 @@ public class MixinSayCommand {
 		// SourceSay Event
 		EventManager.post(new MinecraftEvents.SourceSay(
 				commandContext,
-				playerChatMessage,
-				ci
+				playerChatMessage
 		));
 	}
 }

@@ -27,8 +27,7 @@ public class MixinServerGamePacketListenerImpl {
 		// PlayerChat Event
 		EventManager.post(new MinecraftEvents.PlayerChat(
 				playerChatMessage,
-				player,
-				ci
+				player
 		));
 	}
 
@@ -37,8 +36,7 @@ public class MixinServerGamePacketListenerImpl {
 		// PlayerCommand Event
 		EventManager.post(new MinecraftEvents.PlayerCommand(
 				string,
-				player,
-				ci
+				player
 		));
 	}
 
@@ -47,8 +45,7 @@ public class MixinServerGamePacketListenerImpl {
 		// PlayerCommand Event
 		EventManager.post(new MinecraftEvents.PlayerCommand(
 				serverboundChatCommandSignedPacket.command(),
-				player,
-				ci
+				player
 		));
 	}
 }
