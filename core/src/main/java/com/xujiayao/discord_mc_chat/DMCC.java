@@ -66,11 +66,7 @@ public class DMCC {
 			// Initialize Command event handlers
 			CommandEventHandler.init();
 
-			if (IS_MINECRAFT_ENV) {
-				// Use ServiceLoader to initialize Minecraft-specific components
-				ServiceLoader<MinecraftService> services = ServiceLoader.load(MinecraftService.class);
-				services.forEach(MinecraftService::initialize);
-			} else {
+			if (!IS_MINECRAFT_ENV) {
 				// Initialize terminal manager for standalone mode
 				TerminalManager.init();
 			}
