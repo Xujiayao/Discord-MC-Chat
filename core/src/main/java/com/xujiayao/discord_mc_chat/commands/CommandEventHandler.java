@@ -3,13 +3,11 @@ package com.xujiayao.discord_mc_chat.commands;
 import com.xujiayao.discord_mc_chat.DMCC;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
-import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
@@ -20,7 +18,7 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  */
 public class CommandEventHandler {
 
-	private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Command"));;
+	private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Command"));
 
 	/**
 	 * Initializes the Command event handlers.
