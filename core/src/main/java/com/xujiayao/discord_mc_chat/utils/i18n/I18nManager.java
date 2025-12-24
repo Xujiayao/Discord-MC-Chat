@@ -73,9 +73,7 @@ public class I18nManager {
 		// For client-only mode, we only need DMCC translations for logs and basic messages.
 		if (!"multi_server_client".equals(ModeManager.getMode())) {
 			// For server-enabled modes, load the full I18n suite.
-			if (!loadCustomMessages()) {
-				return false;
-			}
+			return loadCustomMessages();
 
 			// Load official Minecraft translations, from cache or by downloading
 //			if (!loadMinecraftTranslations()) {

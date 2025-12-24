@@ -10,7 +10,6 @@ import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import com.xujiayao.discord_mc_chat.utils.logging.impl.LoggerImpl;
 import okhttp3.Cache;
 
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -32,7 +31,7 @@ public class DMCC {
 
 	/**
 	 * Initialize DMCC. Blocks until initialization is complete.
-	 * 
+	 *
 	 * @return true if initialization is successful, false otherwise
 	 */
 	public static boolean init() {
