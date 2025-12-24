@@ -15,17 +15,13 @@ public class StandaloneDMCC {
 	 * @param args Command line arguments
 	 */
 	public static void main(String[] args) {
-		DMCC.init();
-
-		try {
-			Thread.sleep(3000);
-		} catch (InterruptedException e) {
-			throw new RuntimeException(e);
-		}
-
-		TerminalManager.init();
-
 		// Register shutdown hook for standalone mode
-		Runtime.getRuntime().addShutdownHook(new Thread(DMCC::shutdown, "DMCC-Shutdown"));
+		Runtime.getRuntime().addShutdownHook(new Thread(DMCC::shutdown, "DMCC-ShutdownHook"));
+
+		// Initialize DMCC, block until initialization is complete
+		if (DMCC.init()) {
+			// Initialize terminal only if DMCC initialized successfully
+			TerminalManager.init();
+		}
 	}
 }

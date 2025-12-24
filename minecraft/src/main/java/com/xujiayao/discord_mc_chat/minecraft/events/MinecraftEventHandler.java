@@ -18,16 +18,8 @@ public class MinecraftEventHandler {
 	public static void init() {
 		EventManager.register(MinecraftEvents.ServerStopped.class, event -> {
 			// Shutdown DMCC when the server is stopped
-			Thread shutdownThread = new Thread(DMCC::shutdown, "DMCC-Shutdown");
-			shutdownThread.start();
-
-			// Wait for the shutdown thread to finish
-			try {
-				shutdownThread.join();
-			} catch (InterruptedException e) {
-				LOGGER.error("Error while waiting for DMCC shutdown thread to finish", e);
-				Thread.currentThread().interrupt();
-			}
+			// Blocks until shutdown is complete
+			DMCC.shutdown();
 		});
 
 		EventManager.register(MinecraftEvents.CommandRegister.class, event -> {

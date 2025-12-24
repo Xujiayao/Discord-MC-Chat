@@ -15,7 +15,8 @@ public class NettyClient {
 		this.port = port;
 	}
 
-	public void start() {
+	public boolean start() {
+		return true;
 	}
 
 	public void stop() {

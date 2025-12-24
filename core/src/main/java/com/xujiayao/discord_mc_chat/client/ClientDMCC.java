@@ -14,7 +14,6 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  */
 public class ClientDMCC {
 
-	private final ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Client"));
 	private final String host;
 	private final int port;
 	private NettyClient nettyClient;
@@ -24,18 +23,21 @@ public class ClientDMCC {
 		this.port = port;
 	}
 
-	public void start() {
-		executor.submit(() -> {
-			nettyClient = new NettyClient(host, port);
-			nettyClient.start();
-		});
+	public boolean start() {
+		try (ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Server"))) {
+			return executor.submit(() -> {
+				nettyClient = new NettyClient(host, port);
+				return nettyClient.start();
+			}).get();
+		} catch (Exception e) {
+			LOGGER.error("DMCC-Client startup was interrupted", e);
+			return false;
+		}
 	}
 
 	public void shutdown() {
 		if (nettyClient != null) {
 			nettyClient.stop();
 		}
-
-		ExecutorServiceUtils.shutdownAnExecutor(executor);
 	}
 }

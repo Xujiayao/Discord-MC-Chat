@@ -16,9 +16,9 @@ public class NeoForgeDMCC {
 	 * Start NeoForge DMCC.
 	 */
 	public NeoForgeDMCC() {
-		DMCC.init();
-
-		// TODO Maybe this line should come first
+		// Initialize Minecraft event handlers first to get "/dmcc reload" working
 		MinecraftEventHandler.init();
+
+		DMCC.init();
 	}
 }

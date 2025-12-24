@@ -20,14 +20,6 @@ public class DiscordEventHandler extends ListenerAdapter {
 
 	@Override
 	public void onReady(@NotNull ReadyEvent event) {
-		LOGGER.info("Discord bot is ready. Logged in as tag: \"{}\"", event.getJDA().getSelfUser().getAsTag());
-
-		event.getJDA().updateCommands()
-				.addCommands(Commands.slash("help", I18nManager.getDmccTranslation("commands.help.description")))
-				.addCommands(Commands.slash("reload", I18nManager.getDmccTranslation("commands.reload.description")))
-				.addCommands(Commands.slash("shutdown", I18nManager.getDmccTranslation("commands.shutdown.description")))
-				.queue();
-
 		// TODO: Initialize Rich Presence Manager
 	}
 
