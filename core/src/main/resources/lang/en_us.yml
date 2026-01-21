@@ -84,6 +84,7 @@ client:
     disconnected_reason: "Disconnected from DMCC Server. Reason: {}"
     reconnecting: "Reconnecting to DMCC Server..."
     reconnect_failed: "Reconnection failed. Retrying in {} seconds."
+    send_while_disconnected: "Attempted to send packet while disconnected: {}"
 
 utils:
   config:

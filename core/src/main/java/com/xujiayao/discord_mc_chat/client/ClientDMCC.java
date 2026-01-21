@@ -1,5 +1,6 @@
 package com.xujiayao.discord_mc_chat.client;
 
+import com.xujiayao.discord_mc_chat.network.packets.Packet;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
 import java.util.concurrent.ExecutorService;
@@ -42,6 +43,12 @@ public class ClientDMCC {
 	public void shutdown() {
 		if (nettyClient != null) {
 			nettyClient.stop();
+		}
+	}
+
+	public void sendPacket(Packet packet) {
+		if (nettyClient != null) {
+			nettyClient.sendPacket(packet);
 		}
 	}
 }

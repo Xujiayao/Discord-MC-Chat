@@ -84,6 +84,7 @@ client:
     disconnected_reason: "已与 DMCC 服务端断开连接。原因：{}"
     reconnecting: "正在重新连接至 DMCC 服务端..."
     reconnect_failed: "重连失败。将在 {} 秒后重试。"
+    send_while_disconnected: "尝试在断开连接时发送数据包：{}"
 
 utils:
   config:

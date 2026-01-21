@@ -1,10 +1,12 @@
 package com.xujiayao.discord_mc_chat.client;
 
+import com.xujiayao.discord_mc_chat.network.packets.Packet;
 import com.xujiayao.discord_mc_chat.network.serialization.JavaSerializerDecoder;
 import com.xujiayao.discord_mc_chat.network.serialization.JavaSerializerEncoder;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -39,6 +41,7 @@ public class NettyClient {
 	private final AtomicBoolean isRunning = new AtomicBoolean(false);
 	private final AtomicInteger reconnectDelay = new AtomicInteger(2); // Initial delay seconds
 	private EventLoopGroup workerGroup;
+	private Channel channel;
 	private CompletableFuture<Boolean> initialLoginFuture;
 
 	public NettyClient(String host, int port, String serverName, String sharedSecret) {
@@ -105,6 +108,7 @@ public class NettyClient {
 		b.connect(host, port).addListener((ChannelFuture future) -> {
 			if (future.isSuccess()) {
 				// Connection established
+				this.channel = future.channel();
 				reconnectDelay.set(1); // Reset delay on success
 			} else {
 				if (isInitialAttempt) {
@@ -115,6 +119,14 @@ public class NettyClient {
 				}
 			}
 		});
+	}
+
+	public void sendPacket(Packet packet) {
+		if (channel != null && channel.isActive()) {
+			channel.writeAndFlush(packet);
+		} else {
+			LOGGER.warn("client.network.send_while_disconnected", packet.getClass().getSimpleName());
+		}
 	}
 
 	public void scheduleReconnect() {
@@ -129,6 +141,9 @@ public class NettyClient {
 
 	public void stop() {
 		isRunning.set(false);
+		if (channel != null) {
+			channel.close();
+		}
 		if (workerGroup != null) {
 			workerGroup.shutdownGracefully();
 		}
