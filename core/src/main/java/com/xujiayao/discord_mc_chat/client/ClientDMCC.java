@@ -1,5 +1,6 @@
 package com.xujiayao.discord_mc_chat.client;
 
+import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
@@ -32,7 +33,12 @@ public class ClientDMCC {
 		try (ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Client"))) {
 			return executor.submit(() -> {
 				nettyClient = new NettyClient(host, port, serverName, sharedSecret);
-				return nettyClient.start();
+				boolean success = nettyClient.start();
+				if (success) {
+					// Register to NetworkManager on successful start
+					NetworkManager.registerClient(this);
+				}
+				return success;
 			}).get();
 		} catch (Exception e) {
 			LOGGER.error(I18nManager.getDmccTranslation("client.startup_interrupted"), e);

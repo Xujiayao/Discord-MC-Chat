@@ -1,5 +1,6 @@
 package com.xujiayao.discord_mc_chat.server;
 
+import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
@@ -41,6 +42,11 @@ public class ServerDMCC {
 
 				nettyServer = new NettyServer(host, port, sharedSecret);
 				port = nettyServer.start();
+
+				if (port != -1) {
+					// Register to NetworkManager on successful start
+					NetworkManager.registerServer(this);
+				}
 
 				return port;
 			}).get();

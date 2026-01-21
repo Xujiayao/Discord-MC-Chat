@@ -2,6 +2,7 @@ package com.xujiayao.discord_mc_chat;
 
 import com.xujiayao.discord_mc_chat.client.ClientDMCC;
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
+import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.server.ServerDMCC;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
@@ -161,6 +162,9 @@ public class DMCC {
 	public static boolean shutdown() {
 		try (ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Shutdown"))) {
 			return executor.submit(() -> {
+				// Clear the network manager references first
+				NetworkManager.clear();
+
 				if (clientInstance != null) {
 					clientInstance.shutdown();
 					clientInstance = null;
