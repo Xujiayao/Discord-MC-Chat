@@ -60,7 +60,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 		if (authenticated) {
 			switch (packet) {
-				case MinecraftEventPacket ignored -> {
+				case MinecraftEventPacket p -> {
+					LOGGER.warn("Received MinecraftEventPacket from authenticated client {}: type={}, placeholders={}", clientName, p.type, p.placeholders);
 				}
 				case null, default -> LOGGER.warn(unexpectedPacketMessage);
 			}
