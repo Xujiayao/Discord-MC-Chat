@@ -68,11 +68,11 @@ server:
     auth_success: "DMCC Client authenticated: \"{}\""
     client_disconnected_normal: "DMCC Client has disconnected: \"{}\""
     client_timeout: "DMCC Client has timed out, disconnecting: \"{}\""
+    unexpected_packet: "Ignored unexpected packet from DMCC Client \"{}\": {}"
     disconnect_reasons:
       not_whitelisted: "Name \"{}\" is not whitelisted."
       version_mismatch: "Version mismatch. Client: {}, Server: {}"
       auth_failed: "Authentication failed. Please check your shared secret."
-      not_authenticated: "Not authenticated."
 
 client:
   startup_interrupted: "DMCC Client startup was interrupted."

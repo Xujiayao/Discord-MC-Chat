@@ -5,6 +5,7 @@ import com.xujiayao.discord_mc_chat.Constants;
 import com.xujiayao.discord_mc_chat.network.packets.AuthResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.ChallengePacket;
 import com.xujiayao.discord_mc_chat.network.packets.DisconnectPacket;
+import com.xujiayao.discord_mc_chat.network.packets.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.network.packets.HandshakePacket;
 import com.xujiayao.discord_mc_chat.network.packets.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.LoginSuccessPacket;
@@ -50,54 +51,58 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, Packet packet) {
-		switch (packet) {
-			case HandshakePacket p -> {
-				if (!isWhitelisted(p.serverName)) {
-					String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.not_whitelisted", p.serverName);
-					LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", p.serverName, reason));
-					ctx.writeAndFlush(new DisconnectPacket("server.network.disconnect_reasons.not_whitelisted", p.serverName));
-					ctx.close();
-					return;
-				}
+		if (packet instanceof KeepAlivePacket) {
+			// No-op, just resets idle timer
+			return;
+		}
 
-				if (!Constants.VERSION.equals(p.version)) {
-					String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.version_mismatch", p.version, Constants.VERSION);
-					LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", clientName, reason));
-					ctx.writeAndFlush(new DisconnectPacket("server.network.disconnect_reasons.version_mismatch", p.version, Constants.VERSION));
-					ctx.close();
-					return;
-				}
+		String unexpectedPacketMessage = I18nManager.getDmccTranslation("server.network.unexpected_packet", clientName, packet == null ? "null" : packet.getClass().getSimpleName());
 
-				this.clientName = p.serverName;
-				this.expectedNonce = CryptUtils.generateRandomString(16);
-				ctx.writeAndFlush(new ChallengePacket(this.expectedNonce));
+		if (authenticated) {
+			switch (packet) {
+				case MinecraftEventPacket ignored -> {
+				}
+				case null, default -> LOGGER.warn(unexpectedPacketMessage);
 			}
-			case AuthResponsePacket p -> {
-				String correctHash = CryptUtils.sha256(this.expectedNonce + server.getSharedSecret());
+		} else {
+			switch (packet) {
+				case HandshakePacket p -> {
+					if (!isWhitelisted(p.serverName)) {
+						String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.not_whitelisted", p.serverName);
+						LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", p.serverName, reason));
+						ctx.writeAndFlush(new DisconnectPacket("server.network.disconnect_reasons.not_whitelisted", p.serverName));
+						ctx.close();
+						return;
+					}
 
-				if (correctHash.equals(p.hash)) {
-					this.authenticated = true;
-					LOGGER.info(I18nManager.getDmccTranslation("server.network.auth_success", clientName));
-					ctx.writeAndFlush(new LoginSuccessPacket(ConfigManager.getString("language")));
-					// TODO: Add to active clients list
-				} else {
-					String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.auth_failed");
-					LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", clientName, reason));
-					ctx.writeAndFlush(new DisconnectPacket("server.network.disconnect_reasons.auth_failed"));
-					ctx.close();
+					if (!Constants.VERSION.equals(p.version)) {
+						String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.version_mismatch", p.version, Constants.VERSION);
+						LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", clientName, reason));
+						ctx.writeAndFlush(new DisconnectPacket("server.network.disconnect_reasons.version_mismatch", p.version, Constants.VERSION));
+						ctx.close();
+						return;
+					}
+
+					this.clientName = p.serverName;
+					this.expectedNonce = CryptUtils.generateRandomString(16);
+					ctx.writeAndFlush(new ChallengePacket(this.expectedNonce));
 				}
-			}
-			case KeepAlivePacket ignored -> {
-				// No-op, just resets idle timer
-			}
-			case null, default -> {
-				// Handle other packets if authenticated
-				if (!authenticated) {
-					String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.not_authenticated");
-					LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", clientName, reason));
-					ctx.writeAndFlush(new DisconnectPacket("server.network.disconnect_reasons.not_authenticated"));
-					ctx.close();
+				case AuthResponsePacket p -> {
+					String correctHash = CryptUtils.sha256(this.expectedNonce + server.getSharedSecret());
+
+					if (correctHash.equals(p.hash)) {
+						this.authenticated = true;
+						LOGGER.info(I18nManager.getDmccTranslation("server.network.auth_success", clientName));
+						ctx.writeAndFlush(new LoginSuccessPacket(ConfigManager.getString("language")));
+						// TODO: Add to active clients list
+					} else {
+						String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.auth_failed");
+						LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", clientName, reason));
+						ctx.writeAndFlush(new DisconnectPacket("server.network.disconnect_reasons.auth_failed"));
+						ctx.close();
+					}
 				}
+				case null, default -> LOGGER.warn(unexpectedPacketMessage);
 			}
 		}
 	}

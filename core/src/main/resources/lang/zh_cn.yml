@@ -68,11 +68,11 @@ server:
     auth_success: "DMCC 客户端连接成功：\"{}\""
     client_disconnected_normal: "DMCC 客户端已断开连接：\"{}\""
     client_timeout: "DMCC 客户端已超时，正在断开连接：\"{}\""
+    unexpected_packet: "已忽略来自 DMCC 客户端 \"{}\" 的意外数据包：{}"
     disconnect_reasons:
       not_whitelisted: "名称 \"{}\" 不在白名单中。"
       version_mismatch: "版本不匹配。客户端：{}，服务端：{}"
       auth_failed: "验证失败。请检查你的共享密钥。"
-      not_authenticated: "未通过验证。"
 
 client:
   startup_interrupted: "DMCC 客户端启动被中断。"

@@ -163,9 +163,11 @@ public class DMCC {
 			return executor.submit(() -> {
 				if (clientInstance != null) {
 					clientInstance.shutdown();
+					clientInstance = null;
 				}
 				if (serverInstance != null) {
 					serverInstance.shutdown();
+					serverInstance = null;
 				}
 
 				CommandManager.shutdown();
