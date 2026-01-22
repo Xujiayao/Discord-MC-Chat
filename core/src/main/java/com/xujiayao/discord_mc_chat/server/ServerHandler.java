@@ -68,12 +68,22 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		} else {
 			switch (packet) {
 				case HandshakePacket p -> {
-					if (!isWhitelisted(p.serverName)) {
-						String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.not_whitelisted", p.serverName);
-						LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", p.serverName, reason));
-						ctx.writeAndFlush(new DisconnectPacket("server.network.disconnect_reasons.not_whitelisted", p.serverName));
-						ctx.close();
-						return;
+					if ("single_server".equals(ModeManager.getMode())) {
+						if (!"Internal".equals(p.serverName)) {
+							String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.single_server_mode", p.serverName);
+							LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", p.serverName, reason));
+							ctx.writeAndFlush(new DisconnectPacket("server.network.disconnect_reasons.single_server_mode", p.serverName));
+							ctx.close();
+							return;
+						}
+					} else {
+						if (!isWhitelisted(p.serverName)) {
+							String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.not_whitelisted", p.serverName);
+							LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", p.serverName, reason));
+							ctx.writeAndFlush(new DisconnectPacket("server.network.disconnect_reasons.not_whitelisted", p.serverName));
+							ctx.close();
+							return;
+						}
 					}
 
 					if (!Constants.VERSION.equals(p.version)) {
@@ -127,10 +137,6 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	}
 
 	private boolean isWhitelisted(String serverName) {
-		if ("single_server".equals(ModeManager.getMode()) && "Internal".equals(serverName)) {
-			return true;
-		}
-
 		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
 		if (serversNode.isArray()) {
 			for (JsonNode node : serversNode) {

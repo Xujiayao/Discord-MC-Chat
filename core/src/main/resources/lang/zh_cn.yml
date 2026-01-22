@@ -70,6 +70,7 @@ server:
     client_timeout: "DMCC 客户端已超时，正在断开连接：\"{}\""
     unexpected_packet: "已忽略来自 DMCC 客户端 \"{}\" 的意外数据包：{}"
     disconnect_reasons:
+      single_server_mode: "DMCC 服务端处于 single_server 模式，拒绝任何额外客户端连接。"
       not_whitelisted: "名称 \"{}\" 不在白名单中。"
       version_mismatch: "版本不匹配。客户端：{}，服务端：{}"
       auth_failed: "验证失败。请检查你的共享密钥。"
