@@ -18,6 +18,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.util.concurrent.Future;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -145,7 +146,19 @@ public class NettyClient {
 			channel.close();
 		}
 		if (workerGroup != null) {
-			workerGroup.shutdownGracefully();
+			// Initiates shutdown gracefully
+			Future<?> future = workerGroup.shutdownGracefully();
+
+			// CRITICAL FIX: Prevent Deadlock
+			// We must ONLY wait for shutdown if we are NOT running inside the Netty thread.
+			// If we are inside the Netty thread (e.g. called from ClientHandler), waiting for ourselves to die causes a deadlock.
+			// But if we are on the Main thread (ServerStopped event), we MUST wait to prevent ClassLoader issues.
+			try {
+				if (!Thread.currentThread().getName().contains("DMCC-NettyClient")) {
+					future.awaitUninterruptibly();
+				}
+			} catch (Exception ignored) {
+			}
 		}
 	}
 

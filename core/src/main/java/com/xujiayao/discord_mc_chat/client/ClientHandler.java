@@ -45,14 +45,17 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 		LOGGER.warn(I18nManager.getDmccTranslation("client.network.disconnected_generic"));
 
 		// Trigger reconnection if this was not an intentional stop AND the server didn't explicitly reject us
-		if (client.isRunning() && allowReconnect) {
-			LOGGER.warn(I18nManager.getDmccTranslation("client.network.reconnecting"));
-			client.scheduleReconnect();
-		} else {
-			// If we are not allowed to reconnect, we should probably stop the client fully
-			// to prevent any background threads from lingering or confusing state.
-			client.stop();
+		if (client.isRunning()) {
+			if (allowReconnect) {
+				LOGGER.warn(I18nManager.getDmccTranslation("client.network.reconnecting"));
+				client.scheduleReconnect();
+			} else {
+				// If reconnect is disallowed (e.g. kicked/banned), stop the client.
+				client.stop();
+			}
 		}
+		// ELSE: If client.isRunning() is false, it means stop() was called externally (e.g. server shutdown).
+		// We do NOT need to call client.stop() again here, as that would be redundant and potentially risky.
 	}
 
 	@Override
