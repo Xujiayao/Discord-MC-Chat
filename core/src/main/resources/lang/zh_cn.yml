@@ -54,6 +54,8 @@ discord:
     registering_commands: "正在注册 Discord DMCC 命令。这可能需要一段时间...（理应在 1 分钟以内）"
     commands_success: "Discord DMCC 命令注册成功！"
     commands_failed: "注册 Discord DMCC 命令失败。"
+    channel_not_found: "未找到 Discord 文字频道：\"{}\""
+    channel_cannot_talk: "无法在 Discord 文字频道中发送消息：\"{}\""
   command:
     reply_failed: "无法向 Discord 命令发送者发送回复消息。"
     reply_failed_detail: "对于 reload/shutdown 命令，这是预期的行为。"

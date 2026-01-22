@@ -6,6 +6,7 @@ import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -111,6 +112,50 @@ public class DiscordManager {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Sends a message to a Discord channel.
+	 *
+	 * @param channelIdentifier The ID or Name of the channel.
+	 * @param content           The message content.
+	 */
+	public static void sendMessage(String channelIdentifier, String content) {
+		TextChannel channel = getTextChannel(channelIdentifier);
+		if (channel != null) {
+			channel.sendMessage(content).queue();
+		}
+	}
+
+	/**
+	 * Retrieves a TextChannel by its ID or name.
+	 *
+	 * @param identifier The ID or name of the channel.
+	 * @return The TextChannel if found, null otherwise.
+	 */
+	private static TextChannel getTextChannel(String identifier) {
+		TextChannel tc;
+
+		// Try search by name
+		// Return first result. Use with caution if multiple channels have the same name.
+		List<TextChannel> channels = jda.getTextChannelsByName(identifier, true);
+		if (!channels.isEmpty()) {
+			tc = channels.getFirst();
+		} else {
+			// Try parsing as ID
+			tc = jda.getTextChannelById(identifier);
+			if (tc == null) {
+				LOGGER.error("discord.manager.channel_not_found", identifier);
+				return null;
+			}
+		}
+
+		if (!tc.canTalk()) {
+			LOGGER.error("discord.manager.channel_cannot_talk", identifier);
+			return null;
+		}
+
+		return tc;
 	}
 
 	/**

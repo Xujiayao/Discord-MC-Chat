@@ -54,6 +54,8 @@ discord:
     registering_commands: "Registering Discord DMCC commands. This may take a while... (should be within 1 minute)"
     commands_success: "Discord DMCC commands registered successfully!"
     commands_failed: "Failed to register Discord DMCC commands."
+    channel_not_found: "Discord text channel not found: \"{}\""
+    channel_cannot_talk: "Cannot send messages in Discord text channel: \"{}\""
   command:
     reply_failed: "Failed to send reply message to Discord command sender."
     reply_failed_detail: "This is expected behavior for reload/shutdown commands."
