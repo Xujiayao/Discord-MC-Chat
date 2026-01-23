@@ -126,7 +126,7 @@ public class NettyClient {
 		if (channel != null && channel.isActive()) {
 			channel.writeAndFlush(packet);
 		} else {
-			LOGGER.warn("client.network.send_while_disconnected", packet.getClass().getSimpleName());
+			LOGGER.warn(I18nManager.getDmccTranslation("client.network.send_while_disconnected", packet.getClass().getSimpleName()));
 		}
 	}
 
