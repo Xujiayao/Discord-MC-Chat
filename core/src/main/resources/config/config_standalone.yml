@@ -23,7 +23,7 @@ multi_server:
   servers:
     # This list acts as a whitelist. Only clients with a server name defined here are allowed to connect.
     - name: "SMP"
-      avatar_url: "https://cdn.jsdelivr.net/gh/Xujiayao/Discord-MC-Chat@v3/core/src/main/resources/icon/icon.png"
+      avatar_url: ""
       color: "yellow"
       start_command: "./SMP/start.bat"  # command or url
 
@@ -37,7 +37,7 @@ discord:
   # Webhook 通用设置
   # 多服务器模式下，Webhook 用于发送客户端 MC 服务器消息，因此必须启用 Webhook
   webhook:
-    allow_mentions: # TODO 允许 Webhook 触发提及的对象
+    allow_mentions: # 允许 Webhook 触发提及的对象
       - "everyone"
       - "users"
       - "roles"

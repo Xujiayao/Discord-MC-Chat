@@ -7,6 +7,7 @@ import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
@@ -140,8 +141,26 @@ public class DiscordManager {
 	 * @param content    The message content.
 	 */
 	private static void sendWebhookMessage(Webhook webhook, String username, String avatarUrl, String content) {
+		List<Message.MentionType> allowedMentions = new ArrayList<>();
+		JsonNode allowMentionsNode = ConfigManager.getConfigNode("discord.webhook.allow_mentions");
+		if (allowMentionsNode.isArray()) {
+			for (JsonNode node : allowMentionsNode) {
+				switch (node.asText()) {
+					case "everyone" -> {
+						allowedMentions.add(Message.MentionType.EVERYONE);
+						allowedMentions.add(Message.MentionType.HERE);
+					}
+					case "users" -> allowedMentions.add(Message.MentionType.USER);
+					case "roles" -> allowedMentions.add(Message.MentionType.ROLE);
+				}
+			}
+		}
 
-
+		webhook.sendMessage(content)
+				.setUsername(username)
+				.setAvatarUrl(avatarUrl)
+				.setAllowedMentions(allowedMentions)
+				.queue();
 	}
 
 	/**
@@ -191,7 +210,7 @@ public class DiscordManager {
 						}
 					}
 					if (avatarUrl.isBlank()) {
-						avatarUrl = "https://cdn.jsdelivr.net/gh/Xujiayao/Discord-MC-Chat@v3/core/src/main/resources/icon/icon.png";
+						avatarUrl = jda.getSelfUser().getEffectiveAvatarUrl();
 					}
 
 					// Find or create webhook
