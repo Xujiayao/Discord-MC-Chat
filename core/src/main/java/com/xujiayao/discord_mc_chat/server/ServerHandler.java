@@ -63,8 +63,13 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 			switch (packet) {
 				case MinecraftEventPacket p -> {
 					switch (p.type) {
+						// Server events
 						case SERVER_STARTED -> DiscordManager.clientBroadcast(clientName, "server.started", "server.start", false, p.placeholders);
 						case SERVER_STOPPING -> DiscordManager.clientBroadcast(clientName, "server.stopped", "server.stop", false, p.placeholders);
+						// Player events
+						case PLAYER_JOIN -> DiscordManager.clientBroadcast(clientName, "player.join", "player.join", false, p.placeholders);
+						case PLAYER_QUIT -> DiscordManager.clientBroadcast(clientName, "player.quit", "player.quit", false, p.placeholders);
+						// Unhandled events
 						default -> LOGGER.warn("Received MinecraftEventPacket from authenticated client {}: type={}, placeholders={}", clientName, p.type, p.placeholders);
 					}
 				}

@@ -35,6 +35,22 @@ public class MinecraftEventHandler {
 			DMCC.shutdown();
 		});
 
+		EventManager.register(MinecraftEvents.PlayerJoin.class, event -> {
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.serverPlayer().getName().getString(),
+					"display_name", event.serverPlayer().getDisplayName().getString()
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_JOIN, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.PlayerQuit.class, event -> {
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.serverPlayer().getName().getString(),
+					"display_name", event.serverPlayer().getDisplayName().getString()
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_QUIT, placeholders));
+		});
+
 		EventManager.register(MinecraftEvents.CommandRegister.class, event -> {
 			// Register Minecraft /dmcc commands
 			MinecraftCommands.register(event.dispatcher());
