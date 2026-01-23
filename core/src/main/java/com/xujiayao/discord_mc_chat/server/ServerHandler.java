@@ -142,7 +142,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-		LOGGER.error("Exception in ServerHandler", cause);
+		LOGGER.error(I18nManager.getDmccTranslation("server.network.exception_caught"), cause);
 		ctx.close();
 	}
 

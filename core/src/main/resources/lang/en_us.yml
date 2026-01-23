@@ -78,6 +78,7 @@ server:
       not_whitelisted: "Name \"{}\" is not whitelisted."
       version_mismatch: "Version mismatch. Client: {}, Server: {}"
       auth_failed: "Authentication failed. Please check your shared secret."
+    exception_caught: "Netty caught an exception."
 
 client:
   startup_interrupted: "DMCC Client startup was interrupted."

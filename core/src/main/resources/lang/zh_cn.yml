@@ -78,6 +78,7 @@ server:
       not_whitelisted: "名称 \"{}\" 不在白名单中。"
       version_mismatch: "版本不匹配。客户端：{}，服务端：{}"
       auth_failed: "验证失败。请检查你的共享密钥。"
+    exception_caught: "Netty 捕获到一个异常。"
 
 client:
   startup_interrupted: "DMCC 客户端启动被中断。"
