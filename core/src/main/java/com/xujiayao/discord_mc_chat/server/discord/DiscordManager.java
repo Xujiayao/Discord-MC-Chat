@@ -252,13 +252,13 @@ public class DiscordManager {
 			// Try parsing as ID
 			tc = jda.getTextChannelById(identifier);
 			if (tc == null) {
-				LOGGER.error("discord.manager.channel_not_found", identifier);
+				LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_not_found", identifier));
 				return null;
 			}
 		}
 
 		if (!tc.canTalk()) {
-			LOGGER.error("discord.manager.channel_cannot_talk", identifier);
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_cannot_talk", identifier));
 			return null;
 		}
 
