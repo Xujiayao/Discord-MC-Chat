@@ -34,14 +34,17 @@ discord:
     token: "your_token_here"  # Discord 机器人令牌
     rich_presence: # TODO
       enable: true
-  # Webhook 设置
+  # Webhook 通用设置
+  # 多服务器模式下，Webhook 用于发送客户端 MC 服务器消息，因此必须启用 Webhook
   webhook:
-    enable: true  # 是否使用 Webhook 发送聊天消息
-    avatar_url: "https://mc-heads.net/avatar/{player_name}.png"
-    allowed_mentions: # TODO 允许 Webhook 触发提及的对象
+    allow_mentions: # TODO 允许 Webhook 触发提及的对象
       - "everyone"
       - "users"
       - "roles"
+    # 玩家聊天消息 Webhook 设置
+    players:
+      enable_fake_user_style: true  # 是否使用伪用户样式的 Webhook 发送玩家聊天消息
+      avatar_url: "https://mc-heads.net/avatar/{player_name}.png"
 
 # 消息广播设置
 broadcasts:
