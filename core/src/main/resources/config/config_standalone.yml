@@ -23,6 +23,7 @@ multi_server:
   servers:
     # This list acts as a whitelist. Only clients with a server name defined here are allowed to connect.
     - name: "SMP"
+      avatar_url: "https://cdn.jsdelivr.net/gh/Xujiayao/Discord-MC-Chat@v3/core/src/main/resources/icon/icon.png"
       color: "yellow"
       start_command: "./SMP/start.bat"  # command or url
 

@@ -1,12 +1,15 @@
 package com.xujiayao.discord_mc_chat.server.discord;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -16,6 +19,7 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -115,15 +119,99 @@ public class DiscordManager {
 	}
 
 	/**
-	 * Sends a message to a Discord channel.
+	 * Sends a message to a Discord channel using the JDA bot.
 	 *
 	 * @param channelIdentifier The ID or Name of the channel.
 	 * @param content           The message content.
 	 */
-	public static void sendMessage(String channelIdentifier, String content) {
+	private static void sendBotMessage(String channelIdentifier, String content) {
 		TextChannel channel = getTextChannel(channelIdentifier);
 		if (channel != null) {
 			channel.sendMessage(content).queue();
+		}
+	}
+
+	/**
+	 * Sends a message using a Discord webhook.
+	 *
+	 * @param webhook    The webhook to use.
+	 * @param username   The username to display.
+	 * @param avatarUrl  The avatar URL to use.
+	 * @param content    The message content.
+	 */
+	private static void sendWebhookMessage(Webhook webhook, String username, String avatarUrl, String content) {
+
+
+	}
+
+	/**
+	 * Broadcasts a message to a Discord channel based on the specified parameters.
+	 *
+	 * @param clientName   The name of the DMCC client.
+	 * @param channelNode  The broadcast channel identifier.
+	 * @param lang         The language key for the message.
+	 * @param isTemplate   Whether the message is a template.
+	 * @param placeholders A map of placeholders to replace in the message.
+	 */
+	public static void clientBroadcast(String clientName, String channelNode, String lang, boolean isTemplate, Map<String, String> placeholders) {
+		String channelIdentifier = ConfigManager.getString("broadcasts.minecraft_to_discord." + channelNode);
+		if (channelIdentifier == null || channelIdentifier.isBlank()) {
+			// User chooses not to broadcast this event
+			return;
+		}
+		TextChannel channel = getTextChannel(channelIdentifier);
+		if (channel == null) return;
+
+		try {
+			JsonNode customMessages = I18nManager.getCustomMessages();
+			if (customMessages == null) return;
+
+			String[] parts = ("minecraft_to_discord." + lang).split("\\.");
+			JsonNode messageNode = customMessages;
+			for (String part : parts) {
+				messageNode = messageNode.path(part);
+			}
+
+			if (!isTemplate) {
+				String message = messageNode.asText();
+
+				for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+					message = message.replace("{" + entry.getKey() + "}", entry.getValue());
+				}
+
+				if ("standalone".equals(ModeManager.getMode())) {
+					// Get avatar url for webhook avatar
+					String avatarUrl = "";
+					JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
+					if (serversNode.isArray()) {
+						for (JsonNode node : serversNode) {
+							if (clientName.equals(node.path("name").asText())) {
+								avatarUrl = node.path("avatar_url").asText();
+							}
+						}
+					}
+					if (avatarUrl.isBlank()) {
+						avatarUrl = "https://cdn.jsdelivr.net/gh/Xujiayao/Discord-MC-Chat@v3/core/src/main/resources/icon/icon.png";
+					}
+
+					// Find or create webhook
+					Webhook webhook = channel.retrieveWebhooks().complete()
+							.stream()
+							.filter(i -> "DMCC Webhook".equals(i.getName()))
+							.filter(i -> i.getOwnerAsUser() == jda.getSelfUser())
+							.findFirst()
+							.orElseGet(() -> channel.createWebhook("DMCC Webhook").complete()); // Must use orElseGet to avoid unnecessary creation
+
+					sendWebhookMessage(webhook, clientName, avatarUrl, message);
+				} else {
+					sendBotMessage(channelIdentifier, message);
+				}
+			}
+		} catch (InsufficientPermissionException e) {
+			String reason = I18nManager.getDmccTranslation("discord.manager.insufficient_permission", channel.getName());
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", reason), e);
+		} catch (Exception e) {
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
 		}
 	}
 

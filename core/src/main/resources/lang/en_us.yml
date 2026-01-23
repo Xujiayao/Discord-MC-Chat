@@ -56,6 +56,8 @@ discord:
     commands_failed: "Failed to register Discord DMCC commands."
     channel_not_found: "Discord text channel not found: \"{}\""
     channel_cannot_talk: "Cannot send messages in Discord text channel: \"{}\""
+    insufficient_permission: "Discord bot has insufficient permissions in channel \"{}\"."
+    broadcast_failed: "Failed to broadcast message to Discord channel. Reason: {}"
   command:
     reply_failed: "Failed to send reply message to Discord command sender."
     reply_failed_detail: "This is expected behavior for reload/shutdown commands."

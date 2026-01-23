@@ -5,11 +5,12 @@ import com.xujiayao.discord_mc_chat.Constants;
 import com.xujiayao.discord_mc_chat.network.packets.AuthResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.ChallengePacket;
 import com.xujiayao.discord_mc_chat.network.packets.DisconnectPacket;
-import com.xujiayao.discord_mc_chat.network.packets.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.network.packets.HandshakePacket;
 import com.xujiayao.discord_mc_chat.network.packets.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.LoginSuccessPacket;
+import com.xujiayao.discord_mc_chat.network.packets.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
+import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
@@ -61,7 +62,11 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		if (authenticated) {
 			switch (packet) {
 				case MinecraftEventPacket p -> {
-					LOGGER.warn("Received MinecraftEventPacket from authenticated client {}: type={}, placeholders={}", clientName, p.type, p.placeholders);
+					switch (p.type) {
+						case SERVER_STARTED -> DiscordManager.clientBroadcast(clientName, "server.started", "server.start", false, p.placeholders);
+						case SERVER_STOPPING -> DiscordManager.clientBroadcast(clientName, "server.stopped", "server.stop", false, p.placeholders);
+						default -> LOGGER.warn("Received MinecraftEventPacket from authenticated client {}: type={}, placeholders={}", clientName, p.type, p.placeholders);
+					}
 				}
 				case null, default -> LOGGER.warn(unexpectedPacketMessage);
 			}
