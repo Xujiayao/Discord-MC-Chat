@@ -30,6 +30,23 @@ public class EnvironmentUtils {
 	}
 
 	/**
+	 * Gets the Minecraft version using reflection.
+	 * Should only be called if running in a Minecraft environment.
+	 *
+	 * @return The Minecraft version as a string.
+	 */
+	public static String getMinecraftVersion() {
+		try {
+			// SharedConstants.getCurrentVersion().name()
+			Class<?> sharedConstantsClass = Class.forName("net.minecraft.SharedConstants");
+			Object worldVersionObject = sharedConstantsClass.getMethod("getCurrentVersion").invoke(null);
+			return (String) worldVersionObject.getClass().getMethod("name").invoke(worldVersionObject);
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to get Minecraft version", e);
+		}
+	}
+
+	/**
 	 * Gets the DMCC version from the template "mode.yml" file in resources.
 	 *
 	 * @return The DMCC version as a string.

@@ -9,6 +9,7 @@ import com.xujiayao.discord_mc_chat.network.packets.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.LoginSuccessPacket;
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
+import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -37,7 +38,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) {
-		ctx.writeAndFlush(new HandshakePacket(client.getServerName(), Constants.VERSION));
+		ctx.writeAndFlush(new HandshakePacket(client.getServerName(), Constants.VERSION, EnvironmentUtils.getMinecraftVersion()));
 	}
 
 	@Override

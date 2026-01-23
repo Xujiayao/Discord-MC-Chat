@@ -7,10 +7,12 @@ package com.xujiayao.discord_mc_chat.network.packets;
  */
 public class HandshakePacket extends Packet {
 	public String serverName;
-	public String version;
+	public String dmccVersion;
+	public String minecraftVersion;
 
-	public HandshakePacket(String serverName, String version) {
+	public HandshakePacket(String serverName, String dmccVersion, String minecraftVersion) {
 		this.serverName = serverName;
-		this.version = version;
+		this.dmccVersion = dmccVersion;
+		this.minecraftVersion = minecraftVersion;
 	}
 }

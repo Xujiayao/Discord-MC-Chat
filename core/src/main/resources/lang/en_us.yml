@@ -76,7 +76,7 @@ server:
     disconnect_reasons:
       single_server_mode: "DMCC Server is in single_server mode, rejecting any additional client connections."
       not_whitelisted: "Name \"{}\" is not whitelisted."
-      version_mismatch: "Version mismatch. Client: {}, Server: {}"
+      version_mismatch: "{} version mismatch. Client: {}, Server: {}"
       auth_failed: "Authentication failed. Please check your shared secret."
     exception_caught: "Netty caught an exception."
 
