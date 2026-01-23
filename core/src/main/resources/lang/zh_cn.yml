@@ -56,7 +56,7 @@ discord:
     commands_failed: "注册 Discord DMCC 命令失败。"
     channel_not_found: "未找到 Discord 文字频道：\"{}\""
     channel_cannot_talk: "无法在 Discord 文字频道中发送消息：\"{}\""
-    insufficient_permission: "Discord 机器人在频道 \"{}\" 中权限不足。"
+    insufficient_permission: "Discord 机器人在频道 {} 中权限不足：\"{}\""
     broadcast_failed: "无法将消息广播到 Discord 频道。原因：{}"
   command:
     reply_failed: "无法向 Discord 命令发送者发送回复消息。"

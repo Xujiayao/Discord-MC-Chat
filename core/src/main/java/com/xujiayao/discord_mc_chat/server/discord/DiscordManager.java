@@ -208,8 +208,8 @@ public class DiscordManager {
 				}
 			}
 		} catch (InsufficientPermissionException e) {
-			String reason = I18nManager.getDmccTranslation("discord.manager.insufficient_permission", channel.getName());
-			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", reason), e);
+			String reason = I18nManager.getDmccTranslation("discord.manager.insufficient_permission", channel.getName(), e.getPermission().getName());
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", reason));
 		} catch (Exception e) {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
 		}
