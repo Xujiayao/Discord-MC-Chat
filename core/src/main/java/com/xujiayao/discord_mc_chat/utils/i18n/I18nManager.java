@@ -21,7 +21,7 @@ import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
 
 /**
  * Manages internationalization (i18n) for DMCC.
- * Handles loading language files for custom messages, DMCC translations, and Minecraft translations.
+ * Handles loading language files for DMCC Translations and Custom Messages.
  *
  * @author Xujiayao
  */
@@ -29,8 +29,6 @@ public class I18nManager {
 
 	private static final Map<String, String> DMCC_TRANSLATIONS = new HashMap<>();
 	private static final Path CUSTOM_MESSAGES_DIR = Paths.get("./config/discord_mc_chat/custom_messages");
-	private static final Path CACHE_DIR = Paths.get("./config/discord_mc_chat/cache/lang");
-	private static final Map<String, String> minecraftTranslations = new HashMap<>();
 	private static String language = detectLanguage();
 	private static JsonNode customMessages;
 
@@ -102,11 +100,6 @@ public class I18nManager {
 			if (!loadCustomMessages()) {
 				return false;
 			}
-
-			// Load official Minecraft translations, from cache or by downloading
-//			if (!loadMinecraftTranslations()) {
-//				return false;
-//			}
 		}
 
 		LOGGER.info(I18nManager.getDmccTranslation("utils.i18n.fully_loaded"));
@@ -206,64 +199,6 @@ public class I18nManager {
 		return false;
 	}
 
-//	/**
-//	 * Loads the official Minecraft translation file for the current language.
-//	 * It attempts to use a cached version before downloading a new one.
-//	 *
-//	 * @return true if the translations were loaded successfully.
-//	 */
-//	private static boolean loadMinecraftTranslations() {
-//		minecraftTranslations.clear();
-//
-//		try {
-//			String mcVersion = "EnvironmentUtils.getMinecraftVersion()";
-//			String fileName = StringUtils.format("{}-{}.json", language, mcVersion);
-//
-//			Files.createDirectories(CACHE_DIR);
-//			Path langCachePath = CACHE_DIR.resolve(fileName);
-//
-//			// If a valid cached file exists, use it.
-//			if (Files.exists(langCachePath)) {
-//				try {
-//					JsonNode root = JSON_MAPPER.readTree(Files.newBufferedReader(langCachePath, StandardCharsets.UTF_8));
-//					minecraftTranslations.putAll(JSON_MAPPER.convertValue(root, new TypeReference<Map<String, String>>() {
-//					}));
-//
-//					LOGGER.info("Loaded Minecraft translations from cache for version {}", mcVersion);
-//					return true;
-//				} catch (Exception e) {
-//					LOGGER.error("Failed to read cached Minecraft translations, will attempt to re-download", e);
-//				}
-//			}
-//
-//			// Otherwise, download the file.
-//			LOGGER.info("Downloading Minecraft translations for version {}...", mcVersion);
-//			String url = "https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@" + mcVersion + "/assets/minecraft/lang/" + language + ".json";
-//			Request request = new Request.Builder().url(url).build();
-//
-//			try (Response response = OK_HTTP_CLIENT.newCall(request).execute()) {
-//				if (!response.isSuccessful()) {
-//					LOGGER.error("Failed to download Minecraft translations. HTTP Status: {}", response.code());
-//					return false;
-//				}
-//
-//				String jsonContent = response.body().string();
-//				Files.writeString(langCachePath, jsonContent);
-//
-//				JsonNode root = JSON_MAPPER.readTree(jsonContent);
-//				minecraftTranslations.putAll(JSON_MAPPER.convertValue(root, new TypeReference<Map<String, String>>() {
-//				}));
-//
-//				LOGGER.info("Downloaded and cached Minecraft translations, file size: {} bytes", jsonContent.length());
-//				return true;
-//			}
-//		} catch (IOException e) {
-//			LOGGER.error("Failed to load or download Minecraft translations", e);
-//		}
-//
-//		return false;
-//	}
-
 	/**
 	 * Gets a translation from DMCC's internal translation files (lang/*.yml).
 	 * Placeholders are formatted using {}.
@@ -285,25 +220,6 @@ public class I18nManager {
 	public static JsonNode getCustomMessages() {
 		return customMessages;
 	}
-
-//	/**
-//	 * Gets a translation from the official Minecraft translation files.
-//	 * Placeholders are formatted using %s or %1$s.
-//	 *
-//	 * @param key  The translation key (e.g., "death.attack.drown").
-//	 * @param args The arguments to format into the string.
-//	 * @return The formatted translation string, or the key if not found.
-//	 */
-//	public static String getMinecraftTranslation(String key, Object... args) {
-//		String translation = minecraftTranslations.getOrDefault(key, key);
-//		try {
-//			// MessageFormat handles both %s and %1$s style placeholders
-//			return MessageFormat.format(translation.replace("'", "''"), args);
-//		} catch (IllegalArgumentException e) {
-//			LOGGER.warn("Failed to format Minecraft translation for key \"{}\": {}", key, e.getMessage());
-//			return translation; // Return unformatted string on error
-//		}
-//	}
 
 	/**
 	 * Recursively flattens a JsonNode object into a Map with dot-separated keys.
