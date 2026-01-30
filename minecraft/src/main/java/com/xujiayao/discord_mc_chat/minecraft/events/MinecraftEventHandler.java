@@ -5,6 +5,8 @@ import com.xujiayao.discord_mc_chat.minecraft.commands.MinecraftCommands;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
+import net.minecraft.advancements.DisplayInfo;
+import net.minecraft.world.level.GameRules;
 
 import java.util.Map;
 
@@ -49,6 +51,39 @@ public class MinecraftEventHandler {
 					"display_name", event.serverPlayer().getDisplayName().getString()
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_QUIT, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.PlayerDie.class, event -> {
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.serverPlayer().getName().getString(),
+					"display_name", event.serverPlayer().getDisplayName().getString(),
+					"death_message", "null"
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_DIE, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.PlayerAdvancement.class, event -> {
+			DisplayInfo displayInfo = event.advancementHolder().value().display().orElse(null);
+			if (displayInfo != null
+					&& displayInfo.shouldAnnounceChat()
+					&& event.advancementProgress().isDone()
+					&& event.serverPlayer().level().getGameRules().getBoolean(GameRules.RULE_ANNOUNCE_ADVANCEMENTS)) {
+				String type = switch (displayInfo.getType()) {
+					case TASK -> "task";
+					case CHALLENGE -> "challenge";
+					case GOAL -> "goal";
+				};
+
+				Map<String, String> placeholders = Map.of(
+						"type", type,
+						"user_name", event.serverPlayer().getName().getString(),
+						"display_name", event.serverPlayer().getDisplayName().getString(),
+						"advancement", "null",
+						"description", "null"
+				);
+
+				NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_ADVANCEMENT, placeholders));
+			}
 		});
 
 		EventManager.register(MinecraftEvents.CommandRegister.class, event -> {
