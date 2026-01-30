@@ -1,14 +1,9 @@
 package com.xujiayao.discord_mc_chat.utils.i18n;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
 import com.xujiayao.discord_mc_chat.utils.YamlUtils;
-import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
-import okhttp3.Request;
-import okhttp3.Response;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,15 +12,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import static com.xujiayao.discord_mc_chat.Constants.JSON_MAPPER;
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
-import static com.xujiayao.discord_mc_chat.Constants.OK_HTTP_CLIENT;
 import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
 
 /**
@@ -39,7 +30,7 @@ public class I18nManager {
 	private static final Map<String, String> DMCC_TRANSLATIONS = new HashMap<>();
 	private static final Path CUSTOM_MESSAGES_DIR = Paths.get("./config/discord_mc_chat/custom_messages");
 	private static final Path CACHE_DIR = Paths.get("./config/discord_mc_chat/cache/lang");
-	private static final Map<String, Map<String, String>> minecraftTranslations = new HashMap<>();
+	private static final Map<String, String> minecraftTranslations = new HashMap<>();
 	private static String language = detectLanguage();
 	private static JsonNode customMessages;
 
@@ -113,9 +104,9 @@ public class I18nManager {
 			}
 
 			// Load official Minecraft translations, from cache or by downloading
-			if (!loadMinecraftTranslations()) {
-				return false;
-			}
+//			if (!loadMinecraftTranslations()) {
+//				return false;
+//			}
 		}
 
 		LOGGER.info(I18nManager.getDmccTranslation("utils.i18n.fully_loaded"));
@@ -215,87 +206,63 @@ public class I18nManager {
 		return false;
 	}
 
-	/**
-	 * Loads the official Minecraft translation file for the current language.
-	 * It attempts to use a cached version before downloading a new one.
-	 *
-	 * @return true if the translations were loaded successfully.
-	 */
-	private static boolean loadMinecraftTranslations() {
-		minecraftTranslations.clear();
-
-		// Minecraft version(s) to load translations for
-		List<String> versions = new ArrayList<>();
-		if ("standalone".equals(ModeManager.getMode())) {
-			// For each multi_server.servers get minecraft_version
-			JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
-			if (serversNode.isArray()) {
-				for (JsonNode node : serversNode) {
-					versions.add(node.path("minecraft_version").asText());
-				}
-			}
-		} else {
-			versions.add(EnvironmentUtils.getMinecraftVersion());
-		}
-
-		boolean allLoaded = true;
-
-		try {
-			for (String version : versions) {
-				String fileName = StringUtils.format("{}-{}.json", language, version);
-
-				Files.createDirectories(CACHE_DIR);
-				Path langCachePath = CACHE_DIR.resolve(fileName);
-
-				// If a valid cached file exists, use it.
-				if (Files.exists(langCachePath)) {
-					try {
-						JsonNode root = JSON_MAPPER.readTree(Files.newBufferedReader(langCachePath, StandardCharsets.UTF_8));
-						Map<String, String> translations = JSON_MAPPER.convertValue(root, new TypeReference<Map<String, String>>() {
-						});
-						minecraftTranslations.put(version, translations);
-
-						LOGGER.info("Loaded Minecraft translations from cache for version {}", version);
-						continue;
-					} catch (Exception e) {
-						LOGGER.error("Failed to read cached Minecraft translations, will attempt to re-download", e);
-						Files.delete(langCachePath);
-					}
-				}
-
-				// Otherwise, download the file.
-				LOGGER.info("Downloading Minecraft translations for version {}...", version);
-				String url = "https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@" + version + "/assets/minecraft/lang/" + language + ".json";
-				Request request = new Request.Builder().url(url).build();
-
-				try (Response response = OK_HTTP_CLIENT.newCall(request).execute()) {
-					if (!response.isSuccessful()) {
-						LOGGER.error("Failed to download Minecraft translations. HTTP Status: {}", response.code());
-						allLoaded = false;
-						continue;
-					}
-
-					String jsonContent = response.body().string();
-					Files.writeString(langCachePath, jsonContent);
-
-					JsonNode root = JSON_MAPPER.readTree(jsonContent);
-					Map<String, String> translations = JSON_MAPPER.convertValue(root, new TypeReference<Map<String, String>>() {
-					});
-					minecraftTranslations.put(version, translations);
-
-					LOGGER.info("Downloaded and cached Minecraft translations, file size: {} bytes", jsonContent.length());
-				} catch (Exception e) {
-					LOGGER.error("Failed to download or cache Minecraft translations for version " + version, e);
-					allLoaded = false;
-				}
-			}
-		} catch (Exception e) {
-			LOGGER.error("Failed to load or download Minecraft translations", e);
-			return false;
-		}
-
-		return allLoaded;
-	}
+//	/**
+//	 * Loads the official Minecraft translation file for the current language.
+//	 * It attempts to use a cached version before downloading a new one.
+//	 *
+//	 * @return true if the translations were loaded successfully.
+//	 */
+//	private static boolean loadMinecraftTranslations() {
+//		minecraftTranslations.clear();
+//
+//		try {
+//			String mcVersion = "EnvironmentUtils.getMinecraftVersion()";
+//			String fileName = StringUtils.format("{}-{}.json", language, mcVersion);
+//
+//			Files.createDirectories(CACHE_DIR);
+//			Path langCachePath = CACHE_DIR.resolve(fileName);
+//
+//			// If a valid cached file exists, use it.
+//			if (Files.exists(langCachePath)) {
+//				try {
+//					JsonNode root = JSON_MAPPER.readTree(Files.newBufferedReader(langCachePath, StandardCharsets.UTF_8));
+//					minecraftTranslations.putAll(JSON_MAPPER.convertValue(root, new TypeReference<Map<String, String>>() {
+//					}));
+//
+//					LOGGER.info("Loaded Minecraft translations from cache for version {}", mcVersion);
+//					return true;
+//				} catch (Exception e) {
+//					LOGGER.error("Failed to read cached Minecraft translations, will attempt to re-download", e);
+//				}
+//			}
+//
+//			// Otherwise, download the file.
+//			LOGGER.info("Downloading Minecraft translations for version {}...", mcVersion);
+//			String url = "https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@" + mcVersion + "/assets/minecraft/lang/" + language + ".json";
+//			Request request = new Request.Builder().url(url).build();
+//
+//			try (Response response = OK_HTTP_CLIENT.newCall(request).execute()) {
+//				if (!response.isSuccessful()) {
+//					LOGGER.error("Failed to download Minecraft translations. HTTP Status: {}", response.code());
+//					return false;
+//				}
+//
+//				String jsonContent = response.body().string();
+//				Files.writeString(langCachePath, jsonContent);
+//
+//				JsonNode root = JSON_MAPPER.readTree(jsonContent);
+//				minecraftTranslations.putAll(JSON_MAPPER.convertValue(root, new TypeReference<Map<String, String>>() {
+//				}));
+//
+//				LOGGER.info("Downloaded and cached Minecraft translations, file size: {} bytes", jsonContent.length());
+//				return true;
+//			}
+//		} catch (IOException e) {
+//			LOGGER.error("Failed to load or download Minecraft translations", e);
+//		}
+//
+//		return false;
+//	}
 
 	/**
 	 * Gets a translation from DMCC's internal translation files (lang/*.yml).
