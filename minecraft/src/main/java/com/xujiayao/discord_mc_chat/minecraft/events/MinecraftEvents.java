@@ -9,7 +9,6 @@ import net.minecraft.network.Connection;
 import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
-import net.minecraft.world.damagesource.DamageSource;
 
 /**
  * A container for all Minecraft-related event classes.
@@ -76,7 +75,6 @@ public class MinecraftEvents {
 	 * Posted when a player dies.
 	 */
 	public record PlayerDie(
-			DamageSource damageSource,
 			ServerPlayer serverPlayer
 	) {
 	}

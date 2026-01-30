@@ -19,7 +19,6 @@ public class MixinServerPlayer {
 	private void die(DamageSource damageSource, CallbackInfo ci) {
 		// PlayerDie Event
 		EventManager.post(new MinecraftEvents.PlayerDie(
-				damageSource,
 				(ServerPlayer) (Object) this
 		));
 	}
