@@ -85,7 +85,7 @@ public class MinecraftEvents {
 	public record PlayerAdvancement(
 			AdvancementHolder advancementHolder,
 			String string,
-			ServerPlayer player,
+			ServerPlayer serverPlayer,
 			AdvancementProgress advancementProgress
 	) {
 	}
