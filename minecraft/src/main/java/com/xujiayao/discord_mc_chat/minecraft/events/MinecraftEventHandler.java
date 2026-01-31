@@ -2,10 +2,13 @@ package com.xujiayao.discord_mc_chat.minecraft.events;
 
 import com.xujiayao.discord_mc_chat.DMCC;
 import com.xujiayao.discord_mc_chat.minecraft.commands.MinecraftCommands;
+import com.xujiayao.discord_mc_chat.minecraft.utils.TranslationManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import net.minecraft.advancements.DisplayInfo;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.level.GameRules;
 
 import java.util.Map;
@@ -21,6 +24,9 @@ public class MinecraftEventHandler {
 	 * Initializes the Minecraft event handlers.
 	 */
 	public static void init() {
+		// Initialize Minecraft translations
+		TranslationManager.init();
+
 		EventManager.register(MinecraftEvents.ServerStarted.class, event -> {
 			Map<String, String> placeholders = Map.of();
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SERVER_STARTED, placeholders));
@@ -57,7 +63,7 @@ public class MinecraftEventHandler {
 			Map<String, String> placeholders = Map.of(
 					"user_name", event.serverPlayer().getName().getString(),
 					"display_name", event.serverPlayer().getDisplayName().getString(),
-					"death_message", "null"
+					"death_message", getTranslatedString(event.serverPlayer().getCombatTracker().getDeathMessage())
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_DIE, placeholders));
 		});
@@ -78,8 +84,8 @@ public class MinecraftEventHandler {
 						"type", type,
 						"user_name", event.serverPlayer().getName().getString(),
 						"display_name", event.serverPlayer().getDisplayName().getString(),
-						"advancement", "null",
-						"description", "null"
+						"title", getTranslatedString(displayInfo.getTitle()),
+						"description", getTranslatedString(displayInfo.getDescription())
 				);
 
 				NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_ADVANCEMENT, placeholders));
@@ -90,5 +96,40 @@ public class MinecraftEventHandler {
 			// Register Minecraft /dmcc commands
 			MinecraftCommands.register(event.dispatcher());
 		});
+	}
+
+	/**
+	 * Gets the translated string from a Minecraft Component.
+	 * <p>
+	 * This method handles TranslatableContents to get the translation in the configured language.
+	 *
+	 * @param component The component to translate
+	 * @return The translated string
+	 */
+	private static String getTranslatedString(Component component) {
+		if (component == null) {
+			return "";
+		}
+
+		// Check if this is a translatable component
+		if (component.getContents() instanceof TranslatableContents translatable) {
+			String key = translatable.getKey();
+			Object[] args = translatable.getArgs();
+
+			// Convert Component arguments to translated strings recursively
+			Object[] translatedArgs = new Object[args.length];
+			for (int i = 0; i < args.length; i++) {
+				if (args[i] instanceof Component argComponent) {
+					translatedArgs[i] = getTranslatedString(argComponent);
+				} else {
+					translatedArgs[i] = args[i];
+				}
+			}
+
+			return TranslationManager.get(key, translatedArgs);
+		}
+
+		// For non-translatable components, just return the string representation
+		return component.getString();
 	}
 }
