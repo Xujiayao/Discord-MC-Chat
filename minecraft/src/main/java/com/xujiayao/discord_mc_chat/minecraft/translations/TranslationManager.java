@@ -1,4 +1,4 @@
-package com.xujiayao.discord_mc_chat.minecraft.utils;
+package com.xujiayao.discord_mc_chat.minecraft.translations;
 
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.HttpUtils;

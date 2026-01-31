@@ -2,7 +2,7 @@ package com.xujiayao.discord_mc_chat.minecraft.events;
 
 import com.xujiayao.discord_mc_chat.DMCC;
 import com.xujiayao.discord_mc_chat.minecraft.commands.MinecraftCommands;
-import com.xujiayao.discord_mc_chat.minecraft.utils.TranslationManager;
+import com.xujiayao.discord_mc_chat.minecraft.translations.TranslationManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
