@@ -24,9 +24,6 @@ public class MinecraftEventHandler {
 	 * Initializes the Minecraft event handlers.
 	 */
 	public static void init() {
-		// Initialize Minecraft translations
-		TranslationManager.init();
-
 		EventManager.register(MinecraftEvents.ServerStarted.class, event -> {
 			Map<String, String> placeholders = Map.of();
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SERVER_STARTED, placeholders));
@@ -95,6 +92,11 @@ public class MinecraftEventHandler {
 		EventManager.register(MinecraftEvents.CommandRegister.class, event -> {
 			// Register Minecraft /dmcc commands
 			MinecraftCommands.register(event.dispatcher());
+		});
+
+		EventManager.register(MinecraftEvents.ReloadResources.class, event -> {
+			// Refresh Minecraft translations
+			TranslationManager.init();
 		});
 	}
 

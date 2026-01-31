@@ -15,6 +15,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
@@ -37,21 +39,25 @@ public class TranslationManager {
 	 * Loads translations for the current target language first, then falls back to en_us.
 	 */
 	public static void init() {
-		TRANSLATIONS.clear();
+		try (ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Translations"))) {
+			executor.submit(() -> {
+				TRANSLATIONS.clear();
 
-		String language = I18nManager.getLanguage();
+				String language = I18nManager.getLanguage();
 
-		// Load the target language translations
-		loadTranslations(language);
-		int loadedCount = TRANSLATIONS.size();
+				// Load the target language translations
+				loadTranslations(language);
+				int loadedCount = TRANSLATIONS.size();
 
-		// Load en_us translations to fill in missing keys (fallback)
-		if (!"en_us".equals(language)) {
-			loadTranslations("en_us");
-			LOGGER.info("Loaded {}/{} Minecraft \"{}\" translations", loadedCount, TRANSLATIONS.size(), language);
+				// Load en_us translations to fill in missing keys (fallback)
+				if (!"en_us".equals(language)) {
+					loadTranslations("en_us");
+					LOGGER.info("Loaded {}/{} Minecraft \"{}\" translations", loadedCount, TRANSLATIONS.size(), language);
+				}
+
+				currentLoadedLanguage = language;
+			});
 		}
-
-		currentLoadedLanguage = language;
 	}
 
 	/**

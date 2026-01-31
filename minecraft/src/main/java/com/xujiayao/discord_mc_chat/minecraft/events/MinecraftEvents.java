@@ -114,4 +114,11 @@ public class MinecraftEvents {
 			CommandDispatcher<CommandSourceStack> dispatcher
 	) {
 	}
+
+	/**
+	 * Posted when Minecraft is reloading resources.
+	 */
+	public record ReloadResources(
+	) {
+	}
 }
