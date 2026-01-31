@@ -3,10 +3,9 @@ package com.xujiayao.discord_mc_chat.minecraft.utils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
+import com.xujiayao.discord_mc_chat.utils.HttpUtils;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
-import okhttp3.Request;
-import okhttp3.Response;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -21,7 +20,6 @@ import java.util.stream.Stream;
 
 import static com.xujiayao.discord_mc_chat.Constants.JSON_MAPPER;
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
-import static com.xujiayao.discord_mc_chat.Constants.OK_HTTP_CLIENT;
 
 /**
  * Manages Minecraft translations for official, mods and datapacks.
@@ -155,6 +153,7 @@ public class TranslationManager {
 			Files.createDirectories(CACHE_DIR);
 			Path langCachePath = CACHE_DIR.resolve(fileName);
 
+			boolean loaded = false;
 			// If a valid cached file exists, use it.
 			if (Files.exists(langCachePath)) {
 				try {
@@ -164,22 +163,20 @@ public class TranslationManager {
 					translations.forEach(TRANSLATIONS::putIfAbsent);
 
 					LOGGER.info("Loaded Minecraft translations from cache for version {}", version);
+					loaded = true;
 				} catch (Exception e) {
 					LOGGER.error("Failed to read cached Minecraft translations, will attempt to re-download", e);
 					Files.delete(langCachePath);
 				}
 			}
 
-			// Otherwise, download the file.
-			LOGGER.info("Downloading Minecraft translations for version {}...", version);
-			String url = "https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@" + version + "/assets/minecraft/lang/" + language + ".json";
-			Request request = new Request.Builder().url(url).build();
+			if (!loaded) {
+				// Otherwise, download the file.
+				LOGGER.info("Downloading Minecraft translations for version {}...", version);
+				String url = "https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@" + version + "/assets/minecraft/lang/" + language + ".json";
 
-			try (Response response = OK_HTTP_CLIENT.newCall(request).execute()) {
-				if (!response.isSuccessful()) {
-					LOGGER.error("Failed to download Minecraft translations. HTTP Status: {}", response.code());
-				} else {
-					String jsonContent = response.body().string();
+				try {
+					String jsonContent = HttpUtils.get(url);
 					Files.writeString(langCachePath, jsonContent);
 
 					JsonNode root = JSON_MAPPER.readTree(jsonContent);
@@ -188,9 +185,9 @@ public class TranslationManager {
 					translations.forEach(TRANSLATIONS::putIfAbsent);
 
 					LOGGER.info("Downloaded and cached Minecraft translations, file size: {} bytes", jsonContent.length());
+				} catch (Exception e) {
+					LOGGER.error("Failed to download or cache Minecraft translations for version " + version, e);
 				}
-			} catch (Exception e) {
-				LOGGER.error("Failed to download or cache Minecraft translations for version " + version, e);
 			}
 		} catch (Exception e) {
 			LOGGER.error("Unexpected error while loading official Minecraft translations", e);
