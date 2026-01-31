@@ -1,9 +1,8 @@
 package com.xujiayao.discord_mc_chat.minecraft.utils;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.HttpUtils;
+import com.xujiayao.discord_mc_chat.utils.JsonUtils;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
@@ -18,7 +17,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static com.xujiayao.discord_mc_chat.Constants.JSON_MAPPER;
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
 /**
@@ -58,8 +56,6 @@ public class TranslationManager {
 
 	/**
 	 * Gets a Minecraft translation with the specified key and arguments.
-	 * <p>
-	 * This method handles Minecraft's placeholder format (%s, %1$s, %2$s, etc.)
 	 *
 	 * @param key  The translation key
 	 * @param args The arguments to format into the string
@@ -157,9 +153,7 @@ public class TranslationManager {
 			// If a valid cached file exists, use it.
 			if (Files.exists(langCachePath)) {
 				try {
-					JsonNode root = JSON_MAPPER.readTree(Files.newBufferedReader(langCachePath, StandardCharsets.UTF_8));
-					Map<String, String> translations = JSON_MAPPER.convertValue(root, new TypeReference<>() {
-					});
+					Map<String, String> translations = JsonUtils.toStringMap(Files.newBufferedReader(langCachePath, StandardCharsets.UTF_8));
 					translations.forEach(TRANSLATIONS::putIfAbsent);
 
 					LOGGER.info("Loaded Minecraft translations from cache for version {}", version);
@@ -179,9 +173,7 @@ public class TranslationManager {
 					String jsonContent = HttpUtils.get(url);
 					Files.writeString(langCachePath, jsonContent);
 
-					JsonNode root = JSON_MAPPER.readTree(jsonContent);
-					Map<String, String> translations = JSON_MAPPER.convertValue(root, new TypeReference<>() {
-					});
+					Map<String, String> translations = JsonUtils.toStringMap(jsonContent);
 					translations.forEach(TRANSLATIONS::putIfAbsent);
 
 					LOGGER.info("Downloaded and cached Minecraft translations, file size: {} bytes", jsonContent.length());
@@ -214,8 +206,7 @@ public class TranslationManager {
 								}
 
 								try (InputStream is = Files.newInputStream(langFile)) {
-									Map<String, String> translations = JSON_MAPPER.readValue(is, new TypeReference<>() {
-									});
+									Map<String, String> translations = JsonUtils.toStringMap(is);
 									translations.forEach(TRANSLATIONS::putIfAbsent);
 								} catch (Exception e) {
 									LOGGER.error("Failed to load translations from mod JAR", e);
