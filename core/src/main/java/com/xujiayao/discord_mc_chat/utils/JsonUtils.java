@@ -7,10 +7,12 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.util.Map;
 
-import static com.xujiayao.discord_mc_chat.Constants.JSON_MAPPER;
+import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
 
 /**
  * JSON utility class that wraps Jackson operations.
+ * <p>
+ * Uses the YAML_MAPPER from Constants for JSON processing to support # comments in JSON (BlazeAndCaves).
  *
  * @author Xujiayao
  */
@@ -24,7 +26,7 @@ public class JsonUtils {
 	 * @throws IOException If parsing fails
 	 */
 	public static Map<String, String> toStringMap(String json) throws IOException {
-		return JSON_MAPPER.convertValue(JSON_MAPPER.readTree(json), new TypeReference<>() {
+		return YAML_MAPPER.convertValue(YAML_MAPPER.readTree(json), new TypeReference<>() {
 		});
 	}
 
@@ -36,7 +38,7 @@ public class JsonUtils {
 	 * @throws IOException If reading or parsing fails
 	 */
 	public static Map<String, String> toStringMap(Reader reader) throws IOException {
-		return JSON_MAPPER.convertValue(JSON_MAPPER.readTree(reader), new TypeReference<>() {
+		return YAML_MAPPER.convertValue(YAML_MAPPER.readTree(reader), new TypeReference<>() {
 		});
 	}
 
@@ -48,7 +50,7 @@ public class JsonUtils {
 	 * @throws IOException If parsing fails
 	 */
 	public static Map<String, String> toStringMap(InputStream inputStream) throws IOException {
-		return JSON_MAPPER.readValue(inputStream, new TypeReference<>() {
+		return YAML_MAPPER.readValue(inputStream, new TypeReference<>() {
 		});
 	}
 }

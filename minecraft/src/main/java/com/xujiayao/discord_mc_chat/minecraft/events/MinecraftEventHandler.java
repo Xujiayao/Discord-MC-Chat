@@ -77,15 +77,13 @@ public class MinecraftEventHandler {
 					case GOAL -> "goal";
 				};
 
-				String path = "advancements." + event.advancementHolder().id().getPath().replace("/", ".");
-
 				Map<String, String> placeholders = Map.of(
 						"type", type,
 						"user_name", event.serverPlayer().getName().getString(),
 						"display_name", event.serverPlayer().getDisplayName().getString(),
-						"title", TranslationManager.get(path + ".title"),
-						"description", TranslationManager.get(path + ".description")
-				); // BlazeAndCaves modifies titles and descriptions to plain texts, so cannot use Component method here
+						"title", TranslationManager.get(displayInfo.getTitle()),
+						"description", TranslationManager.get(displayInfo.getDescription())
+				);
 
 				NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_ADVANCEMENT, placeholders));
 			}

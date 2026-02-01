@@ -74,7 +74,7 @@ minecraft_to_discord:
     start: ":white_check_mark: **Server started!**"
     stop: ":octagonal_sign: **Server stopped!**"
   player:
-    join: ":grinning: **{display_name} joined the server**"
+    join: ":wave: **{display_name} joined the server**"
     quit: ":cry: **{display_name} left the server**"
     chat: default
     command: default

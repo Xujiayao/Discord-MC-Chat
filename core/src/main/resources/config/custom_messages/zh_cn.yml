@@ -74,7 +74,7 @@ minecraft_to_discord:
     start: ":white_check_mark: **服务器已启动！**"
     stop: ":octagonal_sign: **服务器已关闭！**"
   player:
-    join: ":grinning: **{display_name} 加入了服务器**"
+    join: ":wave: **{display_name} 加入了服务器**"
     quit: ":cry: **{display_name} 离开了服务器**"
     chat: default
     command: default
