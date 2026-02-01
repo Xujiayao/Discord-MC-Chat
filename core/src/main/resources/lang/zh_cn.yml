@@ -135,3 +135,19 @@ utils:
     custom_validation_failed: "自定义消息配置验证失败。"
     custom_load_failed: "加载自定义消息失败。"
     fully_loaded: "DMCC 语言资源已完全加载！"
+
+minecraft:
+  translations:
+    loaded: "已加载 {}/{} 条 Minecraft \"{}\" 翻译。"
+    init_failed: "初始化 Minecraft 翻译失败。"
+    key_not_found: "未找到键的翻译：\"{}\"，将按原样返回键。"
+    cache_loaded: "已从缓存加载版本 {1} 的 Minecraft \"{0}\" 翻译。"
+    cache_read_failed: "读取缓存的 Minecraft 翻译失败，将尝试重新下载。"
+    downloading: "正在下载 Minecraft 版本 {1} 的 \"{0}\" 翻译..."
+    downloaded: "已下载并缓存 Minecraft \"{}\" 翻译，文件大小：{} 字节"
+    download_failed: "下载或缓存 Minecraft 版本 {1} 的 \"{0}\" 翻译失败。"
+    official_load_failed: "加载官方 Minecraft 翻译时发生意外错误。"
+    mod_load_failed: "无法从模组 JAR 加载翻译。"
+    jar_open_failed: "无法打开 JAR 文件。"
+    mods_scan_failed: "扫描模组目录时出错。"
+    datapack_load_failed: "无法从数据包加载翻译。"

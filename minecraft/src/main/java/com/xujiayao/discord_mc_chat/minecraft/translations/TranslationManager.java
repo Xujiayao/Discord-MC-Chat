@@ -77,11 +77,11 @@ public class TranslationManager {
 					loadTranslations("en_us");
 				}
 
-				LOGGER.info("Loaded {}/{} Minecraft \"{}\" translations", loadedCount, TRANSLATIONS.size(), language);
+				LOGGER.info(I18nManager.getDmccTranslation("minecraft.translations.loaded", loadedCount, TRANSLATIONS.size(), language));
 				currentLoadedLanguage = language;
 			}).get();
 		} catch (Exception e) {
-			LOGGER.error("Failed to initialize Minecraft translations.", e);
+			LOGGER.error(I18nManager.getDmccTranslation("minecraft.translations.init_failed"), e);
 		}
 	}
 
@@ -100,7 +100,7 @@ public class TranslationManager {
 		String translation = TRANSLATIONS.get(key);
 
 		if (translation == null) {
-			LOGGER.warn("Translation not found for key: '{}', returning key as-is.", key);
+			LOGGER.warn(I18nManager.getDmccTranslation("minecraft.translations.key_not_found", key));
 			return key;
 		}
 
@@ -172,17 +172,17 @@ public class TranslationManager {
 					Map<String, String> translations = JsonUtils.toStringMap(Files.newBufferedReader(langCachePath, StandardCharsets.UTF_8));
 					translations.forEach(TRANSLATIONS::putIfAbsent);
 
-					LOGGER.info("Loaded Minecraft \"{}\" translations from cache for version {}", language, version);
+					LOGGER.info(I18nManager.getDmccTranslation("minecraft.translations.cache_loaded", language, version));
 					loaded = true;
 				} catch (Exception e) {
-					LOGGER.error("Failed to read cached Minecraft translations, will attempt to re-download", e);
+					LOGGER.error(I18nManager.getDmccTranslation("minecraft.translations.cache_read_failed"), e);
 					Files.delete(langCachePath);
 				}
 			}
 
 			if (!loaded) {
 				// Otherwise, download the file.
-				LOGGER.info("Downloading Minecraft \"{}\" translations for version {}...", language, version);
+				LOGGER.info(I18nManager.getDmccTranslation("minecraft.translations.downloading", language, version));
 				String url = "https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@" + version + "/assets/minecraft/lang/" + language + ".json";
 
 				try {
@@ -192,13 +192,13 @@ public class TranslationManager {
 					Map<String, String> translations = JsonUtils.toStringMap(jsonContent);
 					translations.forEach(TRANSLATIONS::putIfAbsent);
 
-					LOGGER.info("Downloaded and cached Minecraft \"{}\" translations, file size: {} bytes", language, jsonContent.length());
+					LOGGER.info(I18nManager.getDmccTranslation("minecraft.translations.downloaded", language, jsonContent.length()));
 				} catch (Exception e) {
-					LOGGER.error(StringUtils.format("Failed to download or cache Minecraft \"{}\" translations for version {}", language, version), e);
+					LOGGER.error(I18nManager.getDmccTranslation("minecraft.translations.download_failed", language, version), e);
 				}
 			}
 		} catch (Exception e) {
-			LOGGER.error("Unexpected error while loading official Minecraft translations.", e);
+			LOGGER.error(I18nManager.getDmccTranslation("minecraft.translations.official_load_failed"), e);
 		}
 
 		// Step 2: Scan mods directory
@@ -225,16 +225,16 @@ public class TranslationManager {
 									Map<String, String> translations = JsonUtils.toStringMap(is);
 									translations.forEach(TRANSLATIONS::putIfAbsent);
 								} catch (Exception e) {
-									LOGGER.error("Failed to load translations from mod JAR.", e);
+									LOGGER.error(I18nManager.getDmccTranslation("minecraft.translations.mod_load_failed"), e);
 								}
 							});
 						}
 					} catch (Exception e) {
-						LOGGER.error("Cannot open JAR file.", e);
+						LOGGER.error(I18nManager.getDmccTranslation("minecraft.translations.jar_open_failed"), e);
 					}
 				});
 			} catch (Exception e) {
-				LOGGER.error("Error scanning mods directory.", e);
+				LOGGER.error(I18nManager.getDmccTranslation("minecraft.translations.mods_scan_failed"), e);
 			}
 		}
 
@@ -253,7 +253,7 @@ public class TranslationManager {
 								Map<String, String> translations = JsonUtils.toStringMap(is);
 								translations.forEach(TRANSLATIONS::putIfAbsent);
 							} catch (Exception e) {
-								LOGGER.error("Failed to load translations from datapack.", e);
+								LOGGER.error(I18nManager.getDmccTranslation("minecraft.translations.datapack_load_failed"), e);
 							}
 						}
 					});

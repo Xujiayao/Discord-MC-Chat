@@ -135,3 +135,19 @@ utils:
     custom_validation_failed: "Validation of custom message config failed."
     custom_load_failed: "Failed to load custom messages."
     fully_loaded: "DMCC language resources fully loaded!"
+
+minecraft:
+  translations:
+    loaded: "Loaded {}/{} Minecraft \"{}\" translations."
+    init_failed: "Failed to initialize Minecraft translations."
+    key_not_found: "Translation not found for key: \"{}\", returning key as-is."
+    cache_loaded: "Loaded Minecraft \"{}\" translations from cache for version {}."
+    cache_read_failed: "Failed to read cached Minecraft translations, will attempt to re-download."
+    downloading: "Downloading Minecraft \"{}\" translations for version {}..."
+    downloaded: "Downloaded and cached Minecraft \"{}\" translations, file size: {} bytes"
+    download_failed: "Failed to download or cache Minecraft \"{}\" translations for version {}."
+    official_load_failed: "Unexpected error while loading official Minecraft translations."
+    mod_load_failed: "Failed to load translations from mod JAR."
+    jar_open_failed: "Cannot open JAR file."
+    mods_scan_failed: "Error scanning mods directory."
+    datapack_load_failed: "Failed to load translations from datapack."
