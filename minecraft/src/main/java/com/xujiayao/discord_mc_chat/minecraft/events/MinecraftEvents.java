@@ -7,6 +7,7 @@ import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.PlayerChatMessage;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
 
@@ -20,7 +21,9 @@ public class MinecraftEvents {
 	/**
 	 * Posted when the server is started.
 	 */
-	public record ServerStarted() {
+	public record ServerStarted(
+			MinecraftServer minecraftServer
+	) {
 	}
 
 	/**

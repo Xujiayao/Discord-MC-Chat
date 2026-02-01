@@ -17,7 +17,9 @@ public class MixinMinecraftServer {
 	@Inject(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/Util;getNanos()J", ordinal = 0))
 	private void serverStarted(CallbackInfo ci) {
 		// ServerStarted Event
-		EventManager.post(new MinecraftEvents.ServerStarted());
+		EventManager.post(new MinecraftEvents.ServerStarted(
+				(MinecraftServer) (Object) this
+		));
 	}
 
 	@Inject(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;stopServer()V"))

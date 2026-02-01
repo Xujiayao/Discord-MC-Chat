@@ -5,6 +5,11 @@ import com.xujiayao.discord_mc_chat.utils.HttpUtils;
 import com.xujiayao.discord_mc_chat.utils.JsonUtils;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.packs.PackResources;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.repository.Pack;
+import net.minecraft.server.packs.resources.IoSupplier;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -32,6 +37,16 @@ public class TranslationManager {
 	private static final Path CACHE_DIR = Paths.get("./config/discord_mc_chat/cache/lang");
 
 	private static String currentLoadedLanguage = "";
+	private static MinecraftServer server;
+
+	/**
+	 * Sets the Minecraft server instance.
+	 *
+	 * @param server The Minecraft server
+	 */
+	public static void setServer(MinecraftServer server) {
+		TranslationManager.server = server;
+	}
 
 	/**
 	 * Initializes the translation manager.
@@ -41,6 +56,12 @@ public class TranslationManager {
 	public static void init() {
 		try (ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Translations"))) {
 			executor.submit(() -> {
+				if (server == null) {
+					// Called before ServerStarted event (before MinecraftServer is available)
+					// Will be called again when the first get() is requested
+					return;
+				}
+
 				TRANSLATIONS.clear();
 
 				String language = I18nManager.getLanguage();
@@ -86,60 +107,6 @@ public class TranslationManager {
 		// Handle Minecraft's placeholder format
 		return StringUtils.format(translation, args);
 	}
-
-//	/**
-//	 * Loads translations from a PackRepository (for datapacks).
-//	 *
-//	 * @param packRepository The pack repository to load from
-//	 */
-//	public static void loadFromPackRepository(PackRepository packRepository) {
-//		LOGGER.info("[MTM] loadFromPackRepository() called");
-//
-//		if (packRepository == null) {
-//			LOGGER.warn("[MTM] PackRepository is null, skipping");
-//			return;
-//		}
-//
-//		int packCount = 0;
-//		for (Pack pack : packRepository.getSelectedPacks()) {
-//			packCount++;
-//			LOGGER.info("[MTM] Processing pack: {}", pack.getId());
-//			try {
-//				pack.streamSelfAndChildren().forEach(packResources -> {
-//					LOGGER.info("[MTM]     Processing pack resources: {}", packResources.getId());
-//
-//					packResources.open().getNamespaces(PackType.CLIENT_RESOURCES).forEach(namespace -> {
-//						LOGGER.info("[MTM]       Checking namespace: {}", namespace);
-//
-//						IoSupplier<InputStream> supplier = packResources.open().getResource(
-//								PackType.CLIENT_RESOURCES,
-//								net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(namespace, "lang/" + language + ".json")
-//						);
-//
-//						if (supplier != null) {
-//							LOGGER.info("[MTM]         Found lang resource for namespace '{}'", namespace);
-//							try (InputStream is = supplier.get()) {
-//								Map<String, String> translations = JSON_MAPPER.readValue(is,
-//										new TypeReference<Map<String, String>>() {
-//										});
-//								int count = translations.size();
-//								TRANSLATIONS.putAll(translations);
-//								LOGGER.info("[MTM]         Loaded {} translations", count);
-//							} catch (IOException e) {
-//								LOGGER.warn("[MTM]         Failed to load: {}", e.getMessage());
-//							}
-//						} else {
-//							LOGGER.info("[MTM]         No lang resource found for namespace '{}'", namespace);
-//						}
-//					});
-//				});
-//			} catch (Exception e) {
-//				LOGGER.warn("[MTM] Failed to load translations from pack: {}", pack.getId());
-//				LOGGER.warn("[MTM] Exception: {}", e.getMessage());
-//			}
-//		}
-//		LOGGER.info("[MTM] Processed {} packs from PackRepository", packCount);
-//	}
 
 	/**
 	 * Loads translations for a specific language.
@@ -226,6 +193,29 @@ public class TranslationManager {
 			} catch (Exception e) {
 				LOGGER.error("Error scanning mods directory.", e);
 			}
+		}
+
+		// Step 3: Scan datapacks directory
+		for (Pack pack : server.getPackRepository().getSelectedPacks()) {
+			pack.streamSelfAndChildren().forEach(packResources0 -> {
+				try (PackResources packResources1 = packResources0.open()) {
+					packResources1.getNamespaces(PackType.CLIENT_RESOURCES).forEach(namespace -> {
+						IoSupplier<InputStream> supplier = packResources1.getResource(
+								PackType.CLIENT_RESOURCES,
+								net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(namespace, "lang/" + language + ".json")
+						);
+
+						if (supplier != null) {
+							try (InputStream is = supplier.get()) {
+								Map<String, String> translations = JsonUtils.toStringMap(is);
+								translations.forEach(TRANSLATIONS::putIfAbsent);
+							} catch (Exception e) {
+								LOGGER.error("Failed to load translations from datapack.", e);
+							}
+						}
+					});
+				}
+			});
 		}
 	}
 }
