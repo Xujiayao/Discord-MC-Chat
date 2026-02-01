@@ -23,10 +23,12 @@ public class MinecraftEventHandler {
 	 */
 	public static void init() {
 		EventManager.register(MinecraftEvents.ServerStarted.class, event -> {
-			TranslationManager.setServer(event.minecraftServer());
-
 			Map<String, String> placeholders = Map.of();
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SERVER_STARTED, placeholders));
+
+			// Initialize translation manager with the started server instance after announcing server started event
+			TranslationManager.setServer(event.minecraftServer());
+			TranslationManager.init();
 		});
 
 		EventManager.register(MinecraftEvents.ServerStopping.class, event -> {

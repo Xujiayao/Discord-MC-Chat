@@ -79,7 +79,9 @@ public class TranslationManager {
 
 				LOGGER.info("Loaded {}/{} Minecraft \"{}\" translations", loadedCount, TRANSLATIONS.size(), language);
 				currentLoadedLanguage = language;
-			});
+			}).get();
+		} catch (Exception e) {
+			LOGGER.error("Failed to initialize Minecraft translations.", e);
 		}
 	}
 
@@ -119,6 +121,10 @@ public class TranslationManager {
 	 * @return The translated string
 	 */
 	public static String get(Component component) {
+		if (!currentLoadedLanguage.equals(I18nManager.getLanguage())) {
+			init();
+		}
+
 		if (component == null) {
 			return "";
 		}
