@@ -78,11 +78,11 @@ minecraft_to_discord:
     quit: ":cry: **{display_name} 离开了服务器**"
     chat: default
     command: default
-    die: ":skull_and_crossbones: **{death_message}**"
+    die: ":skull: **{death_message}**"
     advancement:
-      task: ":partying_face: **{display_name} 取得了进度 [{title}]**\n*{description}*"
-      challenge: ":partying_face: **{display_name} 完成了挑战 [{title}]**\n*{description}*"
-      goal: ":partying_face: **{display_name} 达成了目标 [{title}]**\n*{description}*"
+      task: ":partying_face: **{display_name} 取得了进度 [{title}]**\\n       *{description}*"
+      challenge: ":partying_face: **{display_name} 完成了挑战 [{title}]**\\n       *{description}*"
+      goal: ":partying_face: **{display_name} 达成了目标 [{title}]**\\n       *{description}*"
   source:
     say: default
     tell_raw: default

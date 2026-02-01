@@ -78,11 +78,11 @@ minecraft_to_discord:
     quit: ":cry: **{display_name} left the server**"
     chat: default
     command: default
-    die: ":skull_and_crossbones: **{death_message}**"
+    die: ":skull: **{death_message}**"
     advancement:
-      task: ":partying_face: **{display_name} has made the advancement [{title}]**\n*{description}*"
-      challenge: ":partying_face: **{display_name} has completed the challenge [{title}]**\n*{description}*"
-      goal: ":partying_face: **{display_name} has reached the goal [{title}]**\n*{description}*"
+      task: ":partying_face: **{display_name} has made the advancement [{title}]**\\n       *{description}*"
+      challenge: ":partying_face: **{display_name} has completed the challenge [{title}]**\\n       *{description}*"
+      goal: ":partying_face: **{display_name} has reached the goal [{title}]**\\n       *{description}*"
   source:
     say: default
     tell_raw: default
