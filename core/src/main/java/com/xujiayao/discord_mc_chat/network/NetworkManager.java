@@ -13,33 +13,33 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class NetworkManager {
 
-    private static final AtomicReference<ClientDMCC> clientInstance = new AtomicReference<>();
-    private static final AtomicReference<ServerDMCC> serverInstance = new AtomicReference<>();
+	private static final AtomicReference<ClientDMCC> clientInstance = new AtomicReference<>();
+	private static final AtomicReference<ServerDMCC> serverInstance = new AtomicReference<>();
 
-    public static void registerClient(ClientDMCC client) {
-        clientInstance.set(client);
-    }
+	public static void registerClient(ClientDMCC client) {
+		clientInstance.set(client);
+	}
 
-    public static void registerServer(ServerDMCC server) {
-        serverInstance.set(server);
-    }
+	public static void registerServer(ServerDMCC server) {
+		serverInstance.set(server);
+	}
 
-    public static void clear() {
-        clientInstance.set(null);
-        serverInstance.set(null);
-    }
+	public static void clear() {
+		clientInstance.set(null);
+		serverInstance.set(null);
+	}
 
-    /**
-     * Sends a packet to the server. Should be called from client only.
-     *
-     * @param packet The packet to send
-     */
-    public static void sendPacketToServer(Packet packet) {
-        ClientDMCC client = clientInstance.get();
-        if (client != null) {
-            client.sendPacket(packet);
+	/**
+	 * Sends a packet to the server. Should be called from client only.
+	 *
+	 * @param packet The packet to send
+	 */
+	public static void sendPacketToServer(Packet packet) {
+		ClientDMCC client = clientInstance.get();
+		if (client != null) {
+			client.sendPacket(packet);
 		}
-    }
+	}
 
 //	/**
 //	 * Sends a packet to a client. Should be called from server only.

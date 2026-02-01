@@ -135,10 +135,10 @@ public class DiscordManager {
 	/**
 	 * Sends a message using a Discord webhook. Uses allowed_mention specified in config.
 	 *
-	 * @param webhook    The webhook to use.
-	 * @param username   The username to display.
-	 * @param avatarUrl  The avatar URL to use.
-	 * @param content    The message content.
+	 * @param webhook   The webhook to use.
+	 * @param username  The username to display.
+	 * @param avatarUrl The avatar URL to use.
+	 * @param content   The message content.
 	 */
 	private static void sendWebhookMessage(Webhook webhook, String username, String avatarUrl, String content) {
 		List<Message.MentionType> allowedMentions = new ArrayList<>();
