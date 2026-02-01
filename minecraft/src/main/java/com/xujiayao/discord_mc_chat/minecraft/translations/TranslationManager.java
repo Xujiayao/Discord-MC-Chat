@@ -5,6 +5,8 @@ import com.xujiayao.discord_mc_chat.utils.HttpUtils;
 import com.xujiayao.discord_mc_chat.utils.JsonUtils;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackType;
@@ -73,9 +75,9 @@ public class TranslationManager {
 				// Load en_us translations to fill in missing keys (fallback)
 				if (!"en_us".equals(language)) {
 					loadTranslations("en_us");
-					LOGGER.info("Loaded {}/{} Minecraft \"{}\" translations", loadedCount, TRANSLATIONS.size(), language);
 				}
 
+				LOGGER.info("Loaded {}/{} Minecraft \"{}\" translations", loadedCount, TRANSLATIONS.size(), language);
 				currentLoadedLanguage = language;
 			});
 		}
@@ -106,6 +108,41 @@ public class TranslationManager {
 
 		// Handle Minecraft's placeholder format
 		return StringUtils.format(translation, args);
+	}
+
+	/**
+	 * Gets the translated string from a Minecraft Component.
+	 * <p>
+	 * This method handles TranslatableContents to get the translation in the configured language.
+	 *
+	 * @param component The component to translate
+	 * @return The translated string
+	 */
+	public static String get(Component component) {
+		if (component == null) {
+			return "";
+		}
+
+		// Check if this is a translatable component
+		if (component.getContents() instanceof TranslatableContents translatable) {
+			String key = translatable.getKey();
+			Object[] args = translatable.getArgs();
+
+			// Convert Component arguments to translated strings recursively
+			Object[] translatedArgs = new Object[args.length];
+			for (int i = 0; i < args.length; i++) {
+				if (args[i] instanceof Component argComponent) {
+					translatedArgs[i] = get(argComponent);
+				} else {
+					translatedArgs[i] = args[i];
+				}
+			}
+
+			return get(key, translatedArgs);
+		}
+
+		// For non-translatable components, just return the string representation
+		return component.getString();
 	}
 
 	/**
