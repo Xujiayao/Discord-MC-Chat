@@ -14,6 +14,7 @@ terminal:
   input_closed: "终端输入流已关闭。正在关闭终端管理器。"
 
 commands:
+  execution_failed: "命令执行失败：{}"
   help:
     description: "显示可用命令列表"
     help: "帮助"

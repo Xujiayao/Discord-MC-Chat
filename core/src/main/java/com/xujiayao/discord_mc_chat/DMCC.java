@@ -39,6 +39,7 @@ public class DMCC {
 				// Load DMCC internal translation
 				if (!I18nManager.loadInternalTranslationsOnly()) {
 					// Should not happen!
+					// No need to translate, as translations failed to load
 					LOGGER.warn("DMCC will not continue initialization due to internal language file issues.");
 					LOGGER.warn("This is a critical error, please report it to the developer!");
 					return false;

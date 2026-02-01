@@ -101,7 +101,7 @@ public class CommandManager {
 			try {
 				command.execute(sender, args);
 			} catch (Exception e) {
-				sender.reply("Command execution failed: " + e.getMessage());
+				sender.reply(I18nManager.getDmccTranslation("commands.execution_failed", e.getMessage()));
 			}
 		});
 	}
