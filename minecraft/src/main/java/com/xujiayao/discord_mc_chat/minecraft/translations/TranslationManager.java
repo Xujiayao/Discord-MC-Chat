@@ -162,7 +162,7 @@ public class TranslationManager {
 					Map<String, String> translations = JsonUtils.toStringMap(Files.newBufferedReader(langCachePath, StandardCharsets.UTF_8));
 					translations.forEach(TRANSLATIONS::putIfAbsent);
 
-					LOGGER.info("Loaded Minecraft translations from cache for version {}", version);
+					LOGGER.info("Loaded Minecraft \"{}\" translations from cache for version {}", language, version);
 					loaded = true;
 				} catch (Exception e) {
 					LOGGER.error("Failed to read cached Minecraft translations, will attempt to re-download", e);
@@ -172,7 +172,7 @@ public class TranslationManager {
 
 			if (!loaded) {
 				// Otherwise, download the file.
-				LOGGER.info("Downloading Minecraft translations for version {}...", version);
+				LOGGER.info("Downloading Minecraft \"{}\" translations for version {}...", language, version);
 				String url = "https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@" + version + "/assets/minecraft/lang/" + language + ".json";
 
 				try {
@@ -182,13 +182,13 @@ public class TranslationManager {
 					Map<String, String> translations = JsonUtils.toStringMap(jsonContent);
 					translations.forEach(TRANSLATIONS::putIfAbsent);
 
-					LOGGER.info("Downloaded and cached Minecraft translations, file size: {} bytes", jsonContent.length());
+					LOGGER.info("Downloaded and cached Minecraft \"{}\" translations, file size: {} bytes", language, jsonContent.length());
 				} catch (Exception e) {
-					LOGGER.error("Failed to download or cache Minecraft translations for version " + version, e);
+					LOGGER.error(StringUtils.format("Failed to download or cache Minecraft \"{}\" translations for version {}", language, version), e);
 				}
 			}
 		} catch (Exception e) {
-			LOGGER.error("Unexpected error while loading official Minecraft translations", e);
+			LOGGER.error("Unexpected error while loading official Minecraft translations.", e);
 		}
 
 		// Step 2: Scan mods directory
@@ -215,12 +215,12 @@ public class TranslationManager {
 									Map<String, String> translations = JsonUtils.toStringMap(is);
 									translations.forEach(TRANSLATIONS::putIfAbsent);
 								} catch (Exception e) {
-									LOGGER.error("Failed to load translations from mod JAR", e);
+									LOGGER.error("Failed to load translations from mod JAR.", e);
 								}
 							});
 						}
 					} catch (Exception e) {
-						LOGGER.error("Cannot open JAR file", e);
+						LOGGER.error("Cannot open JAR file.", e);
 					}
 				});
 			} catch (Exception e) {
