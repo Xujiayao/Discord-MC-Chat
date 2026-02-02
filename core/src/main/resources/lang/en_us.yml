@@ -52,6 +52,7 @@ commands:
       no_clients: "- No DMCC clients online."
       clients: |
         - [{}]
+              Connection latency: {}ms
               Minecraft version: {}
               Online players: ({}/{})
               {}

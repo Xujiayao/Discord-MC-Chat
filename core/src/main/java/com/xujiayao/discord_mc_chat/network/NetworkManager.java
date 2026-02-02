@@ -29,6 +29,7 @@ public class NetworkManager {
 
 	private static final Map<String, InfoResponsePacket> infoCache = new ConcurrentHashMap<>();
 	private static final AtomicReference<Supplier<InfoResponsePacket>> infoSupplier = new AtomicReference<>();
+	private static final Object infoLock = new Object();
 
 	/**
 	 * Registers the client instance for network operations.
@@ -148,6 +149,10 @@ public class NetworkManager {
 		}
 
 		infoCache.put(name, packet);
+
+		synchronized (infoLock) {
+			infoLock.notifyAll();
+		}
 	}
 
 	/**
@@ -159,20 +164,36 @@ public class NetworkManager {
 	public static Map<String, InfoResponsePacket> requestInfoSnapshot(int timeoutSeconds) {
 		infoCache.clear();
 
-		if (!clientChannels.isEmpty()) {
-			broadcastToClients(new InfoRequestPacket());
+		int expectedResponses = clientChannels.size();
+
+		if (expectedResponses > 0) {
+			broadcastToClients(new InfoRequestPacket(System.currentTimeMillis()));
 		}
 
-		ClientDMCC client = clientInstance.get();
-		if (client != null) {
+		boolean includeLocalPacket = expectedResponses == 0 && clientInstance.get() != null;
+		if (includeLocalPacket) {
 			InfoResponsePacket localPacket = createInfoResponsePacket();
 			cacheInfoResponse(localPacket.serverName, localPacket);
+			expectedResponses += 1;
 		}
 
-		try {
-			TimeUnit.SECONDS.sleep(timeoutSeconds);
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
+		long deadlineMillis = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(timeoutSeconds);
+
+		if (expectedResponses > 0) {
+			synchronized (infoLock) {
+				while (infoCache.size() < expectedResponses) {
+					long remaining = deadlineMillis - System.currentTimeMillis();
+					if (remaining <= 0) {
+						break;
+					}
+					try {
+						infoLock.wait(remaining);
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+						break;
+					}
+				}
+			}
 		}
 
 		Map<String, InfoResponsePacket> snapshot = new LinkedHashMap<>(infoCache);
@@ -198,6 +219,7 @@ public class NetworkManager {
 
 			packet = new InfoResponsePacket(
 					serverName,
+					-1,
 					minecraftVersion,
 					0,
 					0,

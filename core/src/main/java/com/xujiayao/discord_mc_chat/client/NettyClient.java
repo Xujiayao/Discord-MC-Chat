@@ -84,6 +84,8 @@ public class NettyClient {
 	private void connect(boolean isInitialAttempt) {
 		if (!isRunning.get()) return;
 
+		long connectStartNanos = System.nanoTime();
+
 		Bootstrap b = new Bootstrap();
 		b.group(workerGroup);
 		b.channel(NioSocketChannel.class);

@@ -15,6 +15,7 @@ import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import java.lang.management.ManagementFactory;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -43,7 +44,16 @@ public class InfoCommand implements Command {
 
 	@Override
 	public void execute(CommandSender sender, String... args) {
-		Map<String, InfoResponsePacket> infoSnapshot = NetworkManager.requestInfoSnapshot(INFO_REQUEST_TIMEOUT_SECONDS);
+		CompletableFuture<Map<String, InfoResponsePacket>> infoFuture =
+				CompletableFuture.supplyAsync(() -> NetworkManager.requestInfoSnapshot(INFO_REQUEST_TIMEOUT_SECONDS));
+
+		CompletableFuture<DiscordStatusInfo> discordFuture = null;
+		if (!"multi_server_client".equals(ModeManager.getMode())) {
+			discordFuture = CompletableFuture.supplyAsync(DiscordManager::getStatusInfo);
+		}
+
+		Map<String, InfoResponsePacket> infoSnapshot = infoFuture.join();
+		DiscordStatusInfo statusInfo = discordFuture == null ? null : discordFuture.join();
 
 		StringBuilder builder = new StringBuilder();
 
@@ -61,16 +71,13 @@ public class InfoCommand implements Command {
 				usedMemoryMiB, totalMemoryMiB));
 
 		// Discord part
-		if (!"multi_server_client".equals(ModeManager.getMode())) {
-			DiscordStatusInfo statusInfo = DiscordManager.getStatusInfo();
-			if (statusInfo != null) {
-				builder.append("\n");
-				builder.append(I18nManager.getDmccTranslation("commands.info.discord_part",
-						statusInfo.status(),
-						statusInfo.tag(),
-						statusInfo.gatewayPingMillis(),
-						statusInfo.restPingMillis()));
-			}
+		if (statusInfo != null) {
+			builder.append("\n");
+			builder.append(I18nManager.getDmccTranslation("commands.info.discord_part",
+					statusInfo.status(),
+					statusInfo.tag(),
+					statusInfo.gatewayPingMillis(),
+					statusInfo.restPingMillis()));
 		}
 
 		// Server/client part
@@ -118,6 +125,7 @@ public class InfoCommand implements Command {
 
 		return I18nManager.getDmccTranslation("commands.info.server_part.clients",
 				packet.serverName,
+				packet.connectionLatencyMillis,
 				packet.minecraftVersion,
 				packet.onlinePlayerCount,
 				packet.maxPlayerCount,
@@ -132,11 +140,12 @@ public class InfoCommand implements Command {
 		InfoResponsePacket packet = getClientPacket(infoSnapshot);
 
 		String connectionStatus = "DISCONNECTED";
-		long connectionLatency = 0;
+		long connectionLatency = -1;
 
 		var client = NetworkManager.getClient();
 		if (client != null && client.isConnected()) {
 			connectionStatus = "CONNECTED";
+			connectionLatency = packet.connectionLatencyMillis;
 		}
 
 		String playersInfo = buildPlayersInfo(packet);

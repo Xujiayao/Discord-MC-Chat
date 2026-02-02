@@ -52,6 +52,7 @@ commands:
       no_clients: "- 当前没有在线 DMCC 客户端。"
       clients: |
         - [{}]
+              连接延迟：{}ms
               Minecraft 版本：{}
               在线玩家：({}/{})
               {}

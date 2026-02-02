@@ -8,14 +8,17 @@ import com.xujiayao.discord_mc_chat.network.packets.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
+import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.GameRules;
 
+import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Handles Minecraft events posted from the event manager.
@@ -112,7 +115,7 @@ public class MinecraftEventHandler {
 	}
 
 	private static InfoResponsePacket buildInfoResponse(MinecraftServer server) {
-		String serverName = ConfigManager.getString("multi_server.server_name", "Internal");
+		String serverName = "single_server".equals(ModeManager.getMode()) ? "Internal" : ConfigManager.getString("multi_server.server_name");
 		String minecraftVersion = EnvironmentUtils.getMinecraftVersion();
 
 		int onlinePlayers = server.getPlayerList().getPlayerCount();
@@ -120,17 +123,18 @@ public class MinecraftEventHandler {
 
 		Map<String, Integer> playersAndLatencies = new HashMap<>();
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-			playersAndLatencies.put(player.getDisplayName().getString(), 0);
+			playersAndLatencies.put(player.getDisplayName().getString(), player.connection.latency());
 		}
 
 		double mspt = server.tickRateManager().millisecondsPerTick();
 		double tps = server.tickRateManager().tickrate();
 
-		long uptimeSeconds = server.getTickCount() / 20L;
+		long uptimeSeconds = TimeUnit.MILLISECONDS.toSeconds(ManagementFactory.getRuntimeMXBean().getUptime());
 
 		Runtime runtime = Runtime.getRuntime();
 		return new InfoResponsePacket(
 				serverName,
+				-1,
 				minecraftVersion,
 				onlinePlayers,
 				maxPlayers,

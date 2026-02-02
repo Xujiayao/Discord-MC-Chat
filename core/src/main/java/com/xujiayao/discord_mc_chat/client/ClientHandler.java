@@ -77,8 +77,9 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 					initialLoginFuture.complete(true);
 				}
 			}
-			case InfoRequestPacket ignored -> {
+			case InfoRequestPacket request -> {
 				InfoResponsePacket response = NetworkManager.createInfoResponsePacket();
+				response.connectionLatencyMillis = Math.max(0, System.currentTimeMillis() - request.sentAtMillis);
 				ctx.writeAndFlush(response);
 			}
 			case DisconnectPacket p -> {
