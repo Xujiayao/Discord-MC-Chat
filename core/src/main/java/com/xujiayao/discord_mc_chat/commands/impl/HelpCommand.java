@@ -32,16 +32,11 @@ public class HelpCommand implements Command {
 	@Override
 	public void execute(CommandSender sender, String... args) {
 		StringBuilder builder = new StringBuilder();
-		builder.append(I18nManager.getDmccTranslation("commands.help.description")).append("\n");
+		builder.append("========== ").append(I18nManager.getDmccTranslation("commands.help.help")).append(" ==========\n");
 
-		CommandManager.getCommands().stream()
-				.sorted(Comparator.comparing(Command::name))
-				.forEach(cmd -> builder.append("- ")
-						.append(cmd.name())
-						.append(": ")
-						.append(cmd.description())
-						.append("\n"));
+		CommandManager.getCommands().stream().sorted(Comparator.comparing(Command::name)).forEach(cmd -> builder
+				.append("\n").append("- ").append(cmd.name()).append(": ").append(cmd.description()));
 
-		sender.reply(builder.toString().trim());
+		sender.reply(builder.toString());
 	}
 }
