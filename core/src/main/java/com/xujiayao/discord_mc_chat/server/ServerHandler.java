@@ -2,6 +2,7 @@ package com.xujiayao.discord_mc_chat.server;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.Constants;
+import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.AuthResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.ChallengePacket;
 import com.xujiayao.discord_mc_chat.network.packets.DisconnectPacket;
@@ -48,6 +49,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		if (clientName != null) {
 			LOGGER.warn(I18nManager.getDmccTranslation("server.network.client_disconnected_normal", clientName));
 		}
+		// Clean up from NetworkManager
+		NetworkManager.removeClientChannel(ctx.channel());
 	}
 
 	@Override
@@ -130,9 +133,12 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 					if (correctHash.equals(p.hash)) {
 						this.authenticated = true;
+
+						// Register client in NetworkManager
+						NetworkManager.addClientChannel(ctx.channel(), clientName);
+
 						LOGGER.info(I18nManager.getDmccTranslation("server.network.auth_success", clientName));
 						ctx.writeAndFlush(new LoginSuccessPacket(ConfigManager.getString("language")));
-						// TODO: Add to active clients list
 					} else {
 						String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.auth_failed");
 						LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", clientName, reason));
