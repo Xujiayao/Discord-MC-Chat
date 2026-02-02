@@ -1,10 +1,13 @@
 package com.xujiayao.discord_mc_chat.client;
 
 import com.xujiayao.discord_mc_chat.Constants;
+import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.AuthResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.ChallengePacket;
 import com.xujiayao.discord_mc_chat.network.packets.DisconnectPacket;
 import com.xujiayao.discord_mc_chat.network.packets.HandshakePacket;
+import com.xujiayao.discord_mc_chat.network.packets.InfoRequestPacket;
+import com.xujiayao.discord_mc_chat.network.packets.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.LoginSuccessPacket;
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
@@ -73,6 +76,10 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 				if (!initialLoginFuture.isDone()) {
 					initialLoginFuture.complete(true);
 				}
+			}
+			case InfoRequestPacket ignored -> {
+				InfoResponsePacket response = NetworkManager.createInfoResponsePacket();
+				ctx.writeAndFlush(response);
 			}
 			case DisconnectPacket p -> {
 				// If we receive a DisconnectPacket, it means the server explicitly rejected us.

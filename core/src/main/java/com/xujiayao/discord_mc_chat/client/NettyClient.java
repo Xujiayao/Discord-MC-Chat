@@ -165,4 +165,8 @@ public class NettyClient {
 	public boolean isRunning() {
 		return isRunning.get();
 	}
+
+	public boolean isConnected() {
+		return channel != null && channel.isActive();
+	}
 }

@@ -52,13 +52,13 @@ commands:
       no_clients: "- 当前没有在线 DMCC 客户端。"
       clients: |
         - [{}]
-            Minecraft 版本：{}
-            在线玩家：({}/{})
-            {}
-            服务器 TPS：{}
-            服务器 MSPT：{}
-            正常运行时间：{}d {}h {}m {}s
-            JVM 内存使用：{}/{} MiB
+              Minecraft 版本：{}
+              在线玩家：({}/{})
+              {}
+              服务器 TPS：{}
+              服务器 MSPT：{}
+              正常运行时间：{}d {}h {}m {}s
+              JVM 内存使用：{}/{} MiB
     client_part: |
       [DMCC 客户端]
         连接状态：{}

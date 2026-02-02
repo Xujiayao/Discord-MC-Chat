@@ -4,11 +4,17 @@ import com.xujiayao.discord_mc_chat.DMCC;
 import com.xujiayao.discord_mc_chat.minecraft.commands.MinecraftCommands;
 import com.xujiayao.discord_mc_chat.minecraft.translations.TranslationManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
+import com.xujiayao.discord_mc_chat.network.packets.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.MinecraftEventPacket;
+import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
+import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import net.minecraft.advancements.DisplayInfo;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.GameRules;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -29,6 +35,9 @@ public class MinecraftEventHandler {
 			// Initialize translation manager with the started server instance after announcing server started event
 			TranslationManager.setServer(event.minecraftServer());
 			TranslationManager.init();
+
+			// Register info supplier after server is started
+			NetworkManager.registerInfoSupplier(() -> buildInfoResponse(event.minecraftServer()));
 		});
 
 		EventManager.register(MinecraftEvents.ServerStopping.class, event -> {
@@ -100,5 +109,37 @@ public class MinecraftEventHandler {
 			// Refresh Minecraft translations
 			TranslationManager.init();
 		});
+	}
+
+	private static InfoResponsePacket buildInfoResponse(MinecraftServer server) {
+		String serverName = ConfigManager.getString("multi_server.server_name", "Internal");
+		String minecraftVersion = EnvironmentUtils.getMinecraftVersion();
+
+		int onlinePlayers = server.getPlayerList().getPlayerCount();
+		int maxPlayers = server.getPlayerList().getMaxPlayers();
+
+		Map<String, Integer> playersAndLatencies = new HashMap<>();
+		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+			playersAndLatencies.put(player.getDisplayName().getString(), 0);
+		}
+
+		double mspt = server.tickRateManager().millisecondsPerTick();
+		double tps = server.tickRateManager().tickrate();
+
+		long uptimeSeconds = server.getTickCount() / 20L;
+
+		Runtime runtime = Runtime.getRuntime();
+		return new InfoResponsePacket(
+				serverName,
+				minecraftVersion,
+				onlinePlayers,
+				maxPlayers,
+				playersAndLatencies,
+				tps,
+				mspt,
+				uptimeSeconds,
+				runtime.totalMemory(),
+				runtime.freeMemory()
+		);
 	}
 }

@@ -1,9 +1,21 @@
 package com.xujiayao.discord_mc_chat.commands.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.xujiayao.discord_mc_chat.Constants;
 import com.xujiayao.discord_mc_chat.commands.Command;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
+import com.xujiayao.discord_mc_chat.network.NetworkManager;
+import com.xujiayao.discord_mc_chat.network.packets.InfoResponsePacket;
+import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
+import com.xujiayao.discord_mc_chat.server.discord.DiscordManager.DiscordStatusInfo;
+import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
+
+import java.lang.management.ManagementFactory;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Info command implementation.
@@ -11,6 +23,8 @@ import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
  * @author Xujiayao
  */
 public class InfoCommand implements Command {
+
+	private static final int INFO_REQUEST_TIMEOUT_SECONDS = 3;
 
 	@Override
 	public String name() {
@@ -29,21 +43,164 @@ public class InfoCommand implements Command {
 
 	@Override
 	public void execute(CommandSender sender, String... args) {
-		String message = switch (ModeManager.getMode()) {
-			case "standalone" -> {
-				// common_part + discord_part + server_part
-				yield "";
+		Map<String, InfoResponsePacket> infoSnapshot = NetworkManager.requestInfoSnapshot(INFO_REQUEST_TIMEOUT_SECONDS);
+
+		StringBuilder builder = new StringBuilder();
+
+		// Common part
+		long uptimeSeconds = TimeUnit.MILLISECONDS.toSeconds(ManagementFactory.getRuntimeMXBean().getUptime());
+		long[] uptime = splitSeconds(uptimeSeconds);
+
+		long totalMemoryMiB = toMiB(Runtime.getRuntime().totalMemory());
+		long usedMemoryMiB = toMiB(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
+
+		builder.append(I18nManager.getDmccTranslation("commands.info.common_part",
+				Constants.VERSION,
+				ModeManager.getMode(),
+				uptime[0], uptime[1], uptime[2], uptime[3],
+				usedMemoryMiB, totalMemoryMiB));
+
+		// Discord part
+		if (!"multi_server_client".equals(ModeManager.getMode())) {
+			DiscordStatusInfo statusInfo = DiscordManager.getStatusInfo();
+			if (statusInfo != null) {
+				builder.append("\n");
+				builder.append(I18nManager.getDmccTranslation("commands.info.discord_part",
+						statusInfo.status(),
+						statusInfo.tag(),
+						statusInfo.gatewayPingMillis(),
+						statusInfo.restPingMillis()));
 			}
-			case "single_server" -> {
-				// common_part + discord_part + client_part
-				yield "";
+		}
+
+		// Server/client part
+		builder.append("\n");
+		if (ModeManager.getMode().equals("standalone")) {
+			builder.append(buildServerPart(infoSnapshot));
+		} else {
+			builder.append(buildClientPart(infoSnapshot));
+		}
+
+		sender.reply(builder.toString());
+	}
+
+	private static String buildServerPart(Map<String, InfoResponsePacket> infoSnapshot) {
+		int onlineClients = infoSnapshot.size();
+		int totalClients = getConfiguredClientCount();
+		if (totalClients == 0) {
+			totalClients = onlineClients;
+		}
+
+		String clientsInfo;
+		if (infoSnapshot.isEmpty()) {
+			clientsInfo = I18nManager.getDmccTranslation("commands.info.server_part.no_clients");
+		} else {
+			StringBuilder clientsBuilder = new StringBuilder();
+			infoSnapshot.values().stream()
+					.sorted(Comparator.comparing(packet -> packet.serverName == null ? "" : packet.serverName, String.CASE_INSENSITIVE_ORDER))
+					.forEach(packet -> {
+						if (!clientsBuilder.isEmpty()) {
+							clientsBuilder.append("\n");
+						}
+						clientsBuilder.append(buildServerClientInfo(packet));
+					});
+			clientsInfo = clientsBuilder.toString();
+		}
+
+		return I18nManager.getDmccTranslation("commands.info.server_part.base", onlineClients, totalClients, clientsInfo);
+	}
+
+	private static String buildServerClientInfo(InfoResponsePacket packet) {
+		String playersInfo = buildPlayersInfo(packet);
+		long[] uptime = splitSeconds(packet.uptimeSeconds);
+		long usedMemoryMiB = toMiB(packet.totalMemory - packet.freeMemory);
+		long totalMemoryMiB = toMiB(packet.totalMemory);
+
+		return I18nManager.getDmccTranslation("commands.info.server_part.clients",
+				packet.serverName,
+				packet.minecraftVersion,
+				packet.onlinePlayerCount,
+				packet.maxPlayerCount,
+				playersInfo,
+				packet.tps,
+				packet.mspt,
+				uptime[0], uptime[1], uptime[2], uptime[3],
+				usedMemoryMiB, totalMemoryMiB);
+	}
+
+	private static String buildClientPart(Map<String, InfoResponsePacket> infoSnapshot) {
+		InfoResponsePacket packet = getClientPacket(infoSnapshot);
+
+		String connectionStatus = "DISCONNECTED";
+		long connectionLatency = 0;
+
+		var client = NetworkManager.getClient();
+		if (client != null && client.isConnected()) {
+			connectionStatus = "CONNECTED";
+		}
+
+		String playersInfo = buildPlayersInfo(packet);
+
+		return I18nManager.getDmccTranslation("commands.info.client_part",
+				connectionStatus,
+				connectionLatency,
+				packet.minecraftVersion,
+				packet.onlinePlayerCount,
+				packet.maxPlayerCount,
+				playersInfo,
+				packet.tps,
+				packet.mspt);
+	}
+
+	private static String buildPlayersInfo(InfoResponsePacket packet) {
+		if (packet.playersAndLatencies == null || packet.playersAndLatencies.isEmpty()) {
+			return I18nManager.getDmccTranslation("commands.info.no_players");
+		}
+
+		StringBuilder playersBuilder = new StringBuilder();
+		packet.playersAndLatencies.forEach((name, latency) -> {
+			if (!playersBuilder.isEmpty()) {
+				playersBuilder.append("\n");
 			}
-			case "multi_server_client" -> {
-				// common_part + client_part
-				yield "";
-			}
-			default -> throw new IllegalStateException("Unexpected value: " + ModeManager.getMode());
-		};
-		sender.reply(message);
+			playersBuilder.append(I18nManager.getDmccTranslation("commands.info.players", latency, name));
+		});
+
+		return playersBuilder.toString();
+	}
+
+	private static InfoResponsePacket getClientPacket(Map<String, InfoResponsePacket> infoSnapshot) {
+		String serverName = NetworkManager.getClientServerName();
+		InfoResponsePacket packet = infoSnapshot.get(serverName);
+
+		if (packet == null && !infoSnapshot.isEmpty()) {
+			packet = infoSnapshot.values().iterator().next();
+		}
+
+		if (packet == null) {
+			packet = NetworkManager.createInfoResponsePacket();
+		}
+
+		return packet;
+	}
+
+	private static int getConfiguredClientCount() {
+		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
+		if (serversNode != null && serversNode.isArray()) {
+			return serversNode.size();
+		}
+		return 0;
+	}
+
+	private static long[] splitSeconds(long totalSeconds) {
+		long days = totalSeconds / 86400;
+		long hours = (totalSeconds % 86400) / 3600;
+		long minutes = (totalSeconds % 3600) / 60;
+		long seconds = totalSeconds % 60;
+
+		return new long[]{days, hours, minutes, seconds};
+	}
+
+	private static long toMiB(long bytes) {
+		return bytes / (1024L * 1024L);
 	}
 }

@@ -52,13 +52,13 @@ commands:
       no_clients: "- No DMCC clients online."
       clients: |
         - [{}]
-            Minecraft version: {}
-            Online players: ({}/{})
-            {}
-            Server TPS: {}
-            Server MSPT: {}
-            Uptime: {}d {}h {}m {}s
-            JVM memory usage: {}/{} MiB
+              Minecraft version: {}
+              Online players: ({}/{})
+              {}
+              Server TPS: {}
+              Server MSPT: {}
+              Uptime: {}d {}h {}m {}s
+              JVM memory usage: {}/{} MiB
     client_part: |
       [DMCC Client]
         Connection status: {}

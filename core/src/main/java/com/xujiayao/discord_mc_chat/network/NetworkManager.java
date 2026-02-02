@@ -1,13 +1,19 @@
 package com.xujiayao.discord_mc_chat.network;
 
 import com.xujiayao.discord_mc_chat.client.ClientDMCC;
+import com.xujiayao.discord_mc_chat.network.packets.InfoRequestPacket;
+import com.xujiayao.discord_mc_chat.network.packets.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
+import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import io.netty.channel.Channel;
 
 import java.net.InetSocketAddress;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 /**
  * Central access point for sending network packets and managing connections.
@@ -21,6 +27,9 @@ public class NetworkManager {
 	// Server-side: Manage connected client channels
 	private static final Map<Channel, String> clientChannels = new ConcurrentHashMap<>();
 
+	private static final Map<String, InfoResponsePacket> infoCache = new ConcurrentHashMap<>();
+	private static final AtomicReference<Supplier<InfoResponsePacket>> infoSupplier = new AtomicReference<>();
+
 	/**
 	 * Registers the client instance for network operations.
 	 *
@@ -31,11 +40,21 @@ public class NetworkManager {
 	}
 
 	/**
+	 * Registers an information supplier for InfoResponse packets.
+	 *
+	 * @param supplier The supplier to register
+	 */
+	public static void registerInfoSupplier(Supplier<InfoResponsePacket> supplier) {
+		infoSupplier.set(supplier);
+	}
+
+	/**
 	 * Resets the network manager state, clearing client instance and channels.
 	 */
 	public static void clear() {
 		clientInstance.set(null);
 		clientChannels.clear();
+		infoCache.clear();
 	}
 
 	/**
@@ -103,5 +122,126 @@ public class NetworkManager {
 			return addr.getAddress().getHostAddress() + ":" + addr.getPort();
 		}
 		return channel.remoteAddress().toString();
+	}
+
+	/**
+	 * Stores a received InfoResponsePacket into cache.
+	 *
+	 * @param clientName The client name
+	 * @param packet     The packet to cache
+	 */
+	public static void cacheInfoResponse(String clientName, InfoResponsePacket packet) {
+		if (packet == null) {
+			return;
+		}
+
+		String name = clientName;
+		if (name == null || name.isBlank()) {
+			name = packet.serverName;
+		}
+		if (name == null || name.isBlank()) {
+			name = "unknown";
+		}
+
+		if (packet.serverName == null || packet.serverName.isBlank()) {
+			packet.serverName = name;
+		}
+
+		infoCache.put(name, packet);
+	}
+
+	/**
+	 * Sends InfoRequest packets, blocks the current thread, then returns a snapshot of cached responses.
+	 *
+	 * @param timeoutSeconds The waiting time in seconds
+	 * @return A snapshot of cached InfoResponsePacket items
+	 */
+	public static Map<String, InfoResponsePacket> requestInfoSnapshot(int timeoutSeconds) {
+		infoCache.clear();
+
+		if (!clientChannels.isEmpty()) {
+			broadcastToClients(new InfoRequestPacket());
+		}
+
+		ClientDMCC client = clientInstance.get();
+		if (client != null) {
+			InfoResponsePacket localPacket = createInfoResponsePacket();
+			cacheInfoResponse(localPacket.serverName, localPacket);
+		}
+
+		try {
+			TimeUnit.SECONDS.sleep(timeoutSeconds);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		}
+
+		Map<String, InfoResponsePacket> snapshot = new LinkedHashMap<>(infoCache);
+		infoCache.clear();
+		return snapshot;
+	}
+
+	/**
+	 * Creates an InfoResponsePacket using the registered supplier or a fallback.
+	 *
+	 * @return The InfoResponsePacket instance
+	 */
+	public static InfoResponsePacket createInfoResponsePacket() {
+		Supplier<InfoResponsePacket> supplier = infoSupplier.get();
+		InfoResponsePacket packet = supplier != null ? supplier.get() : null;
+
+		if (packet == null) {
+			Runtime runtime = Runtime.getRuntime();
+			String serverName = getClientServerName();
+			String minecraftVersion = EnvironmentUtils.isMinecraftEnvironment()
+					? EnvironmentUtils.getMinecraftVersion()
+					: "unknown";
+
+			packet = new InfoResponsePacket(
+					serverName,
+					minecraftVersion,
+					0,
+					0,
+					Map.of(),
+					0,
+					0,
+					0,
+					runtime.totalMemory(),
+					runtime.freeMemory()
+			);
+		}
+
+		if (packet.serverName == null || packet.serverName.isBlank()) {
+			packet.serverName = getClientServerName();
+		}
+
+		if (packet.minecraftVersion == null || packet.minecraftVersion.isBlank()) {
+			packet.minecraftVersion = EnvironmentUtils.isMinecraftEnvironment()
+					? EnvironmentUtils.getMinecraftVersion()
+					: "unknown";
+		}
+
+		return packet;
+	}
+
+	/**
+	 * Gets the registered client instance.
+	 *
+	 * @return The client instance, or null if not registered
+	 */
+	public static ClientDMCC getClient() {
+		return clientInstance.get();
+	}
+
+	/**
+	 * Gets the client server name if available.
+	 *
+	 * @return The client server name, or "unknown"
+	 */
+	public static String getClientServerName() {
+		ClientDMCC client = clientInstance.get();
+		if (client == null) {
+			return "unknown";
+		}
+		return client.getServerName();
 	}
 }

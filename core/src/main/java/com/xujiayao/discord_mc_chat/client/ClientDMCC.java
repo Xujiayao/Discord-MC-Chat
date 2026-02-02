@@ -57,4 +57,12 @@ public class ClientDMCC {
 			nettyClient.sendPacket(packet);
 		}
 	}
+
+	public String getServerName() {
+		return serverName;
+	}
+
+	public boolean isConnected() {
+		return nettyClient != null && nettyClient.isConnected();
+	}
 }

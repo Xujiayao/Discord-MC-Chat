@@ -34,6 +34,12 @@ public class MinecraftCommands {
 					CommandManager.execute(new MinecraftCommandSender(ctx.getSource()), "help");
 					return 1;
 				});
+		var info = literal("info")
+				.requires(source -> source.hasPermission(ConfigManager.getInt("command_permission_levels.info", 0)))
+				.executes(ctx -> {
+					CommandManager.execute(new MinecraftCommandSender(ctx.getSource()), "info");
+					return 1;
+				});
 		var reload = literal("reload")
 				.requires(source -> source.hasPermission(ConfigManager.getInt("command_permission_levels.reload", 4)))
 				.executes(ctx -> {
@@ -43,6 +49,7 @@ public class MinecraftCommands {
 
 		dispatcher.register(root
 				.then(help)
+				.then(info)
 				.then(reload));
 	}
 

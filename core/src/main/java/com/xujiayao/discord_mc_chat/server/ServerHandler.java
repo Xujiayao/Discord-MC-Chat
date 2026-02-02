@@ -7,6 +7,7 @@ import com.xujiayao.discord_mc_chat.network.packets.AuthResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.ChallengePacket;
 import com.xujiayao.discord_mc_chat.network.packets.DisconnectPacket;
 import com.xujiayao.discord_mc_chat.network.packets.HandshakePacket;
+import com.xujiayao.discord_mc_chat.network.packets.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.LoginSuccessPacket;
 import com.xujiayao.discord_mc_chat.network.packets.MinecraftEventPacket;
@@ -85,6 +86,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 								LOGGER.warn("Received MinecraftEventPacket from authenticated client {}: type={}, placeholders={}", clientName, p.type, p.placeholders);
 					}
 				}
+				case InfoResponsePacket p -> NetworkManager.cacheInfoResponse(clientName, p);
 				case null, default -> LOGGER.warn(unexpectedPacketMessage);
 			}
 		} else {

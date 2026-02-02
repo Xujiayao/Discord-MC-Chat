@@ -94,6 +94,7 @@ public class DiscordManager {
 			try {
 				List<CommandData> commands = new ArrayList<>();
 				commands.add(Commands.slash("help", I18nManager.getDmccTranslation("commands.help.description")));
+				commands.add(Commands.slash("info", I18nManager.getDmccTranslation("commands.info.description")));
 				commands.add(Commands.slash("reload", I18nManager.getDmccTranslation("commands.reload.description")));
 				if ("standalone".equals(ModeManager.getMode())) {
 					commands.add(Commands.slash("shutdown", I18nManager.getDmccTranslation("commands.shutdown.description")));
@@ -117,6 +118,30 @@ public class DiscordManager {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Retrieves the current Discord status info.
+	 *
+	 * @return The DiscordStatusInfo, or null if JDA is not ready
+	 */
+	public static DiscordStatusInfo getStatusInfo() {
+		if (jda == null) {
+			return null;
+		}
+
+		long restPing = -1;
+		try {
+			restPing = jda.getRestPing().complete();
+		} catch (Exception ignored) {
+		}
+
+		return new DiscordStatusInfo(
+				jda.getStatus().toString(),
+				jda.getSelfUser().getAsTag(),
+				jda.getGatewayPing(),
+				restPing
+		);
 	}
 
 	/**
@@ -285,5 +310,16 @@ public class DiscordManager {
 
 			jda = null;
 		}
+	}
+
+	/**
+	 * Data holder for Discord status info.
+	 *
+	 * @param status            JDA status string
+	 * @param tag               Bot user tag
+	 * @param gatewayPingMillis Gateway ping in milliseconds
+	 * @param restPingMillis    REST ping in milliseconds
+	 */
+	public record DiscordStatusInfo(String status, String tag, long gatewayPingMillis, long restPingMillis) {
 	}
 }
