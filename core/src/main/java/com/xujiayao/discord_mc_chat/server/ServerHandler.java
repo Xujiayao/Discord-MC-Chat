@@ -108,22 +108,22 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 							ctx.close();
 							return;
 						}
-					}
 
-					if (!Constants.VERSION.equals(p.dmccVersion)) {
-						String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.version_mismatch", "DMCC", p.dmccVersion, Constants.VERSION);
-						LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", p.serverName, reason));
-						ctx.writeAndFlush(new DisconnectPacket("server.network.disconnect_reasons.version_mismatch", "DMCC", p.dmccVersion, Constants.VERSION));
-						ctx.close();
-						return;
-					}
+						if (!Constants.VERSION.equals(p.dmccVersion)) {
+							String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.version_mismatch", "DMCC", p.dmccVersion, Constants.VERSION);
+							LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", p.serverName, reason));
+							ctx.writeAndFlush(new DisconnectPacket("server.network.disconnect_reasons.version_mismatch", "DMCC", p.dmccVersion, Constants.VERSION));
+							ctx.close();
+							return;
+						}
 
-					if (!getMinecraftVersion(p.serverName).equals(p.minecraftVersion)) {
-						String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.version_mismatch", "Minecraft", p.minecraftVersion, getMinecraftVersion(p.serverName));
-						LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", p.serverName, reason));
-						ctx.writeAndFlush(new DisconnectPacket("server.network.disconnect_reasons.version_mismatch", "Minecraft", p.minecraftVersion, getMinecraftVersion(p.serverName)));
-						ctx.close();
-						return;
+						if (!getMinecraftVersion(p.serverName).equals(p.minecraftVersion)) {
+							String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.version_mismatch", "Minecraft", p.minecraftVersion, getMinecraftVersion(p.serverName));
+							LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", p.serverName, reason));
+							ctx.writeAndFlush(new DisconnectPacket("server.network.disconnect_reasons.version_mismatch", "Minecraft", p.minecraftVersion, getMinecraftVersion(p.serverName)));
+							ctx.close();
+							return;
+						}
 					}
 
 					this.clientName = p.serverName;
