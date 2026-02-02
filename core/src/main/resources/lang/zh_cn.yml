@@ -28,6 +28,48 @@ commands:
     shutting_down: "正在关闭 DMCC..."
     success: "DMCC 关闭成功。再见！"
     failure: "DMCC 关闭失败。"
+  info:
+    description: "查看 DMCC 及 Minecraft 服务器的运行状态"
+    common_part: |
+      ========== 运行状态 ==========
+      
+      [DMCC]
+        版本：{}
+        模式：{}
+        正常运行时间：{}d {}h {}m {}s
+        JVM 内存使用：{}/{} MiB
+    discord_part: |
+      [Discord]
+        连接状态：{}
+        机器人用户标签：{}
+        心跳包响应延迟：{}ms
+        REST 请求响应延迟：{}ms
+    server_part:
+      base: |
+        [DMCC 服务端]
+          在线客户端：({}/{})
+          {}
+      no_clients: "- 当前没有在线 DMCC 客户端。"
+      clients: |
+        - [{}]
+            Minecraft 版本：{}
+            在线玩家：({}/{})
+            {}
+            服务器 TPS：{}
+            服务器 MSPT：{}
+            正常运行时间：{}d {}h {}m {}s
+            JVM 内存使用：{}/{} MiB
+    client_part: |
+      [DMCC 客户端]
+        连接状态：{}
+        连接延迟：{}ms
+        Minecraft 版本：{}
+        在线玩家：({}/{})
+        {}
+        服务器 TPS：{}
+        服务器 MSPT：{}
+    players: "- [{}ms] {}"
+    no_players: "- 当前没有在线玩家。"
 
 main:
   init:

@@ -28,6 +28,48 @@ commands:
     shutting_down: "Shutting down DMCC..."
     success: "DMCC shut down successfully. Goodbye!"
     failure: "DMCC shutdown failed."
+info:
+  description: "View DMCC and Minecraft server runtime status"
+  common_part: |
+    ========== Runtime Status ==========
+    
+    [DMCC]
+      Version: {}
+      Mode: {}
+      Uptime: {}d {}h {}m {}s
+      JVM memory usage: {}/{} MiB
+  discord_part: |
+    [Discord]
+      Connection status: {}
+      Bot user tag: {}
+      Heartbeat latency: {}ms
+      REST request latency: {}ms
+  server_part:
+    base: |
+      [DMCC Server]
+        Online clients: ({}/{})
+        {}
+    no_clients: "- No DMCC clients online."
+    clients: |
+      - [{}]
+          Minecraft version: {}
+          Online players: ({}/{})
+          {}
+          Server TPS: {}
+          Server MSPT: {}
+          Uptime: {}d {}h {}m {}s
+          JVM memory usage: {}/{} MiB
+  client_part: |
+    [DMCC Client]
+      Connection status: {}
+      Connection latency: {}ms
+      Minecraft version: {}
+      Online players: ({}/{})
+      {}
+      Server TPS: {}
+      Server MSPT: {}
+  players: "- [{}ms] {}"
+  no_players: "- No players online."
 
 main:
   init:
