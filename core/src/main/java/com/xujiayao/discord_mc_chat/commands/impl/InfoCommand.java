@@ -130,8 +130,8 @@ public class InfoCommand implements Command {
 				packet.onlinePlayerCount,
 				packet.maxPlayerCount,
 				playersInfo,
-				packet.tps,
-				packet.mspt,
+				String.format("%.2f", packet.tps),
+				String.format("%.2f", packet.mspt),
 				uptime[0], uptime[1], uptime[2], uptime[3],
 				usedMemoryMiB, totalMemoryMiB);
 	}
@@ -157,8 +157,8 @@ public class InfoCommand implements Command {
 				packet.onlinePlayerCount,
 				packet.maxPlayerCount,
 				playersInfo,
-				packet.tps,
-				packet.mspt);
+				String.format("%.2f", packet.tps),
+				String.format("%.2f", packet.mspt));
 	}
 
 	private static String buildPlayersInfo(InfoResponsePacket packet) {

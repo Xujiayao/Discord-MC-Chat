@@ -12,7 +12,9 @@ import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.ServerTickRateManager;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.TimeUtil;
 import net.minecraft.world.level.GameRules;
 
 import java.lang.management.ManagementFactory;
@@ -126,8 +128,12 @@ public class MinecraftEventHandler {
 			playersAndLatencies.put(player.getDisplayName().getString(), player.connection.latency());
 		}
 
-		double mspt = server.tickRateManager().millisecondsPerTick();
-		double tps = server.tickRateManager().tickrate();
+		double mspt = ((double) server.getAverageTickTimeNanos()) / TimeUtil.NANOSECONDS_PER_MILLISECOND;
+		ServerTickRateManager manager = server.tickRateManager();
+		double tps = 1000.0D / Math.max(manager.isSprinting() ? 0.0 : manager.millisecondsPerTick(), mspt);
+		if (manager.isFrozen()) {
+			tps = 0;
+		}
 
 		long uptimeSeconds = TimeUnit.MILLISECONDS.toSeconds(ManagementFactory.getRuntimeMXBean().getUptime());
 
