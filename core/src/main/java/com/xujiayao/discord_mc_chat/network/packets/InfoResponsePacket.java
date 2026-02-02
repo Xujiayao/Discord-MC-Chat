@@ -10,6 +10,8 @@ import java.util.Map;
 public class InfoResponsePacket extends Packet {
 	public String serverName;
 
+	public String minecraftVersion;
+
 	public int onlinePlayerCount;
 	public int maxPlayerCount;
 	public Map<String, Integer> playersAndLatencies;
@@ -22,10 +24,11 @@ public class InfoResponsePacket extends Packet {
 	public long totalMemory;
 	public long freeMemory;
 
-	public InfoResponsePacket(String serverName, int onlinePlayerCount, int maxPlayerCount,
+	public InfoResponsePacket(String serverName, String minecraftVersion, int onlinePlayerCount, int maxPlayerCount,
 							  Map<String, Integer> playersAndLatencies, double tps, double mspt,
 							  long uptimeSeconds, long totalMemory, long freeMemory) {
 		this.serverName = serverName;
+		this.minecraftVersion = minecraftVersion;
 		this.onlinePlayerCount = onlinePlayerCount;
 		this.maxPlayerCount = maxPlayerCount;
 		this.playersAndLatencies = playersAndLatencies;
