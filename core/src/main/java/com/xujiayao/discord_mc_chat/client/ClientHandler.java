@@ -61,31 +61,34 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, Packet packet) {
-		if (packet instanceof ChallengePacket p) {
-			String hash = CryptUtils.sha256(p.salt + client.getSharedSecret());
-			ctx.writeAndFlush(new AuthResponsePacket(hash));
-
-		} else if (packet instanceof LoginSuccessPacket p) {
-			I18nManager.load(p.language);
-			LOGGER.info(I18nManager.getDmccTranslation("client.network.connected"));
-
-			if (!initialLoginFuture.isDone()) {
-				initialLoginFuture.complete(true);
+		switch (packet) {
+			case ChallengePacket p -> {
+				String hash = CryptUtils.sha256(p.salt + client.getSharedSecret());
+				ctx.writeAndFlush(new AuthResponsePacket(hash));
 			}
+			case LoginSuccessPacket p -> {
+				I18nManager.load(p.language);
+				LOGGER.info(I18nManager.getDmccTranslation("client.network.connected"));
 
-		} else if (packet instanceof DisconnectPacket p) {
-			// If we receive a DisconnectPacket, it means the server explicitly rejected us.
-			// In most cases (whitelist, auth fail, version mismatch), retrying immediately won't help.
-			// So we disable reconnection.
-			allowReconnect = false;
-
-			String reason = I18nManager.getDmccTranslation(p.key, p.args);
-			LOGGER.error(I18nManager.getDmccTranslation("client.network.disconnected_reason", reason));
-
-			if (!initialLoginFuture.isDone()) {
-				initialLoginFuture.complete(false);
+				if (!initialLoginFuture.isDone()) {
+					initialLoginFuture.complete(true);
+				}
 			}
-			ctx.close();
+			case DisconnectPacket p -> {
+				// If we receive a DisconnectPacket, it means the server explicitly rejected us.
+				// In most cases (whitelist, auth fail, version mismatch), retrying immediately won't help.
+				// So we disable reconnection.
+				allowReconnect = false;
+
+				String reason = I18nManager.getDmccTranslation(p.key, p.args);
+				LOGGER.error(I18nManager.getDmccTranslation("client.network.disconnected_reason", reason));
+
+				if (!initialLoginFuture.isDone()) {
+					initialLoginFuture.complete(false);
+				}
+				ctx.close();
+			}
+			case null, default -> LOGGER.warn(I18nManager.getDmccTranslation("client.network.unexpected_packet", packet == null ? "null" : packet.getClass().getSimpleName()));
 		}
 	}
 

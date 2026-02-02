@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.commands;
 
 import com.xujiayao.discord_mc_chat.commands.impl.HelpCommand;
+import com.xujiayao.discord_mc_chat.commands.impl.InfoCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.ReloadCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.ShutdownCommand;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
@@ -35,6 +36,7 @@ public class CommandManager {
 		COMMANDS.clear();
 
 		register(new HelpCommand());
+		register(new InfoCommand());
 		register(new ReloadCommand());
 
 		if ("standalone".equals(ModeManager.getMode())) {

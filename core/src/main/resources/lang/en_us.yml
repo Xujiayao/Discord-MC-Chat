@@ -92,6 +92,7 @@ client:
     reconnecting: "Reconnecting to DMCC Server..."
     reconnect_failed: "Reconnection failed. Retrying in {} seconds."
     send_while_disconnected: "Attempted to send packet while disconnected: {}"
+    unexpected_packet: "Ignored unexpected packet from DMCC Server: {}"
 
 utils:
   config:
