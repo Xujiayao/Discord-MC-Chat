@@ -1,5 +1,6 @@
 package com.xujiayao.discord_mc_chat.client;
 
+import com.xujiayao.discord_mc_chat.network.packets.LatencyPingPacket;
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
 import com.xujiayao.discord_mc_chat.network.serialization.JavaSerializerDecoder;
 import com.xujiayao.discord_mc_chat.network.serialization.JavaSerializerEncoder;
@@ -24,6 +25,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
@@ -41,6 +43,8 @@ public class NettyClient {
 	private final String sharedSecret;
 	private final AtomicBoolean isRunning = new AtomicBoolean(false);
 	private final AtomicInteger reconnectDelay = new AtomicInteger(2); // Initial delay seconds
+	private final AtomicReference<CompletableFuture<Long>> latencyFuture = new AtomicReference<>();
+	private volatile long connectionLatencyMillis;
 	private EventLoopGroup workerGroup;
 	private Channel channel;
 	private CompletableFuture<Boolean> initialLoginFuture;
@@ -113,6 +117,7 @@ public class NettyClient {
 				// Connection established
 				this.channel = future.channel();
 				reconnectDelay.set(1); // Reset delay on success
+				connectionLatencyMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - connectStartNanos);
 			} else {
 				if (isInitialAttempt) {
 					initialLoginFuture.completeExceptionally(future.cause());
@@ -170,5 +175,40 @@ public class NettyClient {
 
 	public boolean isConnected() {
 		return channel != null && channel.isActive();
+	}
+
+	public long getConnectionLatencyMillis() {
+		return connectionLatencyMillis;
+	}
+
+	public long requestLatencySample(long timeoutMillis) {
+		if (channel == null || !channel.isActive()) {
+			return -1;
+		}
+
+		CompletableFuture<Long> future = new CompletableFuture<>();
+		CompletableFuture<Long> previous = latencyFuture.getAndSet(future);
+		if (previous != null && !previous.isDone()) {
+			previous.complete(connectionLatencyMillis);
+		}
+
+		long sentAtMillis = System.currentTimeMillis();
+		channel.writeAndFlush(new LatencyPingPacket(sentAtMillis));
+
+		try {
+			return future.get(timeoutMillis, TimeUnit.MILLISECONDS);
+		} catch (Exception ignored) {
+			latencyFuture.compareAndSet(future, null);
+			return connectionLatencyMillis > 0 ? connectionLatencyMillis : -1;
+		}
+	}
+
+	public void updateConnectionLatency(long latencyMillis) {
+		connectionLatencyMillis = latencyMillis;
+
+		CompletableFuture<Long> future = latencyFuture.getAndSet(null);
+		if (future != null && !future.isDone()) {
+			future.complete(latencyMillis);
+		}
 	}
 }

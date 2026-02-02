@@ -65,4 +65,12 @@ public class ClientDMCC {
 	public boolean isConnected() {
 		return nettyClient != null && nettyClient.isConnected();
 	}
+
+	public long getConnectionLatencyMillis() {
+		return nettyClient == null ? 0 : nettyClient.getConnectionLatencyMillis();
+	}
+
+	public long requestLatencySample(long timeoutMillis) {
+		return nettyClient == null ? -1 : nettyClient.requestLatencySample(timeoutMillis);
+	}
 }

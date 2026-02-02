@@ -9,6 +9,8 @@ import com.xujiayao.discord_mc_chat.network.packets.DisconnectPacket;
 import com.xujiayao.discord_mc_chat.network.packets.HandshakePacket;
 import com.xujiayao.discord_mc_chat.network.packets.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.KeepAlivePacket;
+import com.xujiayao.discord_mc_chat.network.packets.LatencyPingPacket;
+import com.xujiayao.discord_mc_chat.network.packets.LatencyPongPacket;
 import com.xujiayao.discord_mc_chat.network.packets.LoginSuccessPacket;
 import com.xujiayao.discord_mc_chat.network.packets.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
@@ -87,6 +89,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 					}
 				}
 				case InfoResponsePacket p -> NetworkManager.cacheInfoResponse(clientName, p);
+				case LatencyPingPacket p -> ctx.writeAndFlush(new LatencyPongPacket(p.sentAtMillis));
 				case null, default -> LOGGER.warn(unexpectedPacketMessage);
 			}
 		} else {

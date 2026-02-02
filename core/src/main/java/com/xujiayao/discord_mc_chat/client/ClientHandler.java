@@ -9,6 +9,7 @@ import com.xujiayao.discord_mc_chat.network.packets.HandshakePacket;
 import com.xujiayao.discord_mc_chat.network.packets.InfoRequestPacket;
 import com.xujiayao.discord_mc_chat.network.packets.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.KeepAlivePacket;
+import com.xujiayao.discord_mc_chat.network.packets.LatencyPongPacket;
 import com.xujiayao.discord_mc_chat.network.packets.LoginSuccessPacket;
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
@@ -81,6 +82,10 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 				InfoResponsePacket response = NetworkManager.createInfoResponsePacket();
 				response.connectionLatencyMillis = Math.max(0, System.currentTimeMillis() - request.sentAtMillis);
 				ctx.writeAndFlush(response);
+			}
+			case LatencyPongPacket pong -> {
+				long latency = Math.max(0, System.currentTimeMillis() - pong.sentAtMillis);
+				client.updateConnectionLatency(latency);
 			}
 			case DisconnectPacket p -> {
 				// If we receive a DisconnectPacket, it means the server explicitly rejected us.

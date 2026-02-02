@@ -2,6 +2,7 @@ package com.xujiayao.discord_mc_chat.commands.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.Constants;
+import com.xujiayao.discord_mc_chat.client.ClientDMCC;
 import com.xujiayao.discord_mc_chat.commands.Command;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
@@ -52,8 +53,18 @@ public class InfoCommand implements Command {
 			discordFuture = CompletableFuture.supplyAsync(DiscordManager::getStatusInfo);
 		}
 
+		ClientDMCC client = NetworkManager.getClient();
+		boolean clientConnected = client != null && client.isConnected();
+
+		CompletableFuture<Long> latencyFuture = null;
+		if (clientConnected) {
+			long timeoutMillis = TimeUnit.SECONDS.toMillis(INFO_REQUEST_TIMEOUT_SECONDS);
+			latencyFuture = CompletableFuture.supplyAsync(() -> client.requestLatencySample(timeoutMillis));
+		}
+
 		Map<String, InfoResponsePacket> infoSnapshot = infoFuture.join();
 		DiscordStatusInfo statusInfo = discordFuture == null ? null : discordFuture.join();
+		long latencyOverride = latencyFuture == null ? -1 : latencyFuture.join();
 
 		StringBuilder builder = new StringBuilder();
 
@@ -85,7 +96,7 @@ public class InfoCommand implements Command {
 		if (ModeManager.getMode().equals("standalone")) {
 			builder.append(buildServerPart(infoSnapshot));
 		} else {
-			builder.append(buildClientPart(infoSnapshot));
+			builder.append(buildClientPart(infoSnapshot, latencyOverride, clientConnected));
 		}
 
 		sender.reply(builder.toString());
@@ -136,16 +147,19 @@ public class InfoCommand implements Command {
 				usedMemoryMiB, totalMemoryMiB);
 	}
 
-	private static String buildClientPart(Map<String, InfoResponsePacket> infoSnapshot) {
+	private static String buildClientPart(Map<String, InfoResponsePacket> infoSnapshot, long latencyOverride, boolean clientConnected) {
 		InfoResponsePacket packet = getClientPacket(infoSnapshot);
 
 		String connectionStatus = "DISCONNECTED";
 		long connectionLatency = -1;
 
-		var client = NetworkManager.getClient();
-		if (client != null && client.isConnected()) {
+		if (clientConnected) {
 			connectionStatus = "CONNECTED";
-			connectionLatency = packet.connectionLatencyMillis;
+			connectionLatency = latencyOverride >= 0 ? latencyOverride : packet.connectionLatencyMillis;
+			if (connectionLatency < 0) {
+				var client = NetworkManager.getClient();
+				connectionLatency = client == null ? -1 : client.getConnectionLatencyMillis();
+			}
 		}
 
 		String playersInfo = buildPlayersInfo(packet);
