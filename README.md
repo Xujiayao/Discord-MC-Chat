@@ -101,7 +101,7 @@ DMCC 所有运行模式都基于一个统一的通信模型，该模型包含两
 | `update`                          | `everyone` | ✅                          | ✅                    | ✅                 | 在本地执行，检查自身 DMCC 实例的更新。每个实例独立检查自身版本。只是检查更新，不是自动更新。                                  |
 | `stats <type> <name>`             | `everyone` | ✅                          | ✅                    | ✅                 | 在 `client` 执行只统计自身 MC 服务器。在 `server` 端执行则统计全部 MC 服务器。获取的是 `/world/stats/` 文件夹中的数据。 |
 | `console <mc_command>`            | `admin`    | ✅                          | ✅                    | ❌                 | 在所在的 MC 服务器中执行 MC 命令。                                                              |
-| `execute <at/all> <dmcc_command>` | `admin`    | ✅                          | ❌                    | ✅                 | `client` 端执行时会将请求转发给 `server`，由 `server` 进行转发。                                     |
+| `execute <at/all> <dmcc_command>` | `admin`    | ❌                          | ❌                    | ✅                 | 仅 `standalone`（Server）存在。用于将命令转发给目标 Client。`at=all` 不包含自身（standalone）。             |
 | `link <add/remove> <mc_user>`     | `everyone` | ❌                          | ✅                    | ✅                 | 管理该 Discord 账户的账户链接（仅 `add` 需要验证），只能在 `server` 执行。                                 |
 | `link confirm`                    | `everyone` | ✅                          | ✅                    | ❌                 | 验证先前提交的账户链接请求，只能在游戏内 `client` 执行，然后通知 `server`。                                    |
 | `link list <discord_user/all>`    | `admin`    | ❌                          | ✅                    | ✅                 | 列出某 Discord 账户的账户链接，只能在 `server` 执行。`single_server` 环境时可在游戏内执行。`all` 仅供管理员使用。      |
@@ -111,9 +111,9 @@ DMCC 所有运行模式都基于一个统一的通信模型，该模型包含两
 | `stop <server>`                   | `admin`    | ❌                          | ❌                    | ✅                 | 停止 `config.yml` 中定义的子 MC 服务器。                                                      |
 | `shutdown`                        | `admin`    | ❌                          | ❌                    | ✅                 | 关闭 `standalone` 应用程序。                                                              |
 
-`execute <at> <dmcc_command>` 命令设计有 all 的选项，但是需要处理重名的问题，以及 `server_name` 的要求，例如不可以设为 all 和 standalone。
+`execute <at> <dmcc_command>` 命令仅存在于 `standalone`（服务端）环境。`at=all` 不包含自身（standalone）。`server_name` 不允许为 `all` 或 `standalone`，或重名等问题必须在配置校验阶段处理。
 
-`log <file>` 命令和 `link <add/remove> <mc_user>` 命令为 Discord 独占的命令。前者的结果为文件附件，后者需要验证 Discord 账户身份。
+`log <file>` 命令为 Discord 独占命令。其结果为文件附件。`<file>` 为必填参数，支持 `.log` 与 `.log.gz`。需要自动补全可用日志文件名。
 
 ## 6. 权限管理模型 (双轨制)
 
