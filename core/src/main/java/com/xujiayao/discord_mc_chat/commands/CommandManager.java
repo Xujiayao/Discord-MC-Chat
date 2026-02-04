@@ -75,28 +75,24 @@ public class CommandManager {
 	/**
 	 * Execute a command line.
 	 *
-	 * @param sender   The command sender
-	 * @param rawInput The raw command line
+	 * @param sender The command sender
+	 * @param name   The command name
+	 * @param args   The command arguments (if any)
 	 */
-	public static void execute(CommandSender sender, String rawInput) {
+	public static void execute(CommandSender sender, String name, String... args) {
 		if (commandExecutor == null || commandExecutor.isShutdown()) {
 			return;
 		}
 
 		commandExecutor.submit(() -> {
-			String line = rawInput == null ? "" : rawInput.trim();
-			if (line.isEmpty()) {
-				sender.reply(I18nManager.getDmccTranslation("terminal.unknown_command", rawInput));
+			Command command = COMMANDS.get(name);
+			if (command == null) {
+				sender.reply(I18nManager.getDmccTranslation("terminal.unknown_command", name));
 				return;
 			}
 
-			String[] parts = line.split("\\s+");
-			String name = parts[0].toLowerCase();
-			String[] args = parts.length > 1 ? line.substring(line.indexOf(' ') + 1).split("\\s+") : new String[0];
-
-			Command command = COMMANDS.get(name);
-			if (command == null) {
-				sender.reply(I18nManager.getDmccTranslation("terminal.unknown_command", rawInput));
+			if (command.args().length != args.length) {
+				sender.reply(I18nManager.getDmccTranslation("terminal.unknown_command", (name + " " + String.join(" ", args))));
 				return;
 			}
 

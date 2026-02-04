@@ -40,7 +40,11 @@ public class TerminalManager {
 							line = line.substring(1);
 						}
 
-						CommandManager.execute(new TerminalCommandSender(), line);
+						String[] parts = line.split("\\s+");
+						String name = parts[0].toLowerCase();
+						String[] args = parts.length > 1 ? line.substring(line.indexOf(' ') + 1).split("\\s+") : new String[0];
+
+						CommandManager.execute(new TerminalCommandSender(), name, args);
 					}
 				} catch (IllegalStateException e) {
 					// This can happen if System.in is closed externally, which signals the end.

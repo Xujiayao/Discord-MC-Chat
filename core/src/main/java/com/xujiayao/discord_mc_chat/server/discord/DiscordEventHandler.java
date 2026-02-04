@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -23,8 +24,19 @@ public class DiscordEventHandler extends ListenerAdapter {
 	public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
 		event.deferReply().queue();
 
-		// TODO Confirm whether event.getName() is correct
-		CommandManager.execute(new JdaCommandSender(event), event.getName());
+		String name = event.getName();
+		switch (name) {
+			case "execute" -> {
+				String at = event.getOption("at", OptionMapping::getAsString);
+				String command = event.getOption("command", OptionMapping::getAsString);
+				CommandManager.execute(new JdaCommandSender(event), name, at, command);
+			}
+			case "log" -> {
+				String file = event.getOption("file", OptionMapping::getAsString);
+				CommandManager.execute(new JdaCommandSender(event), name, file);
+			}
+			default -> CommandManager.execute(new JdaCommandSender(event), name);
+		}
 	}
 
 	@Override

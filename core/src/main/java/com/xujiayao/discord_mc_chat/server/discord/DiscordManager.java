@@ -103,8 +103,7 @@ public class DiscordManager {
 				if ("standalone".equals(ModeManager.getMode())) {
 					commands.add(Commands.slash("execute", I18nManager.getDmccTranslation("commands.execute.description"))
 							.addOption(OptionType.STRING, "at", I18nManager.getDmccTranslation("commands.execute.args_desc.at"), true)
-							.addOption(OptionType.STRING, "command", I18nManager.getDmccTranslation("commands.execute.args_desc.command"), true)
-							.addOption(OptionType.STRING, "arg_1", I18nManager.getDmccTranslation("commands.execute.args_desc.arg_1"), false));
+							.addOption(OptionType.STRING, "command", I18nManager.getDmccTranslation("commands.execute.args_desc.command"), true));
 					commands.add(Commands.slash("shutdown", I18nManager.getDmccTranslation("commands.shutdown.description")));
 				}
 
@@ -168,12 +167,20 @@ public class DiscordManager {
 	/**
 	 * Sends a message using a Discord webhook. Uses allowed_mention specified in config.
 	 *
-	 * @param webhook   The webhook to use.
+	 * @param channel   The target channel.
 	 * @param username  The username to display.
 	 * @param avatarUrl The avatar URL to use.
 	 * @param content   The message content.
 	 */
-	private static void sendWebhookMessage(Webhook webhook, String username, String avatarUrl, String content) {
+	private static void sendWebhookMessage(TextChannel channel, String username, String avatarUrl, String content) {
+		// Find or create webhook
+		Webhook webhook = channel.retrieveWebhooks().complete()
+				.stream()
+				.filter(i -> "DMCC Webhook".equals(i.getName()))
+				.filter(i -> i.getOwnerAsUser() == jda.getSelfUser())
+				.findFirst()
+				.orElseGet(() -> channel.createWebhook("DMCC Webhook").complete()); // Must use orElseGet to avoid unnecessary creation
+
 		List<Message.MentionType> allowedMentions = new ArrayList<>();
 		JsonNode allowMentionsNode = ConfigManager.getConfigNode("discord.webhook.allow_mentions");
 		if (allowMentionsNode.isArray()) {
@@ -246,15 +253,7 @@ public class DiscordManager {
 						avatarUrl = jda.getSelfUser().getEffectiveAvatarUrl();
 					}
 
-					// Find or create webhook
-					Webhook webhook = channel.retrieveWebhooks().complete()
-							.stream()
-							.filter(i -> "DMCC Webhook".equals(i.getName()))
-							.filter(i -> i.getOwnerAsUser() == jda.getSelfUser())
-							.findFirst()
-							.orElseGet(() -> channel.createWebhook("DMCC Webhook").complete()); // Must use orElseGet to avoid unnecessary creation
-
-					sendWebhookMessage(webhook, clientName, avatarUrl, message);
+					sendWebhookMessage(channel, clientName, avatarUrl, message);
 				} else {
 					sendBotMessage(channelIdentifier, message);
 				}
