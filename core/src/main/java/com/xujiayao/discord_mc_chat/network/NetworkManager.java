@@ -8,7 +8,9 @@ import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import io.netty.channel.Channel;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -110,6 +112,25 @@ public class NetworkManager {
 	 */
 	public static void removeClientChannel(Channel channel) {
 		clientChannels.remove(channel);
+	}
+
+	/**
+	 * Gets all connected client names.
+	 *
+	 * @return A list of connected client names.
+	 */
+	public static List<String> getConnectedClientNames() {
+		return new ArrayList<>(clientChannels.values());
+	}
+
+	/**
+	 * Checks if a client is connected by name.
+	 *
+	 * @param clientName The client name to check.
+	 * @return true if connected, false otherwise.
+	 */
+	public static boolean isClientConnected(String clientName) {
+		return clientChannels.values().stream().anyMatch(name -> name.equals(clientName));
 	}
 
 	/**
