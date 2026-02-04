@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 
@@ -95,8 +96,15 @@ public class DiscordManager {
 				List<CommandData> commands = new ArrayList<>();
 				commands.add(Commands.slash("help", I18nManager.getDmccTranslation("commands.help.description")));
 				commands.add(Commands.slash("info", I18nManager.getDmccTranslation("commands.info.description")));
+				commands.add(Commands.slash("log", I18nManager.getDmccTranslation("commands.log.description"))
+						.addOption(OptionType.STRING, "file", I18nManager.getDmccTranslation("commands.log.args_desc.file"), true));
 				commands.add(Commands.slash("reload", I18nManager.getDmccTranslation("commands.reload.description")));
+
 				if ("standalone".equals(ModeManager.getMode())) {
+					commands.add(Commands.slash("execute", I18nManager.getDmccTranslation("commands.execute.description"))
+							.addOption(OptionType.STRING, "at", I18nManager.getDmccTranslation("commands.execute.args_desc.at"), true)
+							.addOption(OptionType.STRING, "command", I18nManager.getDmccTranslation("commands.execute.args_desc.command"), true)
+							.addOption(OptionType.STRING, "arg_1", I18nManager.getDmccTranslation("commands.execute.args_desc.arg_1"), false));
 					commands.add(Commands.slash("shutdown", I18nManager.getDmccTranslation("commands.shutdown.description")));
 				}
 
