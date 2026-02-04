@@ -50,12 +50,5 @@ public interface Command {
 		 * @return The argument description.
 		 */
 		String description();
-
-		/**
-		 * Checks if the argument is optional.
-		 *
-		 * @return true if the argument is optional, false otherwise.
-		 */
-		boolean isOptional();
 	}
 }
