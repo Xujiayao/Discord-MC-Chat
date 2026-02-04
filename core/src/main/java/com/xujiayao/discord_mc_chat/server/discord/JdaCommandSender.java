@@ -1,7 +1,6 @@
 package com.xujiayao.discord_mc_chat.server.discord;
 
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
-import com.xujiayao.discord_mc_chat.commands.FileCommandSender;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
@@ -15,7 +14,7 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  *
  * @author Xujiayao
  */
-public class JdaCommandSender implements CommandSender, FileCommandSender {
+public class JdaCommandSender implements CommandSender {
 
 	private final SlashCommandInteractionEvent event;
 
@@ -34,16 +33,6 @@ public class JdaCommandSender implements CommandSender, FileCommandSender {
 			// This usually happens when trying to send the "Success" message after a reload/shutdown,
 			// because the JDA instance belonging to this event has been shut down.
 			// We log it as a warning but don't crash the thread, state that it is expected behavior.
-			LOGGER.warn(I18nManager.getDmccTranslation("discord.command.reply_failed"));
-			LOGGER.warn(I18nManager.getDmccTranslation("discord.command.reply_failed_detail"));
-		}
-	}
-
-	@Override
-	public void sendFile(String fileName, byte[] content) {
-		try {
-			event.getHook().sendFiles(FileUpload.fromData(content, fileName)).complete();
-		} catch (RejectedExecutionException e) {
 			LOGGER.warn(I18nManager.getDmccTranslation("discord.command.reply_failed"));
 			LOGGER.warn(I18nManager.getDmccTranslation("discord.command.reply_failed_detail"));
 		}
