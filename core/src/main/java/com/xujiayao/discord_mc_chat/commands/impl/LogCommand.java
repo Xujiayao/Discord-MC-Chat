@@ -2,6 +2,7 @@ package com.xujiayao.discord_mc_chat.commands.impl;
 
 import com.xujiayao.discord_mc_chat.commands.Command;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
+import com.xujiayao.discord_mc_chat.commands.LocalCommandSender;
 import com.xujiayao.discord_mc_chat.standalone.TerminalManager;
 import com.xujiayao.discord_mc_chat.utils.LogFileUtils;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
@@ -39,6 +40,14 @@ public class LogCommand implements Command {
 	@Override
 	public String description() {
 		return I18nManager.getDmccTranslation("commands.log.description");
+	}
+
+	@Override
+	public boolean isVisibleTo(CommandSender sender) {
+		// The log command is only meaningful when the sender supports file attachments,
+		// i.e., Discord slash commands (JdaCommandSender) or remote execute (capture sender).
+		// It should not appear in help for local senders (terminal or Minecraft in-game).
+		return !(sender instanceof LocalCommandSender);
 	}
 
 	@Override

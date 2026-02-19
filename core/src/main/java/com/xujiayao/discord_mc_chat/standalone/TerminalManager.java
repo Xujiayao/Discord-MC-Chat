@@ -1,7 +1,7 @@
 package com.xujiayao.discord_mc_chat.standalone;
 
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
-import com.xujiayao.discord_mc_chat.commands.CommandSender;
+import com.xujiayao.discord_mc_chat.commands.LocalCommandSender;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
 import java.io.IOException;
@@ -87,7 +87,7 @@ public class TerminalManager {
 	 *
 	 * @author Xujiayao
 	 */
-	public static class TerminalCommandSender implements CommandSender {
+	public static class TerminalCommandSender implements LocalCommandSender {
 
 		@Override
 		public void reply(String message) {

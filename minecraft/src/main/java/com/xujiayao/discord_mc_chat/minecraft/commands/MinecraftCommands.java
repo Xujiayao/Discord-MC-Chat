@@ -2,7 +2,7 @@ package com.xujiayao.discord_mc_chat.minecraft.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
-import com.xujiayao.discord_mc_chat.commands.CommandSender;
+import com.xujiayao.discord_mc_chat.commands.LocalCommandSender;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
@@ -58,7 +58,7 @@ public class MinecraftCommands {
 	 *
 	 * @author Xujiayao
 	 */
-	private record MinecraftCommandSender(CommandSourceStack source) implements CommandSender {
+	private record MinecraftCommandSender(CommandSourceStack source) implements LocalCommandSender {
 
 		@Override
 		public void reply(String message) {

@@ -41,6 +41,19 @@ public interface Command {
 	}
 
 	/**
+	 * Whether this command should be visible to the given sender in help listings.
+	 * <p>
+	 * Commands can override this to hide themselves from certain sender types.
+	 * This does NOT affect whether the command can be executed — only its visibility in help.
+	 *
+	 * @param sender The command sender requesting the help listing.
+	 * @return true if this command should be shown to the sender, false otherwise.
+	 */
+	default boolean isVisibleTo(CommandSender sender) {
+		return true;
+	}
+
+	/**
 	 * Executes the command.
 	 *
 	 * @param sender The entity that sent the command.

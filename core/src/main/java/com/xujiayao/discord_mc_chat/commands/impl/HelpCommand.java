@@ -34,13 +34,16 @@ public class HelpCommand implements Command {
 		StringBuilder builder = new StringBuilder();
 		builder.append("========== ").append(I18nManager.getDmccTranslation("commands.help.help")).append(" ==========\n");
 
-		CommandManager.getCommands().stream().sorted(Comparator.comparing(Command::name)).forEach(cmd -> {
-			builder.append("\n").append("- ").append(cmd.name()).append(": ").append(cmd.description());
+		CommandManager.getCommands().stream()
+				.filter(cmd -> cmd.isVisibleTo(sender))
+				.sorted(Comparator.comparing(Command::name))
+				.forEach(cmd -> {
+					builder.append("\n").append("- ").append(cmd.name()).append(": ").append(cmd.description());
 
-			for (Command.CommandArgument arg : cmd.args()) {
-				builder.append("\n    ").append("<").append(arg.name()).append(">: ").append(arg.description());
-			}
-		});
+					for (Command.CommandArgument arg : cmd.args()) {
+						builder.append("\n    ").append("<").append(arg.name()).append(">: ").append(arg.description());
+					}
+				});
 
 		sender.reply(builder.toString());
 	}
