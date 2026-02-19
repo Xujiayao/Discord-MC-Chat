@@ -2,10 +2,13 @@ package com.xujiayao.discord_mc_chat.server;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.Constants;
+import com.xujiayao.discord_mc_chat.commands.impl.ExecuteCommand;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.AuthResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.ChallengePacket;
+import com.xujiayao.discord_mc_chat.network.packets.CommandAutoCompleteResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.DisconnectPacket;
+import com.xujiayao.discord_mc_chat.network.packets.ExecuteResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.HandshakePacket;
 import com.xujiayao.discord_mc_chat.network.packets.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.KeepAlivePacket;
@@ -90,6 +93,9 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 				}
 				case InfoResponsePacket p -> NetworkManager.cacheInfoResponse(clientName, p);
 				case LatencyPingPacket p -> ctx.writeAndFlush(new LatencyPongPacket(p.sentAtMillis));
+				case ExecuteResponsePacket p -> ExecuteCommand.completeRequest(p.requestId, p);
+				case CommandAutoCompleteResponsePacket p ->
+						NetworkManager.cacheAutoCompleteResponse(clientName, p.suggestions);
 				case null, default -> LOGGER.warn(unexpectedPacketMessage);
 			}
 		} else {

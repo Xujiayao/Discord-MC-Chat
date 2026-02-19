@@ -12,10 +12,11 @@ import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.interactions.commands.Command;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 
 import java.time.Duration;
@@ -97,13 +98,13 @@ public class DiscordManager {
 				commands.add(Commands.slash("help", I18nManager.getDmccTranslation("commands.help.description")));
 				commands.add(Commands.slash("info", I18nManager.getDmccTranslation("commands.info.description")));
 				commands.add(Commands.slash("log", I18nManager.getDmccTranslation("commands.log.description"))
-						.addOption(OptionType.STRING, "file", I18nManager.getDmccTranslation("commands.log.args_desc.file"), true));
+						.addOption(OptionType.STRING, "file", I18nManager.getDmccTranslation("commands.log.args_desc.file"), true, true));
 				commands.add(Commands.slash("reload", I18nManager.getDmccTranslation("commands.reload.description")));
 
 				if ("standalone".equals(ModeManager.getMode())) {
 					commands.add(Commands.slash("execute", I18nManager.getDmccTranslation("commands.execute.description"))
-							.addOption(OptionType.STRING, "at", I18nManager.getDmccTranslation("commands.execute.args_desc.at"), true)
-							.addOption(OptionType.STRING, "command", I18nManager.getDmccTranslation("commands.execute.args_desc.command"), true));
+							.addOption(OptionType.STRING, "at", I18nManager.getDmccTranslation("commands.execute.args_desc.at"), true, true)
+							.addOption(OptionType.STRING, "command", I18nManager.getDmccTranslation("commands.execute.args_desc.command"), true, true));
 					commands.add(Commands.slash("shutdown", I18nManager.getDmccTranslation("commands.shutdown.description")));
 				}
 
@@ -174,13 +175,62 @@ public class DiscordManager {
 	 */
 	private static void sendWebhookMessage(TextChannel channel, String username, String avatarUrl, String content) {
 		// Find or create webhook
-		Webhook webhook = channel.retrieveWebhooks().complete()
+		Webhook webhook = getOrCreateWebhook(channel);
+
+		List<Message.MentionType> allowedMentions = getAllowedMentions();
+
+		webhook.sendMessage(content)
+				.setUsername(username)
+				.setAvatarUrl(avatarUrl)
+				.setAllowedMentions(allowedMentions)
+				.queue();
+	}
+
+	/**
+	 * Sends a message with a file attachment using a Discord webhook.
+	 *
+	 * @param channel   The target channel.
+	 * @param username  The username to display.
+	 * @param avatarUrl The avatar URL to use.
+	 * @param content   The message content.
+	 * @param fileData  The file data.
+	 * @param fileName  The file name.
+	 */
+	private static void sendWebhookMessageWithFile(TextChannel channel, String username, String avatarUrl,
+												   String content, byte[] fileData, String fileName) {
+		Webhook webhook = getOrCreateWebhook(channel);
+
+		List<Message.MentionType> allowedMentions = getAllowedMentions();
+
+		webhook.sendMessage(content)
+				.setUsername(username)
+				.setAvatarUrl(avatarUrl)
+				.setAllowedMentions(allowedMentions)
+				.addFiles(FileUpload.fromData(fileData, fileName))
+				.queue();
+	}
+
+	/**
+	 * Gets or creates the DMCC webhook for a channel.
+	 *
+	 * @param channel The target channel
+	 * @return The webhook
+	 */
+	private static Webhook getOrCreateWebhook(TextChannel channel) {
+		return channel.retrieveWebhooks().complete()
 				.stream()
 				.filter(i -> "DMCC Webhook".equals(i.getName()))
 				.filter(i -> i.getOwnerAsUser() == jda.getSelfUser())
 				.findFirst()
 				.orElseGet(() -> channel.createWebhook("DMCC Webhook").complete()); // Must use orElseGet to avoid unnecessary creation
+	}
 
+	/**
+	 * Gets the allowed mention types from config.
+	 *
+	 * @return The list of allowed mention types
+	 */
+	private static List<Message.MentionType> getAllowedMentions() {
 		List<Message.MentionType> allowedMentions = new ArrayList<>();
 		JsonNode allowMentionsNode = ConfigManager.getConfigNode("discord.webhook.allow_mentions");
 		if (allowMentionsNode.isArray()) {
@@ -195,12 +245,72 @@ public class DiscordManager {
 				}
 			}
 		}
+		return allowedMentions;
+	}
 
-		webhook.sendMessage(content)
-				.setUsername(username)
-				.setAvatarUrl(avatarUrl)
-				.setAllowedMentions(allowedMentions)
-				.queue();
+	/**
+	 * Gets the avatar URL for a given client server name from config.
+	 *
+	 * @param clientName The client server name
+	 * @return The avatar URL, or the bot's own avatar URL if not configured
+	 */
+	private static String getClientAvatarUrl(String clientName) {
+		String avatarUrl = "";
+		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
+		if (serversNode != null && serversNode.isArray()) {
+			for (JsonNode node : serversNode) {
+				if (clientName.equals(node.path("name").asText())) {
+					avatarUrl = node.path("avatar_url").asText();
+				}
+			}
+		}
+		if (avatarUrl == null || avatarUrl.isBlank()) {
+			avatarUrl = jda.getSelfUser().getEffectiveAvatarUrl();
+		}
+		return avatarUrl;
+	}
+
+	/**
+	 * Sends an execute command result via webhook, using the client's server name as the webhook username.
+	 * The result is sent to the in-game-chat channel (same as server events).
+	 *
+	 * @param clientName The name of the DMCC client
+	 * @param message    The result message
+	 */
+	public static void sendExecuteResultViaWebhook(String clientName, String message) {
+		String channelIdentifier = ConfigManager.getString("broadcasts.minecraft_to_discord.server.started", "in-game-chat");
+		TextChannel channel = getTextChannel(channelIdentifier);
+		if (channel == null) return;
+
+		try {
+			String avatarUrl = getClientAvatarUrl(clientName);
+			sendWebhookMessage(channel, clientName, avatarUrl, "```\n" + message + "\n```");
+		} catch (Exception e) {
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
+		}
+	}
+
+	/**
+	 * Sends an execute command result with a file attachment via webhook.
+	 *
+	 * @param clientName The name of the DMCC client
+	 * @param message    The result message
+	 * @param fileData   The file data
+	 * @param fileName   The file name
+	 */
+	public static void sendExecuteResultWithFileViaWebhook(String clientName, String message,
+														   byte[] fileData, String fileName) {
+		String channelIdentifier = ConfigManager.getString("broadcasts.minecraft_to_discord.server.started", "in-game-chat");
+		TextChannel channel = getTextChannel(channelIdentifier);
+		if (channel == null) return;
+
+		try {
+			String avatarUrl = getClientAvatarUrl(clientName);
+			sendWebhookMessageWithFile(channel, clientName, avatarUrl,
+					"```\n" + message + "\n```", fileData, fileName);
+		} catch (Exception e) {
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
+		}
 	}
 
 	/**
@@ -239,20 +349,7 @@ public class DiscordManager {
 				}
 
 				if ("standalone".equals(ModeManager.getMode())) {
-					// Get avatar url for webhook avatar
-					String avatarUrl = "";
-					JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
-					if (serversNode.isArray()) {
-						for (JsonNode node : serversNode) {
-							if (clientName.equals(node.path("name").asText())) {
-								avatarUrl = node.path("avatar_url").asText();
-							}
-						}
-					}
-					if (avatarUrl.isBlank()) {
-						avatarUrl = jda.getSelfUser().getEffectiveAvatarUrl();
-					}
-
+					String avatarUrl = getClientAvatarUrl(clientName);
 					sendWebhookMessage(channel, clientName, avatarUrl, message);
 				} else {
 					sendBotMessage(channelIdentifier, message);

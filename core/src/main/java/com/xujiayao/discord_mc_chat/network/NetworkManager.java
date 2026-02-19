@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.network;
 
 import com.xujiayao.discord_mc_chat.client.ClientDMCC;
+import com.xujiayao.discord_mc_chat.network.packets.CommandAutoCompleteRequestPacket;
 import com.xujiayao.discord_mc_chat.network.packets.InfoRequestPacket;
 import com.xujiayao.discord_mc_chat.network.packets.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
@@ -33,6 +34,10 @@ public class NetworkManager {
 	private static final AtomicReference<Supplier<InfoResponsePacket>> infoSupplier = new AtomicReference<>();
 	private static final Object infoLock = new Object();
 
+	// Auto-complete cache
+	private static final Map<String, List<String>> autoCompleteCache = new ConcurrentHashMap<>();
+	private static final Object autoCompleteLock = new Object();
+
 	/**
 	 * Registers the client instance for network operations.
 	 *
@@ -58,6 +63,7 @@ public class NetworkManager {
 		clientInstance.set(null);
 		clientChannels.clear();
 		infoCache.clear();
+		autoCompleteCache.clear();
 	}
 
 	/**
@@ -264,6 +270,58 @@ public class NetworkManager {
 		}
 
 		return packet;
+	}
+
+	// ===== Auto-Complete Methods =====
+
+	/**
+	 * Caches an auto-complete response from a client.
+	 *
+	 * @param clientName  The client name
+	 * @param suggestions The list of suggestions
+	 */
+	public static void cacheAutoCompleteResponse(String clientName, List<String> suggestions) {
+		autoCompleteCache.put(clientName, suggestions);
+		synchronized (autoCompleteLock) {
+			autoCompleteLock.notifyAll();
+		}
+	}
+
+	/**
+	 * Requests auto-complete suggestions from all connected clients for the given input.
+	 *
+	 * @param input          The current user input to complete
+	 * @param timeoutSeconds The waiting time in seconds
+	 * @return A map of client name to suggestion list
+	 */
+	public static Map<String, List<String>> requestAutoCompleteSnapshot(String input, int timeoutSeconds) {
+		autoCompleteCache.clear();
+
+		int expectedResponses = clientChannels.size();
+		if (expectedResponses > 0) {
+			broadcastToClients(new CommandAutoCompleteRequestPacket(input));
+		}
+
+		long deadlineMillis = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(timeoutSeconds);
+
+		if (expectedResponses > 0) {
+			synchronized (autoCompleteLock) {
+				while (autoCompleteCache.size() < expectedResponses) {
+					long remaining = deadlineMillis - System.currentTimeMillis();
+					if (remaining <= 0) break;
+					try {
+						autoCompleteLock.wait(remaining);
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+						break;
+					}
+				}
+			}
+		}
+
+		Map<String, List<String>> snapshot = new LinkedHashMap<>(autoCompleteCache);
+		autoCompleteCache.clear();
+		return snapshot;
 	}
 
 	/**

@@ -15,4 +15,17 @@ public interface CommandSender {
 	 * @param message The message to send.
 	 */
 	void reply(String message);
+
+	/**
+	 * Sends a message with a file attachment back to the command sender.
+	 * <p>
+	 * Default implementation falls back to reply with message only.
+	 *
+	 * @param message  The message to send.
+	 * @param fileData The file content as bytes.
+	 * @param fileName The file name.
+	 */
+	default void replyWithFile(String message, byte[] fileData, String fileName) {
+		reply(message);
+	}
 }

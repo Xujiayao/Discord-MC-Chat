@@ -28,80 +28,6 @@ public class InfoCommand implements Command {
 
 	private static final int INFO_REQUEST_TIMEOUT_SECONDS = 3;
 
-	@Override
-	public String name() {
-		return "info";
-	}
-
-	@Override
-	public CommandArgument[] args() {
-		return new CommandArgument[0];
-	}
-
-	@Override
-	public String description() {
-		return I18nManager.getDmccTranslation("commands.info.description");
-	}
-
-	@Override
-	public void execute(CommandSender sender, String... args) {
-		CompletableFuture<Map<String, InfoResponsePacket>> infoFuture =
-				CompletableFuture.supplyAsync(() -> NetworkManager.requestInfoSnapshot(INFO_REQUEST_TIMEOUT_SECONDS));
-
-		CompletableFuture<DiscordStatusInfo> discordFuture = null;
-		if (!"multi_server_client".equals(ModeManager.getMode())) {
-			discordFuture = CompletableFuture.supplyAsync(DiscordManager::getStatusInfo);
-		}
-
-		ClientDMCC client = NetworkManager.getClient();
-		boolean clientConnected = client != null && client.isConnected();
-
-		CompletableFuture<Long> latencyFuture = null;
-		if (clientConnected) {
-			long timeoutMillis = TimeUnit.SECONDS.toMillis(INFO_REQUEST_TIMEOUT_SECONDS);
-			latencyFuture = CompletableFuture.supplyAsync(() -> client.requestLatencySample(timeoutMillis));
-		}
-
-		Map<String, InfoResponsePacket> infoSnapshot = infoFuture.join();
-		DiscordStatusInfo statusInfo = discordFuture == null ? null : discordFuture.join();
-		long latencyOverride = latencyFuture == null ? -1 : latencyFuture.join();
-
-		StringBuilder builder = new StringBuilder();
-
-		// Common part
-		long uptimeSeconds = TimeUnit.MILLISECONDS.toSeconds(ManagementFactory.getRuntimeMXBean().getUptime());
-		long[] uptime = splitSeconds(uptimeSeconds);
-
-		long totalMemoryMiB = toMiB(Runtime.getRuntime().totalMemory());
-		long usedMemoryMiB = toMiB(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
-
-		builder.append(I18nManager.getDmccTranslation("commands.info.common_part",
-				Constants.VERSION,
-				ModeManager.getMode(),
-				uptime[0], uptime[1], uptime[2], uptime[3],
-				usedMemoryMiB, totalMemoryMiB));
-
-		// Discord part
-		if (statusInfo != null) {
-			builder.append("\n");
-			builder.append(I18nManager.getDmccTranslation("commands.info.discord_part",
-					statusInfo.status(),
-					statusInfo.tag(),
-					statusInfo.gatewayPingMillis(),
-					statusInfo.restPingMillis()));
-		}
-
-		// Server/client part
-		builder.append("\n");
-		if (ModeManager.getMode().equals("standalone")) {
-			builder.append(buildServerPart(infoSnapshot));
-		} else {
-			builder.append(buildClientPart(infoSnapshot, latencyOverride, clientConnected));
-		}
-
-		sender.reply(builder.toString());
-	}
-
 	private static String buildServerPart(Map<String, InfoResponsePacket> infoSnapshot) {
 		int onlineClients = infoSnapshot.size();
 		int totalClients = getConfiguredClientCount();
@@ -225,5 +151,79 @@ public class InfoCommand implements Command {
 
 	private static long toMiB(long bytes) {
 		return bytes / (1024L * 1024L);
+	}
+
+	@Override
+	public String name() {
+		return "info";
+	}
+
+	@Override
+	public CommandArgument[] args() {
+		return new CommandArgument[0];
+	}
+
+	@Override
+	public String description() {
+		return I18nManager.getDmccTranslation("commands.info.description");
+	}
+
+	@Override
+	public void execute(CommandSender sender, String... args) {
+		CompletableFuture<Map<String, InfoResponsePacket>> infoFuture =
+				CompletableFuture.supplyAsync(() -> NetworkManager.requestInfoSnapshot(INFO_REQUEST_TIMEOUT_SECONDS));
+
+		CompletableFuture<DiscordStatusInfo> discordFuture = null;
+		if (!"multi_server_client".equals(ModeManager.getMode())) {
+			discordFuture = CompletableFuture.supplyAsync(DiscordManager::getStatusInfo);
+		}
+
+		ClientDMCC client = NetworkManager.getClient();
+		boolean clientConnected = client != null && client.isConnected();
+
+		CompletableFuture<Long> latencyFuture = null;
+		if (clientConnected) {
+			long timeoutMillis = TimeUnit.SECONDS.toMillis(INFO_REQUEST_TIMEOUT_SECONDS);
+			latencyFuture = CompletableFuture.supplyAsync(() -> client.requestLatencySample(timeoutMillis));
+		}
+
+		Map<String, InfoResponsePacket> infoSnapshot = infoFuture.join();
+		DiscordStatusInfo statusInfo = discordFuture == null ? null : discordFuture.join();
+		long latencyOverride = latencyFuture == null ? -1 : latencyFuture.join();
+
+		StringBuilder builder = new StringBuilder();
+
+		// Common part
+		long uptimeSeconds = TimeUnit.MILLISECONDS.toSeconds(ManagementFactory.getRuntimeMXBean().getUptime());
+		long[] uptime = splitSeconds(uptimeSeconds);
+
+		long totalMemoryMiB = toMiB(Runtime.getRuntime().totalMemory());
+		long usedMemoryMiB = toMiB(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
+
+		builder.append(I18nManager.getDmccTranslation("commands.info.common_part",
+				Constants.VERSION,
+				ModeManager.getMode(),
+				uptime[0], uptime[1], uptime[2], uptime[3],
+				usedMemoryMiB, totalMemoryMiB));
+
+		// Discord part
+		if (statusInfo != null) {
+			builder.append("\n");
+			builder.append(I18nManager.getDmccTranslation("commands.info.discord_part",
+					statusInfo.status(),
+					statusInfo.tag(),
+					statusInfo.gatewayPingMillis(),
+					statusInfo.restPingMillis()));
+		}
+
+		// Server/client part
+		builder.append("\n");
+		if (ModeManager.getMode().equals("standalone")) {
+			builder.append(buildServerPart(infoSnapshot));
+		} else {
+			builder.append(buildClientPart(infoSnapshot, latencyOverride, clientConnected));
+		}
+
+		sender.reply(builder.toString());
 	}
 }

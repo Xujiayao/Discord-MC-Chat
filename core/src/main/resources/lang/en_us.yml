@@ -71,6 +71,29 @@ commands:
         Server MSPT: {}
     players: "- [{}ms] {}"
     no_players: "- No players online."
+  execute:
+    description: "Execute a DMCC command on a remote client"
+    args_desc:
+      at: "Target server name or \"all\""
+      command: "DMCC command to execute"
+    usage: "Usage: execute <at> <command>"
+    executing: "Executing \"{}\" on {}..."
+    client_offline: "DMCC Client \"{}\" is offline."
+    timeout: "Command execution on \"{}\" timed out."
+    invalid_target: "Invalid target DMCC Client: \"{}\""
+    no_online_clients: "No DMCC clients are online."
+  log:
+    description: "Retrieve a log file"
+    args_desc:
+      file: "Log file name"
+    usage: "Usage: log <file>"
+    file_not_found: "Log file \"{}\" not found."
+    success: "Log file \"{}\" retrieved successfully."
+    list_failed: "Failed to list log files."
+    read_failed: "Failed to read log file: {}"
+    saved_to_cache: "Log file saved to: {}"
+    save_failed: "Failed to save log file to cache: {}"
+    terminal_not_supported: "Retrieving log files in terminal is not supported. Please access the \"./logs\" directory directly."
 
 main:
   init:

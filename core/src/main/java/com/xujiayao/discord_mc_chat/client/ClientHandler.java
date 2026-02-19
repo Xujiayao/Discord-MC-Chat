@@ -1,10 +1,17 @@
 package com.xujiayao.discord_mc_chat.client;
 
 import com.xujiayao.discord_mc_chat.Constants;
+import com.xujiayao.discord_mc_chat.commands.CommandAutoCompleter;
+import com.xujiayao.discord_mc_chat.commands.CommandManager;
+import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.AuthResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.ChallengePacket;
+import com.xujiayao.discord_mc_chat.network.packets.CommandAutoCompleteRequestPacket;
+import com.xujiayao.discord_mc_chat.network.packets.CommandAutoCompleteResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.DisconnectPacket;
+import com.xujiayao.discord_mc_chat.network.packets.ExecuteRequestPacket;
+import com.xujiayao.discord_mc_chat.network.packets.ExecuteResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.HandshakePacket;
 import com.xujiayao.discord_mc_chat.network.packets.InfoRequestPacket;
 import com.xujiayao.discord_mc_chat.network.packets.InfoResponsePacket;
@@ -20,6 +27,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
@@ -78,14 +86,58 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 					initialLoginFuture.complete(true);
 				}
 			}
-			case InfoRequestPacket request -> {
+			case InfoRequestPacket p -> {
 				InfoResponsePacket response = NetworkManager.createInfoResponsePacket();
-				response.connectionLatencyMillis = Math.max(0, System.currentTimeMillis() - request.sentAtMillis);
+				response.connectionLatencyMillis = Math.max(0, System.currentTimeMillis() - p.sentAtMillis);
 				ctx.writeAndFlush(response);
 			}
-			case LatencyPongPacket pong -> {
-				long latency = Math.max(0, System.currentTimeMillis() - pong.sentAtMillis);
+			case LatencyPongPacket p -> {
+				long latency = Math.max(0, System.currentTimeMillis() - p.sentAtMillis);
 				client.updateConnectionLatency(latency);
+			}
+			case ExecuteRequestPacket p -> {
+				StringBuilder responseBuilder = new StringBuilder();
+				byte[][] fileDataHolder = new byte[1][];
+				String[] fileNameHolder = new String[1];
+
+				CommandSender captureSender = new CommandSender() {
+					@Override
+					public void reply(String message) {
+						if (!responseBuilder.isEmpty()) {
+							responseBuilder.append("\n");
+						}
+						responseBuilder.append(message);
+					}
+
+					@Override
+					public void replyWithFile(String message, byte[] fileData, String fileName) {
+						reply(message);
+						fileDataHolder[0] = fileData;
+						fileNameHolder[0] = fileName;
+					}
+				};
+
+				try {
+					CommandManager.executeAndWait(captureSender, p.command, p.args)
+							.whenComplete((v, ex) -> {
+								ExecuteResponsePacket response;
+								if (ex != null) {
+									response = new ExecuteResponsePacket(p.requestId, I18nManager.getDmccTranslation("commands.execution_failed", ex.getMessage()));
+								} else if (fileDataHolder[0] != null) {
+									String prefixedFileName = client.getServerName() + "_" + fileNameHolder[0];
+									response = new ExecuteResponsePacket(p.requestId, responseBuilder.toString(), fileDataHolder[0], prefixedFileName);
+								} else {
+									response = new ExecuteResponsePacket(p.requestId, responseBuilder.toString());
+								}
+								ctx.writeAndFlush(response);
+							});
+				} catch (Exception e) {
+					ctx.writeAndFlush(new ExecuteResponsePacket(p.requestId, I18nManager.getDmccTranslation("commands.execution_failed", e.getMessage())));
+				}
+			}
+			case CommandAutoCompleteRequestPacket p -> {
+				List<String> suggestions = CommandAutoCompleter.getSuggestions(p.input);
+				ctx.writeAndFlush(new CommandAutoCompleteResponsePacket(client.getServerName(), suggestions));
 			}
 			case DisconnectPacket p -> {
 				// If we receive a DisconnectPacket, it means the server explicitly rejected us.
@@ -101,7 +153,8 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 				}
 				ctx.close();
 			}
-			case null, default -> LOGGER.warn(I18nManager.getDmccTranslation("client.network.unexpected_packet", packet == null ? "null" : packet.getClass().getSimpleName()));
+			case null, default ->
+					LOGGER.warn(I18nManager.getDmccTranslation("client.network.unexpected_packet", packet == null ? "null" : packet.getClass().getSimpleName()));
 		}
 	}
 
