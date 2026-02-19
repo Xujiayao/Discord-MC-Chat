@@ -87,7 +87,6 @@ commands:
     description: "Retrieve a log file"
     args_desc:
       file: "Log file name"
-    usage: "Usage: log <file>"
     file_not_found: "Log file \"{}\" not found."
     success: "Log file \"{}\" retrieved successfully."
     list_failed: "Failed to list log files."

@@ -57,11 +57,6 @@ public class LogCommand implements Command {
 			return;
 		}
 
-		if (args.length < 1 || args[0].isBlank()) {
-			sender.reply(I18nManager.getDmccTranslation("commands.log.usage"));
-			return;
-		}
-
 		String fileName = args[0];
 
 		byte[] fileData = LogFileUtils.readLogFile(fileName);

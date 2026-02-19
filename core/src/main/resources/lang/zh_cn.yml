@@ -87,7 +87,6 @@ commands:
     description: "获取日志文件"
     args_desc:
       file: "日志文件名"
-    usage: "用法：log <file>"
     file_not_found: "未找到日志文件 \"{}\"。"
     success: "已成功获取日志文件 \"{}\"。"
     list_failed: "列出日志文件失败。"
