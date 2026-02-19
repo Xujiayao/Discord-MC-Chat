@@ -15,6 +15,7 @@ terminal:
 
 commands:
   execution_failed: "Command execution failed: {}"
+  invalid_usage: "Invalid usage. Correct usage: \"{}\""
   help:
     description: "Show a list of available commands"
     help: "Help"
@@ -74,13 +75,13 @@ commands:
   execute:
     description: "Execute a DMCC command on a remote client"
     args_desc:
-      at: "Target server name or \"all\""
+      at: "Target server name or \"all_online_clients\""
       command: "DMCC command to execute"
-    usage: "Usage: execute <at> <command>"
     executing: "Executing \"{}\" on {}..."
     client_offline: "DMCC Client \"{}\" is offline."
     timeout: "Command execution on \"{}\" timed out."
-    invalid_target: "Invalid target DMCC Client: \"{}\""
+    invalid_target: "Invalid target DMCC Client: \"{}\". Available clients: {}"
+    all_online_clients: "all online DMCC clients"
     no_online_clients: "No DMCC clients are online."
   log:
     description: "Retrieve a log file"

@@ -39,7 +39,7 @@ public class TerminalManager {
 			while (!Thread.currentThread().isInterrupted()) {
 				try {
 					if (scanner.hasNextLine()) {
-						String line = scanner.nextLine();
+						String line = scanner.nextLine().trim();
 
 						// Remove leading slash if present
 						if (line.startsWith("/")) {

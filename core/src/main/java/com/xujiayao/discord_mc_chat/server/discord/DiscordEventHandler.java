@@ -78,7 +78,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 
 	/**
 	 * Gets auto-complete choices for the 'at' parameter of the execute command.
-	 * Includes "all_connected" as the first option, followed by configured server names.
+	 * Includes "all_online_clients" as the first option, followed by configured server names.
 	 *
 	 * @param currentValue The current user input for filtering
 	 * @return List of choices
@@ -87,9 +87,9 @@ public class DiscordEventHandler extends ListenerAdapter {
 		List<Command.Choice> choices = new ArrayList<>();
 		String lowerValue = currentValue.toLowerCase();
 
-		// Add "all_connected" as the first option
-		if ("all_connected".contains(lowerValue)) {
-			choices.add(new Command.Choice("all_connected", "all_connected"));
+		// Add "all_online_clients" as the first option
+		if ("all_online_clients".contains(lowerValue)) {
+			choices.add(new Command.Choice("all_online_clients", "all_online_clients"));
 		}
 
 		// Add configured server names (only those online)

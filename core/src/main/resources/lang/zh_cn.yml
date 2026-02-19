@@ -15,6 +15,7 @@ terminal:
 
 commands:
   execution_failed: "命令执行失败：{}"
+  invalid_usage: "用法错误。正确用法：\"{}\""
   help:
     description: "显示可用命令列表"
     help: "帮助"
@@ -74,13 +75,13 @@ commands:
   execute:
     description: "在远程客户端上执行 DMCC 命令"
     args_desc:
-      at: "目标服务器名称或 \"all\""
+      at: "目标服务器名称或 \"all_online_clients\""
       command: "要执行的 DMCC 命令"
-    usage: "用法：execute <at> <command>"
     executing: "正在 {1} 上执行 \"{0}\"..."
     client_offline: "DMCC 客户端 \"{}\" 处于离线状态。"
     timeout: "在 \"{}\" 上执行命令超时。"
-    invalid_target: "无效的目标 DMCC 客户端：\"{}\""
+    invalid_target: "无效的目标 DMCC 客户端：\"{}\"。可用客户端：{}"
+    all_online_clients: "所有在线 DMCC 客户端"
     no_online_clients: "没有在线的 DMCC 客户端。"
   log:
     description: "获取日志文件"

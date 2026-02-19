@@ -144,10 +144,25 @@ public class CommandManager {
 			return;
 		}
 
-		// Validate minimum required arguments instead of exact match
-		// This allows commands like 'execute' to accept variable-length arguments
-		if (args.length < command.args().length) {
-			sender.reply(I18nManager.getDmccTranslation("terminal.unknown_command", (name + " " + String.join(" ", args))));
+		int expectedArgs = command.args().length;
+
+		// Too few arguments: show the command's own usage
+		if (args.length < expectedArgs) {
+			StringBuilder usage = new StringBuilder(name);
+			for (Command.CommandArgument arg : command.args()) {
+				usage.append(" <").append(arg.name()).append(">");
+			}
+			sender.reply(I18nManager.getDmccTranslation("commands.invalid_usage", usage.toString()));
+			return;
+		}
+
+		// Too many arguments: reject (except for commands that accept variable args)
+		if (args.length > expectedArgs && !command.acceptsExtraArgs()) {
+			StringBuilder usage = new StringBuilder(name);
+			for (Command.CommandArgument arg : command.args()) {
+				usage.append(" <").append(arg.name()).append(">");
+			}
+			sender.reply(I18nManager.getDmccTranslation("commands.invalid_usage", usage.toString()));
 			return;
 		}
 

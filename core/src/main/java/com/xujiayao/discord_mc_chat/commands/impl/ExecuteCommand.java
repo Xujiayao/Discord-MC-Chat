@@ -78,17 +78,21 @@ public class ExecuteCommand implements Command {
 	}
 
 	@Override
+	public boolean acceptsExtraArgs() {
+		// The "command" argument from terminal parsing may contain extra tokens
+		// that were not split because TerminalManager treats everything after <at> as one arg.
+		// However, from Discord slash commands, args are always exactly [at, command].
+		// We return true as a safety measure in case of edge cases.
+		return true;
+	}
+
+	@Override
 	public String description() {
 		return I18nManager.getDmccTranslation("commands.execute.description");
 	}
 
 	@Override
 	public void execute(CommandSender sender, String... args) {
-		if (args.length < 2) {
-			sender.reply(I18nManager.getDmccTranslation("commands.execute.usage"));
-			return;
-		}
-
 		String target = args[0];
 		String command = args[1];
 
@@ -104,15 +108,17 @@ public class ExecuteCommand implements Command {
 
 		List<String> targets = new ArrayList<>();
 		List<String> allConnected = NetworkManager.getConnectedClientNames();
-		if ("all_connected".equalsIgnoreCase(target)) {
+		String targetName;
+		if ("all_online_clients".equalsIgnoreCase(target)) {
 			if (allConnected.isEmpty()) {
 				sender.reply(I18nManager.getDmccTranslation("commands.execute.no_online_clients"));
 				return;
 			}
 			targets.addAll(allConnected);
+			targetName = I18nManager.getDmccTranslation("commands.execute.all_online_clients");
 		} else {
 			if (!isValidTarget(target)) {
-				sender.reply(I18nManager.getDmccTranslation("commands.execute.invalid_target", target));
+				sender.reply(I18nManager.getDmccTranslation("commands.execute.invalid_target", target, allConnected));
 				return;
 			}
 			if (!allConnected.contains(target)) {
@@ -120,10 +126,11 @@ public class ExecuteCommand implements Command {
 				return;
 			}
 			targets.add(target);
+			targetName = target;
 		}
 
 		// Inform the sender that execution is in progress
-		sender.reply(I18nManager.getDmccTranslation("commands.execute.executing", command, target));
+		sender.reply(I18nManager.getDmccTranslation("commands.execute.executing", command, targetName));
 
 		for (String serverName : targets) {
 			if (!NetworkManager.isClientConnected(serverName)) {
@@ -157,7 +164,7 @@ public class ExecuteCommand implements Command {
 				} else {
 					// Terminal: send result directly
 					if (response.fileData != null && response.fileName != null) {
-						sender.replyWithFile(response.response, response.fileData, response.fileName);
+						sender.replyWithFile("[" + serverName + "] " + response.response, response.fileData, response.fileName);
 					} else {
 						String[] lines = response.response.split("\n");
 						for (String line : lines) {

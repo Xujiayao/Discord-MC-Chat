@@ -29,6 +29,18 @@ public interface Command {
 	String description();
 
 	/**
+	 * Whether this command accepts more arguments than defined by {@link #args()}.
+	 * <p>
+	 * Override and return true for commands that handle variable-length arguments
+	 * internally (e.g., execute, whose "command" arg may itself contain spaces).
+	 *
+	 * @return true if extra arguments are allowed, false otherwise.
+	 */
+	default boolean acceptsExtraArgs() {
+		return false;
+	}
+
+	/**
 	 * Executes the command.
 	 *
 	 * @param sender The entity that sent the command.
