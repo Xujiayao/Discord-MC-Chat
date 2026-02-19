@@ -33,6 +33,8 @@ multi_server:
 #     Player or executor can use all the commands, including commands related to server management.
 command_permission_levels:
   help: 0  # 可用命令根据用户的权限等级动态显示
+  info: 0
+  log: 4
   reload: 4
 
 # 统计数据收集设置
