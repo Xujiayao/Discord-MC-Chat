@@ -36,6 +36,7 @@ command_permission_levels:
   info: 0
   log: 4
   reload: 4
+  stats: 0
 
 # 统计数据收集设置
 # 收集匿名的使用数据以帮助改进 DMCC

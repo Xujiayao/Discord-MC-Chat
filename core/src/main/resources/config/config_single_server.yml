@@ -145,6 +145,7 @@ command_permission_levels:
   info: 0
   log: 4
   reload: 4
+  stats: 0
 
 # 检查更新设置
 check_for_updates:
