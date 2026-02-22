@@ -106,6 +106,10 @@ public class DiscordManager {
 							.addOption(OptionType.STRING, "at", I18nManager.getDmccTranslation("commands.execute.args_desc.at"), true, true)
 							.addOption(OptionType.STRING, "command", I18nManager.getDmccTranslation("commands.execute.args_desc.command"), true, true));
 					commands.add(Commands.slash("shutdown", I18nManager.getDmccTranslation("commands.shutdown.description")));
+				} else {
+					commands.add(Commands.slash("stats", I18nManager.getDmccTranslation("commands.stats.description"))
+							.addOption(OptionType.STRING, "type", I18nManager.getDmccTranslation("commands.stats.args_desc.type"), true, true)
+							.addOption(OptionType.STRING, "stat", I18nManager.getDmccTranslation("commands.stats.args_desc.stat"), true, true));
 				}
 
 				CompletableFuture<List<Command>> updateFuture = jda.updateCommands().addCommands(commands).submit();

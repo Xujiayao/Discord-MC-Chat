@@ -94,6 +94,17 @@ commands:
     saved_to_cache: "Log file saved to: {}"
     save_failed: "Failed to save log file to cache: {}"
     terminal_not_supported: "Retrieving log files in terminal is not supported. Please access the \"./logs\" directory directly."
+  stats:
+    description: "View Minecraft statistics"
+    args_desc:
+      type: "Stat type"
+      stat: "Stat name"
+    server_not_ready: "Minecraft Server is not ready yet."
+    dir_not_found: "Stats directory not found."
+    read_failed: "Failed to read stats: {}"
+    no_stats: "No stats found for {0} {1}."
+    stats: "Stats"
+    colon: ": "
 
 main:
   init:

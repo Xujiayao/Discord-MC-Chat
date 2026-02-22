@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.server.discord;
 
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
+import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.utils.LogFileUtils;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
@@ -46,6 +47,11 @@ public class DiscordEventHandler extends ListenerAdapter {
 				String file = event.getOption("file", OptionMapping::getAsString);
 				CommandManager.execute(new JdaCommandSender(event), name, file);
 			}
+			case "stats" -> {
+				String type = event.getOption("type", OptionMapping::getAsString);
+				String stat = event.getOption("stat", OptionMapping::getAsString);
+				CommandManager.execute(new JdaCommandSender(event), name, type, stat);
+			}
 			default -> CommandManager.execute(new JdaCommandSender(event), name);
 		}
 	}
@@ -69,6 +75,14 @@ public class DiscordEventHandler extends ListenerAdapter {
 			case "log" -> {
 				if ("file".equals(focusedOption)) {
 					choices = getLogFileChoices(currentValue);
+				}
+			}
+			case "stats" -> {
+				if ("type".equals(focusedOption)) {
+					choices = getStatsTypeChoices(currentValue);
+				} else if ("stat".equals(focusedOption)) {
+					String type = event.getOption("type", OptionMapping::getAsString);
+					choices = getStatsStatChoices(type, currentValue);
 				}
 			}
 		}
@@ -142,6 +156,43 @@ public class DiscordEventHandler extends ListenerAdapter {
 				.filter(f -> f.toLowerCase().contains(lowerValue))
 				.limit(25)
 				.map(f -> new Command.Choice(f, f))
+				.collect(Collectors.toList());
+	}
+
+	/**
+	 * Gets auto-complete choices for the 'type' parameter of the stats command.
+	 *
+	 * @param currentValue The current user input for filtering
+	 * @return List of choices
+	 */
+	private List<Command.Choice> getStatsTypeChoices(String currentValue) {
+		StatsCommand.StatsProvider provider = StatsCommand.getProvider();
+		if (provider == null) return List.of();
+
+		String lowerValue = currentValue.toLowerCase();
+		return provider.getStatTypes().stream()
+				.filter(t -> t.toLowerCase().contains(lowerValue))
+				.limit(25)
+				.map(t -> new Command.Choice(t, t))
+				.collect(Collectors.toList());
+	}
+
+	/**
+	 * Gets auto-complete choices for the 'stat' parameter of the stats command.
+	 *
+	 * @param type         The selected stat type
+	 * @param currentValue The current user input for filtering
+	 * @return List of choices
+	 */
+	private List<Command.Choice> getStatsStatChoices(String type, String currentValue) {
+		StatsCommand.StatsProvider provider = StatsCommand.getProvider();
+		if (provider == null || type == null || type.isBlank()) return List.of();
+
+		String lowerValue = currentValue.toLowerCase();
+		return provider.getStatNames(type).stream()
+				.filter(s -> s.toLowerCase().contains(lowerValue))
+				.limit(25)
+				.map(s -> new Command.Choice(s, s))
 				.collect(Collectors.toList());
 	}
 

@@ -6,6 +6,7 @@ import com.xujiayao.discord_mc_chat.commands.impl.InfoCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.LogCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.ReloadCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.ShutdownCommand;
+import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
@@ -46,6 +47,8 @@ public class CommandManager {
 		if ("standalone".equals(ModeManager.getMode())) {
 			register(new ExecuteCommand());
 			register(new ShutdownCommand());
+		} else {
+			register(new StatsCommand());
 		}
 	}
 
@@ -75,15 +78,6 @@ public class CommandManager {
 	 */
 	public static Collection<Command> getCommands() {
 		return new ArrayList<>(COMMANDS.values());
-	}
-
-	/**
-	 * Get all registered command names.
-	 *
-	 * @return A collection of registered command names
-	 */
-	public static Collection<String> getCommandNames() {
-		return new ArrayList<>(COMMANDS.keySet());
 	}
 
 	/**

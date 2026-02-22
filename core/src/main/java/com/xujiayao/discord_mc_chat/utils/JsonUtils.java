@@ -1,12 +1,17 @@
 package com.xujiayao.discord_mc_chat.utils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 
+import static com.xujiayao.discord_mc_chat.Constants.JSON_MAPPER;
 import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
 
 /**
@@ -52,5 +57,25 @@ public class JsonUtils {
 	public static Map<String, String> toStringMap(InputStream inputStream) throws IOException {
 		return YAML_MAPPER.readValue(inputStream, new TypeReference<>() {
 		});
+	}
+
+	/**
+	 * Reads a specific statistic from a player's stats JSON file.
+	 *
+	 * @param path The path to the JSON file
+	 * @param type The stat type (e.g., "minecraft:custom")
+	 * @param stat The stat name (e.g., "minecraft:deaths")
+	 * @return The stat value, or 0 if not found
+	 */
+	public static int getStat(Path path, String type, String stat) {
+		try (Reader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
+			JsonNode root = JSON_MAPPER.readTree(reader);
+			JsonNode typeNode = root.path("stats").path(type);
+			if (!typeNode.isMissingNode() && typeNode.has(stat)) {
+				return typeNode.path(stat).asInt();
+			}
+		} catch (Exception ignored) {
+		}
+		return 0;
 	}
 }

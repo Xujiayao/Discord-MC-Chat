@@ -94,6 +94,17 @@ commands:
     saved_to_cache: "日志文件已保存到：{}"
     save_failed: "保存日志文件到缓存失败：{}"
     terminal_not_supported: "在终端中获取日志文件不受支持。请直接访问 \"./logs\" 目录。"
+  stats:
+    description: "查看 Minecraft 统计数据"
+    args_desc:
+      type: "统计数据类型"
+      stat: "统计数据名称"
+    server_not_ready: "Minecraft 服务器尚未准备就绪。"
+    dir_not_found: "未找到统计数据目录。"
+    read_failed: "读取统计数据失败：{}"
+    no_stats: "未找到关于 {0} {1} 的统计数据。"
+    stats: "统计数据"
+    colon: "："
 
 main:
   init:

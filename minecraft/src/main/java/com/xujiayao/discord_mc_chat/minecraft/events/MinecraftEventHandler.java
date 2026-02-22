@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.minecraft.events;
 
 import com.xujiayao.discord_mc_chat.DMCC;
+import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.minecraft.commands.MinecraftCommands;
 import com.xujiayao.discord_mc_chat.minecraft.translations.TranslationManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
@@ -11,15 +12,26 @@ import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import net.minecraft.advancements.DisplayInfo;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerTickRateManager;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.NameAndId;
+import net.minecraft.stats.StatType;
 import net.minecraft.util.TimeUtil;
 import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.storage.LevelResource;
 
 import java.lang.management.ManagementFactory;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -34,6 +46,51 @@ public class MinecraftEventHandler {
 	 */
 	public static void init() {
 		EventManager.register(MinecraftEvents.ServerStarted.class, event -> {
+			StatsCommand.setProvider(new StatsCommand.StatsProvider() {
+				@Override
+				public void saveAll() {
+					event.minecraftServer().getPlayerList().saveAll();
+				}
+
+				@Override
+				public Path getStatsDirectory() {
+					return event.minecraftServer().getWorldPath(LevelResource.PLAYER_STATS_DIR);
+				}
+
+				@Override
+				public String getPlayerName(UUID uuid) {
+					return event.minecraftServer().services().nameToIdCache()
+							.get(uuid)
+							.map(NameAndId::name)
+							.orElse(null);
+				}
+
+				@Override
+				public List<String> getStatTypes() {
+					List<String> types = new ArrayList<>();
+					for (ResourceLocation loc : BuiltInRegistries.STAT_TYPE.keySet()) {
+						types.add(loc.toString());
+					}
+					return types;
+				}
+
+				@Override
+				public List<String> getStatNames(String typeStr) {
+					List<String> stats = new ArrayList<>();
+					try {
+						ResourceLocation typeLoc = ResourceLocation.parse(typeStr);
+						Optional<Holder.Reference<StatType<?>>> optional = BuiltInRegistries.STAT_TYPE.get(typeLoc);
+						if (optional.isPresent()) {
+							for (ResourceLocation loc : optional.get().value().getRegistry().keySet()) {
+								stats.add(loc.toString());
+							}
+						}
+					} catch (Exception ignored) {
+					}
+					return stats;
+				}
+			});
+
 			Map<String, String> placeholders = Map.of();
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SERVER_STARTED, placeholders));
 
