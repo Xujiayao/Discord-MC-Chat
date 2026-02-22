@@ -122,6 +122,16 @@ public class StatsCommand implements Command {
 		List<Map.Entry<String, Integer>> sorted = new ArrayList<>(leaderboard.entrySet());
 		sorted.sort((e1, e2) -> e2.getValue().compareTo(e1.getValue()));
 
+		int maxWidth = 4;
+		if (!sorted.isEmpty()) {
+			int maxValLen = String.valueOf(sorted.getFirst().getValue()).length();
+			if (maxValLen > maxWidth) {
+				maxWidth = maxValLen;
+			}
+		}
+
+		String format = "%-" + maxWidth + "d %s";
+
 		StringBuilder sb = new StringBuilder();
 		String colon = I18nManager.getDmccTranslation("commands.stats.colon");
 
@@ -131,7 +141,7 @@ public class StatsCommand implements Command {
 
 		for (int i = 0; i < sorted.size(); i++) {
 			Map.Entry<String, Integer> entry = sorted.get(i);
-			sb.append(i + 1).append(". ").append(entry.getKey()).append(": ").append(entry.getValue());
+			sb.append(String.format(format, entry.getValue(), entry.getKey()));
 			if (i < sorted.size() - 1) {
 				sb.append("\n");
 			}
