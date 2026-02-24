@@ -1,4 +1,6 @@
-package com.xujiayao.discord_mc_chat.network.packets;
+package com.xujiayao.discord_mc_chat.network.packets.auth;
+
+import com.xujiayao.discord_mc_chat.network.packets.Packet;
 
 /**
  * Sent by client to initiate connection.

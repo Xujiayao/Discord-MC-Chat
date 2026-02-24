@@ -1,4 +1,6 @@
-package com.xujiayao.discord_mc_chat.network.packets;
+package com.xujiayao.discord_mc_chat.network.packets.commands;
+
+import com.xujiayao.discord_mc_chat.network.packets.Packet;
 
 /**
  * Sent by Client to Server with the result of a command execution.

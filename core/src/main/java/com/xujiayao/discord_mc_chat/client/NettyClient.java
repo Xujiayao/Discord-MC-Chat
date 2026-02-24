@@ -1,7 +1,7 @@
 package com.xujiayao.discord_mc_chat.client;
 
-import com.xujiayao.discord_mc_chat.network.packets.LatencyPingPacket;
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
+import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPingPacket;
 import com.xujiayao.discord_mc_chat.network.serialization.JavaSerializerDecoder;
 import com.xujiayao.discord_mc_chat.network.serialization.JavaSerializerEncoder;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;

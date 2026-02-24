@@ -1,10 +1,10 @@
 package com.xujiayao.discord_mc_chat.network;
 
 import com.xujiayao.discord_mc_chat.client.ClientDMCC;
-import com.xujiayao.discord_mc_chat.network.packets.CommandAutoCompleteRequestPacket;
-import com.xujiayao.discord_mc_chat.network.packets.InfoRequestPacket;
-import com.xujiayao.discord_mc_chat.network.packets.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
+import com.xujiayao.discord_mc_chat.network.packets.commands.CommandAutoCompleteRequestPacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.InfoRequestPacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import io.netty.channel.Channel;
 

@@ -6,7 +6,7 @@ import com.xujiayao.discord_mc_chat.client.ClientDMCC;
 import com.xujiayao.discord_mc_chat.commands.Command;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
-import com.xujiayao.discord_mc_chat.network.packets.InfoResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager.DiscordStatusInfo;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
