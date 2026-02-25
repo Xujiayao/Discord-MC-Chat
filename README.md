@@ -134,8 +134,6 @@ DMCC 采用**基于数值 OP 等级的细粒度权限模型**。每个命令在 
 | `reload`                 | `4`      | ✅                          | ✅                    | ✅                 | 通过 `shutdown()` + `init()` 实现。                                                                     |
 | `log <file>`             | `4`      | ✅                          | ✅                    | ✅                 | 获取自身实例的日志文件。Discord 独占命令（结果为文件附件）。支持 `.log` 与 `.log.gz`，自动补全可用文件名。可通过 `execute` 命令获得 `client` 的日志。 |
 | `execute <at> <command>` | `0`      | ❌                          | ❌                    | ✅                 | 仅 `standalone`（Server）存在。`at` 可为具体服务器名称或 `all_online_clients`。其本身的权限等级为 0，实际鉴权委托给目标客户端上的具体命令。      |
-| `start <server>`         | `4`      | ❌                          | ❌                    | ✅                 | 启动 `config.yml` 中定义的子 MC 服务器（执行其 `start_command`）。`start_command` 支持系统命令或 URL。                     |
-| `stop <server>`          | `4`      | ❌                          | ❌                    | ✅                 | 向目标 DMCC 客户端发送 `ServerStopRequestPacket`，客户端收到后执行 Minecraft `/stop` 命令。目标客户端必须在线。                  |
 | `shutdown`               | `4`      | ❌                          | ❌                    | ✅                 | 关闭 `standalone` 应用程序。                                                                              |
 
 **备注：**
@@ -151,7 +149,6 @@ DMCC 采用**基于数值 OP 等级的细粒度权限模型**。每个命令在 
 - `execute <command>`: 向所有在线客户端发送 `CommandAutoCompleteRequestPacket` 实时收集建议。
 - `log <file>`: 列出可用日志文件。
 - `stats <type>` / `stats <stat>`: 根据指定的统计类型自动补全可用的统计数据。
-- `start <server>` / `stop <server>`: 列出 `config.yml` 中配置的所有服务器名称。
 
 ## 6. 权限管理模型
 
