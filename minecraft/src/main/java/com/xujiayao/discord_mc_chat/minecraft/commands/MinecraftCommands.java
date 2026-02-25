@@ -32,19 +32,19 @@ public class MinecraftCommands {
 	 */
 	public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
 		var root = literal("dmcc")
-				.requires(source -> source.hasPermission(ConfigManager.getInt("command_permission_levels.help", 0)))
+				.requires(source -> source.hasPermission(ConfigManager.getInt("command_permission_levels.help", -1)))
 				.executes(ctx -> {
 					CommandManager.execute(new MinecraftCommandSender(ctx.getSource()), "help");
 					return 1;
 				});
 		var help = literal("help")
-				.requires(source -> source.hasPermission(ConfigManager.getInt("command_permission_levels.help", 0)))
+				.requires(source -> source.hasPermission(ConfigManager.getInt("command_permission_levels.help", -1)))
 				.executes(ctx -> {
 					CommandManager.execute(new MinecraftCommandSender(ctx.getSource()), "help");
 					return 1;
 				});
 		var info = literal("info")
-				.requires(source -> source.hasPermission(ConfigManager.getInt("command_permission_levels.info", 0)))
+				.requires(source -> source.hasPermission(ConfigManager.getInt("command_permission_levels.info", -1)))
 				.executes(ctx -> {
 					CommandManager.execute(new MinecraftCommandSender(ctx.getSource()), "info");
 					return 1;
@@ -56,7 +56,7 @@ public class MinecraftCommands {
 					return 1;
 				});
 		var stats = literal("stats")
-				.requires(source -> source.hasPermission(ConfigManager.getInt("command_permission_levels.stats", 0)))
+				.requires(source -> source.hasPermission(ConfigManager.getInt("command_permission_levels.stats", -1)))
 				.then(argument("type", ResourceLocationArgument.id())
 						.suggests((ctx, builder) -> SharedSuggestionProvider.suggestResource(
 								BuiltInRegistries.STAT_TYPE.keySet(), builder))
