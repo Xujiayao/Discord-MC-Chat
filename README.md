@@ -61,7 +61,8 @@ DMCC 所有运行模式都基于一个统一的通信模型，该模型包含两
    Minecraft 服务器提供的开箱即用的解决方案。
 2. **多服务器-客户端模式 (`multi_server_client`)**: **只启动一个客户端**，此客户端会连接到一个外部独立运行的服务端。用于将多个
    Minecraft 服务器连接到一个中央服务端。
-3. **独立模式 (`standalone`)**: **只启动一个服务端**，监听网络端口，等待一个或多个外部客户端连接。作为多服务器架构的中央"大脑"而存在。
+3. **独立模式 (`standalone`)**: **只启动一个服务端**，监听网络端口，等待一个或多个外部客户端连接。作为多服务器架构的中央"
+   大脑"而存在。
 
 ### 3.3 配置文件策略
 
@@ -78,9 +79,12 @@ DMCC 所有运行模式都基于一个统一的通信模型，该模型包含两
 1. **客户端发起连接**: `Client` 连接成功后，发送 `HandshakePacket`，包含其在 `config.yml` 中配置的 `serverName`、自身的
    DMCC 版本号和 Minecraft 版本号。
 2. **服务端验证与质询**: `Server` 收到 `HandshakePacket` 后：
-   a. **模式检查**: 若 `Server` 处于 `single_server` 模式，且 `serverName` 不为 `Internal`，则返回 `DisconnectPacket`（包含原因）并断开连接。
-   b. **白名单检查**: 若 `Server` 处于 `standalone` 模式，检查 `serverName` 是否在 `config.yml` 的 `multi_server.servers` 列表中。如果不在，返回 `DisconnectPacket`（包含原因）并断开连接。
-   c. **版本检查**: 对比 `Client` 的 DMCC 版本和 Minecraft 版本与 `Server` 端的期望值。如果不兼容，返回 `DisconnectPacket`（包含原因）并断开连接。
+   a. **模式检查**: 若 `Server` 处于 `single_server` 模式，且 `serverName` 不为 `Internal`，则返回 `DisconnectPacket`
+   （包含原因）并断开连接。
+   b. **白名单检查**: 若 `Server` 处于 `standalone` 模式，检查 `serverName` 是否在 `config.yml` 的 `multi_server.servers`
+   列表中。如果不在，返回 `DisconnectPacket`（包含原因）并断开连接。
+   c. **版本检查**: 对比 `Client` 的 DMCC 版本和 Minecraft 版本与 `Server` 端的期望值。如果不兼容，返回 `DisconnectPacket`
+   （包含原因）并断开连接。
    d. **生成质询**: 如果通过，`Server` 生成一个唯一的、一次性的随机字符串作为 `nonce`，并暂存于内存中。
    e. **发送质询**: `Server` 向 `Client` 发送 `ChallengePacket`，包含该随机 `salt`。
 3. **客户端计算响应**: `Client` 收到 `ChallengePacket` 后：
@@ -91,19 +95,27 @@ DMCC 所有运行模式都基于一个统一的通信模型，该模型包含两
    a. 取出内存中为该 `Client` 暂存的 `nonce`。
    b. 以同样的方式计算 `SHA-256(nonce + shared_secret)`。
    c. **比对哈希**: 如果不一致，返回 `DisconnectPacket`（包含原因）并断开连接。
-5. **握手成功**: 如果哈希一致，认证通过。`Server` 发送 `LoginSuccessPacket`，其中包含服务端所配置的 `language`，作为全局同步的语言，客户端收到后会重载语言。
+5. **握手成功**: 如果哈希一致，认证通过。`Server` 发送 `LoginSuccessPacket`，其中包含服务端所配置的 `language`
+   ，作为全局同步的语言，客户端收到后会重载语言。
 
 ## 5. 命令系统设计
 
 ### 5.1 权限模型
 
-DMCC 采用**基于数值 OP 等级的细粒度权限模型**。每个命令在 `config.yml` 中都有一个独立的 `command_permission_levels` 配置项，映射到 Minecraft 原生的 OP 等级 (0-4)。
+DMCC 采用**基于数值 OP 等级的细粒度权限模型**。每个命令在 `config.yml` 中都有一个独立的 `command_permission_levels`
+配置项，映射到 Minecraft 原生的 OP 等级 (0-4)。
 
-对于 Minecraft 游戏内命令（通过 `/dmcc` 执行），使用 Brigadier 的 `.requires(source -> source.hasPermission(level))` 进行原生权限检查。
+对于 Minecraft 游戏内命令（通过 `/dmcc` 执行），使用 Brigadier 的 `.requires(source -> source.hasPermission(level))`
+进行原生权限检查。
 
 对于 Discord 斜杠命令，权限通过已绑定的 Minecraft 账户的 OP 等级来判定。
 
+**关于 `execute` 命令的特殊说明**：`execute` 命令本身的权限等级设为 `0`
+，因为它仅作为转发中枢，实际的权限校验将根据执行者的身份，委托给远程客户端上的具体命令处理（例如：允许任何人执行
+`/execute SMP help`，但拒绝无权限者执行 `/execute SMP reload`。自动补全提供的命令也应根据执行者的权限动态调整）。
+
 **OP 等级参考:**
+
 - Level 0 (normal): 无特殊权限。
 - Level 1 (moderator): 可以绕过出生点保护。
 - Level 2 (gamemaster): 可以使用更多命令和命令方块。
@@ -114,31 +126,36 @@ DMCC 采用**基于数值 OP 等级的细粒度权限模型**。每个命令在 
 
 ### 5.2 命令列表
 
-| 命令                            | 默认 OP 等级 | 模组运行 `multi_server_client` | 模组运行 `single_server` | 独立运行 `standalone` | 说明与行为差异                                                                                            |
-|:------------------------------|:---------|:---------------------------|:---------------------|:------------------|:---------------------------------------------------------------------------------------------------|
-| `help`                        | `0`      | ✅                          | ✅                    | ✅                 | 动态显示当前环境可用且有权执行的命令。可用命令根据用户的权限等级动态显示。                                                              |
-| `info`                        | `0`      | ✅                          | ✅                    | ✅                 | 在 `client` 执行只显示自身状态。在 `server` 端执行则显示全局信息（包含所有在线客户端和 Discord 连接状态）。                               |
-| `reload`                      | `4`      | ✅                          | ✅                    | ✅                 | 通过 `shutdown()` + `init()` 实现。                                                                     |
-| `log <file>`                  | `4`      | ✅                          | ✅                    | ✅                 | 获取自身实例的日志文件。Discord 独占命令（结果为文件附件）。支持 `.log` 与 `.log.gz`，自动补全可用文件名。可通过 `execute` 命令获得 `client` 的日志。 |
-| `execute <at> <dmcc_command>` | `4`      | ❌                          | ❌                    | ✅                 | 仅 `standalone`（Server）存在。`at` 可为具体服务器名称或 `all_online_clients`（向所有在线客户端广播，不包含自身 standalone）。        |
-| `start <server>`              | `4`      | ❌                          | ❌                    | ✅                 | 启动 `config.yml` 中定义的子 MC 服务器（执行其 `start_command`）。`start_command` 支持系统命令或 URL。                     |
-| `stop <server>`               | `4`      | ❌                          | ❌                    | ✅                 | 向目标 DMCC 客户端发送 `ServerStopRequestPacket`，客户端收到后执行 Minecraft `/stop` 命令。目标客户端必须在线。                  |
-| `shutdown`                    | `4`      | ❌                          | ❌                    | ✅                 | 关闭 `standalone` 应用程序。                                                                              |
+| 命令                       | 默认 OP 等级 | 模组运行 `multi_server_client` | 模组运行 `single_server` | 独立运行 `standalone` | 说明与行为差异                                                                                            |
+|:-------------------------|:---------|:---------------------------|:---------------------|:------------------|:---------------------------------------------------------------------------------------------------|
+| `help`                   | `0`      | ✅                          | ✅                    | ✅                 | 动态显示当前环境可用且有权执行的命令。可用命令根据用户的权限等级动态显示。                                                              |
+| `info`                   | `0`      | ✅                          | ✅                    | ✅                 | 在 `client` 执行只显示自身状态。在 `server` 端执行则显示全局信息（包含所有在线客户端和 Discord 连接状态）。                               |
+| `stats <type> <stat>`    | `0`      | ✅                          | ✅                    | ❌                 | 查看 Minecraft 统计数据。支持自动补全可用的统计数据类型与名称。                                                              |
+| `reload`                 | `4`      | ✅                          | ✅                    | ✅                 | 通过 `shutdown()` + `init()` 实现。                                                                     |
+| `log <file>`             | `4`      | ✅                          | ✅                    | ✅                 | 获取自身实例的日志文件。Discord 独占命令（结果为文件附件）。支持 `.log` 与 `.log.gz`，自动补全可用文件名。可通过 `execute` 命令获得 `client` 的日志。 |
+| `execute <at> <command>` | `0`      | ❌                          | ❌                    | ✅                 | 仅 `standalone`（Server）存在。`at` 可为具体服务器名称或 `all_online_clients`。其本身的权限等级为 0，实际鉴权委托给目标客户端上的具体命令。      |
+| `start <server>`         | `4`      | ❌                          | ❌                    | ✅                 | 启动 `config.yml` 中定义的子 MC 服务器（执行其 `start_command`）。`start_command` 支持系统命令或 URL。                     |
+| `stop <server>`          | `4`      | ❌                          | ❌                    | ✅                 | 向目标 DMCC 客户端发送 `ServerStopRequestPacket`，客户端收到后执行 Minecraft `/stop` 命令。目标客户端必须在线。                  |
+| `shutdown`               | `4`      | ❌                          | ❌                    | ✅                 | 关闭 `standalone` 应用程序。                                                                              |
 
 **备注：**
+
 - `log <file>` 在 `LocalCommandSender`（终端和游戏内）的帮助列表中不显示，但仍可通过 `execute` 远程获取客户端日志。
 - `execute` 命令的 `command` 参数在终端解析时，`<at>` 之后的所有内容视为单一参数。
 
 ### 5.3 Discord 斜杠命令自动补全
 
 所有接受参数的 Discord 斜杠命令均支持自动补全：
+
 - `execute <at>`: 建议 `all_online_clients` 和所有在线客户端名称。
 - `execute <command>`: 向所有在线客户端发送 `CommandAutoCompleteRequestPacket` 实时收集建议。
 - `log <file>`: 列出可用日志文件。
+- `stats <type>` / `stats <stat>`: 根据指定的统计类型自动补全可用的统计数据。
 - `start <server>` / `stop <server>`: 列出 `config.yml` 中配置的所有服务器名称。
 
 ## 6. 权限管理模型
 
-1. **原生数值模型 (config → Minecraft/DMCC)**: 每个 DMCC 命令在 `command_permission_levels` 中配置一个 0-4 的 OP 等级数值。游戏内通过 Brigadier 原生权限检查，Discord 端通过绑定账户的 OP 等级判定。
+1. **原生数值模型 (config → Minecraft/DMCC)**: 每个 DMCC 命令在 `command_permission_levels` 中配置一个 0-4 的 OP
+   等级数值。游戏内通过 Brigadier 原生权限检查，Discord 端通过绑定账户的 OP 等级判定，Standalone 控制台直接为最高等级。
 2. **角色同步模型 (Discord → Minecraft)**: 可选功能。可配置 Discord 角色到游戏内 OP 等级的映射。`Server` 组件会周期性检查并
    **通过向 `Client` 发送指令**来自动授予/撤销玩家的游戏内 OP 权限。
