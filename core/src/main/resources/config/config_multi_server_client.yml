@@ -20,6 +20,10 @@ multi_server:
     shared_secret: "your_shared_secret_here"
 
 # DMCC 命令权限设置
+# 配置要求执行命令的最低 OP 等级。
+# 特殊值：
+#   Level -1
+#     允许任何人执行（包括未绑定账号的 Discord 游客）
 # OP 等级对应的官方 Minecraft 权限级别：
 #   Level 0 (normal)
 #     Player has no special permissions.
@@ -32,11 +36,12 @@ multi_server:
 #   Level 4 (owner)
 #     Player or executor can use all the commands, including commands related to server management.
 command_permission_levels:
-  help: 0  # 可用命令根据用户的权限等级动态显示
-  info: 0
+  help: -1
+  info: -1
   log: 4
   reload: 4
-  stats: 0
+  stats: -1
+  whitelist: 0
 
 # 统计数据收集设置
 # 收集匿名的使用数据以帮助改进 DMCC

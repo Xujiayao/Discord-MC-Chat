@@ -28,7 +28,7 @@ discord:
       - "everyone"
       - "users"
       - "roles"
-    # 玩家聊天消息 Webhook 设置
+    # 玩家聊天消�� Webhook 设置
     players:
       enable_fake_user_style: true  # 是否使用伪用户样式的 Webhook 发送玩家聊天消息
       avatar_url: "https://mc-heads.net/avatar/{player_name}.png"
@@ -102,26 +102,23 @@ voice_channels_updating:
 # 账户绑定设置
 # 强制启用
 account_linking:
-  # Discord 用户的 DMCC 命令权限是根据其已绑定的 Minecraft 账户的 OP 等级来决定的
-  role_op_sync:
-    # 根据用户的 Discord 角色，来自动地为他们在游戏内授予或撤销 OP 权限。
-    sync_op_level_based_on_discord_roles: true
+  # 权限映射与同步：将 Discord 的身份映射为 Minecraft 的 OP 等级。
+  # 这个 OP 等级将被用于决定该用户是否有权执行某些 DMCC 命令（包括 execute 的委托鉴权）。
+  op_sync:
+    # 开启后，DMCC 还会自动在游戏内赋予/撤销已绑定玩家实际的 OP 权限。
+    sync_op_level_based_on_discord: true
+    # 基于特定用户的映射（优先级最高）。
+    user_mappings:
+      - user: "xujiayao"
+        op_level: 4
+    # 基于身份组的映射。若用户有多个身份组，取映射的最高 OP 等级。
     role_mappings:
-      # 示例：任何拥有 "Admins" Discord 角色的已链接玩家，都将被 DMCC 自动设置为 3 级 OP。
-      # 同时，他们也会自动成为等级 4 的 DMCC 管理员。
-      # OP 等级对应的官方 Minecraft 权限级别：
-      #   Level 0 (normal)
-      #     Player has no special permissions.
-      #   Level 1 (moderator)
-      #     Player can bypass spawn protection.
-      #   Level 2 (gamemaster)
-      #     Player or executor can use more commands and player can use command blocks.
-      #   Level 3 (admin)
-      #     Player or executor can use commands related to multiplayer management.
-      #   Level 4 (owner)
-      #     Player or executor can use all the commands, including commands related to server management.
-      - role_name: "Admins"
+      # 示例 1：拥有 "Admins" 角色的用户将被视为 OP 3。
+      - role: "Admins"
         op_level: 3
+      # 示例 2：可将基础认证角色映射为 OP 0，使其有权执行无需特殊权限的 DMCC 命令（如委托执行白名单）。
+      - role: "Players"
+        op_level: 0
   use_role_colors_in_chat: true
   discord_mention_notifications:
     enable: true
@@ -129,6 +126,10 @@ account_linking:
   discord_user_avatar_for_webhooks: false
 
 # DMCC 命令权限设置
+# 配置要求执行命令的最低 OP 等级。
+# 特殊值：
+#   Level -1
+#     允许任何人执行（包括未绑定账号的 Discord 游客）
 # OP 等级对应的官方 Minecraft 权限级别：
 #   Level 0 (normal)
 #     Player has no special permissions.
@@ -141,11 +142,12 @@ account_linking:
 #   Level 4 (owner)
 #     Player or executor can use all the commands, including commands related to server management.
 command_permission_levels:
-  help: 0  # 可用命令根据用户的权限等级动态显示
-  info: 0
+  help: -1
+  info: -1
   log: 4
   reload: 4
-  stats: 0
+  stats: -1
+  whitelist: -1
 
 # 检查更新设置
 check_for_updates:
