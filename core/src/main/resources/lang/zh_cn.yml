@@ -29,6 +29,7 @@ commands:
     invalid_target: "无效的目标 DMCC 客户端：\"{}\"。可用客户端：{}"
     all_online_clients: "所有在线 DMCC 客户端"
     no_online_clients: "没有在线的 DMCC 客户端。"
+    dmcc_not_supported: "通过 \"console\" 命令执行 DMCC 命令不受支持。请使用 \"execute\" 命令。"
   help:
     description: "显示可用命令列表"
     help: "帮助"

@@ -137,6 +137,11 @@ public class ConsoleCommand implements Command {
 			commandLine = commandLine.substring(1);
 		}
 
+		if (commandLine.startsWith("dmcc")) {
+			sender.reply(I18nManager.getDmccTranslation("commands.console.dmcc_not_supported"));
+			return;
+		}
+
 		sender.reply(I18nManager.getDmccTranslation("commands.console.executing_local", commandLine));
 
 		EventManager.post(new CoreEvents.MinecraftCommandExecutionEvent(sender, commandLine));
@@ -160,6 +165,11 @@ public class ConsoleCommand implements Command {
 		String commandLine = commandBuilder.toString();
 		if (commandLine.startsWith("/")) {
 			commandLine = commandLine.substring(1);
+		}
+
+		if (commandLine.startsWith("dmcc")) {
+			sender.reply(I18nManager.getDmccTranslation("commands.console.dmcc_not_supported"));
+			return;
 		}
 
 		List<String> targets = new ArrayList<>();

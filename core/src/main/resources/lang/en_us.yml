@@ -29,6 +29,7 @@ commands:
     invalid_target: "Invalid target DMCC Client: \"{}\". Available clients: {}"
     all_online_clients: "all online DMCC clients"
     no_online_clients: "No DMCC clients are online."
+    dmcc_not_supported: "Executing DMCC commands through \"console\" command is not supported. Please use \"execute\" command."
   help:
     description: "Show a list of available commands"
     help: "Help"
