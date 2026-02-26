@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.minecraft.events;
 
 import com.mojang.brigadier.ParseResults;
+import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.tree.CommandNode;
@@ -282,30 +283,121 @@ public class MinecraftEventHandler {
 					null
 			);
 
-			ParseResults<CommandSourceStack> parse = serverInstance.getCommands().getDispatcher().parse(event.input(), source);
+			String rawInput = event.input() == null ? "" : event.input();
+
 			try {
-				Suggestions suggestions = serverInstance.getCommands().getDispatcher()
-						.getCompletionSuggestions(parse)
-						.get(3, TimeUnit.SECONDS);
+				List<String> currentResult = getSuggestionsForInput(rawInput, source);
 
-				boolean isRootToken = event.input() != null && !event.input().contains(" ");
+				if (!rawInput.isBlank() && !rawInput.endsWith(" ") && isExactPath(rawInput, source)) {
+					List<String> nextResult = getSuggestionsForInput(rawInput + " ", source);
 
-				Set<String> allowedRoot = new HashSet<>();
-				for (CommandNode<CommandSourceStack> child : serverInstance.getCommands().getDispatcher().getRoot().getChildren()) {
-					if (!child.getName().isEmpty() && child.canUse(source)) {
-						allowedRoot.add(child.getName());
+					// Priority:
+					// 1) self (only if self is a valid candidate)
+					// 2) suggestions for "<input> "
+					// 3) current suggestions
+					Set<String> added = new HashSet<>();
+
+					if (isSelfCandidate(rawInput, source, nextResult, currentResult)) {
+						added.add(rawInput);
+						event.suggestions().add(rawInput);
 					}
+
+					for (String s : nextResult) {
+						if (added.add(s)) {
+							event.suggestions().add(s);
+						}
+					}
+
+					for (String s : currentResult) {
+						if (added.add(s)) {
+							event.suggestions().add(s);
+						}
+					}
+					return;
 				}
 
-				for (Suggestion suggestion : suggestions.getList()) {
-					if (isRootToken && !allowedRoot.contains(suggestion.getText())) {
-						continue;
-					}
-					event.suggestions().add(suggestion.apply(event.input()));
-				}
+				event.suggestions().addAll(currentResult);
 			} catch (Exception ignored) {
 			}
 		});
+	}
+
+	private static List<String> getSuggestionsForInput(String input, CommandSourceStack source) throws Exception {
+		ParseResults<CommandSourceStack> parse = serverInstance.getCommands().getDispatcher().parse(input, source);
+
+		Suggestions suggestions = serverInstance.getCommands().getDispatcher()
+				.getCompletionSuggestions(parse)
+				.get(3, TimeUnit.SECONDS);
+
+		boolean isRootToken = !input.contains(" ");
+		Set<String> allowedRoot = new HashSet<>();
+		for (CommandNode<CommandSourceStack> child : serverInstance.getCommands().getDispatcher().getRoot().getChildren()) {
+			if (!child.getName().isEmpty() && child.canUse(source)) {
+				allowedRoot.add(child.getName());
+			}
+		}
+
+		List<String> result = new ArrayList<>();
+		Set<String> seen = new HashSet<>();
+		for (Suggestion suggestion : suggestions.getList()) {
+			if (isRootToken && !allowedRoot.contains(suggestion.getText())) {
+				continue;
+			}
+			String applied = suggestion.apply(input);
+			if (seen.add(applied)) {
+				result.add(applied);
+			}
+		}
+		return result;
+	}
+
+	private static boolean isExactPath(String input, CommandSourceStack source) {
+		ParseResults<CommandSourceStack> parse = serverInstance.getCommands().getDispatcher().parse(input, source);
+		CommandContextBuilder<CommandSourceStack> ctx = parse.getContext();
+
+		if (ctx.getRange().getEnd() != input.length()) {
+			return false;
+		}
+
+		if (!parse.getExceptions().isEmpty()) {
+			return false;
+		}
+
+		return !ctx.getNodes().isEmpty();
+	}
+
+	/**
+	 * Determines whether the raw input itself should be included as the "self" suggestion.
+	 * This avoids showing invalid partial tokens such as "dmcc stats minecraft:cust".
+	 *
+	 * @param rawInput      The original user input.
+	 * @param source        The command source stack for permission context.
+	 * @param nextResult    The suggestions for "<input> " (if applicable).
+	 * @param currentResult The suggestions for the current input.
+	 * @return true if rawInput is a valid candidate to be included as a suggestion, false otherwise.
+	 */
+	private static boolean isSelfCandidate(String rawInput,
+										   CommandSourceStack source,
+										   List<String> nextResult,
+										   List<String> currentResult) {
+		// Fast path: already present in computed suggestions.
+		if (nextResult.contains(rawInput) || currentResult.contains(rawInput)) {
+			return true;
+		}
+
+		// Backspace test:
+		// if input-1 can suggest rawInput, treat rawInput as a valid candidate.
+		if (rawInput.length() <= 1) {
+			return false;
+		}
+
+		String backspaced = rawInput.substring(0, rawInput.length() - 1);
+		try {
+			List<String> fromBackspaced = getSuggestionsForInput(backspaced, source);
+			return fromBackspaced.contains(rawInput);
+		} catch (Exception ignored) {
+			return false;
+		}
 	}
 
 	/**
