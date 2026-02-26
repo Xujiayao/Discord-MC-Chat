@@ -41,7 +41,7 @@ public interface Command {
 	}
 
 	/**
-	 * Whether this command should be visible to the given sender in help listings.
+	 * Whether this command should be visible in help listings for the given sender.
 	 * <p>
 	 * Commands can override this to hide themselves from certain sender types.
 	 * This does NOT affect whether the command can be executed — only its visibility in help.
@@ -49,7 +49,20 @@ public interface Command {
 	 * @param sender The command sender requesting the help listing.
 	 * @return true if this command should be shown to the sender, false otherwise.
 	 */
-	default boolean isVisibleTo(CommandSender sender) {
+	default boolean isVisibleInHelp(CommandSender sender) {
+		return true;
+	}
+
+	/**
+	 * Whether this command should be visible in help when the request originates
+	 * from a local Minecraft sender context.
+	 * <p>
+	 * This is evaluated only in Minecraft environment for local senders.
+	 * It does NOT affect whether the command can be executed — only its visibility in help.
+	 *
+	 * @return true if this command should be shown in Minecraft local help, false otherwise.
+	 */
+	default boolean isVisibleFromMinecraft() {
 		return true;
 	}
 

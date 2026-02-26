@@ -43,7 +43,7 @@ public class LogCommand implements Command {
 	}
 
 	@Override
-	public boolean isVisibleTo(CommandSender sender) {
+	public boolean isVisibleInHelp(CommandSender sender) {
 		// The log command is only meaningful when the sender supports file attachments,
 		// i.e., Discord slash commands (JdaCommandSender) or remote execute (capture sender).
 		// It should not appear in help for local senders (terminal or Minecraft in-game).

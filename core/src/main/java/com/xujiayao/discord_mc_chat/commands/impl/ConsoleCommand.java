@@ -116,6 +116,11 @@ public class ConsoleCommand implements Command {
 	}
 
 	@Override
+	public boolean isVisibleFromMinecraft() {
+		return false;
+	}
+
+	@Override
 	public void execute(CommandSender sender, String... args) {
 		if ("standalone".equals(ModeManager.getMode())) {
 			executeStandalone(sender, args);

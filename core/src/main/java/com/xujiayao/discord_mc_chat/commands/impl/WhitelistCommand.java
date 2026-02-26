@@ -58,6 +58,11 @@ public class WhitelistCommand implements Command {
 	}
 
 	@Override
+	public boolean isVisibleFromMinecraft() {
+		return false;
+	}
+
+	@Override
 	public void execute(CommandSender sender, String... args) {
 		String player = args[0];
 

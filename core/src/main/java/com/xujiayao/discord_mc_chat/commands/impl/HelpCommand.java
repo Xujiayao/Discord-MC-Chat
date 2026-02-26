@@ -41,13 +41,12 @@ public class HelpCommand implements Command {
 		StringBuilder builder = new StringBuilder();
 		builder.append("========== ").append(I18nManager.getDmccTranslation("commands.help.help")).append(" ==========\n");
 
-		String mcPrefix = (IS_MINECRAFT_ENV && sender instanceof LocalCommandSender) ? "dmcc " : "";
+		boolean isFromMinecraft = (IS_MINECRAFT_ENV && sender instanceof LocalCommandSender);
+		String mcPrefix = isFromMinecraft ? "dmcc " : "";
 
 		CommandManager.getCommands().stream()
-				// 1. Check if the command is structurally visible to this sender type
-				//    (e.g. log command hides itself from LocalCommandSender because it needs file upload)
-				.filter(cmd -> cmd.isVisibleTo(sender))
-				// 2. Check if the sender has the required OP level to execute this command
+				.filter(cmd -> cmd.isVisibleInHelp(sender))
+				.filter(cmd -> !isFromMinecraft || cmd.isVisibleFromMinecraft())
 				.filter(cmd -> sender.getOpLevel() >= ConfigManager.getInt("command_permission_levels." + cmd.name(), 4))
 				.sorted(Comparator.comparing(Command::name))
 				.forEach(cmd -> {
