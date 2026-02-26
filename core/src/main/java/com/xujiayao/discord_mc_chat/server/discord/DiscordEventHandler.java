@@ -205,7 +205,6 @@ public class DiscordEventHandler extends ListenerAdapter {
 
 		return autoCompleteLists.values().stream()
 				.flatMap(List::stream)
-				.filter(s -> s.toLowerCase().contains(currentValue.toLowerCase()))
 				.distinct()
 				.limit(25)
 				.map(s -> new Command.Choice(s, s))

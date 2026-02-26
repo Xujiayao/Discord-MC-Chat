@@ -41,11 +41,31 @@ public class CommandAutoCompleter {
 			return suggestions;
 		}
 
-		String[] parts = input.trim().split("\\s+");
+		String trimmed = input.trim();
+		String[] parts = trimmed.isEmpty() ? new String[0] : trimmed.split("\\s+");
+		boolean hasTrailingSpace = input.endsWith(" ");
+
+		if (parts.length == 0) {
+			return suggestions;
+		}
+
 		String commandName = parts[0].toLowerCase();
 
-		if (parts.length == 1 && !input.endsWith(" ")) {
-			// User is still typing the command name
+		// User is typing command name (no trailing space yet)
+		if (parts.length == 1 && !hasTrailingSpace) {
+			// Special-case commands with argument auto-complete even when command name is exact.
+			switch (commandName) {
+				case "stats" -> {
+					return suggestStats(parts, false, opLevel);
+				}
+				case "log" -> {
+					return suggestLog(parts, false, opLevel);
+				}
+				case "whitelist" -> {
+					return suggestWhitelist(parts, false, opLevel);
+				}
+			}
+
 			CommandManager.getCommands().stream()
 					.filter(cmd -> cmd.name().startsWith(commandName))
 					.sorted(Comparator.comparing(Command::name))
@@ -54,49 +74,13 @@ public class CommandAutoCompleter {
 			return suggestions;
 		}
 
-		// User has typed a command name and moved on to arguments
-		switch (commandName) {
-			case "log" -> {
-				if (opLevel >= ConfigManager.getInt("command_permission_levels.log", 4)) {
-					String argInput = parts.length > 1 ? parts[1] : "";
-					if (parts.length == 1 || (parts.length == 2 && !input.endsWith(" "))) {
-						List<String> logFiles = LogFileUtils.listLogFiles();
-						String lowerArgInput = argInput.toLowerCase();
-						for (String file : logFiles) {
-							if (file.toLowerCase().startsWith(lowerArgInput) || file.toLowerCase().contains(lowerArgInput)) {
-								suggestions.add("log " + file);
-							}
-						}
-					}
-				}
-			}
-			case "stats" -> {
-				if (opLevel >= ConfigManager.getInt("command_permission_levels.stats", 4)) {
-					StatsCommand.StatsProvider provider = StatsCommand.getProvider();
-					if (provider != null) {
-						if (parts.length == 1 || (parts.length == 2 && !input.endsWith(" "))) {
-							String typeInput = parts.length > 1 ? parts[1] : "";
-							String lowerType = typeInput.toLowerCase();
-							for (String type : provider.getStatTypes()) {
-								if (type.toLowerCase().startsWith(lowerType) || type.toLowerCase().contains(lowerType)) {
-									suggestions.add("stats " + type);
-								}
-							}
-						} else if (parts.length == 2 || (parts.length == 3 && !input.endsWith(" "))) {
-							String type = parts[1];
-							String statInput = parts.length > 2 ? parts[2] : "";
-							String lowerStat = statInput.toLowerCase();
-							for (String stat : provider.getStatNames(type)) {
-								if (stat.toLowerCase().startsWith(lowerStat) || stat.toLowerCase().contains(lowerStat)) {
-									suggestions.add("stats " + type + " " + stat);
-								}
-							}
-						}
-					}
-				}
-			}
+		// Command + args stage
+		return switch (commandName) {
+			case "stats" -> suggestStats(parts, hasTrailingSpace, opLevel);
+			case "log" -> suggestLog(parts, hasTrailingSpace, opLevel);
+			case "whitelist" -> suggestWhitelist(parts, hasTrailingSpace, opLevel);
 			default -> {
-				// For commands without argument auto-complete, suggest the command itself
+				// For commands without argument auto-complete, suggest the command itself if no args.
 				Command command = null;
 				for (Command cmd : CommandManager.getCommands()) {
 					if (cmd.name().equals(commandName)) {
@@ -107,9 +91,212 @@ public class CommandAutoCompleter {
 				if (command != null && command.args().length == 0) {
 					addCommandIfAuthorized(command, opLevel, suggestions);
 				}
+				yield suggestions;
 			}
+		};
+	}
+
+	private static List<String> suggestLog(String[] parts, boolean hasTrailingSpace, int opLevel) {
+		List<String> suggestions = new ArrayList<>();
+		if (opLevel < ConfigManager.getInt("command_permission_levels.log", 4)) {
+			return suggestions;
 		}
 
+		List<String> logFiles = LogFileUtils.listLogFiles();
+
+		// "log" (exact, no space) => start first-argument suggestions immediately
+		if (parts.length == 1 && !hasTrailingSpace) {
+			for (String file : logFiles) {
+				suggestions.add("log " + file);
+			}
+			return suggestions;
+		}
+
+		// "log " => first-argument suggestions
+		if (parts.length == 1) {
+			for (String file : logFiles) {
+				suggestions.add("log " + file);
+			}
+			return suggestions;
+		}
+
+		// "log <file...>"
+		if (parts.length == 2) {
+			String fileInput = parts[1];
+			String lowerInput = fileInput.toLowerCase();
+
+			List<String> exact = new ArrayList<>();
+			List<String> prefix = new ArrayList<>();
+			List<String> contains = new ArrayList<>();
+
+			for (String file : logFiles) {
+				String lower = file.toLowerCase();
+				if (lower.equals(lowerInput)) {
+					exact.add(file);
+				} else if (lower.startsWith(lowerInput)) {
+					prefix.add(file);
+				} else if (lower.contains(lowerInput)) {
+					contains.add(file);
+				}
+			}
+
+			// Strategy: show longer prefix candidates first, then exact match.
+			// For single-argument commands, exact match should still be included.
+			for (String file : prefix) {
+				suggestions.add("log " + file);
+			}
+			for (String file : contains) {
+				suggestions.add("log " + file);
+			}
+			for (String file : exact) {
+				suggestions.add("log " + file);
+			}
+			return suggestions;
+		}
+
+		// More than one argument: log has no additional arguments
+		return suggestions;
+	}
+
+	private static List<String> suggestStats(String[] parts, boolean hasTrailingSpace, int opLevel) {
+		List<String> suggestions = new ArrayList<>();
+		if (opLevel < ConfigManager.getInt("command_permission_levels.stats", 4)) {
+			return suggestions;
+		}
+
+		StatsCommand.StatsProvider provider = StatsCommand.getProvider();
+		if (provider == null) {
+			return suggestions;
+		}
+
+		// "stats" (exact, no space) => suggest first argument immediately
+		if (parts.length == 1 && !hasTrailingSpace) {
+			for (String type : provider.getStatTypes()) {
+				suggestions.add("stats " + type + " <stat>");
+			}
+			return suggestions;
+		}
+
+		// "stats " => first-argument suggestions
+		if (parts.length == 1) {
+			for (String type : provider.getStatTypes()) {
+				suggestions.add("stats " + type + " <stat>");
+			}
+			return suggestions;
+		}
+
+		// Typing first argument: "stats <type...>"
+		if (parts.length == 2 && !hasTrailingSpace) {
+			String typeInput = parts[1];
+			String lowerType = typeInput.toLowerCase();
+
+			List<String> exactType = new ArrayList<>();
+			List<String> prefixType = new ArrayList<>();
+			List<String> containsType = new ArrayList<>();
+
+			for (String type : provider.getStatTypes()) {
+				String lower = type.toLowerCase();
+				if (lower.equals(lowerType)) {
+					exactType.add(type);
+				} else if (lower.startsWith(lowerType)) {
+					prefixType.add(type);
+				} else if (lower.contains(lowerType)) {
+					containsType.add(type);
+				}
+			}
+
+			// Before a trailing space is entered, show possible longer type matches first.
+			for (String type : prefixType) {
+				suggestions.add("stats " + type + " <stat>");
+			}
+			for (String type : containsType) {
+				suggestions.add("stats " + type + " <stat>");
+			}
+
+			// On exact type match, start second-argument suggestions immediately
+			// (but keep them after longer prefix candidates).
+			if (!exactType.isEmpty()) {
+				String type = exactType.getFirst();
+				for (String stat : provider.getStatNames(type)) {
+					suggestions.add("stats " + type + " " + stat);
+				}
+			}
+
+			return suggestions;
+		}
+
+		// "stats <type> "
+		if (parts.length == 2) {
+			String type = parts[1];
+			for (String stat : provider.getStatNames(type)) {
+				suggestions.add("stats " + type + " " + stat);
+			}
+			return suggestions;
+		}
+
+		// Typing second argument: "stats <type> <stat...>"
+		if (parts.length == 3 && !hasTrailingSpace) {
+			String type = parts[1];
+			String statInput = parts[2];
+			String lowerStat = statInput.toLowerCase();
+
+			List<String> exactStat = new ArrayList<>();
+			List<String> prefixStat = new ArrayList<>();
+			List<String> containsStat = new ArrayList<>();
+
+			for (String stat : provider.getStatNames(type)) {
+				String lower = stat.toLowerCase();
+				if (lower.equals(lowerStat)) {
+					exactStat.add(stat);
+				} else if (lower.startsWith(lowerStat)) {
+					prefixStat.add(stat);
+				} else if (lower.contains(lowerStat)) {
+					containsStat.add(stat);
+				}
+			}
+
+			// Before trailing space, show longer prefix candidates first, then exact.
+			// Exact should still be included.
+			for (String stat : prefixStat) {
+				suggestions.add("stats " + type + " " + stat);
+			}
+			for (String stat : containsStat) {
+				suggestions.add("stats " + type + " " + stat);
+			}
+			for (String stat : exactStat) {
+				suggestions.add("stats " + type + " " + stat);
+			}
+
+			return suggestions;
+		}
+
+		// "stats <type> <stat> " or more arguments (stats only has 2 args)
+		return suggestions;
+	}
+
+	private static List<String> suggestWhitelist(String[] parts, boolean hasTrailingSpace, int opLevel) {
+		List<String> suggestions = new ArrayList<>();
+		if (opLevel < ConfigManager.getInt("command_permission_levels.whitelist", 4)) {
+			return suggestions;
+		}
+
+		// whitelist / whitelist  => always show template
+		if (parts.length == 1) {
+			suggestions.add("whitelist <player>");
+			return suggestions;
+		}
+
+		// whitelist a => only echo user's current input
+		if (parts.length == 2) {
+			if (hasTrailingSpace) {
+				// whitelist a<space> means an unknown second argument slot appears, return empty.
+				return suggestions;
+			}
+			suggestions.add("whitelist " + parts[1]);
+			return suggestions;
+		}
+
+		// Extra arguments appear (e.g. whitelist a b) => empty
 		return suggestions;
 	}
 
