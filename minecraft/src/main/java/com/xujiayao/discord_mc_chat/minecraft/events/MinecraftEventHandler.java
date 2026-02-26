@@ -3,6 +3,7 @@ package com.xujiayao.discord_mc_chat.minecraft.events;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.tree.CommandNode;
 import com.xujiayao.discord_mc_chat.DMCC;
 import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.minecraft.commands.MinecraftCommands;
@@ -38,9 +39,11 @@ import java.lang.management.ManagementFactory;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -281,8 +284,23 @@ public class MinecraftEventHandler {
 
 			ParseResults<CommandSourceStack> parse = serverInstance.getCommands().getDispatcher().parse(event.input(), source);
 			try {
-				Suggestions suggestions = serverInstance.getCommands().getDispatcher().getCompletionSuggestions(parse).get(3, TimeUnit.SECONDS);
+				Suggestions suggestions = serverInstance.getCommands().getDispatcher()
+						.getCompletionSuggestions(parse)
+						.get(3, TimeUnit.SECONDS);
+
+				boolean isRootToken = event.input() != null && !event.input().contains(" ");
+
+				Set<String> allowedRoot = new HashSet<>();
+				for (CommandNode<CommandSourceStack> child : serverInstance.getCommands().getDispatcher().getRoot().getChildren()) {
+					if (!child.getName().isEmpty() && child.canUse(source)) {
+						allowedRoot.add(child.getName());
+					}
+				}
+
 				for (Suggestion suggestion : suggestions.getList()) {
+					if (isRootToken && !allowedRoot.contains(suggestion.getText())) {
+						continue;
+					}
 					event.suggestions().add(suggestion.apply(event.input()));
 				}
 			} catch (Exception ignored) {
