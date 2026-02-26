@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 public class ConsoleCommand implements Command {
 
 	private static final int CONSOLE_TIMEOUT_SECONDS = 30;
+	private static final int LOCAL_COMMAND_TIMEOUT_SECONDS = 10;
 	private static final Map<String, CompletableFuture<ConsoleResponsePacket>> pendingRequests = new ConcurrentHashMap<>();
 
 	/**
@@ -125,7 +126,7 @@ public class ConsoleCommand implements Command {
 
 	/**
 	 * Executes a Minecraft command on the local server (single_server mode).
-	 * Dispatches via CoreEvents.MinecraftCommandExecutionEvent.
+	 * Dispatches via CoreEvents.MinecraftCommandExecutionEvent with callback-based completion.
 	 *
 	 * @param sender The command sender.
 	 * @param args   args[0] = command (may contain spaces from acceptsExtraArgs).
@@ -144,7 +145,17 @@ public class ConsoleCommand implements Command {
 
 		sender.reply(I18nManager.getDmccTranslation("commands.console.executing_local", commandLine));
 
-		EventManager.post(new CoreEvents.MinecraftCommandExecutionEvent(sender, commandLine));
+		CompletableFuture<Void> completionFuture = new CompletableFuture<>();
+
+		EventManager.post(new CoreEvents.MinecraftCommandExecutionEvent(sender, commandLine, completionFuture));
+
+		// Wait for the command to complete with a timeout
+		try {
+			completionFuture.get(LOCAL_COMMAND_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+		} catch (Exception ignored) {
+			// Timeout or interruption - the command may still be running,
+			// but we've already sent all output that was produced so far via the sender.
+		}
 	}
 
 	/**

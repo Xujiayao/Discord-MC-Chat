@@ -47,6 +47,8 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  */
 public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 
+	private static final int CONSOLE_COMMAND_TIMEOUT_SECONDS = 10;
+
 	private final NettyClient client;
 	private final CompletableFuture<Boolean> initialLoginFuture;
 	private boolean allowReconnect = true; // Default to true for network errors
@@ -150,7 +152,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 				}
 			}
 			case ConsoleRequestPacket p -> {
-				// Handle Minecraft command execution via CoreEvents
+				// Handle Minecraft command execution via CoreEvents with callback-based completion
 				StringBuilder responseBuilder = new StringBuilder();
 
 				CommandSender captureSender = new CommandSender() {
@@ -168,14 +170,16 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 					}
 				};
 
-				EventManager.post(new CoreEvents.MinecraftCommandExecutionEvent(captureSender, p.commandLine));
+				CompletableFuture<Void> completionFuture = new CompletableFuture<>();
 
-				// Note: Minecraft command execution is dispatched to the server thread.
-				// We schedule the response to be sent after a short delay to allow for execution.
-				// TODO: Consider a callback-based approach for more reliable response timing.
-				ctx.channel().eventLoop().schedule(() -> {
-					ctx.writeAndFlush(new ConsoleResponsePacket(p.requestId, responseBuilder.toString()));
-				}, 1, TimeUnit.SECONDS);
+				EventManager.post(new CoreEvents.MinecraftCommandExecutionEvent(captureSender, p.commandLine, completionFuture));
+
+				// Use the completion future with a timeout to send the response reliably
+				completionFuture
+						.orTimeout(CONSOLE_COMMAND_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+						.whenComplete((v, ex) -> {
+							ctx.writeAndFlush(new ConsoleResponsePacket(p.requestId, responseBuilder.toString()));
+						});
 			}
 			case ExecuteAutoCompleteRequestPacket p -> {
 				// Handle DMCC command auto-complete with OP level filtering

@@ -190,6 +190,7 @@ public class MinecraftEventHandler {
 		EventManager.register(CoreEvents.MinecraftCommandExecutionEvent.class, event -> {
 			if (serverInstance == null) {
 				event.sender().reply("Minecraft server is not ready yet.");
+				event.completionFuture().complete(null);
 				return;
 			}
 
@@ -229,8 +230,18 @@ public class MinecraftEventHandler {
 					null
 			);
 
-			// Must be dispatched to the main server thread to avoid concurrent modification
-			serverInstance.execute(() -> serverInstance.getCommands().performPrefixedCommand(source, event.commandLine()));
+			// Must be dispatched to the main server thread to avoid concurrent modification.
+			// The completion future is completed after the command has been executed on the server thread,
+			// ensuring all output has been sent to the sender before the response is collected.
+			serverInstance.execute(() -> {
+				try {
+					serverInstance.getCommands().performPrefixedCommand(source, event.commandLine());
+				} catch (Exception e) {
+					event.sender().reply("Error executing command: " + e.getMessage());
+				} finally {
+					event.completionFuture().complete(null);
+				}
+			});
 		});
 
 		EventManager.register(CoreEvents.MinecraftCommandAutoCompleteEvent.class, event -> {

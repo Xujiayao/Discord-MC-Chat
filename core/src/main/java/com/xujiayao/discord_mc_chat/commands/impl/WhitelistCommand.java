@@ -6,6 +6,9 @@ import com.xujiayao.discord_mc_chat.utils.events.CoreEvents;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
 /**
  * Proxy command for managing the server whitelist via DMCC.
  * <p>
@@ -24,6 +27,8 @@ import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
  * @author Xujiayao
  */
 public class WhitelistCommand implements Command {
+
+	private static final int WHITELIST_COMMAND_TIMEOUT_SECONDS = 10;
 
 	@Override
 	public String name() {
@@ -76,7 +81,18 @@ public class WhitelistCommand implements Command {
 			}
 		};
 
-		// Delegate to Minecraft's native /whitelist add command
-		EventManager.post(new CoreEvents.MinecraftCommandExecutionEvent(elevatedSender, "whitelist add " + player));
+		// Delegate to Minecraft's native /whitelist add command with callback-based completion
+		CompletableFuture<Void> completionFuture = new CompletableFuture<>();
+
+		EventManager.post(new CoreEvents.MinecraftCommandExecutionEvent(elevatedSender, "whitelist add " + player, completionFuture));
+
+		// Wait for the command to complete so the response is available before this method returns.
+		// This is critical for remote execution (execute command) where the response is collected
+		// from the sender's reply buffer after this method returns.
+		try {
+			completionFuture.get(WHITELIST_COMMAND_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+		} catch (Exception ignored) {
+			// Timeout or interruption - output produced so far will still be in the sender's buffer.
+		}
 	}
 }

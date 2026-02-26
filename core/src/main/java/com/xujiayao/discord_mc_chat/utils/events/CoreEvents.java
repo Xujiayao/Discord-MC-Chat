@@ -3,6 +3,7 @@ package com.xujiayao.discord_mc_chat.utils.events;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Core events for communication between DMCC Core and Minecraft-specific implementations.
@@ -19,13 +20,20 @@ public class CoreEvents {
 	 * <p>
 	 * The handler should construct a virtual CommandSourceStack with the sender's OP level
 	 * and dispatch the command to the Minecraft command dispatcher.
+	 * <p>
+	 * The handler MUST complete the {@code completionFuture} after the command has finished
+	 * executing and all output has been sent to the sender. This enables reliable response
+	 * timing for remote command execution (console/execute commands).
 	 *
-	 * @param sender      The command sender bridging the execution, used for replying results.
-	 * @param commandLine The raw Minecraft command line to be executed (without leading slash).
+	 * @param sender           The command sender bridging the execution, used for replying results.
+	 * @param commandLine      The raw Minecraft command line to be executed (without leading slash).
+	 * @param completionFuture A future that the handler MUST complete when command execution is done.
+	 *                         Complete with {@code null} on success, or exceptionally on failure.
 	 */
 	public record MinecraftCommandExecutionEvent(
 			CommandSender sender,
-			String commandLine
+			String commandLine,
+			CompletableFuture<Void> completionFuture
 	) {
 	}
 
