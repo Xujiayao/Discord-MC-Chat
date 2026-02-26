@@ -30,6 +30,8 @@ import net.minecraft.stats.StatType;
 import net.minecraft.util.TimeUtil;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.storage.LevelResource;
+import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.Vec3;
 
 import java.lang.management.ManagementFactory;
 import java.nio.file.Path;
@@ -196,9 +198,8 @@ public class MinecraftEventHandler {
 
 			// Construct a virtual CommandSourceStack with the sender's OP level
 			// and a custom CommandSource that bridges output back to the DMCC sender
-			CommandSourceStack source = serverInstance.createCommandSourceStack()
-					.withPermission(mcOp)
-					.withSource(new CommandSource() {
+			CommandSourceStack source = new CommandSourceStack(
+					new CommandSource() {
 						@Override
 						public void sendSystemMessage(Component component) {
 							event.sender().reply(TranslationManager.get(component));
@@ -218,19 +219,55 @@ public class MinecraftEventHandler {
 						public boolean shouldInformAdmins() {
 							return true; // We want to relay all outputs
 						}
-					});
+					},
+					Vec3.atLowerCornerOf(serverInstance.getRespawnData().pos()),
+					Vec2.ZERO, serverInstance.findRespawnDimension(),
+					mcOp,
+					"DMCC",
+					Component.literal("DMCC"),
+					serverInstance,
+					null
+			);
 
 			// Must be dispatched to the main server thread to avoid concurrent modification
-			serverInstance.execute(() -> {
-				serverInstance.getCommands().performPrefixedCommand(source, event.commandLine());
-			});
+			serverInstance.execute(() -> serverInstance.getCommands().performPrefixedCommand(source, event.commandLine()));
 		});
 
 		EventManager.register(CoreEvents.MinecraftCommandAutoCompleteEvent.class, event -> {
 			if (serverInstance == null) return;
 
 			int mcOp = Math.max(0, event.opLevel());
-			CommandSourceStack source = serverInstance.createCommandSourceStack().withPermission(mcOp);
+
+			CommandSourceStack source = new CommandSourceStack(
+					new CommandSource() {
+						@Override
+						public void sendSystemMessage(Component component) {
+							// Not needed for auto-complete
+						}
+
+						@Override
+						public boolean acceptsSuccess() {
+							return true;
+						}
+
+						@Override
+						public boolean acceptsFailure() {
+							return true;
+						}
+
+						@Override
+						public boolean shouldInformAdmins() {
+							return true; // We want to relay all outputs
+						}
+					},
+					Vec3.atLowerCornerOf(serverInstance.getRespawnData().pos()),
+					Vec2.ZERO, serverInstance.findRespawnDimension(),
+					mcOp,
+					"DMCC",
+					Component.literal("DMCC"),
+					serverInstance,
+					null
+			);
 
 			ParseResults<CommandSourceStack> parse = serverInstance.getCommands().getDispatcher().parse(event.input(), source);
 			try {
