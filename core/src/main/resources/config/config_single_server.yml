@@ -28,7 +28,7 @@ discord:
       - "everyone"
       - "users"
       - "roles"
-    # 玩家聊天消�� Webhook 设置
+    # 玩家聊天消息 Webhook 设置
     players:
       enable_fake_user_style: true  # 是否使用伪用户样式的 Webhook 发送玩家聊天消息
       avatar_url: "https://mc-heads.net/avatar/{player_name}.png"
@@ -142,12 +142,13 @@ account_linking:
 #   Level 4 (owner)
 #     Player or executor can use all the commands, including commands related to server management.
 command_permission_levels:
+  console: 0
   help: -1
   info: -1
   log: 4
   reload: 4
   stats: -1
-  whitelist: -1
+  whitelist: 0
 
 # 检查更新设置
 check_for_updates:

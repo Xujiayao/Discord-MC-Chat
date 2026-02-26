@@ -158,6 +158,7 @@ account_linking:
 #   Level 4 (owner)
 #     Player or executor can use all the commands, including commands related to server management.
 command_permission_levels:
+  console: 0
   execute: -1
   help: -1
   info: -1
