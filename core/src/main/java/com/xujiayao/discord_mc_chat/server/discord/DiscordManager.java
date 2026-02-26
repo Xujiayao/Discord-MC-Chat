@@ -102,11 +102,17 @@ public class DiscordManager {
 				commands.add(Commands.slash("reload", I18nManager.getDmccTranslation("commands.reload.description")));
 
 				if ("standalone".equals(ModeManager.getMode())) {
+					commands.add(Commands.slash("console", I18nManager.getDmccTranslation("commands.console.description"))
+							.addOption(OptionType.STRING, "at", I18nManager.getDmccTranslation("commands.console.args_desc.at"), true, true)
+							.addOption(OptionType.STRING, "command", I18nManager.getDmccTranslation("commands.console.args_desc.command"), true, true));
 					commands.add(Commands.slash("execute", I18nManager.getDmccTranslation("commands.execute.description"))
 							.addOption(OptionType.STRING, "at", I18nManager.getDmccTranslation("commands.execute.args_desc.at"), true, true)
 							.addOption(OptionType.STRING, "command", I18nManager.getDmccTranslation("commands.execute.args_desc.command"), true, true));
 					commands.add(Commands.slash("shutdown", I18nManager.getDmccTranslation("commands.shutdown.description")));
 				} else {
+					// single_server mode: /console <command> (no "at" parameter)
+					commands.add(Commands.slash("console", I18nManager.getDmccTranslation("commands.console.description"))
+							.addOption(OptionType.STRING, "command", I18nManager.getDmccTranslation("commands.console.args_desc.command"), true, true));
 					commands.add(Commands.slash("stats", I18nManager.getDmccTranslation("commands.stats.description"))
 							.addOption(OptionType.STRING, "type", I18nManager.getDmccTranslation("commands.stats.args_desc.type"), true, true)
 							.addOption(OptionType.STRING, "stat", I18nManager.getDmccTranslation("commands.stats.args_desc.stat"), true, true));

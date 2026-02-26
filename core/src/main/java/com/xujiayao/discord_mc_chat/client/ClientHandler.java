@@ -11,8 +11,12 @@ import com.xujiayao.discord_mc_chat.network.packets.auth.ChallengePacket;
 import com.xujiayao.discord_mc_chat.network.packets.auth.DisconnectPacket;
 import com.xujiayao.discord_mc_chat.network.packets.auth.HandshakePacket;
 import com.xujiayao.discord_mc_chat.network.packets.auth.LoginSuccessPacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.CommandAutoCompleteRequestPacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.CommandAutoCompleteResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.ConsoleAutoCompleteRequestPacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.ConsoleAutoCompleteResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.ConsoleRequestPacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.ConsoleResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.ExecuteAutoCompleteRequestPacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.ExecuteAutoCompleteResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.ExecuteRequestPacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.ExecuteResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.InfoRequestPacket;
@@ -21,14 +25,18 @@ import com.xujiayao.discord_mc_chat.network.packets.misc.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPongPacket;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
+import com.xujiayao.discord_mc_chat.utils.events.CoreEvents;
+import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
@@ -96,6 +104,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 				client.updateConnectionLatency(latency);
 			}
 			case ExecuteRequestPacket p -> {
+				// Handle DMCC command execution with OP level credential for edge authorization
 				StringBuilder responseBuilder = new StringBuilder();
 				byte[][] fileDataHolder = new byte[1][];
 				String[] fileNameHolder = new String[1];
@@ -114,6 +123,11 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 						reply(message);
 						fileDataHolder[0] = fileData;
 						fileNameHolder[0] = fileName;
+					}
+
+					@Override
+					public int getOpLevel() {
+						return p.opLevel;
 					}
 				};
 
@@ -135,9 +149,44 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 					ctx.writeAndFlush(new ExecuteResponsePacket(p.requestId, I18nManager.getDmccTranslation("commands.execution_failed", e.getMessage())));
 				}
 			}
-			case CommandAutoCompleteRequestPacket p -> {
-				List<String> suggestions = CommandAutoCompleter.getSuggestions(p.input);
-				ctx.writeAndFlush(new CommandAutoCompleteResponsePacket(client.getServerName(), suggestions));
+			case ConsoleRequestPacket p -> {
+				// Handle Minecraft command execution via CoreEvents
+				StringBuilder responseBuilder = new StringBuilder();
+
+				CommandSender captureSender = new CommandSender() {
+					@Override
+					public void reply(String message) {
+						if (!responseBuilder.isEmpty()) {
+							responseBuilder.append("\n");
+						}
+						responseBuilder.append(message);
+					}
+
+					@Override
+					public int getOpLevel() {
+						return p.opLevel;
+					}
+				};
+
+				EventManager.post(new CoreEvents.MinecraftCommandExecutionEvent(captureSender, p.commandLine));
+
+				// Note: Minecraft command execution is dispatched to the server thread.
+				// We schedule the response to be sent after a short delay to allow for execution.
+				// TODO: Consider a callback-based approach for more reliable response timing.
+				ctx.channel().eventLoop().schedule(() -> {
+					ctx.writeAndFlush(new ConsoleResponsePacket(p.requestId, responseBuilder.toString()));
+				}, 1, TimeUnit.SECONDS);
+			}
+			case ExecuteAutoCompleteRequestPacket p -> {
+				// Handle DMCC command auto-complete with OP level filtering
+				List<String> suggestions = CommandAutoCompleter.getSuggestions(p.input, p.opLevel);
+				ctx.writeAndFlush(new ExecuteAutoCompleteResponsePacket(client.getServerName(), suggestions));
+			}
+			case ConsoleAutoCompleteRequestPacket p -> {
+				// Handle Minecraft command auto-complete via CoreEvents
+				List<String> suggestions = new ArrayList<>();
+				EventManager.post(new CoreEvents.MinecraftCommandAutoCompleteEvent(p.input, p.opLevel, suggestions));
+				ctx.writeAndFlush(new ConsoleAutoCompleteResponsePacket(client.getServerName(), suggestions));
 			}
 			case DisconnectPacket p -> {
 				// If we receive a DisconnectPacket, it means the server explicitly rejected us.

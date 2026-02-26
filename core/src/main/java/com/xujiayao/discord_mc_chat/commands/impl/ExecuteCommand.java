@@ -148,7 +148,8 @@ public class ExecuteCommand implements Command {
 			CompletableFuture<ExecuteResponsePacket> future = new CompletableFuture<>();
 			pendingRequests.put(requestId, future);
 
-			NetworkManager.sendPacketToClient(new ExecuteRequestPacket(requestId, commandName, commandArgs), serverName);
+			// Append sender's OP level credential to the packet for client-side edge authorization
+			NetworkManager.sendPacketToClient(new ExecuteRequestPacket(requestId, sender.getOpLevel(), commandName, commandArgs), serverName);
 
 			try {
 				ExecuteResponsePacket response = future.get(EXECUTE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -185,6 +186,12 @@ public class ExecuteCommand implements Command {
 		}
 	}
 
+	/**
+	 * Checks if the target server name is valid according to the configuration.
+	 *
+	 * @param target The target server name.
+	 * @return true if valid, false otherwise.
+	 */
 	private boolean isValidTarget(String target) {
 		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
 		if (serversNode.isArray()) {

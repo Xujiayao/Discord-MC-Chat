@@ -20,9 +20,17 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 public class JdaCommandSender implements CommandSender {
 
 	private final SlashCommandInteractionEvent event;
+	private final int opLevel;
 
-	public JdaCommandSender(SlashCommandInteractionEvent event) {
+	/**
+	 * Constructs a new JdaCommandSender.
+	 *
+	 * @param event   The Discord slash command interaction event.
+	 * @param opLevel The resolved OP level for the Discord user.
+	 */
+	public JdaCommandSender(SlashCommandInteractionEvent event, int opLevel) {
 		this.event = event;
+		this.opLevel = opLevel;
 	}
 
 	@Override
@@ -51,5 +59,10 @@ public class JdaCommandSender implements CommandSender {
 			LOGGER.warn(I18nManager.getDmccTranslation("discord.command.reply_failed"));
 			LOGGER.warn(I18nManager.getDmccTranslation("discord.command.reply_failed_detail"));
 		}
+	}
+
+	@Override
+	public int getOpLevel() {
+		return opLevel;
 	}
 }

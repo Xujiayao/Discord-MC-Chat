@@ -7,10 +7,12 @@ import com.xujiayao.discord_mc_chat.network.packets.Packet;
  *
  * @author Xujiayao
  */
-public class CommandAutoCompleteRequestPacket extends Packet {
+public class ExecuteAutoCompleteRequestPacket extends Packet {
 	public String input;
+	public int opLevel;
 
-	public CommandAutoCompleteRequestPacket(String input) {
+	public ExecuteAutoCompleteRequestPacket(String input, int opLevel) {
 		this.input = input;
+		this.opLevel = opLevel;
 	}
 }

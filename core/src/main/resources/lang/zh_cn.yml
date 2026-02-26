@@ -16,6 +16,19 @@ terminal:
 commands:
   execution_failed: "命令执行失败：{}"
   invalid_usage: "用法错误。正确用法：\"{}\""
+  insufficient_permission: "你没有足够的权限执行此命令。"
+  console:
+    description: "执行 Minecraft 命令"
+    args_desc:
+      at: "目标服务器名称或 \"all_online_clients\""
+      command: "要执行的 Minecraft 命令"
+    executing: "正在 {1} 上执行 \"{0}\"..."
+    executing_local: "正在执行 \"{}\"..."
+    client_offline: "DMCC 客户端 \"{}\" 处于离线状态。"
+    timeout: "在 \"{}\" 上执行命令超时。"
+    invalid_target: "无效的目标 DMCC 客户端：\"{}\"。可用客户端：{}"
+    all_online_clients: "所有在线 DMCC 客户端"
+    no_online_clients: "没有在线的 DMCC 客户端。"
   help:
     description: "显示可用命令列表"
     help: "帮助"
@@ -105,6 +118,10 @@ commands:
     no_stats: "未找到关于 {0} {1} 的统计数据。"
     stats: "统计数据"
     colon: "："
+  whitelist:
+    description: "将玩家添加到服务器白名单"
+    args_desc:
+      player: "玩家名称"
 
 main:
   init:

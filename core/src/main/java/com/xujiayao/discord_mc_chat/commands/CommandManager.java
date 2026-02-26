@@ -1,5 +1,6 @@
 package com.xujiayao.discord_mc_chat.commands;
 
+import com.xujiayao.discord_mc_chat.commands.impl.ConsoleCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.ExecuteCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.HelpCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.InfoCommand;
@@ -7,7 +8,9 @@ import com.xujiayao.discord_mc_chat.commands.impl.LogCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.ReloadCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.ShutdownCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
+import com.xujiayao.discord_mc_chat.commands.impl.WhitelistCommand;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
+import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
@@ -44,11 +47,21 @@ public class CommandManager {
 		register(new ReloadCommand());
 		register(new LogCommand());
 
-		if ("standalone".equals(ModeManager.getMode())) {
-			register(new ExecuteCommand());
-			register(new ShutdownCommand());
-		} else {
-			register(new StatsCommand());
+		switch (ModeManager.getMode()) {
+			case "standalone" -> {
+				register(new ExecuteCommand());
+				register(new ConsoleCommand());
+				register(new ShutdownCommand());
+			}
+			case "single_server" -> {
+				register(new ConsoleCommand());
+				register(new StatsCommand());
+				register(new WhitelistCommand());
+			}
+			case "multi_server_client" -> {
+				register(new StatsCommand());
+				register(new WhitelistCommand());
+			}
 		}
 	}
 
@@ -126,6 +139,9 @@ public class CommandManager {
 
 	/**
 	 * Internal command execution logic.
+	 * <p>
+	 * Performs edge authorization by comparing the sender's OP level against
+	 * the required permission level from the local config before execution.
 	 *
 	 * @param sender The command sender
 	 * @param name   The command name
@@ -135,6 +151,13 @@ public class CommandManager {
 		Command command = COMMANDS.get(name);
 		if (command == null) {
 			sender.reply(I18nManager.getDmccTranslation("terminal.unknown_command", name));
+			return;
+		}
+
+		// Edge authorization: compare sender's OP level against local config requirement
+		int requiredOp = ConfigManager.getInt("command_permission_levels." + name, 4);
+		if (sender.getOpLevel() < requiredOp) {
+			sender.reply(I18nManager.getDmccTranslation("commands.insufficient_permission"));
 			return;
 		}
 

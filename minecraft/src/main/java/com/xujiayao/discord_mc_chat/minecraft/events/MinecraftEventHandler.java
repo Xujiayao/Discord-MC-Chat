@@ -1,5 +1,8 @@
 package com.xujiayao.discord_mc_chat.minecraft.events;
 
+import com.mojang.brigadier.ParseResults;
+import com.mojang.brigadier.suggestion.Suggestion;
+import com.mojang.brigadier.suggestion.Suggestions;
 import com.xujiayao.discord_mc_chat.DMCC;
 import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.minecraft.commands.MinecraftCommands;
@@ -10,10 +13,14 @@ import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
+import com.xujiayao.discord_mc_chat.utils.events.CoreEvents;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import net.minecraft.advancements.DisplayInfo;
+import net.minecraft.commands.CommandSource;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerTickRateManager;
@@ -41,11 +48,15 @@ import java.util.concurrent.TimeUnit;
  */
 public class MinecraftEventHandler {
 
+	private static MinecraftServer serverInstance;
+
 	/**
 	 * Initializes the Minecraft event handlers.
 	 */
 	public static void init() {
 		EventManager.register(MinecraftEvents.ServerStarted.class, event -> {
+			serverInstance = event.minecraftServer();
+
 			StatsCommand.setProvider(new StatsCommand.StatsProvider() {
 				@Override
 				public void saveAll() {
@@ -171,8 +182,73 @@ public class MinecraftEventHandler {
 			// Refresh Minecraft translations
 			TranslationManager.init();
 		});
+
+		// ===== Core Events: Minecraft Command Execution Bridge =====
+
+		EventManager.register(CoreEvents.MinecraftCommandExecutionEvent.class, event -> {
+			if (serverInstance == null) {
+				event.sender().reply("Minecraft server is not ready yet.");
+				return;
+			}
+
+			// Discord visitors (-1) default to OP 0 for Minecraft's permission system
+			int mcOp = Math.max(0, event.sender().getOpLevel());
+
+			// Construct a virtual CommandSourceStack with the sender's OP level
+			// and a custom CommandSource that bridges output back to the DMCC sender
+			CommandSourceStack source = serverInstance.createCommandSourceStack()
+					.withPermission(mcOp)
+					.withSource(new CommandSource() {
+						@Override
+						public void sendSystemMessage(Component component) {
+							event.sender().reply(TranslationManager.get(component));
+						}
+
+						@Override
+						public boolean acceptsSuccess() {
+							return true;
+						}
+
+						@Override
+						public boolean acceptsFailure() {
+							return true;
+						}
+
+						@Override
+						public boolean shouldInformAdmins() {
+							return true; // We want to relay all outputs
+						}
+					});
+
+			// Must be dispatched to the main server thread to avoid concurrent modification
+			serverInstance.execute(() -> {
+				serverInstance.getCommands().performPrefixedCommand(source, event.commandLine());
+			});
+		});
+
+		EventManager.register(CoreEvents.MinecraftCommandAutoCompleteEvent.class, event -> {
+			if (serverInstance == null) return;
+
+			int mcOp = Math.max(0, event.opLevel());
+			CommandSourceStack source = serverInstance.createCommandSourceStack().withPermission(mcOp);
+
+			ParseResults<CommandSourceStack> parse = serverInstance.getCommands().getDispatcher().parse(event.input(), source);
+			try {
+				Suggestions suggestions = serverInstance.getCommands().getDispatcher().getCompletionSuggestions(parse).get(3, TimeUnit.SECONDS);
+				for (Suggestion suggestion : suggestions.getList()) {
+					event.suggestions().add(suggestion.apply(event.input()));
+				}
+			} catch (Exception ignored) {
+			}
+		});
 	}
 
+	/**
+	 * Builds an InfoResponsePacket containing real-time metrics of the Minecraft server.
+	 *
+	 * @param server The Minecraft server instance.
+	 * @return The populated InfoResponsePacket.
+	 */
 	private static InfoResponsePacket buildInfoResponse(MinecraftServer server) {
 		String serverName = "single_server".equals(ModeManager.getMode()) ? "Internal" : ConfigManager.getString("multi_server.server_name");
 		String minecraftVersion = EnvironmentUtils.getMinecraftVersion();

@@ -28,4 +28,17 @@ public interface CommandSender {
 	default void replyWithFile(String message, byte[] fileData, String fileName) {
 		reply(message);
 	}
+
+	/**
+	 * Gets the permission level of the sender.
+	 * <p>
+	 * Defaults to maximum privileges (OP 4) for local/console senders,
+	 * ensuring unrestricted access for terminal and in-game operators.
+	 * Remote senders (Discord) will override this with a resolved value.
+	 *
+	 * @return The OP level (-1 to 4).
+	 */
+	default int getOpLevel() {
+		return 4;
+	}
 }

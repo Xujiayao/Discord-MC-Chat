@@ -1,9 +1,14 @@
 package com.xujiayao.discord_mc_chat.server.discord;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
 import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.utils.LogFileUtils;
+import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -27,6 +32,52 @@ public class DiscordEventHandler extends ListenerAdapter {
 
 	private static final int AUTOCOMPLETE_TIMEOUT_SECONDS = 5;
 
+	/**
+	 * Resolves the OP Level credential for a Discord user based on config mappings.
+	 * <p>
+	 * Resolution order (highest wins):
+	 * 1. user_mappings: exact user ID or username match.
+	 * 2. role_mappings: iterate user's roles, take the highest mapped OP level.
+	 * 3. TODO: Account linking (linked MC account's actual OP level).
+	 *
+	 * @param member The Discord Member object (null if in DMs).
+	 * @param user   The Discord User object.
+	 * @return The resolved OP level (-1 to 4).
+	 */
+	private int getOpLevel(Member member, User user) {
+		int maxOp = -1;
+
+		// Check exact user mappings first (highest priority)
+		JsonNode userMappings = ConfigManager.getConfigNode("account_linking.op_sync.user_mappings");
+		if (userMappings.isArray()) {
+			for (JsonNode node : userMappings) {
+				if (user.getId().equals(node.path("user").asText()) || user.getName().equals(node.path("user").asText())) {
+					maxOp = Math.max(maxOp, node.path("op_level").asInt(-1));
+				}
+			}
+		}
+
+		// Check role mappings if member exists (in a guild)
+		if (member != null) {
+			JsonNode roleMappings = ConfigManager.getConfigNode("account_linking.op_sync.role_mappings");
+			if (roleMappings.isArray()) {
+				for (Role role : member.getRoles()) {
+					for (JsonNode node : roleMappings) {
+						if (role.getId().equals(node.path("role").asText()) || role.getName().equals(node.path("role").asText())) {
+							maxOp = Math.max(maxOp, node.path("op_level").asInt(-1));
+						}
+					}
+				}
+			}
+		}
+
+		// TODO: Account Linking logic
+		// If maxOp is still -1, query links.json for linked Minecraft UUID
+		// and fetch exact OP level from the bound MC account.
+
+		return maxOp;
+	}
+
 	@Override
 	public void onReady(@NotNull ReadyEvent event) {
 		// TODO: Initialize Rich Presence Manager
@@ -36,23 +87,36 @@ public class DiscordEventHandler extends ListenerAdapter {
 	public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
 		event.deferReply().queue();
 
+		int opLevel = getOpLevel(event.getMember(), event.getUser());
 		String name = event.getName();
+
 		switch (name) {
 			case "execute" -> {
 				String at = event.getOption("at", OptionMapping::getAsString);
 				String command = event.getOption("command", OptionMapping::getAsString);
-				CommandManager.execute(new JdaCommandSender(event), name, at, command);
+				CommandManager.execute(new JdaCommandSender(event, opLevel), name, at, command);
+			}
+			case "console" -> {
+				String at = event.getOption("at", OptionMapping::getAsString);
+				String command = event.getOption("command", OptionMapping::getAsString);
+				if (at != null) {
+					// standalone mode: /console <at> <command>
+					CommandManager.execute(new JdaCommandSender(event, opLevel), name, at, command);
+				} else {
+					// single_server mode: /console <command>
+					CommandManager.execute(new JdaCommandSender(event, opLevel), name, command);
+				}
 			}
 			case "log" -> {
 				String file = event.getOption("file", OptionMapping::getAsString);
-				CommandManager.execute(new JdaCommandSender(event), name, file);
+				CommandManager.execute(new JdaCommandSender(event, opLevel), name, file);
 			}
 			case "stats" -> {
 				String type = event.getOption("type", OptionMapping::getAsString);
 				String stat = event.getOption("stat", OptionMapping::getAsString);
-				CommandManager.execute(new JdaCommandSender(event), name, type, stat);
+				CommandManager.execute(new JdaCommandSender(event, opLevel), name, type, stat);
 			}
-			default -> CommandManager.execute(new JdaCommandSender(event), name);
+			default -> CommandManager.execute(new JdaCommandSender(event, opLevel), name);
 		}
 	}
 
@@ -67,9 +131,16 @@ public class DiscordEventHandler extends ListenerAdapter {
 		switch (commandName) {
 			case "execute" -> {
 				if ("at".equals(focusedOption)) {
-					choices = getExecuteAtChoices(currentValue);
+					choices = getTargetAtChoices(currentValue);
 				} else if ("command".equals(focusedOption)) {
 					choices = getExecuteCommandChoices(currentValue, event);
+				}
+			}
+			case "console" -> {
+				if ("at".equals(focusedOption)) {
+					choices = getTargetAtChoices(currentValue);
+				} else if ("command".equals(focusedOption)) {
+					choices = getConsoleCommandChoices(currentValue, event);
 				}
 			}
 			case "log" -> {
@@ -91,13 +162,13 @@ public class DiscordEventHandler extends ListenerAdapter {
 	}
 
 	/**
-	 * Gets auto-complete choices for the 'at' parameter of the execute command.
+	 * Gets auto-complete choices for the 'at' parameter (shared by execute and console).
 	 * Includes "all_online_clients" as the first option, followed by configured server names.
 	 *
 	 * @param currentValue The current user input for filtering
 	 * @return List of choices
 	 */
-	private List<Command.Choice> getExecuteAtChoices(String currentValue) {
+	private List<Command.Choice> getTargetAtChoices(String currentValue) {
 		List<Command.Choice> choices = new ArrayList<>();
 		String lowerValue = currentValue.toLowerCase();
 
@@ -120,16 +191,40 @@ public class DiscordEventHandler extends ListenerAdapter {
 
 	/**
 	 * Gets auto-complete choices for the 'command' parameter of the execute command.
-	 * Sends a real-time auto-complete request to connected clients with the current input,
-	 * so clients can provide full command+argument suggestions (e.g., "log latest.log").
+	 * Sends a real-time auto-complete request to connected clients with the current input and OP level,
+	 * so clients can provide DMCC command suggestions that the user is authorized to execute.
 	 *
 	 * @param currentValue The current user input for filtering
 	 * @param event        The auto-complete event to read other options
 	 * @return List of choices
 	 */
 	private List<Command.Choice> getExecuteCommandChoices(String currentValue, CommandAutoCompleteInteractionEvent event) {
-		// Send the current input to all connected clients and collect suggestions
-		Map<String, List<String>> autoCompleteLists = NetworkManager.requestAutoCompleteSnapshot(currentValue, AUTOCOMPLETE_TIMEOUT_SECONDS);
+		int opLevel = getOpLevel(event.getMember(), event.getUser());
+
+		Map<String, List<String>> autoCompleteLists = NetworkManager.requestExecuteAutoCompleteSnapshot(currentValue, opLevel, AUTOCOMPLETE_TIMEOUT_SECONDS);
+
+		return autoCompleteLists.values().stream()
+				.flatMap(List::stream)
+				.filter(s -> s.toLowerCase().contains(currentValue.toLowerCase()))
+				.distinct()
+				.limit(25)
+				.map(s -> new Command.Choice(s, s))
+				.collect(Collectors.toList());
+	}
+
+	/**
+	 * Gets auto-complete choices for the 'command' parameter of the console command.
+	 * Sends a real-time auto-complete request to connected clients with the current input and OP level,
+	 * so clients can provide Minecraft command suggestions via their Brigadier dispatcher.
+	 *
+	 * @param currentValue The current user input for filtering
+	 * @param event        The auto-complete event to read other options
+	 * @return List of choices
+	 */
+	private List<Command.Choice> getConsoleCommandChoices(String currentValue, CommandAutoCompleteInteractionEvent event) {
+		int opLevel = getOpLevel(event.getMember(), event.getUser());
+
+		Map<String, List<String>> autoCompleteLists = NetworkManager.requestConsoleAutoCompleteSnapshot(currentValue, opLevel, AUTOCOMPLETE_TIMEOUT_SECONDS);
 
 		return autoCompleteLists.values().stream()
 				.flatMap(List::stream)

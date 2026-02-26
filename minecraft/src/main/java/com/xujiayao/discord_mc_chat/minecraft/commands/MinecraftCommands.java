@@ -89,6 +89,9 @@ public class MinecraftCommands {
 
 	/**
 	 * Command sender implementation for Minecraft command sources.
+	 * <p>
+	 * Resolves the OP level from the Minecraft permission system by probing
+	 * permission levels from 4 down to 0.
 	 *
 	 * @author Xujiayao
 	 */
@@ -101,6 +104,17 @@ public class MinecraftCommands {
 			for (String line : message.split("\n")) {
 				source.sendSuccess(() -> Component.literal(line), false);
 			}
+		}
+
+		@Override
+		public int getOpLevel() {
+			// Probe from highest to lowest to determine the sender's actual permission level
+			for (int level = 4; level >= 0; level--) {
+				if (source.hasPermission(level)) {
+					return level;
+				}
+			}
+			return 0;
 		}
 	}
 }

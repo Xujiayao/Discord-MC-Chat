@@ -2,6 +2,7 @@ package com.xujiayao.discord_mc_chat.server;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.Constants;
+import com.xujiayao.discord_mc_chat.commands.impl.ConsoleCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.ExecuteCommand;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
@@ -10,7 +11,9 @@ import com.xujiayao.discord_mc_chat.network.packets.auth.ChallengePacket;
 import com.xujiayao.discord_mc_chat.network.packets.auth.DisconnectPacket;
 import com.xujiayao.discord_mc_chat.network.packets.auth.HandshakePacket;
 import com.xujiayao.discord_mc_chat.network.packets.auth.LoginSuccessPacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.CommandAutoCompleteResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.ConsoleAutoCompleteResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.ConsoleResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.ExecuteAutoCompleteResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.ExecuteResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftEventPacket;
@@ -94,8 +97,11 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 				case InfoResponsePacket p -> NetworkManager.cacheInfoResponse(clientName, p);
 				case LatencyPingPacket p -> ctx.writeAndFlush(new LatencyPongPacket(p.sentAtMillis));
 				case ExecuteResponsePacket p -> ExecuteCommand.completeRequest(p.requestId, p);
-				case CommandAutoCompleteResponsePacket p ->
-						NetworkManager.cacheAutoCompleteResponse(clientName, p.suggestions);
+				case ConsoleResponsePacket p -> ConsoleCommand.completeRequest(p.requestId, p);
+				case ExecuteAutoCompleteResponsePacket p ->
+						NetworkManager.cacheExecuteAutoCompleteResponse(clientName, p.suggestions);
+				case ConsoleAutoCompleteResponsePacket p ->
+						NetworkManager.cacheConsoleAutoCompleteResponse(clientName, p.suggestions);
 				case null, default -> LOGGER.warn(unexpectedPacketMessage);
 			}
 		} else {
@@ -180,6 +186,12 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		ctx.close();
 	}
 
+	/**
+	 * Checks if the given server name is whitelisted in the configuration.
+	 *
+	 * @param serverName The server name to check.
+	 * @return true if whitelisted, false otherwise.
+	 */
 	private boolean isWhitelisted(String serverName) {
 		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
 		if (serversNode.isArray()) {
@@ -192,6 +204,12 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		return false;
 	}
 
+	/**
+	 * Gets the expected Minecraft version for a given server name from the configuration.
+	 *
+	 * @param serverName The server name to look up.
+	 * @return The expected Minecraft version, or an empty string if not found.
+	 */
 	private String getMinecraftVersion(String serverName) {
 		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
 		if (serversNode.isArray()) {
