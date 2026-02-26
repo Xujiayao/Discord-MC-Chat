@@ -30,6 +30,7 @@ commands:
     all_online_clients: "all online DMCC clients"
     no_online_clients: "No DMCC clients are online."
     dmcc_not_supported: "Executing DMCC commands through \"console\" command is not supported. Please use \"execute\" command."
+    server_not_ready: "Minecraft Server is not ready yet."
   help:
     description: "Show a list of available commands"
     help: "Help"

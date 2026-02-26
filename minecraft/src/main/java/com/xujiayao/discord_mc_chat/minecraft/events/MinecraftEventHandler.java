@@ -15,6 +15,7 @@ import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.events.CoreEvents;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
+import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
@@ -189,7 +190,7 @@ public class MinecraftEventHandler {
 
 		EventManager.register(CoreEvents.MinecraftCommandExecutionEvent.class, event -> {
 			if (serverInstance == null) {
-				event.sender().reply("Minecraft server is not ready yet.");
+				event.sender().reply(I18nManager.getDmccTranslation("commands.console.server_not_ready"));
 				event.completionFuture().complete(null);
 				return;
 			}
@@ -236,8 +237,6 @@ public class MinecraftEventHandler {
 			serverInstance.execute(() -> {
 				try {
 					serverInstance.getCommands().performPrefixedCommand(source, event.commandLine());
-				} catch (Exception e) {
-					event.sender().reply("Error executing command: " + e.getMessage());
 				} finally {
 					event.completionFuture().complete(null);
 				}
