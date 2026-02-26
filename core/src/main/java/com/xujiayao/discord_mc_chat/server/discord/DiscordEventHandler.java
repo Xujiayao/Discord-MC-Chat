@@ -126,6 +126,12 @@ public class DiscordEventHandler extends ListenerAdapter {
 		String focusedOption = event.getFocusedOption().getName();
 		String currentValue = event.getFocusedOption().getValue();
 
+		int opLevel = getOpLevel(event.getMember(), event.getUser());
+		if (opLevel < ConfigManager.getInt("command_permission_levels." + commandName, 4)) {
+			event.replyChoices(List.of()).queue();
+			return;
+		}
+
 		List<Command.Choice> choices = new ArrayList<>();
 
 		switch (commandName) {
