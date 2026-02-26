@@ -207,6 +207,10 @@ public class DiscordEventHandler extends ListenerAdapter {
 	private List<Command.Choice> getExecuteCommandChoices(String currentValue, CommandAutoCompleteInteractionEvent event) {
 		int opLevel = getOpLevel(event.getMember(), event.getUser());
 
+		if (currentValue.startsWith("/")) {
+			currentValue = currentValue.substring(1);
+		}
+
 		Map<String, List<String>> autoCompleteLists = NetworkManager.requestExecuteAutoCompleteSnapshot(currentValue, opLevel, AUTOCOMPLETE_TIMEOUT_SECONDS);
 
 		return autoCompleteLists.values().stream()
@@ -229,11 +233,14 @@ public class DiscordEventHandler extends ListenerAdapter {
 	private List<Command.Choice> getConsoleCommandChoices(String currentValue, CommandAutoCompleteInteractionEvent event) {
 		int opLevel = getOpLevel(event.getMember(), event.getUser());
 
+		if (currentValue.startsWith("/")) {
+			currentValue = currentValue.substring(1);
+		}
+
 		Map<String, List<String>> autoCompleteLists = NetworkManager.requestConsoleAutoCompleteSnapshot(currentValue, opLevel, AUTOCOMPLETE_TIMEOUT_SECONDS);
 
 		return autoCompleteLists.values().stream()
 				.flatMap(List::stream)
-				.filter(s -> s.toLowerCase().contains(currentValue.toLowerCase()))
 				.distinct()
 				.limit(25)
 				.map(s -> new Command.Choice(s, s))
