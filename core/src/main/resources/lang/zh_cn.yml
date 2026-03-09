@@ -132,7 +132,7 @@ commands:
     discord_only: "此命令只能在 Discord 上使用。"
     not_available: "此命令在当前模式下不可用。"
     already_linked: "你的 Minecraft 账户已绑定到一个 Discord 账户。"
-    code_generated: "你的验证码是：{}。在 Discord 上使用 /link {} 来完成绑定。验证码将在 5 分钟后过期。"
+    code_generated: "你的验证码是：{0}。在 Discord 上使用 /link {0} 来完成绑定。验证码将在 5 分钟后过期。"
     code_requested: "验证码请求已发送。请查看你的 Minecraft 聊天获取验证码。"
     invalid_code: "无效或已过期的验证码。"
     success: "成功绑定 Minecraft 玩家 \"{}\"！"
@@ -265,7 +265,7 @@ linking:
     saved: "已绑定账户保存成功。"
     save_failed: "保存已绑定账户失败。"
     linked: "已将 Discord 用户 {} 绑定到 Minecraft UUID {}。"
-    unlinked_discord: "已解除 Discord 用户 {} 的 {} 个 Minecraft 账户绑定。"
+    unlinked_discord: "已解除 Discord 用户 {1} 的 {0} 个 Minecraft 账户绑定。"
     unlinked_minecraft: "已解除 Minecraft UUID {} 与 Discord 用户 {} 的绑定。"
     uuid_already_linked: "Minecraft UUID {} 已绑定到 Discord 用户 {}。"
   verification:

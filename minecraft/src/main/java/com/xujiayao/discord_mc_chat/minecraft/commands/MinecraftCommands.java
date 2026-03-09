@@ -176,7 +176,7 @@ public class MinecraftCommands {
 			if (source.getEntity() instanceof ServerPlayer player) {
 				return player.getName().getString();
 			}
-			return source.getTextName();
+			return null;
 		}
 	}
 }
