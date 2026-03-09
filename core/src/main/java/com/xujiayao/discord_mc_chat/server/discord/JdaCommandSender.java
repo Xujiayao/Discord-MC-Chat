@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.server.discord;
 
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
+import com.xujiayao.discord_mc_chat.commands.impl.LinkCommand;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
@@ -14,10 +15,13 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  * <p>
  * For the execute command, the actual results are sent via webhooks by DiscordManager.
  * This sender only provides the ephemeral acknowledgement to the slash command invoker.
+ * <p>
+ * Implements {@link LinkCommand.DiscordUserContextProvider} to provide the Discord user ID
+ * for account linking commands.
  *
  * @author Xujiayao
  */
-public class JdaCommandSender implements CommandSender {
+public class JdaCommandSender implements CommandSender, LinkCommand.DiscordUserContextProvider {
 
 	private final SlashCommandInteractionEvent event;
 	private final int opLevel;
@@ -64,5 +68,10 @@ public class JdaCommandSender implements CommandSender {
 	@Override
 	public int getOpLevel() {
 		return opLevel;
+	}
+
+	@Override
+	public String getDiscordUserId() {
+		return event.getUser().getId();
 	}
 }

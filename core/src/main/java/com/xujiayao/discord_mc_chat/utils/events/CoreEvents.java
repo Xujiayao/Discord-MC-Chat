@@ -4,6 +4,7 @@ import com.xujiayao.discord_mc_chat.commands.CommandSender;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 /**
  * Core events for communication between DMCC Core and Minecraft-specific implementations.
@@ -51,6 +52,86 @@ public class CoreEvents {
 			String input,
 			int opLevel,
 			List<String> suggestions
+	) {
+	}
+
+	/**
+	 * Posted when a Minecraft player needs a verification code for account linking.
+	 * <p>
+	 * The handler should resolve the player's UUID and name from the Minecraft server
+	 * and invoke the callback with the result.
+	 *
+	 * @param playerUuid The UUID of the Minecraft player (as string).
+	 * @param playerName The display name of the Minecraft player.
+	 * @param callback   A consumer that receives the generated verification code,
+	 *                   or null if the player is already linked.
+	 */
+	public record LinkCodeRequestEvent(
+			String playerUuid,
+			String playerName,
+			Consumer<String> callback
+	) {
+	}
+
+	/**
+	 * Posted when a Minecraft player wants to unlink their account.
+	 * <p>
+	 * The handler should remove the link for the given UUID and invoke the callback.
+	 *
+	 * @param playerUuid The UUID of the Minecraft player (as string).
+	 * @param callback   A consumer that receives true if unlink was successful, false otherwise.
+	 */
+	public record UnlinkByUuidEvent(
+			String playerUuid,
+			Consumer<Boolean> callback
+	) {
+	}
+
+	/**
+	 * Posted when a Minecraft player joins the server to check their account link status.
+	 * <p>
+	 * The handler should check if the player's UUID is linked. If not linked,
+	 * a verification code should be generated and sent back via the callback.
+	 *
+	 * @param playerUuid The UUID of the Minecraft player (as string).
+	 * @param playerName The display name of the Minecraft player.
+	 * @param callback   A consumer that receives the verification code if not linked,
+	 *                   or null if already linked.
+	 */
+	public record PlayerJoinLinkCheckEvent(
+			String playerUuid,
+			String playerName,
+			Consumer<String> callback
+	) {
+	}
+
+	/**
+	 * Posted by the Client when receiving a link code response from the Server.
+	 * <p>
+	 * The Minecraft module should notify the player with the verification code.
+	 *
+	 * @param playerUuid   The UUID of the Minecraft player.
+	 * @param code         The verification code, or null if already linked.
+	 * @param alreadyLinked Whether the player is already linked.
+	 */
+	public record LinkCodeResponseEvent(
+			String playerUuid,
+			String code,
+			boolean alreadyLinked
+	) {
+	}
+
+	/**
+	 * Posted by the Client when receiving an unlink response from the Server.
+	 * <p>
+	 * The Minecraft module should notify the player with the result.
+	 *
+	 * @param playerUuid The UUID of the Minecraft player.
+	 * @param success    Whether the unlink was successful.
+	 */
+	public record UnlinkResponseEvent(
+			String playerUuid,
+			boolean success
 	) {
 	}
 }

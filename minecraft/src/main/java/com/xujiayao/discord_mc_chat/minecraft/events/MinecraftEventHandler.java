@@ -12,6 +12,9 @@ import com.xujiayao.discord_mc_chat.minecraft.translations.TranslationManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.commands.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftEventPacket;
+import com.xujiayao.discord_mc_chat.network.packets.linking.LinkCodeRequestPacket;
+import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
+import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
@@ -137,6 +140,29 @@ public class MinecraftEventHandler {
 					"display_name", event.serverPlayer().getDisplayName().getString()
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_JOIN, placeholders));
+
+			// Account linking: check if this player is linked
+			String playerUuid = event.serverPlayer().getStringUUID();
+			String playerName = event.serverPlayer().getName().getString();
+
+			switch (ModeManager.getMode()) {
+				case "single_server" -> {
+					// Direct access to server-side managers
+					if (!LinkedAccountManager.isMinecraftUuidLinked(playerUuid)) {
+						String code = VerificationCodeManager.generateOrRefreshCode(playerUuid, playerName);
+						// Notify the player in-game
+						ServerPlayer sp = event.serverPlayer();
+						sp.sendSystemMessage(Component.literal(
+								I18nManager.getDmccTranslation("linking.player_join.not_linked")));
+						sp.sendSystemMessage(Component.literal(
+								I18nManager.getDmccTranslation("linking.player_join.code_hint", code)));
+					}
+				}
+				case "multi_server_client" -> {
+					// Send request to standalone server
+					NetworkManager.sendPacketToServer(new LinkCodeRequestPacket(playerUuid, playerName));
+				}
+			}
 		});
 
 		EventManager.register(MinecraftEvents.PlayerQuit.class, event -> {
@@ -319,6 +345,51 @@ public class MinecraftEventHandler {
 				event.suggestions().addAll(currentResult);
 			} catch (Exception ignored) {
 			}
+		});
+
+		// ===== Account Linking Response Events =====
+
+		EventManager.register(CoreEvents.LinkCodeResponseEvent.class, event -> {
+			if (serverInstance == null) return;
+
+			// Find the player and notify them
+			serverInstance.execute(() -> {
+				try {
+					UUID uuid = UUID.fromString(event.playerUuid());
+					ServerPlayer player = serverInstance.getPlayerList().getPlayer(uuid);
+					if (player != null) {
+						if (event.alreadyLinked()) {
+							player.sendSystemMessage(Component.literal(
+									I18nManager.getDmccTranslation("commands.link.already_linked")));
+						} else if (event.code() != null) {
+							player.sendSystemMessage(Component.literal(
+									I18nManager.getDmccTranslation("linking.player_join.code_hint", event.code())));
+						}
+					}
+				} catch (Exception ignored) {
+				}
+			});
+		});
+
+		EventManager.register(CoreEvents.UnlinkResponseEvent.class, event -> {
+			if (serverInstance == null) return;
+
+			serverInstance.execute(() -> {
+				try {
+					UUID uuid = UUID.fromString(event.playerUuid());
+					ServerPlayer player = serverInstance.getPlayerList().getPlayer(uuid);
+					if (player != null) {
+						if (event.success()) {
+							player.sendSystemMessage(Component.literal(
+									I18nManager.getDmccTranslation("commands.unlink.success")));
+						} else {
+							player.sendSystemMessage(Component.literal(
+									I18nManager.getDmccTranslation("commands.unlink.not_linked")));
+						}
+					}
+				} catch (Exception ignored) {
+				}
+			});
 		});
 	}
 

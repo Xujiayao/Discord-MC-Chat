@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
 import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
+import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.utils.LogFileUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import net.dv8tion.jda.api.entities.Member;
@@ -38,7 +39,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 	 * Resolution order (highest wins):
 	 * 1. user_mappings: exact user ID or username match.
 	 * 2. role_mappings: iterate user's roles, take the highest mapped OP level.
-	 * 3. TODO: Account linking (linked MC account's actual OP level).
+	 * 3. Account linking: linked MC account's actual OP level (reserved for future implementation).
 	 *
 	 * @param member The Discord Member object (null if in DMs).
 	 * @param user   The Discord User object.
@@ -71,9 +72,11 @@ public class DiscordEventHandler extends ListenerAdapter {
 			}
 		}
 
-		// TODO: Account Linking logic
-		// If maxOp is still -1, query links.json for linked Minecraft UUID
-		// and fetch exact OP level from the bound MC account.
+		// Account Linking: if user has linked MC accounts, they get at least OP 0
+		List<String> linkedUuids = LinkedAccountManager.getMinecraftUuidsByDiscordId(user.getId());
+		if (!linkedUuids.isEmpty() && maxOp < 0) {
+			maxOp = 0;
+		}
 
 		return maxOp;
 	}
@@ -115,6 +118,10 @@ public class DiscordEventHandler extends ListenerAdapter {
 				String type = event.getOption("type", OptionMapping::getAsString);
 				String stat = event.getOption("stat", OptionMapping::getAsString);
 				CommandManager.execute(new JdaCommandSender(event, opLevel), name, type, stat);
+			}
+			case "link" -> {
+				String code = event.getOption("code", OptionMapping::getAsString);
+				CommandManager.execute(new JdaCommandSender(event, opLevel), name, code);
 			}
 			default -> CommandManager.execute(new JdaCommandSender(event, opLevel), name);
 		}

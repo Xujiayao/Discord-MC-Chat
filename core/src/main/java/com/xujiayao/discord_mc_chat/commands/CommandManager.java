@@ -4,10 +4,13 @@ import com.xujiayao.discord_mc_chat.commands.impl.ConsoleCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.ExecuteCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.HelpCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.InfoCommand;
+import com.xujiayao.discord_mc_chat.commands.impl.LinkCommand;
+import com.xujiayao.discord_mc_chat.commands.impl.LinksCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.LogCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.ReloadCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.ShutdownCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
+import com.xujiayao.discord_mc_chat.commands.impl.UnlinkCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.WhitelistCommand;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
@@ -52,15 +55,23 @@ public class CommandManager {
 				register(new ExecuteCommand());
 				register(new ConsoleCommand());
 				register(new ShutdownCommand());
+				register(new LinkCommand());
+				register(new UnlinkCommand());
+				register(new LinksCommand());
 			}
 			case "single_server" -> {
 				register(new ConsoleCommand());
 				register(new StatsCommand());
 				register(new WhitelistCommand());
+				register(new LinkCommand());
+				register(new UnlinkCommand());
+				register(new LinksCommand());
 			}
 			case "multi_server_client" -> {
 				register(new StatsCommand());
 				register(new WhitelistCommand());
+				register(new LinkCommand());
+				register(new UnlinkCommand());
 			}
 		}
 	}

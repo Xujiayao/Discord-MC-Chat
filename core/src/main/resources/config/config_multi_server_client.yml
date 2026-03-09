@@ -38,9 +38,11 @@ multi_server:
 command_permission_levels:
   help: -1
   info: -1
+  link: 0
   log: 4
   reload: 4
   stats: -1
+  unlink: 0
   whitelist: 0
 
 # 统计数据收集设置
