@@ -132,7 +132,7 @@ commands:
     discord_only: "This command can only be used from Discord."
     not_available: "This command is not available in the current mode."
     already_linked: "Your Minecraft account is already linked to a Discord account."
-    code_generated: "Your verification code is: {}. Use /link {} on Discord to complete linking. The code expires in 5 minutes."
+    code_generated: "Your verification code is: {0}. Use /link {0} on Discord to complete linking. The code expires in 5 minutes."
     code_requested: "Verification code request sent. Check your Minecraft chat for the code."
     invalid_code: "Invalid or expired verification code."
     success: "Successfully linked to Minecraft player \"{}\"!"
@@ -265,7 +265,7 @@ linking:
     saved: "Linked accounts saved successfully."
     save_failed: "Failed to save linked accounts."
     linked: "Linked Discord user {} to Minecraft UUID {}."
-    unlinked_discord: "Unlinked {} Minecraft account(s) from Discord user {}."
+    unlinked_discord: "Unlinked {0} Minecraft account(s) from Discord user {1}."
     unlinked_minecraft: "Unlinked Minecraft UUID {} from Discord user {}."
     uuid_already_linked: "Minecraft UUID {} is already linked to Discord user {}."
   verification:

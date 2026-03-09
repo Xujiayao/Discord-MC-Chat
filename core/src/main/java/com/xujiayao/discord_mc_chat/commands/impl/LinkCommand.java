@@ -2,14 +2,11 @@ package com.xujiayao.discord_mc_chat.commands.impl;
 
 import com.xujiayao.discord_mc_chat.commands.Command;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
-import com.xujiayao.discord_mc_chat.commands.LocalCommandSender;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.linking.LinkCodeRequestPacket;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
-import com.xujiayao.discord_mc_chat.utils.events.CoreEvents;
-import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
 /**
@@ -110,6 +107,11 @@ public class LinkCommand implements Command {
 
 		String uuid = player.getPlayerUuid();
 		String name = player.getPlayerName();
+
+		if (uuid == null) {
+			sender.reply(I18nManager.getDmccTranslation("commands.link.player_only"));
+			return;
+		}
 
 		switch (ModeManager.getMode()) {
 			case "single_server" -> {
