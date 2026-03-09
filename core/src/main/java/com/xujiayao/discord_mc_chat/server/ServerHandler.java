@@ -17,10 +17,16 @@ import com.xujiayao.discord_mc_chat.network.packets.commands.ExecuteAutoComplete
 import com.xujiayao.discord_mc_chat.network.packets.commands.ExecuteResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftEventPacket;
+import com.xujiayao.discord_mc_chat.network.packets.linking.LinkCodeRequestPacket;
+import com.xujiayao.discord_mc_chat.network.packets.linking.LinkCodeResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.linking.UnlinkByUuidRequestPacket;
+import com.xujiayao.discord_mc_chat.network.packets.linking.UnlinkByUuidResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPingPacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPongPacket;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
+import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
+import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
@@ -102,6 +108,18 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 						NetworkManager.cacheExecuteAutoCompleteResponse(clientName, p.suggestions);
 				case ConsoleAutoCompleteResponsePacket p ->
 						NetworkManager.cacheConsoleAutoCompleteResponse(clientName, p.suggestions);
+				case LinkCodeRequestPacket p -> {
+					if (LinkedAccountManager.isMinecraftUuidLinked(p.minecraftUuid)) {
+						ctx.writeAndFlush(new LinkCodeResponsePacket(p.minecraftUuid, null, true));
+					} else {
+						String code = VerificationCodeManager.generateOrRefreshCode(p.minecraftUuid, p.playerName);
+						ctx.writeAndFlush(new LinkCodeResponsePacket(p.minecraftUuid, code, false));
+					}
+				}
+				case UnlinkByUuidRequestPacket p -> {
+					boolean success = LinkedAccountManager.unlinkByMinecraftUuid(p.minecraftUuid);
+					ctx.writeAndFlush(new UnlinkByUuidResponsePacket(p.minecraftUuid, success));
+				}
 				case null, default -> LOGGER.warn(unexpectedPacketMessage);
 			}
 		} else {

@@ -179,9 +179,12 @@ command_permission_levels:
   execute: -1
   help: -1
   info: -1
+  link: 0
+  links: 4
   log: 4
   reload: 4
   shutdown: 4 # This is for standalone DMCC only, which will exit JVM
+  unlink: 0
 
 # 检查更新设置
 check_for_updates:

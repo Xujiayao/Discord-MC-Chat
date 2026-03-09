@@ -124,6 +124,31 @@ commands:
     description: "Add a player to the server whitelist"
     args_desc:
       player: "Player name"
+  link:
+    description: "Link your Minecraft account to Discord"
+    args_desc:
+      code: "Verification code from Minecraft"
+    player_only: "This command can only be used by a Minecraft player."
+    discord_only: "This command can only be used from Discord."
+    not_available: "This command is not available in the current mode."
+    already_linked: "Your Minecraft account is already linked to a Discord account."
+    code_generated: "Your verification code is: {}. Use /link {} on Discord to complete linking. The code expires in 5 minutes."
+    code_requested: "Verification code request sent. Check your Minecraft chat for the code."
+    invalid_code: "Invalid or expired verification code."
+    success: "Successfully linked to Minecraft player \"{}\"!"
+    uuid_already_linked: "This Minecraft account is already linked to another Discord user."
+  unlink:
+    description: "Unlink your Minecraft account from Discord"
+    not_available: "This command is not available in the current mode."
+    success: "Your Minecraft account has been unlinked."
+    not_linked: "No linked account found."
+    request_sent: "Unlink request sent to the server."
+    discord_success: "Successfully unlinked {} Minecraft account(s)."
+  links:
+    description: "View all linked accounts"
+    no_links: "No linked accounts found."
+    title: "Linked Accounts"
+    total: "Total: {} linked account(s) across {} Discord user(s)."
 
 main:
   init:
@@ -232,6 +257,24 @@ utils:
     custom_validation_failed: "Validation of custom message config failed."
     custom_load_failed: "Failed to load custom messages."
     fully_loaded: "DMCC language resources fully loaded!"
+
+linking:
+  manager:
+    loaded: "Loaded {} linked account(s)."
+    load_failed: "Failed to load linked accounts."
+    saved: "Linked accounts saved successfully."
+    save_failed: "Failed to save linked accounts."
+    linked: "Linked Discord user {} to Minecraft UUID {}."
+    unlinked_discord: "Unlinked {} Minecraft account(s) from Discord user {}."
+    unlinked_minecraft: "Unlinked Minecraft UUID {} from Discord user {}."
+    uuid_already_linked: "Minecraft UUID {} is already linked to Discord user {}."
+  verification:
+    generated: "Generated verification code {} for player {}."
+    refreshed: "Refreshed verification code {} for player {}."
+    consumed: "Verification code {} consumed by player {}."
+  player_join:
+    not_linked: "Your Minecraft account is not linked to Discord. Use /dmcc link to get a verification code."
+    code_hint: "Use /link {} on Discord within 5 minutes to link your account."
 
 minecraft:
   translations:

@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.server;
 
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
+import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
 import java.util.concurrent.ExecutorService;
@@ -34,6 +35,12 @@ public class ServerDMCC {
 	public int start() {
 		try (ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Server"))) {
 			return executor.submit(() -> {
+				// Load linked accounts before Discord initialization
+				if (!LinkedAccountManager.load()) {
+					LOGGER.warn(I18nManager.getDmccTranslation("linking.manager.load_failed"));
+					// Non-fatal: continue with empty linked accounts
+				}
+
 				if (!DiscordManager.init()) {
 					LOGGER.error(I18nManager.getDmccTranslation("server.discord_init_failed"));
 					return -1;
@@ -55,6 +62,7 @@ public class ServerDMCC {
 			nettyServer.stop();
 		}
 
+		LinkedAccountManager.shutdown();
 		DiscordManager.shutdown();
 	}
 }

@@ -3,6 +3,7 @@ package com.xujiayao.discord_mc_chat.minecraft.commands;
 import com.mojang.brigadier.CommandDispatcher;
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
 import com.xujiayao.discord_mc_chat.commands.LocalCommandSender;
+import com.xujiayao.discord_mc_chat.commands.impl.LinkCommand;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -11,6 +12,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.StatType;
 
 import java.util.Optional;
@@ -79,12 +81,26 @@ public class MinecraftCommands {
 									CommandManager.execute(new MinecraftCommandSender(ctx.getSource()), "stats", typeLoc.toString(), statLoc.toString());
 									return 1;
 								})));
+		var link = literal("link")
+				.requires(source -> source.hasPermission(ConfigManager.getInt("command_permission_levels.link", 0)))
+				.executes(ctx -> {
+					CommandManager.execute(new MinecraftPlayerCommandSender(ctx.getSource()), "link");
+					return 1;
+				});
+		var unlink = literal("unlink")
+				.requires(source -> source.hasPermission(ConfigManager.getInt("command_permission_levels.unlink", 0)))
+				.executes(ctx -> {
+					CommandManager.execute(new MinecraftPlayerCommandSender(ctx.getSource()), "unlink");
+					return 1;
+				});
 
 		dispatcher.register(root
 				.then(help)
 				.then(info)
 				.then(reload)
-				.then(stats));
+				.then(stats)
+				.then(link)
+				.then(unlink));
 	}
 
 	/**
@@ -115,6 +131,52 @@ public class MinecraftCommands {
 				}
 			}
 			return 0;
+		}
+	}
+
+	/**
+	 * Command sender implementation for Minecraft players, providing player context
+	 * (UUID and name) for account linking commands.
+	 * <p>
+	 * If the command source is not a player (e.g., console or command block),
+	 * the player context methods return null/empty values.
+	 *
+	 * @author Xujiayao
+	 */
+	private record MinecraftPlayerCommandSender(CommandSourceStack source)
+			implements LocalCommandSender, LinkCommand.PlayerContextProvider {
+
+		@Override
+		public void reply(String message) {
+			for (String line : message.split("\n")) {
+				source.sendSuccess(() -> Component.literal(line), false);
+			}
+		}
+
+		@Override
+		public int getOpLevel() {
+			for (int level = 4; level >= 0; level--) {
+				if (source.hasPermission(level)) {
+					return level;
+				}
+			}
+			return 0;
+		}
+
+		@Override
+		public String getPlayerUuid() {
+			if (source.getEntity() instanceof ServerPlayer player) {
+				return player.getStringUUID();
+			}
+			return null;
+		}
+
+		@Override
+		public String getPlayerName() {
+			if (source.getEntity() instanceof ServerPlayer player) {
+				return player.getName().getString();
+			}
+			return source.getTextName();
 		}
 	}
 }

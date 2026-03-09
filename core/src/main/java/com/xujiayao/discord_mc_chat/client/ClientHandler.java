@@ -21,6 +21,8 @@ import com.xujiayao.discord_mc_chat.network.packets.commands.ExecuteRequestPacke
 import com.xujiayao.discord_mc_chat.network.packets.commands.ExecuteResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.InfoRequestPacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.InfoResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.linking.LinkCodeResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.linking.UnlinkByUuidResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPongPacket;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
@@ -191,6 +193,14 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 				List<String> suggestions = new ArrayList<>();
 				EventManager.post(new CoreEvents.MinecraftCommandAutoCompleteEvent(p.input, p.opLevel, suggestions));
 				ctx.writeAndFlush(new ConsoleAutoCompleteResponsePacket(client.getServerName(), suggestions));
+			}
+			case LinkCodeResponsePacket p -> {
+				// Handle link code response from server - notify the player
+				EventManager.post(new CoreEvents.LinkCodeResponseEvent(p.minecraftUuid, p.code, p.alreadyLinked));
+			}
+			case UnlinkByUuidResponsePacket p -> {
+				// Handle unlink response from server - notify the player
+				EventManager.post(new CoreEvents.UnlinkResponseEvent(p.minecraftUuid, p.success));
 			}
 			case DisconnectPacket p -> {
 				// If we receive a DisconnectPacket, it means the server explicitly rejected us.
