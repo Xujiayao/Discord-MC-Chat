@@ -106,7 +106,7 @@ account_linking:
   # 这个 OP 等级将被用于决定该用户是否有权执行某些 DMCC 命令（包括 execute 的委托鉴权）。
   op_sync:
     # 开启后，DMCC 还会自动在游戏内赋予/撤销已绑定玩家实际的 OP 权限。
-    sync_op_level_to_minecraft: true
+    sync_op_level_to_minecraft: false
     # 基于特定用户的映射（优先级最高）。
     user_mappings:
       - user: "xujiayao"

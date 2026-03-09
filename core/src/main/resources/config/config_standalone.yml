@@ -26,6 +26,10 @@ multi_server:
       minecraft_version: "1.21.10"
       avatar_url: ""
       color: "yellow"
+    - name: "CMP"
+      minecraft_version: "1.21.10"
+      avatar_url: ""
+      color: "green"
 
 # Discord 设置
 discord:
@@ -100,6 +104,8 @@ console_forwarding:
   channels:
     - server: "SMP"
       channel: "console-smp"
+    - server: "CMP"
+      channel: "console-cmp"
 
 # 频道主题更新设置
 channel_topic_updating:
@@ -121,19 +127,31 @@ account_linking:
   # 这个 OP 等级将被用于决定该用户是否有权执行某些 DMCC 命令（包括 execute 的委托鉴权）。
   op_sync:
     # 开启后，DMCC 还会自动在游戏内赋予/撤销已绑定玩家实际的 OP 权限。
-    sync_op_level_to_minecraft: true
+    sync_op_level_to_minecraft: false
     # 基于特定用户的映射（优先级最高）。
     user_mappings:
       - user: "xujiayao"
-        op_level: 4
+        servers:
+          - server: "SMP"
+            op_level: 4
+          - server: "CMP"
+            op_level: 4
     # 基于身份组的映射。若用户有多个身份组，取映射的最高 OP 等级。
     role_mappings:
       # 示例 1：拥有 "Admins" 角色的用户将被视为 OP 3。
       - role: "Admins"
-        op_level: 3
+        servers:
+          - server: "SMP"
+            op_level: 3
+          - server: "CMP"
+            op_level: 3
       # 示例 2：可将基础认证角色映射为 OP 0，使其有权执行无需特殊权限的 DMCC 命令（如委托执行白名单）。
       - role: "Players"
-        op_level: 0
+        servers:
+          - server: "SMP"
+            op_level: 0
+          - server: "CMP"
+            op_level: 2
   use_role_colors_in_chat: true
   discord_mention_notifications:
     enable: true
