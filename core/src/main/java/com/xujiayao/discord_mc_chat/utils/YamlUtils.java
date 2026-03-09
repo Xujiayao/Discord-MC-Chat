@@ -3,7 +3,6 @@ package com.xujiayao.discord_mc_chat.utils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
-import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -29,11 +28,10 @@ public class YamlUtils {
 	 *
 	 * @param userConfig        The user-loaded config to validate
 	 * @param templateConfig    The template config to validate against
-	 * @param configPath        The path to the config file for logging purposes
 	 * @param errorOnUnmodified If true, an error is logged if the file is identical to the template
 	 * @return true if the config is valid, false otherwise
 	 */
-	public static boolean validate(JsonNode userConfig, JsonNode templateConfig, Path configPath, boolean errorOnUnmodified) {
+	public static boolean validate(JsonNode userConfig, JsonNode templateConfig, boolean errorOnUnmodified) {
 		// Check if config is identical to template (user made no changes)
 		if (errorOnUnmodified && userConfig.equals(templateConfig)) {
 			LOGGER.error(I18nManager.getDmccTranslation("utils.yaml.unmodified"));
@@ -148,8 +146,12 @@ public class YamlUtils {
 
 		// Check for direct node type mismatch (covers string/object/array/etc.)
 		if (template.getNodeType() != config.getNodeType()) {
-			issues.add((path.isEmpty() ? "(root)" : path) + ": Expected type " + template.getNodeType()
-					+ " but found " + config.getNodeType());
+			// Special case: The user emptied an array
+			// Consider this case valid
+			if (!(template.isArray() && config.isNull())) {
+				issues.add((path.isEmpty() ? "(root)" : path) + ": Expected type " + template.getNodeType()
+						+ " but found " + config.getNodeType());
+			}
 			return issues; // If types mismatch, don't recurse further at this node
 		}
 
