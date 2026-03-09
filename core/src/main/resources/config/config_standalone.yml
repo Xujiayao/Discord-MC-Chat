@@ -26,7 +26,6 @@ multi_server:
       minecraft_version: "1.21.10"
       avatar_url: ""
       color: "yellow"
-      start_command: "./SMP/start.bat"  # command or url
 
 # Discord 设置
 discord:
