@@ -94,7 +94,7 @@ public class ConfigManager {
 			}
 
 			// Validate config
-			if (!YamlUtils.validate(userConfig, templateConfig, CONFIG_FILE_PATH, true)) {
+			if (!YamlUtils.validate(userConfig, templateConfig, true)) {
 				LOGGER.error(I18nManager.getDmccTranslation("utils.config.config.validation_failed"));
 				return false;
 			}

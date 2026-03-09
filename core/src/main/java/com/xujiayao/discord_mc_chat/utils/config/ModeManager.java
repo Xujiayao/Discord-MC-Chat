@@ -71,7 +71,7 @@ public class ModeManager {
 			}
 
 			// Validate the mode file
-			if (!YamlUtils.validate(userModeConfig, templateModeConfig, MODE_FILE_PATH, true)) {
+			if (!YamlUtils.validate(userModeConfig, templateModeConfig, true)) {
 				LOGGER.error(I18nManager.getDmccTranslation("utils.config.mode.validation_failed"));
 				return false;
 			}

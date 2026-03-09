@@ -185,7 +185,7 @@ public class I18nManager {
 
 			// Validate the user's file against the template.
 			// The `errorOnUnmodified` flag is set to false because users might not need to customize messages.
-			if (!YamlUtils.validate(userMessages, templateMessages, customMessagesPath, false)) {
+			if (!YamlUtils.validate(userMessages, templateMessages, false)) {
 				LOGGER.error(I18nManager.getDmccTranslation("utils.i18n.custom_validation_failed"));
 				return false;
 			}
