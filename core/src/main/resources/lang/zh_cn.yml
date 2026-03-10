@@ -273,6 +273,7 @@ linking:
   player_join:
     not_linked: "你的 Minecraft 账户尚未绑定 Discord。使用 /dmcc link 获取验证码。"
     code_hint: "在 5 分钟内在 Discord 上使用 /link {} 来绑定你的账户。"
+    click_to_copy: "点击复制验证码"
 
 minecraft:
   translations:

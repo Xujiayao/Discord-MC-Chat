@@ -68,6 +68,7 @@ public class CommandAutoCompleter {
 
 			CommandManager.getCommands().stream()
 					.filter(cmd -> cmd.name().startsWith(commandName))
+					.filter(Command::isAutoCompletable)
 					.sorted(Comparator.comparing(Command::name))
 					.forEach(cmd -> addCommandIfAuthorized(cmd, opLevel, suggestions));
 
@@ -308,6 +309,9 @@ public class CommandAutoCompleter {
 	 * @param suggestions The list to append to.
 	 */
 	private static void addCommandIfAuthorized(Command cmd, int opLevel, List<String> suggestions) {
+		if (!cmd.isAutoCompletable()) {
+			return;
+		}
 		int requiredOp = ConfigManager.getInt("command_permission_levels." + cmd.name(), 4);
 		if (opLevel >= requiredOp) {
 			StringBuilder builder = new StringBuilder();

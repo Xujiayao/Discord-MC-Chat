@@ -23,16 +23,22 @@ import com.xujiayao.discord_mc_chat.utils.events.CoreEvents;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import net.minecraft.advancements.DisplayInfo;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerTickRateManager;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.NameAndId;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.server.players.ServerOpList;
+import net.minecraft.server.players.ServerOpListEntry;
 import net.minecraft.stats.StatType;
 import net.minecraft.util.TimeUtil;
 import net.minecraft.world.level.GameRules;
@@ -162,6 +168,7 @@ public class MinecraftEventHandler {
 								I18nManager.getDmccTranslation("linking.player_join.not_linked")));
 						sp.sendSystemMessage(Component.literal(
 								I18nManager.getDmccTranslation("linking.player_join.code_hint", code)));
+						sp.sendSystemMessage(buildClickableCode(code));
 					}
 				}
 				case "multi_server_client" -> {
@@ -369,7 +376,8 @@ public class MinecraftEventHandler {
 									I18nManager.getDmccTranslation("commands.link.already_linked", event.discordName())));
 						} else if (event.code() != null) {
 							player.sendSystemMessage(Component.literal(
-									I18nManager.getDmccTranslation("linking.player_join.code_hint", event.code())));
+									I18nManager.getDmccTranslation("commands.link.code_generated", event.code())));
+							player.sendSystemMessage(buildClickableCode(event.code()));
 						}
 					}
 				} catch (Exception ignored) {
@@ -405,17 +413,16 @@ public class MinecraftEventHandler {
 
 			serverInstance.execute(() -> {
 				try {
-					net.minecraft.server.players.PlayerList playerList = serverInstance.getPlayerList();
-					net.minecraft.server.players.ServerOpList opList = playerList.getOps();
+					PlayerList playerList = serverInstance.getPlayerList();
+					ServerOpList opList = playerList.getOps();
 
 					// Step 1: De-op all currently opped players
 					// Copy the list to avoid ConcurrentModificationException
-					List<net.minecraft.server.players.ServerOpListEntry> currentOps =
-							new ArrayList<>(opList.getEntries());
-					for (net.minecraft.server.players.ServerOpListEntry op : currentOps) {
-						com.mojang.authlib.GameProfile profile = op.getUser();
-						if (profile != null) {
-							playerList.deop(profile);
+					List<ServerOpListEntry> currentOps = new ArrayList<>(opList.getEntries());
+					for (ServerOpListEntry op : currentOps) {
+						NameAndId nameAndId = op.getUser();
+						if (nameAndId != null) {
+							playerList.deop(nameAndId);
 						}
 					}
 
@@ -427,15 +434,15 @@ public class MinecraftEventHandler {
 
 						try {
 							UUID uuid = UUID.fromString(uuidStr);
-							com.mojang.authlib.GameProfile profile = serverInstance.getProfileCache()
-									.get(uuid).orElse(null);
-							if (profile == null) {
-								// Profile not in cache; skip this entry as we can't op without a valid profile
+							Optional<NameAndId> nameAndIdOpt = serverInstance.services().nameToIdCache().get(uuid);
+							if (nameAndIdOpt.isEmpty()) {
+								// Profile not in cache; skip this entry
 								continue;
 							}
+							NameAndId nameAndId = nameAndIdOpt.get();
 							// Add the OP entry with the exact desired level
-							opList.add(new net.minecraft.server.players.ServerOpListEntry(
-									profile, opLevel, opList.canBypassPlayerLimit(profile)));
+							opList.add(new ServerOpListEntry(
+									nameAndId, opLevel, opList.canBypassPlayerLimit(nameAndId)));
 						} catch (Exception ignored) {
 						}
 					}
@@ -532,6 +539,22 @@ public class MinecraftEventHandler {
 		} catch (Exception ignored) {
 			return false;
 		}
+	}
+
+	/**
+	 * Builds a clickable Component for a verification code.
+	 * When clicked, the code is copied to the player's clipboard.
+	 *
+	 * @param code The verification code.
+	 * @return A clickable Component.
+	 */
+	private static Component buildClickableCode(String code) {
+		return Component.literal("[" + code + "]").withStyle(style -> style
+				.withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, code))
+				.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+						Component.literal(I18nManager.getDmccTranslation("linking.player_join.click_to_copy"))))
+				.withColor(ChatFormatting.GREEN)
+				.withBold(true));
 	}
 
 	/**

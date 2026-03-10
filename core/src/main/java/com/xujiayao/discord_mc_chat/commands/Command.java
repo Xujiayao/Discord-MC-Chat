@@ -54,6 +54,19 @@ public interface Command {
 	}
 
 	/**
+	 * Whether this command should appear in auto-complete suggestions for the execute command.
+	 * <p>
+	 * Commands that are only meaningful for specific sender types (e.g., link/unlink
+	 * which require player or Discord context) should return false.
+	 * This does NOT affect whether the command can be executed — only its auto-complete visibility.
+	 *
+	 * @return true if this command should appear in auto-complete, false otherwise.
+	 */
+	default boolean isAutoCompletable() {
+		return true;
+	}
+
+	/**
 	 * Whether this command should be visible in help listings for the given sender.
 	 * <p>
 	 * Commands can override this to hide themselves from certain sender types.
