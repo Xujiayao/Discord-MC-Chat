@@ -4,6 +4,7 @@ import com.xujiayao.discord_mc_chat.client.ClientDMCC;
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.server.ServerDMCC;
+import com.xujiayao.discord_mc_chat.server.linking.OpSyncManager;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
@@ -147,6 +148,13 @@ public class DMCC {
 				}
 
 				LOGGER.info(I18nManager.getDmccTranslation("main.init.success"));
+
+				// Trigger OP sync after successful initialization
+				// In single_server mode on first start, this is redundant with the ServerStarted event sync,
+				// but on reload it is necessary since ServerStarted won't fire again.
+				// In standalone mode, this syncs all currently connected clients.
+				OpSyncManager.syncAll();
+
 				return true;
 			}).get();
 		} catch (Exception e) {
