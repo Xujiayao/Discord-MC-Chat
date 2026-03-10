@@ -35,7 +35,8 @@ public class UnlinkCommand implements Command {
 
 	@Override
 	public boolean isVisibleInHelp(CommandSender sender) {
-		return (sender instanceof LinkCommand.PlayerContextProvider) || (sender instanceof LinkCommand.DiscordUserContextProvider);
+		// Always visible - unlink is available to players and Discord users
+		return true;
 	}
 
 	@Override
@@ -58,16 +59,18 @@ public class UnlinkCommand implements Command {
 
 		switch (ModeManager.getMode()) {
 			case "single_server" -> {
-				boolean success = LinkedAccountManager.unlinkByMinecraftUuid(uuid, name);
-				if (success) {
-					sender.reply(I18nManager.getDmccTranslation("commands.unlink.success"));
+				// Look up the linked Discord ID before unlinking so we can show it
+				String discordId = LinkedAccountManager.getDiscordIdByMinecraftUuid(uuid);
+				String unlinkResult = LinkedAccountManager.unlinkByMinecraftUuid(uuid, name);
+				if (unlinkResult != null) {
+					String discordName = LinkedAccountManager.resolveDiscordName(discordId);
+					sender.reply(I18nManager.getDmccTranslation("commands.unlink.success", discordName));
 				} else {
 					sender.reply(I18nManager.getDmccTranslation("commands.unlink.not_linked"));
 				}
 			}
 			case "multi_server_client" -> {
 				NetworkManager.sendPacketToServer(new UnlinkRequestPacket(uuid, name));
-				sender.reply(I18nManager.getDmccTranslation("commands.unlink.request_sent"));
 			}
 			default -> sender.reply(I18nManager.getDmccTranslation("commands.unlink.not_available"));
 		}
@@ -82,7 +85,7 @@ public class UnlinkCommand implements Command {
 		int count = LinkedAccountManager.unlinkByDiscordId(discordId, discordName);
 
 		if (count > 0) {
-			sender.reply(I18nManager.getDmccTranslation("commands.unlink.discord_success", count));
+			sender.reply(I18nManager.getDmccTranslation("commands.unlink.discord_success", count, discordName));
 		} else {
 			sender.reply(I18nManager.getDmccTranslation("commands.unlink.not_linked"));
 		}

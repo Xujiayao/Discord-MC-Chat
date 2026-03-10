@@ -196,11 +196,11 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 			}
 			case LinkResponsePacket p -> {
 				// Handle link code response from server - notify the player
-				EventManager.post(new CoreEvents.LinkCodeResponseEvent(p.minecraftUuid, p.code, p.alreadyLinked));
+				EventManager.post(new CoreEvents.LinkCodeResponseEvent(p.minecraftUuid, p.code, p.alreadyLinked, p.discordName != null ? p.discordName : ""));
 			}
 			case UnlinkResponsePacket p -> {
 				// Handle unlink response from server - notify the player
-				EventManager.post(new CoreEvents.UnlinkResponseEvent(p.minecraftUuid, p.success));
+				EventManager.post(new CoreEvents.UnlinkResponseEvent(p.minecraftUuid, p.success, p.discordName != null ? p.discordName : ""));
 			}
 			case DisconnectPacket p -> {
 				// If we receive a DisconnectPacket, it means the server explicitly rejected us.

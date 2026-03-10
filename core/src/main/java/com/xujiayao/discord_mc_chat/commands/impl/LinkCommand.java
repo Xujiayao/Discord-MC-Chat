@@ -75,6 +75,28 @@ public class LinkCommand implements Command {
 	}
 
 	@Override
+	public CommandArgument[] argsForSender(CommandSender sender) {
+		// In Discord context, show the <code> argument
+		if (sender instanceof DiscordUserContextProvider) {
+			return new CommandArgument[]{
+					new CommandArgument() {
+						@Override
+						public String name() {
+							return "code";
+						}
+
+						@Override
+						public String description() {
+							return I18nManager.getDmccTranslation("commands.link.args_desc.code");
+						}
+					}
+			};
+		}
+		// In Minecraft context, show no arguments
+		return new CommandArgument[0];
+	}
+
+	@Override
 	public boolean acceptsExtraArgs() {
 		return true;
 	}
@@ -86,8 +108,8 @@ public class LinkCommand implements Command {
 
 	@Override
 	public boolean isVisibleInHelp(CommandSender sender) {
-		// Hide from help if the sender is not a player or Discord user
-		return (sender instanceof PlayerContextProvider) || (sender instanceof DiscordUserContextProvider);
+		// Always visible - link is available to players and Discord users
+		return true;
 	}
 
 	@Override
@@ -124,7 +146,9 @@ public class LinkCommand implements Command {
 			case "single_server" -> {
 				// Direct access to server-side managers
 				if (LinkedAccountManager.isMinecraftUuidLinked(uuid)) {
-					sender.reply(I18nManager.getDmccTranslation("commands.link.already_linked"));
+					String discordId = LinkedAccountManager.getDiscordIdByMinecraftUuid(uuid);
+					String discordName = LinkedAccountManager.resolveDiscordName(discordId);
+					sender.reply(I18nManager.getDmccTranslation("commands.link.already_linked", discordName));
 					return;
 				}
 				String code = VerificationCodeManager.generateOrRefreshCode(uuid, name);
@@ -133,7 +157,6 @@ public class LinkCommand implements Command {
 			case "multi_server_client" -> {
 				// Send request to standalone server via network
 				NetworkManager.sendPacketToServer(new LinkRequestPacket(uuid, name));
-				sender.reply(I18nManager.getDmccTranslation("commands.link.code_requested"));
 			}
 			default -> sender.reply(I18nManager.getDmccTranslation("commands.link.not_available"));
 		}

@@ -110,15 +110,21 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 						NetworkManager.cacheConsoleAutoCompleteResponse(clientName, p.suggestions);
 				case LinkRequestPacket p -> {
 					if (LinkedAccountManager.isMinecraftUuidLinked(p.minecraftUuid)) {
-						ctx.writeAndFlush(new LinkResponsePacket(p.minecraftUuid, null, true));
+						String discordId = LinkedAccountManager.getDiscordIdByMinecraftUuid(p.minecraftUuid);
+						String discordName = DiscordManager.resolveDiscordUserName(discordId != null ? discordId : "");
+						ctx.writeAndFlush(new LinkResponsePacket(p.minecraftUuid, null, true, discordName));
 					} else {
 						String code = VerificationCodeManager.generateOrRefreshCode(p.minecraftUuid, p.playerName);
-						ctx.writeAndFlush(new LinkResponsePacket(p.minecraftUuid, code, false));
+						ctx.writeAndFlush(new LinkResponsePacket(p.minecraftUuid, code, false, ""));
 					}
 				}
 				case UnlinkRequestPacket p -> {
-					boolean success = LinkedAccountManager.unlinkByMinecraftUuid(p.minecraftUuid, p.playerName);
-					ctx.writeAndFlush(new UnlinkResponsePacket(p.minecraftUuid, success));
+					String unlinkedDiscordId = LinkedAccountManager.unlinkByMinecraftUuid(p.minecraftUuid, p.playerName);
+					String discordName = "";
+					if (unlinkedDiscordId != null) {
+						discordName = DiscordManager.resolveDiscordUserName(unlinkedDiscordId);
+					}
+					ctx.writeAndFlush(new UnlinkResponsePacket(p.minecraftUuid, unlinkedDiscordId != null, discordName));
 				}
 				case null, default -> LOGGER.warn(unexpectedPacketMessage);
 			}

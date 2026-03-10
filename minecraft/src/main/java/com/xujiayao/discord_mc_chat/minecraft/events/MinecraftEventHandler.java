@@ -360,7 +360,7 @@ public class MinecraftEventHandler {
 					if (player != null) {
 						if (event.alreadyLinked()) {
 							player.sendSystemMessage(Component.literal(
-									I18nManager.getDmccTranslation("commands.link.already_linked")));
+									I18nManager.getDmccTranslation("commands.link.already_linked", event.discordName())));
 						} else if (event.code() != null) {
 							player.sendSystemMessage(Component.literal(
 									I18nManager.getDmccTranslation("linking.player_join.code_hint", event.code())));
@@ -381,7 +381,7 @@ public class MinecraftEventHandler {
 					if (player != null) {
 						if (event.success()) {
 							player.sendSystemMessage(Component.literal(
-									I18nManager.getDmccTranslation("commands.unlink.success")));
+									I18nManager.getDmccTranslation("commands.unlink.success", event.discordName())));
 						} else {
 							player.sendSystemMessage(Component.literal(
 									I18nManager.getDmccTranslation("commands.unlink.not_linked")));
