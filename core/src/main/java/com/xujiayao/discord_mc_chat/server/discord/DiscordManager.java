@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -38,6 +39,7 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 public class DiscordManager {
 
 	private static JDA jda;
+	private static final Map<String, String> DISCORD_NAME_CACHE = new ConcurrentHashMap<>();
 
 	/**
 	 * Initializes the Discord bot.
@@ -170,17 +172,24 @@ public class DiscordManager {
 
 	/**
 	 * Resolves a Discord username from a user ID via JDA.
+	 * Results are cached in memory to avoid repeated blocking API calls.
 	 * Falls back to the raw ID if JDA is not available or the user cannot be found.
 	 *
 	 * @param discordId The Discord user ID.
 	 * @return The resolved username, or the raw ID if resolution fails.
 	 */
 	public static String resolveDiscordUserName(String discordId) {
+		String cached = DISCORD_NAME_CACHE.get(discordId);
+		if (cached != null) {
+			return cached;
+		}
 		if (jda == null) {
 			return discordId;
 		}
 		try {
-			return jda.retrieveUserById(discordId).complete().getName();
+			String name = jda.retrieveUserById(discordId).complete().getName();
+			DISCORD_NAME_CACHE.put(discordId, name);
+			return name;
 		} catch (Exception e) {
 			return discordId;
 		}

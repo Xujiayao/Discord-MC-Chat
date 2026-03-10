@@ -3,7 +3,9 @@ package com.xujiayao.discord_mc_chat.utils;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.xujiayao.discord_mc_chat.Constants.JSON_MAPPER;
 
@@ -12,12 +14,14 @@ import static com.xujiayao.discord_mc_chat.Constants.JSON_MAPPER;
  * <p>
  * Supports both online (Mojang API) and offline UUID formats.
  * Provides fallback to raw UUID display when resolution fails.
+ * Results are cached in memory to avoid repeated network calls.
  *
  * @author Xujiayao
  */
 public class MojangUtils {
 
 	private static final String PROFILE_URL = "https://sessionserver.mojang.com/session/minecraft/profile/";
+	private static final Map<String, String> NAME_CACHE = new ConcurrentHashMap<>();
 
 	/**
 	 * Resolves a Minecraft player name from a UUID string.
@@ -30,6 +34,11 @@ public class MojangUtils {
 	 * @return The resolved player name, or the original UUID string if resolution fails.
 	 */
 	public static String resolvePlayerName(String uuidString) {
+		String cached = NAME_CACHE.get(uuidString);
+		if (cached != null) {
+			return cached;
+		}
+
 		try {
 			UUID uuid = UUID.fromString(uuidString);
 
@@ -47,6 +56,7 @@ public class MojangUtils {
 
 			String name = profile.path("name").asText(null);
 			if (name != null && !name.isEmpty()) {
+				NAME_CACHE.put(uuidString, name);
 				return name;
 			}
 		} catch (Exception ignored) {
