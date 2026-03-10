@@ -196,6 +196,41 @@ public class DiscordManager {
 	}
 
 	/**
+	 * Retrieves a Discord User object by ID.
+	 *
+	 * @param discordId The Discord user ID.
+	 * @return The User object, or null if JDA is not available or user not found.
+	 */
+	public static net.dv8tion.jda.api.entities.User retrieveUser(String discordId) {
+		if (jda == null) return null;
+		try {
+			return jda.retrieveUserById(discordId).complete();
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	/**
+	 * Retrieves a Discord Member object by user ID from the first mutual guild.
+	 *
+	 * @param discordId The Discord user ID.
+	 * @return The Member object, or null if JDA is not available or member not found.
+	 */
+	public static net.dv8tion.jda.api.entities.Member retrieveMember(String discordId) {
+		if (jda == null) return null;
+		try {
+			for (var guild : jda.getGuilds()) {
+				net.dv8tion.jda.api.entities.Member member = guild.retrieveMemberById(discordId).complete();
+				if (member != null) {
+					return member;
+				}
+			}
+		} catch (Exception ignored) {
+		}
+		return null;
+	}
+
+	/**
 	 * Sends a message to a Discord channel using the JDA bot.
 	 *
 	 * @param channelIdentifier The ID or Name of the channel.

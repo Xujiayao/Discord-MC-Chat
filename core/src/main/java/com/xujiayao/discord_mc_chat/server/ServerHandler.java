@@ -26,6 +26,7 @@ import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPingPacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPongPacket;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
+import com.xujiayao.discord_mc_chat.server.linking.OpSyncManager;
 import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
@@ -82,8 +83,11 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 				case MinecraftEventPacket p -> {
 					switch (p.type) {
 						// Server events
-						case SERVER_STARTED ->
-								DiscordManager.clientBroadcast(clientName, "server.started", "server.start", false, p.placeholders);
+						case SERVER_STARTED -> {
+							DiscordManager.clientBroadcast(clientName, "server.started", "server.start", false, p.placeholders);
+							// Trigger OP sync for this newly started client
+							OpSyncManager.syncAll();
+						}
 						case SERVER_STOPPING ->
 								DiscordManager.clientBroadcast(clientName, "server.stopped", "server.stop", false, p.placeholders);
 						// Player events

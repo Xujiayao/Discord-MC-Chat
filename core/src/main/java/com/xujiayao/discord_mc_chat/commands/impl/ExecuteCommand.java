@@ -8,6 +8,7 @@ import com.xujiayao.discord_mc_chat.network.packets.commands.execute.ExecuteRequ
 import com.xujiayao.discord_mc_chat.network.packets.commands.execute.ExecuteResponsePacket;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.discord.JdaCommandSender;
+import com.xujiayao.discord_mc_chat.server.discord.OpLevelResolver;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
@@ -144,12 +145,18 @@ public class ExecuteCommand implements Command {
 				continue;
 			}
 
+			// Resolve per-server OP level for the target client
+			int opLevel = sender.getOpLevel();
+			if (sender instanceof JdaCommandSender jdaSender) {
+				opLevel = OpLevelResolver.resolveForServer(jdaSender.getMember(), jdaSender.getUser(), serverName);
+			}
+
 			String requestId = CryptUtils.generateRandomString(16);
 			CompletableFuture<ExecuteResponsePacket> future = new CompletableFuture<>();
 			pendingRequests.put(requestId, future);
 
-			// Append sender's OP level credential to the packet for client-side edge authorization
-			NetworkManager.sendPacketToClient(new ExecuteRequestPacket(requestId, sender.getOpLevel(), commandName, commandArgs), serverName);
+			// Append sender's per-server OP level credential to the packet for client-side edge authorization
+			NetworkManager.sendPacketToClient(new ExecuteRequestPacket(requestId, opLevel, commandName, commandArgs), serverName);
 
 			try {
 				ExecuteResponsePacket response = future.get(EXECUTE_TIMEOUT_SECONDS, TimeUnit.SECONDS);

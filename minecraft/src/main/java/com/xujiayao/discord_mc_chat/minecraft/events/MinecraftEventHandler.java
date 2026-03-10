@@ -14,6 +14,7 @@ import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePa
 import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkRequestPacket;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
+import com.xujiayao.discord_mc_chat.server.linking.OpSyncManager;
 import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
@@ -121,6 +122,11 @@ public class MinecraftEventHandler {
 
 			// Register info supplier after server is started
 			NetworkManager.registerInfoSupplier(() -> buildInfoResponse(event.minecraftServer()));
+
+			// Trigger initial OP sync after server is ready (single_server mode)
+			if ("single_server".equals(ModeManager.getMode())) {
+				OpSyncManager.syncAll();
+			}
 		});
 
 		EventManager.register(MinecraftEvents.ServerStopping.class, event -> {
@@ -386,6 +392,63 @@ public class MinecraftEventHandler {
 							player.sendSystemMessage(Component.literal(
 									I18nManager.getDmccTranslation("commands.unlink.not_linked")));
 						}
+					}
+				} catch (Exception ignored) {
+				}
+			});
+		});
+
+		// ===== OP Level Sync =====
+
+		EventManager.register(CoreEvents.OpSyncEvent.class, event -> {
+			if (serverInstance == null) return;
+
+			serverInstance.execute(() -> {
+				try {
+					net.minecraft.server.players.PlayerList playerList = serverInstance.getPlayerList();
+					net.minecraft.server.players.ServerOpList opList = playerList.getOps();
+
+					// Step 1: De-op all currently opped players
+					// Copy the list to avoid ConcurrentModificationException
+					List<net.minecraft.server.players.ServerOpListEntry> currentOps =
+							new ArrayList<>(opList.getEntries());
+					for (net.minecraft.server.players.ServerOpListEntry op : currentOps) {
+						com.mojang.authlib.GameProfile profile = op.getUser();
+						if (profile != null) {
+							playerList.deop(profile);
+						}
+					}
+
+					// Step 2: Apply the new OP levels from the sync event
+					for (Map.Entry<String, Integer> entry : event.opLevels().entrySet()) {
+						String uuidStr = entry.getKey();
+						int opLevel = entry.getValue();
+						if (opLevel <= 0) continue; // OP 0 means no special permissions, skip
+
+						try {
+							UUID uuid = UUID.fromString(uuidStr);
+							com.mojang.authlib.GameProfile profile = serverInstance.getProfileCache()
+									.get(uuid).orElse(null);
+							if (profile == null) {
+								// Create a minimal profile for offline players
+								profile = new com.mojang.authlib.GameProfile(uuid, "");
+							}
+							// Add the OP entry with the exact desired level
+							opList.add(new net.minecraft.server.players.ServerOpListEntry(
+									profile, opLevel, opList.canBypassPlayerLimit(profile)));
+						} catch (Exception ignored) {
+						}
+					}
+
+					// Step 3: Save the ops list
+					try {
+						opList.save();
+					} catch (Exception ignored) {
+					}
+
+					// Step 4: Update permission levels for online players
+					for (ServerPlayer player : playerList.getPlayers()) {
+						playerList.sendPlayerPermissionLevel(player);
 					}
 				} catch (Exception ignored) {
 				}

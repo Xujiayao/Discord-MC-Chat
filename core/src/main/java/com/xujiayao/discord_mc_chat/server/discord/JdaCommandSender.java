@@ -3,6 +3,8 @@ package com.xujiayao.discord_mc_chat.server.discord;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.commands.impl.LinkCommand;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
 
@@ -63,6 +65,24 @@ public class JdaCommandSender implements CommandSender, LinkCommand.DiscordUserC
 			LOGGER.warn(I18nManager.getDmccTranslation("discord.command.reply_failed"));
 			LOGGER.warn(I18nManager.getDmccTranslation("discord.command.reply_failed_detail"));
 		}
+	}
+
+	/**
+	 * Gets the Discord Member object for this sender.
+	 *
+	 * @return The Member, or null if in DMs.
+	 */
+	public Member getMember() {
+		return event.getMember();
+	}
+
+	/**
+	 * Gets the Discord User object for this sender.
+	 *
+	 * @return The User.
+	 */
+	public User getUser() {
+		return event.getUser();
 	}
 
 	@Override

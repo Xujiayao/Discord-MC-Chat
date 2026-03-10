@@ -162,6 +162,7 @@ public class LinkedAccountManager {
 
 		LOGGER.info(I18nManager.getDmccTranslation("linking.manager.linked", discordName, discordId, minecraftName, minecraftUuid));
 		save();
+		OpSyncManager.syncAll();
 		return true;
 	}
 
@@ -180,6 +181,7 @@ public class LinkedAccountManager {
 			removed.forEach(entry -> UUID_TO_DISCORD.remove(entry.minecraftUuid()));
 			LOGGER.info(I18nManager.getDmccTranslation("linking.manager.unlinked_discord", count, discordName, discordId));
 			save();
+			OpSyncManager.syncAll();
 		}
 
 		return count;
@@ -209,6 +211,7 @@ public class LinkedAccountManager {
 		String discordName = resolveDiscordName(discordId);
 		LOGGER.info(I18nManager.getDmccTranslation("linking.manager.unlinked_minecraft", minecraftName, minecraftUuid, discordName, discordId));
 		save();
+		OpSyncManager.syncAll();
 		return discordId;
 	}
 
