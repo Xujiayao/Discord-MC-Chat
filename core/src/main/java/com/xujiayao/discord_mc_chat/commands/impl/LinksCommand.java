@@ -2,7 +2,9 @@ package com.xujiayao.discord_mc_chat.commands.impl;
 
 import com.xujiayao.discord_mc_chat.commands.Command;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
+import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
+import com.xujiayao.discord_mc_chat.utils.MojangUtils;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
 import java.time.Instant;
@@ -64,11 +66,13 @@ public class LinksCommand implements Command {
 			List<LinkedAccountManager.LinkEntry> links = entry.getValue();
 			totalLinks += links.size();
 
-			builder.append("\n[Discord: ").append(discordId).append("]");
+			String discordName = DiscordManager.resolveDiscordUserName(discordId);
+			builder.append("\n[Discord: ").append(discordName).append(" (").append(discordId).append(")]");
 
 			for (LinkedAccountManager.LinkEntry link : links) {
 				String time = DATE_FORMATTER.format(Instant.ofEpochMilli(link.linkedAt()));
-				builder.append("\n  - MC UUID: ").append(link.minecraftUuid());
+				String mcName = MojangUtils.resolvePlayerName(link.minecraftUuid());
+				builder.append("\n  - MC: ").append(mcName).append(" (").append(link.minecraftUuid()).append(")");
 				builder.append(" (").append(time).append(")");
 			}
 		}

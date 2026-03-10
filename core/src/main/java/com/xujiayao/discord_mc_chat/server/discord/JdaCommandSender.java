@@ -74,4 +74,9 @@ public class JdaCommandSender implements CommandSender, LinkCommand.DiscordUserC
 	public String getDiscordUserId() {
 		return event.getUser().getId();
 	}
+
+	@Override
+	public String getDiscordUserName() {
+		return event.getUser().getName();
+	}
 }

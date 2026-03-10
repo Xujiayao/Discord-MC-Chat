@@ -169,6 +169,24 @@ public class DiscordManager {
 	}
 
 	/**
+	 * Resolves a Discord username from a user ID via JDA.
+	 * Falls back to the raw ID if JDA is not available or the user cannot be found.
+	 *
+	 * @param discordId The Discord user ID.
+	 * @return The resolved username, or the raw ID if resolution fails.
+	 */
+	public static String resolveDiscordUserName(String discordId) {
+		if (jda == null) {
+			return discordId;
+		}
+		try {
+			return jda.retrieveUserById(discordId).complete().getName();
+		} catch (Exception e) {
+			return discordId;
+		}
+	}
+
+	/**
 	 * Sends a message to a Discord channel using the JDA bot.
 	 *
 	 * @param channelIdentifier The ID or Name of the channel.

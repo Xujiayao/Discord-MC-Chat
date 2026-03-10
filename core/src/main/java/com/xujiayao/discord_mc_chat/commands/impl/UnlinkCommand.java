@@ -3,7 +3,7 @@ package com.xujiayao.discord_mc_chat.commands.impl;
 import com.xujiayao.discord_mc_chat.commands.Command;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
-import com.xujiayao.discord_mc_chat.network.packets.linking.UnlinkByUuidRequestPacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkRequestPacket;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
@@ -58,7 +58,7 @@ public class UnlinkCommand implements Command {
 
 		switch (ModeManager.getMode()) {
 			case "single_server" -> {
-				boolean success = LinkedAccountManager.unlinkByMinecraftUuid(uuid);
+				boolean success = LinkedAccountManager.unlinkByMinecraftUuid(uuid, name);
 				if (success) {
 					sender.reply(I18nManager.getDmccTranslation("commands.unlink.success"));
 				} else {
@@ -66,7 +66,7 @@ public class UnlinkCommand implements Command {
 				}
 			}
 			case "multi_server_client" -> {
-				NetworkManager.sendPacketToServer(new UnlinkByUuidRequestPacket(uuid, name));
+				NetworkManager.sendPacketToServer(new UnlinkRequestPacket(uuid, name));
 				sender.reply(I18nManager.getDmccTranslation("commands.unlink.request_sent"));
 			}
 			default -> sender.reply(I18nManager.getDmccTranslation("commands.unlink.not_available"));
@@ -78,7 +78,8 @@ public class UnlinkCommand implements Command {
 	 */
 	private void executeDiscordUnlink(CommandSender sender, LinkCommand.DiscordUserContextProvider discord) {
 		String discordId = discord.getDiscordUserId();
-		int count = LinkedAccountManager.unlinkByDiscordId(discordId);
+		String discordName = discord.getDiscordUserName();
+		int count = LinkedAccountManager.unlinkByDiscordId(discordId, discordName);
 
 		if (count > 0) {
 			sender.reply(I18nManager.getDmccTranslation("commands.unlink.discord_success", count));

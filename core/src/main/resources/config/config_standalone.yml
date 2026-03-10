@@ -131,6 +131,7 @@ account_linking:
     # 基于特定用户的映射（优先级最高）。
     user_mappings:
       - user: "xujiayao"
+        op_level: 4
         servers:
           - server: "SMP"
             op_level: 4
@@ -140,6 +141,7 @@ account_linking:
     role_mappings:
       # 示例 1：拥有 "Admins" 角色的用户将被视为 OP 3。
       - role: "Admins"
+        op_level: 3
         servers:
           - server: "SMP"
             op_level: 3
@@ -147,6 +149,7 @@ account_linking:
             op_level: 3
       # 示例 2：可将基础认证角色映射为 OP 0，使其有权执行无需特殊权限的 DMCC 命令（如委托执行白名单）。
       - role: "Players"
+        op_level: 0
         servers:
           - server: "SMP"
             op_level: 0

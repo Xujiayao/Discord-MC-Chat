@@ -3,7 +3,7 @@ package com.xujiayao.discord_mc_chat.commands.impl;
 import com.xujiayao.discord_mc_chat.commands.Command;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
-import com.xujiayao.discord_mc_chat.network.packets.linking.LinkCodeRequestPacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkRequestPacket;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
@@ -55,6 +55,13 @@ public class LinkCommand implements Command {
 		 * @return The Discord user ID.
 		 */
 		String getDiscordUserId();
+
+		/**
+		 * Gets the Discord user's display name.
+		 *
+		 * @return The Discord username.
+		 */
+		String getDiscordUserName();
 	}
 
 	@Override
@@ -125,7 +132,7 @@ public class LinkCommand implements Command {
 			}
 			case "multi_server_client" -> {
 				// Send request to standalone server via network
-				NetworkManager.sendPacketToServer(new LinkCodeRequestPacket(uuid, name));
+				NetworkManager.sendPacketToServer(new LinkRequestPacket(uuid, name));
 				sender.reply(I18nManager.getDmccTranslation("commands.link.code_requested"));
 			}
 			default -> sender.reply(I18nManager.getDmccTranslation("commands.link.not_available"));
@@ -142,6 +149,7 @@ public class LinkCommand implements Command {
 		}
 
 		String discordId = discord.getDiscordUserId();
+		String discordName = discord.getDiscordUserName();
 
 		VerificationCodeManager.PendingVerification pending = VerificationCodeManager.consumeCode(code);
 		if (pending == null) {
@@ -149,7 +157,7 @@ public class LinkCommand implements Command {
 			return;
 		}
 
-		boolean success = LinkedAccountManager.linkAccount(discordId, pending.minecraftUuid());
+		boolean success = LinkedAccountManager.linkAccount(discordId, discordName, pending.minecraftUuid(), pending.playerName());
 		if (success) {
 			sender.reply(I18nManager.getDmccTranslation("commands.link.success", pending.playerName()));
 		} else {

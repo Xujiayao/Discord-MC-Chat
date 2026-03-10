@@ -10,9 +10,9 @@ import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.minecraft.commands.MinecraftCommands;
 import com.xujiayao.discord_mc_chat.minecraft.translations.TranslationManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
-import com.xujiayao.discord_mc_chat.network.packets.commands.InfoResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftEventPacket;
-import com.xujiayao.discord_mc_chat.network.packets.linking.LinkCodeRequestPacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkRequestPacket;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
@@ -160,7 +160,7 @@ public class MinecraftEventHandler {
 				}
 				case "multi_server_client" -> {
 					// Send request to standalone server
-					NetworkManager.sendPacketToServer(new LinkCodeRequestPacket(playerUuid, playerName));
+					NetworkManager.sendPacketToServer(new LinkRequestPacket(playerUuid, playerName));
 				}
 			}
 		});
