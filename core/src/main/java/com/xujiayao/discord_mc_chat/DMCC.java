@@ -4,6 +4,7 @@ import com.xujiayao.discord_mc_chat.client.ClientDMCC;
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.server.ServerDMCC;
+import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
@@ -176,6 +177,8 @@ public class DMCC {
 				}
 
 				CommandManager.shutdown();
+
+				VerificationCodeManager.clear();
 
 				// Do NOT clear event handlers here. They are registered once during mod initialization
 				// and should persist across DMCC reloads.
