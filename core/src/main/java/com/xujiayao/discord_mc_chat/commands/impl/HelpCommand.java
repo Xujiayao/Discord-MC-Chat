@@ -22,6 +22,13 @@ import static com.xujiayao.discord_mc_chat.Constants.IS_MINECRAFT_ENV;
  */
 public class HelpCommand implements Command {
 
+	private static String padRight(String text, int width) {
+		if (text.length() >= width) {
+			return text;
+		}
+		return text + " ".repeat(width - text.length());
+	}
+
 	@Override
 	public String name() {
 		return "help";
@@ -90,12 +97,5 @@ public class HelpCommand implements Command {
 		}
 
 		sender.reply(builder.toString());
-	}
-
-	private static String padRight(String text, int width) {
-		if (text.length() >= width) {
-			return text;
-		}
-		return text + " ".repeat(width - text.length());
 	}
 }

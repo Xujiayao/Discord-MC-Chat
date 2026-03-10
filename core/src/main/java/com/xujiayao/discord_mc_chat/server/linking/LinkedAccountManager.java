@@ -62,15 +62,6 @@ public class LinkedAccountManager {
 	}
 
 	/**
-	 * A linked Minecraft account entry.
-	 *
-	 * @param minecraftUuid The UUID of the linked Minecraft account.
-	 * @param linkedAt      The timestamp (epoch millis) when the link was created.
-	 */
-	public record LinkEntry(String minecraftUuid, long linkedAt) {
-	}
-
-	/**
 	 * Loads linked accounts from the JSON file.
 	 * Creates an empty file if it does not exist.
 	 *
@@ -142,10 +133,10 @@ public class LinkedAccountManager {
 	 * Links a Minecraft account to a Discord account.
 	 * Enforces uniqueness: a Minecraft UUID can only be linked to one Discord account.
 	 *
-	 * @param discordId         The Discord user ID.
-	 * @param discordName       The Discord username (for logging only, not persisted).
-	 * @param minecraftUuid     The Minecraft account UUID.
-	 * @param minecraftName     The Minecraft player name (for logging only, not persisted).
+	 * @param discordId     The Discord user ID.
+	 * @param discordName   The Discord username (for logging only, not persisted).
+	 * @param minecraftUuid The Minecraft account UUID.
+	 * @param minecraftName The Minecraft player name (for logging only, not persisted).
 	 * @return true if the link was created successfully, false if the Minecraft UUID is already linked.
 	 */
 	public static synchronized boolean linkAccount(String discordId, String discordName, String minecraftUuid, String minecraftName) {
@@ -264,5 +255,14 @@ public class LinkedAccountManager {
 	 */
 	public static Map<String, List<LinkEntry>> getAllLinks() {
 		return Collections.unmodifiableMap(LINKED_ACCOUNTS);
+	}
+
+	/**
+	 * A linked Minecraft account entry.
+	 *
+	 * @param minecraftUuid The UUID of the linked Minecraft account.
+	 * @param linkedAt      The timestamp (epoch millis) when the link was created.
+	 */
+	public record LinkEntry(String minecraftUuid, long linkedAt) {
 	}
 }
