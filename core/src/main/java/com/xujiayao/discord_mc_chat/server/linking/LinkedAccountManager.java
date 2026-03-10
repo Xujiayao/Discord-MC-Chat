@@ -127,7 +127,7 @@ public class LinkedAccountManager {
 	 * Clears all linked accounts from memory without writing to disk.
 	 * <p>
 	 * This intentionally does NOT save to disk, so users can manually edit
-	 * {@code links.json} while DMCC is running and reload to apply their changes.
+	 * {@code linked_accounts.json} while DMCC is running and reload to apply their changes.
 	 * Any in-memory changes that were not yet persisted via {@link #save()} will be lost.
 	 * In practice, all mutations (link/unlink) call {@link #save()} immediately,
 	 * so no data is lost under normal operation.

@@ -430,8 +430,8 @@ public class MinecraftEventHandler {
 							com.mojang.authlib.GameProfile profile = serverInstance.getProfileCache()
 									.get(uuid).orElse(null);
 							if (profile == null) {
-								// Create a minimal profile for offline players
-								profile = new com.mojang.authlib.GameProfile(uuid, "");
+								// Profile not in cache; skip this entry as we can't op without a valid profile
+								continue;
 							}
 							// Add the OP entry with the exact desired level
 							opList.add(new net.minecraft.server.players.ServerOpListEntry(
