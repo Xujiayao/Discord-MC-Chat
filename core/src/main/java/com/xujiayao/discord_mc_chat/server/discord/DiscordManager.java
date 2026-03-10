@@ -38,8 +38,8 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  */
 public class DiscordManager {
 
-	private static JDA jda;
 	private static final Map<String, String> DISCORD_NAME_CACHE = new ConcurrentHashMap<>();
+	private static JDA jda;
 
 	/**
 	 * Initializes the Discord bot.

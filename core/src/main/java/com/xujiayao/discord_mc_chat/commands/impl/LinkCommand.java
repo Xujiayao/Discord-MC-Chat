@@ -24,48 +24,6 @@ import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
  */
 public class LinkCommand implements Command {
 
-	/**
-	 * Functional interface for providing player context in Minecraft-side link commands.
-	 * <p>
-	 * Implementations provide the player's UUID and name from the Minecraft server.
-	 */
-	public interface PlayerContextProvider {
-		/**
-		 * Gets the player's UUID as a string.
-		 *
-		 * @return The player UUID string.
-		 */
-		String getPlayerUuid();
-
-		/**
-		 * Gets the player's display name.
-		 *
-		 * @return The player name.
-		 */
-		String getPlayerName();
-	}
-
-	/**
-	 * Functional interface for providing Discord user context in Discord-side link commands.
-	 * <p>
-	 * Implementations provide the Discord user's ID.
-	 */
-	public interface DiscordUserContextProvider {
-		/**
-		 * Gets the Discord user's ID.
-		 *
-		 * @return The Discord user ID.
-		 */
-		String getDiscordUserId();
-
-		/**
-		 * Gets the Discord user's display name.
-		 *
-		 * @return The Discord username.
-		 */
-		String getDiscordUserName();
-	}
-
 	@Override
 	public String name() {
 		return "link";
@@ -195,5 +153,47 @@ public class LinkCommand implements Command {
 		} else {
 			sender.reply(I18nManager.getDmccTranslation("commands.link.uuid_already_linked"));
 		}
+	}
+
+	/**
+	 * Functional interface for providing player context in Minecraft-side link commands.
+	 * <p>
+	 * Implementations provide the player's UUID and name from the Minecraft server.
+	 */
+	public interface PlayerContextProvider {
+		/**
+		 * Gets the player's UUID as a string.
+		 *
+		 * @return The player UUID string.
+		 */
+		String getPlayerUuid();
+
+		/**
+		 * Gets the player's display name.
+		 *
+		 * @return The player name.
+		 */
+		String getPlayerName();
+	}
+
+	/**
+	 * Functional interface for providing Discord user context in Discord-side link commands.
+	 * <p>
+	 * Implementations provide the Discord user's ID.
+	 */
+	public interface DiscordUserContextProvider {
+		/**
+		 * Gets the Discord user's ID.
+		 *
+		 * @return The Discord user ID.
+		 */
+		String getDiscordUserId();
+
+		/**
+		 * Gets the Discord user's display name.
+		 *
+		 * @return The Discord username.
+		 */
+		String getDiscordUserName();
 	}
 }

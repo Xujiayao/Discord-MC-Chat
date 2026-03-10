@@ -111,10 +111,10 @@ public class CoreEvents {
 	 * <p>
 	 * The Minecraft module should notify the player with the verification code.
 	 *
-	 * @param playerUuid   The UUID of the Minecraft player.
-	 * @param code         The verification code, or null if already linked.
+	 * @param playerUuid    The UUID of the Minecraft player.
+	 * @param code          The verification code, or null if already linked.
 	 * @param alreadyLinked Whether the player is already linked.
-	 * @param discordName  The Discord username if already linked (for display), or empty string.
+	 * @param discordName   The Discord username if already linked (for display), or empty string.
 	 */
 	public record LinkCodeResponseEvent(
 			String playerUuid,

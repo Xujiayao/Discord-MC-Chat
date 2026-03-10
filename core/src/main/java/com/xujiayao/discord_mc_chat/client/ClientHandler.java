@@ -180,9 +180,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 				// Use the completion future with a timeout to send the response reliably
 				completionFuture
 						.orTimeout(CONSOLE_COMMAND_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-						.whenComplete((v, ex) -> {
-							ctx.writeAndFlush(new ConsoleResponsePacket(p.requestId, responseBuilder.toString()));
-						});
+						.whenComplete((v, ex) -> ctx.writeAndFlush(new ConsoleResponsePacket(p.requestId, responseBuilder.toString())));
 			}
 			case ExecuteAutoCompleteRequestPacket p -> {
 				// Handle DMCC command auto-complete with OP level filtering

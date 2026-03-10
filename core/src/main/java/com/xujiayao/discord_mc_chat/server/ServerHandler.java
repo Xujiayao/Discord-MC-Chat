@@ -16,11 +16,11 @@ import com.xujiayao.discord_mc_chat.network.packets.commands.console.ConsoleResp
 import com.xujiayao.discord_mc_chat.network.packets.commands.execute.ExecuteAutoCompleteResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.execute.ExecuteResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkRequestPacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkRequestPacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPingPacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPongPacket;

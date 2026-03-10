@@ -32,16 +32,6 @@ public class VerificationCodeManager {
 	private static final Map<String, String> UUID_TO_CODE = new ConcurrentHashMap<>();
 
 	/**
-	 * A pending verification entry.
-	 *
-	 * @param minecraftUuid The UUID of the Minecraft player requesting linking.
-	 * @param playerName    The display name of the Minecraft player (for messages only).
-	 * @param expiresAt     The timestamp (epoch millis) when this code expires.
-	 */
-	public record PendingVerification(String minecraftUuid, String playerName, long expiresAt) {
-	}
-
-	/**
 	 * Generates or refreshes a verification code for a Minecraft player.
 	 * <p>
 	 * If the player already has an unexpired code, the same code is returned
@@ -145,5 +135,15 @@ public class VerificationCodeManager {
 			sb.append(CODE_CHARS[RANDOM.nextInt(CODE_CHARS.length)]);
 		}
 		return sb.toString();
+	}
+
+	/**
+	 * A pending verification entry.
+	 *
+	 * @param minecraftUuid The UUID of the Minecraft player requesting linking.
+	 * @param playerName    The display name of the Minecraft player (for messages only).
+	 * @param expiresAt     The timestamp (epoch millis) when this code expires.
+	 */
+	public record PendingVerification(String minecraftUuid, String playerName, long expiresAt) {
 	}
 }
