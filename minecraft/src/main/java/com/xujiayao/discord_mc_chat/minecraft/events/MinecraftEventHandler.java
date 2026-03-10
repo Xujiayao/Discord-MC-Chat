@@ -403,44 +403,79 @@ public class MinecraftEventHandler {
 					PlayerList playerList = serverInstance.getPlayerList();
 					ServerOpList opList = playerList.getOps();
 
-					// Step 1: De-op all currently opped players
-					// Copy the list to avoid ConcurrentModificationException
-					List<ServerOpListEntry> currentOps = new ArrayList<>(opList.getEntries());
-					for (ServerOpListEntry op : currentOps) {
-						NameAndId nameAndId = op.getUser();
-						if (nameAndId != null) {
-							playerList.deop(nameAndId);
-						}
-					}
-
-					// Step 2: Apply the new OP levels from the sync event
-					for (Map.Entry<String, Integer> entry : event.opLevels().entrySet()) {
-						String uuidStr = entry.getKey();
-						int opLevel = entry.getValue();
-						if (opLevel <= 0) continue; // OP 0 means no special permissions, skip
-
+					// Build a map of current OP levels: UUID -> level
+					Map<UUID, Integer> currentOpLevels = new HashMap<>();
+					for (ServerOpListEntry entry : opList.getEntries()) {
 						try {
-							UUID uuid = UUID.fromString(uuidStr);
-							Optional<NameAndId> nameAndIdOpt = serverInstance.services().nameToIdCache().get(uuid);
-							if (nameAndIdOpt.isEmpty()) {
-								// Profile not in cache; skip this entry
-								continue;
-							}
-							NameAndId nameAndId = nameAndIdOpt.get();
-							// Add the OP entry with the exact desired level
-							opList.add(new ServerOpListEntry(
-									nameAndId, opLevel, opList.canBypassPlayerLimit(nameAndId)));
+							NameAndId user = entry.getUser();
+							if (user == null) continue;
+							UUID uuid = UUID.fromString(user.id().toString());
+							// Read level from entry
+							int level = entry.getLevel();
+							if (level >= 0) currentOpLevels.put(uuid, level);
 						} catch (Exception ignored) {
 						}
 					}
 
-					// Step 3: Save the ops list
-					try {
-						opList.save();
-					} catch (Exception ignored) {
+					// Build desired OP levels map from the event (UUID -> level), skipping non-positive levels
+					Map<UUID, Integer> desiredOpLevels = new HashMap<>();
+					for (Map.Entry<String, Integer> e : event.opLevels().entrySet()) {
+						int level = e.getValue();
+						if (level <= 0) continue;
+						try {
+							desiredOpLevels.put(UUID.fromString(e.getKey()), level);
+						} catch (Exception ignored) {
+						}
 					}
 
-					// Step 4: Update permission levels for online players
+					// Quick equality check: if both maps equal, skip save and permission update
+					if (currentOpLevels.equals(desiredOpLevels)) {
+						return;
+					}
+
+					boolean changed = false;
+
+					// De-op users that are currently opped but not desired
+					for (ServerOpListEntry entry : new ArrayList<>(opList.getEntries())) {
+						NameAndId user = entry.getUser();
+						if (user == null) continue;
+						try {
+							UUID uuid = UUID.fromString(user.id().toString());
+							if (!desiredOpLevels.containsKey(uuid)) {
+								playerList.deop(user);
+								changed = true;
+							}
+						} catch (Exception ignored) {
+						}
+					}
+
+					// Add/update desired OP entries
+					for (Map.Entry<UUID, Integer> e : desiredOpLevels.entrySet()) {
+						UUID uuid = e.getKey();
+						int level = e.getValue();
+						Optional<NameAndId> nameAndIdOpt = serverInstance.services().nameToIdCache().get(uuid);
+						if (nameAndIdOpt.isEmpty()) {
+							// Profile not in cache; skip this entry
+							continue;
+						}
+						NameAndId nameAndId = nameAndIdOpt.get();
+						// If current level equals desired, skip; otherwise add (or re-add) entry
+						Integer currentLevel = currentOpLevels.get(uuid);
+						if (currentLevel != null && currentLevel == level) {
+							continue;
+						}
+						opList.add(new ServerOpListEntry(nameAndId, level, opList.canBypassPlayerLimit(nameAndId)));
+						changed = true;
+					}
+
+					if (changed) {
+						try {
+							opList.save();
+						} catch (Exception ignored) {
+						}
+					}
+
+					// Update permission levels for online players
 					for (ServerPlayer player : playerList.getPlayers()) {
 						playerList.sendPlayerPermissionLevel(player);
 					}
