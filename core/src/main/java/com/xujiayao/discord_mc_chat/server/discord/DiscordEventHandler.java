@@ -39,7 +39,10 @@ public class DiscordEventHandler extends ListenerAdapter {
 	 * Resolution order (highest wins):
 	 * 1. user_mappings: exact user ID or username match.
 	 * 2. role_mappings: iterate user's roles, take the highest mapped OP level.
-	 * 3. Account linking: linked MC account's actual OP level (reserved for future implementation).
+	 * 3. Account linking: linked MC account gets at least OP 0.
+	 * <p>
+	 * For standalone mode, each mapping entry has a top-level {@code op_level} for the DMCC Server itself.
+	 * For single_server mode, mappings use a flat {@code op_level}.
 	 *
 	 * @param member The Discord Member object (null if in DMs).
 	 * @param user   The Discord User object.
@@ -53,6 +56,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 		if (userMappings.isArray()) {
 			for (JsonNode node : userMappings) {
 				if (user.getId().equals(node.path("user").asText()) || user.getName().equals(node.path("user").asText())) {
+					// Read the top-level op_level (used by standalone and single_server)
 					maxOp = Math.max(maxOp, node.path("op_level").asInt(-1));
 				}
 			}
@@ -65,6 +69,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 				for (Role role : member.getRoles()) {
 					for (JsonNode node : roleMappings) {
 						if (role.getId().equals(node.path("role").asText()) || role.getName().equals(node.path("role").asText())) {
+							// Read the top-level op_level (used by standalone and single_server)
 							maxOp = Math.max(maxOp, node.path("op_level").asInt(-1));
 						}
 					}

@@ -11,16 +11,16 @@ import com.xujiayao.discord_mc_chat.network.packets.auth.ChallengePacket;
 import com.xujiayao.discord_mc_chat.network.packets.auth.DisconnectPacket;
 import com.xujiayao.discord_mc_chat.network.packets.auth.HandshakePacket;
 import com.xujiayao.discord_mc_chat.network.packets.auth.LoginSuccessPacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.ConsoleAutoCompleteResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.ConsoleResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.ExecuteAutoCompleteResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.ExecuteResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.InfoResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.console.ConsoleAutoCompleteResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.console.ConsoleResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.execute.ExecuteAutoCompleteResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.execute.ExecuteResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftEventPacket;
-import com.xujiayao.discord_mc_chat.network.packets.linking.LinkCodeRequestPacket;
-import com.xujiayao.discord_mc_chat.network.packets.linking.LinkCodeResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.linking.UnlinkByUuidRequestPacket;
-import com.xujiayao.discord_mc_chat.network.packets.linking.UnlinkByUuidResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkRequestPacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkRequestPacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPingPacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPongPacket;
@@ -108,17 +108,17 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 						NetworkManager.cacheExecuteAutoCompleteResponse(clientName, p.suggestions);
 				case ConsoleAutoCompleteResponsePacket p ->
 						NetworkManager.cacheConsoleAutoCompleteResponse(clientName, p.suggestions);
-				case LinkCodeRequestPacket p -> {
+				case LinkRequestPacket p -> {
 					if (LinkedAccountManager.isMinecraftUuidLinked(p.minecraftUuid)) {
-						ctx.writeAndFlush(new LinkCodeResponsePacket(p.minecraftUuid, null, true));
+						ctx.writeAndFlush(new LinkResponsePacket(p.minecraftUuid, null, true));
 					} else {
 						String code = VerificationCodeManager.generateOrRefreshCode(p.minecraftUuid, p.playerName);
-						ctx.writeAndFlush(new LinkCodeResponsePacket(p.minecraftUuid, code, false));
+						ctx.writeAndFlush(new LinkResponsePacket(p.minecraftUuid, code, false));
 					}
 				}
-				case UnlinkByUuidRequestPacket p -> {
-					boolean success = LinkedAccountManager.unlinkByMinecraftUuid(p.minecraftUuid);
-					ctx.writeAndFlush(new UnlinkByUuidResponsePacket(p.minecraftUuid, success));
+				case UnlinkRequestPacket p -> {
+					boolean success = LinkedAccountManager.unlinkByMinecraftUuid(p.minecraftUuid, p.playerName);
+					ctx.writeAndFlush(new UnlinkResponsePacket(p.minecraftUuid, success));
 				}
 				case null, default -> LOGGER.warn(unexpectedPacketMessage);
 			}

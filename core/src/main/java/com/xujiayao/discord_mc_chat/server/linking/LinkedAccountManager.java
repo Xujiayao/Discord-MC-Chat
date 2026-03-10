@@ -21,13 +21,13 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  * <p>
  * One Discord account can link multiple Minecraft accounts (1:N).
  * One Minecraft account can only link to one Discord account (N:1 uniqueness).
- * Data is stored in {@code linked_accounts.json} in the DMCC config directory.
+ * Data is stored in {@code linking/links.json} in the DMCC config directory.
  *
  * @author Xujiayao
  */
 public class LinkedAccountManager {
 
-	private static final Path LINKED_ACCOUNTS_FILE = Paths.get("./config/discord_mc_chat/linked_accounts.json");
+	private static final Path LINKS_FILE = Paths.get("./config/discord_mc_chat/linking/links.json");
 
 	private static final ConcurrentHashMap<String, List<LinkEntry>> LINKED_ACCOUNTS = new ConcurrentHashMap<>();
 
@@ -51,9 +51,9 @@ public class LinkedAccountManager {
 	 */
 	public static boolean load() {
 		try {
-			Files.createDirectories(LINKED_ACCOUNTS_FILE.getParent());
+			Files.createDirectories(LINKS_FILE.getParent());
 
-			if (!Files.exists(LINKED_ACCOUNTS_FILE) || Files.size(LINKED_ACCOUNTS_FILE) == 0) {
+			if (!Files.exists(LINKS_FILE) || Files.size(LINKS_FILE) == 0) {
 				LINKED_ACCOUNTS.clear();
 				UUID_TO_DISCORD.clear();
 				save();
@@ -62,7 +62,7 @@ public class LinkedAccountManager {
 			}
 
 			Map<String, List<LinkEntry>> loaded = JSON_MAPPER.readValue(
-					Files.newBufferedReader(LINKED_ACCOUNTS_FILE),
+					Files.newBufferedReader(LINKS_FILE),
 					new TypeReference<>() {
 					}
 			);
@@ -88,19 +88,21 @@ public class LinkedAccountManager {
 	 */
 	public static synchronized void save() {
 		try {
-			Files.createDirectories(LINKED_ACCOUNTS_FILE.getParent());
-			JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValue(LINKED_ACCOUNTS_FILE.toFile(), LINKED_ACCOUNTS);
-			LOGGER.info(I18nManager.getDmccTranslation("linking.manager.saved"));
+			Files.createDirectories(LINKS_FILE.getParent());
+			JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValue(LINKS_FILE.toFile(), LINKED_ACCOUNTS);
+			LOGGER.info(I18nManager.getDmccTranslation("linking.manager.saved", LINKS_FILE));
 		} catch (IOException e) {
 			LOGGER.error(I18nManager.getDmccTranslation("linking.manager.save_failed"), e);
 		}
 	}
 
 	/**
-	 * Saves the current state and clears all linked accounts from memory.
+	 * Clears all linked accounts from memory without writing to disk.
+	 * <p>
+	 * This is intentionally a no-save shutdown so that users can manually edit
+	 * {@code links.json} while DMCC is running and reload to apply their changes.
 	 */
 	public static void shutdown() {
-		save();
 		LINKED_ACCOUNTS.clear();
 		UUID_TO_DISCORD.clear();
 	}
@@ -109,14 +111,16 @@ public class LinkedAccountManager {
 	 * Links a Minecraft account to a Discord account.
 	 * Enforces uniqueness: a Minecraft UUID can only be linked to one Discord account.
 	 *
-	 * @param discordId     The Discord user ID.
-	 * @param minecraftUuid The Minecraft account UUID.
+	 * @param discordId         The Discord user ID.
+	 * @param discordName       The Discord username (for logging only, not persisted).
+	 * @param minecraftUuid     The Minecraft account UUID.
+	 * @param minecraftName     The Minecraft player name (for logging only, not persisted).
 	 * @return true if the link was created successfully, false if the Minecraft UUID is already linked.
 	 */
-	public static synchronized boolean linkAccount(String discordId, String minecraftUuid) {
+	public static synchronized boolean linkAccount(String discordId, String discordName, String minecraftUuid, String minecraftName) {
 		String existingDiscordId = UUID_TO_DISCORD.get(minecraftUuid);
 		if (existingDiscordId != null) {
-			LOGGER.warn(I18nManager.getDmccTranslation("linking.manager.uuid_already_linked", minecraftUuid, existingDiscordId));
+			LOGGER.warn(I18nManager.getDmccTranslation("linking.manager.uuid_already_linked", minecraftName, minecraftUuid, existingDiscordId));
 			return false;
 		}
 
@@ -124,25 +128,26 @@ public class LinkedAccountManager {
 				.add(new LinkEntry(minecraftUuid, System.currentTimeMillis()));
 		UUID_TO_DISCORD.put(minecraftUuid, discordId);
 
+		LOGGER.info(I18nManager.getDmccTranslation("linking.manager.linked", discordName, discordId, minecraftName, minecraftUuid));
 		save();
-		LOGGER.info(I18nManager.getDmccTranslation("linking.manager.linked", discordId, minecraftUuid));
 		return true;
 	}
 
 	/**
 	 * Removes all Minecraft account links for a Discord user.
 	 *
-	 * @param discordId The Discord user ID.
+	 * @param discordId   The Discord user ID.
+	 * @param discordName The Discord username (for logging only).
 	 * @return The number of Minecraft accounts that were unlinked.
 	 */
-	public static synchronized int unlinkByDiscordId(String discordId) {
+	public static synchronized int unlinkByDiscordId(String discordId, String discordName) {
 		List<LinkEntry> removed = LINKED_ACCOUNTS.remove(discordId);
 		int count = (removed != null) ? removed.size() : 0;
 
 		if (count > 0) {
 			removed.forEach(entry -> UUID_TO_DISCORD.remove(entry.minecraftUuid()));
+			LOGGER.info(I18nManager.getDmccTranslation("linking.manager.unlinked_discord", count, discordName, discordId));
 			save();
-			LOGGER.info(I18nManager.getDmccTranslation("linking.manager.unlinked_discord", count, discordId));
 		}
 
 		return count;
@@ -152,9 +157,10 @@ public class LinkedAccountManager {
 	 * Removes a specific Minecraft UUID link from any Discord account.
 	 *
 	 * @param minecraftUuid The Minecraft account UUID to unlink.
+	 * @param minecraftName The Minecraft player name (for logging only).
 	 * @return true if the UUID was found and removed, false otherwise.
 	 */
-	public static synchronized boolean unlinkByMinecraftUuid(String minecraftUuid) {
+	public static synchronized boolean unlinkByMinecraftUuid(String minecraftUuid, String minecraftName) {
 		String discordId = UUID_TO_DISCORD.remove(minecraftUuid);
 		if (discordId == null) {
 			return false;
@@ -168,8 +174,8 @@ public class LinkedAccountManager {
 			}
 		}
 
+		LOGGER.info(I18nManager.getDmccTranslation("linking.manager.unlinked_minecraft", minecraftName, minecraftUuid, discordId));
 		save();
-		LOGGER.info(I18nManager.getDmccTranslation("linking.manager.unlinked_minecraft", minecraftUuid, discordId));
 		return true;
 	}
 

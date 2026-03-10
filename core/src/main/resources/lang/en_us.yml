@@ -9,7 +9,7 @@
 # ==================================================
 
 terminal:
-  started: "Interactive terminal started. Type \"help\" for a list of available commands."
+  started: "Interactive terminal started! Type \"help\" for a list of available commands."
   unknown_command: "Unknown command: \"{}\". Type \"help\" for a list of available commands."
   input_closed: "Terminal input stream closed. Shutting down terminal manager."
 
@@ -103,10 +103,10 @@ commands:
     args_desc:
       file: "Log file name"
     file_not_found: "Log file \"{}\" not found."
-    success: "Log file \"{}\" retrieved successfully."
+    success: "Log file \"{}\" retrieved successfully!"
     list_failed: "Failed to list log files."
     read_failed: "Failed to read log file: {}"
-    saved_to_cache: "Log file saved to: {}"
+    saved_to_cache: "Log file saved to: {}!"
     save_failed: "Failed to save log file to cache: {}"
     terminal_not_supported: "Retrieving log files in terminal is not supported. Please access the \"./logs\" directory directly."
   stats:
@@ -140,10 +140,10 @@ commands:
   unlink:
     description: "Unlink your Minecraft account from Discord"
     not_available: "This command is not available in the current mode."
-    success: "Your Minecraft account has been unlinked."
+    success: "Your Minecraft account has been unlinked!"
     not_linked: "No linked account found."
     request_sent: "Unlink request sent to the server."
-    discord_success: "Successfully unlinked {} Minecraft account(s)."
+    discord_success: "Successfully unlinked {} Minecraft account(s)!"
   links:
     description: "View all linked accounts"
     no_links: "No linked accounts found."
@@ -188,7 +188,7 @@ server:
   discord_init_failed: "Failed to initialize Discord Manager. Aborting DMCC Server startup."
   startup_interrupted: "DMCC Server startup was interrupted."
   network:
-    listening: "DMCC Server is now listening on port {}."
+    listening: "DMCC Server is now listening on port {}!"
     bind_failed: "Failed to bind to port {}."
     reject: "Rejected DMCC Client \"{}\" connection. Reason: {}"
     auth_success: "DMCC Client authenticated: \"{}\""
@@ -218,7 +218,7 @@ client:
 utils:
   config:
     mode:
-      set: "Operating mode set to \"{}\"."
+      set: "Operating mode set to \"{}\"!"
       not_found: "Mode configuration file not found or is empty."
       creating: "Creating a default one at \"{}\"."
       edit_prompt: "Please edit \"{}\" before reloading DMCC."
@@ -260,31 +260,31 @@ utils:
 
 linking:
   manager:
-    loaded: "Loaded {} linked account(s)."
+    loaded: "Loaded {} linked account(s)!"
     load_failed: "Failed to load linked accounts."
-    saved: "Linked accounts saved successfully."
+    saved: "Linked accounts saved to {}!"
     save_failed: "Failed to save linked accounts."
-    linked: "Linked Discord user {} to Minecraft UUID {}."
-    unlinked_discord: "Unlinked {0} Minecraft account(s) from Discord user {1}."
-    unlinked_minecraft: "Unlinked Minecraft UUID {} from Discord user {}."
-    uuid_already_linked: "Minecraft UUID {} is already linked to Discord user {}."
+    linked: "Linked Discord user {} ({}) to Minecraft player {} ({})!"
+    unlinked_discord: "Unlinked {0} Minecraft account(s) from Discord user {1} ({2})!"
+    unlinked_minecraft: "Unlinked Minecraft player {} ({}) from Discord user {}!"
+    uuid_already_linked: "Minecraft player {} ({}) is already linked to Discord user {}."
   verification:
-    generated: "Generated verification code {} for player {}."
-    refreshed: "Refreshed verification code {} for player {}."
-    consumed: "Verification code {} consumed by player {}."
+    generated: "Generated verification code {} for player {}!"
+    refreshed: "Refreshed verification code {} for player {}!"
+    consumed: "Verification code consumed by player {}: {}!"
   player_join:
     not_linked: "Your Minecraft account is not linked to Discord. Use /dmcc link to get a verification code."
     code_hint: "Use /link {} on Discord within 5 minutes to link your account."
 
 minecraft:
   translations:
-    loaded: "Loaded {}/{} Minecraft \"{}\" translations."
+    loaded: "Loaded {}/{} Minecraft \"{}\" translations!"
     init_failed: "Failed to initialize Minecraft translations."
     key_not_found: "Translation not found for key: \"{}\", returning key as-is."
-    cache_loaded: "Loaded Minecraft \"{}\" translations from cache for version {}."
+    cache_loaded: "Loaded Minecraft \"{}\" translations from cache for version {}!"
     cache_read_failed: "Failed to read cached Minecraft translations, will attempt to re-download."
     downloading: "Downloading Minecraft \"{}\" translations for version {}..."
-    downloaded: "Downloaded and cached Minecraft \"{}\" translations, file size: {} bytes"
+    downloaded: "Downloaded and cached Minecraft \"{}\" translations, file size: {} bytes!"
     download_failed: "Failed to download or cache Minecraft \"{}\" translations for version {}."
     official_load_failed: "Unexpected error while loading official Minecraft translations."
     mod_load_failed: "Failed to load translations from mod JAR."
