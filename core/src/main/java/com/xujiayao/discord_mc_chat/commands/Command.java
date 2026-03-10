@@ -29,6 +29,19 @@ public interface Command {
 	String description();
 
 	/**
+	 * Gets the list of arguments for the command, potentially adjusted for the sender context.
+	 * <p>
+	 * By default, delegates to {@link #args()}. Commands can override this to
+	 * show different arguments based on sender type (e.g., Discord vs Minecraft).
+	 *
+	 * @param sender The command sender requesting the help listing.
+	 * @return The command arguments appropriate for the given sender.
+	 */
+	default CommandArgument[] argsForSender(CommandSender sender) {
+		return args();
+	}
+
+	/**
 	 * Whether this command accepts more arguments than defined by {@link #args()}.
 	 * <p>
 	 * Override and return true for commands that handle variable-length arguments

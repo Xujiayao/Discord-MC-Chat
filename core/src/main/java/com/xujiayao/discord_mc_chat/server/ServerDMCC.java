@@ -46,6 +46,9 @@ public class ServerDMCC {
 					return -1;
 				}
 
+				// Register Discord name resolver for LinkedAccountManager log messages
+				LinkedAccountManager.setDiscordNameResolver(DiscordManager::resolveDiscordUserName);
+
 				nettyServer = new NettyServer(host, port, sharedSecret);
 				port = nettyServer.start();
 

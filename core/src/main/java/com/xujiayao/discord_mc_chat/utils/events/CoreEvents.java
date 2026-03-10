@@ -113,11 +113,13 @@ public class CoreEvents {
 	 * @param playerUuid   The UUID of the Minecraft player.
 	 * @param code         The verification code, or null if already linked.
 	 * @param alreadyLinked Whether the player is already linked.
+	 * @param discordName  The Discord username if already linked (for display), or empty string.
 	 */
 	public record LinkCodeResponseEvent(
 			String playerUuid,
 			String code,
-			boolean alreadyLinked
+			boolean alreadyLinked,
+			String discordName
 	) {
 	}
 
@@ -126,12 +128,14 @@ public class CoreEvents {
 	 * <p>
 	 * The Minecraft module should notify the player with the result.
 	 *
-	 * @param playerUuid The UUID of the Minecraft player.
-	 * @param success    Whether the unlink was successful.
+	 * @param playerUuid  The UUID of the Minecraft player.
+	 * @param success     Whether the unlink was successful.
+	 * @param discordName The Discord username that was unlinked from (for display), or empty string.
 	 */
 	public record UnlinkResponseEvent(
 			String playerUuid,
-			boolean success
+			boolean success,
+			String discordName
 	) {
 	}
 }

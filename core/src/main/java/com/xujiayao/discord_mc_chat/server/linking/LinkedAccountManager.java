@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 import static com.xujiayao.discord_mc_chat.Constants.JSON_MAPPER;
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
@@ -21,18 +22,44 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  * <p>
  * One Discord account can link multiple Minecraft accounts (1:N).
  * One Minecraft account can only link to one Discord account (N:1 uniqueness).
- * Data is stored in {@code linking/links.json} in the DMCC config directory.
+ * Data is stored in {@code account_linking/linked_accounts.json} in the DMCC config directory.
  *
  * @author Xujiayao
  */
 public class LinkedAccountManager {
 
-	private static final Path LINKS_FILE = Paths.get("./config/discord_mc_chat/linking/links.json");
+	private static final Path LINKS_FILE = Paths.get("./config/discord_mc_chat/account_linking/linked_accounts.json");
 
 	private static final ConcurrentHashMap<String, List<LinkEntry>> LINKED_ACCOUNTS = new ConcurrentHashMap<>();
 
 	// Reverse index: Minecraft UUID -> Discord ID for O(1) lookups
 	private static final ConcurrentHashMap<String, String> UUID_TO_DISCORD = new ConcurrentHashMap<>();
+
+	// Discord name resolver, set by the server module to avoid circular dependencies
+	private static Function<String, String> discordNameResolver;
+
+	/**
+	 * Registers a function that resolves Discord user ID to username.
+	 *
+	 * @param resolver A function that takes Discord ID and returns the username (or the ID itself as fallback).
+	 */
+	public static void setDiscordNameResolver(Function<String, String> resolver) {
+		discordNameResolver = resolver;
+	}
+
+	/**
+	 * Resolves a Discord username from an ID using the registered resolver.
+	 * Falls back to the raw ID if no resolver is registered.
+	 *
+	 * @param discordId The Discord user ID.
+	 * @return The resolved username, or the raw ID.
+	 */
+	public static String resolveDiscordName(String discordId) {
+		if (discordNameResolver != null) {
+			return discordNameResolver.apply(discordId);
+		}
+		return discordId;
+	}
 
 	/**
 	 * A linked Minecraft account entry.
@@ -90,7 +117,7 @@ public class LinkedAccountManager {
 		try {
 			Files.createDirectories(LINKS_FILE.getParent());
 			JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValue(LINKS_FILE.toFile(), LINKED_ACCOUNTS);
-			LOGGER.info(I18nManager.getDmccTranslation("linking.manager.saved", LINKS_FILE));
+			LOGGER.info(I18nManager.getDmccTranslation("linking.manager.saved"));
 		} catch (IOException e) {
 			LOGGER.error(I18nManager.getDmccTranslation("linking.manager.save_failed"), e);
 		}
@@ -108,6 +135,7 @@ public class LinkedAccountManager {
 	public static void shutdown() {
 		LINKED_ACCOUNTS.clear();
 		UUID_TO_DISCORD.clear();
+		discordNameResolver = null;
 	}
 
 	/**
@@ -123,7 +151,8 @@ public class LinkedAccountManager {
 	public static synchronized boolean linkAccount(String discordId, String discordName, String minecraftUuid, String minecraftName) {
 		String existingDiscordId = UUID_TO_DISCORD.get(minecraftUuid);
 		if (existingDiscordId != null) {
-			LOGGER.warn(I18nManager.getDmccTranslation("linking.manager.uuid_already_linked", minecraftName, minecraftUuid, existingDiscordId));
+			String existingDiscordName = resolveDiscordName(existingDiscordId);
+			LOGGER.warn(I18nManager.getDmccTranslation("linking.manager.uuid_already_linked", minecraftName, minecraftUuid, existingDiscordName, existingDiscordId));
 			return false;
 		}
 
@@ -161,12 +190,12 @@ public class LinkedAccountManager {
 	 *
 	 * @param minecraftUuid The Minecraft account UUID to unlink.
 	 * @param minecraftName The Minecraft player name (for logging only).
-	 * @return true if the UUID was found and removed, false otherwise.
+	 * @return The Discord user ID that was unlinked from, or null if the UUID was not linked.
 	 */
-	public static synchronized boolean unlinkByMinecraftUuid(String minecraftUuid, String minecraftName) {
+	public static synchronized String unlinkByMinecraftUuid(String minecraftUuid, String minecraftName) {
 		String discordId = UUID_TO_DISCORD.remove(minecraftUuid);
 		if (discordId == null) {
-			return false;
+			return null;
 		}
 
 		List<LinkEntry> entries = LINKED_ACCOUNTS.get(discordId);
@@ -177,9 +206,10 @@ public class LinkedAccountManager {
 			}
 		}
 
-		LOGGER.info(I18nManager.getDmccTranslation("linking.manager.unlinked_minecraft", minecraftName, minecraftUuid, discordId));
+		String discordName = resolveDiscordName(discordId);
+		LOGGER.info(I18nManager.getDmccTranslation("linking.manager.unlinked_minecraft", minecraftName, minecraftUuid, discordName, discordId));
 		save();
-		return true;
+		return discordId;
 	}
 
 	/**

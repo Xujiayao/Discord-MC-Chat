@@ -14,10 +14,12 @@ public class LinkResponsePacket extends Packet {
 	public String minecraftUuid;
 	public String code;
 	public boolean alreadyLinked;
+	public String discordName;
 
-	public LinkResponsePacket(String minecraftUuid, String code, boolean alreadyLinked) {
+	public LinkResponsePacket(String minecraftUuid, String code, boolean alreadyLinked, String discordName) {
 		this.minecraftUuid = minecraftUuid;
 		this.code = code;
 		this.alreadyLinked = alreadyLinked;
+		this.discordName = discordName;
 	}
 }

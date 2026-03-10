@@ -60,7 +60,7 @@ public class HelpCommand implements Command {
 			String commandLabel = "- " + mcPrefix + cmd.name();
 			maxLeftWidth = Math.max(maxLeftWidth, commandLabel.length());
 
-			Command.CommandArgument[] arguments = cmd.args();
+			Command.CommandArgument[] arguments = cmd.argsForSender(sender);
 			for (int i = 0; i < arguments.length; i++) {
 				boolean isLast = (i == arguments.length - 1);
 				String branch = isLast ? "  └─ " : "  ├─ ";
@@ -77,7 +77,7 @@ public class HelpCommand implements Command {
 					.append(" | ")
 					.append(cmd.description());
 
-			Command.CommandArgument[] arguments = cmd.args();
+			Command.CommandArgument[] arguments = cmd.argsForSender(sender);
 			for (int i = 0; i < arguments.length; i++) {
 				boolean isLast = (i == arguments.length - 1);
 				String branch = isLast ? "  └─ " : "  ├─ ";
