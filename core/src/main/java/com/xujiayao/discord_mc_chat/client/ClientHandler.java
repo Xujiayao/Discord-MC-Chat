@@ -22,6 +22,7 @@ import com.xujiayao.discord_mc_chat.network.packets.commands.execute.ExecuteResp
 import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoRequestPacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.commands.link.OpSyncPacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPongPacket;
@@ -201,6 +202,10 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 			case UnlinkResponsePacket p -> {
 				// Handle unlink response from server - notify the player
 				EventManager.post(new CoreEvents.UnlinkResponseEvent(p.minecraftUuid, p.success, p.discordName != null ? p.discordName : ""));
+			}
+			case OpSyncPacket p -> {
+				// Handle OP sync from server - apply OP levels to Minecraft players
+				EventManager.post(new CoreEvents.OpSyncEvent(p.opLevels));
 			}
 			case DisconnectPacket p -> {
 				// If we receive a DisconnectPacket, it means the server explicitly rejected us.

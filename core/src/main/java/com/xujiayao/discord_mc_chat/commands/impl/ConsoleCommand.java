@@ -8,6 +8,7 @@ import com.xujiayao.discord_mc_chat.network.packets.commands.console.ConsoleRequ
 import com.xujiayao.discord_mc_chat.network.packets.commands.console.ConsoleResponsePacket;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.discord.JdaCommandSender;
+import com.xujiayao.discord_mc_chat.server.discord.OpLevelResolver;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
@@ -229,8 +230,14 @@ public class ConsoleCommand implements Command {
 			CompletableFuture<ConsoleResponsePacket> future = new CompletableFuture<>();
 			pendingRequests.put(requestId, future);
 
-			// Send with the sender's OP level for Minecraft's own permission check on the client
-			NetworkManager.sendPacketToClient(new ConsoleRequestPacket(requestId, sender.getOpLevel(), commandLine), serverName);
+			// Resolve per-server OP level for the target client
+			int opLevel = sender.getOpLevel();
+			if (sender instanceof JdaCommandSender jdaSender) {
+				opLevel = OpLevelResolver.resolveForServer(jdaSender.getMember(), jdaSender.getUser(), serverName);
+			}
+
+			// Send with the sender's per-server OP level for Minecraft's own permission check on the client
+			NetworkManager.sendPacketToClient(new ConsoleRequestPacket(requestId, opLevel, commandLine), serverName);
 
 			try {
 				ConsoleResponsePacket response = future.get(CONSOLE_TIMEOUT_SECONDS, TimeUnit.SECONDS);

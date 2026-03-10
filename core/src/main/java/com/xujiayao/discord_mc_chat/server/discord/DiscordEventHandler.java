@@ -1,14 +1,11 @@
 package com.xujiayao.discord_mc_chat.server.discord;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
 import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
-import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.utils.LogFileUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -35,55 +32,25 @@ public class DiscordEventHandler extends ListenerAdapter {
 
 	/**
 	 * Resolves the OP Level credential for a Discord user based on config mappings.
-	 * <p>
-	 * Resolution order (highest wins):
-	 * 1. user_mappings: exact user ID or username match.
-	 * 2. role_mappings: iterate user's roles, take the highest mapped OP level.
-	 * 3. Account linking: linked MC account gets at least OP 0.
-	 * <p>
-	 * For standalone mode, each mapping entry has a top-level {@code op_level} for the DMCC Server itself.
-	 * For single_server mode, mappings use a flat {@code op_level}.
 	 *
 	 * @param member The Discord Member object (null if in DMs).
 	 * @param user   The Discord User object.
 	 * @return The resolved OP level (-1 to 4).
 	 */
 	private int getOpLevel(Member member, User user) {
-		int maxOp = -1;
+		return OpLevelResolver.resolve(member, user);
+	}
 
-		// Check exact user mappings first (highest priority)
-		JsonNode userMappings = ConfigManager.getConfigNode("account_linking.op_sync.user_mappings");
-		if (userMappings.isArray()) {
-			for (JsonNode node : userMappings) {
-				if (user.getId().equals(node.path("user").asText()) || user.getName().equals(node.path("user").asText())) {
-					// Read the top-level op_level (used by standalone and single_server)
-					maxOp = Math.max(maxOp, node.path("op_level").asInt(-1));
-				}
-			}
-		}
-
-		// Check role mappings if member exists (in a guild)
-		if (member != null) {
-			JsonNode roleMappings = ConfigManager.getConfigNode("account_linking.op_sync.role_mappings");
-			if (roleMappings.isArray()) {
-				for (Role role : member.getRoles()) {
-					for (JsonNode node : roleMappings) {
-						if (role.getId().equals(node.path("role").asText()) || role.getName().equals(node.path("role").asText())) {
-							// Read the top-level op_level (used by standalone and single_server)
-							maxOp = Math.max(maxOp, node.path("op_level").asInt(-1));
-						}
-					}
-				}
-			}
-		}
-
-		// Account Linking: if user has linked MC accounts, they get at least OP 0
-		List<String> linkedUuids = LinkedAccountManager.getMinecraftUuidsByDiscordId(user.getId());
-		if (!linkedUuids.isEmpty() && maxOp < 0) {
-			maxOp = 0;
-		}
-
-		return maxOp;
+	/**
+	 * Resolves the OP Level credential for a specific target server.
+	 *
+	 * @param member     The Discord Member object (null if in DMs).
+	 * @param user       The Discord User object.
+	 * @param serverName The target DMCC client server name.
+	 * @return The resolved OP level (-1 to 4).
+	 */
+	private int getOpLevelForServer(Member member, User user, String serverName) {
+		return OpLevelResolver.resolveForServer(member, user, serverName);
 	}
 
 	@Override
@@ -211,13 +178,21 @@ public class DiscordEventHandler extends ListenerAdapter {
 	 * Gets auto-complete choices for the 'command' parameter of the execute command.
 	 * Sends a real-time auto-complete request to connected clients with the current input and OP level,
 	 * so clients can provide DMCC command suggestions that the user is authorized to execute.
+	 * <p>
+	 * When a target server is selected, uses the per-server OP level for accurate suggestions.
 	 *
 	 * @param currentValue The current user input for filtering
 	 * @param event        The auto-complete event to read other options
 	 * @return List of choices
 	 */
 	private List<Command.Choice> getExecuteCommandChoices(String currentValue, CommandAutoCompleteInteractionEvent event) {
-		int opLevel = getOpLevel(event.getMember(), event.getUser());
+		String target = event.getOption("at", OptionMapping::getAsString);
+		int opLevel;
+		if (target != null && !target.isBlank() && !"all_online_clients".equalsIgnoreCase(target)) {
+			opLevel = getOpLevelForServer(event.getMember(), event.getUser(), target);
+		} else {
+			opLevel = getOpLevel(event.getMember(), event.getUser());
+		}
 
 		if (currentValue.startsWith("/")) {
 			currentValue = currentValue.substring(1);
@@ -237,13 +212,21 @@ public class DiscordEventHandler extends ListenerAdapter {
 	 * Gets auto-complete choices for the 'command' parameter of the console command.
 	 * Sends a real-time auto-complete request to connected clients with the current input and OP level,
 	 * so clients can provide Minecraft command suggestions via their Brigadier dispatcher.
+	 * <p>
+	 * When a target server is selected, uses the per-server OP level for accurate suggestions.
 	 *
 	 * @param currentValue The current user input for filtering
 	 * @param event        The auto-complete event to read other options
 	 * @return List of choices
 	 */
 	private List<Command.Choice> getConsoleCommandChoices(String currentValue, CommandAutoCompleteInteractionEvent event) {
-		int opLevel = getOpLevel(event.getMember(), event.getUser());
+		String target = event.getOption("at", OptionMapping::getAsString);
+		int opLevel;
+		if (target != null && !target.isBlank() && !"all_online_clients".equalsIgnoreCase(target)) {
+			opLevel = getOpLevelForServer(event.getMember(), event.getUser(), target);
+		} else {
+			opLevel = getOpLevel(event.getMember(), event.getUser());
+		}
 
 		if (currentValue.startsWith("/")) {
 			currentValue = currentValue.substring(1);

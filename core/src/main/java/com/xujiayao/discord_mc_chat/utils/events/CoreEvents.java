@@ -3,6 +3,7 @@ package com.xujiayao.discord_mc_chat.utils.events;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -136,6 +137,19 @@ public class CoreEvents {
 			String playerUuid,
 			boolean success,
 			String discordName
+	) {
+	}
+
+	/**
+	 * Posted when OP levels should be synchronized to the Minecraft server.
+	 * <p>
+	 * This is a full-reset sync: the handler should clear all existing OP assignments
+	 * and reapply the provided mapping. Players not in the map should be de-opped (OP 0).
+	 *
+	 * @param opLevels A map of Minecraft UUID (as string) to the desired OP level (0-4).
+	 */
+	public record OpSyncEvent(
+			Map<String, Integer> opLevels
 	) {
 	}
 }
