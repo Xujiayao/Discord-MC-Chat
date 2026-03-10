@@ -1,4 +1,4 @@
-package com.xujiayao.discord_mc_chat.network.packets.commands;
+package com.xujiayao.discord_mc_chat.network.packets.commands.info;
 
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
 

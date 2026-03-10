@@ -1,4 +1,4 @@
-package com.xujiayao.discord_mc_chat.network.packets.linking;
+package com.xujiayao.discord_mc_chat.network.packets.commands.link;
 
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
 
@@ -10,11 +10,11 @@ import com.xujiayao.discord_mc_chat.network.packets.Packet;
  *
  * @author Xujiayao
  */
-public class LinkCodeRequestPacket extends Packet {
+public class LinkRequestPacket extends Packet {
 	public String minecraftUuid;
 	public String playerName;
 
-	public LinkCodeRequestPacket(String minecraftUuid, String playerName) {
+	public LinkRequestPacket(String minecraftUuid, String playerName) {
 		this.minecraftUuid = minecraftUuid;
 		this.playerName = playerName;
 	}

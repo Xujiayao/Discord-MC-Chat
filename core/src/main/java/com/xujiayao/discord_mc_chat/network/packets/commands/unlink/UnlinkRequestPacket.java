@@ -1,4 +1,4 @@
-package com.xujiayao.discord_mc_chat.network.packets.linking;
+package com.xujiayao.discord_mc_chat.network.packets.commands.unlink;
 
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
 
@@ -9,11 +9,11 @@ import com.xujiayao.discord_mc_chat.network.packets.Packet;
  *
  * @author Xujiayao
  */
-public class UnlinkByUuidRequestPacket extends Packet {
+public class UnlinkRequestPacket extends Packet {
 	public String minecraftUuid;
 	public String playerName;
 
-	public UnlinkByUuidRequestPacket(String minecraftUuid, String playerName) {
+	public UnlinkRequestPacket(String minecraftUuid, String playerName) {
 		this.minecraftUuid = minecraftUuid;
 		this.playerName = playerName;
 	}
