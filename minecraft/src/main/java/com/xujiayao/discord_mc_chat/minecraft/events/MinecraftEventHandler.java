@@ -162,13 +162,9 @@ public class MinecraftEventHandler {
 					// Direct access to server-side managers
 					if (!LinkedAccountManager.isMinecraftUuidLinked(playerUuid)) {
 						String code = VerificationCodeManager.generateOrRefreshCode(playerUuid, playerName);
-						// Notify the player in-game
+						// Notify the player in-game with inline clickable elements
 						ServerPlayer sp = event.serverPlayer();
-						sp.sendSystemMessage(Component.literal(
-								I18nManager.getDmccTranslation("linking.player_join.not_linked")));
-						sp.sendSystemMessage(Component.literal(
-								I18nManager.getDmccTranslation("linking.player_join.code_hint", code)));
-						sp.sendSystemMessage(buildClickableCode(code));
+						sp.sendSystemMessage(buildNotLinkedMessage(code));
 					}
 				}
 				case "multi_server_client" -> {
@@ -372,12 +368,9 @@ public class MinecraftEventHandler {
 					ServerPlayer player = serverInstance.getPlayerList().getPlayer(uuid);
 					if (player != null) {
 						if (event.alreadyLinked()) {
-							player.sendSystemMessage(Component.literal(
-									I18nManager.getDmccTranslation("commands.link.already_linked", event.discordName())));
+							player.sendSystemMessage(buildAlreadyLinkedMessage(event.discordName()));
 						} else if (event.code() != null) {
-							player.sendSystemMessage(Component.literal(
-									I18nManager.getDmccTranslation("commands.link.code_generated", event.code())));
-							player.sendSystemMessage(buildClickableCode(event.code()));
+							player.sendSystemMessage(buildCodeGeneratedMessage(event.code()));
 						}
 					}
 				} catch (Exception ignored) {
@@ -542,17 +535,84 @@ public class MinecraftEventHandler {
 	}
 
 	/**
-	 * Builds a clickable Component for a verification code.
-	 * When clicked, the code is copied to the player's clipboard.
+	 * Builds a rich Component for the "not linked" player join notification.
+	 * Contains inline clickable elements: [/link code: CODE] for copy-to-clipboard
+	 * and [/dmcc link] for suggest-command.
 	 *
 	 * @param code The verification code.
+	 * @return A rich Component with inline clickable elements.
+	 */
+	private static Component buildNotLinkedMessage(String code) {
+		return Component.empty()
+				.append(Component.literal(I18nManager.getDmccTranslation("linking.player_join.not_linked_prefix")))
+				.append(buildCopyToClipboard(I18nManager.getDmccTranslation("linking.player_join.not_linked_discord_cmd", code)))
+				.append(Component.literal(I18nManager.getDmccTranslation("linking.player_join.not_linked_middle")))
+				.append(buildSuggestCommand("/dmcc link", I18nManager.getDmccTranslation("linking.player_join.not_linked_refresh_cmd")))
+				.append(Component.literal(I18nManager.getDmccTranslation("linking.player_join.not_linked_refresh_tail")));
+	}
+
+	/**
+	 * Builds a rich Component for the "code generated" response from /dmcc link.
+	 * Contains inline clickable elements: [/link code: CODE] for copy-to-clipboard
+	 * and [/dmcc link] for suggest-command.
+	 *
+	 * @param code The verification code.
+	 * @return A rich Component with inline clickable elements.
+	 */
+	private static Component buildCodeGeneratedMessage(String code) {
+		return Component.empty()
+				.append(Component.literal(I18nManager.getDmccTranslation("commands.link.code_generated_prefix")))
+				.append(buildCopyToClipboard(code))
+				.append(Component.literal(I18nManager.getDmccTranslation("commands.link.code_generated_suffix")))
+				.append(buildCopyToClipboard(I18nManager.getDmccTranslation("commands.link.code_generated_discord_cmd", code)))
+				.append(Component.literal(I18nManager.getDmccTranslation("commands.link.code_generated_tail")))
+				.append(buildSuggestCommand("/dmcc link", I18nManager.getDmccTranslation("commands.link.code_generated_refresh_cmd")))
+				.append(Component.literal(I18nManager.getDmccTranslation("commands.link.code_generated_refresh_tail")));
+	}
+
+	/**
+	 * Builds a rich Component for the "already linked" response from /dmcc link.
+	 * Contains an inline clickable [/dmcc unlink] suggest-command element.
+	 *
+	 * @param discordName The Discord user's display name.
+	 * @return A rich Component with inline clickable element.
+	 */
+	private static Component buildAlreadyLinkedMessage(String discordName) {
+		return Component.empty()
+				.append(Component.literal(I18nManager.getDmccTranslation("commands.link.already_linked", discordName)))
+				.append(buildSuggestCommand("/dmcc unlink", I18nManager.getDmccTranslation("commands.link.already_linked_unlink")))
+				.append(Component.literal(I18nManager.getDmccTranslation("commands.link.already_linked_suffix")));
+	}
+
+	/**
+	 * Builds a clickable Component that copies the given text to clipboard when clicked.
+	 * Displayed in green bold with brackets.
+	 *
+	 * @param text The text to copy and display.
 	 * @return A clickable Component.
 	 */
-	private static Component buildClickableCode(String code) {
-		return Component.literal("[" + code + "]").withStyle(style -> style
-				.withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, code))
-				.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+	private static Component buildCopyToClipboard(String text) {
+		return Component.literal("[" + text + "]").withStyle(style -> style
+				.withClickEvent(new ClickEvent.CopyToClipboard(text))
+				.withHoverEvent(new HoverEvent.ShowText(
 						Component.literal(I18nManager.getDmccTranslation("linking.player_join.click_to_copy"))))
+				.withColor(ChatFormatting.GREEN)
+				.withBold(true));
+	}
+
+	/**
+	 * Builds a clickable Component that suggests a command (fills the chat input) when clicked.
+	 * Displayed in green bold with brackets.
+	 *
+	 * @param command     The command to suggest (fill into chat input).
+	 * @param displayText The text to display in the bracket.
+	 * @return A clickable Component.
+	 */
+	private static Component buildSuggestCommand(String command, String displayText) {
+		return Component.literal("[" + displayText + "]").withStyle(style -> style
+				.withClickEvent(new ClickEvent.SuggestCommand(command))
+				.withHoverEvent(new HoverEvent.ShowText(
+						Component.literal(I18nManager.getDmccTranslation("linking.player_join.click_to_run"))))
 				.withColor(ChatFormatting.GREEN)
 				.withBold(true));
 	}

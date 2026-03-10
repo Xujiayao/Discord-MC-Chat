@@ -36,13 +36,13 @@ public class MinecraftCommands {
 		var root = literal("dmcc")
 				.requires(source -> source.hasPermission(ConfigManager.getInt("command_permission_levels.help", -1)))
 				.executes(ctx -> {
-					CommandManager.execute(new MinecraftCommandSender(ctx.getSource()), "help");
+					CommandManager.execute(createSenderForSource(ctx.getSource()), "help");
 					return 1;
 				});
 		var help = literal("help")
 				.requires(source -> source.hasPermission(ConfigManager.getInt("command_permission_levels.help", -1)))
 				.executes(ctx -> {
-					CommandManager.execute(new MinecraftCommandSender(ctx.getSource()), "help");
+					CommandManager.execute(createSenderForSource(ctx.getSource()), "help");
 					return 1;
 				});
 		var info = literal("info")
@@ -101,6 +101,22 @@ public class MinecraftCommands {
 				.then(stats)
 				.then(link)
 				.then(unlink));
+	}
+
+	/**
+	 * Creates the appropriate command sender based on whether the source is a player or console.
+	 * <p>
+	 * Players get a {@link MinecraftPlayerCommandSender} which provides player context
+	 * for commands like link/unlink. Console/command blocks get a plain {@link MinecraftCommandSender}.
+	 *
+	 * @param source The command source stack.
+	 * @return The appropriate command sender.
+	 */
+	private static LocalCommandSender createSenderForSource(CommandSourceStack source) {
+		if (source.getEntity() instanceof ServerPlayer) {
+			return new MinecraftPlayerCommandSender(source);
+		}
+		return new MinecraftCommandSender(source);
 	}
 
 	/**
