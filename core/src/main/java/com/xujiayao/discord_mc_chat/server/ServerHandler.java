@@ -83,16 +83,17 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 				case MinecraftEventPacket p -> {
 					switch (p.type) {
 						// Server events
-						case SERVER_STARTED -> {
-							DiscordManager.clientBroadcast(clientName, "server.started", "server.start", false, p.placeholders);
-							// Trigger OP sync for this newly started client
-							OpSyncManager.syncAll();
-						}
+						case SERVER_STARTED ->
+								DiscordManager.clientBroadcast(clientName, "server.started", "server.start", false, p.placeholders);
 						case SERVER_STOPPING ->
 								DiscordManager.clientBroadcast(clientName, "server.stopped", "server.stop", false, p.placeholders);
 						// Player events
-						case PLAYER_JOIN ->
-								DiscordManager.clientBroadcast(clientName, "player.join", "player.join", false, p.placeholders);
+						case PLAYER_JOIN -> {
+							DiscordManager.clientBroadcast(clientName, "player.join", "player.join", false, p.placeholders);
+
+							// After a player joins, perform OP level sync if enabled to ensure they have correct permissions
+							OpSyncManager.syncAll();
+						}
 						case PLAYER_QUIT ->
 								DiscordManager.clientBroadcast(clientName, "player.quit", "player.quit", false, p.placeholders);
 						case PLAYER_DIE ->
@@ -184,6 +185,9 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 						LOGGER.info(I18nManager.getDmccTranslation("server.network.auth_success", clientName));
 						ctx.writeAndFlush(new LoginSuccessPacket(ConfigManager.getString("language")));
+
+						// After successful authentication, perform OP level sync if enabled
+						OpSyncManager.syncAll();
 					} else {
 						String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.auth_failed");
 						LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", clientName, reason));

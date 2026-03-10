@@ -14,7 +14,6 @@ import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePa
 import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkRequestPacket;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
-import com.xujiayao.discord_mc_chat.server.linking.OpSyncManager;
 import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
@@ -128,11 +127,6 @@ public class MinecraftEventHandler {
 
 			// Register info supplier after server is started
 			NetworkManager.registerInfoSupplier(() -> buildInfoResponse(event.minecraftServer()));
-
-			// Trigger initial OP sync after server is ready (single_server mode)
-			if ("single_server".equals(ModeManager.getMode())) {
-				OpSyncManager.syncAll();
-			}
 		});
 
 		EventManager.register(MinecraftEvents.ServerStopping.class, event -> {
