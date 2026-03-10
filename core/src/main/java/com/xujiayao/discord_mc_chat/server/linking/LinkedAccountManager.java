@@ -22,13 +22,13 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  * <p>
  * One Discord account can link multiple Minecraft accounts (1:N).
  * One Minecraft account can only link to one Discord account (N:1 uniqueness).
- * Data is stored in {@code account_linking/linked_accounts.json} in the DMCC config directory.
+ * Data is stored in {@code account_linking/links.json} in the DMCC config directory.
  *
  * @author Xujiayao
  */
 public class LinkedAccountManager {
 
-	private static final Path LINKS_FILE = Paths.get("./config/discord_mc_chat/account_linking/linked_accounts.json");
+	private static final Path LINKS_FILE = Paths.get("./config/discord_mc_chat/account_linking/links.json");
 
 	private static final ConcurrentHashMap<String, List<LinkEntry>> LINKED_ACCOUNTS = new ConcurrentHashMap<>();
 
@@ -127,7 +127,7 @@ public class LinkedAccountManager {
 	 * Clears all linked accounts from memory without writing to disk.
 	 * <p>
 	 * This intentionally does NOT save to disk, so users can manually edit
-	 * {@code linked_accounts.json} while DMCC is running and reload to apply their changes.
+	 * {@code links.json} while DMCC is running and reload to apply their changes.
 	 * Any in-memory changes that were not yet persisted via {@link #save()} will be lost.
 	 * In practice, all mutations (link/unlink) call {@link #save()} immediately,
 	 * so no data is lost under normal operation.
@@ -195,6 +195,10 @@ public class LinkedAccountManager {
 	 * @return The Discord user ID that was unlinked from, or null if the UUID was not linked.
 	 */
 	public static synchronized String unlinkByMinecraftUuid(String minecraftUuid, String minecraftName) {
+		if (minecraftUuid == null) {
+			return null;
+		}
+
 		String discordId = UUID_TO_DISCORD.remove(minecraftUuid);
 		if (discordId == null) {
 			return null;

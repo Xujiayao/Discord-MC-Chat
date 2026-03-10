@@ -273,6 +273,7 @@ linking:
   player_join:
     not_linked: "Your Minecraft account is not linked to Discord. Use /dmcc link to get a verification code."
     code_hint: "Use /link {} on Discord within 5 minutes to link your account."
+    click_to_copy: "Click to copy verification code"
 
 minecraft:
   translations:

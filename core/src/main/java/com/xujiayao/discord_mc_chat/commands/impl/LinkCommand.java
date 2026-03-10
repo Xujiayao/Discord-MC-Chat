@@ -7,6 +7,8 @@ import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkRequestPac
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
+import com.xujiayao.discord_mc_chat.utils.events.CoreEvents;
+import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
 /**
@@ -107,9 +109,14 @@ public class LinkCommand implements Command {
 	}
 
 	@Override
+	public boolean isAutoCompletable() {
+		return false;
+	}
+
+	@Override
 	public boolean isVisibleInHelp(CommandSender sender) {
-		// Always visible - link is available to players and Discord users
-		return true;
+		// Only show link in help for Minecraft players or Discord users
+		return (sender instanceof PlayerContextProvider) || (sender instanceof DiscordUserContextProvider);
 	}
 
 	@Override
@@ -148,11 +155,13 @@ public class LinkCommand implements Command {
 				if (LinkedAccountManager.isMinecraftUuidLinked(uuid)) {
 					String discordId = LinkedAccountManager.getDiscordIdByMinecraftUuid(uuid);
 					String discordName = LinkedAccountManager.resolveDiscordName(discordId);
-					sender.reply(I18nManager.getDmccTranslation("commands.link.already_linked", discordName));
+					// Post event so Minecraft module can display with rich formatting
+					EventManager.post(new CoreEvents.LinkCodeResponseEvent(uuid, null, true, discordName));
 					return;
 				}
 				String code = VerificationCodeManager.generateOrRefreshCode(uuid, name);
-				sender.reply(I18nManager.getDmccTranslation("commands.link.code_generated", code));
+				// Post event so Minecraft module can display with click-to-copy
+				EventManager.post(new CoreEvents.LinkCodeResponseEvent(uuid, code, false, ""));
 			}
 			case "multi_server_client" -> {
 				// Send request to standalone server via network

@@ -34,9 +34,14 @@ public class UnlinkCommand implements Command {
 	}
 
 	@Override
+	public boolean isAutoCompletable() {
+		return false;
+	}
+
+	@Override
 	public boolean isVisibleInHelp(CommandSender sender) {
-		// Always visible - unlink is available to players and Discord users
-		return true;
+		// Only show unlink in help for Minecraft players or Discord users
+		return (sender instanceof LinkCommand.PlayerContextProvider) || (sender instanceof LinkCommand.DiscordUserContextProvider);
 	}
 
 	@Override
@@ -56,6 +61,11 @@ public class UnlinkCommand implements Command {
 	private void executeMcUnlink(CommandSender sender, LinkCommand.PlayerContextProvider player) {
 		String uuid = player.getPlayerUuid();
 		String name = player.getPlayerName();
+
+		if (uuid == null) {
+			sender.reply(I18nManager.getDmccTranslation("commands.unlink.not_available"));
+			return;
+		}
 
 		switch (ModeManager.getMode()) {
 			case "single_server" -> {
