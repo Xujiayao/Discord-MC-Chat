@@ -625,8 +625,7 @@ public class MinecraftEventHandler {
 				.withClickEvent(new ClickEvent.CopyToClipboard(text))
 				.withHoverEvent(new HoverEvent.ShowText(
 						Component.literal(I18nManager.getDmccTranslation("linking.player_join.click_to_copy"))))
-				.withColor(ChatFormatting.GREEN)
-				.withBold(true));
+				.withColor(ChatFormatting.GREEN));
 	}
 
 	/**
@@ -642,8 +641,7 @@ public class MinecraftEventHandler {
 				.withClickEvent(new ClickEvent.SuggestCommand(command))
 				.withHoverEvent(new HoverEvent.ShowText(
 						Component.literal(I18nManager.getDmccTranslation("linking.player_join.click_to_run"))))
-				.withColor(ChatFormatting.GREEN)
-				.withBold(true));
+				.withColor(ChatFormatting.GREEN));
 	}
 
 	/**
