@@ -301,6 +301,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 	@Override
 	public void onMessageReceived(@NotNull MessageReceivedEvent event) {
 		if (event.getAuthor().isBot() || event.isWebhookMessage()) {
+			return;
 		}
 
 		// TODO: Handle incoming Discord messages and forward to Minecraft

@@ -92,6 +92,9 @@ public class OpLevelResolver {
 
 	/**
 	 * Reads the OP level from a mapping node, optionally for a specific server.
+	 * <p>
+	 * If {@code serverName} is non-null but no matching entry exists in the {@code servers} array,
+	 * falls back to the top-level {@code op_level} of the mapping node.
 	 *
 	 * @param node       The mapping node (user_mappings or role_mappings entry).
 	 * @param serverName The target server name (null for top-level OP).
@@ -108,7 +111,7 @@ public class OpLevelResolver {
 				}
 			}
 		}
-		// Top-level op_level (for standalone and single_server)
+		// Fallback to top-level op_level when no server-specific entry matches
 		return node.path("op_level").asInt(-1);
 	}
 }
