@@ -68,18 +68,8 @@ public class UnlinkCommand implements Command {
 		}
 
 		switch (ModeManager.getMode()) {
-			case "single_server" -> {
-				// Look up the linked Discord ID before unlinking so we can show it
-				String discordId = LinkedAccountManager.getDiscordIdByMinecraftUuid(uuid);
-				String unlinkResult = LinkedAccountManager.unlinkByMinecraftUuid(uuid, name);
-				if (unlinkResult != null) {
-					String discordName = LinkedAccountManager.resolveDiscordName(discordId);
-					sender.reply(I18nManager.getDmccTranslation("commands.unlink.success", discordName));
-				} else {
-					sender.reply(I18nManager.getDmccTranslation("commands.unlink.not_linked"));
-				}
-			}
-			case "multi_server_client" -> {
+			case "single_server", "multi_server_client" -> {
+				// Send request to server via network (same for both modes)
 				NetworkManager.sendPacketToServer(new UnlinkRequestPacket(uuid, name));
 			}
 			default -> sender.reply(I18nManager.getDmccTranslation("commands.unlink.not_available"));

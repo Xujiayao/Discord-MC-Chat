@@ -2,7 +2,6 @@ package com.xujiayao.discord_mc_chat.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,11 +25,11 @@ public class MojangUtils {
 	/**
 	 * Resolves a Minecraft player name from a UUID string.
 	 * <p>
-	 * If the UUID is an offline-mode UUID, the name cannot be resolved from Mojang
-	 * and will fall back to the raw UUID. For online-mode UUIDs, the Mojang session
+	 * If the UUID is an offline-mode UUID (version 3), the name cannot be resolved from Mojang
+	 * and will fall back to the raw UUID. For online-mode UUIDs (version 4), the Mojang session
 	 * server is queried. Network failures also fall back to the raw UUID.
 	 *
-	 * @param uuidString The UUID string (with or without dashes).
+	 * @param uuidString The UUID string (standard dashed format, e.g. "069a79f4-44e9-4726-a5be-fca90e38aaf5").
 	 * @return The resolved player name, or the original UUID string if resolution fails.
 	 */
 	public static String resolvePlayerName(String uuidString) {
@@ -65,16 +64,4 @@ public class MojangUtils {
 		return uuidString;
 	}
 
-	/**
-	 * Generates an offline-mode UUID for a given player name.
-	 * <p>
-	 * This uses the same algorithm as Minecraft servers in offline mode:
-	 * {@code UUID.nameUUIDFromBytes("OfflinePlayer:" + name)}.
-	 *
-	 * @param playerName The player name.
-	 * @return The offline-mode UUID.
-	 */
-	public static UUID offlineUuid(String playerName) {
-		return UUID.nameUUIDFromBytes(("OfflinePlayer:" + playerName).getBytes(StandardCharsets.UTF_8));
-	}
 }

@@ -218,14 +218,14 @@ public class DiscordManager {
 	 */
 	public static net.dv8tion.jda.api.entities.Member retrieveMember(String discordId) {
 		if (jda == null) return null;
-		try {
-			for (var guild : jda.getGuilds()) {
+		for (var guild : jda.getGuilds()) {
+			try {
 				net.dv8tion.jda.api.entities.Member member = guild.retrieveMemberById(discordId).complete();
 				if (member != null) {
 					return member;
 				}
+			} catch (Exception ignored) {
 			}
-		} catch (Exception ignored) {
 		}
 		return null;
 	}

@@ -4,6 +4,7 @@ import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.commands.link.OpSyncPacket;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.discord.OpLevelResolver;
+import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.events.CoreEvents;
@@ -14,6 +15,8 @@ import net.dv8tion.jda.api.entities.User;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
@@ -23,18 +26,34 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  * When {@code sync_op_level_to_minecraft} is enabled, this class computes the desired OP level
  * for every linked Minecraft account based on the Discord user's mapping configuration,
  * then applies a full-reset sync to the Minecraft server(s).
+ * <p>
+ * All sync operations are queued on a dedicated single-thread executor to avoid
+ * blocking Netty IO threads or other callers with JDA's blocking API calls.
  *
  * @author Xujiayao
  */
 public class OpSyncManager {
 
+	private static final ExecutorService SYNC_EXECUTOR =
+			Executors.newSingleThreadExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-OpSync"));
+
 	/**
 	 * Performs a full OP level sync for all linked accounts.
+	 * <p>
+	 * The actual work is submitted to a dedicated executor thread to avoid
+	 * blocking the caller (e.g. Netty handler threads).
 	 * <p>
 	 * In single_server mode, posts a CoreEvent to the local Minecraft server.
 	 * In standalone mode, sends OpSyncPackets to each connected client.
 	 */
 	public static void syncAll() {
+		SYNC_EXECUTOR.execute(OpSyncManager::doSyncAll);
+	}
+
+	/**
+	 * Internal sync implementation that runs on the dedicated executor thread.
+	 */
+	private static void doSyncAll() {
 		if (!Boolean.TRUE.equals(ConfigManager.getBoolean("account_linking.op_sync.sync_op_level_to_minecraft"))) {
 			return;
 		}
@@ -48,8 +67,10 @@ public class OpSyncManager {
 				for (Map.Entry<String, List<LinkedAccountManager.LinkEntry>> entry : allLinks.entrySet()) {
 					String discordId = entry.getKey();
 					int opLevel = resolveOpForDiscordUser(discordId, null);
-					for (LinkedAccountManager.LinkEntry link : entry.getValue()) {
-						opLevels.put(link.minecraftUuid(), Math.max(0, opLevel));
+					if (opLevel > 0) {
+						for (LinkedAccountManager.LinkEntry link : entry.getValue()) {
+							opLevels.put(link.minecraftUuid(), opLevel);
+						}
 					}
 				}
 				EventManager.post(new CoreEvents.OpSyncEvent(opLevels));
@@ -62,8 +83,10 @@ public class OpSyncManager {
 					for (Map.Entry<String, List<LinkedAccountManager.LinkEntry>> entry : allLinks.entrySet()) {
 						String discordId = entry.getKey();
 						int opLevel = resolveOpForDiscordUser(discordId, clientName);
-						for (LinkedAccountManager.LinkEntry link : entry.getValue()) {
-							opLevels.put(link.minecraftUuid(), Math.max(0, opLevel));
+						if (opLevel > 0) {
+							for (LinkedAccountManager.LinkEntry link : entry.getValue()) {
+								opLevels.put(link.minecraftUuid(), opLevel);
+							}
 						}
 					}
 					NetworkManager.sendPacketToClient(new OpSyncPacket(opLevels), clientName);
