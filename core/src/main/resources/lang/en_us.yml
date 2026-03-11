@@ -274,8 +274,8 @@ linking:
     unlinked_minecraft: "Unlinked Minecraft player {} ({}) from Discord user {} ({})!"
     uuid_already_linked: "Minecraft player {} ({}) is already linked to Discord user {} ({})."
   verification:
-    generated: "Generated verification code {} for player {}!"
-    refreshed: "Refreshed verification code {} for player {}!"
+    generated: "Generated verification code for player {}: {}!"
+    refreshed: "Refreshed verification code for player {}: {}!"
     consumed: "Verification code consumed by player {}: {}!"
   player_join:
     not_linked_prefix: "Your Minecraft account is not linked to Discord. Use "

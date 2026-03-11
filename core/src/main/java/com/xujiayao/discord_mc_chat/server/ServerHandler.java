@@ -83,17 +83,17 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 				case MinecraftEventPacket p -> {
 					switch (p.type) {
 						// Server events
-						case SERVER_STARTED ->
-								DiscordManager.clientBroadcast(clientName, "server.started", "server.start", false, p.placeholders);
+						case SERVER_STARTED -> {
+							DiscordManager.clientBroadcast(clientName, "server.started", "server.start", false, p.placeholders);
+
+							// After a Minecraft server starts, perform OP level sync if enabled
+							OpSyncManager.syncAll();
+						}
 						case SERVER_STOPPING ->
 								DiscordManager.clientBroadcast(clientName, "server.stopped", "server.stop", false, p.placeholders);
 						// Player events
-						case PLAYER_JOIN -> {
-							DiscordManager.clientBroadcast(clientName, "player.join", "player.join", false, p.placeholders);
-
-							// After a player joins, perform OP level sync if enabled to ensure they have correct permissions
-							OpSyncManager.syncAll();
-						}
+						case PLAYER_JOIN ->
+								DiscordManager.clientBroadcast(clientName, "player.join", "player.join", false, p.placeholders);
 						case PLAYER_QUIT ->
 								DiscordManager.clientBroadcast(clientName, "player.quit", "player.quit", false, p.placeholders);
 						case PLAYER_DIE ->
@@ -115,9 +115,12 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 						NetworkManager.cacheConsoleAutoCompleteResponse(clientName, p.suggestions);
 				case LinkRequestPacket p -> {
 					if (LinkedAccountManager.isMinecraftUuidLinked(p.minecraftUuid)) {
-						String discordId = LinkedAccountManager.getDiscordIdByMinecraftUuid(p.minecraftUuid);
-						String discordName = DiscordManager.resolveDiscordUserName(discordId != null ? discordId : "");
-						ctx.writeAndFlush(new LinkResponsePacket(p.minecraftUuid, null, true, discordName));
+						if (!p.joinCheck) {
+							// Only notify "already linked" for explicit /dmcc link commands, not join checks
+							String discordId = LinkedAccountManager.getDiscordIdByMinecraftUuid(p.minecraftUuid);
+							String discordName = DiscordManager.resolveDiscordUserName(discordId != null ? discordId : "");
+							ctx.writeAndFlush(new LinkResponsePacket(p.minecraftUuid, null, true, discordName));
+						}
 					} else {
 						String code = VerificationCodeManager.generateOrRefreshCode(p.minecraftUuid, p.playerName);
 						ctx.writeAndFlush(new LinkResponsePacket(p.minecraftUuid, code, false, ""));

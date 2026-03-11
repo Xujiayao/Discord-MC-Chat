@@ -7,8 +7,6 @@ import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkRequestPac
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
-import com.xujiayao.discord_mc_chat.utils.events.CoreEvents;
-import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
 /**
@@ -108,22 +106,9 @@ public class LinkCommand implements Command {
 		}
 
 		switch (ModeManager.getMode()) {
-			case "single_server" -> {
-				// Direct access to server-side managers
-				if (LinkedAccountManager.isMinecraftUuidLinked(uuid)) {
-					String discordId = LinkedAccountManager.getDiscordIdByMinecraftUuid(uuid);
-					String discordName = LinkedAccountManager.resolveDiscordName(discordId);
-					// Post event so Minecraft module can display with rich formatting
-					EventManager.post(new CoreEvents.LinkCodeResponseEvent(uuid, null, true, discordName));
-					return;
-				}
-				String code = VerificationCodeManager.generateOrRefreshCode(uuid, name);
-				// Post event so Minecraft module can display with click-to-copy
-				EventManager.post(new CoreEvents.LinkCodeResponseEvent(uuid, code, false, ""));
-			}
-			case "multi_server_client" -> {
-				// Send request to standalone server via network
-				NetworkManager.sendPacketToServer(new LinkRequestPacket(uuid, name));
+			case "single_server", "multi_server_client" -> {
+				// Send request to server via network (same for both modes)
+				NetworkManager.sendPacketToServer(new LinkRequestPacket(uuid, name, false));
 			}
 			default -> sender.reply(I18nManager.getDmccTranslation("commands.link.not_available"));
 		}

@@ -13,8 +13,6 @@ import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkRequestPacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftEventPacket;
-import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
-import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
@@ -147,25 +145,10 @@ public class MinecraftEventHandler {
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_JOIN, placeholders));
 
-			// Account linking: check if this player is linked
+			// Account linking: check if this player is linked (via network packet)
 			String playerUuid = event.serverPlayer().getStringUUID();
 			String playerName = event.serverPlayer().getName().getString();
-
-			switch (ModeManager.getMode()) {
-				case "single_server" -> {
-					// Direct access to server-side managers
-					if (!LinkedAccountManager.isMinecraftUuidLinked(playerUuid)) {
-						String code = VerificationCodeManager.generateOrRefreshCode(playerUuid, playerName);
-						// Notify the player in-game with inline clickable elements
-						ServerPlayer sp = event.serverPlayer();
-						sp.sendSystemMessage(buildNotLinkedMessage(code));
-					}
-				}
-				case "multi_server_client" -> {
-					// Send request to standalone server
-					NetworkManager.sendPacketToServer(new LinkRequestPacket(playerUuid, playerName));
-				}
-			}
+			NetworkManager.sendPacketToServer(new LinkRequestPacket(playerUuid, playerName, true));
 		});
 
 		EventManager.register(MinecraftEvents.PlayerQuit.class, event -> {
@@ -473,11 +456,11 @@ public class MinecraftEventHandler {
 							opList.save();
 						} catch (Exception ignored) {
 						}
-					}
 
-					// Update permission levels for online players
-					for (ServerPlayer player : playerList.getPlayers()) {
-						playerList.sendPlayerPermissionLevel(player);
+						// Update permission levels for online players only if OP list was modified
+						for (ServerPlayer player : playerList.getPlayers()) {
+							playerList.sendPlayerPermissionLevel(player);
+						}
 					}
 				} catch (Exception ignored) {
 				}
@@ -615,7 +598,7 @@ public class MinecraftEventHandler {
 
 	/**
 	 * Builds a clickable Component that copies the given text to clipboard when clicked.
-	 * Displayed in green bold with brackets.
+	 * Displayed in green with brackets.
 	 *
 	 * @param text The text to copy and display.
 	 * @return A clickable Component.
@@ -630,7 +613,7 @@ public class MinecraftEventHandler {
 
 	/**
 	 * Builds a clickable Component that suggests a command (fills the chat input) when clicked.
-	 * Displayed in green bold with brackets.
+	 * Displayed in green with brackets.
 	 *
 	 * @param command     The command to suggest (fill into chat input).
 	 * @param displayText The text to display in the bracket.

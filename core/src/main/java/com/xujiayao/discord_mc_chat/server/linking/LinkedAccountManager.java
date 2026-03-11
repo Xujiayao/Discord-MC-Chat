@@ -79,11 +79,14 @@ public class LinkedAccountManager {
 				return true;
 			}
 
-			Map<String, List<LinkEntry>> loaded = JSON_MAPPER.readValue(
-					Files.newBufferedReader(LINKS_FILE),
-					new TypeReference<>() {
-					}
-			);
+			Map<String, List<LinkEntry>> loaded;
+			try (var reader = Files.newBufferedReader(LINKS_FILE)) {
+				loaded = JSON_MAPPER.readValue(
+						reader,
+						new TypeReference<>() {
+						}
+				);
+			}
 
 			LINKED_ACCOUNTS.clear();
 			UUID_TO_DISCORD.clear();

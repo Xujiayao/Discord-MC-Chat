@@ -89,24 +89,6 @@ public class CoreEvents {
 	}
 
 	/**
-	 * Posted when a Minecraft player joins the server to check their account link status.
-	 * <p>
-	 * The handler should check if the player's UUID is linked. If not linked,
-	 * a verification code should be generated and sent back via the callback.
-	 *
-	 * @param playerUuid The UUID of the Minecraft player (as string).
-	 * @param playerName The display name of the Minecraft player.
-	 * @param callback   A consumer that receives the verification code if not linked,
-	 *                   or null if already linked.
-	 */
-	public record PlayerJoinLinkCheckEvent(
-			String playerUuid,
-			String playerName,
-			Consumer<String> callback
-	) {
-	}
-
-	/**
 	 * Posted by the Client when receiving a link code response from the Server.
 	 * <p>
 	 * The Minecraft module should notify the player with the verification code.
