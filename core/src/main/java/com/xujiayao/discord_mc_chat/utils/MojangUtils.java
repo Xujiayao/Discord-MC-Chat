@@ -33,6 +33,22 @@ public class MojangUtils {
 	 * @return The resolved player name, or the original UUID string if resolution fails.
 	 */
 	public static String resolvePlayerName(String uuidString) {
+		return resolvePlayerName(uuidString, null);
+	}
+
+	/**
+	 * Resolves a Minecraft player name from a UUID string, with an optional fallback name
+	 * for offline-mode UUIDs.
+	 * <p>
+	 * If the UUID is an offline-mode UUID (version 3), {@code offlineFallbackName} is returned
+	 * if non-null; otherwise "N/A" is returned. For online-mode UUIDs (version 4), the Mojang
+	 * session server is queried. Network failures fall back to the raw UUID.
+	 *
+	 * @param uuidString          The UUID string (standard dashed format).
+	 * @param offlineFallbackName The player name to use for offline UUIDs, or null.
+	 * @return The resolved player name, or the fallback/"N/A"/UUID string if resolution fails.
+	 */
+	public static String resolvePlayerName(String uuidString, String offlineFallbackName) {
 		String cached = NAME_CACHE.get(uuidString);
 		if (cached != null) {
 			return cached;
@@ -44,8 +60,10 @@ public class MojangUtils {
 			// Check if this is an offline-mode UUID (version 3)
 			if (uuid.version() == 3) {
 				// Offline UUIDs are generated from "OfflinePlayer:" + name
-				// We cannot reverse this, so return the raw UUID
-				return uuidString;
+				// We cannot reverse this, so use the fallback name or "N/A"
+				String name = (offlineFallbackName != null) ? offlineFallbackName : "N/A";
+				NAME_CACHE.put(uuidString, name);
+				return name;
 			}
 
 			// Online UUID (version 4) - query Mojang

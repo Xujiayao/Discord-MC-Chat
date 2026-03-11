@@ -1,5 +1,6 @@
 package com.xujiayao.discord_mc_chat.server.linking;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -151,7 +153,7 @@ public class LinkedAccountManager {
 		}
 
 		LINKED_ACCOUNTS.computeIfAbsent(discordId, k -> new ArrayList<>())
-				.add(new LinkEntry(minecraftUuid, System.currentTimeMillis()));
+				.add(new LinkEntry(minecraftUuid, System.currentTimeMillis(), isOfflineUuid(minecraftUuid) ? minecraftName : null));
 		UUID_TO_DISCORD.put(minecraftUuid, discordId);
 
 		LOGGER.info(I18nManager.getDmccTranslation("linking.manager.linked", discordName, discordId, minecraftName, minecraftUuid));
@@ -261,11 +263,31 @@ public class LinkedAccountManager {
 	}
 
 	/**
+	 * Checks if a Minecraft UUID is an offline-mode UUID (version 3).
+	 *
+	 * @param uuidString The UUID string.
+	 * @return true if the UUID is offline-mode (version 3), false otherwise.
+	 */
+	private static boolean isOfflineUuid(String uuidString) {
+		try {
+			return UUID.fromString(uuidString).version() == 3;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	/**
 	 * A linked Minecraft account entry.
 	 *
-	 * @param minecraftUuid The UUID of the linked Minecraft account.
-	 * @param linkedAt      The timestamp (epoch millis) when the link was created.
+	 * @param minecraftUuid     The UUID of the linked Minecraft account.
+	 * @param linkedAt          The timestamp (epoch millis) when the link was created.
+	 * @param offlinePlayerName The player name stored at link time for offline-mode UUIDs only.
+	 *                          {@code null} for online-mode players (resolvable via Mojang API).
 	 */
-	public record LinkEntry(String minecraftUuid, long linkedAt) {
+	public record LinkEntry(
+			String minecraftUuid,
+			long linkedAt,
+			@JsonInclude(JsonInclude.Include.NON_NULL) String offlinePlayerName
+	) {
 	}
 }
