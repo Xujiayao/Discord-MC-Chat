@@ -9,7 +9,7 @@
 # ==================================================
 
 terminal:
-  started: "交互式终端已启动！输入 \"help\" 查看可用命令列表。"
+  started: "交互式终端已启动。输入 \"help\" 查看可用命令列表。"
   unknown_command: "未知命令：\"{}\"。输入 \"help\" 查看可用命令列表。"
   input_closed: "终端输入流已关闭。正在关闭终端管理器。"
 
@@ -106,7 +106,7 @@ commands:
     success: "已成功获取日志文件 \"{}\"！"
     list_failed: "列出日志文件失败。"
     read_failed: "读取日志文件失败：{}"
-    saved_to_cache: "日志文件已保存到：{}！"
+    saved_to_cache: "日志文件已保存到：{}"
     save_failed: "保存日志文件到缓存失败：{}"
     terminal_not_supported: "在终端中获取日志文件不受支持。请直接访问 \"./logs\" 目录。"
   stats:
@@ -193,7 +193,7 @@ server:
   discord_init_failed: "初始化 Discord 管理器失败。正在中止 DMCC 服务端启动。"
   startup_interrupted: "DMCC 服务端启动被中断。"
   network:
-    listening: "DMCC 服务端正在监听端口 {}！"
+    listening: "DMCC 服务端正在监听端口 {}。"
     bind_failed: "无法绑定端口 {}。"
     reject: "拒绝与 DMCC 客户端 \"{}\" 连接。原因：{}"
     auth_success: "DMCC 客户端连接成功：\"{}\""
@@ -223,7 +223,7 @@ client:
 utils:
   config:
     mode:
-      set: "运行模式已设置为 \"{}\"！"
+      set: "运行模式已设置为 \"{}\"。"
       not_found: "模式配置文件未找到或为空。"
       creating: "正在于 \"{}\" 创建默认文件。"
       edit_prompt: "请在重新加载 DMCC 之前编辑 \"{}\"。"
@@ -288,13 +288,13 @@ linking:
 
 minecraft:
   translations:
-    loaded: "已加载 {}/{} 条 Minecraft \"{}\" 翻译！"
+    loaded: "已加载 {}/{} 条 Minecraft \"{}\" 翻译。"
     init_failed: "初始化 Minecraft 翻译失败。"
     key_not_found: "未找到键的翻译：\"{}\"，将按原样返回键。"
-    cache_loaded: "已从缓存加载版本 {1} 的 Minecraft \"{0}\" 翻译！"
+    cache_loaded: "已从缓存加载版本 {1} 的 Minecraft \"{0}\" 翻译。"
     cache_read_failed: "读取缓存的 Minecraft 翻译失败，将尝试重新下载。"
     downloading: "正在下载 Minecraft 版本 {1} 的 \"{0}\" 翻译..."
-    downloaded: "已下载并缓存 Minecraft \"{}\" 翻译，文件大小：{} 字节！"
+    downloaded: "已下载并缓存 Minecraft \"{}\" 翻译，文件大小：{} 字节"
     download_failed: "下载或缓存 Minecraft 版本 {1} 的 \"{0}\" 翻译失败。"
     official_load_failed: "加载官方 Minecraft 翻译时发生意外错误。"
     mod_load_failed: "无法从模组 JAR 加载翻译。"
