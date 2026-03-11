@@ -142,7 +142,7 @@ public class NetworkManager {
 	 * @return true if connected, false otherwise.
 	 */
 	public static boolean isClientConnected(String clientName) {
-		return clientChannels.values().stream().anyMatch(name -> name.equals(clientName));
+		return clientChannels.containsValue(clientName);
 	}
 
 	/**

@@ -105,15 +105,7 @@ public class CommandAutoCompleter {
 
 		List<String> logFiles = LogFileUtils.listLogFiles();
 
-		// "log" (exact, no space) => start first-argument suggestions immediately
-		if (parts.length == 1 && !hasTrailingSpace) {
-			for (String file : logFiles) {
-				suggestions.add("log " + file);
-			}
-			return suggestions;
-		}
-
-		// "log " => first-argument suggestions
+		// "log" (exact, no space) or "log " => first-argument suggestions
 		if (parts.length == 1) {
 			for (String file : logFiles) {
 				suggestions.add("log " + file);
@@ -170,15 +162,7 @@ public class CommandAutoCompleter {
 			return suggestions;
 		}
 
-		// "stats" (exact, no space) => suggest first argument immediately
-		if (parts.length == 1 && !hasTrailingSpace) {
-			for (String type : provider.getStatTypes()) {
-				suggestions.add("stats " + type + " <stat>");
-			}
-			return suggestions;
-		}
-
-		// "stats " => first-argument suggestions
+		// "stats" (exact, no space) or "stats " => first-argument suggestions
 		if (parts.length == 1) {
 			for (String type : provider.getStatTypes()) {
 				suggestions.add("stats " + type + " <stat>");

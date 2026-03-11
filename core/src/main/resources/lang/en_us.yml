@@ -125,7 +125,7 @@ commands:
     args_desc:
       player: "Player name"
   link:
-    description: "Link your Minecraft account to Discord"
+    description: "Link your Minecraft player to a Discord user"
     args_desc:
       code: "Verification code from Minecraft"
     player_only: "This command can only be used by a Minecraft player."
@@ -133,18 +133,18 @@ commands:
     not_available: "This command is not available in the current mode."
     invalid_code: "Invalid or expired verification code."
     success: "Successfully linked to Minecraft player \"{}\"!"
-    uuid_already_linked: "This Minecraft account is already linked to another Discord user."
+    uuid_already_linked: "Linking failed. This Minecraft player is already linked to another Discord user."
   unlink:
-    description: "Unlink your Minecraft account from Discord"
+    description: "Unlink your Minecraft player from a Discord user"
     not_available: "This command is not available in the current mode."
-    success: "Your Minecraft account has been unlinked from Discord user \"{}\"!"
-    not_linked: "No linked account found."
-    discord_success: "Successfully unlinked {} Minecraft account(s) from Discord user \"{}\"!"
+    success_minecraft: "You have been unlinked from Discord user \"{}\"!"
+    success_discord: "Successfully unlinked {0} Minecraft player(s) from Discord user \"{1}\"!"
+    not_linked: "No linked accounts found for you."
   links:
-    description: "View all linked accounts"
-    no_links: "No linked accounts found."
-    title: "Linked Accounts"
-    total: "Total: {} linked account(s) across {} Discord user(s)."
+    description: "View all account linking records"
+    no_links: "No account linking records found."
+    title: "Account Linking Records"
+    total: "Total: {} linked Minecraft player(s) across {} Discord user(s)."
 
 main:
   init:
@@ -256,26 +256,26 @@ utils:
 
 linking:
   manager:
-    loaded: "Loaded {} linked account(s)!"
-    load_failed: "Failed to load linked accounts."
-    saved: "Linked accounts saved to file!"
-    save_failed: "Failed to save linked accounts."
-    linked: "Linked Discord user {} ({}) to Minecraft player {} ({})!"
-    unlinked_discord: "Unlinked {0} Minecraft account(s) from Discord user {1} ({2})!"
-    unlinked_minecraft: "Unlinked Minecraft player {} ({}) from Discord user {} ({})!"
+    loaded: "Loaded {} account linking record(s)."
+    load_failed: "Failed to load account linking records."
+    saved: "Account linking records saved to file."
+    save_failed: "Failed to save account linking records."
+    linked: "Linked Discord user {} ({}) to Minecraft player {} ({})."
+    unlinked_discord: "Unlinked {0} Minecraft player(s) from Discord user {1} ({2})."
+    unlinked_minecraft: "Unlinked Minecraft player {} ({}) from Discord user {} ({})."
     uuid_already_linked: "Minecraft player {} ({}) is already linked to Discord user {} ({})."
   verification:
-    generated: "Generated verification code for Minecraft player {}: {}!"
-    refreshed: "Refreshed verification code validity for Minecraft player {}: {}!"
-    consumed: "Minecraft player {} completed linking with verification code {}!"
+    generated: "Generated account linking verification code for Minecraft player {}."
+    refreshed: "Refreshed account linking verification code validity for Minecraft player {}."
+    consumed: "Minecraft player {} completed account linking."
   message:
-    not_linked_1: "Your Minecraft account is not linked to a Discord user. Use "
-    not_linked_2: " on Discord to complete linking. The code expires in 5 minutes. Run "
-    not_linked_3: " in-game to refresh the code validity."
-    already_linked_1: "Your Minecraft account is already linked to Discord user \"{}\". Run "
-    already_linked_2: " to unlink."
+    not_linked_1: "Your Minecraft player is not linked to a Discord user. Use "
+    not_linked_2: " command on Discord to complete linking. The code expires in 5 minutes. Run "
+    not_linked_3: " command in-game to refresh the code validity."
+    already_linked_1: "Your Minecraft player is already linked to Discord user \"{}\". Run "
+    already_linked_2: " command to unlink."
   tooltip:
-    click_to_copy: "Click to copy"
+    click_to_copy: "Click to copy to clipboard"
     click_to_run: "Click to fill command"
 
 minecraft:
