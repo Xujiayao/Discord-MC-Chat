@@ -125,7 +125,7 @@ commands:
     args_desc:
       player: "玩家名称"
   link:
-    description: "将你的 Minecraft 账户绑定到 Discord"
+    description: "将你的 Minecraft 玩家与 Discord 用户绑定"
     args_desc:
       code: "来自 Minecraft 的验证码"
     player_only: "此命令只能由 Minecraft 玩家使用。"
@@ -133,18 +133,18 @@ commands:
     not_available: "此命令在当前模式下不可用。"
     invalid_code: "无效或已过期的验证码。"
     success: "成功绑定 Minecraft 玩家 \"{}\"！"
-    uuid_already_linked: "此 Minecraft 账户已绑定到另一个 Discord 用户。"
+    uuid_already_linked: "绑定失败。此 Minecraft 玩家已绑定到另一个 Discord 用户。"
   unlink:
-    description: "解除你的 Minecraft 账户与 Discord 的绑定"
+    description: "解除你的 Minecraft 玩家与 Discord 用户的绑定"
     not_available: "此命令在当前模式下不可用。"
-    success: "你的 Minecraft 账户已与 Discord 用户 \"{}\" 解除绑定！"
-    not_linked: "未找到已绑定的账户。"
-    discord_success: "已成功解除 Discord 用户 \"{1}\" 的 {0} 个 Minecraft 账户绑定！"
+    success_minecraft: "你已与 Discord 用户 \"{}\" 解除绑定！"
+    success_discord: "已成功解除 Discord 用户 \"{1}\" 的 {0} 个 Minecraft 玩家绑定！"
+    not_linked: "未找到任何你已绑定的账户。"
   links:
-    description: "查看所有已绑定的账户"
-    no_links: "未找到已绑定的账户。"
-    title: "已绑定账户"
-    total: "共计：{} 个已绑定账户，关联 {} 个 Discord 用户。"
+    description: "查看所有账户绑定记录"
+    no_links: "未找到任何账户绑定记录。"
+    title: "账户绑定记录"
+    total: "共计：{} 个已绑定 Minecraft 玩家，关联 {} 个 Discord 用户。"
 
 main:
   init:
@@ -256,26 +256,26 @@ utils:
 
 linking:
   manager:
-    loaded: "已加载 {} 个已绑定账户！"
-    load_failed: "加载已绑定账户失败。"
-    saved: "已绑定账户已保存到文件！"
-    save_failed: "保存已绑定账户失败。"
-    linked: "已将 Discord 用户 {} ({}) 绑定到 Minecraft 玩家 {} ({})！"
-    unlinked_discord: "已解除 Discord 用户 {1} ({2}) 的 {0} 个 Minecraft 账户绑定！"
-    unlinked_minecraft: "已解除 Minecraft 玩家 {} ({}) 与 Discord 用户 {} ({}) 的绑定！"
+    loaded: "已加载 {} 条账户绑定记录。"
+    load_failed: "加载账户绑定记录失败。"
+    saved: "账户绑定记录已保存到文件。"
+    save_failed: "保存账户绑定记录失败。"
+    linked: "已将 Discord 用户 {} ({}) 绑定到 Minecraft 玩家 {} ({})。"
+    unlinked_discord: "已解除 Discord 用户 {1} ({2}) 的 {0} 个 Minecraft 玩家绑定。"
+    unlinked_minecraft: "已解除 Minecraft 玩家 {} ({}) 与 Discord 用户 {} ({}) 的绑定。"
     uuid_already_linked: "Minecraft 玩家 {} ({}) 已绑定到 Discord 用户 {} ({})。"
   verification:
-    generated: "已为 Minecraft 玩家 {} 生成验证码 {}！"
-    refreshed: "已刷新 Minecraft 玩家 {} 的验证码 {} 有效期！"
-    consumed: "Minecraft 玩家 {} 使用验证码 {} 完成绑定！"
+    generated: "已为 Minecraft 玩家 {} 生成账户绑定验证码。"
+    refreshed: "已刷新 Minecraft 玩家 {} 的账户绑定验证码有效期。"
+    consumed: "Minecraft 玩家 {} 完成了账户绑定。"
   message:
-    not_linked_1: "你的 Minecraft 账户尚未与 Discord 用户绑定。在 Discord 上使用 "
-    not_linked_2: " 完成绑定。验证码将在 5 分钟后过期，届时可执行 "
-    not_linked_3: " 刷新验证码有效期。"
-    already_linked_1: "你的 Minecraft 账户已绑定到 Discord 用户 \"{}\"。执行 "
-    already_linked_2: " 解除绑定。"
+    not_linked_1: "你的 Minecraft 玩家尚未与 Discord 用户绑定。在 Discord 上使用 "
+    not_linked_2: " 命令完成绑定。验证码将在 5 分钟后过期，届时可在游戏内执行 "
+    not_linked_3: " 命令刷新验证码有效期。"
+    already_linked_1: "你的 Minecraft 玩家已绑定到 Discord 用户 \"{}\"。执行 "
+    already_linked_2: " 命令解除绑定。"
   tooltip:
-    click_to_copy: "点击复制"
+    click_to_copy: "点击复制到剪贴板"
     click_to_run: "点击填入命令"
 
 minecraft:

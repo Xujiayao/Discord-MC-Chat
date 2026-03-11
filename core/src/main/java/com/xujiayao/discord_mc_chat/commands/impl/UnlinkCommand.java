@@ -85,7 +85,7 @@ public class UnlinkCommand implements Command {
 		int count = LinkedAccountManager.unlinkByDiscordId(discordId, discordName);
 
 		if (count > 0) {
-			sender.reply(I18nManager.getDmccTranslation("commands.unlink.discord_success", count, discordName));
+			sender.reply(I18nManager.getDmccTranslation("commands.unlink.success_discord", count, discordName));
 		} else {
 			sender.reply(I18nManager.getDmccTranslation("commands.unlink.not_linked"));
 		}

@@ -365,7 +365,7 @@ public class MinecraftEventHandler {
 					if (player != null) {
 						if (event.success()) {
 							player.sendSystemMessage(Component.literal(
-									I18nManager.getDmccTranslation("commands.unlink.success", event.discordName())));
+									I18nManager.getDmccTranslation("commands.unlink.success_minecraft", event.discordName())));
 						} else {
 							player.sendSystemMessage(Component.literal(
 									I18nManager.getDmccTranslation("commands.unlink.not_linked")));
@@ -560,7 +560,7 @@ public class MinecraftEventHandler {
 				.append(Component.literal(I18nManager.getDmccTranslation("linking.message.not_linked_1")))
 				.append(buildCopyToClipboard("/link code: " + code))
 				.append(Component.literal(I18nManager.getDmccTranslation("linking.message.not_linked_2")))
-				.append(buildSuggestCommand("/dmcc link", "/dmcc link"))
+				.append(buildSuggestCommand("/dmcc link"))
 				.append(Component.literal(I18nManager.getDmccTranslation("linking.message.not_linked_3")));
 	}
 
@@ -574,7 +574,7 @@ public class MinecraftEventHandler {
 	private static Component buildAlreadyLinkedMessage(String discordName) {
 		return Component.empty()
 				.append(Component.literal(I18nManager.getDmccTranslation("linking.message.already_linked_1", discordName)))
-				.append(buildSuggestCommand("/dmcc unlink", "/dmcc unlink"))
+				.append(buildSuggestCommand("/dmcc unlink"))
 				.append(Component.literal(I18nManager.getDmccTranslation("linking.message.already_linked_2")));
 	}
 
@@ -598,11 +598,10 @@ public class MinecraftEventHandler {
 	 * Displayed in green with brackets.
 	 *
 	 * @param command     The command to suggest (fill into chat input).
-	 * @param displayText The text to display in the bracket.
 	 * @return A clickable Component.
 	 */
-	private static Component buildSuggestCommand(String command, String displayText) {
-		return Component.literal("[" + displayText + "]").withStyle(style -> style
+	private static Component buildSuggestCommand(String command) {
+		return Component.literal("[" + command + "]").withStyle(style -> style
 				.withClickEvent(new ClickEvent.SuggestCommand(command))
 				.withHoverEvent(new HoverEvent.ShowText(
 						Component.literal(I18nManager.getDmccTranslation("linking.tooltip.click_to_run"))))

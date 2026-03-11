@@ -52,7 +52,7 @@ public class VerificationCodeManager {
 				// Refresh expiry time for the existing code
 				long newExpiry = System.currentTimeMillis() + CODE_EXPIRY_MILLIS;
 				PENDING_CODES.put(existingCode, new PendingVerification(minecraftUuid, playerName, newExpiry));
-				LOGGER.info(I18nManager.getDmccTranslation("linking.verification.refreshed", playerName, existingCode));
+				LOGGER.info(I18nManager.getDmccTranslation("linking.verification.refreshed", playerName));
 				return existingCode;
 			} else {
 				// Code has expired, remove it
@@ -71,7 +71,7 @@ public class VerificationCodeManager {
 		PENDING_CODES.put(code, new PendingVerification(minecraftUuid, playerName, expiresAt));
 		UUID_TO_CODE.put(minecraftUuid, code);
 
-		LOGGER.info(I18nManager.getDmccTranslation("linking.verification.generated", playerName, code));
+		LOGGER.info(I18nManager.getDmccTranslation("linking.verification.generated", playerName));
 		return code;
 	}
 
@@ -98,7 +98,7 @@ public class VerificationCodeManager {
 		}
 
 		UUID_TO_CODE.remove(pending.minecraftUuid());
-		LOGGER.info(I18nManager.getDmccTranslation("linking.verification.consumed", pending.playerName(), upperCode));
+		LOGGER.info(I18nManager.getDmccTranslation("linking.verification.consumed", pending.playerName()));
 		return pending;
 	}
 
