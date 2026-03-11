@@ -347,7 +347,7 @@ public class MinecraftEventHandler {
 						if (event.alreadyLinked()) {
 							player.sendSystemMessage(buildAlreadyLinkedMessage(event.discordName()));
 						} else if (event.code() != null) {
-							player.sendSystemMessage(buildCodeGeneratedMessage(event.code()));
+							player.sendSystemMessage(buildNotLinkedMessage(event.code()));
 						}
 					}
 				} catch (Exception ignored) {
@@ -547,7 +547,8 @@ public class MinecraftEventHandler {
 	}
 
 	/**
-	 * Builds a rich Component for the "not linked" player join notification.
+	 * Builds a rich Component for the "not linked" notification shown on both player join
+	 * and /dmcc link when the account is not linked.
 	 * Contains inline clickable elements: [/link code: CODE] for copy-to-clipboard
 	 * and [/dmcc link] for suggest-command.
 	 *
@@ -556,30 +557,11 @@ public class MinecraftEventHandler {
 	 */
 	private static Component buildNotLinkedMessage(String code) {
 		return Component.empty()
-				.append(Component.literal(I18nManager.getDmccTranslation("linking.player_join.not_linked_prefix")))
-				.append(buildCopyToClipboard(I18nManager.getDmccTranslation("linking.player_join.not_linked_discord_cmd", code)))
-				.append(Component.literal(I18nManager.getDmccTranslation("linking.player_join.not_linked_middle")))
-				.append(buildSuggestCommand("/dmcc link", I18nManager.getDmccTranslation("linking.player_join.not_linked_refresh_cmd")))
-				.append(Component.literal(I18nManager.getDmccTranslation("linking.player_join.not_linked_refresh_tail")));
-	}
-
-	/**
-	 * Builds a rich Component for the "code generated" response from /dmcc link.
-	 * Contains inline clickable elements: [/link code: CODE] for copy-to-clipboard
-	 * and [/dmcc link] for suggest-command.
-	 *
-	 * @param code The verification code.
-	 * @return A rich Component with inline clickable elements.
-	 */
-	private static Component buildCodeGeneratedMessage(String code) {
-		return Component.empty()
-				.append(Component.literal(I18nManager.getDmccTranslation("commands.link.code_generated_prefix")))
-				.append(buildCopyToClipboard(code))
-				.append(Component.literal(I18nManager.getDmccTranslation("commands.link.code_generated_suffix")))
-				.append(buildCopyToClipboard(I18nManager.getDmccTranslation("commands.link.code_generated_discord_cmd", code)))
-				.append(Component.literal(I18nManager.getDmccTranslation("commands.link.code_generated_tail")))
-				.append(buildSuggestCommand("/dmcc link", I18nManager.getDmccTranslation("commands.link.code_generated_refresh_cmd")))
-				.append(Component.literal(I18nManager.getDmccTranslation("commands.link.code_generated_refresh_tail")));
+				.append(Component.literal(I18nManager.getDmccTranslation("linking.message.not_linked_1")))
+				.append(buildCopyToClipboard("/link code: " + code))
+				.append(Component.literal(I18nManager.getDmccTranslation("linking.message.not_linked_2")))
+				.append(buildSuggestCommand("/dmcc link", "/dmcc link"))
+				.append(Component.literal(I18nManager.getDmccTranslation("linking.message.not_linked_3")));
 	}
 
 	/**
@@ -591,9 +573,9 @@ public class MinecraftEventHandler {
 	 */
 	private static Component buildAlreadyLinkedMessage(String discordName) {
 		return Component.empty()
-				.append(Component.literal(I18nManager.getDmccTranslation("commands.link.already_linked", discordName)))
-				.append(buildSuggestCommand("/dmcc unlink", I18nManager.getDmccTranslation("commands.link.already_linked_unlink")))
-				.append(Component.literal(I18nManager.getDmccTranslation("commands.link.already_linked_suffix")));
+				.append(Component.literal(I18nManager.getDmccTranslation("linking.message.already_linked_1", discordName)))
+				.append(buildSuggestCommand("/dmcc unlink", "/dmcc unlink"))
+				.append(Component.literal(I18nManager.getDmccTranslation("linking.message.already_linked_2")));
 	}
 
 	/**
@@ -607,7 +589,7 @@ public class MinecraftEventHandler {
 		return Component.literal("[" + text + "]").withStyle(style -> style
 				.withClickEvent(new ClickEvent.CopyToClipboard(text))
 				.withHoverEvent(new HoverEvent.ShowText(
-						Component.literal(I18nManager.getDmccTranslation("linking.player_join.click_to_copy"))))
+						Component.literal(I18nManager.getDmccTranslation("linking.tooltip.click_to_copy"))))
 				.withColor(ChatFormatting.GREEN));
 	}
 
@@ -623,7 +605,7 @@ public class MinecraftEventHandler {
 		return Component.literal("[" + displayText + "]").withStyle(style -> style
 				.withClickEvent(new ClickEvent.SuggestCommand(command))
 				.withHoverEvent(new HoverEvent.ShowText(
-						Component.literal(I18nManager.getDmccTranslation("linking.player_join.click_to_run"))))
+						Component.literal(I18nManager.getDmccTranslation("linking.tooltip.click_to_run"))))
 				.withColor(ChatFormatting.GREEN));
 	}
 
