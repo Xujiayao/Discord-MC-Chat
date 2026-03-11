@@ -71,7 +71,7 @@ public class LinksCommand implements Command {
 
 			for (LinkedAccountManager.LinkEntry link : links) {
 				String time = DATE_FORMATTER.format(Instant.ofEpochMilli(link.linkedAt()));
-				String mcName = MojangUtils.resolvePlayerName(link.minecraftUuid());
+				String mcName = MojangUtils.resolvePlayerName(link.minecraftUuid(), link.offlinePlayerName());
 				builder.append("\n  - MC: ").append(mcName).append(" (").append(link.minecraftUuid()).append(")");
 				builder.append(" (").append(time).append(")");
 			}

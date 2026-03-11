@@ -62,8 +62,9 @@ DMCC 所有运行模式都基于一个统一的通信模型，该模型包含两
 - **一个 Discord 账户可关联多个 Minecraft 账户**（方便玩家管理大号与小号）。
 - **一个 Minecraft 账户只能关联一个 Discord 账户**（确保游戏内身份的绝对唯一性）。
 - **数据持久化**: 绑定关系作为永久数据存储在 `Server` 端的 `account_linking/links.json` 中，以 Discord ID 为主键。
-- **存储约束**: `links.json` 中仅存储绑定关系最小必要字段（Discord ID、Minecraft UUID、添加时间），**不得额外存储**
-  Discord 用户名或 Minecraft 玩家名；显示名称在查询时实时解析。
+- **存储约束**: `links.json` 中存储绑定关系最小必要字段（Discord ID、Minecraft UUID、添加时间）。对于离线模式玩家，
+  额外存储 `offlinePlayerName`（绑定时的玩家名），因为离线 UUID 无法通过 Mojang API 反查玩家名。
+  在线模式玩家不存储玩家名，显示名称在查询时通过 Mojang API 实时解析。Discord 用户名始终不存储，查询时实时解析。
 
 ### 4.2 安全绑定工作流 (严格的 MC 优先原则)
 
@@ -82,7 +83,8 @@ DMCC 所有运行模式都基于一个统一的通信模型，该模型包含两
 
 - **Discord `/unlink`**: 直接取消该 Discord 用户名下的所有 Minecraft 绑定（无需二次确认）。
 - **Minecraft `/dmcc unlink`**: 直接取消“当前执行玩家”对应的绑定关系（无需二次确认）。
-- **查询展示规则**: `links` 查询时实时解析显示名称，若无法解析则回退显示 UUID / Discord ID。
+- **查询展示规则**: `links` 查询时实时解析显示名称；在线模式玩家通过 Mojang API 解析，离线模式玩家使用绑定时记录的玩家名。
+  若无法解析则显示 "N/A"（Minecraft 玩家名）或 Discord ID。
 
 ### 4.4 同步与跨平台交互
 
