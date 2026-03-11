@@ -129,14 +129,14 @@ commands:
     args_desc:
       code: "Verification code from Minecraft"
     player_only: "This command can only be used by a Minecraft player."
-    discord_only: "This command can only be used from Discord."
+    discord_only: "This command can only be used by a Discord user."
     not_available: "This command is not available in the current mode."
     invalid_code: "Invalid or expired verification code."
     success: "Successfully linked to Minecraft player \"{}\"!"
     uuid_already_linked: "Linking failed. This Minecraft player is already linked to another Discord user."
   unlink:
     description: "Unlink your Minecraft player from a Discord user"
-    not_available: "This command is not available in the current mode."
+    not_available: "This command can only be used by a Minecraft player or a Discord user."
     success_minecraft: "You have been unlinked from Discord user \"{}\"!"
     success_discord: "Successfully unlinked {0} Minecraft player(s) from Discord user \"{1}\"!"
     not_linked: "No linked accounts found for you."

@@ -129,14 +129,14 @@ commands:
     args_desc:
       code: "来自 Minecraft 的验证码"
     player_only: "此命令只能由 Minecraft 玩家使用。"
-    discord_only: "此命令只能在 Discord 上使用。"
+    discord_only: "此命令只能由 Discord 用户使用。"
     not_available: "此命令在当前模式下不可用。"
     invalid_code: "无效或已过期的验证码。"
     success: "成功绑定 Minecraft 玩家 \"{}\"！"
     uuid_already_linked: "绑定失败。此 Minecraft 玩家已绑定到另一个 Discord 用户。"
   unlink:
     description: "解除你的 Minecraft 玩家与 Discord 用户的绑定"
-    not_available: "此命令在当前模式下不可用。"
+    not_available: "此命令只能由 Minecraft 玩家或 Discord 用户使用。"
     success_minecraft: "你已与 Discord 用户 \"{}\" 解除绑定！"
     success_discord: "已成功解除 Discord 用户 \"{1}\" 的 {0} 个 Minecraft 玩家绑定！"
     not_linked: "未找到任何你已绑定的账户。"
