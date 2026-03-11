@@ -222,21 +222,31 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	}
 
 	/**
+	 * Finds the configuration node for the given server name from the multi-server servers list.
+	 *
+	 * @param serverName The server name to look up.
+	 * @return The matching JsonNode, or null if not found.
+	 */
+	private JsonNode findServerConfig(String serverName) {
+		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
+		if (serversNode.isArray()) {
+			for (JsonNode node : serversNode) {
+				if (serverName.equals(node.path("name").asText())) {
+					return node;
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * Checks if the given server name is whitelisted in the configuration.
 	 *
 	 * @param serverName The server name to check.
 	 * @return true if whitelisted, false otherwise.
 	 */
 	private boolean isWhitelisted(String serverName) {
-		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
-		if (serversNode.isArray()) {
-			for (JsonNode node : serversNode) {
-				if (serverName.equals(node.path("name").asText())) {
-					return true;
-				}
-			}
-		}
-		return false;
+		return findServerConfig(serverName) != null;
 	}
 
 	/**
@@ -246,14 +256,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	 * @return The expected Minecraft version, or an empty string if not found.
 	 */
 	private String getMinecraftVersion(String serverName) {
-		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
-		if (serversNode.isArray()) {
-			for (JsonNode node : serversNode) {
-				if (serverName.equals(node.path("name").asText())) {
-					return node.path("minecraft_version").asText();
-				}
-			}
-		}
-		return "";
+		JsonNode config = findServerConfig(serverName);
+		return config != null ? config.path("minecraft_version").asText() : "";
 	}
 }
