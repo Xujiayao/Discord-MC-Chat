@@ -263,16 +263,16 @@ linking:
     linked: "Linked Discord user {} ({}) to Minecraft player {} ({})."
     unlinked_discord: "Unlinked {0} Minecraft player(s) from Discord user {1} ({2})."
     unlinked_minecraft: "Unlinked Minecraft player {} ({}) from Discord user {} ({})."
-    uuid_already_linked: "Minecraft player {} ({}) is already linked to Discord user {} ({})."
+    uuid_already_linked: "Linking failed. Minecraft player {} ({}) is already linked to Discord user {} ({})."
   verification:
     generated: "Generated account linking verification code for Minecraft player {}."
     refreshed: "Refreshed account linking verification code validity for Minecraft player {}."
     consumed: "Minecraft player {} completed account linking."
   message:
-    not_linked_1: "Your Minecraft player is not linked to a Discord user. Use "
+    not_linked_1: "You are not linked to a Discord user. Use "
     not_linked_2: " command on Discord to complete linking. The code expires in 5 minutes. Run "
     not_linked_3: " command in-game to refresh the code validity."
-    already_linked_1: "Your Minecraft player is already linked to Discord user \"{}\". Run "
+    already_linked_1: "You are already linked to Discord user \"{}\". Run "
     already_linked_2: " command to unlink."
   tooltip:
     click_to_copy: "Click to copy to clipboard"
