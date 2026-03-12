@@ -547,8 +547,9 @@ public class DiscordManager {
 	 * Processes an incoming Discord message and forwards it to Minecraft clients.
 	 * <p>
 	 * Checks if the message is from a chat channel and if Discord-to-Minecraft chat
-	 * forwarding is enabled. If so, builds pre-formatted text parts from the
-	 * custom_messages format and broadcasts a DiscordMessagePacket to all clients.
+	 * forwarding is enabled. Parses the Discord message into rich TextParts that
+	 * preserve markdown formatting, clickable URLs, colored mentions, and custom emojis,
+	 * then broadcasts a DiscordMessagePacket to all clients.
 	 *
 	 * @param event The Discord message received event
 	 */
@@ -586,7 +587,7 @@ public class DiscordManager {
 			}
 		}
 
-		// Build message content with display formatting options
+		// Read display formatting options
 		boolean showMarkdown = ConfigManager.getBoolean("display_formatting.discord_to_minecraft.markdown") == Boolean.TRUE;
 		boolean showAttachments = ConfigManager.getBoolean("display_formatting.discord_to_minecraft.attachments") == Boolean.TRUE;
 		boolean showStickers = ConfigManager.getBoolean("display_formatting.discord_to_minecraft.stickers") == Boolean.TRUE;
@@ -595,61 +596,51 @@ public class DiscordManager {
 		boolean showMentions = ConfigManager.getBoolean("display_formatting.discord_to_minecraft.mentions") == Boolean.TRUE;
 		boolean showHyperlinks = ConfigManager.getBoolean("display_formatting.discord_to_minecraft.hyperlinks") == Boolean.TRUE;
 
-		// Use getContentDisplay() which resolves mentions and emojis, or getContentRaw() for raw content
-		String messageContent = showMentions ? event.getMessage().getContentDisplay() : event.getMessage().getContentRaw();
+		String openUrlTooltip = I18nManager.getDmccTranslation("linking.tooltip.open_url");
 
-		// Strip markdown formatting if disabled
-		if (!showMarkdown) {
-			messageContent = stripMarkdown(messageContent);
-		}
+		// Parse the raw message content into rich TextParts
+		String rawContent = event.getMessage().getContentRaw();
+		List<DiscordMessagePacket.TextPart> messageParts = parseDiscordMessageToTextParts(
+				rawContent, event, showMarkdown, showCustomEmojis, showMentions,
+				showHyperlinks, showUnicodeEmojis, openUrlTooltip);
 
-		// Strip custom emoji names if disabled
-		if (!showCustomEmojis) {
-			messageContent = messageContent.replaceAll("<a?:\\w+:\\d+>", "");
-		}
-
-		// Strip Unicode emojis if disabled
-		if (!showUnicodeEmojis) {
-			messageContent = stripUnicodeEmojis(messageContent);
-		}
-
-		// Strip hyperlinks if disabled
-		if (!showHyperlinks) {
-			messageContent = messageContent.replaceAll("https?://\\S+", "[link]");
-		}
-
-		StringBuilder contentBuilder = new StringBuilder(messageContent);
-
+		// Append attachments
 		if (showAttachments) {
 			for (Message.Attachment attachment : event.getMessage().getAttachments()) {
-				if (!contentBuilder.isEmpty()) contentBuilder.append(" ");
-				contentBuilder.append("[").append(attachment.getFileName()).append("]");
+				String url = attachment.getUrl();
+				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(
+						" [" + attachment.getFileName() + "]", false, "blue");
+				part.underlined = true;
+				part.clickAction = "open_url";
+				part.clickValue = url;
+				part.hoverText = openUrlTooltip;
+				messageParts.add(part);
 			}
 		}
 
+		// Append stickers
 		if (showStickers) {
 			for (StickerItem sticker : event.getMessage().getStickers()) {
-				if (!contentBuilder.isEmpty()) contentBuilder.append(" ");
-				contentBuilder.append("[Sticker: ").append(sticker.getName()).append("]");
+				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(
+						" [Sticker: " + sticker.getName() + "]", false, "yellow");
+				messageParts.add(part);
 			}
 		}
 
-		String finalContent = contentBuilder.toString();
-		if (finalContent.isBlank()) return;
+		if (messageParts.isEmpty()) return;
 
 		// Determine server color for standalone mode
 		String serverColor = "blue"; // Discord brand color
 		String serverName = "Discord";
 
-		// Build main text parts from common.chat format
+		// Build prefix parts from common.chat format, but replace {message} with our rich parts
 		JsonNode chatFormat = customMessages.path("common").path("chat");
-		List<DiscordMessagePacket.TextPart> mainParts = buildTextParts(chatFormat, Map.of(
+		List<DiscordMessagePacket.TextPart> mainParts = buildRichMessageParts(chatFormat, Map.of(
 				"server", serverName,
 				"server_color", serverColor,
 				"name", senderName,
-				"role_color", roleColor,
-				"message", finalContent
-		));
+				"role_color", roleColor
+		), messageParts);
 
 		// Handle reply formatting
 		List<DiscordMessagePacket.TextPart> replyParts = null;
@@ -748,6 +739,239 @@ public class DiscordManager {
 			color = replacePlaceholders(color, placeholders);
 
 			parts.add(new DiscordMessagePacket.TextPart(text, bold, color));
+		}
+
+		return parts;
+	}
+
+	/**
+	 * Builds TextParts from the common.chat format, inserting rich message parts in place of {message}.
+	 * Parts of the template that contain {message} are replaced by the provided message parts,
+	 * while other parts (prefix like "[Discord] " and "<Name> ") are kept from the template.
+	 *
+	 * @param formatNode   The JsonNode array containing format entries
+	 * @param placeholders Simple placeholder values (excluding "message")
+	 * @param messageParts Rich TextParts for the message content
+	 * @return A combined list of TextPart objects
+	 */
+	private static List<DiscordMessagePacket.TextPart> buildRichMessageParts(
+			JsonNode formatNode, Map<String, String> placeholders,
+			List<DiscordMessagePacket.TextPart> messageParts) {
+		List<DiscordMessagePacket.TextPart> parts = new ArrayList<>();
+		if (formatNode == null || !formatNode.isArray()) return parts;
+
+		for (JsonNode entry : formatNode) {
+			String text = entry.path("text").asText("");
+			boolean bold = entry.path("bold").asBoolean(false);
+			String color = entry.path("color").asText("white");
+
+			// Replace non-message placeholders in text and color
+			text = replacePlaceholders(text, placeholders);
+			color = replacePlaceholders(color, placeholders);
+
+			if (text.contains("{message}")) {
+				// Split around {message} and insert the rich message parts
+				String[] segments = text.split("\\{message}", -1);
+				for (int i = 0; i < segments.length; i++) {
+					if (!segments[i].isEmpty()) {
+						parts.add(new DiscordMessagePacket.TextPart(segments[i], bold, color));
+					}
+					if (i < segments.length - 1) {
+						// Insert rich message parts
+						parts.addAll(messageParts);
+					}
+				}
+			} else {
+				parts.add(new DiscordMessagePacket.TextPart(text, bold, color));
+			}
+		}
+
+		return parts;
+	}
+
+	/**
+	 * Parses a raw Discord message into rich TextParts with proper formatting.
+	 * Handles markdown (bold/italic/underline/strikethrough), mentions (@user/@role/@everyone/@here),
+	 * custom emojis (:name:), URLs (clickable, blue, underlined), and Tenor GIFs.
+	 *
+	 * @param rawContent      The raw message content from Discord
+	 * @param event           The message event (for resolving mentions)
+	 * @param showMarkdown    Whether to apply markdown formatting
+	 * @param showCustomEmojis Whether to show custom emojis
+	 * @param showMentions    Whether to show mentions
+	 * @param showHyperlinks  Whether to show hyperlinks
+	 * @param showUnicodeEmojis Whether to show unicode emojis
+	 * @param openUrlTooltip  Localized "Open URL" tooltip text
+	 * @return List of rich TextParts
+	 */
+	private static List<DiscordMessagePacket.TextPart> parseDiscordMessageToTextParts(
+			String rawContent, MessageReceivedEvent event,
+			boolean showMarkdown, boolean showCustomEmojis, boolean showMentions,
+			boolean showHyperlinks, boolean showUnicodeEmojis, String openUrlTooltip) {
+
+		List<DiscordMessagePacket.TextPart> parts = new ArrayList<>();
+		if (rawContent == null || rawContent.isEmpty()) return parts;
+
+		// Strip Unicode emojis if disabled
+		if (!showUnicodeEmojis) {
+			rawContent = stripUnicodeEmojis(rawContent);
+		}
+
+		// Combined regex to match all special segments in one pass:
+		// Group: URLs, user mentions, role mentions, @everyone/@here, custom emojis, markdown
+		// The order matters - longer patterns first to avoid partial matches
+		String regex =
+				"(https?://\\S+)" +                                         // URLs
+				"|(<@!?(\\d+)>)" +                                           // User mentions
+				"|(<@&(\\d+)>)" +                                            // Role mentions
+				"|(@everyone|@here)" +                                       // @everyone and @here
+				"|(<a?:(\\w+):(\\d+)>)" +                                    // Custom emojis
+				"|(\\*\\*\\*(.+?)\\*\\*\\*)" +                               // Bold italic ***text***
+				"|(\\*\\*(.+?)\\*\\*)" +                                     // Bold **text**
+				"|(\\*(.+?)\\*)" +                                           // Italic *text*
+				"|(__(.+?)__)" +                                             // Underline __text__
+				"|(~~(.+?)~~)" +                                             // Strikethrough ~~text~~
+				"|(\\|\\|(.+?)\\|\\|)" +                                     // Spoiler ||text||
+				"|(\\\\([*_~`|]))";                                          // Escaped characters
+
+		java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(regex);
+		java.util.regex.Matcher matcher = pattern.matcher(rawContent);
+
+		int lastEnd = 0;
+		while (matcher.find()) {
+			// Add plain text before this match
+			if (matcher.start() > lastEnd) {
+				String plainText = rawContent.substring(lastEnd, matcher.start());
+				parts.add(new DiscordMessagePacket.TextPart(plainText, false, "gray"));
+			}
+
+			if (matcher.group(1) != null) {
+				// URL
+				String url = matcher.group(1);
+				if (showHyperlinks) {
+					// Detect Tenor GIF links
+					boolean isTenorGif = url.contains("tenor.com/view/") || url.contains("tenor.com/gif/");
+					String displayText = isTenorGif ? "<gif>" : url;
+
+					DiscordMessagePacket.TextPart urlPart = new DiscordMessagePacket.TextPart(displayText, false, "blue");
+					urlPart.underlined = true;
+					urlPart.clickAction = "open_url";
+					urlPart.clickValue = url;
+					urlPart.hoverText = openUrlTooltip;
+					parts.add(urlPart);
+				} else {
+					parts.add(new DiscordMessagePacket.TextPart("[link]", false, "gray"));
+				}
+			} else if (matcher.group(2) != null) {
+				// User mention <@123456> or <@!123456>
+				String userId = matcher.group(3);
+				if (showMentions) {
+					// Resolve user name and role color
+					String userName = userId;
+					String mentionColor = "white";
+					try {
+						Member mentionedMember = event.getGuild().getMemberById(userId);
+						if (mentionedMember != null) {
+							userName = mentionedMember.getEffectiveName();
+							if (ConfigManager.getBoolean("account_linking.use_role_colors_in_chat") == Boolean.TRUE) {
+								java.awt.Color color = mentionedMember.getColor();
+								if (color != null) {
+									mentionColor = String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
+								}
+							}
+						} else {
+							net.dv8tion.jda.api.entities.User user = retrieveUser(userId);
+							if (user != null) {
+								userName = user.getName();
+							}
+						}
+					} catch (Exception ignored) {
+					}
+					parts.add(new DiscordMessagePacket.TextPart("[@" + userName + "]", false, mentionColor));
+				} else {
+					parts.add(new DiscordMessagePacket.TextPart("@" + userId, false, "gray"));
+				}
+			} else if (matcher.group(4) != null) {
+				// Role mention <@&123456>
+				String roleId = matcher.group(5);
+				if (showMentions) {
+					String roleName = roleId;
+					String mentionColor = "white";
+					try {
+						Role role = event.getGuild().getRoleById(roleId);
+						if (role != null) {
+							roleName = role.getName();
+							java.awt.Color color = role.getColor();
+							if (color != null && ConfigManager.getBoolean("account_linking.use_role_colors_in_chat") == Boolean.TRUE) {
+								mentionColor = String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
+							}
+						}
+					} catch (Exception ignored) {
+					}
+					parts.add(new DiscordMessagePacket.TextPart("[@" + roleName + "]", false, mentionColor));
+				} else {
+					parts.add(new DiscordMessagePacket.TextPart("@" + roleId, false, "gray"));
+				}
+			} else if (matcher.group(6) != null) {
+				// @everyone or @here
+				String mention = matcher.group(6);
+				if (showMentions) {
+					parts.add(new DiscordMessagePacket.TextPart("[" + mention + "]", false, "yellow"));
+				} else {
+					parts.add(new DiscordMessagePacket.TextPart(mention, false, "gray"));
+				}
+			} else if (matcher.group(7) != null) {
+				// Custom emoji <:name:id> or <a:name:id>
+				String emojiName = matcher.group(8);
+				if (showCustomEmojis) {
+					parts.add(new DiscordMessagePacket.TextPart(":" + emojiName + ":", false, "yellow"));
+				}
+				// If not showing custom emojis, strip it (don't add anything)
+			} else if (matcher.group(10) != null && showMarkdown) {
+				// Bold italic ***text***
+				String innerText = matcher.group(11);
+				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(innerText, true, "gray");
+				part.italic = true;
+				parts.add(part);
+			} else if (matcher.group(12) != null && showMarkdown) {
+				// Bold **text**
+				parts.add(new DiscordMessagePacket.TextPart(matcher.group(13), true, "gray"));
+			} else if (matcher.group(14) != null && showMarkdown) {
+				// Italic *text*
+				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(matcher.group(15), false, "gray");
+				part.italic = true;
+				parts.add(part);
+			} else if (matcher.group(16) != null && showMarkdown) {
+				// Underline __text__
+				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(matcher.group(17), false, "gray");
+				part.underlined = true;
+				parts.add(part);
+			} else if (matcher.group(18) != null && showMarkdown) {
+				// Strikethrough ~~text~~
+				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(matcher.group(19), false, "gray");
+				part.strikethrough = true;
+				parts.add(part);
+			} else if (matcher.group(20) != null && showMarkdown) {
+				// Spoiler ||text|| - show as obfuscated or just plain text
+				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(matcher.group(21), false, "dark_gray");
+				part.hoverText = matcher.group(21);
+				part.italic = true;
+				parts.add(part);
+			} else if (matcher.group(22) != null) {
+				// Escaped character \* \_ \~ \` \|
+				parts.add(new DiscordMessagePacket.TextPart(matcher.group(23), false, "gray"));
+			} else {
+				// If markdown is disabled, just show the raw matched text
+				parts.add(new DiscordMessagePacket.TextPart(matcher.group(), false, "gray"));
+			}
+
+			lastEnd = matcher.end();
+		}
+
+		// Add remaining plain text
+		if (lastEnd < rawContent.length()) {
+			String remaining = rawContent.substring(lastEnd);
+			parts.add(new DiscordMessagePacket.TextPart(remaining, false, "gray"));
 		}
 
 		return parts;

@@ -108,6 +108,13 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 							Map<String, String> enriched = new java.util.HashMap<>(p.placeholders);
 							enriched.put("server", clientName);
 							enriched.put("player_name", enriched.getOrDefault("user_name", ""));
+
+							// Check excluded commands on the server side (config only exists in single_server/standalone)
+							String commandMessage = enriched.getOrDefault("message", "");
+							if (isCommandExcluded(commandMessage)) {
+								break;
+							}
+
 							DiscordManager.clientBroadcast(clientName, "player.command", "player.command", true, enriched);
 						}
 						case PLAYER_DIE ->
@@ -274,6 +281,34 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	 */
 	private boolean isWhitelisted(String serverName) {
 		return findServerConfig(serverName) != null;
+	}
+
+	/**
+	 * Checks if a command should be excluded from broadcasting based on the excluded_commands config.
+	 * This is done on the server side because:
+	 * 1. The minecraft module must not use Jackson classes (causes NoSuchMethodError).
+	 * 2. The excluded_commands config does not exist in multi_server_client mode.
+	 *
+	 * @param commandWithSlash The command string (with leading slash, e.g., "/msg player hello").
+	 * @return true if the command matches any exclusion pattern, false otherwise.
+	 */
+	private static boolean isCommandExcluded(String commandWithSlash) {
+		JsonNode excludedNode = ConfigManager.getConfigNode("excluded_commands");
+		if (excludedNode == null || !excludedNode.isArray()) return false;
+
+		for (JsonNode patternNode : excludedNode) {
+			String pattern = patternNode.asText("");
+			if (!pattern.isEmpty()) {
+				try {
+					if (java.util.regex.Pattern.compile(pattern).matcher(commandWithSlash).matches()) {
+						return true;
+					}
+				} catch (Exception ignored) {
+					// Invalid regex pattern, skip
+				}
+			}
+		}
+		return false;
 	}
 
 	/**

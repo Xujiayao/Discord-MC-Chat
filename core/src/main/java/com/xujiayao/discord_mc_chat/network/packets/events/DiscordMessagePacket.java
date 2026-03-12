@@ -61,7 +61,24 @@ public class DiscordMessagePacket extends Packet {
 
 		public String text;
 		public boolean bold;
+		public boolean italic;
+		public boolean underlined;
+		public boolean strikethrough;
 		public String color;
+
+		/**
+		 * Click event action: "open_url", "suggest_command", "run_command", "copy_to_clipboard", or null.
+		 */
+		public String clickAction;
+		/**
+		 * Click event value (e.g., the URL to open or the command to suggest).
+		 */
+		public String clickValue;
+
+		/**
+		 * Hover event text to show when hovering over this part, or null.
+		 */
+		public String hoverText;
 
 		public TextPart() {
 		}

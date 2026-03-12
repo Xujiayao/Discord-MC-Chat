@@ -277,6 +277,7 @@ linking:
   tooltip:
     click_to_copy: "点击复制到剪贴板"
     click_to_run: "点击填入命令"
+    open_url: "打开链接"
 
 minecraft:
   translations:

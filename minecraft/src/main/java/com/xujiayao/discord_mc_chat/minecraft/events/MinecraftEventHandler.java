@@ -60,7 +60,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 
 /**
  * Handles Minecraft events posted from the event manager.
@@ -212,11 +211,6 @@ public class MinecraftEventHandler {
 
 		EventManager.register(MinecraftEvents.PlayerCommand.class, event -> {
 			String command = event.command();
-
-			// Check excluded commands
-			if (isCommandExcluded(command)) {
-				return;
-			}
 
 			Map<String, String> placeholders = new HashMap<>();
 			placeholders.put("user_name", event.serverPlayer().getName().getString());
@@ -585,32 +579,6 @@ public class MinecraftEventHandler {
 	}
 
 	/**
-	 * Checks if a command should be excluded from broadcasting based on the excluded_commands config.
-	 *
-	 * @param command The command string (without leading slash).
-	 * @return true if the command matches any exclusion pattern, false otherwise.
-	 */
-	private static boolean isCommandExcluded(String command) {
-		com.fasterxml.jackson.databind.JsonNode excludedNode = ConfigManager.getConfigNode("excluded_commands");
-		if (excludedNode == null || !excludedNode.isArray()) return false;
-
-		String commandWithSlash = "/" + command;
-		for (com.fasterxml.jackson.databind.JsonNode patternNode : excludedNode) {
-			String pattern = patternNode.asText("");
-			if (!pattern.isEmpty()) {
-				try {
-					if (Pattern.compile(pattern).matcher(commandWithSlash).matches()) {
-						return true;
-					}
-				} catch (Exception ignored) {
-					// Invalid regex pattern, skip
-				}
-			}
-		}
-		return false;
-	}
-
-	/**
 	 * Builds a Minecraft Component from a list of pre-formatted TextParts.
 	 *
 	 * @param parts The list of TextPart objects from a DiscordMessagePacket.
@@ -627,12 +595,38 @@ public class MinecraftEventHandler {
 			if (part.bold) {
 				style = style.withBold(true);
 			}
+			if (part.italic) {
+				style = style.withItalic(true);
+			}
+			if (part.underlined) {
+				style = style.withUnderlined(true);
+			}
+			if (part.strikethrough) {
+				style = style.withStrikethrough(true);
+			}
 
 			if (part.color != null && !part.color.isEmpty()) {
 				TextColor textColor = resolveTextColor(part.color);
 				if (textColor != null) {
 					style = style.withColor(textColor);
 				}
+			}
+
+			if (part.clickAction != null && part.clickValue != null) {
+				ClickEvent clickEvent = switch (part.clickAction) {
+					case "open_url" -> new ClickEvent.OpenUrl(part.clickValue);
+					case "suggest_command" -> new ClickEvent.SuggestCommand(part.clickValue);
+					case "run_command" -> new ClickEvent.RunCommand(part.clickValue);
+					case "copy_to_clipboard" -> new ClickEvent.CopyToClipboard(part.clickValue);
+					default -> null;
+				};
+				if (clickEvent != null) {
+					style = style.withClickEvent(clickEvent);
+				}
+			}
+
+			if (part.hoverText != null) {
+				style = style.withHoverEvent(new HoverEvent.ShowText(Component.literal(part.hoverText)));
 			}
 
 			textComponent.setStyle(style);

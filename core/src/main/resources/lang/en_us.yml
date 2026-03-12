@@ -277,6 +277,7 @@ linking:
   tooltip:
     click_to_copy: "Click to copy to clipboard"
     click_to_run: "Click to fill command"
+    open_url: "Open URL"
 
 minecraft:
   translations:
