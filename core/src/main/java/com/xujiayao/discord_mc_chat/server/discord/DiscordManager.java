@@ -47,6 +47,26 @@ public class DiscordManager {
 
 	private static final Map<String, String> DISCORD_NAME_CACHE = new ConcurrentHashMap<>();
 	private static final int MAX_REPLY_PREVIEW_LENGTH = 50;
+
+	/**
+	 * Pre-compiled regex pattern for parsing Discord raw message content.
+	 * Matches URLs, user/role mentions, @everyone/@here, custom emojis, and markdown formatting.
+	 */
+	private static final java.util.regex.Pattern DISCORD_MESSAGE_PATTERN = java.util.regex.Pattern.compile(
+			"(https?://\\S+)" +                                         // Group 1: URLs
+			"|(<@!?(\\d+)>)" +                                           // Group 2,3: User mentions
+			"|(<@&(\\d+)>)" +                                            // Group 4,5: Role mentions
+			"|(@everyone|@here)" +                                       // Group 6: @everyone and @here
+			"|(<a?:(\\w+):(\\d+)>)" +                                    // Group 7,8,9: Custom emojis
+			"|(\\*\\*\\*(.+?)\\*\\*\\*)" +                               // Group 10,11: Bold italic
+			"|(\\*\\*(.+?)\\*\\*)" +                                     // Group 12,13: Bold
+			"|(\\*(.+?)\\*)" +                                           // Group 14,15: Italic
+			"|(__(.+?)__)" +                                             // Group 16,17: Underline
+			"|(~~(.+?)~~)" +                                             // Group 18,19: Strikethrough
+			"|(\\|\\|(.+?)\\|\\|)" +                                     // Group 20,21: Spoiler
+			"|(\\\\([*_~`|]))"                                           // Group 22,23: Escaped chars
+	);
+
 	private static JDA jda;
 
 	/**
@@ -817,25 +837,7 @@ public class DiscordManager {
 			rawContent = stripUnicodeEmojis(rawContent);
 		}
 
-		// Combined regex to match all special segments in one pass:
-		// Group: URLs, user mentions, role mentions, @everyone/@here, custom emojis, markdown
-		// The order matters - longer patterns first to avoid partial matches
-		String regex =
-				"(https?://\\S+)" +                                         // URLs
-				"|(<@!?(\\d+)>)" +                                           // User mentions
-				"|(<@&(\\d+)>)" +                                            // Role mentions
-				"|(@everyone|@here)" +                                       // @everyone and @here
-				"|(<a?:(\\w+):(\\d+)>)" +                                    // Custom emojis
-				"|(\\*\\*\\*(.+?)\\*\\*\\*)" +                               // Bold italic ***text***
-				"|(\\*\\*(.+?)\\*\\*)" +                                     // Bold **text**
-				"|(\\*(.+?)\\*)" +                                           // Italic *text*
-				"|(__(.+?)__)" +                                             // Underline __text__
-				"|(~~(.+?)~~)" +                                             // Strikethrough ~~text~~
-				"|(\\|\\|(.+?)\\|\\|)" +                                     // Spoiler ||text||
-				"|(\\\\([*_~`|]))";                                          // Escaped characters
-
-		java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(regex);
-		java.util.regex.Matcher matcher = pattern.matcher(rawContent);
+		java.util.regex.Matcher matcher = DISCORD_MESSAGE_PATTERN.matcher(rawContent);
 
 		int lastEnd = 0;
 		while (matcher.find()) {
@@ -846,11 +848,22 @@ public class DiscordManager {
 			}
 
 			if (matcher.group(1) != null) {
-				// URL
+				// URL - already guaranteed to be http:// or https:// by the regex
 				String url = matcher.group(1);
 				if (showHyperlinks) {
-					// Detect Tenor GIF links
-					boolean isTenorGif = url.contains("tenor.com/view/") || url.contains("tenor.com/gif/");
+					// Detect Tenor GIF links by checking host
+					boolean isTenorGif = false;
+					try {
+						java.net.URI uri = new java.net.URI(url);
+						String host = uri.getHost();
+						if (host != null && (host.equals("tenor.com") || host.endsWith(".tenor.com"))) {
+							String path = uri.getPath();
+							if (path != null && (path.startsWith("/view/") || path.startsWith("/gif/"))) {
+								isTenorGif = true;
+							}
+						}
+					} catch (Exception ignored) {
+					}
 					String displayText = isTenorGif ? "<gif>" : url;
 
 					DiscordMessagePacket.TextPart urlPart = new DiscordMessagePacket.TextPart(displayText, false, "blue");

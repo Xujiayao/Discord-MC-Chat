@@ -37,6 +37,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
@@ -284,6 +286,12 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	}
 
 	/**
+	 * Cached compiled patterns from the excluded_commands config.
+	 * Cleared when null to force re-compilation on config changes (reload).
+	 */
+	private static List<java.util.regex.Pattern> cachedExcludedPatterns;
+
+	/**
 	 * Checks if a command should be excluded from broadcasting based on the excluded_commands config.
 	 * This is done on the server side because:
 	 * 1. The minecraft module must not use Jackson classes (causes NoSuchMethodError).
@@ -293,22 +301,37 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	 * @return true if the command matches any exclusion pattern, false otherwise.
 	 */
 	private static boolean isCommandExcluded(String commandWithSlash) {
-		JsonNode excludedNode = ConfigManager.getConfigNode("excluded_commands");
-		if (excludedNode == null || !excludedNode.isArray()) return false;
-
-		for (JsonNode patternNode : excludedNode) {
-			String pattern = patternNode.asText("");
-			if (!pattern.isEmpty()) {
-				try {
-					if (java.util.regex.Pattern.compile(pattern).matcher(commandWithSlash).matches()) {
-						return true;
+		if (cachedExcludedPatterns == null) {
+			cachedExcludedPatterns = new ArrayList<>();
+			JsonNode excludedNode = ConfigManager.getConfigNode("excluded_commands");
+			if (excludedNode != null && excludedNode.isArray()) {
+				for (JsonNode patternNode : excludedNode) {
+					String pattern = patternNode.asText("");
+					if (!pattern.isEmpty()) {
+						try {
+							cachedExcludedPatterns.add(java.util.regex.Pattern.compile(pattern));
+						} catch (Exception ignored) {
+							// Invalid regex pattern, skip
+						}
 					}
-				} catch (Exception ignored) {
-					// Invalid regex pattern, skip
 				}
 			}
 		}
+
+		for (java.util.regex.Pattern p : cachedExcludedPatterns) {
+			if (p.matcher(commandWithSlash).matches()) {
+				return true;
+			}
+		}
 		return false;
+	}
+
+	/**
+	 * Clears the cached excluded command patterns, forcing re-compilation on next use.
+	 * Should be called after config reload.
+	 */
+	public static void clearExcludedCommandsCache() {
+		cachedExcludedPatterns = null;
 	}
 
 	/**

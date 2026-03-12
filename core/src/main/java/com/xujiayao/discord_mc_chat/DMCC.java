@@ -4,6 +4,7 @@ import com.xujiayao.discord_mc_chat.client.ClientDMCC;
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.server.ServerDMCC;
+import com.xujiayao.discord_mc_chat.server.ServerHandler;
 import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
@@ -89,6 +90,9 @@ public class DMCC {
 
 				// Initialize command system after internal translations and operating mode are loaded
 				CommandManager.initialize();
+
+				// Clear cached patterns (may be stale from previous init/reload)
+				ServerHandler.clearExcludedCommandsCache();
 
 				if (configs) {
 					if (IS_MINECRAFT_ENV) {
