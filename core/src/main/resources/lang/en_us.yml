@@ -179,6 +179,22 @@ discord:
   command:
     reply_failed: "Failed to send reply message to Discord command sender."
     reply_failed_detail: "This is expected behavior for reload/shutdown commands."
+  timestamp:
+    relative:
+      past:
+        seconds: "{} seconds ago"
+        minutes: "{} minutes ago"
+        hours: "{} hours ago"
+        days: "{} days ago"
+        months: "{} months ago"
+        years: "{} years ago"
+      future:
+        seconds: "in {} seconds"
+        minutes: "in {} minutes"
+        hours: "in {} hours"
+        days: "in {} days"
+        months: "in {} months"
+        years: "in {} years"
 
 server:
   discord_init_failed: "Failed to initialize Discord Manager. Aborting DMCC Server startup."

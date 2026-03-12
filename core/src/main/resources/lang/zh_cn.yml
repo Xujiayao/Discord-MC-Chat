@@ -179,6 +179,22 @@ discord:
   command:
     reply_failed: "无法向 Discord 命令发送者发送回复消息。"
     reply_failed_detail: "对于 reload/shutdown 命令，这是预期的行为。"
+  timestamp:
+    relative:
+      past:
+        seconds: "{} 秒前"
+        minutes: "{} 分钟前"
+        hours: "{} 小时前"
+        days: "{} 天前"
+        months: "{} 个月前"
+        years: "{} 年前"
+      future:
+        seconds: "{} 秒后"
+        minutes: "{} 分钟后"
+        hours: "{} 小时后"
+        days: "{} 天后"
+        months: "{} 个月后"
+        years: "{} 年后"
 
 server:
   discord_init_failed: "初始化 Discord 管理器失败。正在中止 DMCC 服务端启动。"

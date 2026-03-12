@@ -58,13 +58,14 @@ public class DiscordManager {
 			"|(<@&(\\d+)>)" +                                            // Group 4,5: Role mentions
 			"|(@everyone|@here)" +                                       // Group 6: @everyone and @here
 			"|(<a?:(\\w+):(\\d+)>)" +                                    // Group 7,8,9: Custom emojis
-			"|(\\*\\*\\*(.+?)\\*\\*\\*)" +                               // Group 10,11: Bold italic
-			"|(\\*\\*(.+?)\\*\\*)" +                                     // Group 12,13: Bold
-			"|(\\*(.+?)\\*)" +                                           // Group 14,15: Italic
-			"|(__(.+?)__)" +                                             // Group 16,17: Underline
-			"|(~~(.+?)~~)" +                                             // Group 18,19: Strikethrough
-			"|(\\|\\|(.+?)\\|\\|)" +                                     // Group 20,21: Spoiler
-			"|(\\\\([*_~`|]))"                                           // Group 22,23: Escaped chars
+			"|(<t:(\\d+)(?::([tTdDfFR]))?>)" +                           // Group 10,11,12: Discord timestamps
+			"|(\\*\\*\\*(.+?)\\*\\*\\*)" +                               // Group 13,14: Bold italic
+			"|(\\*\\*(.+?)\\*\\*)" +                                     // Group 15,16: Bold
+			"|(\\*(.+?)\\*)" +                                           // Group 17,18: Italic
+			"|(__(.+?)__)" +                                             // Group 19,20: Underline
+			"|(~~(.+?)~~)" +                                             // Group 21,22: Strikethrough
+			"|(\\|\\|(.+?)\\|\\|)" +                                     // Group 23,24: Spoiler
+			"|(\\\\([*_~`|]))"                                           // Group 25,26: Escaped chars
 	);
 
 	private static JDA jda;
@@ -940,39 +941,50 @@ public class DiscordManager {
 					parts.add(new DiscordMessagePacket.TextPart(":" + emojiName + ":", false, "yellow"));
 				}
 				// If not showing custom emojis, strip it (don't add anything)
-			} else if (matcher.group(10) != null && showMarkdown) {
+			} else if (matcher.group(10) != null) {
+				// Discord timestamp <t:1234567890> or <t:1234567890:R>
+				try {
+					long epochSeconds = Long.parseLong(matcher.group(11));
+					String style = matcher.group(12); // may be null
+					String formatted = formatDiscordTimestamp(epochSeconds, style);
+					parts.add(new DiscordMessagePacket.TextPart(formatted, false, "gray"));
+				} catch (Exception ignored) {
+					// If parsing fails, show the raw text
+					parts.add(new DiscordMessagePacket.TextPart(matcher.group(10), false, "gray"));
+				}
+			} else if (matcher.group(13) != null && showMarkdown) {
 				// Bold italic ***text***
-				String innerText = matcher.group(11);
+				String innerText = matcher.group(14);
 				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(innerText, true, "gray");
 				part.italic = true;
 				parts.add(part);
-			} else if (matcher.group(12) != null && showMarkdown) {
+			} else if (matcher.group(15) != null && showMarkdown) {
 				// Bold **text**
-				parts.add(new DiscordMessagePacket.TextPart(matcher.group(13), true, "gray"));
-			} else if (matcher.group(14) != null && showMarkdown) {
+				parts.add(new DiscordMessagePacket.TextPart(matcher.group(16), true, "gray"));
+			} else if (matcher.group(17) != null && showMarkdown) {
 				// Italic *text*
-				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(matcher.group(15), false, "gray");
+				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(matcher.group(18), false, "gray");
 				part.italic = true;
 				parts.add(part);
-			} else if (matcher.group(16) != null && showMarkdown) {
+			} else if (matcher.group(19) != null && showMarkdown) {
 				// Underline __text__
-				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(matcher.group(17), false, "gray");
+				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(matcher.group(20), false, "gray");
 				part.underlined = true;
 				parts.add(part);
-			} else if (matcher.group(18) != null && showMarkdown) {
+			} else if (matcher.group(21) != null && showMarkdown) {
 				// Strikethrough ~~text~~
-				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(matcher.group(19), false, "gray");
+				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(matcher.group(22), false, "gray");
 				part.strikethrough = true;
 				parts.add(part);
-			} else if (matcher.group(20) != null && showMarkdown) {
+			} else if (matcher.group(23) != null && showMarkdown) {
 				// Spoiler ||text|| - show as obfuscated or just plain text
-				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(matcher.group(21), false, "dark_gray");
-				part.hoverText = matcher.group(21);
+				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(matcher.group(24), false, "dark_gray");
+				part.hoverText = matcher.group(24);
 				part.italic = true;
 				parts.add(part);
-			} else if (matcher.group(22) != null) {
+			} else if (matcher.group(25) != null) {
 				// Escaped character \* \_ \~ \` \|
-				parts.add(new DiscordMessagePacket.TextPart(matcher.group(23), false, "gray"));
+				parts.add(new DiscordMessagePacket.TextPart(matcher.group(26), false, "gray"));
 			} else {
 				// If markdown is disabled, just show the raw matched text
 				parts.add(new DiscordMessagePacket.TextPart(matcher.group(), false, "gray"));
@@ -1076,6 +1088,102 @@ public class DiscordManager {
 				.replaceAll("[\\x{200D}]", "")                    // Zero Width Joiner
 				.replaceAll("[\\x{20E3}]", "")                    // Combining Enclosing Keycap
 				.replaceAll("[\\x{FE0F}]", "");                   // Variation Selector-16
+	}
+
+	/**
+	 * Formats a Discord timestamp (Unix epoch seconds) according to the specified style.
+	 * <p>
+	 * Discord timestamp styles:
+	 * <ul>
+	 *   <li>{@code t} - Short time (e.g., "4:20 PM")</li>
+	 *   <li>{@code T} - Long time (e.g., "4:20:30 PM")</li>
+	 *   <li>{@code d} - Short date (e.g., "03/12/2026")</li>
+	 *   <li>{@code D} - Long date (e.g., "March 12, 2026")</li>
+	 *   <li>{@code f} - Short date/time (e.g., "March 12, 2026 4:20 PM") - default</li>
+	 *   <li>{@code F} - Long date/time (e.g., "Thursday, March 12, 2026 4:20 PM")</li>
+	 *   <li>{@code R} - Relative time (e.g., "2 hours ago")</li>
+	 * </ul>
+	 *
+	 * @param epochSeconds The Unix timestamp in seconds
+	 * @param style        The style character (t/T/d/D/f/F/R), or null for default (f)
+	 * @return The formatted timestamp string
+	 */
+	private static String formatDiscordTimestamp(long epochSeconds, String style) {
+		java.time.Instant instant = java.time.Instant.ofEpochSecond(epochSeconds);
+		java.time.ZonedDateTime dateTime = instant.atZone(java.time.ZoneId.systemDefault());
+
+		// Determine locale from DMCC language setting
+		java.util.Locale locale = resolveLocale();
+
+		if (style == null) style = "f"; // default to short date/time
+
+		return switch (style) {
+			case "t" -> dateTime.format(java.time.format.DateTimeFormatter.ofLocalizedTime(java.time.format.FormatStyle.SHORT).withLocale(locale));
+			case "T" -> dateTime.format(java.time.format.DateTimeFormatter.ofLocalizedTime(java.time.format.FormatStyle.MEDIUM).withLocale(locale));
+			case "d" -> dateTime.format(java.time.format.DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.SHORT).withLocale(locale));
+			case "D" -> dateTime.format(java.time.format.DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.LONG).withLocale(locale));
+			case "f" -> dateTime.format(java.time.format.DateTimeFormatter.ofLocalizedDateTime(java.time.format.FormatStyle.LONG, java.time.format.FormatStyle.SHORT).withLocale(locale));
+			case "F" -> dateTime.format(java.time.format.DateTimeFormatter.ofLocalizedDateTime(java.time.format.FormatStyle.FULL, java.time.format.FormatStyle.SHORT).withLocale(locale));
+			case "R" -> formatRelativeTime(instant);
+			default -> dateTime.format(java.time.format.DateTimeFormatter.ofLocalizedDateTime(java.time.format.FormatStyle.LONG, java.time.format.FormatStyle.SHORT).withLocale(locale));
+		};
+	}
+
+	/**
+	 * Resolves the Java Locale from the DMCC language setting.
+	 *
+	 * @return The resolved Locale
+	 */
+	private static java.util.Locale resolveLocale() {
+		String lang = I18nManager.getLanguage();
+		if (lang != null && lang.contains("_")) {
+			String[] parts = lang.split("_", 2);
+			return java.util.Locale.of(parts[0], parts[1].toUpperCase());
+		}
+		return java.util.Locale.US;
+	}
+
+	/**
+	 * Formats a relative time string (e.g., "2 hours ago", "in 3 days").
+	 * Uses DMCC translations for localization.
+	 *
+	 * @param instant The point in time
+	 * @return The formatted relative time string
+	 */
+	private static String formatRelativeTime(java.time.Instant instant) {
+		java.time.Instant now = java.time.Instant.now();
+		long totalSeconds = java.time.temporal.ChronoUnit.SECONDS.between(instant, now);
+		boolean past = totalSeconds >= 0;
+		totalSeconds = Math.abs(totalSeconds);
+
+		long value;
+		String unit;
+		if (totalSeconds < 60) {
+			value = totalSeconds;
+			unit = "seconds";
+		} else if (totalSeconds < 3600) {
+			value = totalSeconds / 60;
+			unit = "minutes";
+		} else if (totalSeconds < 86400) {
+			value = totalSeconds / 3600;
+			unit = "hours";
+		} else if (totalSeconds < 2592000) { // ~30 days
+			value = totalSeconds / 86400;
+			unit = "days";
+		} else if (totalSeconds < 31536000) { // ~365 days
+			value = totalSeconds / 2592000;
+			unit = "months";
+		} else {
+			value = totalSeconds / 31536000;
+			unit = "years";
+		}
+
+		// Use i18n for relative time formatting
+		if (past) {
+			return I18nManager.getDmccTranslation("discord.timestamp.relative.past." + unit, String.valueOf(value));
+		} else {
+			return I18nManager.getDmccTranslation("discord.timestamp.relative.future." + unit, String.valueOf(value));
+		}
 	}
 
 	/**
