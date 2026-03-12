@@ -84,6 +84,9 @@ mspt_monitoring:
 console_forwarding:
   enable: true
   execute_messages_from_channel: true
+  # 敏感信息正则过滤
+  filter_regex:
+    - "\\b(?:[0-9]{1,3}\\.){3}[0-9]{1,3}\\b"  # IPv4 地址
   channel: "console"
 
 # 频道主题更新设置
