@@ -73,9 +73,21 @@ broadcasts:
       tell_raw: "in-game-chat"
 
 # 消息格式设置
-formatting: # TODO
-  format_chat_messages: true
-  todo: true
+display_formatting:
+  discord_to_minecraft:
+    markdown: true
+    attachments: true
+    stickers: true
+    unicode_emojis: true
+    custom_emojis: true
+    mentions: true
+    hyperlinks: true
+  minecraft_to_discord:
+    markdown: true
+    unicode_emojis: true
+    custom_emojis: true
+    mentions: true
+    hyperlinks: true
 
 # 命令过滤设置
 excluded_commands:
