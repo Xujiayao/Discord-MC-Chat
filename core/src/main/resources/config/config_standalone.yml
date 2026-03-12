@@ -37,7 +37,9 @@ discord:
   bot:
     token: "your_token_here"  # Discord 机器人令牌
     enable_status: true  # 有玩家在线时 Online / 没玩家在线时 Idle / 正在启动或关闭时 Do Not Disturb
-    enable_rich_presence: true
+    rich_presence:
+      enable: true
+      game_name: "Minecraft"
   # Webhook 通用设置
   # 多服务器模式下，Webhook 用于发送客户端 MC 服务器消息，因此必须启用 Webhook
   webhook:

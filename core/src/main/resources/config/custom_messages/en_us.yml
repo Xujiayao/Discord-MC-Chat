@@ -87,6 +87,20 @@ minecraft_to_discord:
     say: default
     tell_raw: default
 
+rich_presence:
+  all_servers_offline:
+    playing_title: "{game_name}"
+    first_line: "Server offline"
+    second_line: ""
+  at_least_one_server_online:
+    playing_title: "{game_name} ({online_player_count}/{max_player_count})"
+    standalone:
+      first_line: "{online_server_count} server(s) online"
+      second_line: "[{online_server_list}]"
+    single_server:
+      first_line: "{online_player_count}/{max_player_count} player(s) online"
+      second_line: "{total_player_count} player(s) ever joined"
+
 channel_topic_updating:
   all_servers_offline: ":octagonal_sign: Server offline | Last updated: <t:{last_update_time}:f>"
   at_least_one_server_online:
