@@ -484,18 +484,25 @@ public class DiscordManager {
 
 		boolean useWebhook = ConfigManager.getBoolean("discord.webhook.players.enable_fake_user_style") == Boolean.TRUE;
 
+		// Apply MC→Discord display formatting to the message content
+		Map<String, String> formattedPlaceholders = new java.util.HashMap<>(placeholders);
+		String message = formattedPlaceholders.get("message");
+		if (message != null) {
+			formattedPlaceholders.put("message", applyMinecraftToDiscordFormatting(message));
+		}
+
 		if (useWebhook) {
 			JsonNode webhookNode = selectedTemplate.path("with_webhook").path(modeKey);
-			String username = replacePlaceholders(webhookNode.path("username").asText(""), placeholders);
-			String content = replacePlaceholders(webhookNode.path("content").asText(""), placeholders);
+			String username = replacePlaceholders(webhookNode.path("username").asText(""), formattedPlaceholders);
+			String content = replacePlaceholders(webhookNode.path("content").asText(""), formattedPlaceholders);
 
 			// Determine avatar URL
 			String avatarUrl = ConfigManager.getString("discord.webhook.players.avatar_url", "");
-			avatarUrl = replacePlaceholders(avatarUrl, placeholders);
+			avatarUrl = replacePlaceholders(avatarUrl, formattedPlaceholders);
 
 			// If discord_user_avatar_for_webhooks is enabled and user is linked, use Discord avatar
 			if (ConfigManager.getBoolean("account_linking.discord_user_avatar_for_webhooks") == Boolean.TRUE) {
-				String playerUuid = placeholders.get("player_uuid");
+				String playerUuid = formattedPlaceholders.get("player_uuid");
 				if (playerUuid != null) {
 					String discordId = LinkedAccountManager.getDiscordIdByMinecraftUuid(playerUuid);
 					if (discordId != null) {
@@ -510,13 +517,13 @@ public class DiscordManager {
 			sendWebhookMessage(channel, username, avatarUrl, content);
 		} else {
 			JsonNode noWebhookNode = selectedTemplate.path("without_webhook").path(modeKey);
-			String message = replacePlaceholders(noWebhookNode.asText(""), placeholders);
+			String formattedMessage = replacePlaceholders(noWebhookNode.asText(""), formattedPlaceholders);
 
 			if ("standalone".equals(mode)) {
 				String avatarUrl = getClientAvatarUrl(clientName);
-				sendWebhookMessage(channel, clientName, avatarUrl, message);
+				sendWebhookMessage(channel, clientName, avatarUrl, formattedMessage);
 			} else {
-				channel.sendMessage(message).queue();
+				channel.sendMessage(formattedMessage).queue();
 			}
 		}
 	}
@@ -569,21 +576,46 @@ public class DiscordManager {
 		Member member = event.getMember();
 		String senderName = member != null ? member.getEffectiveName() : event.getAuthor().getName();
 
-		// Resolve role color
+		// Resolve role color (respecting use_role_colors_in_chat config)
 		String roleColor = "white";
-		if (member != null) {
+		if (ConfigManager.getBoolean("account_linking.use_role_colors_in_chat") == Boolean.TRUE && member != null) {
 			java.awt.Color color = member.getColor();
 			if (color != null) {
 				roleColor = String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
 			}
 		}
 
-		// Build message content
-		String messageContent = event.getMessage().getContentDisplay();
-
-		// Apply display formatting options
+		// Build message content with display formatting options
+		boolean showMarkdown = ConfigManager.getBoolean("display_formatting.discord_to_minecraft.markdown") == Boolean.TRUE;
 		boolean showAttachments = ConfigManager.getBoolean("display_formatting.discord_to_minecraft.attachments") == Boolean.TRUE;
 		boolean showStickers = ConfigManager.getBoolean("display_formatting.discord_to_minecraft.stickers") == Boolean.TRUE;
+		boolean showUnicodeEmojis = ConfigManager.getBoolean("display_formatting.discord_to_minecraft.unicode_emojis") == Boolean.TRUE;
+		boolean showCustomEmojis = ConfigManager.getBoolean("display_formatting.discord_to_minecraft.custom_emojis") == Boolean.TRUE;
+		boolean showMentions = ConfigManager.getBoolean("display_formatting.discord_to_minecraft.mentions") == Boolean.TRUE;
+		boolean showHyperlinks = ConfigManager.getBoolean("display_formatting.discord_to_minecraft.hyperlinks") == Boolean.TRUE;
+
+		// Use getContentDisplay() which resolves mentions and emojis, or getContentRaw() for raw content
+		String messageContent = showMentions ? event.getMessage().getContentDisplay() : event.getMessage().getContentRaw();
+
+		// Strip markdown formatting if disabled
+		if (!showMarkdown) {
+			messageContent = stripMarkdown(messageContent);
+		}
+
+		// Strip custom emoji names if disabled
+		if (!showCustomEmojis) {
+			messageContent = messageContent.replaceAll("<a?:\\w+:\\d+>", "");
+		}
+
+		// Strip Unicode emojis if disabled
+		if (!showUnicodeEmojis) {
+			messageContent = stripUnicodeEmojis(messageContent);
+		}
+
+		// Strip hyperlinks if disabled
+		if (!showHyperlinks) {
+			messageContent = messageContent.replaceAll("https?://\\S+", "[link]");
+		}
 
 		StringBuilder contentBuilder = new StringBuilder(messageContent);
 
@@ -624,7 +656,7 @@ public class DiscordManager {
 		if (referencedMessage != null) {
 			String replyName = referencedMessage.getAuthor().getName();
 			String replyRoleColor = "white";
-			if (referencedMessage.getMember() != null) {
+			if (ConfigManager.getBoolean("account_linking.use_role_colors_in_chat") == Boolean.TRUE && referencedMessage.getMember() != null) {
 				java.awt.Color replyColor = referencedMessage.getMember().getColor();
 				if (replyColor != null) {
 					replyRoleColor = String.format("#%02x%02x%02x", replyColor.getRed(), replyColor.getGreen(), replyColor.getBlue());
@@ -665,23 +697,6 @@ public class DiscordManager {
 		);
 
 		NetworkManager.broadcastToClients(packet);
-
-		// Also notify about command execution if enabled
-		notifyCommandExecution(event, senderName, roleColor);
-	}
-
-	/**
-	 * Sends a command execution notification to Minecraft when a Discord user
-	 * executes a slash command (handled separately via the command flow, not here).
-	 * This method is a no-op for regular chat messages.
-	 *
-	 * @param event     The message event
-	 * @param name      The sender name
-	 * @param roleColor The role color
-	 */
-	private static void notifyCommandExecution(MessageReceivedEvent event, String name, String roleColor) {
-		// Command execution notifications are sent from onSlashCommandInteraction flow.
-		// This is intentionally a no-op for regular chat messages.
 	}
 
 	/**
@@ -735,6 +750,94 @@ public class DiscordManager {
 		}
 
 		return parts;
+	}
+
+	/**
+	 * Applies Minecraft-to-Discord display formatting options to a message string.
+	 * Handles markdown escaping, mention conversion, emoji processing, and hyperlinks.
+	 *
+	 * @param message The raw message from Minecraft
+	 * @return The formatted message suitable for Discord
+	 */
+	static String applyMinecraftToDiscordFormatting(String message) {
+		if (message == null) return "";
+
+		boolean useMarkdown = ConfigManager.getBoolean("display_formatting.minecraft_to_discord.markdown") == Boolean.TRUE;
+		boolean useUnicodeEmojis = ConfigManager.getBoolean("display_formatting.minecraft_to_discord.unicode_emojis") == Boolean.TRUE;
+		boolean useCustomEmojis = ConfigManager.getBoolean("display_formatting.minecraft_to_discord.custom_emojis") == Boolean.TRUE;
+		boolean useMentions = ConfigManager.getBoolean("display_formatting.minecraft_to_discord.mentions") == Boolean.TRUE;
+		boolean useHyperlinks = ConfigManager.getBoolean("display_formatting.minecraft_to_discord.hyperlinks") == Boolean.TRUE;
+
+		String result = message;
+
+		// Escape markdown if disabled
+		if (!useMarkdown) {
+			result = result.replace("*", "\\*")
+					.replace("_", "\\_")
+					.replace("~", "\\~")
+					.replace("`", "\\`")
+					.replace("|", "\\|");
+		}
+
+		// Strip Unicode emojis if disabled
+		if (!useUnicodeEmojis) {
+			result = stripUnicodeEmojis(result);
+		}
+
+		// Strip :emoji: patterns if custom emojis disabled
+		if (!useCustomEmojis) {
+			result = result.replaceAll(":\\w+:", "");
+		}
+
+		// Convert @mentions to plain text if disabled
+		if (!useMentions) {
+			result = result.replaceAll("@(\\S+)", "$1");
+		}
+
+		// Wrap URLs in <> to suppress Discord embed if hyperlinks disabled
+		if (!useHyperlinks) {
+			result = result.replaceAll("(https?://\\S+)", "<$1>");
+		}
+
+		return result;
+	}
+
+	/**
+	 * Strips common Discord markdown formatting characters from a string.
+	 *
+	 * @param text The text with potential markdown
+	 * @return The text without markdown formatting
+	 */
+	private static String stripMarkdown(String text) {
+		if (text == null) return "";
+		return text.replaceAll("\\*{1,3}(.+?)\\*{1,3}", "$1")    // bold/italic
+				.replaceAll("__(.+?)__", "$1")                     // underline
+				.replaceAll("~~(.+?)~~", "$1")                     // strikethrough
+				.replaceAll("`{1,3}([^`]+)`{1,3}", "$1")          // inline code/code blocks
+				.replaceAll("\\|{2}(.+?)\\|{2}", "$1");           // spoiler
+	}
+
+	/**
+	 * Strips Unicode emoji characters from a string.
+	 * Removes characters in common emoji Unicode ranges.
+	 *
+	 * @param text The text with potential Unicode emojis
+	 * @return The text without Unicode emojis
+	 */
+	private static String stripUnicodeEmojis(String text) {
+		if (text == null) return "";
+		// Remove common Unicode emoji ranges
+		return text.replaceAll("[\\x{1F600}-\\x{1F64F}]", "")   // Emoticons
+				.replaceAll("[\\x{1F300}-\\x{1F5FF}]", "")       // Misc Symbols and Pictographs
+				.replaceAll("[\\x{1F680}-\\x{1F6FF}]", "")       // Transport and Map
+				.replaceAll("[\\x{1F1E0}-\\x{1F1FF}]", "")       // Flags
+				.replaceAll("[\\x{2600}-\\x{26FF}]", "")         // Misc symbols
+				.replaceAll("[\\x{2700}-\\x{27BF}]", "")         // Dingbats
+				.replaceAll("[\\x{FE00}-\\x{FE0F}]", "")         // Variation Selectors
+				.replaceAll("[\\x{1F900}-\\x{1F9FF}]", "")       // Supplemental Symbols and Pictographs
+				.replaceAll("[\\x{200D}]", "")                    // Zero Width Joiner
+				.replaceAll("[\\x{20E3}]", "")                    // Combining Enclosing Keycap
+				.replaceAll("[\\x{FE0F}]", "");                   // Variation Selector-16
 	}
 
 	/**
