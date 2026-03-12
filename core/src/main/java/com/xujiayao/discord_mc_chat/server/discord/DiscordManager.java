@@ -1034,9 +1034,10 @@ public class DiscordManager {
 				parts.add(part);
 			} else if (matcher.group(32) != null && showMarkdown) {
 				// Spoiler ||text|| - show as obfuscated text with hover to reveal
-				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(matcher.group(33), false, "dark_gray");
+				String spoilerText = matcher.group(33);
+				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(spoilerText, false, "dark_gray");
 				part.obfuscated = true;
-				part.hoverText = matcher.group(33);
+				part.hoverText = spoilerText;
 				parts.add(part);
 			} else if (matcher.group(34) != null) {
 				// Escaped character \* \_ \~ \` \|
