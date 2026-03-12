@@ -37,6 +37,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 
+import java.util.Map;
+
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
 /**
@@ -96,11 +98,36 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 								DiscordManager.clientBroadcast(clientName, "player.join", "player.join", false, p.placeholders);
 						case PLAYER_QUIT ->
 								DiscordManager.clientBroadcast(clientName, "player.quit", "player.quit", false, p.placeholders);
+						case PLAYER_CHAT -> {
+							Map<String, String> enriched = new java.util.HashMap<>(p.placeholders);
+							enriched.put("server", clientName);
+							enriched.put("player_name", enriched.getOrDefault("user_name", ""));
+							DiscordManager.clientBroadcast(clientName, "player.chat", "player.chat", true, enriched);
+						}
+						case PLAYER_COMMAND -> {
+							Map<String, String> enriched = new java.util.HashMap<>(p.placeholders);
+							enriched.put("server", clientName);
+							enriched.put("player_name", enriched.getOrDefault("user_name", ""));
+							DiscordManager.clientBroadcast(clientName, "player.command", "player.command", true, enriched);
+						}
 						case PLAYER_DIE ->
 								DiscordManager.clientBroadcast(clientName, "player.die", "player.die", false, p.placeholders);
 						case PLAYER_ADVANCEMENT ->
 								DiscordManager.clientBroadcast(clientName, "player.advancement", "player.advancement." + p.placeholders.get("type"), false, p.placeholders);
-						// Unhandled events
+						// Source events
+						case SOURCE_SAY -> {
+							Map<String, String> enriched = new java.util.HashMap<>(p.placeholders);
+							enriched.put("server", clientName);
+							enriched.put("player_name", enriched.getOrDefault("user_name", "Server"));
+							DiscordManager.clientBroadcast(clientName, "source.say", "source.say", true, enriched);
+						}
+						case SOURCE_TELL_RAW -> {
+							Map<String, String> enriched = new java.util.HashMap<>(p.placeholders);
+							enriched.put("server", clientName);
+							enriched.put("player_name", enriched.getOrDefault("user_name", "Server"));
+							DiscordManager.clientBroadcast(clientName, "source.tell_raw", "source.tell_raw", true, enriched);
+						}
+						// SERVER_STOPPED is not broadcast here (it's sent via SERVER_STOPPING)
 						default ->
 								LOGGER.warn("Received MinecraftEventPacket from authenticated client {}: type={}, placeholders={}", clientName, p.type, p.placeholders);
 					}

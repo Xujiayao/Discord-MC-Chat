@@ -1,15 +1,22 @@
 package com.xujiayao.discord_mc_chat.server.discord;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.xujiayao.discord_mc_chat.network.NetworkManager;
+import com.xujiayao.discord_mc_chat.network.packets.events.DiscordMessagePacket;
+import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.sticker.StickerItem;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -419,7 +426,11 @@ public class DiscordManager {
 				messageNode = messageNode.path(part);
 			}
 
-			if (!isTemplate) {
+			if (isTemplate) {
+				// Template-based message (e.g., player chat/command, /say, /tellraw)
+				String templateName = messageNode.asText();
+				sendTemplateMessage(channel, clientName, templateName, placeholders);
+			} else {
 				String message = messageNode.asText();
 
 				for (Map.Entry<String, String> entry : placeholders.entrySet()) {
@@ -439,6 +450,291 @@ public class DiscordManager {
 		} catch (Exception e) {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
 		}
+	}
+
+	/**
+	 * Sends a template-based message to Discord, resolving the template from custom_messages.
+	 * Supports both webhook (fake user) and bot message modes.
+	 *
+	 * @param channel      The target Discord channel
+	 * @param clientName   The DMCC client name
+	 * @param templateName The template name (e.g., "default")
+	 * @param placeholders The placeholders to replace
+	 */
+	private static void sendTemplateMessage(TextChannel channel, String clientName, String templateName,
+											Map<String, String> placeholders) {
+		JsonNode customMessages = I18nManager.getCustomMessages();
+		if (customMessages == null) return;
+
+		// Look up the template by name
+		JsonNode templatesNode = customMessages.path("templates");
+		JsonNode selectedTemplate = null;
+		if (templatesNode.isArray()) {
+			for (JsonNode template : templatesNode) {
+				if (templateName.equals(template.path("name").asText())) {
+					selectedTemplate = template;
+					break;
+				}
+			}
+		}
+		if (selectedTemplate == null) return;
+
+		String mode = ModeManager.getMode();
+		String modeKey = "standalone".equals(mode) ? "standalone" : "single_server";
+
+		boolean useWebhook = ConfigManager.getBoolean("discord.webhook.players.enable_fake_user_style") == Boolean.TRUE;
+
+		if (useWebhook) {
+			JsonNode webhookNode = selectedTemplate.path("with_webhook").path(modeKey);
+			String username = replacePlaceholders(webhookNode.path("username").asText(""), placeholders);
+			String content = replacePlaceholders(webhookNode.path("content").asText(""), placeholders);
+
+			// Determine avatar URL
+			String avatarUrl = ConfigManager.getString("discord.webhook.players.avatar_url", "");
+			avatarUrl = replacePlaceholders(avatarUrl, placeholders);
+
+			// If discord_user_avatar_for_webhooks is enabled and user is linked, use Discord avatar
+			if (ConfigManager.getBoolean("account_linking.discord_user_avatar_for_webhooks") == Boolean.TRUE) {
+				String playerUuid = placeholders.get("player_uuid");
+				if (playerUuid != null) {
+					String discordId = LinkedAccountManager.getDiscordIdByMinecraftUuid(playerUuid);
+					if (discordId != null) {
+						net.dv8tion.jda.api.entities.User discordUser = retrieveUser(discordId);
+						if (discordUser != null) {
+							avatarUrl = discordUser.getEffectiveAvatarUrl();
+						}
+					}
+				}
+			}
+
+			sendWebhookMessage(channel, username, avatarUrl, content);
+		} else {
+			JsonNode noWebhookNode = selectedTemplate.path("without_webhook").path(modeKey);
+			String message = replacePlaceholders(noWebhookNode.asText(""), placeholders);
+
+			if ("standalone".equals(mode)) {
+				String avatarUrl = getClientAvatarUrl(clientName);
+				sendWebhookMessage(channel, clientName, avatarUrl, message);
+			} else {
+				channel.sendMessage(message).queue();
+			}
+		}
+	}
+
+	/**
+	 * Replaces placeholders in a string using a map of key-value pairs.
+	 *
+	 * @param text         The template string with {key} placeholders
+	 * @param placeholders The placeholder values
+	 * @return The string with placeholders replaced
+	 */
+	private static String replacePlaceholders(String text, Map<String, String> placeholders) {
+		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+			text = text.replace("{" + entry.getKey() + "}", entry.getValue());
+		}
+		return text;
+	}
+
+	/**
+	 * Processes an incoming Discord message and forwards it to Minecraft clients.
+	 * <p>
+	 * Checks if the message is from a chat channel and if Discord-to-Minecraft chat
+	 * forwarding is enabled. If so, builds pre-formatted text parts from the
+	 * custom_messages format and broadcasts a DiscordMessagePacket to all clients.
+	 *
+	 * @param event The Discord message received event
+	 */
+	public static void processIncomingDiscordMessage(MessageReceivedEvent event) {
+		// Check if Discord-to-Minecraft chat is enabled
+		if (ConfigManager.getBoolean("broadcasts.discord_to_minecraft.chat") != Boolean.TRUE) {
+			return;
+		}
+
+		// Check if the message is from an in-game-chat channel
+		String chatChannel = ConfigManager.getString("broadcasts.minecraft_to_discord.player.chat", "");
+		if (chatChannel.isBlank()) {
+			return;
+		}
+
+		TextChannel messageChannel = event.getChannel().asTextChannel();
+		TextChannel targetChannel = getTextChannel(chatChannel);
+		if (targetChannel == null || !messageChannel.getId().equals(targetChannel.getId())) {
+			return;
+		}
+
+		JsonNode customMessages = I18nManager.getCustomMessages();
+		if (customMessages == null) return;
+
+		// Extract message info
+		Member member = event.getMember();
+		String senderName = member != null ? member.getEffectiveName() : event.getAuthor().getName();
+
+		// Resolve role color
+		String roleColor = "white";
+		if (member != null) {
+			java.awt.Color color = member.getColor();
+			if (color != null) {
+				roleColor = String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
+			}
+		}
+
+		// Build message content
+		String messageContent = event.getMessage().getContentDisplay();
+
+		// Apply display formatting options
+		boolean showAttachments = ConfigManager.getBoolean("display_formatting.discord_to_minecraft.attachments") == Boolean.TRUE;
+		boolean showStickers = ConfigManager.getBoolean("display_formatting.discord_to_minecraft.stickers") == Boolean.TRUE;
+
+		StringBuilder contentBuilder = new StringBuilder(messageContent);
+
+		if (showAttachments) {
+			for (Message.Attachment attachment : event.getMessage().getAttachments()) {
+				if (!contentBuilder.isEmpty()) contentBuilder.append(" ");
+				contentBuilder.append("[").append(attachment.getFileName()).append("]");
+			}
+		}
+
+		if (showStickers) {
+			for (StickerItem sticker : event.getMessage().getStickers()) {
+				if (!contentBuilder.isEmpty()) contentBuilder.append(" ");
+				contentBuilder.append("[Sticker: ").append(sticker.getName()).append("]");
+			}
+		}
+
+		String finalContent = contentBuilder.toString();
+		if (finalContent.isBlank()) return;
+
+		// Determine server color for standalone mode
+		String serverColor = "blue"; // Discord brand color
+		String serverName = "Discord";
+
+		// Build main text parts from common.chat format
+		JsonNode chatFormat = customMessages.path("common").path("chat");
+		List<DiscordMessagePacket.TextPart> mainParts = buildTextParts(chatFormat, Map.of(
+				"server", serverName,
+				"server_color", serverColor,
+				"name", senderName,
+				"role_color", roleColor,
+				"message", finalContent
+		));
+
+		// Handle reply formatting
+		List<DiscordMessagePacket.TextPart> replyParts = null;
+		Message referencedMessage = event.getMessage().getReferencedMessage();
+		if (referencedMessage != null) {
+			String replyName = referencedMessage.getAuthor().getName();
+			String replyRoleColor = "white";
+			if (referencedMessage.getMember() != null) {
+				java.awt.Color replyColor = referencedMessage.getMember().getColor();
+				if (replyColor != null) {
+					replyRoleColor = String.format("#%02x%02x%02x", replyColor.getRed(), replyColor.getGreen(), replyColor.getBlue());
+				}
+			}
+			String replyContent = referencedMessage.getContentDisplay();
+			if (replyContent.length() > 50) {
+				replyContent = replyContent.substring(0, 50) + "...";
+			}
+
+			JsonNode responseFormat = customMessages.path("discord_to_minecraft").path("response");
+			replyParts = buildTextParts(responseFormat, Map.of(
+					"name", replyName,
+					"role_color", replyRoleColor,
+					"message", replyContent
+			));
+		}
+
+		// Resolve mention notifications
+		List<String> mentionedPlayerUuids = new ArrayList<>();
+		String mentionStyle = ConfigManager.getString("account_linking.discord_mention_notifications.style", "action_bar");
+		boolean mentionEnabled = ConfigManager.getBoolean("account_linking.discord_mention_notifications.enable") == Boolean.TRUE;
+
+		if (mentionEnabled) {
+			// Check Discord @mentions for linked MC players
+			for (net.dv8tion.jda.api.entities.User mentioned : event.getMessage().getMentions().getUsers()) {
+				List<String> uuids = LinkedAccountManager.getMinecraftUuidsByDiscordId(mentioned.getId());
+				mentionedPlayerUuids.addAll(uuids);
+			}
+		}
+
+		// Send packet to all connected clients
+		DiscordMessagePacket packet = new DiscordMessagePacket(
+				mainParts, replyParts,
+				mentionedPlayerUuids.isEmpty() ? null : mentionedPlayerUuids,
+				mentionStyle,
+				senderName
+		);
+
+		NetworkManager.broadcastToClients(packet);
+
+		// Also notify about command execution if enabled
+		notifyCommandExecution(event, senderName, roleColor);
+	}
+
+	/**
+	 * Sends a command execution notification to Minecraft when a Discord user
+	 * executes a slash command (handled separately via the command flow, not here).
+	 * This method is a no-op for regular chat messages.
+	 *
+	 * @param event     The message event
+	 * @param name      The sender name
+	 * @param roleColor The role color
+	 */
+	private static void notifyCommandExecution(MessageReceivedEvent event, String name, String roleColor) {
+		// Command execution notifications are sent from onSlashCommandInteraction flow.
+		// This is intentionally a no-op for regular chat messages.
+	}
+
+	/**
+	 * Broadcasts a Discord command execution notification to Minecraft clients.
+	 *
+	 * @param commandName The name of the command executed
+	 * @param senderName  The name of the Discord user
+	 * @param roleColor   The role color of the Discord user (hex or Minecraft color name)
+	 */
+	public static void broadcastCommandExecutionToMinecraft(String commandName, String senderName, String roleColor) {
+		if (ConfigManager.getBoolean("broadcasts.discord_to_minecraft.command") != Boolean.TRUE) {
+			return;
+		}
+
+		JsonNode customMessages = I18nManager.getCustomMessages();
+		if (customMessages == null) return;
+
+		JsonNode commandFormat = customMessages.path("discord_to_minecraft").path("command");
+		List<DiscordMessagePacket.TextPart> parts = buildTextParts(commandFormat, Map.of(
+				"name", senderName,
+				"role_color", roleColor,
+				"command", commandName
+		));
+
+		DiscordMessagePacket packet = new DiscordMessagePacket(parts, null, null, null, null);
+		NetworkManager.broadcastToClients(packet);
+	}
+
+	/**
+	 * Builds a list of TextPart objects from a custom_messages format node.
+	 * Each entry in the node should have "text", "bold", and "color" fields.
+	 *
+	 * @param formatNode   The JsonNode array containing format entries
+	 * @param placeholders The placeholders to replace in text fields
+	 * @return A list of TextPart objects
+	 */
+	private static List<DiscordMessagePacket.TextPart> buildTextParts(JsonNode formatNode, Map<String, String> placeholders) {
+		List<DiscordMessagePacket.TextPart> parts = new ArrayList<>();
+		if (formatNode == null || !formatNode.isArray()) return parts;
+
+		for (JsonNode entry : formatNode) {
+			String text = entry.path("text").asText("");
+			boolean bold = entry.path("bold").asBoolean(false);
+			String color = entry.path("color").asText("white");
+
+			// Replace placeholders in text and color
+			text = replacePlaceholders(text, placeholders);
+			color = replacePlaceholders(color, placeholders);
+
+			parts.add(new DiscordMessagePacket.TextPart(text, bold, color));
+		}
+
+		return parts;
 	}
 
 	/**

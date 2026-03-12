@@ -304,6 +304,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 			return;
 		}
 
-		// TODO: Handle incoming Discord messages and forward to Minecraft
+		// Forward Discord chat messages to Minecraft
+		DiscordManager.processIncomingDiscordMessage(event);
 	}
 }

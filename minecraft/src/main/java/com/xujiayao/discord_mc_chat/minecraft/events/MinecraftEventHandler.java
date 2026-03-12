@@ -12,6 +12,7 @@ import com.xujiayao.discord_mc_chat.minecraft.translations.TranslationManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkRequestPacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.DiscordMessagePacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
@@ -28,6 +29,11 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerTickRateManager;
@@ -54,6 +60,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 /**
  * Handles Minecraft events posted from the event manager.
@@ -190,6 +197,64 @@ public class MinecraftEventHandler {
 
 				NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_ADVANCEMENT, placeholders));
 			}
+		});
+
+		EventManager.register(MinecraftEvents.PlayerChat.class, event -> {
+			String message = event.playerChatMessage().signedContent();
+			Map<String, String> placeholders = new HashMap<>();
+			placeholders.put("user_name", event.serverPlayer().getName().getString());
+			placeholders.put("display_name", event.serverPlayer().getDisplayName().getString());
+			placeholders.put("player_uuid", event.serverPlayer().getStringUUID());
+			placeholders.put("message", message);
+
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_CHAT, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.PlayerCommand.class, event -> {
+			String command = event.command();
+
+			// Check excluded commands
+			if (isCommandExcluded(command)) {
+				return;
+			}
+
+			Map<String, String> placeholders = new HashMap<>();
+			placeholders.put("user_name", event.serverPlayer().getName().getString());
+			placeholders.put("display_name", event.serverPlayer().getDisplayName().getString());
+			placeholders.put("player_uuid", event.serverPlayer().getStringUUID());
+			placeholders.put("message", "/" + command);
+
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_COMMAND, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceSay.class, event -> {
+			String message = event.playerChatMessage().signedContent();
+			String sourceName = event.commandContext().getSource().getTextName();
+
+			Map<String, String> placeholders = new HashMap<>();
+			placeholders.put("user_name", sourceName);
+			placeholders.put("display_name", sourceName);
+			placeholders.put("message", message);
+
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_SAY, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceTellRaw.class, event -> {
+			// Extract the raw JSON text from the command context
+			String sourceName = event.commandContext().getSource().getTextName();
+			String rawJson = "";
+			try {
+				rawJson = net.minecraft.commands.arguments.ComponentArgument
+						.getResolvedComponent(event.commandContext(), "message").getString();
+			} catch (Exception ignored) {
+			}
+
+			Map<String, String> placeholders = new HashMap<>();
+			placeholders.put("user_name", sourceName);
+			placeholders.put("display_name", sourceName);
+			placeholders.put("message", rawJson);
+
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_TELL_RAW, placeholders));
 		});
 
 		EventManager.register(MinecraftEvents.CommandRegister.class, event -> {
@@ -466,6 +531,145 @@ public class MinecraftEventHandler {
 				}
 			});
 		});
+
+		// ===== Discord Chat Message Display =====
+
+		EventManager.register(CoreEvents.DiscordChatMessageEvent.class, event -> {
+			if (serverInstance == null) return;
+
+			serverInstance.execute(() -> {
+				try {
+					DiscordMessagePacket packet = event.packet();
+
+					// Build main message component from TextParts
+					MutableComponent mainComponent = Component.empty();
+					if (packet.replyParts != null && !packet.replyParts.isEmpty()) {
+						mainComponent.append(buildComponentFromTextParts(packet.replyParts));
+						mainComponent.append(Component.literal("\n"));
+					}
+					mainComponent.append(buildComponentFromTextParts(packet.mainParts));
+
+					// Broadcast to all online players
+					for (ServerPlayer player : serverInstance.getPlayerList().getPlayers()) {
+						player.sendSystemMessage(mainComponent);
+					}
+
+					// Handle mention notifications
+					if (packet.mentionedPlayerUuids != null && !packet.mentionedPlayerUuids.isEmpty()) {
+						String style = packet.mentionNotificationStyle != null ? packet.mentionNotificationStyle : "action_bar";
+						String senderName = packet.mentionNotificationSenderName != null ? packet.mentionNotificationSenderName : "Discord";
+						Component mentionText = Component.literal(senderName + " mentioned you!")
+								.withStyle(s -> s.withColor(ChatFormatting.GOLD).withBold(true));
+
+						for (String uuidStr : packet.mentionedPlayerUuids) {
+							try {
+								UUID uuid = UUID.fromString(uuidStr);
+								ServerPlayer player = serverInstance.getPlayerList().getPlayer(uuid);
+								if (player != null) {
+									switch (style) {
+										case "action_bar" ->
+												player.connection.send(new ClientboundSetActionBarTextPacket(mentionText));
+										case "title" ->
+												player.connection.send(new ClientboundSetTitleTextPacket(mentionText));
+										case "chat" -> player.sendSystemMessage(mentionText);
+									}
+								}
+							} catch (Exception ignored) {
+							}
+						}
+					}
+				} catch (Exception ignored) {
+				}
+			});
+		});
+	}
+
+	/**
+	 * Checks if a command should be excluded from broadcasting based on the excluded_commands config.
+	 *
+	 * @param command The command string (without leading slash).
+	 * @return true if the command matches any exclusion pattern, false otherwise.
+	 */
+	private static boolean isCommandExcluded(String command) {
+		com.fasterxml.jackson.databind.JsonNode excludedNode = ConfigManager.getConfigNode("excluded_commands");
+		if (excludedNode == null || !excludedNode.isArray()) return false;
+
+		String commandWithSlash = "/" + command;
+		for (com.fasterxml.jackson.databind.JsonNode patternNode : excludedNode) {
+			String pattern = patternNode.asText("");
+			if (!pattern.isEmpty()) {
+				try {
+					if (Pattern.compile(pattern).matcher(commandWithSlash).matches()) {
+						return true;
+					}
+				} catch (Exception ignored) {
+					// Invalid regex pattern, skip
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Builds a Minecraft Component from a list of pre-formatted TextParts.
+	 *
+	 * @param parts The list of TextPart objects from a DiscordMessagePacket.
+	 * @return A Minecraft Component with styled text.
+	 */
+	private static Component buildComponentFromTextParts(List<DiscordMessagePacket.TextPart> parts) {
+		MutableComponent component = Component.empty();
+		if (parts == null) return component;
+
+		for (DiscordMessagePacket.TextPart part : parts) {
+			MutableComponent textComponent = Component.literal(part.text);
+			Style style = Style.EMPTY;
+
+			if (part.bold) {
+				style = style.withBold(true);
+			}
+
+			if (part.color != null && !part.color.isEmpty()) {
+				TextColor textColor = resolveTextColor(part.color);
+				if (textColor != null) {
+					style = style.withColor(textColor);
+				}
+			}
+
+			textComponent.setStyle(style);
+			component.append(textComponent);
+		}
+
+		return component;
+	}
+
+	/**
+	 * Resolves a color string to a Minecraft TextColor.
+	 * Supports Minecraft color names (e.g., "gold", "blue") and hex colors (e.g., "#FF5555").
+	 *
+	 * @param color The color string.
+	 * @return The resolved TextColor, or null if unresolvable.
+	 */
+	private static TextColor resolveTextColor(String color) {
+		if (color.startsWith("#")) {
+			try {
+				return TextColor.parseColor(color).result().orElse(null);
+			} catch (Exception e) {
+				return null;
+			}
+		}
+
+		// Try Minecraft color names
+		ChatFormatting formatting = ChatFormatting.getByName(color);
+		if (formatting != null && formatting.isColor()) {
+			return TextColor.fromLegacyFormat(formatting);
+		}
+
+		// Try parsing as hex without #
+		try {
+			return TextColor.parseColor("#" + color).result().orElse(null);
+		} catch (Exception e) {
+			return null;
+		}
 	}
 
 	private static List<String> getSuggestionsForInput(String input, CommandSourceStack source) throws Exception {

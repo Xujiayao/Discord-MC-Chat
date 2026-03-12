@@ -24,6 +24,7 @@ import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePa
 import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.link.OpSyncPacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.DiscordMessagePacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPongPacket;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
@@ -204,6 +205,10 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 			case OpSyncPacket p -> {
 				// Handle OP sync from server - apply OP levels to Minecraft players
 				EventManager.post(new CoreEvents.OpSyncEvent(p.opLevels));
+			}
+			case DiscordMessagePacket p -> {
+				// Handle Discord message from server - display in Minecraft
+				EventManager.post(new CoreEvents.DiscordChatMessageEvent(p));
 			}
 			case DisconnectPacket p -> {
 				// If we receive a DisconnectPacket, it means the server explicitly rejected us.

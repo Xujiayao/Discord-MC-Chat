@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.utils.events;
 
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
+import com.xujiayao.discord_mc_chat.network.packets.events.DiscordMessagePacket;
 
 import java.util.List;
 import java.util.Map;
@@ -132,6 +133,19 @@ public class CoreEvents {
 	 */
 	public record OpSyncEvent(
 			Map<String, Integer> opLevels
+	) {
+	}
+
+	/**
+	 * Posted by the Client when receiving a Discord chat/command message from the Server.
+	 * <p>
+	 * The Minecraft module should build Components from the text parts and broadcast
+	 * to all online players. It should also handle mention notifications if applicable.
+	 *
+	 * @param packet The Discord message packet containing pre-formatted text parts.
+	 */
+	public record DiscordChatMessageEvent(
+			DiscordMessagePacket packet
 	) {
 	}
 }
