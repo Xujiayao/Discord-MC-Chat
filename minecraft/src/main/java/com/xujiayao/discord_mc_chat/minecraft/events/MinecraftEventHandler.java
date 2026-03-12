@@ -50,6 +50,7 @@ import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 
 import java.lang.management.ManagementFactory;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -614,7 +615,7 @@ public class MinecraftEventHandler {
 
 			if (part.clickAction != null && part.clickValue != null) {
 				ClickEvent clickEvent = switch (part.clickAction) {
-					case "open_url" -> new ClickEvent.OpenUrl(part.clickValue);
+					case "open_url" -> new ClickEvent.OpenUrl(URI.create(part.clickValue));
 					case "suggest_command" -> new ClickEvent.SuggestCommand(part.clickValue);
 					case "run_command" -> new ClickEvent.RunCommand(part.clickValue);
 					case "copy_to_clipboard" -> new ClickEvent.CopyToClipboard(part.clickValue);
