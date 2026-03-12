@@ -102,7 +102,7 @@ public class OpLevelResolver {
 	 */
 	private static int resolveOpFromNode(JsonNode node, String serverName) {
 		if (serverName != null) {
-			JsonNode serversArray = node.path("servers");
+			JsonNode serversArray = node.path("server_overrides");
 			if (serversArray.isArray()) {
 				for (JsonNode serverEntry : serversArray) {
 					if (serverName.equals(serverEntry.path("server").asText())) {
