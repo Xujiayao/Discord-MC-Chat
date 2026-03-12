@@ -57,13 +57,14 @@ public class DiscordMessagePacket extends Packet {
 	 */
 	public static class TextPart implements Serializable {
 		@Serial
-		private static final long serialVersionUID = 1L;
+		private static final long serialVersionUID = 2L;
 
 		public String text;
 		public boolean bold;
 		public boolean italic;
 		public boolean underlined;
 		public boolean strikethrough;
+		public boolean obfuscated;
 		public String color;
 
 		/**

@@ -59,13 +59,17 @@ public class DiscordManager {
 			"|(@everyone|@here)" +                                       // Group 6: @everyone and @here
 			"|(<a?:(\\w+):(\\d+)>)" +                                    // Group 7,8,9: Custom emojis
 			"|(<t:(\\d+)(?::([tTdDfFR]))?>)" +                           // Group 10,11,12: Discord timestamps
-			"|(\\*\\*\\*(.+?)\\*\\*\\*)" +                               // Group 13,14: Bold italic
-			"|(\\*\\*(.+?)\\*\\*)" +                                     // Group 15,16: Bold
-			"|(\\*(.+?)\\*)" +                                           // Group 17,18: Italic
-			"|(__(.+?)__)" +                                             // Group 19,20: Underline
-			"|(~~(.+?)~~)" +                                             // Group 21,22: Strikethrough
-			"|(\\|\\|(.+?)\\|\\|)" +                                     // Group 23,24: Spoiler
-			"|(\\\\([*_~`|]))"                                           // Group 25,26: Escaped chars
+			"|(<#(\\d+)>)" +                                             // Group 13,14: Channel mentions
+			"|(```(?:\\w*\\n)?([\\s\\S]*?)```)" +                        // Group 15,16: Code blocks
+			"|(`([^`]+?)`)" +                                            // Group 17,18: Inline code
+			"|(\\[([^\\]]+)]\\((https?://\\S+?)\\))" +                   // Group 19,20,21: Masked links
+			"|(\\*\\*\\*(.+?)\\*\\*\\*)" +                               // Group 22,23: Bold italic
+			"|(\\*\\*(.+?)\\*\\*)" +                                     // Group 24,25: Bold
+			"|(\\*(.+?)\\*)" +                                           // Group 26,27: Italic
+			"|(__(.+?)__)" +                                             // Group 28,29: Underline
+			"|(~~(.+?)~~)" +                                             // Group 30,31: Strikethrough
+			"|(\\|\\|(.+?)\\|\\|)" +                                     // Group 32,33: Spoiler
+			"|(\\\\([*_~`|]))"                                           // Group 34,35: Escaped chars
 	);
 
 	private static JDA jda;
@@ -257,6 +261,24 @@ public class DiscordManager {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Resolves a Discord channel name from its ID.
+	 *
+	 * @param channelId The Discord channel ID.
+	 * @return The channel name, or the raw ID if not found.
+	 */
+	private static String resolveChannelName(String channelId) {
+		if (jda == null) return channelId;
+		try {
+			TextChannel channel = jda.getTextChannelById(channelId);
+			if (channel != null) {
+				return channel.getName();
+			}
+		} catch (Exception ignored) {
+		}
+		return channelId;
 	}
 
 	/**
@@ -812,8 +834,9 @@ public class DiscordManager {
 
 	/**
 	 * Parses a raw Discord message into rich TextParts with proper formatting.
-	 * Handles markdown (bold/italic/underline/strikethrough), mentions (@user/@role/@everyone/@here),
-	 * custom emojis (:name:), URLs (clickable, blue, underlined), and Tenor GIFs.
+	 * Handles markdown (bold/italic/underline/strikethrough/spoiler), mentions (@user/@role/@everyone/@here/#channel),
+	 * custom emojis (:name:), URLs (clickable, blue, underlined), Tenor GIFs, inline code, code blocks,
+	 * masked links, and Discord timestamps.
 	 *
 	 * @param rawContent      The raw message content from Discord
 	 * @param event           The message event (for resolving mentions)
@@ -952,39 +975,72 @@ public class DiscordManager {
 					// If parsing fails, show the raw text
 					parts.add(new DiscordMessagePacket.TextPart(matcher.group(10), false, "gray"));
 				}
-			} else if (matcher.group(13) != null && showMarkdown) {
+			} else if (matcher.group(13) != null) {
+				// Channel mention <#channel_id>
+				String channelId = matcher.group(14);
+				if (showMentions) {
+					String channelName = resolveChannelName(channelId);
+					parts.add(new DiscordMessagePacket.TextPart("[#" + channelName + "]", false, "white"));
+				} else {
+					parts.add(new DiscordMessagePacket.TextPart("#" + channelId, false, "gray"));
+				}
+			} else if (matcher.group(15) != null && showMarkdown) {
+				// Code block ```code```
+				String code = matcher.group(16);
+				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(code, false, "dark_gray");
+				parts.add(part);
+			} else if (matcher.group(17) != null && showMarkdown) {
+				// Inline code `code`
+				String code = matcher.group(18);
+				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(code, false, "dark_gray");
+				parts.add(part);
+			} else if (matcher.group(19) != null) {
+				// Masked link [text](url)
+				String linkText = matcher.group(20);
+				String linkUrl = matcher.group(21);
+				if (showHyperlinks) {
+					DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(linkText, false, "blue");
+					part.underlined = true;
+					part.clickAction = "open_url";
+					part.clickValue = linkUrl;
+					part.hoverText = openUrlTooltip;
+					parts.add(part);
+				} else {
+					parts.add(new DiscordMessagePacket.TextPart(linkText, false, "gray"));
+				}
+			} else if (matcher.group(22) != null && showMarkdown) {
 				// Bold italic ***text***
-				String innerText = matcher.group(14);
+				String innerText = matcher.group(23);
 				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(innerText, true, "gray");
 				part.italic = true;
 				parts.add(part);
-			} else if (matcher.group(15) != null && showMarkdown) {
+			} else if (matcher.group(24) != null && showMarkdown) {
 				// Bold **text**
-				parts.add(new DiscordMessagePacket.TextPart(matcher.group(16), true, "gray"));
-			} else if (matcher.group(17) != null && showMarkdown) {
+				parts.add(new DiscordMessagePacket.TextPart(matcher.group(25), true, "gray"));
+			} else if (matcher.group(26) != null && showMarkdown) {
 				// Italic *text*
-				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(matcher.group(18), false, "gray");
+				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(matcher.group(27), false, "gray");
 				part.italic = true;
 				parts.add(part);
-			} else if (matcher.group(19) != null && showMarkdown) {
+			} else if (matcher.group(28) != null && showMarkdown) {
 				// Underline __text__
-				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(matcher.group(20), false, "gray");
+				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(matcher.group(29), false, "gray");
 				part.underlined = true;
 				parts.add(part);
-			} else if (matcher.group(21) != null && showMarkdown) {
+			} else if (matcher.group(30) != null && showMarkdown) {
 				// Strikethrough ~~text~~
-				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(matcher.group(22), false, "gray");
+				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(matcher.group(31), false, "gray");
 				part.strikethrough = true;
 				parts.add(part);
-			} else if (matcher.group(23) != null && showMarkdown) {
-				// Spoiler ||text|| - show as obfuscated or just plain text
-				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(matcher.group(24), false, "dark_gray");
-				part.hoverText = matcher.group(24);
-				part.italic = true;
+			} else if (matcher.group(32) != null && showMarkdown) {
+				// Spoiler ||text|| - show as obfuscated text with hover to reveal
+				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(matcher.group(33), false, "dark_gray");
+				part.obfuscated = true;
+				part.hoverText = matcher.group(33);
 				parts.add(part);
-			} else if (matcher.group(25) != null) {
+			} else if (matcher.group(34) != null) {
 				// Escaped character \* \_ \~ \` \|
-				parts.add(new DiscordMessagePacket.TextPart(matcher.group(26), false, "gray"));
+				parts.add(new DiscordMessagePacket.TextPart(matcher.group(35), false, "gray"));
 			} else {
 				// If markdown is disabled, just show the raw matched text
 				parts.add(new DiscordMessagePacket.TextPart(matcher.group(), false, "gray"));

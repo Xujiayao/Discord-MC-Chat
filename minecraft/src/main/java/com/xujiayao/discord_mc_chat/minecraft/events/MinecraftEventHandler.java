@@ -605,6 +605,9 @@ public class MinecraftEventHandler {
 			if (part.strikethrough) {
 				style = style.withStrikethrough(true);
 			}
+			if (part.obfuscated) {
+				style = style.withObfuscated(true);
+			}
 
 			if (part.color != null && !part.color.isEmpty()) {
 				TextColor textColor = resolveTextColor(part.color);
