@@ -138,17 +138,27 @@ account_linking:
     user_mappings:
       - user: "xujiayao"
         op_level: 4
-        server_overrides:
+        server_overrides:  # 如果该子服务器不需要覆盖上方定义的 OP 等级设置，可以删除该项。此列表可以为空。
+          - server: "SMP"
+            op_level: 4
+          - server: "CMP"
+            op_level: 4
     # 基于身份组的映射。若用户有多个身份组，取映射的最高 OP 等级。
     role_mappings:
       # 示例 1：拥有 "Admins" 角色的用户将被视为 OP 3。
       - role: "Admins"
         op_level: 3
-        server_overrides:
+        server_overrides:  # 如果该子服务器不需要覆盖上方定义的 OP 等级设置，可以删除该项。此列表可以为空。
+          - server: "SMP"
+            op_level: 3
+          - server: "CMP"
+            op_level: 3
       # 示例 2：可将基础认证角色映射为 OP 0，使其有权执行无需特殊权限的 DMCC 命令（如委托执行白名单）。
       - role: "Players"
         op_level: 0
-        server_overrides:
+        server_overrides:  # 如果该子服务器不需要覆盖上方定义的 OP 等级设置，可以删除该项。此列表可以为空。
+          - server: "SMP"
+            op_level: 0
           - server: "CMP"
             op_level: 2
   use_role_colors_in_chat: true
