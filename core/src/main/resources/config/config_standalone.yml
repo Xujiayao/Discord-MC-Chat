@@ -114,7 +114,10 @@ console_forwarding:
 channel_topic_updating:
   enable: true
   interval_minutes: 10
-  channel: "in-game-chat"
+  channels:
+    - "in-game-chat"
+    - "console-smp"
+    - "console-cmp"
 
 # 语音频道状态更新设置
 voice_channels_updating:
