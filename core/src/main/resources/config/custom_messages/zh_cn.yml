@@ -18,15 +18,15 @@ version: ${mod_version}
 templates: # You can add your own templates here
   - name: default
     with_webhook:
-      multi_server_enabled:
+      standalone:
         username: "[{server}] {display_name}"
         content: "{message}"
-      multi_server_disabled:
+      single_server:
         username: "{display_name}"
         content: "{message}"
     without_webhook:
-      multi_server_enabled: "[{server}] <{display_name}> {message}"
-      multi_server_disabled: "<{display_name}> {message}"
+      standalone: "[{server}] <{display_name}> {message}"
+      single_server: "<{display_name}> {message}"
 
 common:
   chat:
@@ -88,10 +88,10 @@ minecraft_to_discord:
     tell_raw: default
 
 channel_topic_updating:
-  offline: ":octagonal_sign: 服务器离线 | 最后更新于：<t:{last_update_time}:f>"
-  online:
-    multi_server_enabled: ":white_check_mark: {online_player_count}/{max_player_count} 位玩家在线 | {total_player_count} 位玩家曾加入过 | {online_server_count} 个服务器在线 [{online_server_list}] | 服务器启动于 <t:{server_started_time}:R> | 最后更新于：<t:{last_update_time}:f>"
-    multi_server_disabled: ":white_check_mark: {online_player_count}/{max_player_count} 位玩家在线 | {total_player_count} 位玩家曾加入过 | 服务器启动于 <t:{server_started_time}:R> | 最后更新于：<t:{last_update_time}:f>"
+  all_servers_offline: ":octagonal_sign: 服务器离线 | 最后更新于：<t:{last_update_time}:f>"
+  at_least_one_server_online:
+    standalone: ":white_check_mark: {online_player_count}/{max_player_count} 位玩家在线 | {total_player_count} 位玩家曾加入过 | {online_server_count} 个服务器在线 [{online_server_list}] | 服务器启动于 <t:{server_started_time}:R> | 最后更新于：<t:{last_update_time}:f>"
+    single_server: ":white_check_mark: {online_player_count}/{max_player_count} 位玩家在线 | {total_player_count} 位玩家曾加入过 | 服务器启动于 <t:{server_started_time}:R> | 最后更新于：<t:{last_update_time}:f>"
 
 mspt_monitoring:
   high_mspt: ":warning: **服务器 MSPT 已达 {mspt}！**"
