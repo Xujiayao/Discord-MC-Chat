@@ -46,6 +46,7 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 public class DiscordManager {
 
 	private static final Map<String, String> DISCORD_NAME_CACHE = new ConcurrentHashMap<>();
+	private static final int MAX_REPLY_PREVIEW_LENGTH = 50;
 	private static JDA jda;
 
 	/**
@@ -663,8 +664,8 @@ public class DiscordManager {
 				}
 			}
 			String replyContent = referencedMessage.getContentDisplay();
-			if (replyContent.length() > 50) {
-				replyContent = replyContent.substring(0, 50) + "...";
+			if (replyContent.length() > MAX_REPLY_PREVIEW_LENGTH) {
+				replyContent = replyContent.substring(0, MAX_REPLY_PREVIEW_LENGTH) + "...";
 			}
 
 			JsonNode responseFormat = customMessages.path("discord_to_minecraft").path("response");
