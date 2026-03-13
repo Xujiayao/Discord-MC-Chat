@@ -29,7 +29,7 @@ Discord-MC-Chat (DMCC) 是一个 Minecraft 模组，旨在为 Discord 和 Minecr
 - **频道看板与状态监控 (Channel Monitor)**:
     - **文字频道 Topic**: 定期动态更新频道的 Topic（如在线人数、历史总玩家数、各子服状态）。
     - **语音频道名称**: 动态更新指定的语音频道名称，用作服务器状态（Status: Online）和人数（Players: X/Y）的直观数据看板。
-- **Bot 状态展示 (Rich Presence)**: 根据游戏内在线人数与状态，实时同步更新 Discord Bot 的活动状态（Activity）和在线状态。
+- **Bot 状态展示**: 根据游戏内在线人数与状态，实时同步更新 Discord Bot 的活动状态（Activity）和在线状态。
 - **性能预警**: 定期监控服务器 MSPT（每 tick 毫秒数），超过设定阈值时在 Discord 频道自动发出警告。
 - **自动更新检查**: 自动校验 DMCC 版本并对比兼容性，发现新版本时在指定频道发送更新日志，并支持一键提醒管理员（Ping Admins）。
 

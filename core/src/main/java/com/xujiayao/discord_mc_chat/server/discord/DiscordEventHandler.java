@@ -55,7 +55,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 
 	@Override
 	public void onReady(@NotNull ReadyEvent event) {
-		// TODO: Initialize Rich Presence Manager
+		// TODO: Initialize Status & Activity Manager
 	}
 
 	@Override
