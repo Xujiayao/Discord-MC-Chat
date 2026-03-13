@@ -64,7 +64,7 @@ commands:
       base: |
         [DMCC Server]
           Online clients: ({}/{})
-          {}
+        {}
       no_clients: "- No DMCC clients online."
       clients: |
         - [{}]

@@ -43,9 +43,7 @@ public class InfoCommand implements Command {
 			infoSnapshot.values().stream()
 					.sorted(Comparator.comparing(packet -> packet.serverName == null ? "" : packet.serverName, String.CASE_INSENSITIVE_ORDER))
 					.forEach(packet -> {
-						if (!clientsBuilder.isEmpty()) {
-							clientsBuilder.append("\n");
-						}
+						clientsBuilder.append("  ");
 						clientsBuilder.append(buildServerClientInfo(packet));
 					});
 			clientsInfo = clientsBuilder.toString();

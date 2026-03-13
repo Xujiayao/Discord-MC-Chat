@@ -64,7 +64,7 @@ commands:
       base: |
         [DMCC 服务端]
           在线客户端：({}/{})
-          {}
+        {}
       no_clients: "- 当前没有在线 DMCC 客户端。"
       clients: |
         - [{}]
