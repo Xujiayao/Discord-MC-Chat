@@ -27,7 +27,7 @@ public class MixinPlayerList {
 		));
 	}
 
-	@Inject(method = "remove", at = @At("HEAD"))
+	@Inject(method = "remove", at = @At("RETURN"))
 	private void remove(ServerPlayer serverPlayer, CallbackInfo ci) {
 		// PlayerQuit Event
 		EventManager.post(new MinecraftEvents.PlayerQuit(

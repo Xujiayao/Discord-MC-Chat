@@ -1,12 +1,16 @@
 package com.xujiayao.discord_mc_chat.server.discord;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.xujiayao.discord_mc_chat.network.NetworkManager;
+import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.OnlineStatus;
+import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -40,6 +44,7 @@ public class DiscordManager {
 
 	private static final Map<String, String> DISCORD_NAME_CACHE = new ConcurrentHashMap<>();
 	private static JDA jda;
+	private static ExecutorService statusUpdateExecutor;
 
 	/**
 	 * Initializes the Discord bot.
@@ -47,6 +52,10 @@ public class DiscordManager {
 	 * @return true if initialization is successful, false otherwise.
 	 */
 	public static boolean init() {
+		if (statusUpdateExecutor == null || statusUpdateExecutor.isShutdown()) {
+			statusUpdateExecutor = Executors.newSingleThreadExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-BotPresence"));
+		}
+
 		String token = ConfigManager.getString("discord.bot.token");
 		if (token.isBlank()) {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.token_missing"));
@@ -168,6 +177,66 @@ public class DiscordManager {
 				jda.getGatewayPing(),
 				restPing
 		);
+	}
+
+	/**
+	 * Updates the Discord bot's status and activity based on the current server state.
+	 */
+	public static void updateBotPresence() {
+		if (jda == null) return;
+
+		boolean enableStatus = ConfigManager.getBoolean("discord.bot.enable_status");
+		boolean enableActivity = ConfigManager.getBoolean("discord.bot.enable_activity");
+
+		if (!enableStatus && !enableActivity) return;
+
+		if (statusUpdateExecutor == null || statusUpdateExecutor.isShutdown()) return;
+
+		statusUpdateExecutor.execute(() -> {
+			int onlinePlayerCount = 0;
+			int maxPlayerCount = 0;
+			int onlineServerCount = 0;
+
+			List<String> connectedClients = NetworkManager.getConnectedClientNames();
+			if (!connectedClients.isEmpty()) {
+				Map<String, InfoResponsePacket> infoMap = NetworkManager.requestInfoSnapshot(3);
+				for (String client : connectedClients) {
+					InfoResponsePacket info = infoMap.get(client);
+					if (info != null && info.maxPlayerCount > 0) {
+						onlinePlayerCount += info.onlinePlayerCount;
+						maxPlayerCount += info.maxPlayerCount;
+						onlineServerCount++;
+					}
+				}
+			}
+
+			if (enableStatus) {
+				if (onlineServerCount == 0) {
+					jda.getPresence().setStatus(OnlineStatus.DO_NOT_DISTURB);
+				} else if (onlinePlayerCount == 0) {
+					jda.getPresence().setStatus(OnlineStatus.IDLE);
+				} else {
+					jda.getPresence().setStatus(OnlineStatus.ONLINE);
+				}
+			}
+
+			if (enableActivity) {
+				JsonNode customMessages = I18nManager.getCustomMessages();
+				if (customMessages != null) {
+					String activityText;
+					if (onlineServerCount == 0) {
+						activityText = customMessages.path("activity").path("all_servers_offline").asText();
+					} else {
+						activityText = customMessages.path("activity").path("at_least_one_server_online").asText();
+					}
+
+					activityText = activityText.replace("{online_player_count}", String.valueOf(onlinePlayerCount))
+							.replace("{max_player_count}", String.valueOf(maxPlayerCount));
+
+					jda.getPresence().setActivity(Activity.playing(activityText));
+				}
+			}
+		});
 	}
 
 	/**
@@ -476,6 +545,11 @@ public class DiscordManager {
 	 * Shuts down the Discord bot.
 	 */
 	public static void shutdown() {
+		if (statusUpdateExecutor != null) {
+			ExecutorServiceUtils.shutdownAnExecutor(statusUpdateExecutor);
+			statusUpdateExecutor = null;
+		}
+
 		if (jda != null) {
 			jda.shutdown();
 			try {

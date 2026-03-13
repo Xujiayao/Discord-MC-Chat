@@ -67,6 +67,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		}
 		// Clean up from NetworkManager
 		NetworkManager.removeClientChannel(ctx.channel());
+		DiscordManager.updateBotPresence();
 	}
 
 	@Override
@@ -88,14 +89,19 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 							// After a Minecraft server starts, perform OP level sync if enabled
 							OpSyncManager.syncAll();
+							DiscordManager.updateBotPresence();
 						}
 						case SERVER_STOPPING ->
 								DiscordManager.clientBroadcast(clientName, "server.stopped", "server.stop", false, p.placeholders);
 						// Player events
-						case PLAYER_JOIN ->
-								DiscordManager.clientBroadcast(clientName, "player.join", "player.join", false, p.placeholders);
-						case PLAYER_QUIT ->
-								DiscordManager.clientBroadcast(clientName, "player.quit", "player.quit", false, p.placeholders);
+						case PLAYER_JOIN -> {
+							DiscordManager.clientBroadcast(clientName, "player.join", "player.join", false, p.placeholders);
+							DiscordManager.updateBotPresence();
+						}
+						case PLAYER_QUIT -> {
+							DiscordManager.clientBroadcast(clientName, "player.quit", "player.quit", false, p.placeholders);
+							DiscordManager.updateBotPresence();
+						}
 						case PLAYER_DIE ->
 								DiscordManager.clientBroadcast(clientName, "player.die", "player.die", false, p.placeholders);
 						case PLAYER_ADVANCEMENT ->
@@ -191,6 +197,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 						// After successful authentication, perform OP level sync if enabled
 						OpSyncManager.syncAll();
+						DiscordManager.updateBotPresence();
 					} else {
 						String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.auth_failed");
 						LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", clientName, reason));

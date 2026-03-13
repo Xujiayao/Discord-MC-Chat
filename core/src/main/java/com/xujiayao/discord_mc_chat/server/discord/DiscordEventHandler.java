@@ -55,7 +55,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 
 	@Override
 	public void onReady(@NotNull ReadyEvent event) {
-		// TODO: Initialize Status & Activity Manager
+		DiscordManager.updateBotPresence();
 	}
 
 	@Override
