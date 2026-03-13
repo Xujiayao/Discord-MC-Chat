@@ -50,6 +50,16 @@ public class DiscordManager {
 	private static final int MAX_REPLY_PREVIEW_LENGTH = 50;
 
 	/**
+	 * Pre-compiled regex pattern for matching URLs.
+	 */
+	private static final java.util.regex.Pattern URL_PATTERN = java.util.regex.Pattern.compile("(https?://\\S+)");
+
+	/**
+	 * Pre-compiled regex pattern for matching emoji shortcode aliases like :wave:.
+	 */
+	private static final java.util.regex.Pattern EMOJI_ALIAS_PATTERN = java.util.regex.Pattern.compile("(:\\w+:)");
+
+	/**
 	 * Pre-compiled regex pattern for parsing Discord raw message content.
 	 * Matches URLs, user/role mentions, @everyone/@here, custom emojis, and markdown formatting.
 	 */
@@ -1043,7 +1053,7 @@ public class DiscordManager {
 				// Spoiler ||text|| - show as obfuscated text with hover to reveal
 				// Parse spoiler content for URLs so hyperlinks inside spoilers are clickable
 				String spoilerText = matcher.group(33);
-				java.util.regex.Matcher urlMatcher = java.util.regex.Pattern.compile("(https?://\\S+)").matcher(spoilerText);
+				java.util.regex.Matcher urlMatcher = URL_PATTERN.matcher(spoilerText);
 				int spoilerLastEnd = 0;
 				while (urlMatcher.find()) {
 					if (urlMatcher.start() > spoilerLastEnd) {
@@ -1121,7 +1131,7 @@ public class DiscordManager {
 		}
 
 		// Split the converted text on emoji shortcode patterns to style them differently
-		java.util.regex.Matcher emojiMatcher = java.util.regex.Pattern.compile("(:\\w+:)").matcher(converted);
+		java.util.regex.Matcher emojiMatcher = EMOJI_ALIAS_PATTERN.matcher(converted);
 		int lastEnd = 0;
 		while (emojiMatcher.find()) {
 			if (emojiMatcher.start() > lastEnd) {
