@@ -31,6 +31,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
@@ -44,7 +46,8 @@ public class DiscordManager {
 
 	private static final Map<String, String> DISCORD_NAME_CACHE = new ConcurrentHashMap<>();
 	private static JDA jda;
-	private static ExecutorService statusUpdateExecutor;
+	private static ScheduledExecutorService statusUpdateExecutor;
+	private static ScheduledFuture<?> presenceUpdateTask;
 
 	/**
 	 * Initializes the Discord bot.
@@ -53,7 +56,7 @@ public class DiscordManager {
 	 */
 	public static boolean init() {
 		if (statusUpdateExecutor == null || statusUpdateExecutor.isShutdown()) {
-			statusUpdateExecutor = Executors.newSingleThreadExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-BotPresence"));
+			statusUpdateExecutor = Executors.newSingleThreadScheduledExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-BotPresence"));
 		}
 
 		String token = ConfigManager.getString("discord.bot.token");
@@ -181,6 +184,7 @@ public class DiscordManager {
 
 	/**
 	 * Updates the Discord bot's status and activity based on the current server state.
+	 * Debounce rapid calls and automatically updates every 30 seconds.
 	 */
 	public static void updateBotPresence() {
 		if (jda == null) return;
@@ -192,51 +196,72 @@ public class DiscordManager {
 
 		if (statusUpdateExecutor == null || statusUpdateExecutor.isShutdown()) return;
 
-		statusUpdateExecutor.execute(() -> {
-			int onlinePlayerCount = 0;
-			int maxPlayerCount = 0;
-			int onlineServerCount = 0;
-
-			List<String> connectedClients = NetworkManager.getConnectedClientNames();
-			if (!connectedClients.isEmpty()) {
-				Map<String, InfoResponsePacket> infoMap = NetworkManager.requestInfoSnapshot(3);
-				for (String client : connectedClients) {
-					InfoResponsePacket info = infoMap.get(client);
-					if (info != null && info.maxPlayerCount > 0) {
-						onlinePlayerCount += info.onlinePlayerCount;
-						maxPlayerCount += info.maxPlayerCount;
-						onlineServerCount++;
-					}
-				}
+		synchronized (DiscordManager.class) {
+			// Cancel the previously scheduled update.
+			// If it is currently running, cancel(false) allows it to finish safely.
+			// If it is in the queue, it is removed, naturally achieving debounce.
+			if (presenceUpdateTask != null) {
+				presenceUpdateTask.cancel(false);
 			}
 
-			if (enableStatus) {
+			// Schedule a new task to run immediately (0 delay), then repeat every 30 seconds.
+			presenceUpdateTask = statusUpdateExecutor.scheduleWithFixedDelay(() -> {
+				try {
+					doUpdateBotPresence(enableStatus, enableActivity);
+				} catch (Exception e) {
+					LOGGER.warn("Failed to update bot presence: " + e.getMessage());
+				}
+			}, 0, 30, TimeUnit.SECONDS);
+		}
+	}
+
+	/**
+	 * Internal method to perform the network fetching and JDA Presence updating.
+	 */
+	private static void doUpdateBotPresence(boolean enableStatus, boolean enableActivity) {
+		int onlinePlayerCount = 0;
+		int maxPlayerCount = 0;
+		int onlineServerCount = 0;
+
+		List<String> connectedClients = NetworkManager.getConnectedClientNames();
+		if (!connectedClients.isEmpty()) {
+			Map<String, InfoResponsePacket> infoMap = NetworkManager.requestInfoSnapshot(3);
+			for (String client : connectedClients) {
+				InfoResponsePacket info = infoMap.get(client);
+				if (info != null && info.maxPlayerCount > 0) {
+					onlinePlayerCount += info.onlinePlayerCount;
+					maxPlayerCount += info.maxPlayerCount;
+					onlineServerCount++;
+				}
+			}
+		}
+
+		if (enableStatus) {
+			if (onlineServerCount == 0) {
+				jda.getPresence().setStatus(OnlineStatus.DO_NOT_DISTURB);
+			} else if (onlinePlayerCount == 0) {
+				jda.getPresence().setStatus(OnlineStatus.IDLE);
+			} else {
+				jda.getPresence().setStatus(OnlineStatus.ONLINE);
+			}
+		}
+
+		if (enableActivity) {
+			JsonNode customMessages = I18nManager.getCustomMessages();
+			if (customMessages != null) {
+				String activityText;
 				if (onlineServerCount == 0) {
-					jda.getPresence().setStatus(OnlineStatus.DO_NOT_DISTURB);
-				} else if (onlinePlayerCount == 0) {
-					jda.getPresence().setStatus(OnlineStatus.IDLE);
+					activityText = customMessages.path("activity").path("all_servers_offline").asText();
 				} else {
-					jda.getPresence().setStatus(OnlineStatus.ONLINE);
+					activityText = customMessages.path("activity").path("at_least_one_server_online").asText();
 				}
+
+				activityText = activityText.replace("{online_player_count}", String.valueOf(onlinePlayerCount))
+						.replace("{max_player_count}", String.valueOf(maxPlayerCount));
+
+				jda.getPresence().setActivity(Activity.playing(activityText));
 			}
-
-			if (enableActivity) {
-				JsonNode customMessages = I18nManager.getCustomMessages();
-				if (customMessages != null) {
-					String activityText;
-					if (onlineServerCount == 0) {
-						activityText = customMessages.path("activity").path("all_servers_offline").asText();
-					} else {
-						activityText = customMessages.path("activity").path("at_least_one_server_online").asText();
-					}
-
-					activityText = activityText.replace("{online_player_count}", String.valueOf(onlinePlayerCount))
-							.replace("{max_player_count}", String.valueOf(maxPlayerCount));
-
-					jda.getPresence().setActivity(Activity.playing(activityText));
-				}
-			}
-		});
+		}
 	}
 
 	/**
