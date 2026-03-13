@@ -65,7 +65,7 @@ discord_to_minecraft:
     - text: "{name} "
       bold: false
       color: "{role_color}"
-    - text: "executed /{command} command!"
+    - text: "executed [/{command}] command!"
       bold: false
       color: "gray"
 

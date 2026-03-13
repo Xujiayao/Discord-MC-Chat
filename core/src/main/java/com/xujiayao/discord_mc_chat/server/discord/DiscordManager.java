@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.server.discord;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.vdurmont.emoji.EmojiParser;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.events.DiscordMessagePacket;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
@@ -651,8 +652,9 @@ public class DiscordManager {
 		if (showAttachments) {
 			for (Message.Attachment attachment : event.getMessage().getAttachments()) {
 				String url = attachment.getUrl();
+				String prefix = messageParts.isEmpty() ? "" : " ";
 				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(
-						" [" + attachment.getFileName() + "]", false, "blue");
+						prefix + "[" + attachment.getFileName() + "]", false, "blue");
 				part.underlined = true;
 				part.clickAction = "open_url";
 				part.clickValue = url;
@@ -664,8 +666,9 @@ public class DiscordManager {
 		// Append stickers
 		if (showStickers) {
 			for (StickerItem sticker : event.getMessage().getStickers()) {
+				String prefix = messageParts.isEmpty() ? "" : " ";
 				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(
-						" [Sticker: " + sticker.getName() + "]", false, "yellow");
+						prefix + "[Sticker: " + sticker.getName() + "]", false, "yellow");
 				messageParts.add(part);
 			}
 		}
@@ -868,7 +871,11 @@ public class DiscordManager {
 			// Add plain text before this match
 			if (matcher.start() > lastEnd) {
 				String plainText = rawContent.substring(lastEnd, matcher.start());
-				parts.add(new DiscordMessagePacket.TextPart(plainText, false, "gray"));
+				if (showUnicodeEmojis) {
+					addTextWithUnicodeEmojis(parts, plainText);
+				} else {
+					parts.add(new DiscordMessagePacket.TextPart(plainText, false, "gray"));
+				}
 			}
 
 			if (matcher.group(1) != null) {
@@ -1034,11 +1041,42 @@ public class DiscordManager {
 				parts.add(part);
 			} else if (matcher.group(32) != null && showMarkdown) {
 				// Spoiler ||text|| - show as obfuscated text with hover to reveal
+				// Parse spoiler content for URLs so hyperlinks inside spoilers are clickable
 				String spoilerText = matcher.group(33);
-				DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(spoilerText, false, "dark_gray");
-				part.obfuscated = true;
-				part.hoverText = spoilerText;
-				parts.add(part);
+				java.util.regex.Matcher urlMatcher = java.util.regex.Pattern.compile("(https?://\\S+)").matcher(spoilerText);
+				int spoilerLastEnd = 0;
+				while (urlMatcher.find()) {
+					if (urlMatcher.start() > spoilerLastEnd) {
+						String plainPart = spoilerText.substring(spoilerLastEnd, urlMatcher.start());
+						DiscordMessagePacket.TextPart p = new DiscordMessagePacket.TextPart(plainPart, false, "dark_gray");
+						p.obfuscated = true;
+						p.hoverText = plainPart;
+						parts.add(p);
+					}
+					String url = urlMatcher.group(1);
+					DiscordMessagePacket.TextPart urlPart = new DiscordMessagePacket.TextPart(url, false, "dark_gray");
+					urlPart.obfuscated = true;
+					urlPart.hoverText = url;
+					if (showHyperlinks) {
+						urlPart.clickAction = "open_url";
+						urlPart.clickValue = url;
+					}
+					parts.add(urlPart);
+					spoilerLastEnd = urlMatcher.end();
+				}
+				if (spoilerLastEnd == 0) {
+					// No URLs found, add the whole spoiler as one part
+					DiscordMessagePacket.TextPart part = new DiscordMessagePacket.TextPart(spoilerText, false, "dark_gray");
+					part.obfuscated = true;
+					part.hoverText = spoilerText;
+					parts.add(part);
+				} else if (spoilerLastEnd < spoilerText.length()) {
+					String remaining = spoilerText.substring(spoilerLastEnd);
+					DiscordMessagePacket.TextPart p = new DiscordMessagePacket.TextPart(remaining, false, "dark_gray");
+					p.obfuscated = true;
+					p.hoverText = remaining;
+					parts.add(p);
+				}
 			} else if (matcher.group(34) != null) {
 				// Escaped character \* \_ \~ \` \|
 				parts.add(new DiscordMessagePacket.TextPart(matcher.group(35), false, "gray"));
@@ -1053,10 +1091,48 @@ public class DiscordManager {
 		// Add remaining plain text
 		if (lastEnd < rawContent.length()) {
 			String remaining = rawContent.substring(lastEnd);
-			parts.add(new DiscordMessagePacket.TextPart(remaining, false, "gray"));
+			if (showUnicodeEmojis) {
+				addTextWithUnicodeEmojis(parts, remaining);
+			} else {
+				parts.add(new DiscordMessagePacket.TextPart(remaining, false, "gray"));
+			}
 		}
 
 		return parts;
+	}
+
+	/**
+	 * Adds text parts to the list, converting Unicode emoji characters to yellow `:shortcode:` format.
+	 * Non-emoji text is added as gray plain text.
+	 * <p>
+	 * Uses emoji-java to convert Unicode emojis to their Discord alias names,
+	 * then splits the result to style emoji shortcodes in yellow.
+	 *
+	 * @param parts The list to add parts to
+	 * @param text  The text potentially containing Unicode emojis
+	 */
+	private static void addTextWithUnicodeEmojis(List<DiscordMessagePacket.TextPart> parts, String text) {
+		// Convert Unicode emojis to :alias: format
+		String converted = EmojiParser.parseToAliases(text);
+		if (converted.equals(text)) {
+			// No emojis found, add as plain text
+			parts.add(new DiscordMessagePacket.TextPart(text, false, "gray"));
+			return;
+		}
+
+		// Split the converted text on emoji shortcode patterns to style them differently
+		java.util.regex.Matcher emojiMatcher = java.util.regex.Pattern.compile("(:\\w+:)").matcher(converted);
+		int lastEnd = 0;
+		while (emojiMatcher.find()) {
+			if (emojiMatcher.start() > lastEnd) {
+				parts.add(new DiscordMessagePacket.TextPart(converted.substring(lastEnd, emojiMatcher.start()), false, "gray"));
+			}
+			parts.add(new DiscordMessagePacket.TextPart(emojiMatcher.group(1), false, "yellow"));
+			lastEnd = emojiMatcher.end();
+		}
+		if (lastEnd < converted.length()) {
+			parts.add(new DiscordMessagePacket.TextPart(converted.substring(lastEnd), false, "gray"));
+		}
 	}
 
 	/**

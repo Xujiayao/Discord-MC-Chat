@@ -65,7 +65,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 		int opLevel = getOpLevel(event.getMember(), event.getUser());
 		String name = event.getName();
 
-		// Broadcast command execution notification to Minecraft
+		// Broadcast command execution notification to Minecraft (with full command + options)
 		String senderName = event.getMember() != null ? event.getMember().getEffectiveName() : event.getUser().getName();
 		String roleColor = "white";
 		if (event.getMember() != null) {
@@ -74,7 +74,11 @@ public class DiscordEventHandler extends ListenerAdapter {
 				roleColor = String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
 			}
 		}
-		DiscordManager.broadcastCommandExecutionToMinecraft(name, senderName, roleColor);
+		StringBuilder fullCommand = new StringBuilder(name);
+		for (OptionMapping option : event.getOptions()) {
+			fullCommand.append(" ").append(option.getName()).append(": ").append(option.getAsString());
+		}
+		DiscordManager.broadcastCommandExecutionToMinecraft(fullCommand.toString(), senderName, roleColor);
 
 		switch (name) {
 			case "execute" -> {

@@ -23,6 +23,8 @@ dependencies {
     shadow api("com.squareup.okhttp3:okhttp:${okhttp_version}")
 
     shadow api("io.netty:netty-handler:${netty_version}")
+
+    shadow api("com.vdurmont:emoji-java:${emoji_java_version}")
 }
 
 jar {
@@ -58,6 +60,7 @@ shadowJar {
 
     relocate "com.fasterxml", "dmcc_dep.com.fasterxml"
     relocate "com.neovisionaries", "dmcc_dep.com.neovisionaries"
+    relocate "com.vdurmont", "dmcc_dep.com.vdurmont"
     relocate "gnu", "dmcc_dep.gnu"
     relocate "io", "dmcc_dep.io"
     relocate "kotlin", "dmcc_dep.kotlin"
@@ -67,6 +70,7 @@ shadowJar {
     relocate "org.apache", "dmcc_dep.org.apache"
     relocate "org.intellij", "dmcc_dep.org.intellij"
     relocate "org.jetbrains", "dmcc_dep.org.jetbrains"
+    relocate "org.json", "dmcc_dep.org.json"
     relocate "org.slf4j", "dmcc_dep.org.slf4j"
     relocate "org.yaml", "dmcc_dep.org.yaml"
 
