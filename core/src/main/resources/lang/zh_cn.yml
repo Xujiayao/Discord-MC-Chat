@@ -194,6 +194,7 @@ server:
     disconnect_reasons:
       single_server_mode: "DMCC 服务端处于 single_server 模式，拒绝任何额外客户端连接。"
       not_whitelisted: "名称 \"{}\" 不在白名单中。"
+      duplicate_name: "DMCC 客户端名称 \"{}\" 已有一个在线的同名连接。"
       version_mismatch: "{} 版本不匹配。客户端：{}，服务端：{}"
       auth_failed: "验证失败。请检查你的共享密钥。"
     exception_caught: "Netty 捕获到一个异常。"

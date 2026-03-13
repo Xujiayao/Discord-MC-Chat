@@ -162,6 +162,14 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 							return;
 						}
 
+						if (NetworkManager.isClientConnected(p.serverName)) {
+							String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.duplicate_name", p.serverName);
+							LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", p.serverName, reason));
+							ctx.writeAndFlush(new DisconnectPacket("server.network.disconnect_reasons.duplicate_name", p.serverName));
+							ctx.close();
+							return;
+						}
+
 						if (!Constants.VERSION.equals(p.dmccVersion)) {
 							String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.version_mismatch", "DMCC", p.dmccVersion, Constants.VERSION);
 							LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", p.serverName, reason));
