@@ -48,6 +48,7 @@ common:
       color: "gray"
 
 discord_to_minecraft:
+  mentioned: "{name} 提及了你！"
   response:  # 回复其它用户的消息时，原消息的格式
     - text: "    ┌──── "
       bold: true
@@ -62,10 +63,10 @@ discord_to_minecraft:
     - text: "[Discord] "
       bold: true
       color: "blue"
-    - text: "<{name}> "
+    - text: "{name} "
       bold: false
       color: "{role_color}"
-    - text: "执行了 {command} 命令！"
+    - text: "执行了 [{command}] 命令！"
       bold: false
       color: "gray"
 

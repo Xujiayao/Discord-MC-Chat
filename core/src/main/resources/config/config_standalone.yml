@@ -175,10 +175,10 @@ account_linking:
             op_level: 0
           - server: "CMP"
             op_level: 2
-  use_role_colors_in_chat: true
+  # 已隐藏 (2026/03/13)
   discord_mention_notifications:
     enable: true
-    style: "action_bar"  # action_bar, title, or chat
+    style: "title"  # action_bar, title, or chat
   discord_user_avatar_for_webhooks: false
 
 # DMCC 命令权限设置
