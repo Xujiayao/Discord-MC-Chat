@@ -33,7 +33,7 @@ common:
     - text: "[{server}] "
       bold: true
       color: "{server_color}"
-    - text: "<{name}> "
+    - text: "<{effective_name}> "
       bold: false
       color: "{role_color}"
     - text: "{message}"
@@ -48,12 +48,12 @@ common:
       color: "gray"
 
 discord_to_minecraft:
-  mentioned: "{name} mentioned you!"
+  mentioned: "{effective_name} mentioned you!"
   response:  # 回复其它用户的消息时，原消息的格式
     - text: "    ┌──── "
       bold: true
       color: "dark_gray"
-    - text: "<{name}> "
+    - text: "<{effective_name}> "
       bold: false
       color: "{role_color}"
     - text: "{message}"
@@ -63,7 +63,7 @@ discord_to_minecraft:
     - text: "[Discord] "
       bold: true
       color: "blue"
-    - text: "{name} "
+    - text: "{effective_name} "
       bold: false
       color: "{role_color}"
     - text: "executed [{command}] command!"
@@ -90,11 +90,11 @@ minecraft_to_discord:
 
 rich_presence:
   all_servers_offline:
-    playing_title: "{game_name}"
+    playing_title: "Minecraft"
     first_line: "Server offline"
     second_line: ""
   at_least_one_server_online:
-    playing_title: "{game_name} ({online_player_count}/{max_player_count})"
+    playing_title: "Minecraft ({online_player_count}/{max_player_count})"
     standalone:
       first_line: "{online_server_count} server(s) online"
       second_line: "[{online_server_list}]"
