@@ -73,15 +73,35 @@ broadcasts:
 # 消息格式设置
 message_parsing:
   discord_to_minecraft:
-    markdown: true
-    attachments: true
+    markdown:
+      bold: true         # **bold**
+      italic: true       # *italic* / _italic_
+      underline: true    # __underline__
+      strikethrough: true # ~~strikethrough~~
+      code: true         # `inline code`
+      code_block: true   # ```code block```
+      spoiler: true      # ||spoiler||
+      block_quote: true  # > block quote
+      heading: true      # # heading
+    attachments:
+      images: true
+      files: true
     stickers: true
     unicode_emojis: true
     custom_emojis: true
-    mentions: true
+    mentions:
+      users: true
+      roles: true
+      channels: true
+    reply: true
     hyperlinks: true
   minecraft_to_discord:
-    markdown: true
+    markdown:
+      bold: true
+      italic: true
+      underline: true
+      strikethrough: true
+      obfuscated: true   # Converts MC obfuscated text to Discord spoiler
     unicode_emojis: true
     custom_emojis: true
     mentions: true
