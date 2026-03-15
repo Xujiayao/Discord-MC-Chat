@@ -161,6 +161,7 @@ DMCC 在 Client 端提供独立的 `whitelist` 代理命令（默认所需权限
 | `shutdown`               | `4`      | ❌                          | ❌                    | ✅                 | 仅用于安全关闭 Standalone 中央进程。                      |
 | `stats <type> <stat>`    | `-1`     | ✅                          | ✅                    | ❌                 | 查看计分板与统计数据。支持基于权限过滤的动态自动补全。                   |
 | `unlink`                 | `0`      | ✅                          | ✅                    | ✅                 | 解绑当前 MC 玩家 / 当前 Discord 用户的所有关联玩家。            |
+| `update`                 | `4`      | ❌                          | ✅                    | ✅                 | 手动检查 DMCC 更新。                                 |
 | `whitelist <player>`     | `0`      | ✅                          | ✅                    | ❌                 | DMCC 专用的低权限白名单命令代理。                           |
 
 > v3 移除了 v2 提供的 `/stop` 快捷指令。若需在 Discord 端关闭 Minecraft 服务器，拥有 4 级权限的管理员请直接使用

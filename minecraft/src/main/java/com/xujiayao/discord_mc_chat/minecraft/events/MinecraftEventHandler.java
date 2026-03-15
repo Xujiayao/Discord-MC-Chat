@@ -740,13 +740,20 @@ public class MinecraftEventHandler {
 	}
 
 	/**
-	 * Sends mention notifications (action bar messages) to Minecraft players
+	 * Sends mention notifications to Minecraft players
 	 * whose linked Discord accounts were mentioned in the Discord message.
+	 * <p>
+	 * The notification style is controlled by
+	 * {@code account_linking.discord_mention_notifications.style} (action_bar, title, or chat).
 	 *
 	 * @param packet The Discord event packet containing mention data.
 	 */
 	private static void handleMentionNotifications(DiscordEventPacket packet) {
 		if (serverInstance == null || packet.mentionedMinecraftUuids == null) return;
+
+		// Check if mention notifications are enabled
+		Boolean mentionEnabled = ConfigManager.getBoolean("account_linking.discord_mention_notifications.enable");
+		if (mentionEnabled == null || !mentionEnabled) return;
 
 		String mentionTemplate = I18nManager.getCustomMessages()
 				.path("discord_to_minecraft").path("mentioned").asText("");
@@ -755,12 +762,22 @@ public class MinecraftEventHandler {
 		String mentionText = mentionTemplate.replace("{effective_name}", packet.effectiveName);
 		Component mentionComponent = Component.literal(mentionText).withStyle(style -> style.withColor(ChatFormatting.GOLD));
 
+		String notificationStyle = ConfigManager.getString("account_linking.discord_mention_notifications.style", "action_bar");
+
 		for (String uuidStr : packet.mentionedMinecraftUuids) {
 			try {
 				UUID uuid = UUID.fromString(uuidStr);
 				ServerPlayer player = serverInstance.getPlayerList().getPlayer(uuid);
 				if (player != null) {
-					player.displayClientMessage(mentionComponent, true);
+					switch (notificationStyle) {
+						case "title" -> {
+							// Send as title text (displayed prominently in the center of the screen)
+							player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket(mentionComponent));
+							player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket(10, 70, 20));
+						}
+						case "chat" -> player.sendSystemMessage(mentionComponent);
+						default -> player.displayClientMessage(mentionComponent, true); // action_bar
+					}
 				}
 			} catch (Exception ignored) {
 			}
