@@ -192,6 +192,67 @@ public class MinecraftEventHandler {
 			}
 		});
 
+		EventManager.register(MinecraftEvents.PlayerChat.class, event -> {
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.serverPlayer().getName().getString(),
+					"display_name", event.serverPlayer().getDisplayName().getString(),
+					"message", event.playerChatMessage().signedContent()
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_CHAT, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.PlayerCommand.class, event -> {
+			String command = event.command();
+
+			// Filter excluded commands using regex patterns from config
+			if (isCommandExcluded(command)) {
+				return;
+			}
+
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.serverPlayer().getName().getString(),
+					"display_name", event.serverPlayer().getDisplayName().getString(),
+					"command", command
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_COMMAND, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceSay.class, event -> {
+			String sourceName = event.commandContext().getSource().getTextName();
+			String message = event.playerChatMessage().signedContent();
+
+			Map<String, String> placeholders = Map.of(
+					"user_name", sourceName,
+					"display_name", sourceName,
+					"message", message
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_SAY, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceTellRaw.class, event -> {
+			try {
+				String sourceName = event.commandContext().getSource().getTextName();
+
+				// Extract the JSON message from the command arguments
+				String message = TranslationManager.get(
+						net.minecraft.network.chat.ComponentUtils.updateForEntity(
+								event.commandContext().getSource(),
+								net.minecraft.commands.arguments.ComponentArgument.getResolvedComponent(event.commandContext(), "message"),
+								null,
+								0
+						)
+				);
+
+				Map<String, String> placeholders = Map.of(
+						"user_name", sourceName,
+						"display_name", sourceName,
+						"message", message
+				);
+				NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_TELL_RAW, placeholders));
+			} catch (Exception ignored) {
+			}
+		});
+
 		EventManager.register(MinecraftEvents.CommandRegister.class, event -> {
 			// Register Minecraft /dmcc commands
 			MinecraftCommands.register(event.dispatcher());
@@ -466,6 +527,100 @@ public class MinecraftEventHandler {
 				}
 			});
 		});
+
+		// ===== Core Events: Discord Chat Received =====
+
+		EventManager.register(CoreEvents.DiscordChatReceivedEvent.class, event -> {
+			if (serverInstance == null) return;
+
+			serverInstance.execute(() -> {
+				try {
+					// Build the main message component from styled text segments
+					Component mainMessage = buildComponentFromSegments(event.segments());
+
+					// If there are response (reply) segments, render them first
+					if (event.responseSegments() != null && !event.responseSegments().isEmpty()) {
+						Component responseMessage = buildComponentFromSegments(event.responseSegments());
+						serverInstance.getPlayerList().broadcastSystemMessage(responseMessage, false);
+					}
+
+					// Broadcast the main message to all players
+					serverInstance.getPlayerList().broadcastSystemMessage(mainMessage, false);
+
+					// Handle mention notifications
+					if (event.mentionNotification() != null && !event.mentionNotification().isEmpty()
+							&& event.mentionedPlayerUuids() != null && !event.mentionedPlayerUuids().isEmpty()) {
+						Component notification = Component.literal(event.mentionNotification())
+								.withStyle(style -> style.withColor(ChatFormatting.GOLD));
+
+						for (String uuidStr : event.mentionedPlayerUuids()) {
+							try {
+								UUID uuid = UUID.fromString(uuidStr);
+								ServerPlayer player = serverInstance.getPlayerList().getPlayer(uuid);
+								if (player != null) {
+									player.sendSystemMessage(notification);
+								}
+							} catch (Exception ignored) {
+							}
+						}
+					}
+				} catch (Exception ignored) {
+				}
+			});
+		});
+	}
+
+	/**
+	 * Checks whether a command matches any of the excluded command patterns from config.
+	 *
+	 * @param command The command string (without leading slash).
+	 * @return true if the command should be excluded, false otherwise.
+	 */
+	private static boolean isCommandExcluded(String command) {
+		String commandWithSlash = command.startsWith("/") ? command : "/" + command;
+		try {
+			com.fasterxml.jackson.databind.JsonNode excludedNode = ConfigManager.getConfigNode("excluded_commands");
+			if (excludedNode != null && excludedNode.isArray()) {
+				for (com.fasterxml.jackson.databind.JsonNode pattern : excludedNode) {
+					String regex = pattern.asText();
+					if (commandWithSlash.matches(regex)) {
+						return true;
+					}
+				}
+			}
+		} catch (Exception ignored) {
+		}
+		return false;
+	}
+
+	/**
+	 * Builds a Minecraft Component from a list of styled text segments.
+	 *
+	 * @param segments The list of text segments.
+	 * @return The composed Component.
+	 */
+	private static Component buildComponentFromSegments(java.util.List<com.xujiayao.discord_mc_chat.network.packets.events.DiscordEventPacket.TextSegment> segments) {
+		if (segments == null || segments.isEmpty()) {
+			return Component.empty();
+		}
+
+		Component result = Component.empty();
+		for (com.xujiayao.discord_mc_chat.network.packets.events.DiscordEventPacket.TextSegment seg : segments) {
+			Component part = Component.literal(seg.text).withStyle(style -> {
+				if (seg.bold) {
+					style = style.withBold(true);
+				}
+				if (seg.color != null && !seg.color.isEmpty()) {
+					net.minecraft.network.chat.TextColor textColor = net.minecraft.network.chat.TextColor.parseColor(seg.color).result().orElse(null);
+					if (textColor != null) {
+						style = style.withColor(textColor);
+					}
+				}
+				return style;
+			});
+			result = result.copy().append(part);
+		}
+		return result;
 	}
 
 	private static List<String> getSuggestionsForInput(String input, CommandSourceStack source) throws Exception {

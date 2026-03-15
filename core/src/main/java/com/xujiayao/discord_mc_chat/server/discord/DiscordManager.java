@@ -526,6 +526,98 @@ public class DiscordManager {
 				} else {
 					sendBotMessage(channelIdentifier, message);
 				}
+			} else {
+				// Template-based message (e.g. player chat, command, /say, /tellraw)
+				String templateName = messageNode.asText();
+
+				// Find the template definition from custom_messages
+				JsonNode templatesNode = customMessages.path("templates");
+				JsonNode templateDef = null;
+				if (templatesNode.isArray()) {
+					for (JsonNode t : templatesNode) {
+						if (templateName.equals(t.path("name").asText())) {
+							templateDef = t;
+							break;
+						}
+					}
+				}
+
+				if (templateDef == null) {
+					// Template not found, treat as plain text
+					LOGGER.warn("Template '{}' not found in custom_messages", templateName);
+					return;
+				}
+
+				String mode = ModeManager.getMode();
+				boolean useWebhook = "standalone".equals(mode);
+				boolean useFakeUserStyle = ConfigManager.getBoolean("discord.webhook.players.enable_fake_user_style");
+
+				if (useWebhook && useFakeUserStyle) {
+					// Use fake-user-style webhook: player avatar + display name
+					JsonNode webhookNode = templateDef.path("with_webhook").path(mode);
+					String username = webhookNode.path("username").asText("{display_name}");
+					String content = webhookNode.path("content").asText("{message}");
+
+					// Replace placeholders
+					username = username.replace("{server}", clientName);
+					content = content.replace("{server}", clientName);
+					for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+						username = username.replace("{" + entry.getKey() + "}", entry.getValue());
+						content = content.replace("{" + entry.getKey() + "}", entry.getValue());
+					}
+
+					// Build avatar URL from config using player name
+					String avatarUrlTemplate = ConfigManager.getString("discord.webhook.players.avatar_url");
+					String avatarUrl = avatarUrlTemplate;
+					for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+						avatarUrl = avatarUrl.replace("{" + entry.getKey() + "}", entry.getValue());
+					}
+
+					sendWebhookMessage(channel, username, avatarUrl, content);
+				} else if (useWebhook) {
+					// Webhook without fake-user style: use server name + avatar
+					JsonNode noWebhookNode = templateDef.path("without_webhook").path(mode);
+					String message = noWebhookNode.asText("");
+
+					message = message.replace("{server}", clientName);
+					for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+						message = message.replace("{" + entry.getKey() + "}", entry.getValue());
+					}
+
+					String avatarUrl = getClientAvatarUrl(clientName);
+					sendWebhookMessage(channel, clientName, avatarUrl, message);
+				} else {
+					// Bot message (single_server mode)
+					String modeKey = "single_server";
+					JsonNode noWebhookNode = templateDef.path("without_webhook").path(modeKey);
+					String message = noWebhookNode.asText("");
+
+					for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+						message = message.replace("{" + entry.getKey() + "}", entry.getValue());
+					}
+
+					if (useFakeUserStyle) {
+						// Single-server with fake-user webhook
+						JsonNode webhookNode = templateDef.path("with_webhook").path(modeKey);
+						String username = webhookNode.path("username").asText("{display_name}");
+						String content = webhookNode.path("content").asText("{message}");
+
+						for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+							username = username.replace("{" + entry.getKey() + "}", entry.getValue());
+							content = content.replace("{" + entry.getKey() + "}", entry.getValue());
+						}
+
+						String avatarUrlTemplate = ConfigManager.getString("discord.webhook.players.avatar_url");
+						String avatarUrl = avatarUrlTemplate;
+						for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+							avatarUrl = avatarUrl.replace("{" + entry.getKey() + "}", entry.getValue());
+						}
+
+						sendWebhookMessage(channel, username, avatarUrl, content);
+					} else {
+						sendBotMessage(channelIdentifier, message);
+					}
+				}
 			}
 		} catch (InsufficientPermissionException e) {
 			String reason = I18nManager.getDmccTranslation("discord.manager.insufficient_permission", channel.getName(), e.getPermission().getName());

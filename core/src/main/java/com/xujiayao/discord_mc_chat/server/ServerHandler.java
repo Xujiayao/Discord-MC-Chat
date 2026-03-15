@@ -20,6 +20,7 @@ import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkRequestPac
 import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkRequestPacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.DiscordEventPacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPingPacket;
@@ -36,6 +37,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
+
+import java.util.Map;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
@@ -86,26 +89,50 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 						// Server events
 						case SERVER_STARTED -> {
 							DiscordManager.clientBroadcast(clientName, "server.started", "server.start", false, p.placeholders);
+							forwardCrossServerEvent(clientName, p.placeholders);
 
 							// After a Minecraft server starts, perform OP level sync if enabled
 							OpSyncManager.syncAll();
 							DiscordManager.updateBotPresence();
 						}
-						case SERVER_STOPPING ->
-								DiscordManager.clientBroadcast(clientName, "server.stopped", "server.stop", false, p.placeholders);
+						case SERVER_STOPPING -> {
+							DiscordManager.clientBroadcast(clientName, "server.stopped", "server.stop", false, p.placeholders);
+							forwardCrossServerEvent(clientName, p.placeholders);
+						}
 						// Player events
 						case PLAYER_JOIN -> {
 							DiscordManager.clientBroadcast(clientName, "player.join", "player.join", false, p.placeholders);
+							forwardCrossServerEvent(clientName, p.placeholders);
 							DiscordManager.updateBotPresence();
 						}
 						case PLAYER_QUIT -> {
 							DiscordManager.clientBroadcast(clientName, "player.quit", "player.quit", false, p.placeholders);
+							forwardCrossServerEvent(clientName, p.placeholders);
 							DiscordManager.updateBotPresence();
 						}
-						case PLAYER_DIE ->
-								DiscordManager.clientBroadcast(clientName, "player.die", "player.die", false, p.placeholders);
-						case PLAYER_ADVANCEMENT ->
-								DiscordManager.clientBroadcast(clientName, "player.advancement", "player.advancement." + p.placeholders.get("type"), false, p.placeholders);
+						case PLAYER_DIE -> {
+							DiscordManager.clientBroadcast(clientName, "player.die", "player.die", false, p.placeholders);
+							forwardCrossServerEvent(clientName, p.placeholders);
+						}
+						case PLAYER_ADVANCEMENT -> {
+							DiscordManager.clientBroadcast(clientName, "player.advancement", "player.advancement." + p.placeholders.get("type"), false, p.placeholders);
+							forwardCrossServerEvent(clientName, p.placeholders);
+						}
+						// Player/source chat events (template-based, with cross-server forwarding)
+						case PLAYER_CHAT -> {
+							DiscordManager.clientBroadcast(clientName, "player.chat", "player.chat", true, p.placeholders);
+							forwardCrossServerChat(clientName, p.placeholders);
+						}
+						case PLAYER_COMMAND ->
+								DiscordManager.clientBroadcast(clientName, "player.command", "player.command", true, p.placeholders);
+						case SOURCE_SAY -> {
+							DiscordManager.clientBroadcast(clientName, "source.say", "source.say", true, p.placeholders);
+							forwardCrossServerEvent(clientName, p.placeholders);
+						}
+						case SOURCE_TELL_RAW -> {
+							DiscordManager.clientBroadcast(clientName, "source.tell_raw", "source.tell_raw", true, p.placeholders);
+							forwardCrossServerEvent(clientName, p.placeholders);
+						}
 						// Unhandled events
 						default ->
 								LOGGER.warn("Received MinecraftEventPacket from authenticated client {}: type={}, placeholders={}", clientName, p.type, p.placeholders);
@@ -273,5 +300,115 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	private String getMinecraftVersion(String serverName) {
 		JsonNode config = findServerConfig(serverName);
 		return config != null ? config.path("minecraft_version").asText() : "";
+	}
+
+	/**
+	 * Gets the color configured for a specific server.
+	 *
+	 * @param serverName The server name to look up.
+	 * @return The color string, or "white" if not configured.
+	 */
+	private String getServerColor(String serverName) {
+		JsonNode config = findServerConfig(serverName);
+		if (config != null) {
+			String color = config.path("color").asText();
+			if (color != null && !color.isBlank()) {
+				return color;
+			}
+		}
+		return "white";
+	}
+
+	/**
+	 * Forwards a player chat event to all other connected Minecraft clients for cross-server chat.
+	 * Builds styled text segments from the "common.chat" custom_messages template.
+	 *
+	 * @param sourceClient The name of the client that sent the event.
+	 * @param placeholders The event placeholders.
+	 */
+	private void forwardCrossServerChat(String sourceClient, Map<String, String> placeholders) {
+		if (!"standalone".equals(ModeManager.getMode())) return;
+
+		try {
+			JsonNode customMessages = I18nManager.getCustomMessages();
+			if (customMessages == null) return;
+
+			String serverColor = getServerColor(sourceClient);
+
+			// Build styled text segments from common.chat template
+			java.util.List<DiscordEventPacket.TextSegment> segments =
+					buildSegmentsFromTemplate(customMessages.path("common").path("chat"), sourceClient, serverColor, placeholders);
+
+			if (segments.isEmpty()) return;
+
+			DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.CROSS_SERVER_CHAT, segments);
+			NetworkManager.broadcastToClientsExcept(packet, sourceClient);
+		} catch (Exception e) {
+			LOGGER.warn("Failed to forward cross-server chat from {}: {}", sourceClient, e.getMessage());
+		}
+	}
+
+	/**
+	 * Forwards a non-chat event (e.g. join, quit, die, say, tellraw) to all other connected Minecraft clients.
+	 * Builds styled text segments from the "common.others" custom_messages template.
+	 *
+	 * @param sourceClient The name of the client that sent the event.
+	 * @param placeholders The event placeholders.
+	 */
+	private void forwardCrossServerEvent(String sourceClient, Map<String, String> placeholders) {
+		if (!"standalone".equals(ModeManager.getMode())) return;
+
+		try {
+			JsonNode customMessages = I18nManager.getCustomMessages();
+			if (customMessages == null) return;
+
+			String serverColor = getServerColor(sourceClient);
+
+			// Build styled text segments from common.others template
+			java.util.List<DiscordEventPacket.TextSegment> segments =
+					buildSegmentsFromTemplate(customMessages.path("common").path("others"), sourceClient, serverColor, placeholders);
+
+			if (segments.isEmpty()) return;
+
+			DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.CROSS_SERVER_EVENT, segments);
+			NetworkManager.broadcastToClientsExcept(packet, sourceClient);
+		} catch (Exception e) {
+			LOGGER.warn("Failed to forward cross-server event from {}: {}", sourceClient, e.getMessage());
+		}
+	}
+
+	/**
+	 * Builds styled text segments from a custom_messages template node (an array of {text, bold, color} objects).
+	 * Replaces placeholders in text and color fields.
+	 *
+	 * @param templateNode The JSON array node from custom_messages.
+	 * @param serverName   The server name for the {server} placeholder.
+	 * @param serverColor  The server color for the {server_color} placeholder.
+	 * @param placeholders The event placeholders map.
+	 * @return A list of TextSegment objects.
+	 */
+	private java.util.List<DiscordEventPacket.TextSegment> buildSegmentsFromTemplate(
+			JsonNode templateNode, String serverName, String serverColor, Map<String, String> placeholders) {
+		java.util.List<DiscordEventPacket.TextSegment> segments = new java.util.ArrayList<>();
+		if (templateNode == null || !templateNode.isArray()) return segments;
+
+		for (JsonNode segNode : templateNode) {
+			String text = segNode.path("text").asText("");
+			boolean bold = segNode.path("bold").asBoolean(false);
+			String color = segNode.path("color").asText("white");
+
+			// Replace standard placeholders
+			text = text.replace("{server}", serverName);
+			color = color.replace("{server_color}", serverColor);
+
+			// Replace event-specific placeholders
+			for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+				text = text.replace("{" + entry.getKey() + "}", entry.getValue());
+				color = color.replace("{" + entry.getKey() + "}", entry.getValue());
+			}
+
+			segments.add(new DiscordEventPacket.TextSegment(text, bold, color));
+		}
+		return segments;
 	}
 }

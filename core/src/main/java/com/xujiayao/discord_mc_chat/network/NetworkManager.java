@@ -108,6 +108,21 @@ public class NetworkManager {
 	}
 
 	/**
+	 * Broadcasts a packet to all connected clients except the specified one.
+	 * Used for cross-server event forwarding to avoid sending events back to the origin.
+	 *
+	 * @param packet            The packet to send
+	 * @param excludeClientName The client name to exclude from the broadcast
+	 */
+	public static void broadcastToClientsExcept(Packet packet, String excludeClientName) {
+		clientChannels.forEach((channel, name) -> {
+			if (!name.equals(excludeClientName)) {
+				channel.writeAndFlush(packet);
+			}
+		});
+	}
+
+	/**
 	 * Adds a client channel to the managed list.
 	 *
 	 * @param channel The client channel

@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.utils.events;
 
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
+import com.xujiayao.discord_mc_chat.network.packets.events.DiscordEventPacket;
 
 import java.util.List;
 import java.util.Map;
@@ -132,6 +133,28 @@ public class CoreEvents {
 	 */
 	public record OpSyncEvent(
 			Map<String, Integer> opLevels
+	) {
+	}
+
+	/**
+	 * Posted when a Discord chat message or cross-server event is received from the DMCC Server.
+	 * <p>
+	 * The handler should build Minecraft Components from the styled text segments
+	 * and broadcast to all online players. If mention data is present, the handler
+	 * should also display notification to the mentioned players.
+	 *
+	 * @param type                 The event type (DISCORD_CHAT, CROSS_SERVER_CHAT, CROSS_SERVER_EVENT).
+	 * @param segments             The main styled text segments to render in chat.
+	 * @param responseSegments     Optional reply context segments (may be null or empty).
+	 * @param mentionNotification  Optional mention notification text (may be null).
+	 * @param mentionedPlayerUuids List of mentioned player UUIDs (may be null or empty).
+	 */
+	public record DiscordChatReceivedEvent(
+			DiscordEventPacket.EventType type,
+			List<DiscordEventPacket.TextSegment> segments,
+			List<DiscordEventPacket.TextSegment> responseSegments,
+			String mentionNotification,
+			List<String> mentionedPlayerUuids
 	) {
 	}
 }
