@@ -37,8 +37,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Handles Discord JDA events.
