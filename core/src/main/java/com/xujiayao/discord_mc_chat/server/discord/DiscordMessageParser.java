@@ -264,11 +264,9 @@ public class DiscordMessageParser {
 				}
 			}
 
-			// Convert emoji to :name: format
+			// Convert emoji to :name: format, preferring Discord aliases
 			var emoji = result.getEmoji();
-			String shortcode = emoji.getDiscordAliases().isEmpty()
-					? emoji.getAllAliases().isEmpty() ? emoji.getEmoji() : emoji.getAllAliases().getFirst()
-					: emoji.getDiscordAliases().getFirst();
+			String shortcode = getEmojiShortcode(emoji);
 			// Ensure the shortcode has colons
 			if (!shortcode.startsWith(":")) {
 				shortcode = ":" + shortcode + ":";
@@ -289,6 +287,24 @@ public class DiscordMessageParser {
 		}
 
 		return segments;
+	}
+
+	/**
+	 * Gets a human-readable shortcode for a Unicode emoji.
+	 * Prefers Discord aliases (e.g. {@code :blush:}), falls back to general aliases,
+	 * and finally to the raw Unicode character if no alias is available.
+	 *
+	 * @param emoji The JEmoji Emoji object.
+	 * @return The shortcode string (with or without colons).
+	 */
+	private static String getEmojiShortcode(net.fellbaum.jemoji.Emoji emoji) {
+		if (!emoji.getDiscordAliases().isEmpty()) {
+			return emoji.getDiscordAliases().getFirst();
+		}
+		if (!emoji.getAllAliases().isEmpty()) {
+			return emoji.getAllAliases().getFirst();
+		}
+		return emoji.getEmoji();
 	}
 
 	/**
