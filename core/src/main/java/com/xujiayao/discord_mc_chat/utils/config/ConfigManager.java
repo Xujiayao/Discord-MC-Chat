@@ -198,11 +198,20 @@ public class ConfigManager {
 
 	/**
 	 * Gets a configuration value as a boolean.
+	 * Returns null if the node is not a boolean value node (e.g. it's an object or array node).
 	 *
 	 * @param path The path to the configuration value
-	 * @return The boolean value at the specified path
+	 * @return The boolean value at the specified path, or null if not found or not a boolean
 	 */
 	public static Boolean getBoolean(String path) {
-		return getValue(path, JsonNode::asBoolean);
+		JsonNode node = getConfigNode(path);
+		if (node == null || node.isMissingNode() || node.isNull()) {
+			return null;
+		}
+		// Only return boolean if the node is actually a boolean value, not an object/array
+		if (node.isBoolean()) {
+			return node.asBoolean();
+		}
+		return null;
 	}
 }

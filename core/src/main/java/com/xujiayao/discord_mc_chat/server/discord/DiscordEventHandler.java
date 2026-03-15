@@ -89,6 +89,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 				String at = event.getOption("at", OptionMapping::getAsString);
 				String command = event.getOption("command", OptionMapping::getAsString);
 				CommandManager.execute(new JdaCommandSender(event, opLevel), name, at, command);
+				broadcastDiscordCommandToMinecraft(event.getMember(), event.getUser(), "/" + name + " " + command);
 			}
 			case "console" -> {
 				String at = event.getOption("at", OptionMapping::getAsString);
@@ -100,6 +101,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 					// single_server mode: /console <command>
 					CommandManager.execute(new JdaCommandSender(event, opLevel), name, command);
 				}
+				broadcastDiscordCommandToMinecraft(event.getMember(), event.getUser(), "/" + name + " " + command);
 			}
 			case "log" -> {
 				String file = event.getOption("file", OptionMapping::getAsString);
@@ -323,7 +325,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 			return;
 		}
 
-		if (!ConfigManager.getBoolean("broadcasts.discord_to_minecraft.chat")) {
+		if (!Boolean.TRUE.equals(ConfigManager.getBoolean("broadcasts.discord_to_minecraft.chat"))) {
 			return;
 		}
 
@@ -357,7 +359,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 			// Check for reply/referenced message
 			List<DiscordEventPacket.TextSegment> responseSegments = null;
 			Message referencedMessage = message.getReferencedMessage();
-			if (referencedMessage != null) {
+			if (referencedMessage != null && getParsingBoolean("message_parsing.discord_to_minecraft.reply", null)) {
 				String refEffectiveName;
 				String refRoleColor;
 				Member refMember = referencedMessage.getMember();
@@ -609,5 +611,38 @@ public class DiscordEventHandler extends ListenerAdapter {
 			segments.add(new DiscordEventPacket.TextSegment(text, bold, color));
 		}
 		return segments;
+	}
+
+	/**
+	 * Broadcasts a Discord command execution notification to all Minecraft clients.
+	 * Uses the "discord_to_minecraft.command" custom_messages template.
+	 *
+	 * @param member  The Discord member who executed the command (may be null).
+	 * @param user    The Discord user who executed the command.
+	 * @param command The command string that was executed.
+	 */
+	private void broadcastDiscordCommandToMinecraft(Member member, User user, String command) {
+		if (!Boolean.TRUE.equals(ConfigManager.getBoolean("broadcasts.discord_to_minecraft.command"))) {
+			return;
+		}
+
+		try {
+			JsonNode customMessages = I18nManager.getCustomMessages();
+			if (customMessages == null) return;
+
+			String effectiveName = member != null ? member.getEffectiveName() : user.getName();
+			String roleColor = getRoleColorString(member);
+
+			JsonNode commandTemplate = customMessages.path("discord_to_minecraft").path("command");
+			List<DiscordEventPacket.TextSegment> segments = buildDiscordSegments(commandTemplate,
+					Map.of("effective_name", effectiveName, "role_color", roleColor, "command", command));
+
+			if (!segments.isEmpty()) {
+				DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.DISCORD_CHAT, segments);
+				NetworkManager.broadcastToClients(packet);
+			}
+		} catch (Exception e) {
+			LOGGER.error("Failed to broadcast Discord command to Minecraft: {}", e.getMessage(), e);
+		}
 	}
 }
