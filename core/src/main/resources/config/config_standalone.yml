@@ -74,12 +74,17 @@ broadcasts:
 message_parsing:
   discord_to_minecraft:
     markdown: true
-    attachments: true
-    stickers: true
+    user_mentions: true
+    role_mentions: true
+    channel_mentions: true
     unicode_emojis: true
     custom_emojis: true
-    mentions: true
+    attachments: true
+    embeds: true
+    stickers: true
+    components: true
     hyperlinks: true
+    reply_context: true
   minecraft_to_discord:
     markdown: true
     unicode_emojis: true

@@ -23,6 +23,8 @@ dependencies {
     shadow api("com.squareup.okhttp3:okhttp:${okhttp_version}")
 
     shadow api("io.netty:netty-handler:${netty_version}")
+
+    shadow api("net.fellbaum:jemoji:${jemoji_version}")
 }
 
 jar {
@@ -68,6 +70,7 @@ shadowJar {
     relocate "org.intellij", "dmcc_dep.org.intellij"
     relocate "org.jetbrains", "dmcc_dep.org.jetbrains"
     relocate "org.slf4j", "dmcc_dep.org.slf4j"
+    relocate "net.fellbaum", "dmcc_dep.net.fellbaum"
     relocate "org.yaml", "dmcc_dep.org.yaml"
 
     from "../LICENSE"

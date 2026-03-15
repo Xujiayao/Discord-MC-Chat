@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.utils.events;
 
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
+import com.xujiayao.discord_mc_chat.network.packets.events.DiscordEventPacket;
 
 import java.util.List;
 import java.util.Map;
@@ -132,6 +133,33 @@ public class CoreEvents {
 	 */
 	public record OpSyncEvent(
 			Map<String, Integer> opLevels
+	) {
+	}
+
+	/**
+	 * Posted when a Discord chat message should be displayed in Minecraft.
+	 * <p>
+	 * The handler should build a rich Minecraft {@code Component} from the packet's
+	 * pre-parsed text segments and broadcast it to all online players.
+	 * If mention notifications are enabled, the handler should also notify mentioned players.
+	 *
+	 * @param packet The Discord event packet containing the parsed message data.
+	 */
+	public record DiscordChatEvent(
+			DiscordEventPacket packet
+	) {
+	}
+
+	/**
+	 * Posted when a Discord slash command execution should be announced in Minecraft.
+	 * <p>
+	 * The handler should build a Minecraft {@code Component} using the
+	 * {@code discord_to_minecraft.command} template and broadcast it to all online players.
+	 *
+	 * @param packet The Discord event packet containing the command notification data.
+	 */
+	public record DiscordCommandNotificationEvent(
+			DiscordEventPacket packet
 	) {
 	}
 }

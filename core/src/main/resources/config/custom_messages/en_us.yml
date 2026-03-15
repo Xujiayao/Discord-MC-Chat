@@ -48,6 +48,16 @@ common:
       color: "gray"
 
 discord_to_minecraft:
+  chat:
+    - text: "[Discord] "
+      bold: true
+      color: "blue"
+    - text: "<{effective_name}> "
+      bold: false
+      color: "{role_color}"
+    - text: "{message}"
+      bold: false
+      color: "gray"
   mentioned: "{effective_name} mentioned you!"
   response:  # 回复其它用户的消息时，原消息的格式
     - text: "    ┌──── "

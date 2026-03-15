@@ -205,4 +205,16 @@ public class ConfigManager {
 	public static Boolean getBoolean(String path) {
 		return getValue(path, JsonNode::asBoolean);
 	}
+
+	/**
+	 * Gets a configuration value as a boolean, with a default value if not found.
+	 *
+	 * @param path         The path to the configuration value
+	 * @param defaultValue The default value to return if the path is not found
+	 * @return The boolean value at the specified path
+	 */
+	public static boolean getBoolean(String path, boolean defaultValue) {
+		Boolean value = getValue(path, JsonNode::asBoolean);
+		return value == null ? defaultValue : value;
+	}
 }

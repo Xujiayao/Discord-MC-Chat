@@ -1,12 +1,21 @@
 package com.xujiayao.discord_mc_chat.server.discord;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
+import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
+import com.xujiayao.discord_mc_chat.network.packets.commands.console.ConsoleRequestPacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.DiscordEventPacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.DiscordEventPacket.TextSegment;
+import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.utils.LogFileUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
+import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -19,7 +28,10 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
 /**
  * Handles Discord JDA events.
@@ -64,6 +76,15 @@ public class DiscordEventHandler extends ListenerAdapter {
 
 		int opLevel = getOpLevel(event.getMember(), event.getUser());
 		String name = event.getName();
+
+		// Broadcast command notification to Minecraft if enabled
+		Boolean broadcastCommand = ConfigManager.getBoolean("broadcasts.discord_to_minecraft.command");
+		if (broadcastCommand != null && broadcastCommand) {
+			String effectiveName = event.getMember() != null ? event.getMember().getEffectiveName() : event.getUser().getName();
+			String roleColor = DiscordMessageParser.getMemberRoleColor(event.getMember());
+			DiscordEventPacket commandPacket = new DiscordEventPacket(effectiveName, roleColor, name);
+			NetworkManager.broadcastToClients(commandPacket);
+		}
 
 		switch (name) {
 			case "execute" -> {
@@ -304,6 +325,196 @@ public class DiscordEventHandler extends ListenerAdapter {
 			return;
 		}
 
-		// TODO: Handle incoming Discord messages and forward to Minecraft
+		// Ignore messages from non-guild channels (e.g. DMs)
+		if (!event.isFromGuild()) {
+			return;
+		}
+
+		String channelName = event.getChannel().getName();
+
+		// Check if this is a console channel message
+		if (isConsoleChannel(channelName)) {
+			handleConsoleChannelMessage(event);
+			return;
+		}
+
+		// Check if this is a chat channel message
+		if (isChatChannel(channelName)) {
+			handleChatChannelMessage(event);
+		}
+	}
+
+	/**
+	 * Handles a message received in a console channel.
+	 * <p>
+	 * If {@code console_forwarding.execute_messages_from_channel} is enabled,
+	 * the message content is dispatched as a Minecraft command to the appropriate client.
+	 *
+	 * @param event The message received event.
+	 */
+	private void handleConsoleChannelMessage(MessageReceivedEvent event) {
+		Boolean executeEnabled = ConfigManager.getBoolean("console_forwarding.execute_messages_from_channel");
+		if (executeEnabled == null || !executeEnabled) {
+			return;
+		}
+
+		String commandLine = event.getMessage().getContentRaw().trim();
+		if (commandLine.isEmpty()) {
+			return;
+		}
+
+		// Strip leading slash if present
+		if (commandLine.startsWith("/")) {
+			commandLine = commandLine.substring(1);
+		}
+
+		int opLevel = getOpLevel(event.getMember(), event.getAuthor());
+		String requestId = UUID.randomUUID().toString();
+
+		String mode = ModeManager.getMode();
+		if ("standalone".equals(mode)) {
+			// Find the target server for this console channel
+			String targetServer = getConsoleChannelServer(event.getChannel().getName());
+			if (targetServer != null) {
+				NetworkManager.sendPacketToClient(
+						new ConsoleRequestPacket(requestId, opLevel, commandLine), targetServer);
+			}
+		} else {
+			// single_server mode: send to the Internal client
+			NetworkManager.broadcastToClients(new ConsoleRequestPacket(requestId, opLevel, commandLine));
+		}
+	}
+
+	/**
+	 * Handles a message received in a chat channel.
+	 * <p>
+	 * Parses the message content into rich text segments and broadcasts a
+	 * {@link DiscordEventPacket} to all connected Minecraft clients.
+	 *
+	 * @param event The message received event.
+	 */
+	private void handleChatChannelMessage(MessageReceivedEvent event) {
+		Boolean chatEnabled = ConfigManager.getBoolean("broadcasts.discord_to_minecraft.chat");
+		if (chatEnabled == null || !chatEnabled) {
+			return;
+		}
+
+		Message message = event.getMessage();
+		Member member = event.getMember();
+		String effectiveName = member != null ? member.getEffectiveName() : event.getAuthor().getName();
+		String roleColor = DiscordMessageParser.getMemberRoleColor(member);
+
+		// Parse the message content into text segments
+		List<TextSegment> segments = DiscordMessageParser.parse(message);
+		if (segments.isEmpty()) {
+			return;
+		}
+
+		// Handle reply context
+		boolean hasReply = false;
+		String replyEffectiveName = null;
+		String replyRoleColor = null;
+		List<TextSegment> replySegments = null;
+
+		Boolean replyContextEnabled = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.reply_context");
+		if (replyContextEnabled == null || replyContextEnabled) {
+			Message referencedMessage = message.getReferencedMessage();
+			if (referencedMessage != null) {
+				hasReply = true;
+				Member replyMember = referencedMessage.getMember();
+				replyEffectiveName = replyMember != null ? replyMember.getEffectiveName() : referencedMessage.getAuthor().getName();
+				replyRoleColor = DiscordMessageParser.getMemberRoleColor(replyMember);
+				replySegments = DiscordMessageParser.parse(referencedMessage);
+			}
+		}
+
+		// Collect Minecraft UUIDs for mentioned users (for in-game mention notifications)
+		List<String> mentionedMinecraftUuids = new ArrayList<>();
+		for (User mentionedUser : message.getMentions().getUsers()) {
+			List<String> uuids = LinkedAccountManager.getMinecraftUuidsByDiscordId(mentionedUser.getId());
+			mentionedMinecraftUuids.addAll(uuids);
+		}
+		// Also check mentioned roles for players linked to users with those roles
+		for (net.dv8tion.jda.api.entities.Role mentionedRole : message.getMentions().getRoles()) {
+			if (event.getGuild() != null) {
+				for (Member m : event.getGuild().getMembersWithRoles(mentionedRole)) {
+					List<String> uuids = LinkedAccountManager.getMinecraftUuidsByDiscordId(m.getId());
+					mentionedMinecraftUuids.addAll(uuids);
+				}
+			}
+		}
+
+		// Build and broadcast the Discord event packet
+		DiscordEventPacket packet = new DiscordEventPacket(
+				effectiveName, roleColor, segments,
+				hasReply, replyEffectiveName, replyRoleColor, replySegments,
+				mentionedMinecraftUuids
+		);
+
+		NetworkManager.broadcastToClients(packet);
+	}
+
+	/**
+	 * Checks if the given channel name matches a configured chat channel.
+	 * <p>
+	 * The chat channel is the one defined in {@code broadcasts.minecraft_to_discord.player.chat}.
+	 *
+	 * @param channelName The Discord channel name to check.
+	 * @return true if it is a chat channel.
+	 */
+	private boolean isChatChannel(String channelName) {
+		String chatChannel = ConfigManager.getString("broadcasts.minecraft_to_discord.player.chat");
+		return chatChannel != null && !chatChannel.isEmpty() && chatChannel.equalsIgnoreCase(channelName);
+	}
+
+	/**
+	 * Checks if the given channel name matches a configured console channel.
+	 *
+	 * @param channelName The Discord channel name to check.
+	 * @return true if it is a console channel.
+	 */
+	private boolean isConsoleChannel(String channelName) {
+		Boolean consoleEnabled = ConfigManager.getBoolean("console_forwarding.enable");
+		if (consoleEnabled == null || !consoleEnabled) {
+			return false;
+		}
+
+		String mode = ModeManager.getMode();
+		if ("standalone".equals(mode)) {
+			// Standalone mode: check all console channels
+			JsonNode channelsNode = ConfigManager.getConfigNode("console_forwarding.channels");
+			if (channelsNode != null && channelsNode.isArray()) {
+				for (JsonNode entry : channelsNode) {
+					String channel = entry.path("channel").asText("");
+					if (channel.equalsIgnoreCase(channelName)) {
+						return true;
+					}
+				}
+			}
+		} else {
+			// Single server mode: check the single console channel
+			String consoleChannel = ConfigManager.getString("console_forwarding.channel");
+			return consoleChannel != null && consoleChannel.equalsIgnoreCase(channelName);
+		}
+		return false;
+	}
+
+	/**
+	 * Gets the target server name for a console channel in standalone mode.
+	 *
+	 * @param channelName The Discord channel name.
+	 * @return The server name, or null if not found.
+	 */
+	private String getConsoleChannelServer(String channelName) {
+		JsonNode channelsNode = ConfigManager.getConfigNode("console_forwarding.channels");
+		if (channelsNode != null && channelsNode.isArray()) {
+			for (JsonNode entry : channelsNode) {
+				String channel = entry.path("channel").asText("");
+				if (channel.equalsIgnoreCase(channelName)) {
+					return entry.path("server").asText(null);
+				}
+			}
+		}
+		return null;
 	}
 }

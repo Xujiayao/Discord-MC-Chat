@@ -1,5 +1,6 @@
 package com.xujiayao.discord_mc_chat.minecraft.events;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.suggestion.Suggestion;
@@ -12,6 +13,7 @@ import com.xujiayao.discord_mc_chat.minecraft.translations.TranslationManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkRequestPacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.DiscordEventPacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
@@ -28,6 +30,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerTickRateManager;
@@ -466,6 +469,41 @@ public class MinecraftEventHandler {
 				}
 			});
 		});
+
+		// ===== Discord Chat Message =====
+
+		EventManager.register(CoreEvents.DiscordChatEvent.class, event -> {
+			if (serverInstance == null) return;
+
+			serverInstance.execute(() -> {
+				DiscordEventPacket p = event.packet();
+				Component message = buildDiscordChatComponent(p);
+
+				for (ServerPlayer player : serverInstance.getPlayerList().getPlayers()) {
+					player.sendSystemMessage(message);
+				}
+
+				// Handle mention notifications
+				if (p.mentionedMinecraftUuids != null && !p.mentionedMinecraftUuids.isEmpty()) {
+					handleMentionNotifications(p);
+				}
+			});
+		});
+
+		// ===== Discord Command Notification =====
+
+		EventManager.register(CoreEvents.DiscordCommandNotificationEvent.class, event -> {
+			if (serverInstance == null) return;
+
+			serverInstance.execute(() -> {
+				DiscordEventPacket p = event.packet();
+				Component message = buildDiscordCommandComponent(p);
+
+				for (ServerPlayer player : serverInstance.getPlayerList().getPlayers()) {
+					player.sendSystemMessage(message);
+				}
+			});
+		});
 	}
 
 	private static List<String> getSuggestionsForInput(String input, CommandSourceStack source) throws Exception {
@@ -649,5 +687,247 @@ public class MinecraftEventHandler {
 				runtime.totalMemory(),
 				runtime.freeMemory()
 		);
+	}
+
+	/**
+	 * Builds a Minecraft Component for a Discord chat message using the
+	 * {@code discord_to_minecraft.chat} and {@code discord_to_minecraft.response}
+	 * custom message templates.
+	 * <p>
+	 * If the message is a reply, the response template is rendered first (on a separate line)
+	 * followed by the main chat template.
+	 *
+	 * @param packet The Discord event packet with parsed message data.
+	 * @return A rich Minecraft Component ready to be sent to players.
+	 */
+	private static Component buildDiscordChatComponent(DiscordEventPacket packet) {
+		MutableComponent result = Component.empty();
+
+		// If this is a reply, render the response template first
+		if (packet.hasReply && packet.replySegments != null) {
+			JsonNode responseTemplate = I18nManager.getCustomMessages().path("discord_to_minecraft").path("response");
+			if (responseTemplate.isArray()) {
+				result.append(buildFromTemplate(responseTemplate,
+						packet.replyEffectiveName, packet.replyRoleColor, packet.replySegments, null));
+				result.append(Component.literal("\n"));
+			}
+		}
+
+		// Render the main chat template
+		JsonNode chatTemplate = I18nManager.getCustomMessages().path("discord_to_minecraft").path("chat");
+		if (chatTemplate.isArray()) {
+			result.append(buildFromTemplate(chatTemplate,
+					packet.effectiveName, packet.roleColor, packet.segments, null));
+		}
+
+		return result;
+	}
+
+	/**
+	 * Builds a Minecraft Component for a Discord command execution notification
+	 * using the {@code discord_to_minecraft.command} custom message template.
+	 *
+	 * @param packet The Discord event packet with command notification data.
+	 * @return A rich Minecraft Component ready to be sent to players.
+	 */
+	private static Component buildDiscordCommandComponent(DiscordEventPacket packet) {
+		JsonNode commandTemplate = I18nManager.getCustomMessages().path("discord_to_minecraft").path("command");
+		if (commandTemplate.isArray()) {
+			return buildFromTemplate(commandTemplate,
+					packet.effectiveName, packet.roleColor, null, packet.commandName);
+		}
+		return Component.literal("[Discord] " + packet.effectiveName + " executed [" + packet.commandName + "] command!");
+	}
+
+	/**
+	 * Sends mention notifications (action bar messages) to Minecraft players
+	 * whose linked Discord accounts were mentioned in the Discord message.
+	 *
+	 * @param packet The Discord event packet containing mention data.
+	 */
+	private static void handleMentionNotifications(DiscordEventPacket packet) {
+		if (serverInstance == null || packet.mentionedMinecraftUuids == null) return;
+
+		String mentionTemplate = I18nManager.getCustomMessages()
+				.path("discord_to_minecraft").path("mentioned").asText("");
+		if (mentionTemplate.isEmpty()) return;
+
+		String mentionText = mentionTemplate.replace("{effective_name}", packet.effectiveName);
+		Component mentionComponent = Component.literal(mentionText).withStyle(style -> style.withColor(ChatFormatting.GOLD));
+
+		for (String uuidStr : packet.mentionedMinecraftUuids) {
+			try {
+				UUID uuid = UUID.fromString(uuidStr);
+				ServerPlayer player = serverInstance.getPlayerList().getPlayer(uuid);
+				if (player != null) {
+					player.displayClientMessage(mentionComponent, true);
+				}
+			} catch (Exception ignored) {
+			}
+		}
+	}
+
+	/**
+	 * Builds a Minecraft Component from a custom messages template array.
+	 * <p>
+	 * Each element in the template array defines a text segment with optional formatting.
+	 * Supports the following placeholders:
+	 * <ul>
+	 *   <li>{@code {effective_name}} - The Discord user's display name</li>
+	 *   <li>{@code {role_color}} - The hex color of the user's top role</li>
+	 *   <li>{@code {message}} - Replaced with the pre-parsed TextSegments from the packet</li>
+	 *   <li>{@code {command}} - The slash command name (for command notifications)</li>
+	 * </ul>
+	 *
+	 * @param template      The JSON array template from custom_messages.
+	 * @param effectiveName The Discord user's display name.
+	 * @param roleColor     The hex color of the user's top role (e.g. "#FF0000"), or null.
+	 * @param segments      The pre-parsed message segments (null for command templates).
+	 * @param commandName   The command name (null for chat templates).
+	 * @return The built Minecraft Component.
+	 */
+	private static Component buildFromTemplate(JsonNode template,
+											   String effectiveName,
+											   String roleColor,
+											   List<DiscordEventPacket.TextSegment> segments,
+											   String commandName) {
+		MutableComponent result = Component.empty();
+
+		for (JsonNode segmentNode : template) {
+			String text = segmentNode.path("text").asText("");
+			boolean bold = segmentNode.path("bold").asBoolean(false);
+			boolean italic = segmentNode.path("italic").asBoolean(false);
+			boolean underlined = segmentNode.path("underlined").asBoolean(false);
+			boolean strikethrough = segmentNode.path("strikethrough").asBoolean(false);
+			String color = segmentNode.path("color").asText(null);
+
+			// Replace {role_color} in color field
+			if (color != null && color.contains("{role_color}")) {
+				color = roleColor != null ? roleColor : "white";
+			}
+
+			// Check if this segment contains the {message} placeholder
+			if (text.contains("{message}") && segments != null) {
+				String[] parts = text.split("\\{message}", -1);
+
+				// Text before {message}
+				if (!parts[0].isEmpty()) {
+					String before = parts[0].replace("{effective_name}", effectiveName != null ? effectiveName : "Unknown");
+					if (commandName != null) before = before.replace("{command}", commandName);
+					result.append(buildStyledLiteral(before, color, bold, italic, underlined, strikethrough));
+				}
+
+				// Render each TextSegment from the packet
+				String defaultColor = color;
+				for (DiscordEventPacket.TextSegment seg : segments) {
+					result.append(buildTextSegmentComponent(seg, defaultColor));
+				}
+
+				// Text after {message}
+				if (parts.length > 1 && !parts[1].isEmpty()) {
+					String after = parts[1].replace("{effective_name}", effectiveName != null ? effectiveName : "Unknown");
+					if (commandName != null) after = after.replace("{command}", commandName);
+					result.append(buildStyledLiteral(after, color, bold, italic, underlined, strikethrough));
+				}
+			} else {
+				// Regular template segment - replace all placeholders
+				text = text.replace("{effective_name}", effectiveName != null ? effectiveName : "Unknown");
+				if (commandName != null) text = text.replace("{command}", commandName);
+				result.append(buildStyledLiteral(text, color, bold, italic, underlined, strikethrough));
+			}
+		}
+
+		return result;
+	}
+
+	/**
+	 * Builds a styled Minecraft Component from a plain text string with formatting parameters.
+	 *
+	 * @param text          The text content.
+	 * @param color         The color string (hex like "#FF0000" or named like "blue"), or null.
+	 * @param bold          Whether the text is bold.
+	 * @param italic        Whether the text is italic.
+	 * @param underlined    Whether the text is underlined.
+	 * @param strikethrough Whether the text has strikethrough.
+	 * @return The styled Component.
+	 */
+	private static Component buildStyledLiteral(String text, String color,
+												boolean bold, boolean italic,
+												boolean underlined, boolean strikethrough) {
+		MutableComponent comp = Component.literal(text);
+		return comp.withStyle(style -> {
+			if (color != null) style = style.withColor(parseTextColor(color));
+			if (bold) style = style.withBold(true);
+			if (italic) style = style.withItalic(true);
+			if (underlined) style = style.withUnderlined(true);
+			if (strikethrough) style = style.withStrikethrough(true);
+			return style;
+		});
+	}
+
+	/**
+	 * Builds a Minecraft Component from a single pre-parsed {@link DiscordEventPacket.TextSegment}.
+	 * <p>
+	 * The segment's own color takes precedence; if null, the template default color is used.
+	 * Click and hover events from the segment are applied if present.
+	 *
+	 * @param seg          The text segment from the Discord event packet.
+	 * @param defaultColor The fallback color from the template (may be null).
+	 * @return The styled Minecraft Component.
+	 */
+	private static Component buildTextSegmentComponent(DiscordEventPacket.TextSegment seg, String defaultColor) {
+		MutableComponent comp = Component.literal(seg.text);
+		return comp.withStyle(style -> {
+			// Use segment's own color, or fallback to template default
+			String segColor = seg.color != null ? seg.color : defaultColor;
+			if (segColor != null) style = style.withColor(parseTextColor(segColor));
+
+			if (seg.bold) style = style.withBold(true);
+			if (seg.italic) style = style.withItalic(true);
+			if (seg.underlined) style = style.withUnderlined(true);
+			if (seg.strikethrough) style = style.withStrikethrough(true);
+
+			if (seg.clickUrl != null) {
+				try {
+					style = style.withClickEvent(new ClickEvent.OpenUrl(java.net.URI.create(seg.clickUrl)));
+				} catch (Exception ignored) {
+				}
+			}
+
+			if (seg.hoverText != null) {
+				style = style.withHoverEvent(new HoverEvent.ShowText(Component.literal(seg.hoverText)));
+			}
+
+			return style;
+		});
+	}
+
+	/**
+	 * Parses a color string into a Minecraft TextColor integer.
+	 * <p>
+	 * Supports hex colors (e.g. "#FF0000") and named Minecraft colors (e.g. "blue", "dark_gray").
+	 *
+	 * @param color The color string.
+	 * @return The TextColor integer value, or white (-1) if parsing fails.
+	 */
+	private static int parseTextColor(String color) {
+		if (color == null) return ChatFormatting.WHITE.getColor();
+
+		// Hex color
+		if (color.startsWith("#")) {
+			try {
+				return Integer.parseInt(color.substring(1), 16);
+			} catch (NumberFormatException e) {
+				return ChatFormatting.WHITE.getColor();
+			}
+		}
+
+		// Named Minecraft colors
+		ChatFormatting formatting = ChatFormatting.getByName(color);
+		if (formatting != null && formatting.getColor() != null) {
+			return formatting.getColor();
+		}
+
+		return ChatFormatting.WHITE.getColor();
 	}
 }
