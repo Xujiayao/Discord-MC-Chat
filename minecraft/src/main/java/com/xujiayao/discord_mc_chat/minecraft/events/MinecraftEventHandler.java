@@ -13,6 +13,7 @@ import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkRequestPacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftEventPacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.TextSegment;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
@@ -28,6 +29,13 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerTickRateManager;
@@ -44,6 +52,7 @@ import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 
 import java.lang.management.ManagementFactory;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -466,6 +475,57 @@ public class MinecraftEventHandler {
 				}
 			});
 		});
+
+		EventManager.register(CoreEvents.DiscordChatMessageEvent.class, event -> {
+			if (serverInstance == null) return;
+
+			serverInstance.execute(() -> {
+				PlayerList playerList = serverInstance.getPlayerList();
+
+				// Build and broadcast the reply line first (if present)
+				if (event.replySegments() != null && !event.replySegments().isEmpty()) {
+					Component replyComponent = buildComponentFromSegments(event.replySegments());
+					for (ServerPlayer player : playerList.getPlayers()) {
+						player.sendSystemMessage(replyComponent);
+					}
+				}
+
+				// Build and broadcast the main message line
+				Component mainComponent = buildComponentFromSegments(event.segments());
+				for (ServerPlayer player : playerList.getPlayers()) {
+					player.sendSystemMessage(mainComponent);
+				}
+
+				// Send mention notifications to mentioned players
+				if (event.mentionNotificationText() != null
+						&& event.mentionedPlayerUuids() != null
+						&& !event.mentionedPlayerUuids().isEmpty()) {
+					Component notificationComponent = Component.literal(event.mentionNotificationText())
+							.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD);
+
+					for (String uuidStr : event.mentionedPlayerUuids()) {
+						try {
+							ServerPlayer player = playerList.getPlayer(UUID.fromString(uuidStr));
+							if (player != null) {
+								sendMentionNotification(player, notificationComponent, event.mentionNotificationStyle());
+							}
+						} catch (Exception ignored) {
+						}
+					}
+				}
+			});
+		});
+
+		EventManager.register(CoreEvents.DiscordCommandEvent.class, event -> {
+			if (serverInstance == null) return;
+
+			serverInstance.execute(() -> {
+				Component component = buildComponentFromSegments(event.segments());
+				for (ServerPlayer player : serverInstance.getPlayerList().getPlayers()) {
+					player.sendSystemMessage(component);
+				}
+			});
+		});
 	}
 
 	private static List<String> getSuggestionsForInput(String input, CommandSourceStack source) throws Exception {
@@ -649,5 +709,123 @@ public class MinecraftEventHandler {
 				runtime.totalMemory(),
 				runtime.freeMemory()
 		);
+	}
+
+	/**
+	 * Converts a list of {@link TextSegment} objects into a Minecraft {@link Component}.
+	 * <p>
+	 * Each segment is converted into a styled literal component with the appropriate
+	 * color, formatting, click events, and hover text as specified by the segment.
+	 *
+	 * @param segments The text segments to convert.
+	 * @return A composite Minecraft Component.
+	 */
+	private static Component buildComponentFromSegments(List<TextSegment> segments) {
+		MutableComponent root = Component.empty();
+
+		for (TextSegment seg : segments) {
+			MutableComponent part = Component.literal(seg.text);
+			Style style = Style.EMPTY;
+
+			// Apply color
+			if (seg.color != null && !seg.color.isEmpty()) {
+				TextColor textColor = parseTextColor(seg.color);
+				if (textColor != null) {
+					style = style.withColor(textColor);
+				}
+			}
+
+			// Apply formatting
+			if (seg.bold) {
+				style = style.withBold(true);
+			}
+			if (seg.italic) {
+				style = style.withItalic(true);
+			}
+			if (seg.underlined) {
+				style = style.withUnderlined(true);
+			}
+			if (seg.strikethrough) {
+				style = style.withStrikethrough(true);
+			}
+			if (seg.obfuscated) {
+				style = style.withObfuscated(true);
+			}
+
+			// Apply click event (open URL)
+			if (seg.clickUrl != null && !seg.clickUrl.isEmpty()) {
+				try {
+					style = style.withClickEvent(new ClickEvent.OpenUrl(URI.create(seg.clickUrl)));
+				} catch (Exception ignored) {
+					// Invalid URL, skip click event
+				}
+			}
+
+			// Apply hover text
+			if (seg.hoverText != null && !seg.hoverText.isEmpty()) {
+				style = style.withHoverEvent(new HoverEvent.ShowText(Component.literal(seg.hoverText)));
+			}
+
+			part.withStyle(style);
+			root.append(part);
+		}
+
+		return root;
+	}
+
+	/**
+	 * Parses a color string into a Minecraft {@link TextColor}.
+	 * <p>
+	 * Supports named Minecraft colors (e.g. "gold", "dark_gray") and hex color codes
+	 * (e.g. "#3366CC").
+	 *
+	 * @param colorStr The color string.
+	 * @return The parsed TextColor, or null if the string is invalid.
+	 */
+	private static TextColor parseTextColor(String colorStr) {
+		if (colorStr.startsWith("#")) {
+			try {
+				return TextColor.parseColor(colorStr).result().orElse(null);
+			} catch (Exception e) {
+				return null;
+			}
+		}
+
+		// Try named color via ChatFormatting
+		ChatFormatting formatting = ChatFormatting.getByName(colorStr);
+		if (formatting != null && formatting.isColor()) {
+			return TextColor.fromLegacyFormat(formatting);
+		}
+
+		// Try parsing as hex anyway
+		try {
+			return TextColor.parseColor(colorStr).result().orElse(null);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	/**
+	 * Sends a mention notification to a player using the configured style.
+	 *
+	 * @param player    The target player.
+	 * @param component The notification component.
+	 * @param style     The notification style: "action_bar", "title", or "chat".
+	 */
+	private static void sendMentionNotification(ServerPlayer player, Component component, String style) {
+		if (style == null) {
+			style = "title";
+		}
+
+		switch (style) {
+			case "action_bar" -> player.connection.send(new ClientboundSetActionBarTextPacket(component));
+			case "title" -> {
+				player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 70, 20));
+				player.connection.send(new ClientboundSetTitleTextPacket(component));
+				player.connection.send(new ClientboundSetSubtitleTextPacket(Component.empty()));
+			}
+			case "chat" -> player.sendSystemMessage(component);
+			default -> player.connection.send(new ClientboundSetTitleTextPacket(component));
+		}
 	}
 }

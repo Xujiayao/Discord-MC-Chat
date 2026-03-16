@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.utils.events;
 
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
+import com.xujiayao.discord_mc_chat.network.packets.events.TextSegment;
 
 import java.util.List;
 import java.util.Map;
@@ -132,6 +133,40 @@ public class CoreEvents {
 	 */
 	public record OpSyncEvent(
 			Map<String, Integer> opLevels
+	) {
+	}
+
+	/**
+	 * Posted when a Discord chat message should be displayed in Minecraft.
+	 * <p>
+	 * The handler should convert the pre-built {@link TextSegment} lists into
+	 * Minecraft Components and broadcast them to all online players.
+	 *
+	 * @param segments               The main message line segments.
+	 * @param replySegments          The reply context line segments (may be null or empty).
+	 * @param mentionNotificationText The mention notification text (may be null).
+	 * @param mentionNotificationStyle The notification style: "action_bar", "title", or "chat".
+	 * @param mentionedPlayerUuids   UUIDs of players who should receive mention notifications.
+	 */
+	public record DiscordChatMessageEvent(
+			List<TextSegment> segments,
+			List<TextSegment> replySegments,
+			String mentionNotificationText,
+			String mentionNotificationStyle,
+			List<String> mentionedPlayerUuids
+	) {
+	}
+
+	/**
+	 * Posted when a Discord command execution notification should be displayed in Minecraft.
+	 * <p>
+	 * The handler should convert the pre-built {@link TextSegment} list into
+	 * Minecraft Components and broadcast them to all online players.
+	 *
+	 * @param segments The command notification segments.
+	 */
+	public record DiscordCommandEvent(
+			List<TextSegment> segments
 	) {
 	}
 }
