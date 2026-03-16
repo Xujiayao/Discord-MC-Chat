@@ -55,6 +55,19 @@ public class DiscordEventPacket extends Packet {
 	public List<String> mentionedPlayerUuids;
 
 	/**
+	 * Whether the message mentions @everyone or @here.
+	 * When true, ALL online Minecraft players should receive the mention notification,
+	 * regardless of account linking status.
+	 */
+	public boolean mentionEveryone;
+
+	/**
+	 * Pre-built rich text segments for the edited message (only for EDIT events).
+	 * Contains the new (edited) message formatted as chat segments.
+	 */
+	public List<TextSegment> editedMessageSegments;
+
+	/**
 	 * Creates a DiscordEventPacket for a chat message.
 	 *
 	 * @param type     The event type.
@@ -79,6 +92,21 @@ public class DiscordEventPacket extends Packet {
 		/**
 		 * A Discord command execution notification forwarded to Minecraft.
 		 */
-		COMMAND
+		COMMAND,
+
+		/**
+		 * A reaction was added to a message in Discord.
+		 */
+		REACTION,
+
+		/**
+		 * A message was edited in Discord.
+		 */
+		EDIT,
+
+		/**
+		 * A message was deleted in Discord.
+		 */
+		DELETE
 	}
 }

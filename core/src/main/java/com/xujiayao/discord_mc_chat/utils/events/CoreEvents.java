@@ -120,7 +120,8 @@ public class CoreEvents {
 			List<TextSegment> replySegments,
 			String mentionNotificationText,
 			String mentionNotificationStyle,
-			List<String> mentionedPlayerUuids
+			List<String> mentionedPlayerUuids,
+			boolean mentionEveryone
 	) {
 	}
 
@@ -134,6 +135,44 @@ public class CoreEvents {
 	 */
 	public record DiscordCommandEvent(
 			List<TextSegment> segments
+	) {
+	}
+
+	/**
+	 * Posted when a Discord reaction event should be displayed in Minecraft.
+	 *
+	 * @param segments      The reaction notification segments.
+	 * @param replySegments The reference to the original message.
+	 */
+	public record DiscordReactionEvent(
+			List<TextSegment> segments,
+			List<TextSegment> replySegments
+	) {
+	}
+
+	/**
+	 * Posted when a Discord message edit should be displayed in Minecraft.
+	 *
+	 * @param segments              The edit notification segments.
+	 * @param replySegments         The reference to the original (pre-edit) message.
+	 * @param editedMessageSegments The new (edited) message formatted as chat.
+	 */
+	public record DiscordEditEvent(
+			List<TextSegment> segments,
+			List<TextSegment> replySegments,
+			List<TextSegment> editedMessageSegments
+	) {
+	}
+
+	/**
+	 * Posted when a Discord message deletion should be displayed in Minecraft.
+	 *
+	 * @param segments      The delete notification segments.
+	 * @param replySegments The reference to the deleted message.
+	 */
+	public record DiscordDeleteEvent(
+			List<TextSegment> segments,
+			List<TextSegment> replySegments
 	) {
 	}
 }

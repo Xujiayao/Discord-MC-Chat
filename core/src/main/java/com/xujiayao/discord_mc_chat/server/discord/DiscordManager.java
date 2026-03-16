@@ -76,7 +76,8 @@ public class DiscordManager {
 						jda = JDABuilder.createDefault(token)
 								.enableIntents(
 										GatewayIntent.MESSAGE_CONTENT,
-										GatewayIntent.GUILD_MEMBERS
+										GatewayIntent.GUILD_MEMBERS,
+										GatewayIntent.GUILD_MESSAGE_REACTIONS
 								)
 								.setMemberCachePolicy(MemberCachePolicy.ALL)
 								.addEventListeners(new DiscordEventHandler())

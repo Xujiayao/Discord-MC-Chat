@@ -69,6 +69,42 @@ discord_to_minecraft:
     - text: "executed [{command}] command!"
       bold: false
       color: "gray"
+  reaction: # Reaction message format
+    - text: "[Discord] "
+      bold: true
+      color: "blue"
+    - text: "{effective_name} "
+      bold: false
+      color: "{role_color}"
+    - text: "reacted "
+      bold: false
+      color: "gray"
+    - text: "{emoji}"
+      bold: false
+      color: "yellow"
+    - text: " to this message!"
+      bold: false
+      color: "gray"
+  edit: # Message edit notification format
+    - text: "[Discord] "
+      bold: true
+      color: "blue"
+    - text: "{effective_name} "
+      bold: false
+      color: "{role_color}"
+    - text: "edited this message! Edited message becomes:"
+      bold: false
+      color: "gray"
+  delete: # Message delete notification format
+    - text: "[Discord] "
+      bold: true
+      color: "blue"
+    - text: "{effective_name} "
+      bold: false
+      color: "{role_color}"
+    - text: "deleted this message!"
+      bold: false
+      color: "gray"
 
 minecraft_to_discord:
   server:
