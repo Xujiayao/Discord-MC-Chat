@@ -7,6 +7,7 @@ import com.xujiayao.discord_mc_chat.utils.StringUtils;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackType;
@@ -245,7 +246,7 @@ public class TranslationManager {
 					packResources1.getNamespaces(PackType.CLIENT_RESOURCES).forEach(namespace -> {
 						IoSupplier<InputStream> supplier = packResources1.getResource(
 								PackType.CLIENT_RESOURCES,
-								net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(namespace, "lang/" + language + ".json")
+								ResourceLocation.fromNamespaceAndPath(namespace, "lang/" + language + ".json")
 						);
 
 						if (supplier != null) {

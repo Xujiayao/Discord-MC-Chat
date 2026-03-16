@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.network.packets.events.TextSegment;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
-import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -370,13 +369,13 @@ public class DiscordMessageParser {
 	 * Parses the raw text content of a Discord message, handling mentions, emojis,
 	 * markdown, and hyperlinks inline.
 	 *
-	 * @param raw               The raw content string.
-	 * @param message           The Discord message (for resolving mentions).
-	 * @param parseMentions     Whether to parse mentions.
-	 * @param parseCustomEmojis Whether to parse custom emojis.
+	 * @param raw                The raw content string.
+	 * @param message            The Discord message (for resolving mentions).
+	 * @param parseMentions      Whether to parse mentions.
+	 * @param parseCustomEmojis  Whether to parse custom emojis.
 	 * @param parseUnicodeEmojis Whether to parse unicode emojis.
-	 * @param parseMarkdown     Whether to parse markdown formatting.
-	 * @param parseHyperlinks   Whether to parse hyperlinks.
+	 * @param parseMarkdown      Whether to parse markdown formatting.
+	 * @param parseHyperlinks    Whether to parse hyperlinks.
 	 * @return The list of text segments for the raw content.
 	 */
 	private static List<TextSegment> parseRawContent(String raw, Message message,
@@ -722,32 +721,6 @@ public class DiscordMessageParser {
 	}
 
 	/**
-	 * Internal record representing a span of raw text that maps to a special token
-	 * (mention, emoji, link, etc.).
-	 */
-	private record TokenSpan(int start, int end, TextSegment segment) {
-	}
-
-	/**
-	 * Internal record representing a markdown-formatted span of text.
-	 */
-	private record MarkdownSpan(int start, int end, String innerText, MarkdownType type) {
-	}
-
-	/**
-	 * Types of markdown formatting.
-	 */
-	private enum MarkdownType {
-		BOLD,
-		ITALIC,
-		UNDERLINE,
-		STRIKETHROUGH,
-		SPOILER,
-		CODE_BLOCK,
-		INLINE_CODE
-	}
-
-	/**
 	 * Safely truncates a string to the given maximum character count without splitting
 	 * surrogate pairs (multi-byte emoji characters).
 	 *
@@ -764,5 +737,31 @@ public class DiscordMessageParser {
 			return text.substring(0, maxLen - 1);
 		}
 		return text.substring(0, maxLen);
+	}
+
+	/**
+	 * Types of markdown formatting.
+	 */
+	private enum MarkdownType {
+		BOLD,
+		ITALIC,
+		UNDERLINE,
+		STRIKETHROUGH,
+		SPOILER,
+		CODE_BLOCK,
+		INLINE_CODE
+	}
+
+	/**
+	 * Internal record representing a span of raw text that maps to a special token
+	 * (mention, emoji, link, etc.).
+	 */
+	private record TokenSpan(int start, int end, TextSegment segment) {
+	}
+
+	/**
+	 * Internal record representing a markdown-formatted span of text.
+	 */
+	private record MarkdownSpan(int start, int end, String innerText, MarkdownType type) {
 	}
 }

@@ -16,10 +16,14 @@ import java.util.List;
  */
 public class DiscordEventPacket extends Packet {
 
-	/** The type of Discord event. */
+	/**
+	 * The type of Discord event.
+	 */
 	public EventType type;
 
-	/** Pre-built rich text segments for the main message line. */
+	/**
+	 * Pre-built rich text segments for the main message line.
+	 */
 	public List<TextSegment> segments;
 
 	/**
@@ -67,10 +71,14 @@ public class DiscordEventPacket extends Packet {
 	 * @author Xujiayao
 	 */
 	public enum EventType {
-		/** A regular Discord chat message forwarded to Minecraft. */
+		/**
+		 * A regular Discord chat message forwarded to Minecraft.
+		 */
 		CHAT,
 
-		/** A Discord command execution notification forwarded to Minecraft. */
+		/**
+		 * A Discord command execution notification forwarded to Minecraft.
+		 */
 		COMMAND
 	}
 }

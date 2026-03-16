@@ -142,11 +142,11 @@ public class CoreEvents {
 	 * The handler should convert the pre-built {@link TextSegment} lists into
 	 * Minecraft Components and broadcast them to all online players.
 	 *
-	 * @param segments               The main message line segments.
-	 * @param replySegments          The reply context line segments (may be null or empty).
-	 * @param mentionNotificationText The mention notification text (may be null).
+	 * @param segments                 The main message line segments.
+	 * @param replySegments            The reply context line segments (may be null or empty).
+	 * @param mentionNotificationText  The mention notification text (may be null).
 	 * @param mentionNotificationStyle The notification style: "action_bar", "title", or "chat".
-	 * @param mentionedPlayerUuids   UUIDs of players who should receive mention notifications.
+	 * @param mentionedPlayerUuids     UUIDs of players who should receive mention notifications.
 	 */
 	public record DiscordChatMessageEvent(
 			List<TextSegment> segments,
