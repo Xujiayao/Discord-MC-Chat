@@ -12,7 +12,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -219,6 +222,71 @@ public class I18nManager {
 	 */
 	public static JsonNode getCustomMessages() {
 		return customMessages;
+	}
+
+	/**
+	 * Gets a custom message string value by dot-separated path.
+	 * <p>
+	 * This method avoids exposing Jackson types, making it safe to call from
+	 * the minecraft module where Jackson is not available on the classloader.
+	 *
+	 * @param dotPath The dot-separated path (e.g., "discord_to_minecraft.mentioned").
+	 * @return The string value at the path, or an empty string if not found.
+	 */
+	public static String getCustomMessage(String dotPath) {
+		if (customMessages == null) return "";
+
+		String[] parts = dotPath.split("\\.");
+		JsonNode node = customMessages;
+		for (String part : parts) {
+			node = node.path(part);
+		}
+		return node.asText("");
+	}
+
+	/**
+	 * Gets a custom message template array by dot-separated path.
+	 * <p>
+	 * Returns the template as a {@code List<Map<String, Object>>} containing only
+	 * standard Java types (String, Boolean), so that it can be consumed by the
+	 * minecraft module without requiring Jackson on its classloader.
+	 * <p>
+	 * Each map in the list may contain the following keys:
+	 * <ul>
+	 *   <li>{@code text} (String)</li>
+	 *   <li>{@code color} (String)</li>
+	 *   <li>{@code bold} (Boolean)</li>
+	 *   <li>{@code italic} (Boolean)</li>
+	 *   <li>{@code underlined} (Boolean)</li>
+	 *   <li>{@code strikethrough} (Boolean)</li>
+	 * </ul>
+	 *
+	 * @param dotPath The dot-separated path (e.g., "discord_to_minecraft.chat").
+	 * @return The template as a list of maps, or null if the path does not resolve to an array.
+	 */
+	public static List<Map<String, Object>> getCustomMessageTemplate(String dotPath) {
+		if (customMessages == null) return null;
+
+		String[] parts = dotPath.split("\\.");
+		JsonNode node = customMessages;
+		for (String part : parts) {
+			node = node.path(part);
+		}
+
+		if (!node.isArray()) return null;
+
+		List<Map<String, Object>> result = new ArrayList<>();
+		for (JsonNode element : node) {
+			Map<String, Object> segment = new LinkedHashMap<>();
+			segment.put("text", element.path("text").asText(""));
+			if (element.has("color")) segment.put("color", element.path("color").asText());
+			if (element.has("bold")) segment.put("bold", element.path("bold").asBoolean(false));
+			if (element.has("italic")) segment.put("italic", element.path("italic").asBoolean(false));
+			if (element.has("underlined")) segment.put("underlined", element.path("underlined").asBoolean(false));
+			if (element.has("strikethrough")) segment.put("strikethrough", element.path("strikethrough").asBoolean(false));
+			result.add(segment);
+		}
+		return result;
 	}
 
 	/**

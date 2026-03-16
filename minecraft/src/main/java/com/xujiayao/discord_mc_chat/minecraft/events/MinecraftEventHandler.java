@@ -1,6 +1,5 @@
 package com.xujiayao.discord_mc_chat.minecraft.events;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.suggestion.Suggestion;
@@ -708,8 +707,8 @@ public class MinecraftEventHandler {
 
 		// If this is a reply, render the response template first
 		if (packet.hasReply && packet.replySegments != null) {
-			JsonNode responseTemplate = I18nManager.getCustomMessages().path("discord_to_minecraft").path("response");
-			if (responseTemplate.isArray()) {
+			List<Map<String, Object>> responseTemplate = I18nManager.getCustomMessageTemplate("discord_to_minecraft.response");
+			if (responseTemplate != null) {
 				result.append(buildFromTemplate(responseTemplate,
 						packet.replyEffectiveName, packet.replyRoleColor, packet.replySegments, null));
 				result.append(Component.literal("\n"));
@@ -717,8 +716,8 @@ public class MinecraftEventHandler {
 		}
 
 		// Render the main chat template
-		JsonNode chatTemplate = I18nManager.getCustomMessages().path("discord_to_minecraft").path("chat");
-		if (chatTemplate.isArray()) {
+		List<Map<String, Object>> chatTemplate = I18nManager.getCustomMessageTemplate("discord_to_minecraft.chat");
+		if (chatTemplate != null) {
 			result.append(buildFromTemplate(chatTemplate,
 					packet.effectiveName, packet.roleColor, packet.segments, null));
 		}
@@ -734,8 +733,8 @@ public class MinecraftEventHandler {
 	 * @return A rich Minecraft Component ready to be sent to players.
 	 */
 	private static Component buildDiscordCommandComponent(DiscordEventPacket packet) {
-		JsonNode commandTemplate = I18nManager.getCustomMessages().path("discord_to_minecraft").path("command");
-		if (commandTemplate.isArray()) {
+		List<Map<String, Object>> commandTemplate = I18nManager.getCustomMessageTemplate("discord_to_minecraft.command");
+		if (commandTemplate != null) {
 			return buildFromTemplate(commandTemplate,
 					packet.effectiveName, packet.roleColor, null, packet.commandName);
 		}
@@ -758,8 +757,7 @@ public class MinecraftEventHandler {
 		Boolean mentionEnabled = ConfigManager.getBoolean("account_linking.discord_mention_notifications.enable");
 		if (mentionEnabled == null || !mentionEnabled) return;
 
-		String mentionTemplate = I18nManager.getCustomMessages()
-				.path("discord_to_minecraft").path("mentioned").asText("");
+		String mentionTemplate = I18nManager.getCustomMessage("discord_to_minecraft.mentioned");
 		if (mentionTemplate.isEmpty()) return;
 
 		String mentionText = mentionTemplate.replace("{effective_name}", packet.effectiveName);
@@ -799,27 +797,27 @@ public class MinecraftEventHandler {
 	 *   <li>{@code {command}} - The slash command name (for command notifications)</li>
 	 * </ul>
 	 *
-	 * @param template      The JSON array template from custom_messages.
+	 * @param template      The template array from custom_messages, as a list of maps.
 	 * @param effectiveName The Discord user's display name.
 	 * @param roleColor     The hex color of the user's top role (e.g. "#FF0000"), or null.
 	 * @param segments      The pre-parsed message segments (null for command templates).
 	 * @param commandName   The command name (null for chat templates).
 	 * @return The built Minecraft Component.
 	 */
-	private static Component buildFromTemplate(JsonNode template,
+	private static Component buildFromTemplate(List<Map<String, Object>> template,
 											   String effectiveName,
 											   String roleColor,
 											   List<DiscordEventPacket.TextSegment> segments,
 											   String commandName) {
 		MutableComponent result = Component.empty();
 
-		for (JsonNode segmentNode : template) {
-			String text = segmentNode.path("text").asText("");
-			boolean bold = segmentNode.path("bold").asBoolean(false);
-			boolean italic = segmentNode.path("italic").asBoolean(false);
-			boolean underlined = segmentNode.path("underlined").asBoolean(false);
-			boolean strikethrough = segmentNode.path("strikethrough").asBoolean(false);
-			String color = segmentNode.path("color").asText(null);
+		for (Map<String, Object> segmentMap : template) {
+			String text = (String) segmentMap.getOrDefault("text", "");
+			boolean bold = Boolean.TRUE.equals(segmentMap.get("bold"));
+			boolean italic = Boolean.TRUE.equals(segmentMap.get("italic"));
+			boolean underlined = Boolean.TRUE.equals(segmentMap.get("underlined"));
+			boolean strikethrough = Boolean.TRUE.equals(segmentMap.get("strikethrough"));
+			String color = (String) segmentMap.get("color");
 
 			// Replace {role_color} in color field
 			if (color != null && color.contains("{role_color}")) {
