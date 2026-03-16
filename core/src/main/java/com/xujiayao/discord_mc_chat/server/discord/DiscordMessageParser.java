@@ -524,6 +524,7 @@ segments.add(new TextSegment("<components>", false, "yellow"));
 }
 
 // Append poll indicator
+if (ConfigManager.getBoolean("message_parsing.discord_to_minecraft.polls")) {
 MessagePoll poll = message.getPoll();
 if (poll != null) {
 if (!segments.isEmpty()) {
@@ -531,6 +532,7 @@ segments.add(new TextSegment(" "));
 }
 String question = poll.getQuestion().getText();
 segments.add(new TextSegment("<poll question=[" + question + "]>", false, "yellow"));
+}
 }
 
 return segments;
@@ -555,8 +557,10 @@ collectChannelMentionTokens(raw, message, tokens);
 collectEveryoneHereTokens(raw, message, tokens);
 }
 
-// Always collect timestamps (they are Discord syntax, not user-configurable)
+// Collect timestamps if configured
+if (ConfigManager.getBoolean("message_parsing.discord_to_minecraft.timestamps")) {
 collectTimestampTokens(raw, tokens);
+}
 
 if (parseCustomEmojis) {
 collectCustomEmojiTokens(raw, tokens);
@@ -899,7 +903,7 @@ String language = matcher.group(1);
 String content = matcher.group(2);
 List<TextSegment> codeSegments;
 
-if ("ansi".equalsIgnoreCase(language)) {
+if ("ansi".equalsIgnoreCase(language) && ConfigManager.getBoolean("message_parsing.discord_to_minecraft.ansi_code_blocks")) {
 codeSegments = parseAnsiContent(content);
 } else {
 codeSegments = List.of(new TextSegment("[" + content + "]"));
