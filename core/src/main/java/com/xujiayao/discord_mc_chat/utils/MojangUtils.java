@@ -23,20 +23,6 @@ public class MojangUtils {
 	private static final Map<String, String> NAME_CACHE = new ConcurrentHashMap<>();
 
 	/**
-	 * Resolves a Minecraft player name from a UUID string.
-	 * <p>
-	 * If the UUID is an offline-mode UUID (version 3), the name cannot be resolved from Mojang
-	 * and will fall back to the raw UUID. For online-mode UUIDs (version 4), the Mojang session
-	 * server is queried. Network failures also fall back to the raw UUID.
-	 *
-	 * @param uuidString The UUID string (standard dashed format, e.g. "069a79f4-44e9-4726-a5be-fca90e38aaf5").
-	 * @return The resolved player name, or the original UUID string if resolution fails.
-	 */
-	public static String resolvePlayerName(String uuidString) {
-		return resolvePlayerName(uuidString, null);
-	}
-
-	/**
 	 * Resolves a Minecraft player name from a UUID string, with an optional fallback name
 	 * for offline-mode UUIDs.
 	 * <p>

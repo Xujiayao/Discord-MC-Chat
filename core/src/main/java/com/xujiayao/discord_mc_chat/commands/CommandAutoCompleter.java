@@ -59,7 +59,7 @@ public class CommandAutoCompleter {
 					return suggestStats(parts, false, opLevel);
 				}
 				case "log" -> {
-					return suggestLog(parts, false, opLevel);
+					return suggestLog(parts, opLevel);
 				}
 				case "whitelist" -> {
 					return suggestWhitelist(parts, false, opLevel);
@@ -78,7 +78,7 @@ public class CommandAutoCompleter {
 		// Command + args stage
 		return switch (commandName) {
 			case "stats" -> suggestStats(parts, hasTrailingSpace, opLevel);
-			case "log" -> suggestLog(parts, hasTrailingSpace, opLevel);
+			case "log" -> suggestLog(parts, opLevel);
 			case "whitelist" -> suggestWhitelist(parts, hasTrailingSpace, opLevel);
 			default -> {
 				// For commands without argument auto-complete, suggest the command itself if no args.
@@ -97,7 +97,7 @@ public class CommandAutoCompleter {
 		};
 	}
 
-	private static List<String> suggestLog(String[] parts, boolean hasTrailingSpace, int opLevel) {
+	private static List<String> suggestLog(String[] parts, int opLevel) {
 		List<String> suggestions = new ArrayList<>();
 		if (opLevel < ConfigManager.getInt("command_permission_levels.log", 4)) {
 			return suggestions;

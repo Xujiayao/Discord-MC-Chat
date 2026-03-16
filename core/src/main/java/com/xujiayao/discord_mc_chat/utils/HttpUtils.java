@@ -29,10 +29,6 @@ public class HttpUtils {
 				throw new IOException("HTTP request failed with status code: " + response.code());
 			}
 
-			if (response.body() == null) {
-				throw new IOException("Response body is null");
-			}
-
 			return response.body().string();
 		}
 	}

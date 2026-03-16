@@ -106,10 +106,8 @@ public class LinkCommand implements Command {
 		}
 
 		switch (ModeManager.getMode()) {
-			case "single_server", "multi_server_client" -> {
-				// Send request to server via network (same for both modes)
-				NetworkManager.sendPacketToServer(new LinkRequestPacket(uuid, name, false));
-			}
+			case "single_server", "multi_server_client" -> // Send request to server via network (same for both modes)
+					NetworkManager.sendPacketToServer(new LinkRequestPacket(uuid, name, false));
 			default -> sender.reply(I18nManager.getDmccTranslation("commands.link.not_available"));
 		}
 	}

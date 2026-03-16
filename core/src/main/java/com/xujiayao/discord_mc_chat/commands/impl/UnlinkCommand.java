@@ -68,10 +68,8 @@ public class UnlinkCommand implements Command {
 		}
 
 		switch (ModeManager.getMode()) {
-			case "single_server", "multi_server_client" -> {
-				// Send request to server via network (same for both modes)
-				NetworkManager.sendPacketToServer(new UnlinkRequestPacket(uuid, name));
-			}
+			case "single_server", "multi_server_client" -> // Send request to server via network (same for both modes)
+					NetworkManager.sendPacketToServer(new UnlinkRequestPacket(uuid, name));
 			default -> sender.reply(I18nManager.getDmccTranslation("commands.unlink.not_available"));
 		}
 	}

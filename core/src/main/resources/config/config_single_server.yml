@@ -65,7 +65,6 @@ message_parsing:
     hyperlinks: true
     embeds: true
     components: true
-    responses: true
   minecraft_to_discord:
     markdown: true
     unicode_emojis: true

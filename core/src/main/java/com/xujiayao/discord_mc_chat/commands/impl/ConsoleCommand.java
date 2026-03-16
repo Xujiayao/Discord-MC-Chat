@@ -169,7 +169,7 @@ public class ConsoleCommand implements Command {
 	 * Routes via Netty ConsoleRequestPacket.
 	 *
 	 * @param sender The command sender.
-	 * @param args   args[0] = at, args[1..] = command.
+	 * @param args   args[0] = at, args[1...] = command.
 	 */
 	private void executeStandalone(CommandSender sender, String[] args) {
 		String target = args[0];

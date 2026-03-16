@@ -194,18 +194,12 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 				EventManager.post(new CoreEvents.MinecraftCommandAutoCompleteEvent(p.input, p.opLevel, suggestions));
 				ctx.writeAndFlush(new ConsoleAutoCompleteResponsePacket(client.getServerName(), suggestions));
 			}
-			case LinkResponsePacket p -> {
-				// Handle link code response from server - notify the player
-				EventManager.post(new CoreEvents.LinkCodeResponseEvent(p.minecraftUuid, p.code, p.alreadyLinked, p.discordName != null ? p.discordName : ""));
-			}
-			case UnlinkResponsePacket p -> {
-				// Handle unlink response from server - notify the player
-				EventManager.post(new CoreEvents.UnlinkResponseEvent(p.minecraftUuid, p.success, p.discordName != null ? p.discordName : ""));
-			}
-			case OpSyncPacket p -> {
-				// Handle OP sync from server - apply OP levels to Minecraft players
-				EventManager.post(new CoreEvents.OpSyncEvent(p.opLevels));
-			}
+			case LinkResponsePacket p -> // Handle link code response from server - notify the player
+					EventManager.post(new CoreEvents.LinkCodeResponseEvent(p.minecraftUuid, p.code, p.alreadyLinked, p.discordName != null ? p.discordName : ""));
+			case UnlinkResponsePacket p -> // Handle unlink response from server - notify the player
+					EventManager.post(new CoreEvents.UnlinkResponseEvent(p.minecraftUuid, p.success, p.discordName != null ? p.discordName : ""));
+			case OpSyncPacket p -> // Handle OP sync from server - apply OP levels to Minecraft players
+					EventManager.post(new CoreEvents.OpSyncEvent(p.opLevels));
 			case DiscordEventPacket p -> {
 				// Handle Discord event forwarded from server - render in Minecraft
 				switch (p.type) {
