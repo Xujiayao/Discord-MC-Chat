@@ -370,9 +370,10 @@ public class DiscordEventHandler extends ListenerAdapter {
 		List<String> mentionedPlayerUuids = null;
 
 		boolean mentionNotificationsEnabled = ConfigManager.getBoolean("account_linking.discord_mention_notifications.enable");
+		boolean isMentionEveryone = DiscordMessageParser.isMentionEveryone(message);
 		if (mentionNotificationsEnabled) {
 			Set<String> uuids = DiscordMessageParser.collectMentionedPlayerUuids(message);
-			if (!uuids.isEmpty()) {
+			if (isMentionEveryone || !uuids.isEmpty()) {
 				Member member = message.getMember();
 				String effectiveName = member != null ? member.getEffectiveName() : message.getAuthor().getName();
 				mentionNotificationText = DiscordMessageParser.getMentionNotificationText(effectiveName);
@@ -387,7 +388,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 		packet.mentionNotificationText = mentionNotificationText;
 		packet.mentionNotificationStyle = mentionNotificationStyle;
 		packet.mentionedPlayerUuids = mentionedPlayerUuids;
-		packet.mentionEveryone = DiscordMessageParser.isMentionEveryone(message);
+		packet.mentionEveryone = isMentionEveryone;
 
 		NetworkManager.broadcastToClients(packet);
 
@@ -397,7 +398,8 @@ public class DiscordEventHandler extends ListenerAdapter {
 
 	@Override
 	public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
-		if (!ConfigManager.getBoolean("broadcasts.discord_to_minecraft.chat")) {
+		if (!ConfigManager.getBoolean("broadcasts.discord_to_minecraft.chat")
+				|| !ConfigManager.getBoolean("message_parsing.discord_to_minecraft.reactions")) {
 			return;
 		}
 
@@ -434,7 +436,8 @@ public class DiscordEventHandler extends ListenerAdapter {
 
 	@Override
 	public void onMessageUpdate(@NotNull MessageUpdateEvent event) {
-		if (!ConfigManager.getBoolean("broadcasts.discord_to_minecraft.chat")) {
+		if (!ConfigManager.getBoolean("broadcasts.discord_to_minecraft.chat")
+				|| !ConfigManager.getBoolean("message_parsing.discord_to_minecraft.edits")) {
 			return;
 		}
 
@@ -474,7 +477,8 @@ public class DiscordEventHandler extends ListenerAdapter {
 
 	@Override
 	public void onMessageDelete(@NotNull MessageDeleteEvent event) {
-		if (!ConfigManager.getBoolean("broadcasts.discord_to_minecraft.chat")) {
+		if (!ConfigManager.getBoolean("broadcasts.discord_to_minecraft.chat")
+				|| !ConfigManager.getBoolean("message_parsing.discord_to_minecraft.deletes")) {
 			return;
 		}
 
