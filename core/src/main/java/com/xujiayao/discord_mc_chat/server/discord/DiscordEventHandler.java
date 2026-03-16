@@ -2,7 +2,6 @@ package com.xujiayao.discord_mc_chat.server.discord;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
-import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.commands.console.ConsoleRequestPacket;
@@ -14,8 +13,8 @@ import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -30,8 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
-import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
 /**
  * Handles Discord JDA events.
@@ -435,12 +432,10 @@ public class DiscordEventHandler extends ListenerAdapter {
 			mentionedMinecraftUuids.addAll(uuids);
 		}
 		// Also check mentioned roles for players linked to users with those roles
-		for (net.dv8tion.jda.api.entities.Role mentionedRole : message.getMentions().getRoles()) {
-			if (event.getGuild() != null) {
-				for (Member m : event.getGuild().getMembersWithRoles(mentionedRole)) {
-					List<String> uuids = LinkedAccountManager.getMinecraftUuidsByDiscordId(m.getId());
-					mentionedMinecraftUuids.addAll(uuids);
-				}
+		for (Role mentionedRole : message.getMentions().getRoles()) {
+			for (Member m : event.getGuild().getMembersWithRoles(mentionedRole)) {
+				List<String> uuids = LinkedAccountManager.getMinecraftUuidsByDiscordId(m.getId());
+				mentionedMinecraftUuids.addAll(uuids);
 			}
 		}
 

@@ -8,10 +8,11 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
-import net.dv8tion.jda.api.entities.emoji.CustomEmoji;
 import net.dv8tion.jda.api.entities.sticker.StickerItem;
+import net.fellbaum.jemoji.Emoji;
 import net.fellbaum.jemoji.EmojiManager;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -35,7 +36,7 @@ public class DiscordMessageParser {
 	private static final Pattern CUSTOM_EMOJI_PATTERN = Pattern.compile("<a?:(\\w+):(\\d+)>");
 	private static final Pattern URL_PATTERN = Pattern.compile("(https?://\\S+)");
 
-	// Discord markdown patterns (simplified)
+	// Discord Markdown patterns (simplified)
 	private static final Pattern BOLD_PATTERN = Pattern.compile("\\*\\*(.+?)\\*\\*");
 	private static final Pattern ITALIC_UNDERSCORE_PATTERN = Pattern.compile("_(.+?)_");
 	private static final Pattern ITALIC_ASTERISK_PATTERN = Pattern.compile("\\*(.+?)\\*");
@@ -119,7 +120,7 @@ public class DiscordMessageParser {
 
 	/**
 	 * Parses the raw text content of a Discord message into text segments.
-	 * Handles mentions, custom emojis, Unicode emojis, markdown, and hyperlinks.
+	 * Handles mentions, custom emojis, Unicode emojis, Markdown, and hyperlinks.
 	 *
 	 * @param rawContent The raw content string from {@link Message#getContentRaw()}.
 	 * @param message    The original message for resolving mentions.
@@ -155,7 +156,7 @@ public class DiscordMessageParser {
 		}
 
 		if (combinedRegex.isEmpty()) {
-			// No special parsing enabled, just return plain text with optional markdown
+			// No special parsing enabled, just return plain text with optional Markdown
 			segments.addAll(parseMarkdownOrPlain(rawContent));
 			return segments;
 		}
@@ -205,7 +206,7 @@ public class DiscordMessageParser {
 	}
 
 	/**
-	 * Parses a plain text fragment, optionally applying markdown formatting and Unicode emoji conversion.
+	 * Parses a plain text fragment, optionally applying Markdown formatting and Unicode emoji conversion.
 	 *
 	 * @param text The plain text to parse.
 	 * @return A list of TextSegments.
@@ -240,7 +241,7 @@ public class DiscordMessageParser {
 		var emojiResults = EmojiManager.extractEmojisInOrderWithIndex(text);
 
 		if (emojiResults.isEmpty()) {
-			// No emojis found, apply markdown or return plain text
+			// No emojis found, apply Markdown or return plain text
 			if (isEnabled("markdown")) {
 				segments.addAll(parseMarkdown(text));
 			} else if (!text.isEmpty()) {
@@ -297,7 +298,7 @@ public class DiscordMessageParser {
 	 * @param emoji The JEmoji Emoji object.
 	 * @return The shortcode string (with or without colons).
 	 */
-	private static String getEmojiShortcode(net.fellbaum.jemoji.Emoji emoji) {
+	private static String getEmojiShortcode(Emoji emoji) {
 		if (!emoji.getDiscordAliases().isEmpty()) {
 			return emoji.getDiscordAliases().getFirst();
 		}
@@ -308,10 +309,10 @@ public class DiscordMessageParser {
 	}
 
 	/**
-	 * Parses Discord markdown in text and returns styled segments.
+	 * Parses Discord Markdown in text and returns styled segments.
 	 * Handles bold, italic, underline, strikethrough, spoiler, code blocks, and inline code.
 	 *
-	 * @param text The text with Discord markdown.
+	 * @param text The text with Discord Markdown.
 	 * @return A list of styled TextSegments.
 	 */
 	private static List<TextSegment> parseMarkdown(String text) {
@@ -321,7 +322,7 @@ public class DiscordMessageParser {
 			return segments;
 		}
 
-		// Process markdown patterns in priority order
+		// Process Markdown patterns in priority order
 		// Code blocks and inline code first (they prevent other formatting)
 		Matcher codeBlockMatcher = CODE_BLOCK_PATTERN.matcher(text);
 		if (codeBlockMatcher.find()) {
@@ -394,28 +395,24 @@ public class DiscordMessageParser {
 			return segments;
 		}
 
-		// No markdown found, return as plain text
-		if (!text.isEmpty()) {
-			segments.add(new TextSegment(text));
-		}
+		// No Markdown found, return as plain text
+		segments.add(new TextSegment(text));
 
 		return segments;
 	}
 
 	/**
-	 * Adds segments for text before a markdown match.
+	 * Adds segments for text before a Markdown match.
 	 */
 	private static void addBeforeMatch(List<TextSegment> segments, String text, int matchStart) {
 		if (matchStart > 0) {
 			String before = text.substring(0, matchStart);
-			if (!before.isEmpty()) {
-				segments.add(new TextSegment(before));
-			}
+			segments.add(new TextSegment(before));
 		}
 	}
 
 	/**
-	 * Recursively adds segments for text after a markdown match.
+	 * Recursively adds segments for text after a Markdown match.
 	 */
 	private static void addAfterMatch(List<TextSegment> segments, String text, int matchEnd) {
 		if (matchEnd < text.length()) {
@@ -454,8 +451,8 @@ public class DiscordMessageParser {
 	private static TextSegment resolveRoleMention(String roleId, Message message) {
 		for (Role role : message.getMentions().getRoles()) {
 			if (role.getId().equals(roleId)) {
-				String color = role.getColor() != null
-						? String.format("#%06X", role.getColor().getRGB() & 0xFFFFFF)
+				String color = role.getColors().getPrimary() != null
+						? String.format("#%06X", role.getColors().getPrimary().getRGB() & 0xFFFFFF)
 						: null;
 				return new TextSegment("[@" + role.getName() + "]", color);
 			}
@@ -489,7 +486,7 @@ public class DiscordMessageParser {
 	 */
 	public static String getMemberRoleColor(Member member) {
 		if (member == null) return null;
-		java.awt.Color color = member.getColor();
+		Color color = member.getColors().getPrimary();
 		if (color == null) return null;
 		return String.format("#%06X", color.getRGB() & 0xFFFFFF);
 	}

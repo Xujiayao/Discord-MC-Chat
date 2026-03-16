@@ -31,6 +31,8 @@ import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerTickRateManager;
@@ -47,6 +49,7 @@ import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 
 import java.lang.management.ManagementFactory;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -772,8 +775,8 @@ public class MinecraftEventHandler {
 					switch (notificationStyle) {
 						case "title" -> {
 							// Send as title text (displayed prominently in the center of the screen)
-							player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket(mentionComponent));
-							player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket(10, 70, 20));
+							player.connection.send(new ClientboundSetTitleTextPacket(mentionComponent));
+							player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 70, 20));
 						}
 						case "chat" -> player.sendSystemMessage(mentionComponent);
 						default -> player.displayClientMessage(mentionComponent, true); // action_bar
@@ -835,9 +838,8 @@ public class MinecraftEventHandler {
 				}
 
 				// Render each TextSegment from the packet
-				String defaultColor = color;
 				for (DiscordEventPacket.TextSegment seg : segments) {
-					result.append(buildTextSegmentComponent(seg, defaultColor));
+					result.append(buildTextSegmentComponent(seg, color));
 				}
 
 				// Text after {message}
@@ -906,7 +908,7 @@ public class MinecraftEventHandler {
 
 			if (seg.clickUrl != null) {
 				try {
-					style = style.withClickEvent(new ClickEvent.OpenUrl(java.net.URI.create(seg.clickUrl)));
+					style = style.withClickEvent(new ClickEvent.OpenUrl(URI.create(seg.clickUrl)));
 				} catch (Exception ignored) {
 				}
 			}
