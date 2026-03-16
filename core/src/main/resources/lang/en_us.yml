@@ -179,6 +179,8 @@ discord:
   command:
     reply_failed: "Failed to send reply message to Discord command sender."
     reply_failed_detail: "This is expected behavior for reload/shutdown commands."
+  message_parser:
+    click_to_open_link: "Click to open link"
 
 server:
   discord_init_failed: "Failed to initialize Discord Manager. Aborting DMCC Server startup."

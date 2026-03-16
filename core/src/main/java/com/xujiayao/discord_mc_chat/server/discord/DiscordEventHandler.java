@@ -109,7 +109,12 @@ public class DiscordEventHandler extends ListenerAdapter {
 			String effectiveName = member != null ? member.getEffectiveName() : event.getUser().getName();
 			String roleColor = DiscordMessageParser.getRoleColorHex(member);
 
-			List<TextSegment> segments = DiscordMessageParser.buildCommandSegments(effectiveName, roleColor, name);
+			StringBuilder fullCommand = new StringBuilder("/").append(name);
+			for (OptionMapping option : event.getOptions()) {
+				fullCommand.append(" ").append(option.getName()).append(": ").append(option.getAsString());
+			}
+
+			List<TextSegment> segments = DiscordMessageParser.buildCommandSegments(effectiveName, roleColor, fullCommand.toString());
 			DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.COMMAND, segments);
 			NetworkManager.broadcastToClients(packet);
 		}
@@ -316,13 +321,13 @@ public class DiscordEventHandler extends ListenerAdapter {
 
 	@Override
 	public void onMessageReceived(@NotNull MessageReceivedEvent event) {
-		if (event.getAuthor().isBot() || event.isWebhookMessage()) {
+		// Ignore messages from DMCC Bot itself or from webhooks
+		if ((event.getAuthor() == event.getJDA().getSelfUser()) || event.isWebhookMessage()) {
 			return;
 		}
 
 		// Check if Discord-to-Minecraft chat is enabled
-		boolean chatEnabled = ConfigManager.getBoolean("broadcasts.discord_to_minecraft.chat");
-		if (!chatEnabled) {
+		if (!ConfigManager.getBoolean("broadcasts.discord_to_minecraft.chat")) {
 			return;
 		}
 
