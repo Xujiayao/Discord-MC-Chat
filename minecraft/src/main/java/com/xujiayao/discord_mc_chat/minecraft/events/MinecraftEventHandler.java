@@ -497,20 +497,26 @@ public class MinecraftEventHandler {
 					player.sendSystemMessage(mainComponent);
 				}
 
-				// Send mention notifications to mentioned players
-				if (event.mentionNotificationText() != null
-						&& event.mentionedPlayerUuids() != null
-						&& !event.mentionedPlayerUuids().isEmpty()) {
+				// Send mention notifications
+				if (event.mentionNotificationText() != null) {
 					Component notificationComponent = Component.literal(event.mentionNotificationText())
 							.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD);
 
-					for (String uuidStr : event.mentionedPlayerUuids()) {
-						try {
-							ServerPlayer player = playerList.getPlayer(UUID.fromString(uuidStr));
-							if (player != null) {
-								sendMentionNotification(player, notificationComponent, event.mentionNotificationStyle());
+					if (event.mentionEveryone()) {
+						// @everyone/@here: notify ALL online players
+						for (ServerPlayer player : playerList.getPlayers()) {
+							sendMentionNotification(player, notificationComponent, event.mentionNotificationStyle());
+						}
+					} else if (event.mentionedPlayerUuids() != null && !event.mentionedPlayerUuids().isEmpty()) {
+						// Direct/role mentions: notify specific players
+						for (String uuidStr : event.mentionedPlayerUuids()) {
+							try {
+								ServerPlayer player = playerList.getPlayer(UUID.fromString(uuidStr));
+								if (player != null) {
+									sendMentionNotification(player, notificationComponent, event.mentionNotificationStyle());
+								}
+							} catch (Exception ignored) {
 							}
-						} catch (Exception ignored) {
 						}
 					}
 				}
@@ -523,6 +529,75 @@ public class MinecraftEventHandler {
 			serverInstance.execute(() -> {
 				Component component = buildComponentFromSegments(event.segments());
 				for (ServerPlayer player : serverInstance.getPlayerList().getPlayers()) {
+					player.sendSystemMessage(component);
+				}
+			});
+		});
+
+		EventManager.register(CoreEvents.DiscordReactionEvent.class, event -> {
+			if (serverInstance == null) return;
+
+			serverInstance.execute(() -> {
+				PlayerList playerList = serverInstance.getPlayerList();
+
+				if (event.replySegments() != null && !event.replySegments().isEmpty()) {
+					Component replyComponent = buildComponentFromSegments(event.replySegments());
+					for (ServerPlayer player : playerList.getPlayers()) {
+						player.sendSystemMessage(replyComponent);
+					}
+				}
+
+				Component component = buildComponentFromSegments(event.segments());
+				for (ServerPlayer player : playerList.getPlayers()) {
+					player.sendSystemMessage(component);
+				}
+			});
+		});
+
+		EventManager.register(CoreEvents.DiscordEditEvent.class, event -> {
+			if (serverInstance == null) return;
+
+			serverInstance.execute(() -> {
+				PlayerList playerList = serverInstance.getPlayerList();
+
+				if (event.replySegments() != null && !event.replySegments().isEmpty()) {
+					Component replyComponent = buildComponentFromSegments(event.replySegments());
+					for (ServerPlayer player : playerList.getPlayers()) {
+						player.sendSystemMessage(replyComponent);
+					}
+				}
+
+				// Send edit notification
+				Component notificationComponent = buildComponentFromSegments(event.segments());
+				for (ServerPlayer player : playerList.getPlayers()) {
+					player.sendSystemMessage(notificationComponent);
+				}
+
+				// Send edited message content
+				if (event.editedMessageSegments() != null && !event.editedMessageSegments().isEmpty()) {
+					Component editedComponent = buildComponentFromSegments(event.editedMessageSegments());
+					for (ServerPlayer player : playerList.getPlayers()) {
+						player.sendSystemMessage(editedComponent);
+					}
+				}
+			});
+		});
+
+		EventManager.register(CoreEvents.DiscordDeleteEvent.class, event -> {
+			if (serverInstance == null) return;
+
+			serverInstance.execute(() -> {
+				PlayerList playerList = serverInstance.getPlayerList();
+
+				if (event.replySegments() != null && !event.replySegments().isEmpty()) {
+					Component replyComponent = buildComponentFromSegments(event.replySegments());
+					for (ServerPlayer player : playerList.getPlayers()) {
+						player.sendSystemMessage(replyComponent);
+					}
+				}
+
+				Component component = buildComponentFromSegments(event.segments());
+				for (ServerPlayer player : playerList.getPlayers()) {
 					player.sendSystemMessage(component);
 				}
 			});

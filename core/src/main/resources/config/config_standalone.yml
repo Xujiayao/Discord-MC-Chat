@@ -82,6 +82,12 @@ message_parsing:
     hyperlinks: true
     embeds: true
     components: true
+    timestamps: true
+    ansi_code_blocks: true
+    polls: true
+    reactions: true
+    edits: true
+    deletes: true
   minecraft_to_discord:
     markdown: true
     unicode_emojis: true

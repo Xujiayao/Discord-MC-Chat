@@ -208,9 +208,23 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 							p.replySegments,
 							p.mentionNotificationText,
 							p.mentionNotificationStyle,
-							p.mentionedPlayerUuids
+							p.mentionedPlayerUuids,
+							p.mentionEveryone
 					));
 					case COMMAND -> EventManager.post(new CoreEvents.DiscordCommandEvent(p.segments));
+					case REACTION -> EventManager.post(new CoreEvents.DiscordReactionEvent(
+							p.segments,
+							p.replySegments
+					));
+					case EDIT -> EventManager.post(new CoreEvents.DiscordEditEvent(
+							p.segments,
+							p.replySegments,
+							p.editedMessageSegments
+					));
+					case DELETE -> EventManager.post(new CoreEvents.DiscordDeleteEvent(
+							p.segments,
+							p.replySegments
+					));
 				}
 			}
 			case DisconnectPacket p -> {

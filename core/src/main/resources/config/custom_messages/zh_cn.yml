@@ -69,6 +69,42 @@ discord_to_minecraft:
     - text: "执行了 [{command}] 命令！"
       bold: false
       color: "gray"
+  reaction: # 表情反应消息格式
+    - text: "[Discord] "
+      bold: true
+      color: "blue"
+    - text: "{effective_name} "
+      bold: false
+      color: "{role_color}"
+    - text: "对此消息做出了 "
+      bold: false
+      color: "gray"
+    - text: "{emoji}"
+      bold: false
+      color: "yellow"
+    - text: " 反应！"
+      bold: false
+      color: "gray"
+  edit: # 消息编辑通知格式
+    - text: "[Discord] "
+      bold: true
+      color: "blue"
+    - text: "{effective_name} "
+      bold: false
+      color: "{role_color}"
+    - text: "编辑了此消息！编辑后的消息为："
+      bold: false
+      color: "gray"
+  delete: # 消息删除通知格式
+    - text: "[Discord] "
+      bold: true
+      color: "blue"
+    - text: "{effective_name} "
+      bold: false
+      color: "{role_color}"
+    - text: "删除了此消息！"
+      bold: false
+      color: "gray"
 
 minecraft_to_discord:
   server:

@@ -12,7 +12,11 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.entities.emoji.EmojiUnion;
+import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
@@ -23,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -33,6 +38,12 @@ import java.util.stream.Collectors;
 public class DiscordEventHandler extends ListenerAdapter {
 
 	private static final int AUTOCOMPLETE_TIMEOUT_SECONDS = 5;
+
+	/** Cache of recent messages for edit/delete reference. Maps message ID to cached data. */
+	private static final ConcurrentHashMap<String, CachedMessage> messageCache = new ConcurrentHashMap<>();
+	private static final int MAX_CACHE_SIZE = 200;
+
+	private record CachedMessage(String authorName, String authorRoleColor, String contentRaw) {}
 
 	/**
 	 * Resolves the OP Level credential for a Discord user based on config mappings.
@@ -376,7 +387,138 @@ public class DiscordEventHandler extends ListenerAdapter {
 		packet.mentionNotificationText = mentionNotificationText;
 		packet.mentionNotificationStyle = mentionNotificationStyle;
 		packet.mentionedPlayerUuids = mentionedPlayerUuids;
+		packet.mentionEveryone = DiscordMessageParser.isMentionEveryone(message);
 
 		NetworkManager.broadcastToClients(packet);
+
+		// Cache message for edit/delete reference
+		cacheMessage(message);
+	}
+
+	@Override
+	public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
+		if (!ConfigManager.getBoolean("broadcasts.discord_to_minecraft.chat")) {
+			return;
+		}
+
+		String configuredChannel = ConfigManager.getString("broadcasts.minecraft_to_discord.player.chat", "in-game-chat");
+		if (configuredChannel.isBlank()) {
+			return;
+		}
+
+		String channelId = event.getChannel().getId();
+		String channelName = event.getChannel().getName();
+		if (!channelId.equals(configuredChannel) && !channelName.equalsIgnoreCase(configuredChannel)) {
+			return;
+		}
+
+		Member member = event.getMember();
+		if (member == null) {
+			return;
+		}
+
+		String reactorName = member.getEffectiveName();
+		String roleColor = DiscordMessageParser.getRoleColorHex(member);
+
+		EmojiUnion emoji = event.getEmoji();
+		String emojiText = emoji.getFormatted();
+		// For custom emoji, use :name: format
+		if (emoji.getType() == net.dv8tion.jda.api.entities.emoji.Emoji.Type.CUSTOM) {
+			emojiText = ":" + emoji.getName() + ":";
+		}
+
+		List<TextSegment> segments = DiscordMessageParser.buildReactionSegments(reactorName, roleColor, emojiText);
+		DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.REACTION, segments);
+		NetworkManager.broadcastToClients(packet);
+	}
+
+	@Override
+	public void onMessageUpdate(@NotNull MessageUpdateEvent event) {
+		if (!ConfigManager.getBoolean("broadcasts.discord_to_minecraft.chat")) {
+			return;
+		}
+
+		String configuredChannel = ConfigManager.getString("broadcasts.minecraft_to_discord.player.chat", "in-game-chat");
+		if (configuredChannel.isBlank()) {
+			return;
+		}
+
+		String channelId = event.getChannel().getId();
+		String channelName = event.getChannel().getName();
+		if (!channelId.equals(configuredChannel) && !channelName.equalsIgnoreCase(configuredChannel)) {
+			return;
+		}
+
+		Message message = event.getMessage();
+		if (message.getAuthor().isBot() || message.isWebhookMessage()) {
+			return;
+		}
+
+		Member member = message.getMember();
+		String editorName = member != null ? member.getEffectiveName() : message.getAuthor().getName();
+		String roleColor = DiscordMessageParser.getRoleColorHex(member);
+
+		// Build edit notification segments
+		List<TextSegment> notificationSegments = DiscordMessageParser.buildEditNotificationSegments(editorName, roleColor);
+
+		// Build new message content segments
+		List<TextSegment> editedMessageSegments = DiscordMessageParser.buildChatSegments(message);
+
+		DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.EDIT, notificationSegments);
+		packet.editedMessageSegments = editedMessageSegments;
+		NetworkManager.broadcastToClients(packet);
+
+		// Update cache
+		cacheMessage(message);
+	}
+
+	@Override
+	public void onMessageDelete(@NotNull MessageDeleteEvent event) {
+		if (!ConfigManager.getBoolean("broadcasts.discord_to_minecraft.chat")) {
+			return;
+		}
+
+		String configuredChannel = ConfigManager.getString("broadcasts.minecraft_to_discord.player.chat", "in-game-chat");
+		if (configuredChannel.isBlank()) {
+			return;
+		}
+
+		String channelId = event.getChannel().getId();
+		String channelName = event.getChannel().getName();
+		if (!channelId.equals(configuredChannel) && !channelName.equalsIgnoreCase(configuredChannel)) {
+			return;
+		}
+
+		CachedMessage cached = messageCache.remove(event.getMessageId());
+		if (cached == null) {
+			// No cached info - send a generic delete notification
+			List<TextSegment> segments = DiscordMessageParser.buildDeleteSegments("Unknown", "white");
+			DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.DELETE, segments);
+			NetworkManager.broadcastToClients(packet);
+			return;
+		}
+
+		List<TextSegment> segments = DiscordMessageParser.buildDeleteSegments(cached.authorName(), cached.authorRoleColor());
+		DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.DELETE, segments);
+		NetworkManager.broadcastToClients(packet);
+	}
+
+	/**
+	 * Caches a message for later edit/delete reference.
+	 */
+	private void cacheMessage(Message message) {
+		// Evict entries if cache is full
+		if (messageCache.size() >= MAX_CACHE_SIZE) {
+			var iterator = messageCache.keySet().iterator();
+			while (iterator.hasNext() && messageCache.size() >= MAX_CACHE_SIZE) {
+				iterator.next();
+				iterator.remove();
+			}
+		}
+
+		Member member = message.getMember();
+		String name = member != null ? member.getEffectiveName() : message.getAuthor().getName();
+		String roleColor = DiscordMessageParser.getRoleColorHex(member);
+		messageCache.put(message.getId(), new CachedMessage(name, roleColor, message.getContentRaw()));
 	}
 }
