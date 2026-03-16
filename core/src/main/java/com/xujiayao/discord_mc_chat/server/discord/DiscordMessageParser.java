@@ -945,6 +945,7 @@ segments.add(seg);
 
 String[] codes = matcher.group(1).split(";");
 for (String codeStr : codes) {
+try {
 int code = Integer.parseInt(codeStr);
 switch (code) {
 case 0 -> {
@@ -966,6 +967,8 @@ case 34 -> color = "dark_blue";
 case 35 -> color = "dark_purple";
 case 36 -> color = "dark_aqua";
 case 37 -> color = "white";
+}
+} catch (NumberFormatException ignored) {
 }
 }
 
@@ -1014,7 +1017,7 @@ return result;
 }
 
 private static String applyLineLimit(String raw) {
-String[] lines = raw.split("\n", -1);
+String[] lines = raw.split("\n");
 if (lines.length <= MAX_CONTENT_LINES) {
 return raw;
 }

@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.entities.emoji.EmojiUnion;
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -425,7 +426,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 		EmojiUnion emoji = event.getEmoji();
 		String emojiText = emoji.getFormatted();
 		// For custom emoji, use :name: format
-		if (emoji.getType() == net.dv8tion.jda.api.entities.emoji.Emoji.Type.CUSTOM) {
+		if (emoji.getType() == Emoji.Type.CUSTOM) {
 			emojiText = ":" + emoji.getName() + ":";
 		}
 
