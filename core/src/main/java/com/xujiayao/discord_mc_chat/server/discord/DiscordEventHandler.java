@@ -358,14 +358,14 @@ public class DiscordEventHandler extends ListenerAdapter {
 		String mentionNotificationStyle = null;
 		List<String> mentionedPlayerUuids = null;
 
-		boolean mentionNotificationsEnabled = ConfigManager.getBoolean("discord.discord_mention_notifications.enable");
+		boolean mentionNotificationsEnabled = ConfigManager.getBoolean("account_linking.discord_mention_notifications.enable");
 		if (mentionNotificationsEnabled) {
 			Set<String> uuids = DiscordMessageParser.collectMentionedPlayerUuids(message);
 			if (!uuids.isEmpty()) {
 				Member member = message.getMember();
 				String effectiveName = member != null ? member.getEffectiveName() : message.getAuthor().getName();
 				mentionNotificationText = DiscordMessageParser.getMentionNotificationText(effectiveName);
-				mentionNotificationStyle = ConfigManager.getString("discord.discord_mention_notifications.style", "title");
+				mentionNotificationStyle = ConfigManager.getString("account_linking.discord_mention_notifications.style", "title");
 				mentionedPlayerUuids = new ArrayList<>(uuids);
 			}
 		}
