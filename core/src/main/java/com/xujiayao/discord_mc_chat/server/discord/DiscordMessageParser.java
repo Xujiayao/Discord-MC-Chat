@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.entities.sticker.StickerItem;
+import net.fellbaum.jemoji.EmojiManager;
 
 import java.awt.Color;
 import java.util.ArrayList;
@@ -561,9 +562,9 @@ public class DiscordMessageParser {
 	private static void collectUnicodeEmojiTokens(String raw, List<TokenSpan> tokens) {
 		Matcher matcher = UNICODE_EMOJI_PATTERN.matcher(raw);
 		while (matcher.find()) {
-			String emoji = matcher.group();
-			String shortCode = EmojiShortCodeMapper.getShortCode(emoji);
-			TextSegment seg = new TextSegment(shortCode, false, "yellow");
+			String unicodeEmoji = matcher.group();
+			String alias = EmojiManager.replaceAllEmojis(unicodeEmoji, emoji -> emoji.getDiscordAliases().getFirst());
+			TextSegment seg = new TextSegment(alias, false, "yellow");
 			tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
 		}
 	}
