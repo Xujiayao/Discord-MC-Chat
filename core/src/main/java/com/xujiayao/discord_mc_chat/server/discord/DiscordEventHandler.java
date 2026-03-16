@@ -3,9 +3,12 @@ package com.xujiayao.discord_mc_chat.server.discord;
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
 import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
+import com.xujiayao.discord_mc_chat.network.packets.events.DiscordEventPacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.TextSegment;
 import com.xujiayao.discord_mc_chat.utils.LogFileUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -18,6 +21,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -304,6 +308,63 @@ public class DiscordEventHandler extends ListenerAdapter {
 			return;
 		}
 
-		// TODO: Handle incoming Discord messages and forward to Minecraft
+		// Check if Discord-to-Minecraft chat is enabled
+		boolean chatEnabled = ConfigManager.getBoolean("broadcasts.discord_to_minecraft.chat");
+		if (!chatEnabled) {
+			return;
+		}
+
+		// Only handle messages from the configured in-game-chat channel
+		// Use the same channel as minecraft_to_discord player chat
+		String configuredChannel = ConfigManager.getString("broadcasts.minecraft_to_discord.player.chat", "in-game-chat");
+		if (configuredChannel.isBlank()) {
+			return;
+		}
+
+		// Check if the message is from the configured channel (by name or by ID)
+		String channelId = event.getChannel().getId();
+		String channelName = event.getChannel().getName();
+		if (!channelId.equals(configuredChannel) && !channelName.equalsIgnoreCase(configuredChannel)) {
+			return;
+		}
+
+		Message message = event.getMessage();
+
+		// Build the main message line segments using DiscordMessageParser
+		List<TextSegment> mainSegments = DiscordMessageParser.buildChatSegments(message);
+
+		// Build reply segments if this is a reply to another message
+		boolean parseResponses = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.responses");
+		List<TextSegment> replySegments = null;
+		if (parseResponses) {
+			Message referencedMessage = message.getReferencedMessage();
+			replySegments = DiscordMessageParser.buildReplySegments(referencedMessage);
+		}
+
+		// Build mention notification data
+		String mentionNotificationText = null;
+		String mentionNotificationStyle = null;
+		List<String> mentionedPlayerUuids = null;
+
+		boolean mentionNotificationsEnabled = ConfigManager.getBoolean("discord.discord_mention_notifications.enable");
+		if (mentionNotificationsEnabled) {
+			Set<String> uuids = DiscordMessageParser.collectMentionedPlayerUuids(message);
+			if (!uuids.isEmpty()) {
+				Member member = message.getMember();
+				String effectiveName = member != null ? member.getEffectiveName() : message.getAuthor().getName();
+				mentionNotificationText = DiscordMessageParser.getMentionNotificationText(effectiveName);
+				mentionNotificationStyle = ConfigManager.getString("discord.discord_mention_notifications.style", "title");
+				mentionedPlayerUuids = new ArrayList<>(uuids);
+			}
+		}
+
+		// Build and send the DiscordEventPacket to all connected clients
+		DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.CHAT, mainSegments);
+		packet.replySegments = replySegments;
+		packet.mentionNotificationText = mentionNotificationText;
+		packet.mentionNotificationStyle = mentionNotificationStyle;
+		packet.mentionedPlayerUuids = mentionedPlayerUuids;
+
+		NetworkManager.broadcastToClients(packet);
 	}
 }

@@ -80,6 +80,9 @@ message_parsing:
     custom_emojis: true
     mentions: true
     hyperlinks: true
+    embeds: true
+    components: true
+    responses: true
   minecraft_to_discord:
     markdown: true
     unicode_emojis: true
