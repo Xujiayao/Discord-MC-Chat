@@ -101,6 +101,18 @@ public class DiscordEventHandler extends ListenerAdapter {
 			}
 			default -> CommandManager.execute(new JdaCommandSender(event, opLevel), name);
 		}
+
+		// Forward command execution notification to Minecraft (if enabled)
+		boolean commandBroadcastEnabled = ConfigManager.getBoolean("broadcasts.discord_to_minecraft.command");
+		if (commandBroadcastEnabled) {
+			Member member = event.getMember();
+			String effectiveName = member != null ? member.getEffectiveName() : event.getUser().getName();
+			String roleColor = DiscordMessageParser.getRoleColorHex(member);
+
+			List<TextSegment> segments = DiscordMessageParser.buildCommandSegments(effectiveName, roleColor, name);
+			DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.COMMAND, segments);
+			NetworkManager.broadcastToClients(packet);
+		}
 	}
 
 	@Override

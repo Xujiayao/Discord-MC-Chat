@@ -7,7 +7,7 @@ import java.util.Map;
  * Maps common Unicode emoji characters to their short-code representations.
  * <p>
  * This is a lightweight mapper covering frequently used emojis. Unknown emojis
- * will fall back to their Unicode character wrapped in colons.
+ * will fall back to their original Unicode character.
  *
  * @author Xujiayao
  */
@@ -117,7 +117,7 @@ public class EmojiShortCodeMapper {
 	 * Gets the short-code representation for a Unicode emoji.
 	 *
 	 * @param emoji The Unicode emoji string.
-	 * @return The short-code (e.g. ":blush:"), or the original emoji wrapped in colons if unknown.
+	 * @return The short-code (e.g. ":blush:"), or the original Unicode character if unknown.
 	 */
 	public static String getShortCode(String emoji) {
 		String code = EMOJI_MAP.get(emoji);
