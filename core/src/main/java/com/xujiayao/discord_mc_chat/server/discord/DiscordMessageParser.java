@@ -190,7 +190,7 @@ public class DiscordMessageParser {
 		String refRoleColor = getRoleColorHex(refMember);
 		String refContent = referencedMessage.getContentDisplay();
 		if (refContent.length() > 50) {
-			refContent = refContent.substring(0, 50) + "...";
+			refContent = safeTruncate(refContent, 50) + "...";
 		}
 
 		JsonNode customMessages = I18nManager.getCustomMessages();
@@ -343,7 +343,7 @@ public class DiscordMessageParser {
 				if (title.isEmpty() && embed.getDescription() != null) {
 					title = embed.getDescription();
 					if (title.length() > 50) {
-						title = title.substring(0, 50) + "...";
+						title = safeTruncate(title, 50) + "...";
 					}
 				}
 				TextSegment seg = new TextSegment("<embed title=\"" + title + "\">", false, "yellow");
@@ -745,5 +745,24 @@ public class DiscordMessageParser {
 		SPOILER,
 		CODE_BLOCK,
 		INLINE_CODE
+	}
+
+	/**
+	 * Safely truncates a string to the given maximum character count without splitting
+	 * surrogate pairs (multi-byte emoji characters).
+	 *
+	 * @param text   The text to truncate.
+	 * @param maxLen The maximum number of characters.
+	 * @return The truncated text.
+	 */
+	private static String safeTruncate(String text, int maxLen) {
+		if (text.length() <= maxLen) {
+			return text;
+		}
+		// Avoid splitting a surrogate pair
+		if (Character.isHighSurrogate(text.charAt(maxLen - 1))) {
+			return text.substring(0, maxLen - 1);
+		}
+		return text.substring(0, maxLen);
 	}
 }

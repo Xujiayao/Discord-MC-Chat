@@ -805,6 +805,8 @@ public class MinecraftEventHandler {
 		}
 	}
 
+	private static final String DEFAULT_MENTION_STYLE = "title";
+
 	/**
 	 * Sends a mention notification to a player using the configured style.
 	 *
@@ -814,18 +816,18 @@ public class MinecraftEventHandler {
 	 */
 	private static void sendMentionNotification(ServerPlayer player, Component component, String style) {
 		if (style == null) {
-			style = "title";
+			style = DEFAULT_MENTION_STYLE;
 		}
 
 		switch (style) {
 			case "action_bar" -> player.connection.send(new ClientboundSetActionBarTextPacket(component));
-			case "title" -> {
+			case "chat" -> player.sendSystemMessage(component);
+			default -> {
+				// "title" and any unrecognized style fallback to title display
 				player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 70, 20));
 				player.connection.send(new ClientboundSetTitleTextPacket(component));
 				player.connection.send(new ClientboundSetSubtitleTextPacket(Component.empty()));
 			}
-			case "chat" -> player.sendSystemMessage(component);
-			default -> player.connection.send(new ClientboundSetTitleTextPacket(component));
 		}
 	}
 }
