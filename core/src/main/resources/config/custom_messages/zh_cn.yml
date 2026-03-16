@@ -49,7 +49,7 @@ common:
 
 discord_to_minecraft:
   mentioned: "{effective_name} 提及了你！"
-  response:  # 回复其它用户的消息时，原消息的格式
+  response: # 回复其它用户的消息时，原消息的格式
     - text: "    ┌──── "
       bold: true
       color: "dark_gray"

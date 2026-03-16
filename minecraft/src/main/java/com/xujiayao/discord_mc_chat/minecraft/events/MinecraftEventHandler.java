@@ -71,6 +71,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class MinecraftEventHandler {
 
+	private static final String DEFAULT_MENTION_STYLE = "title";
 	private static MinecraftServer serverInstance;
 
 	/**
@@ -657,7 +658,7 @@ public class MinecraftEventHandler {
 	 * Builds a clickable Component that suggests a command (fills the chat input) when clicked.
 	 * Displayed in green with brackets.
 	 *
-	 * @param command     The command to suggest (fill into chat input).
+	 * @param command The command to suggest (fill into chat input).
 	 * @return A clickable Component.
 	 */
 	private static Component buildSuggestCommand(String command) {
@@ -804,8 +805,6 @@ public class MinecraftEventHandler {
 			return null;
 		}
 	}
-
-	private static final String DEFAULT_MENTION_STYLE = "title";
 
 	/**
 	 * Sends a mention notification to a player using the configured style.

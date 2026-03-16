@@ -142,7 +142,8 @@ DMCC 在 Client 端提供独立的 `whitelist` 代理命令（默认所需权限
 当 DMCC 处于 `standalone + multi_server_client` 架构时，不同子服务器可使用不同 OP 映射策略。
 
 在 `standalone` 配置的 `user_mappings` 与 `role_mappings` 中，每个条目包含一个顶层 `op_level`（给 Standalone 自身查询使用），以及一个
-`server_overrides` 列表字典。若 `server_overrides` 中没有某子服务器的对应条目，则该子服务器自动降级使用顶层 `op_level` 作为默认回退值。
+`server_overrides` 列表字典。若 `server_overrides` 中没有某子服务器的对应条目，则该子服务器自动降级使用顶层 `op_level`
+作为默认回退值。
 
 ## 7. 命令列表与权限参考
 

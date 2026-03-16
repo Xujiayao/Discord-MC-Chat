@@ -21,22 +21,34 @@ public class TextSegment implements Serializable {
 	@Serial
 	private static final long serialVersionUID = 1L;
 
-	/** The display text of this segment. */
+	/**
+	 * The display text of this segment.
+	 */
 	public String text;
 
-	/** Whether the text should be rendered in bold. */
+	/**
+	 * Whether the text should be rendered in bold.
+	 */
 	public boolean bold;
 
-	/** Whether the text should be rendered in italic. */
+	/**
+	 * Whether the text should be rendered in italic.
+	 */
 	public boolean italic;
 
-	/** Whether the text should be rendered with underline. */
+	/**
+	 * Whether the text should be rendered with underline.
+	 */
 	public boolean underlined;
 
-	/** Whether the text should be rendered with strikethrough. */
+	/**
+	 * Whether the text should be rendered with strikethrough.
+	 */
 	public boolean strikethrough;
 
-	/** Whether the text should be rendered obfuscated. */
+	/**
+	 * Whether the text should be rendered obfuscated.
+	 */
 	public boolean obfuscated;
 
 	/**

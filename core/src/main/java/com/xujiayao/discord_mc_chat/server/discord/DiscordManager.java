@@ -11,7 +11,9 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
@@ -295,7 +297,7 @@ public class DiscordManager {
 	 * @param discordId The Discord user ID.
 	 * @return The User object, or null if JDA is not available or user not found.
 	 */
-	public static net.dv8tion.jda.api.entities.User retrieveUser(String discordId) {
+	public static User retrieveUser(String discordId) {
 		if (jda == null) return null;
 		try {
 			return jda.retrieveUserById(discordId).complete();
@@ -310,11 +312,11 @@ public class DiscordManager {
 	 * @param discordId The Discord user ID.
 	 * @return The Member object, or null if JDA is not available or member not found.
 	 */
-	public static net.dv8tion.jda.api.entities.Member retrieveMember(String discordId) {
+	public static Member retrieveMember(String discordId) {
 		if (jda == null) return null;
 		for (var guild : jda.getGuilds()) {
 			try {
-				net.dv8tion.jda.api.entities.Member member = guild.retrieveMemberById(discordId).complete();
+				Member member = guild.retrieveMemberById(discordId).complete();
 				if (member != null) {
 					return member;
 				}
