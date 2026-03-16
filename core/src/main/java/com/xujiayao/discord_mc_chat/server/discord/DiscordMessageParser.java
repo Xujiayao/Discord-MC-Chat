@@ -88,16 +88,8 @@ public class DiscordMessageParser {
 		String effectiveName = member != null ? member.getEffectiveName() : message.getAuthor().getName();
 		String roleColor = getRoleColorHex(member);
 
-		JsonNode customMessages = I18nManager.getCustomMessages();
-		if (customMessages == null) {
-			// Fallback: build a simple segment
-			segments.add(new TextSegment("<" + effectiveName + "> ", false, roleColor));
-			segments.addAll(parseMessageContent(message));
-			return segments;
-		}
-
 		// Build segments from common.chat template
-		JsonNode chatNode = customMessages.path("common").path("chat");
+		JsonNode chatNode = I18nManager.getCustomMessages().path("common").path("chat");
 		if (chatNode.isArray()) {
 			for (JsonNode segNode : chatNode) {
 				String text = segNode.path("text").asText("");
@@ -122,10 +114,6 @@ public class DiscordMessageParser {
 					segments.add(new TextSegment(text, bold, color));
 				}
 			}
-		} else {
-			// Fallback
-			segments.add(new TextSegment("<" + effectiveName + "> ", false, roleColor));
-			segments.addAll(parseMessageContent(message));
 		}
 
 		return segments;
@@ -144,15 +132,7 @@ public class DiscordMessageParser {
 	public static List<TextSegment> buildCommandSegments(String effectiveName, String roleColor, String commandName) {
 		List<TextSegment> segments = new ArrayList<>();
 
-		JsonNode customMessages = I18nManager.getCustomMessages();
-		if (customMessages == null) {
-			segments.add(new TextSegment("[Discord] ", true, "blue"));
-			segments.add(new TextSegment(effectiveName + " ", false, roleColor));
-			segments.add(new TextSegment("executed [" + commandName + "] command!", false, "gray"));
-			return segments;
-		}
-
-		JsonNode commandNode = customMessages.path("discord_to_minecraft").path("command");
+		JsonNode commandNode = I18nManager.getCustomMessages().path("discord_to_minecraft").path("command");
 		if (commandNode.isArray()) {
 			for (JsonNode segNode : commandNode) {
 				String text = segNode.path("text").asText("");
@@ -191,18 +171,10 @@ public class DiscordMessageParser {
 		String refRoleColor = getRoleColorHex(refMember);
 		String refContent = referencedMessage.getContentDisplay();
 		if (refContent.length() > 50) {
-			refContent = safeTruncate(refContent, 50) + "...";
+			refContent = safeTruncate(refContent, 20) + "...";
 		}
 
-		JsonNode customMessages = I18nManager.getCustomMessages();
-		if (customMessages == null) {
-			segments.add(new TextSegment("    ┌──── ", true, "dark_gray"));
-			segments.add(new TextSegment("<" + refName + "> ", false, refRoleColor));
-			segments.add(new TextSegment(refContent, false, "dark_gray"));
-			return segments;
-		}
-
-		JsonNode responseNode = customMessages.path("discord_to_minecraft").path("response");
+		JsonNode responseNode = I18nManager.getCustomMessages().path("discord_to_minecraft").path("response");
 		if (responseNode.isArray()) {
 			for (JsonNode segNode : responseNode) {
 				String text = segNode.path("text").asText("");
@@ -227,12 +199,7 @@ public class DiscordMessageParser {
 	 * @return The mention notification text.
 	 */
 	public static String getMentionNotificationText(String effectiveName) {
-		JsonNode customMessages = I18nManager.getCustomMessages();
-		if (customMessages == null) {
-			return effectiveName + " mentioned you!";
-		}
-
-		String template = customMessages.path("discord_to_minecraft").path("mentioned").asText("{effective_name} mentioned you!");
+		String template = I18nManager.getCustomMessages().path("discord_to_minecraft").path("mentioned").asText();
 		return template.replace("{effective_name}", effectiveName);
 	}
 
@@ -311,13 +278,18 @@ public class DiscordMessageParser {
 				if (!segments.isEmpty()) {
 					segments.add(new TextSegment(" "));
 				}
-				String type = attachment.isImage() ? "image" : "file";
-				String label = "<attachment type=\"" + type + "\" name=\"" + attachment.getFileName() + "\">";
+				String type = "file";
+				if (attachment.isImage()) {
+					type = "image";
+				} else if (attachment.isVideo()) {
+					type = "video";
+				}
+				String label = "<attachment type=[" + type + "] name=[" + attachment.getFileName() + "]>";
 
 				TextSegment seg = new TextSegment(label, false, "#3366CC");
 				seg.underlined = true;
 				seg.clickUrl = attachment.getUrl();
-				seg.hoverText = attachment.getUrl();
+				seg.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
 				segments.add(seg);
 			}
 		}
@@ -328,7 +300,7 @@ public class DiscordMessageParser {
 				if (!segments.isEmpty()) {
 					segments.add(new TextSegment(" "));
 				}
-				segments.add(new TextSegment("<sticker name=\"" + sticker.getName() + "\">", false, "yellow"));
+				segments.add(new TextSegment("<sticker name=[" + sticker.getName() + "]>", false, "yellow"));
 			}
 		}
 
@@ -342,13 +314,18 @@ public class DiscordMessageParser {
 				if (title.isEmpty() && embed.getDescription() != null) {
 					title = embed.getDescription();
 					if (title.length() > 50) {
-						title = safeTruncate(title, 50) + "...";
+						title = safeTruncate(title, 20) + "...";
 					}
 				}
-				TextSegment seg = new TextSegment("<embed title=\"" + title + "\">", false, "yellow");
-				if (embed.getUrl() != null) {
+
+				TextSegment seg;
+				if (embed.getUrl() == null) {
+					seg = new TextSegment("<embed title=[" + title + "]>", false, "yellow");
+				} else {
+					seg = new TextSegment("<embed title=[" + title + "]>", false, "#3366CC");
+					seg.underlined = true;
 					seg.clickUrl = embed.getUrl();
-					seg.hoverText = embed.getUrl();
+					seg.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
 				}
 				segments.add(seg);
 			}
@@ -359,7 +336,7 @@ public class DiscordMessageParser {
 			if (!segments.isEmpty()) {
 				segments.add(new TextSegment(" "));
 			}
-			segments.add(new TextSegment("<interactive components>", false, "yellow"));
+			segments.add(new TextSegment("<components>", false, "yellow"));
 		}
 
 		return segments;
@@ -535,7 +512,7 @@ public class DiscordMessageParser {
 			TextSegment seg = new TextSegment(linkText, false, "#3366CC");
 			seg.underlined = true;
 			seg.clickUrl = url;
-			seg.hoverText = url;
+			seg.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
 			tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
 		}
 	}
@@ -550,7 +527,7 @@ public class DiscordMessageParser {
 			TextSegment seg = new TextSegment(url, false, "#3366CC");
 			seg.underlined = true;
 			seg.clickUrl = url;
-			seg.hoverText = url;
+			seg.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
 			tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
 		}
 	}
@@ -627,7 +604,7 @@ public class DiscordMessageParser {
 				case UNDERLINE -> seg.underlined = true;
 				case STRIKETHROUGH -> seg.strikethrough = true;
 				case SPOILER -> seg.obfuscated = true;
-				case CODE_BLOCK, INLINE_CODE -> seg.color = "gray";
+				case CODE_BLOCK, INLINE_CODE -> seg.text = "[" + seg.text + "]";
 			}
 			segments.add(seg);
 
