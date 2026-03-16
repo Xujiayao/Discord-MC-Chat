@@ -16,6 +16,7 @@ import net.fellbaum.jemoji.EmojiManager;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -34,7 +35,7 @@ import java.util.regex.Pattern;
  */
 public class DiscordMessageParser {
 
-	// Discord markdown patterns
+	// Discord Markdown patterns
 	private static final Pattern BOLD_PATTERN = Pattern.compile("\\*\\*(.+?)\\*\\*");
 	private static final Pattern ITALIC_UNDERSCORE_PATTERN = Pattern.compile("(?<!\\\\)_(.+?)(?<!\\\\)_");
 	private static final Pattern ITALIC_ASTERISK_PATTERN = Pattern.compile("(?<!\\*)\\*(?!\\*)(.+?)(?<!\\*)\\*(?!\\*)");
@@ -57,18 +58,18 @@ public class DiscordMessageParser {
 			"[\\x{1F600}-\\x{1F64F}]|[\\x{1F300}-\\x{1F5FF}]|[\\x{1F680}-\\x{1F6FF}]|" +
 					"[\\x{1F1E0}-\\x{1F1FF}]|[\\x{2600}-\\x{26FF}]|[\\x{2700}-\\x{27BF}]|" +
 					"[\\x{FE00}-\\x{FE0F}]|[\\x{1F900}-\\x{1F9FF}]|[\\x{1FA00}-\\x{1FA6F}]|" +
-					"[\\x{1FA70}-\\x{1FAFF}]|[\\x{200D}]|[\\x{20E3}]|" +
-					"[\\x{231A}-\\x{231B}]|[\\x{23E9}-\\x{23F3}]|[\\x{23F8}-\\x{23FA}]|" +
-					"[\\x{25AA}-\\x{25AB}]|[\\x{25B6}]|[\\x{25C0}]|[\\x{25FB}-\\x{25FE}]|" +
-					"[\\x{2614}-\\x{2615}]|[\\x{2648}-\\x{2653}]|[\\x{267F}]|[\\x{2693}]|" +
-					"[\\x{26A1}]|[\\x{26AA}-\\x{26AB}]|[\\x{26BD}-\\x{26BE}]|" +
-					"[\\x{26C4}-\\x{26C5}]|[\\x{26CE}]|[\\x{26D4}]|[\\x{26EA}]|" +
-					"[\\x{26F2}-\\x{26F3}]|[\\x{26F5}]|[\\x{26FA}]|[\\x{26FD}]|" +
-					"[\\x{2702}]|[\\x{2705}]|[\\x{2708}-\\x{270D}]|[\\x{270F}]"
+                    "[\\x{1FA70}-\\x{1FAFF}]|\\x{200D}|\\x{20E3}|" +
+                    "[\\x{231A}-\\x{231B}]|[\\x{23E9}-\\x{23F3}]|[\\x{23F8}-\\x{23FA}]|" +
+                    "[\\x{25AA}-\\x{25AB}]|\\x{25B6}|\\x{25C0}|[\\x{25FB}-\\x{25FE}]|" +
+                    "[\\x{2614}-\\x{2615}]|[\\x{2648}-\\x{2653}]|\\x{267F}|\\x{2693}|" +
+                    "\\x{26A1}|[\\x{26AA}-\\x{26AB}]|[\\x{26BD}-\\x{26BE}]|" +
+                    "[\\x{26C4}-\\x{26C5}]|\\x{26CE}|\\x{26D4}|\\x{26EA}|" +
+                    "[\\x{26F2}-\\x{26F3}]|\\x{26F5}|\\x{26FA}|\\x{26FD}|" +
+                    "\\x{2702}|\\x{2705}|[\\x{2708}-\\x{270D}]|\\x{270F}"
 	);
 
 	// Hyperlink pattern: [text](url) or bare URLs
-	private static final Pattern MARKDOWN_LINK_PATTERN = Pattern.compile("\\[([^\\]]+)]\\((https?://[^)]+)\\)");
+	private static final Pattern MARKDOWN_LINK_PATTERN = Pattern.compile("\\[([^]]+)]\\((https?://[^)]+)\\)");
 	private static final Pattern BARE_URL_PATTERN = Pattern.compile("(https?://\\S+)");
 
 	/**
@@ -195,7 +196,7 @@ public class DiscordMessageParser {
 
 		JsonNode customMessages = I18nManager.getCustomMessages();
 		if (customMessages == null) {
-			segments.add(new TextSegment("    \u250C\u2500\u2500\u2500\u2500 ", true, "dark_gray"));
+			segments.add(new TextSegment("    ┌──── ", true, "dark_gray"));
 			segments.add(new TextSegment("<" + refName + "> ", false, refRoleColor));
 			segments.add(new TextSegment(refContent, false, "dark_gray"));
 			return segments;
@@ -255,21 +256,20 @@ public class DiscordMessageParser {
 
 		// Role mentions
 		for (Role mentionedRole : message.getMentions().getRoles()) {
-			if (message.getGuild() != null) {
-				List<Member> membersWithRole = message.getGuild().getMembersWithRoles(mentionedRole);
-				for (Member m : membersWithRole) {
-					List<String> linkedUuids = LinkedAccountManager.getMinecraftUuidsByDiscordId(m.getUser().getId());
-					uuids.addAll(linkedUuids);
-				}
+			message.getGuild();
+			List<Member> membersWithRole = message.getGuild().getMembersWithRoles(mentionedRole);
+			for (Member m : membersWithRole) {
+				List<String> linkedUuids = LinkedAccountManager.getMinecraftUuidsByDiscordId(m.getUser().getId());
+				uuids.addAll(linkedUuids);
 			}
 		}
 
 		// @everyone / @here mentions
-		if (message.getMentions().mentionsEveryone()) {
+		// if (message.getMentions().mentionsEveryone()) {
 			// Notify all linked players
 			// LinkedAccountManager only exposes per-Discord-ID lookups, so we iterate all known links
 			// This is handled by checking all online linked players on the Minecraft side
-		}
+		// }
 
 		return uuids;
 	}
@@ -279,7 +279,7 @@ public class DiscordMessageParser {
 	 * <p>
 	 * This method handles all the Discord message content types according to the
 	 * {@code message_parsing.discord_to_minecraft.*} config switches:
-	 * markdown, mentions, custom_emojis, unicode_emojis, hyperlinks, attachments,
+	 * Markdown, mentions, custom_emojis, unicode_emojis, hyperlinks, attachments,
 	 * stickers, embeds, and components.
 	 *
 	 * @param message The Discord message.
@@ -298,7 +298,6 @@ public class DiscordMessageParser {
 		boolean parseStickers = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.stickers");
 		boolean parseEmbeds = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.embeds");
 		boolean parseComponents = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.components");
-		boolean parseResponses = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.responses");
 
 		// Process the raw text content
 		if (!raw.isEmpty()) {
@@ -368,14 +367,14 @@ public class DiscordMessageParser {
 
 	/**
 	 * Parses the raw text content of a Discord message, handling mentions, emojis,
-	 * markdown, and hyperlinks inline.
+	 * Markdown, and hyperlinks inline.
 	 *
 	 * @param raw                The raw content string.
 	 * @param message            The Discord message (for resolving mentions).
 	 * @param parseMentions      Whether to parse mentions.
 	 * @param parseCustomEmojis  Whether to parse custom emojis.
-	 * @param parseUnicodeEmojis Whether to parse unicode emojis.
-	 * @param parseMarkdown      Whether to parse markdown formatting.
+	 * @param parseUnicodeEmojis Whether to parse Unicode emojis.
+	 * @param parseMarkdown      Whether to parse Markdown formatting.
 	 * @param parseHyperlinks    Whether to parse hyperlinks.
 	 * @return The list of text segments for the raw content.
 	 */
@@ -409,7 +408,7 @@ public class DiscordMessageParser {
 		}
 
 		// Sort tokens by start position
-		tokens.sort((a, b) -> Integer.compare(a.start, b.start));
+		tokens.sort(Comparator.comparingInt(a -> a.start));
 
 		// Remove overlapping tokens (keep the first one)
 		tokens = removeOverlaps(tokens);
@@ -455,7 +454,8 @@ public class DiscordMessageParser {
 			String color = null;
 			for (User user : message.getMentions().getUsers()) {
 				if (user.getId().equals(userId)) {
-					Member member = message.getGuild() != null ? message.getGuild().getMember(user) : null;
+					message.getGuild();
+					Member member = message.getGuild().getMember(user);
 					displayName = member != null ? member.getEffectiveName() : user.getName();
 					color = getRoleColorHex(member);
 					break;
@@ -481,7 +481,7 @@ public class DiscordMessageParser {
 			for (Role role : message.getMentions().getRoles()) {
 				if (role.getId().equals(roleId)) {
 					roleName = role.getName();
-					Color roleColor = role.getColor();
+					Color roleColor = role.getColors().getPrimary();
 					if (roleColor != null) {
 						color = String.format("#%06X", roleColor.getRGB() & 0xFFFFFF);
 					}
@@ -525,7 +525,7 @@ public class DiscordMessageParser {
 	}
 
 	/**
-	 * Collects markdown-style link tokens from the raw content.
+	 * Collects Markdown-style link tokens from the raw content.
 	 */
 	private static void collectMarkdownLinkTokens(String raw, List<TokenSpan> tokens) {
 		Matcher matcher = MARKDOWN_LINK_PATTERN.matcher(raw);
@@ -556,7 +556,7 @@ public class DiscordMessageParser {
 	}
 
 	/**
-	 * Collects unicode emoji tokens from the raw content and converts them to
+	 * Collects Unicode emoji tokens from the raw content and converts them to
 	 * short-code format (e.g. :blush:).
 	 */
 	private static void collectUnicodeEmojiTokens(String raw, List<TokenSpan> tokens) {
@@ -588,13 +588,13 @@ public class DiscordMessageParser {
 	}
 
 	/**
-	 * Parses simple markdown formatting in plain text into styled segments.
+	 * Parses simple Markdown formatting in plain text into styled segments.
 	 * <p>
 	 * Handles: bold (**), italic (* or _), underline (__), strikethrough (~~),
 	 * spoiler (||), code blocks (```), and inline code (`).
 	 *
-	 * @param text The plain text that may contain markdown.
-	 * @return The list of text segments with markdown styles applied.
+	 * @param text The plain text that may contain Markdown.
+	 * @return The list of text segments with Markdown styles applied.
 	 */
 	private static List<TextSegment> parseMarkdownText(String text) {
 		List<TextSegment> segments = new ArrayList<>();
@@ -611,7 +611,7 @@ public class DiscordMessageParser {
 		collectMarkdownSpans(text, ITALIC_ASTERISK_PATTERN, MarkdownType.ITALIC, spans);
 
 		// Sort by start position and remove overlaps
-		spans.sort((a, b) -> Integer.compare(a.start, b.start));
+		spans.sort(Comparator.comparingInt(a -> a.start));
 		spans = removeMarkdownOverlaps(spans);
 
 		int cursor = 0;
@@ -642,7 +642,7 @@ public class DiscordMessageParser {
 	}
 
 	/**
-	 * Collects markdown spans from the text for a given pattern and type.
+	 * Collects Markdown spans from the text for a given pattern and type.
 	 */
 	private static void collectMarkdownSpans(String text, Pattern pattern, MarkdownType type, List<MarkdownSpan> spans) {
 		Matcher matcher = pattern.matcher(text);
@@ -652,7 +652,7 @@ public class DiscordMessageParser {
 	}
 
 	/**
-	 * Removes overlapping markdown spans, keeping the first one.
+	 * Removes overlapping Markdown spans, keeping the first one.
 	 */
 	private static List<MarkdownSpan> removeMarkdownOverlaps(List<MarkdownSpan> spans) {
 		List<MarkdownSpan> result = new ArrayList<>();
@@ -695,7 +695,7 @@ public class DiscordMessageParser {
 		if (member == null) {
 			return "white";
 		}
-		Color color = member.getColor();
+		Color color = member.getColors().getPrimary();
 		if (color == null) {
 			return "white";
 		}
@@ -741,7 +741,7 @@ public class DiscordMessageParser {
 	}
 
 	/**
-	 * Types of markdown formatting.
+	 * Types of Markdown formatting.
 	 */
 	private enum MarkdownType {
 		BOLD,
@@ -761,7 +761,7 @@ public class DiscordMessageParser {
 	}
 
 	/**
-	 * Internal record representing a markdown-formatted span of text.
+	 * Internal record representing a Markdown-formatted span of text.
 	 */
 	private record MarkdownSpan(int start, int end, String innerText, MarkdownType type) {
 	}

@@ -6,7 +6,6 @@ import com.xujiayao.discord_mc_chat.network.packets.events.TextSegment;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
 /**
  * Core events for communication between DMCC Core and Minecraft-specific implementations.
@@ -54,38 +53,6 @@ public class CoreEvents {
 			String input,
 			int opLevel,
 			List<String> suggestions
-	) {
-	}
-
-	/**
-	 * Posted when a Minecraft player needs a verification code for account linking.
-	 * <p>
-	 * The handler should resolve the player's UUID and name from the Minecraft server
-	 * and invoke the callback with the result.
-	 *
-	 * @param playerUuid The UUID of the Minecraft player (as string).
-	 * @param playerName The display name of the Minecraft player.
-	 * @param callback   A consumer that receives the generated verification code,
-	 *                   or null if the player is already linked.
-	 */
-	public record LinkCodeRequestEvent(
-			String playerUuid,
-			String playerName,
-			Consumer<String> callback
-	) {
-	}
-
-	/**
-	 * Posted when a Minecraft player wants to unlink their account.
-	 * <p>
-	 * The handler should remove the link for the given UUID and invoke the callback.
-	 *
-	 * @param playerUuid The UUID of the Minecraft player (as string).
-	 * @param callback   A consumer that receives true if unlink was successful, false otherwise.
-	 */
-	public record UnlinkByUuidEvent(
-			String playerUuid,
-			Consumer<Boolean> callback
 	) {
 	}
 

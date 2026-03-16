@@ -92,10 +92,4 @@ public class TextSegment implements Serializable {
 		this.bold = bold;
 		this.color = color;
 	}
-
-	/**
-	 * No-arg constructor required for serialization frameworks.
-	 */
-	public TextSegment() {
-	}
 }

@@ -346,12 +346,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 		List<TextSegment> mainSegments = DiscordMessageParser.buildChatSegments(message);
 
 		// Build reply segments if this is a reply to another message
-		boolean parseResponses = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.responses");
-		List<TextSegment> replySegments = null;
-		if (parseResponses) {
-			Message referencedMessage = message.getReferencedMessage();
-			replySegments = DiscordMessageParser.buildReplySegments(referencedMessage);
-		}
+		List<TextSegment> replySegments = DiscordMessageParser.buildReplySegments(message.getReferencedMessage());
 
 		// Build mention notification data
 		String mentionNotificationText = null;
