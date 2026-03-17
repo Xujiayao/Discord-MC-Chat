@@ -961,7 +961,15 @@ List<TextSegment> codeSegments;
 if ("ansi".equalsIgnoreCase(language) && ConfigManager.getBoolean("message_parsing.discord_to_minecraft.ansi_code_blocks")) {
 codeSegments = parseAnsiContent(content);
 } else {
-codeSegments = List.of(new TextSegment("[" + content + "]"));
+	StringBuilder sb = new StringBuilder("<code lang=[").append(language).append("]>");
+
+	// For each line of content string
+	for (String line : content.split("\n", 0)) {
+		sb.append("\n  ").append(line);
+	}
+	sb.append("\n</code>");
+
+codeSegments = List.of(new TextSegment(sb.toString()));
 }
 
 spans.add(new MarkdownSpan(matcher.start(), matcher.end(), content, MarkdownType.CODE_BLOCK, codeSegments));
