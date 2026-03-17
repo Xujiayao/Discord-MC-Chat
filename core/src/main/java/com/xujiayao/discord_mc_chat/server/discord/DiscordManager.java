@@ -80,6 +80,7 @@ public class DiscordManager {
 										GatewayIntent.GUILD_MESSAGE_REACTIONS
 								)
 								.setMemberCachePolicy(MemberCachePolicy.ALL)
+								.setEventPool(Executors.newSingleThreadExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-DiscordEvent")), true)
 								.addEventListeners(new DiscordEventHandler())
 								.build();
 
