@@ -181,6 +181,28 @@ discord:
     reply_failed_detail: "This is expected behavior for reload/shutdown commands."
   message_parser:
     click_to_open_link: "Click to open link"
+    relative:
+      past: "{} {} ago"
+      future: "in {} {}"
+      units:
+        second:
+          one: "second"
+          other: "seconds"
+        minute:
+          one: "minute"
+          other: "minutes"
+        hour:
+          one: "hour"
+          other: "hours"
+        day:
+          one: "day"
+          other: "days"
+        month:
+          one: "month"
+          other: "months"
+        year:
+          one: "year"
+          other: "years"
 
 server:
   discord_init_failed: "Failed to initialize Discord Manager. Aborting DMCC Server startup."

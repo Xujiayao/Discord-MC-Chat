@@ -88,12 +88,15 @@ private static final Pattern ANSI_ESCAPE_PATTERN = Pattern.compile("\\x1B\\[(\\d
 // Hyperlink pattern: [text](url) or bare URLs (excluding trailing markdown delimiters)
 private static final Pattern MARKDOWN_LINK_PATTERN = Pattern.compile("\\[([^]]+)]\\((https?://[^)]+)\\)");
 private static final Pattern BARE_URL_PATTERN = Pattern.compile("(https?://[^\\s*|~`<>)\\]]+)");
+private static final Pattern BOLD_ITALIC_URL_PATTERN = Pattern.compile("\\*\\*\\*(https?://[^\\s*|~`<>)\\]]+)\\*\\*\\*");
 private static final Pattern BOLD_URL_PATTERN = Pattern.compile("\\*\\*(https?://[^\\s*|~`<>)\\]]+)\\*\\*");
+private static final Pattern SPOILER_ITALIC_URL_PATTERN = Pattern.compile("\\|\\|\\*(https?://[^\\s*|~`<>)\\]]+)\\*\\|\\|");
 private static final Pattern SPOILER_URL_PATTERN = Pattern.compile("\\|\\|(https?://[^\\s*|~`<>)\\]]+)\\|\\|");
 
-/** Maximum number of content lines for multi-line messages. */
-private static final int MAX_CONTENT_LINES = 5;
-private static final int REPLY_TRUNCATE_LIMIT = 20;
+private static final int REPLY_TRUNCATE_LIMIT_WIDE = 20;
+private static final int REPLY_TRUNCATE_LIMIT_NARROW = 40;
+private static final int MAIN_TRUNCATE_LIMIT_WIDE = 100;
+private static final int MAIN_TRUNCATE_LIMIT_NARROW = 200;
 private static final String URL_COLOR = "#3366CC";
 
 /**
@@ -119,7 +122,8 @@ String effectiveName = member != null ? member.getEffectiveName() : message.getA
 String roleColor = getRoleColorHex(member);
 
 String raw = message.getContentRaw();
-boolean isMultiLine = raw.contains("\n");
+String truncatedRaw = truncateMainRaw(raw);
+boolean isMultiLine = truncatedRaw.contains("\n");
 
 // Build segments from common.chat template
 JsonNode chatNode = I18nManager.getCustomMessages().path("common").path("chat");
@@ -144,8 +148,7 @@ if (isMultiLine) {
 // YAML-style multi-line: append "|" then newline-separated content
 segments.add(new TextSegment("|", bold, color));
 
-// Apply line limit and parse
-String truncatedRaw = applyLineLimit(raw);
+// Parse already-truncated content
 List<TextSegment> contentSegments = parseMessageContent(message, truncatedRaw);
 
 // Apply default color inheritance
@@ -157,7 +160,7 @@ contentSegments.getFirst().text = "\n" + contentSegments.getFirst().text;
 }
 segments.addAll(contentSegments);
 } else {
-List<TextSegment> contentSegments = parseMessageContent(message);
+List<TextSegment> contentSegments = parseMessageContent(message, truncatedRaw);
 
 // Apply default color inheritance
 applyDefaultColor(contentSegments, color);
@@ -214,7 +217,7 @@ return segments;
  * <p>
  * The format follows the custom_messages {@code discord_to_minecraft.response} pattern.
  * The referenced message content is parsed through the same pipeline as the main message,
- * but truncated to a single line (at first newline and at 20 characters if over 50).
+ * but truncated to a single line (at first newline or at width-based character limit).
  *
  * @param referencedMessage The message being replied to.
  * @return The list of text segments for the reply line, or null if no reply.
@@ -573,7 +576,9 @@ collectCustomEmojiTokens(raw, tokens);
 }
 
 if (parseHyperlinks) {
+collectBoldItalicUrlTokens(raw, tokens);
 collectBoldUrlTokens(raw, tokens);
+collectSpoilerItalicUrlTokens(raw, tokens);
 collectSpoilerUrlTokens(raw, tokens);
 collectMarkdownLinkTokens(raw, tokens);
 collectBareUrlTokens(raw, tokens);
@@ -757,29 +762,35 @@ private static String formatRelativeTime(long diffSeconds) {
 boolean past = diffSeconds >= 0;
 long abs = Math.abs(diffSeconds);
 
-String unit;
+String unitKey;
 long value;
 if (abs < 60) {
 value = abs;
-unit = value == 1 ? "second" : "seconds";
+unitKey = "second";
 } else if (abs < 3600) {
 value = abs / 60;
-unit = value == 1 ? "minute" : "minutes";
+unitKey = "minute";
 } else if (abs < 86400) {
 value = abs / 3600;
-unit = value == 1 ? "hour" : "hours";
+unitKey = "hour";
 } else if (abs < 2592000) {
 value = abs / 86400;
-unit = value == 1 ? "day" : "days";
+unitKey = "day";
 } else if (abs < 31536000) {
 value = abs / 2592000;
-unit = value == 1 ? "month" : "months";
+unitKey = "month";
 } else {
 value = abs / 31536000;
-unit = value == 1 ? "year" : "years";
+unitKey = "year";
 }
 
-return past ? value + " " + unit + " ago" : "in " + value + " " + unit;
+String unit = I18nManager.getDmccTranslation(
+"discord.message_parser.relative.units." + unitKey + (value == 1 ? ".one" : ".other")
+);
+String direction = past
+? I18nManager.getDmccTranslation("discord.message_parser.relative.past", value, unit)
+: I18nManager.getDmccTranslation("discord.message_parser.relative.future", value, unit);
+return direction;
 }
 
 private static Locale getDmccLocale() {
@@ -806,25 +817,30 @@ tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
 }
 }
 
-private static void collectBoldUrlTokens(String raw, List<TokenSpan> tokens) {
-Matcher matcher = BOLD_URL_PATTERN.matcher(raw);
-while (matcher.find()) {
-String url = matcher.group(1);
-TextSegment seg = new TextSegment(url, false, URL_COLOR);
-seg.bold = true;
-seg.underlined = true;
-seg.clickUrl = url;
-seg.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
-tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
+private static void collectBoldItalicUrlTokens(String raw, List<TokenSpan> tokens) {
+collectStyledUrlTokens(raw, BOLD_ITALIC_URL_PATTERN, true, true, false, tokens);
 }
+
+private static void collectBoldUrlTokens(String raw, List<TokenSpan> tokens) {
+collectStyledUrlTokens(raw, BOLD_URL_PATTERN, true, false, false, tokens);
+}
+
+private static void collectSpoilerItalicUrlTokens(String raw, List<TokenSpan> tokens) {
+collectStyledUrlTokens(raw, SPOILER_ITALIC_URL_PATTERN, false, true, true, tokens);
 }
 
 private static void collectSpoilerUrlTokens(String raw, List<TokenSpan> tokens) {
-Matcher matcher = SPOILER_URL_PATTERN.matcher(raw);
+collectStyledUrlTokens(raw, SPOILER_URL_PATTERN, false, false, true, tokens);
+}
+
+private static void collectStyledUrlTokens(String raw, Pattern pattern, boolean bold, boolean italic, boolean obfuscated, List<TokenSpan> tokens) {
+Matcher matcher = pattern.matcher(raw);
 while (matcher.find()) {
 String url = matcher.group(1);
 TextSegment seg = new TextSegment(url, false, URL_COLOR);
-seg.obfuscated = true;
+seg.bold = bold;
+seg.italic = italic;
+seg.obfuscated = obfuscated;
 seg.underlined = true;
 seg.clickUrl = url;
 seg.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
@@ -961,15 +977,12 @@ List<TextSegment> codeSegments;
 if ("ansi".equalsIgnoreCase(language) && ConfigManager.getBoolean("message_parsing.discord_to_minecraft.ansi_code_blocks")) {
 codeSegments = parseAnsiContent(content);
 } else {
-	StringBuilder sb = new StringBuilder("<code lang=[").append(language).append("]>");
-
-	// For each line of content string
-	for (String line : content.split("\n", 0)) {
-		sb.append("\n  ").append(line);
-	}
-	sb.append("\n</code>");
-
-codeSegments = List.of(new TextSegment(sb.toString()));
+codeSegments = new ArrayList<>();
+codeSegments.add(new TextSegment("<code lang=[" + language + "]>", false, "yellow"));
+for (String line : content.split("\n", 0)) {
+codeSegments.add(new TextSegment("\n  " + line));
+}
+codeSegments.add(new TextSegment("\n</code>", false, "yellow"));
 }
 
 spans.add(new MarkdownSpan(matcher.start(), matcher.end(), content, MarkdownType.CODE_BLOCK, codeSegments));
@@ -1079,25 +1092,18 @@ lastEnd = span.end;
 return result;
 }
 
-private static String applyLineLimit(String raw) {
-String[] lines = raw.split("\n");
-if (lines.length <= MAX_CONTENT_LINES) {
+private static String truncateMainRaw(String raw) {
+int maxLength = containsFullWidthCharacter(raw) ? MAIN_TRUNCATE_LIMIT_WIDE : MAIN_TRUNCATE_LIMIT_NARROW;
+if (raw.length() <= maxLength) {
 return raw;
 }
-StringBuilder sb = new StringBuilder();
-for (int i = 0; i < MAX_CONTENT_LINES - 1; i++) {
-if (i > 0) {
-sb.append("\n");
-}
-sb.append(lines[i]);
-}
-sb.append("\n...");
-return sb.toString();
+return safeTruncate(raw, maxLength) + "...";
 }
 
 private static String truncateReplyRaw(String raw) {
+int replyLimit = containsFullWidthCharacter(raw) ? REPLY_TRUNCATE_LIMIT_WIDE : REPLY_TRUNCATE_LIMIT_NARROW;
 int newlineIndex = raw.indexOf('\n');
-int cutoff = newlineIndex >= 0 ? Math.min(newlineIndex, REPLY_TRUNCATE_LIMIT) : REPLY_TRUNCATE_LIMIT;
+int cutoff = newlineIndex >= 0 ? Math.min(newlineIndex, replyLimit) : replyLimit;
 if (cutoff <= 0) {
 return "...";
 }
@@ -1105,6 +1111,26 @@ if (raw.length() <= cutoff) {
 return raw;
 }
 return safeTruncate(raw, cutoff) + "...";
+}
+
+private static boolean containsFullWidthCharacter(String text) {
+for (int i = 0; i < text.length();) {
+int codePoint = text.codePointAt(i);
+Character.UnicodeScript script = Character.UnicodeScript.of(codePoint);
+if (script == Character.UnicodeScript.HAN
+|| script == Character.UnicodeScript.HIRAGANA
+|| script == Character.UnicodeScript.KATAKANA
+|| script == Character.UnicodeScript.HANGUL) {
+return true;
+}
+Character.UnicodeBlock block = Character.UnicodeBlock.of(codePoint);
+if (block == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS
+|| block == Character.UnicodeBlock.CJK_SYMBOLS_AND_PUNCTUATION) {
+return true;
+}
+i += Character.charCount(codePoint);
+}
+return false;
 }
 
 private static void applyDefaultColor(List<TextSegment> segments, String defaultColor) {
