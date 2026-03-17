@@ -955,7 +955,7 @@ private static void collectCodeBlockSpans(String text, List<MarkdownSpan> spans)
 Matcher matcher = CODE_BLOCK_PATTERN.matcher(text);
 while (matcher.find()) {
 String language = matcher.group(1);
-String content = matcher.group(2);
+String content = matcher.group(2).stripTrailing();
 List<TextSegment> codeSegments;
 
 if ("ansi".equalsIgnoreCase(language) && ConfigManager.getBoolean("message_parsing.discord_to_minecraft.ansi_code_blocks")) {
