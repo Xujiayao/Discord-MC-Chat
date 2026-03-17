@@ -47,7 +47,20 @@ public class DiscordEventHandler extends ListenerAdapter {
 	private static final ConcurrentHashMap<String, CachedMessage> messageCache = new ConcurrentHashMap<>();
 	private static final int MAX_CACHE_SIZE = 200;
 
-	private record CachedMessage(String authorName, String authorRoleColor, String contentRaw, Message contextMessage) {}
+	/**
+	 * Cached Discord message metadata for reply/edit/delete context rendering.
+	 * <p>
+	 * Stores the already-rendered one-line reply preview so fallback rendering keeps the
+	 * same formatting pipeline (including webhook message formatting) without retaining full
+	 * JDA {@link Message} objects in memory.
+	 * {@code replySegments} may be null when a preview cannot be produced for a message.
+	 *
+	 * @param authorName    Cached effective name of the message author.
+	 * @param authorRoleColor Cached role color of the message author.
+	 * @param contentRaw    Cached raw content for fallback rebuilding.
+	 * @param replySegments Cached rendered reply preview, nullable.
+	 */
+	private record CachedMessage(String authorName, String authorRoleColor, String contentRaw, List<TextSegment> replySegments) {}
 
 	/**
 	 * Resolves the OP Level credential for a Discord user based on config mappings.
@@ -380,9 +393,12 @@ public class DiscordEventHandler extends ListenerAdapter {
 				replySegments = DiscordMessageParser.buildReplySegments(
 						cachedRef.authorName(),
 						cachedRef.authorRoleColor(),
-						cachedRef.contextMessage(),
+						null,
 						cachedRef.contentRaw()
 				);
+				if (cachedRef.replySegments() != null && !cachedRef.replySegments().isEmpty()) {
+					replySegments = cachedRef.replySegments();
+				}
 			}
 		}
 
@@ -495,12 +511,15 @@ public class DiscordEventHandler extends ListenerAdapter {
 		CachedMessage cached = messageCache.get(message.getId());
 		List<TextSegment> replySegments = null;
 		if (cached != null && cached.contentRaw() != null) {
-			replySegments = DiscordMessageParser.buildReplySegments(
-					cached.authorName(),
-					cached.authorRoleColor(),
-					cached.contextMessage(),
-					cached.contentRaw()
-			);
+			replySegments = cached.replySegments();
+			if (replySegments == null || replySegments.isEmpty()) {
+				replySegments = DiscordMessageParser.buildReplySegments(
+						cached.authorName(),
+						cached.authorRoleColor(),
+						null,
+						cached.contentRaw()
+				);
+			}
 		}
 
 		// Build edit notification segments
@@ -552,9 +571,12 @@ public class DiscordEventHandler extends ListenerAdapter {
 		packet.replySegments = DiscordMessageParser.buildReplySegments(
 				cached.authorName(),
 				cached.authorRoleColor(),
-				cached.contextMessage(),
+				null,
 				cached.contentRaw()
 		);
+		if (cached.replySegments() != null && !cached.replySegments().isEmpty()) {
+			packet.replySegments = cached.replySegments();
+		}
 		logDiscordEventForConsole(packet);
 		NetworkManager.broadcastToClients(packet);
 	}
@@ -575,7 +597,8 @@ public class DiscordEventHandler extends ListenerAdapter {
 		Member member = message.getMember();
 		String name = member != null ? member.getEffectiveName() : message.getAuthor().getName();
 		String roleColor = DiscordMessageParser.getRoleColorHex(member);
-		messageCache.put(message.getId(), new CachedMessage(name, roleColor, message.getContentRaw(), message));
+		List<TextSegment> replySegments = DiscordMessageParser.buildReplySegments(message);
+		messageCache.put(message.getId(), new CachedMessage(name, roleColor, message.getContentRaw(), replySegments));
 	}
 
 	private static void logDiscordEventForConsole(DiscordEventPacket packet) {
