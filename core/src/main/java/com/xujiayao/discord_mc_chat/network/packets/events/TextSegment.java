@@ -94,11 +94,6 @@ public class TextSegment implements Serializable {
 		this.color = color;
 	}
 
-	@Override
-	public String toString() {
-		return text == null ? "" : text;
-	}
-
 	public static String toPlainText(List<TextSegment> segments) {
 		if (segments == null || segments.isEmpty()) {
 			return "";
@@ -108,5 +103,10 @@ public class TextSegment implements Serializable {
 			sb.append(segment == null ? "" : segment.toString());
 		}
 		return sb.toString();
+	}
+
+	@Override
+	public String toString() {
+		return text == null ? "" : text;
 	}
 }
