@@ -73,6 +73,7 @@ public class DiscordManager {
 				// Blocks until JDA is ready
 				CompletableFuture<Void> readyFuture = CompletableFuture.runAsync(() -> {
 					ExecutorService eventExecutor = Executors.newSingleThreadExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-DiscordEvent"));
+					ExecutorService callbackExecutor = Executors.newCachedThreadPool(ExecutorServiceUtils.newThreadFactory("DMCC-DiscordCallback"));
 					try {
 						jda = JDABuilder.createDefault(token)
 								.enableIntents(
@@ -82,6 +83,7 @@ public class DiscordManager {
 								)
 								.setMemberCachePolicy(MemberCachePolicy.ALL)
 								.setEventPool(eventExecutor, true)
+								.setCallbackPool(callbackExecutor, true)
 								.addEventListeners(new DiscordEventHandler())
 								.build();
 
@@ -89,8 +91,9 @@ public class DiscordManager {
 					} catch (InterruptedException e) {
 						LOGGER.error(I18nManager.getDmccTranslation("discord.manager.init_interrupted"), e);
 					} catch (RuntimeException e) {
-						// If build() fails before JDA takes ownership of the event executor, shut it down to avoid leaks
+						// If build() fails before JDA takes ownership of executors, shut them down to avoid leaks
 						eventExecutor.shutdownNow();
+						callbackExecutor.shutdownNow();
 						throw e;
 					}
 				}, executor);
