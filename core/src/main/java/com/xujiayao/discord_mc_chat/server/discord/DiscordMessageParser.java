@@ -92,6 +92,7 @@ private static final Pattern BOLD_ITALIC_URL_PATTERN = Pattern.compile("\\*\\*\\
 private static final Pattern BOLD_URL_PATTERN = Pattern.compile("\\*\\*(https?://[^\\s*|~`<>)\\]]+)\\*\\*");
 private static final Pattern SPOILER_ITALIC_URL_PATTERN = Pattern.compile("\\|\\|\\*(https?://[^\\s*|~`<>)\\]]+)\\*\\|\\|");
 private static final Pattern SPOILER_URL_PATTERN = Pattern.compile("\\|\\|(https?://[^\\s*|~`<>)\\]]+)\\|\\|");
+private static final List<String> MARKDOWN_DELIMITERS = List.of("***", "~~", "||", "**", "__", "*", "_");
 
 private static final int MAX_CONTENT_LINES = 6;
 private static final int REPLY_TRUNCATE_LIMIT_WIDE = 20;
@@ -941,8 +942,11 @@ return segments;
 
 private static List<TextSegment> parseMarkdownInlineWithHeading(String text, MarkdownState baseState) {
 List<TextSegment> result = new ArrayList<>();
+if (text.isEmpty()) {
+return result;
+}
 int start = 0;
-while (start <= text.length()) {
+while (start < text.length()) {
 int newline = text.indexOf('\n', start);
 int lineEnd = newline >= 0 ? newline : text.length();
 String line = text.substring(start, lineEnd);
@@ -1000,7 +1004,7 @@ return segments;
 }
 
 private static String matchMarkdownDelimiter(String text, int index) {
-for (String delimiter : List.of("***", "~~", "||", "**", "__", "*", "_")) {
+for (String delimiter : MARKDOWN_DELIMITERS) {
 if (text.startsWith(delimiter, index)) {
 return delimiter;
 }
@@ -1264,7 +1268,7 @@ segments.add(new TextSegment("..."));
 return;
 }
 TextSegment tail = segments.getLast();
-tail.text = tail.text + "...";
+segments.set(segments.size() - 1, copySegment(tail, tail.text + "..."));
 }
 
 /**
