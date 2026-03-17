@@ -784,9 +784,12 @@ value = abs / 31536000;
 unitKey = "year";
 }
 
-String unit = I18nManager.getDmccTranslation(
-"discord.message_parser.relative.units." + unitKey + (value == 1 ? ".one" : ".other")
+String unitTranslationKey = String.format(
+"discord.message_parser.relative.units.%s.%s",
+unitKey,
+value == 1 ? "one" : "other"
 );
+String unit = I18nManager.getDmccTranslation(unitTranslationKey);
 String direction = past
 ? I18nManager.getDmccTranslation("discord.message_parser.relative.past", value, unit)
 : I18nManager.getDmccTranslation("discord.message_parser.relative.future", value, unit);
@@ -1113,6 +1116,10 @@ return raw;
 return safeTruncate(raw, cutoff) + "...";
 }
 
+/**
+ * Detects whether text contains full-width CJK characters/punctuation.
+ * Used to choose stricter truncation limits for visually wider glyphs.
+ */
 private static boolean containsFullWidthCharacter(String text) {
 for (int i = 0; i < text.length();) {
 int codePoint = text.codePointAt(i);
