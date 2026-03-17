@@ -25,10 +25,12 @@ import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkResponsePa
 import com.xujiayao.discord_mc_chat.network.packets.commands.link.OpSyncPacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.DiscordEventPacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.TextSegment;
 import com.xujiayao.discord_mc_chat.network.packets.misc.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPongPacket;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
+import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.events.CoreEvents;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
@@ -202,6 +204,9 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 					EventManager.post(new CoreEvents.OpSyncEvent(p.opLevels));
 			case DiscordEventPacket p -> {
 				// Handle Discord event forwarded from server - render in Minecraft
+				if ("multi_server_client".equals(ModeManager.getMode())) {
+					logDiscordEventForConsole(p);
+				}
 				switch (p.type) {
 					case CHAT -> EventManager.post(new CoreEvents.DiscordChatMessageEvent(
 							p.segments,
@@ -264,5 +269,17 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 			initialLoginFuture.complete(false);
 		}
 		ctx.close();
+	}
+
+	private static void logDiscordEventForConsole(DiscordEventPacket p) {
+		if (p.replySegments != null && !p.replySegments.isEmpty()) {
+			LOGGER.info(TextSegment.toPlainText(p.replySegments));
+		}
+		if (p.segments != null && !p.segments.isEmpty()) {
+			LOGGER.info(TextSegment.toPlainText(p.segments));
+		}
+		if (p.type == DiscordEventPacket.EventType.EDIT && p.editedMessageSegments != null && !p.editedMessageSegments.isEmpty()) {
+			LOGGER.info(TextSegment.toPlainText(p.editedMessageSegments));
+		}
 	}
 }

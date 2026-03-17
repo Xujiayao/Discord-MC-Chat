@@ -95,6 +95,16 @@ discord_to_minecraft:
     - text: "edited this message! Edited message becomes:"
       bold: false
       color: "gray"
+  edited_message: # Edited message content format (reverse of response)
+    - text: "    <{effective_name}> "
+      bold: false
+      color: "{role_color}"
+    - text: "└──── "
+      bold: true
+      color: "dark_gray"
+    - text: "{message}"
+      bold: false
+      color: "dark_gray"
   delete: # Message delete notification format
     - text: "[Discord] "
       bold: true

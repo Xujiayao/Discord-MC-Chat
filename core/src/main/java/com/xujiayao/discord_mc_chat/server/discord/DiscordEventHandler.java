@@ -32,6 +32,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
+
 /**
  * Handles Discord JDA events.
  *
@@ -409,6 +411,11 @@ public class DiscordEventHandler extends ListenerAdapter {
 		packet.mentionedPlayerUuids = mentionedPlayerUuids;
 		packet.mentionEveryone = isMentionEveryone;
 
+		if (replySegments != null && !replySegments.isEmpty()) {
+			LOGGER.info(TextSegment.toPlainText(replySegments));
+		}
+		LOGGER.info(TextSegment.toPlainText(mainSegments));
+
 		NetworkManager.broadcastToClients(packet);
 
 		// Cache message for edit/delete reference
@@ -501,7 +508,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 		List<TextSegment> notificationSegments = DiscordMessageParser.buildEditNotificationSegments(editorName, roleColor);
 
 		// Build new message content segments
-		List<TextSegment> editedMessageSegments = DiscordMessageParser.buildChatSegments(message);
+		List<TextSegment> editedMessageSegments = DiscordMessageParser.buildEditedMessageSegments(message);
 
 		DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.EDIT, notificationSegments);
 		packet.replySegments = replySegments;

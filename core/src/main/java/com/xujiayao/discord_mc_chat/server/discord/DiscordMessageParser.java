@@ -92,6 +92,7 @@ private static final Pattern BOLD_ITALIC_URL_PATTERN = Pattern.compile("\\*\\*\\
 private static final Pattern BOLD_URL_PATTERN = Pattern.compile("\\*\\*(https?://[^\\s*|~`<>)\\]]+)\\*\\*");
 private static final Pattern SPOILER_ITALIC_URL_PATTERN = Pattern.compile("\\|\\|\\*(https?://[^\\s*|~`<>)\\]]+)\\*\\|\\|");
 private static final Pattern SPOILER_URL_PATTERN = Pattern.compile("\\|\\|(https?://[^\\s*|~`<>)\\]]+)\\|\\|");
+private static final Pattern SPOILER_CONTENT_PATTERN = Pattern.compile("\\|\\|(.+?)\\|\\|");
 private static final Pattern LINK_TOKEN_PATTERN = Pattern.compile("\\[([^]]+)]\\((https?://[^)]+)\\)");
 private static final List<String> MARKDOWN_DELIMITERS = List.of("***", "~~", "||", "**", "__", "*", "_");
 
@@ -345,6 +346,53 @@ return segments;
 }
 
 /**
+ * Builds segments for the edited message content line shown after edit notification.
+ * <p>
+ * Format follows the custom_messages {@code discord_to_minecraft.edited_message} pattern.
+ * This is intentionally separated from {@code common.chat} so edit events can render a
+ * "bottom bun" style complementary to {@code discord_to_minecraft.response}.
+ *
+ * @param message The edited Discord message.
+ * @return The list of text segments for the edited message content line.
+ */
+public static List<TextSegment> buildEditedMessageSegments(Message message) {
+List<TextSegment> segments = new ArrayList<>();
+Member member = message.getMember();
+String effectiveName = member != null ? member.getEffectiveName() : message.getAuthor().getName();
+String roleColor = getRoleColorHex(member);
+String truncatedRaw = truncateMainRaw(message.getContentRaw());
+List<TextSegment> contentSegments = parseMessageContent(message, truncatedRaw);
+
+JsonNode editedNode = I18nManager.getCustomMessages().path("discord_to_minecraft").path("edited_message");
+if (editedNode.isArray()) {
+for (JsonNode segNode : editedNode) {
+String text = segNode.path("text").asText("");
+boolean bold = segNode.path("bold").asBoolean(false);
+String color = segNode.path("color").asText("");
+
+text = text.replace("{effective_name}", effectiveName);
+color = color.replace("{role_color}", roleColor);
+
+if (text.contains("{message}")) {
+String[] parts = text.split("\\{message}", -1);
+if (!parts[0].isEmpty()) {
+segments.add(new TextSegment(parts[0], bold, color));
+}
+applyDefaultColor(contentSegments, color);
+segments.addAll(contentSegments);
+if (parts.length > 1 && !parts[1].isEmpty()) {
+segments.add(new TextSegment(parts[1], bold, color));
+}
+} else {
+segments.add(new TextSegment(text, bold, color));
+}
+}
+}
+
+return segments;
+}
+
+/**
  * Builds segments for a message delete notification.
  * <p>
  * Format follows the custom_messages {@code discord_to_minecraft.delete} pattern.
@@ -481,14 +529,17 @@ type = "image";
 } else if (attachment.isVideo()) {
 type = "video";
 }
-String label = "<attachment type=[" + type + "] name=[" + attachment.getFileName() + "]>";
+		String label = "<attachment type=[" + type + "] name=[" + attachment.getFileName() + "]>";
 
-TextSegment seg = new TextSegment(label, false, "#3366CC");
-seg.underlined = true;
-seg.clickUrl = attachment.getUrl();
-seg.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
-segments.add(seg);
-}
+		TextSegment seg = new TextSegment(label, false, "#3366CC");
+		seg.underlined = true;
+		seg.clickUrl = attachment.getUrl();
+		seg.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
+		if (attachment.isSpoiler() || attachment.getFileName().startsWith("SPOILER_")) {
+			seg.obfuscated = true;
+		}
+		segments.add(seg);
+	}
 }
 
 // Append stickers
@@ -516,16 +567,19 @@ title = safeTruncate(title, 20) + "...";
 }
 
 TextSegment seg;
-if (embed.getUrl() == null) {
-seg = new TextSegment("<embed title=[" + title + "]>", false, "yellow");
-} else {
-seg = new TextSegment("<embed title=[" + title + "]>", false, "#3366CC");
-seg.underlined = true;
-seg.clickUrl = embed.getUrl();
-seg.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
-}
-segments.add(seg);
-}
+		if (embed.getUrl() == null) {
+			seg = new TextSegment("<embed title=[" + title + "]>", false, "yellow");
+		} else {
+			seg = new TextSegment("<embed title=[" + title + "]>", false, "#3366CC");
+			seg.underlined = true;
+			seg.clickUrl = embed.getUrl();
+			seg.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
+		}
+		if (isSpoilerWrappedUrl(raw, embed.getUrl())) {
+			seg.obfuscated = true;
+		}
+		segments.add(seg);
+	}
 }
 
 // Append interactive components indicator
@@ -1328,6 +1382,24 @@ lastEnd = span.end;
 }
 }
 return result;
+}
+
+private static boolean isSpoilerWrappedUrl(String raw, String url) {
+if (raw == null || raw.isEmpty() || url == null || url.isEmpty()) {
+return false;
+}
+Matcher spoilerMatcher = SPOILER_CONTENT_PATTERN.matcher(raw);
+while (spoilerMatcher.find()) {
+String content = spoilerMatcher.group(1);
+if (content == null) {
+continue;
+}
+String normalized = content.replaceAll("[*_~`\\s]", "");
+if (url.equals(normalized)) {
+return true;
+}
+}
+return false;
 }
 
 private static String truncateMainRaw(String raw) {
