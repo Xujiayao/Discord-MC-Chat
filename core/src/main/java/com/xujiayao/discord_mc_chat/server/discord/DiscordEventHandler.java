@@ -499,6 +499,11 @@ public class DiscordEventHandler extends ListenerAdapter {
 
 		Message message = event.getMessage();
 
+		// The bot will edit message when replying slash commands
+		if (event.getAuthor() == event.getJDA().getSelfUser()) {
+			return;
+		}
+
 		Member member = message.getMember();
 		String editorName = member != null ? member.getEffectiveName() : message.getAuthor().getName();
 		String roleColor = DiscordMessageParser.getRoleColorHex(member);
