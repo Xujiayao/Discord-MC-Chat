@@ -72,6 +72,7 @@ public class DiscordManager {
 			try {
 				// Blocks until JDA is ready
 				CompletableFuture<Void> readyFuture = CompletableFuture.runAsync(() -> {
+					ExecutorService eventExecutor = Executors.newSingleThreadExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-DiscordEvent"));
 					try {
 						jda = JDABuilder.createDefault(token)
 								.enableIntents(
@@ -80,13 +81,17 @@ public class DiscordManager {
 										GatewayIntent.GUILD_MESSAGE_REACTIONS
 								)
 								.setMemberCachePolicy(MemberCachePolicy.ALL)
-								.setEventPool(Executors.newSingleThreadExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-DiscordEvent")), true)
+								.setEventPool(eventExecutor, true)
 								.addEventListeners(new DiscordEventHandler())
 								.build();
 
 						jda.awaitReady();
 					} catch (InterruptedException e) {
 						LOGGER.error(I18nManager.getDmccTranslation("discord.manager.init_interrupted"), e);
+					} catch (RuntimeException e) {
+						// If build() fails before JDA takes ownership of the event executor, shut it down to avoid leaks
+						eventExecutor.shutdownNow();
+						throw e;
 					}
 				}, executor);
 
