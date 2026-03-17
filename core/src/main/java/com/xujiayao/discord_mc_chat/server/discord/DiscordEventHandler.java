@@ -10,10 +10,9 @@ import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.emoji.EmojiUnion;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.entities.emoji.Emoji;
-import net.dv8tion.jda.api.entities.emoji.EmojiUnion;
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
@@ -43,24 +42,23 @@ public class DiscordEventHandler extends ListenerAdapter {
 
 	private static final int AUTOCOMPLETE_TIMEOUT_SECONDS = 5;
 
-	/** Cache of recent messages for edit/delete reference. Maps message ID to cached data. */
+	/**
+	 * Cache of recent messages for edit/delete reference. Maps message ID to cached data.
+	 */
 	private static final ConcurrentHashMap<String, CachedMessage> messageCache = new ConcurrentHashMap<>();
 	private static final int MAX_CACHE_SIZE = 200;
 
-	/**
-	 * Cached Discord message metadata for reply/edit/delete context rendering.
-	 * <p>
-	 * Stores the already-rendered one-line reply preview so fallback rendering keeps the
-	 * same formatting pipeline (including webhook message formatting) without retaining full
-	 * JDA {@link Message} objects in memory.
-	 * {@code replySegments} may be null when a preview cannot be produced for a message.
-	 *
-	 * @param authorName    Cached effective name of the message author.
-	 * @param authorRoleColor Cached role color of the message author.
-	 * @param contentRaw    Cached raw content for fallback rebuilding.
-	 * @param replySegments Cached rendered reply preview, nullable.
-	 */
-	private record CachedMessage(String authorName, String authorRoleColor, String contentRaw, List<TextSegment> replySegments) {}
+	private static void logDiscordEventForConsole(DiscordEventPacket packet) {
+		if (packet.replySegments != null && !packet.replySegments.isEmpty()) {
+			LOGGER.info(TextSegment.toPlainText(packet.replySegments));
+		}
+		if (packet.segments != null && !packet.segments.isEmpty()) {
+			LOGGER.info(TextSegment.toPlainText(packet.segments));
+		}
+		if (packet.type == DiscordEventPacket.EventType.EDIT && packet.editedMessageSegments != null && !packet.editedMessageSegments.isEmpty()) {
+			LOGGER.info(TextSegment.toPlainText(packet.editedMessageSegments));
+		}
+	}
 
 	/**
 	 * Resolves the OP Level credential for a Discord user based on config mappings.
@@ -601,15 +599,20 @@ public class DiscordEventHandler extends ListenerAdapter {
 		messageCache.put(message.getId(), new CachedMessage(name, roleColor, message.getContentRaw(), replySegments));
 	}
 
-	private static void logDiscordEventForConsole(DiscordEventPacket packet) {
-		if (packet.replySegments != null && !packet.replySegments.isEmpty()) {
-			LOGGER.info(TextSegment.toPlainText(packet.replySegments));
-		}
-		if (packet.segments != null && !packet.segments.isEmpty()) {
-			LOGGER.info(TextSegment.toPlainText(packet.segments));
-		}
-		if (packet.type == DiscordEventPacket.EventType.EDIT && packet.editedMessageSegments != null && !packet.editedMessageSegments.isEmpty()) {
-			LOGGER.info(TextSegment.toPlainText(packet.editedMessageSegments));
-		}
+	/**
+	 * Cached Discord message metadata for reply/edit/delete context rendering.
+	 * <p>
+	 * Stores the already-rendered one-line reply preview so fallback rendering keeps the
+	 * same formatting pipeline (including webhook message formatting) without retaining full
+	 * JDA {@link Message} objects in memory.
+	 * {@code replySegments} may be null when a preview cannot be produced for a message.
+	 *
+	 * @param authorName      Cached effective name of the message author.
+	 * @param authorRoleColor Cached role color of the message author.
+	 * @param contentRaw      Cached raw content for fallback rebuilding.
+	 * @param replySegments   Cached rendered reply preview, nullable.
+	 */
+	private record CachedMessage(String authorName, String authorRoleColor, String contentRaw,
+								 List<TextSegment> replySegments) {
 	}
 }

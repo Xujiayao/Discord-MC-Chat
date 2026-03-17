@@ -64,6 +64,18 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 		this.initialLoginFuture = initialLoginFuture;
 	}
 
+	private static void logDiscordEventForConsole(DiscordEventPacket p) {
+		if (p.replySegments != null && !p.replySegments.isEmpty()) {
+			LOGGER.info(TextSegment.toPlainText(p.replySegments));
+		}
+		if (p.segments != null && !p.segments.isEmpty()) {
+			LOGGER.info(TextSegment.toPlainText(p.segments));
+		}
+		if (p.type == DiscordEventPacket.EventType.EDIT && p.editedMessageSegments != null && !p.editedMessageSegments.isEmpty()) {
+			LOGGER.info(TextSegment.toPlainText(p.editedMessageSegments));
+		}
+	}
+
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) {
 		ctx.writeAndFlush(new HandshakePacket(client.getServerName(), Constants.VERSION, EnvironmentUtils.getMinecraftVersion()));
@@ -269,17 +281,5 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 			initialLoginFuture.complete(false);
 		}
 		ctx.close();
-	}
-
-	private static void logDiscordEventForConsole(DiscordEventPacket p) {
-		if (p.replySegments != null && !p.replySegments.isEmpty()) {
-			LOGGER.info(TextSegment.toPlainText(p.replySegments));
-		}
-		if (p.segments != null && !p.segments.isEmpty()) {
-			LOGGER.info(TextSegment.toPlainText(p.segments));
-		}
-		if (p.type == DiscordEventPacket.EventType.EDIT && p.editedMessageSegments != null && !p.editedMessageSegments.isEmpty()) {
-			LOGGER.info(TextSegment.toPlainText(p.editedMessageSegments));
-		}
 	}
 }
