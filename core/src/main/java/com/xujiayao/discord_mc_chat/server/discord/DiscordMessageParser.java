@@ -58,6 +58,7 @@ public class DiscordMessageParser {
 
 	// Discord custom emoji patterns
 	private static final Pattern CUSTOM_EMOJI_PATTERN = Pattern.compile("<a?:(\\w+):\\d+>");
+	private static final Pattern DISCORD_ALIAS_EMOJI_PATTERN = Pattern.compile("(?<![A-Za-z0-9_]):[A-Za-z0-9_+\\-]+:(?![A-Za-z0-9_])");
 
 	// Unicode emoji pattern (basic, covering common emoji ranges)
 	private static final Pattern UNICODE_EMOJI_PATTERN = Pattern.compile(
@@ -1092,6 +1093,7 @@ public class DiscordMessageParser {
 			}
 			if (parseCustomEmojis) {
 				current = splitSegmentsByCustomEmoji(current);
+				current = splitSegmentsByDiscordAliasEmoji(current);
 			}
 			if (parseUnicodeEmojis) {
 				current = splitSegmentsByUnicodeEmoji(current);
@@ -1185,6 +1187,39 @@ public class DiscordMessageParser {
 				cursor = matcher.end();
 			}
 			if (cursor == 0) {
+				out.add(segment);
+			} else if (cursor < segment.text.length()) {
+				out.add(copySegment(segment, segment.text.substring(cursor)));
+			}
+		}
+		return out;
+	}
+
+	private static List<TextSegment> splitSegmentsByDiscordAliasEmoji(List<TextSegment> segments) {
+		List<TextSegment> out = new ArrayList<>();
+		for (TextSegment segment : segments) {
+			if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
+				out.add(segment);
+				continue;
+			}
+			Matcher matcher = DISCORD_ALIAS_EMOJI_PATTERN.matcher(segment.text);
+			int cursor = 0;
+			boolean matched = false;
+			while (matcher.find()) {
+				String alias = matcher.group();
+				if (EmojiManager.getByDiscordAlias(alias).isEmpty()) {
+					continue;
+				}
+				if (matcher.start() > cursor) {
+					out.add(copySegment(segment, segment.text.substring(cursor, matcher.start())));
+				}
+				TextSegment emojiSegment = copySegment(segment, alias);
+				emojiSegment.color = "yellow";
+				out.add(emojiSegment);
+				cursor = matcher.end();
+				matched = true;
+			}
+			if (!matched) {
 				out.add(segment);
 			} else if (cursor < segment.text.length()) {
 				out.add(copySegment(segment, segment.text.substring(cursor)));
