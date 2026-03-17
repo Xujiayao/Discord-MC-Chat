@@ -1077,7 +1077,7 @@ if (parseUnicodeEmojis) {
 current = splitSegmentsByUnicodeEmoji(current);
 }
 for (TextSegment seg : current) {
-if (seg.obfuscated && (seg.clickUrl == null || seg.clickUrl.isEmpty()) && (seg.hoverText == null || seg.hoverText.isEmpty())) {
+if (seg.obfuscated && seg.clickUrl == null && (seg.hoverText == null || seg.hoverText.isEmpty())) {
 seg.hoverText = seg.text;
 }
 out.add(seg);
