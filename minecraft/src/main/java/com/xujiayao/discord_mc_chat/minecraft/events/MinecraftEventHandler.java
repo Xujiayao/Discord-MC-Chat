@@ -906,6 +906,6 @@ public class MinecraftEventHandler {
 			}
 		}
 
-		player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.9F, 1.05F);
+		player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.MASTER, 1.0F, 2.0F);
 	}
 }
