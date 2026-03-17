@@ -93,6 +93,7 @@ private static final Pattern BOLD_URL_PATTERN = Pattern.compile("\\*\\*(https?:/
 private static final Pattern SPOILER_ITALIC_URL_PATTERN = Pattern.compile("\\|\\|\\*(https?://[^\\s*|~`<>)\\]]+)\\*\\|\\|");
 private static final Pattern SPOILER_URL_PATTERN = Pattern.compile("\\|\\|(https?://[^\\s*|~`<>)\\]]+)\\|\\|");
 
+private static final int MAX_CONTENT_LINES = 6;
 private static final int REPLY_TRUNCATE_LIMIT_WIDE = 20;
 private static final int REPLY_TRUNCATE_LIMIT_NARROW = 40;
 private static final int MAIN_TRUNCATE_LIMIT_WIDE = 200;
@@ -249,7 +250,8 @@ List<TextSegment> segments = new ArrayList<>();
 String truncatedRaw = truncateReplyRaw(refRaw);
 List<TextSegment> refContentSegments = contextMessage != null
 ? parseMessageContent(contextMessage, truncatedRaw)
-: List.of(new TextSegment(truncatedRaw));
+: parseMessageContentWithoutMessage(truncatedRaw);
+refContentSegments = enforceSingleLine(refContentSegments);
 
 JsonNode responseNode = I18nManager.getCustomMessages().path("discord_to_minecraft").path("response");
 if (responseNode.isArray()) {
@@ -552,9 +554,9 @@ return segments;
  * Markdown, hyperlinks, timestamps, and @everyone/@here inline.
  */
 private static List<TextSegment> parseRawContent(String raw, Message message,
- boolean parseMentions, boolean parseCustomEmojis,
- boolean parseUnicodeEmojis, boolean parseMarkdown,
- boolean parseHyperlinks) {
+  boolean parseMentions, boolean parseCustomEmojis,
+  boolean parseUnicodeEmojis, boolean parseMarkdown,
+  boolean parseHyperlinks) {
 List<TextSegment> segments = new ArrayList<>();
 
 List<TokenSpan> tokens = new ArrayList<>();
@@ -620,6 +622,14 @@ segments.add(new TextSegment(remaining));
 }
 
 return segments;
+}
+
+private static List<TextSegment> parseMessageContentWithoutMessage(String raw) {
+boolean parseCustomEmojis = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.custom_emojis");
+boolean parseUnicodeEmojis = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.unicode_emojis");
+boolean parseMarkdown = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.markdown");
+boolean parseHyperlinks = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.hyperlinks");
+return parseRawContent(raw, null, false, parseCustomEmojis, parseUnicodeEmojis, parseMarkdown, parseHyperlinks);
 }
 
 private static void collectUserMentionTokens(String raw, Message message, List<TokenSpan> tokens) {
@@ -910,61 +920,143 @@ List<TextSegment> segments = new ArrayList<>();
 
 List<MarkdownSpan> spans = new ArrayList<>();
 collectCodeBlockSpans(text, spans);
-collectMarkdownSpans(text, INLINE_CODE_PATTERN, MarkdownType.INLINE_CODE, spans);
-collectMarkdownSpans(text, BOLD_ITALIC_PATTERN, MarkdownType.BOLD_ITALIC, spans);
-collectMarkdownSpans(text, BOLD_PATTERN, MarkdownType.BOLD, spans);
-collectMarkdownSpans(text, UNDERLINE_PATTERN, MarkdownType.UNDERLINE, spans);
-collectMarkdownSpans(text, STRIKETHROUGH_PATTERN, MarkdownType.STRIKETHROUGH, spans);
-collectMarkdownSpans(text, SPOILER_PATTERN, MarkdownType.SPOILER, spans);
-collectMarkdownSpans(text, ITALIC_UNDERSCORE_PATTERN, MarkdownType.ITALIC, spans);
-collectMarkdownSpans(text, ITALIC_ASTERISK_PATTERN, MarkdownType.ITALIC, spans);
-collectMarkdownSpans(text, HEADING_PATTERN, MarkdownType.HEADING, spans);
-
 spans.sort(Comparator.comparingInt(a -> a.start));
 spans = removeMarkdownOverlaps(spans);
 
 int cursor = 0;
 for (MarkdownSpan span : spans) {
 if (span.start > cursor) {
-segments.add(new TextSegment(text.substring(cursor, span.start)));
+segments.addAll(parseMarkdownInlineWithHeading(text.substring(cursor, span.start), new MarkdownState()));
 }
-
-switch (span.type) {
-case CODE_BLOCK -> segments.addAll(span.codeBlockSegments);
-case INLINE_CODE -> segments.add(new TextSegment("[" + span.innerText + "]"));
-case BOLD_ITALIC -> {
-TextSegment seg = new TextSegment(span.innerText);
-seg.bold = true;
-seg.italic = true;
-segments.add(seg);
-}
-case HEADING -> {
-TextSegment seg = new TextSegment(span.innerText);
-seg.bold = true;
-segments.add(seg);
-}
-default -> {
-TextSegment seg = new TextSegment(span.innerText);
-switch (span.type) {
-case BOLD -> seg.bold = true;
-case ITALIC -> seg.italic = true;
-case UNDERLINE -> seg.underlined = true;
-case STRIKETHROUGH -> seg.strikethrough = true;
-case SPOILER -> seg.obfuscated = true;
-default -> {}
-}
-segments.add(seg);
-}
-}
-
+segments.addAll(span.codeBlockSegments);
 cursor = span.end;
 }
 
 if (cursor < text.length()) {
-segments.add(new TextSegment(text.substring(cursor)));
+segments.addAll(parseMarkdownInlineWithHeading(text.substring(cursor), new MarkdownState()));
 }
 
 return segments;
+}
+
+private static List<TextSegment> parseMarkdownInlineWithHeading(String text, MarkdownState baseState) {
+List<TextSegment> result = new ArrayList<>();
+int start = 0;
+while (start <= text.length()) {
+int newline = text.indexOf('\n', start);
+int lineEnd = newline >= 0 ? newline : text.length();
+String line = text.substring(start, lineEnd);
+MarkdownState lineState = baseState.copy();
+if (HEADING_PATTERN.matcher(line).matches()) {
+lineState.bold = true;
+}
+result.addAll(parseNestedMarkdown(line, lineState));
+if (newline < 0) {
+break;
+}
+result.add(new TextSegment("\n"));
+start = newline + 1;
+}
+return result;
+}
+
+private static List<TextSegment> parseNestedMarkdown(String text, MarkdownState state) {
+List<TextSegment> segments = new ArrayList<>();
+StringBuilder plain = new StringBuilder();
+int i = 0;
+while (i < text.length()) {
+if (text.charAt(i) == '\\' && i + 1 < text.length()) {
+plain.append(text.charAt(i + 1));
+i += 2;
+continue;
+}
+if (text.charAt(i) == '`') {
+int close = findClosingDelimiter(text, i + 1, "`");
+if (close > i) {
+appendPlainSegment(segments, plain, state);
+addStyledSegment(segments, "[" + text.substring(i + 1, close) + "]", state);
+i = close + 1;
+continue;
+}
+}
+
+String delimiter = matchMarkdownDelimiter(text, i);
+if (delimiter != null) {
+int close = findClosingDelimiter(text, i + delimiter.length(), delimiter);
+if (close > i) {
+appendPlainSegment(segments, plain, state);
+MarkdownState nestedState = applyDelimiterStyle(state, delimiter);
+segments.addAll(parseNestedMarkdown(text.substring(i + delimiter.length(), close), nestedState));
+i = close + delimiter.length();
+continue;
+}
+}
+
+plain.append(text.charAt(i));
+i++;
+}
+appendPlainSegment(segments, plain, state);
+return segments;
+}
+
+private static String matchMarkdownDelimiter(String text, int index) {
+for (String delimiter : List.of("***", "~~", "||", "**", "__", "*", "_")) {
+if (text.startsWith(delimiter, index)) {
+return delimiter;
+}
+}
+return null;
+}
+
+private static int findClosingDelimiter(String text, int start, String delimiter) {
+for (int i = start; i <= text.length() - delimiter.length(); i++) {
+if (text.charAt(i) == '\\') {
+i++;
+continue;
+}
+if (text.startsWith(delimiter, i)) {
+return i;
+}
+}
+return -1;
+}
+
+private static MarkdownState applyDelimiterStyle(MarkdownState base, String delimiter) {
+MarkdownState state = base.copy();
+switch (delimiter) {
+case "***" -> {
+state.bold = true;
+state.italic = true;
+}
+case "**" -> state.bold = true;
+case "*", "_" -> state.italic = true;
+case "__" -> state.underlined = true;
+case "~~" -> state.strikethrough = true;
+case "||" -> state.obfuscated = true;
+default -> {}
+}
+return state;
+}
+
+private static void appendPlainSegment(List<TextSegment> segments, StringBuilder plain, MarkdownState state) {
+if (plain.isEmpty()) {
+return;
+}
+addStyledSegment(segments, plain.toString(), state);
+plain.setLength(0);
+}
+
+private static void addStyledSegment(List<TextSegment> segments, String text, MarkdownState state) {
+if (text.isEmpty()) {
+return;
+}
+TextSegment segment = new TextSegment(text);
+segment.bold = state.bold;
+segment.italic = state.italic;
+segment.underlined = state.underlined;
+segment.strikethrough = state.strikethrough;
+segment.obfuscated = state.obfuscated;
+segments.add(segment);
 }
 
 /**
@@ -1096,11 +1188,28 @@ return result;
 }
 
 private static String truncateMainRaw(String raw) {
+String lineLimited = applyMainLineLimit(raw);
 int maxLength = containsFullWidthCharacter(raw) ? MAIN_TRUNCATE_LIMIT_WIDE : MAIN_TRUNCATE_LIMIT_NARROW;
-if (raw.length() <= maxLength) {
+if (lineLimited.length() <= maxLength) {
+return lineLimited;
+}
+return safeTruncate(lineLimited, maxLength) + "...";
+}
+
+private static String applyMainLineLimit(String raw) {
+String[] lines = raw.split("\n", -1);
+if (lines.length <= MAX_CONTENT_LINES) {
 return raw;
 }
-return safeTruncate(raw, maxLength) + "...";
+StringBuilder sb = new StringBuilder();
+for (int i = 0; i < MAX_CONTENT_LINES - 1; i++) {
+if (i > 0) {
+sb.append("\n");
+}
+sb.append(lines[i]);
+}
+sb.append("\n...");
+return sb.toString();
 }
 
 private static String truncateReplyRaw(String raw) {
@@ -1114,6 +1223,48 @@ if (raw.length() <= cutoff) {
 return raw;
 }
 return safeTruncate(raw, cutoff) + "...";
+}
+
+private static List<TextSegment> enforceSingleLine(List<TextSegment> segments) {
+List<TextSegment> result = new ArrayList<>();
+boolean cut = false;
+for (TextSegment segment : segments) {
+if (cut) {
+break;
+}
+String text = segment.text == null ? "" : segment.text;
+int newline = text.indexOf('\n');
+if (newline < 0) {
+result.add(copySegment(segment, text));
+continue;
+}
+if (newline > 0) {
+result.add(copySegment(segment, text.substring(0, newline)));
+}
+appendEllipsis(result);
+cut = true;
+}
+return result;
+}
+
+private static TextSegment copySegment(TextSegment source, String text) {
+TextSegment copy = new TextSegment(text, source.bold, source.color);
+copy.italic = source.italic;
+copy.underlined = source.underlined;
+copy.strikethrough = source.strikethrough;
+copy.obfuscated = source.obfuscated;
+copy.clickUrl = source.clickUrl;
+copy.hoverText = source.hoverText;
+return copy;
+}
+
+private static void appendEllipsis(List<TextSegment> segments) {
+if (segments.isEmpty()) {
+segments.add(new TextSegment("..."));
+return;
+}
+TextSegment tail = segments.getLast();
+tail.text = tail.text + "...";
 }
 
 /**
@@ -1213,5 +1364,23 @@ private record TokenSpan(int start, int end, TextSegment segment) {
 
 private record MarkdownSpan(int start, int end, String innerText, MarkdownType type,
 List<TextSegment> codeBlockSegments) {
+}
+
+private static class MarkdownState {
+boolean bold;
+boolean italic;
+boolean underlined;
+boolean strikethrough;
+boolean obfuscated;
+
+MarkdownState copy() {
+MarkdownState copy = new MarkdownState();
+copy.bold = bold;
+copy.italic = italic;
+copy.underlined = underlined;
+copy.strikethrough = strikethrough;
+copy.obfuscated = obfuscated;
+return copy;
+}
 }
 }
