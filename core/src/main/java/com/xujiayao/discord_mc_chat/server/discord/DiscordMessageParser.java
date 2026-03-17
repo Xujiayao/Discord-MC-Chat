@@ -95,8 +95,8 @@ private static final Pattern SPOILER_URL_PATTERN = Pattern.compile("\\|\\|(https
 
 private static final int REPLY_TRUNCATE_LIMIT_WIDE = 20;
 private static final int REPLY_TRUNCATE_LIMIT_NARROW = 40;
-private static final int MAIN_TRUNCATE_LIMIT_WIDE = 100;
-private static final int MAIN_TRUNCATE_LIMIT_NARROW = 200;
+private static final int MAIN_TRUNCATE_LIMIT_WIDE = 200;
+private static final int MAIN_TRUNCATE_LIMIT_NARROW = 400;
 private static final String URL_COLOR = "#3366CC";
 
 /**
