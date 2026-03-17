@@ -128,7 +128,7 @@ public class DiscordMessageParser {
 		String truncatedRaw = truncateMainRaw(raw);
 		boolean isMultiLine = truncatedRaw.contains("\n");
 
-// Build segments from common.chat template
+		// Build segments from common.chat template
 		JsonNode chatNode = I18nManager.getCustomMessages().path("common").path("chat");
 		if (chatNode.isArray()) {
 			for (JsonNode segNode : chatNode) {
@@ -136,28 +136,28 @@ public class DiscordMessageParser {
 				boolean bold = segNode.path("bold").asBoolean(false);
 				String color = segNode.path("color").asText("");
 
-// Replace placeholders
+				// Replace placeholders
 				text = replacePlaceholders(text, effectiveName, roleColor);
 				color = replacePlaceholders(color, effectiveName, roleColor);
 
 				if (text.contains("{message}")) {
-// Split around {message} and inject parsed message content
+					// Split around {message} and inject parsed message content
 					String[] parts = text.split("\\{message}", -1);
 					if (!parts[0].isEmpty()) {
 						segments.add(new TextSegment(parts[0], bold, color));
 					}
 
 					if (isMultiLine) {
-// YAML-style multi-line: append "|" then newline-separated content
+						// YAML-style multi-line: append "|" then newline-separated content
 						segments.add(new TextSegment("|", bold, color));
 
-// Parse already-truncated content
+						// Parse already-truncated content
 						List<TextSegment> contentSegments = parseMessageContent(message, truncatedRaw);
 
-// Apply default color inheritance
+						// Apply default color inheritance
 						applyDefaultColor(contentSegments, color);
 
-// Prepend newline to first content segment
+						// Prepend newline to first content segment
 						if (!contentSegments.isEmpty()) {
 							contentSegments.getFirst().text = "\n" + contentSegments.getFirst().text;
 						}
@@ -165,7 +165,7 @@ public class DiscordMessageParser {
 					} else {
 						List<TextSegment> contentSegments = parseMessageContent(message, truncatedRaw);
 
-// Apply default color inheritance
+						// Apply default color inheritance
 						applyDefaultColor(contentSegments, color);
 
 						segments.addAll(contentSegments);
@@ -453,13 +453,13 @@ public class DiscordMessageParser {
 	public static Set<String> collectMentionedPlayerUuids(Message message) {
 		Set<String> uuids = new HashSet<>();
 
-// Direct user mentions
+		// Direct user mentions
 		for (User mentionedUser : message.getMentions().getUsers()) {
 			List<String> linkedUuids = LinkedAccountManager.getMinecraftUuidsByDiscordId(mentionedUser.getId());
 			uuids.addAll(linkedUuids);
 		}
 
-// Role mentions
+		// Role mentions
 		for (Role mentionedRole : message.getMentions().getRoles()) {
 			List<Member> membersWithRole = message.getGuild().getMembersWithRoles(mentionedRole);
 			for (Member m : membersWithRole) {
@@ -468,8 +468,8 @@ public class DiscordMessageParser {
 			}
 		}
 
-// @everyone / @here mentions are handled via the mentionEveryone flag
-// which notifies ALL online players, not just linked ones
+		// @everyone / @here mentions are handled via the mentionEveryone flag
+		// which notifies ALL online players, not just linked ones
 
 		return uuids;
 	}
@@ -497,13 +497,13 @@ public class DiscordMessageParser {
 		boolean parseEmbeds = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.embeds");
 		boolean parseComponents = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.components");
 
-// Process the raw text content
+		// Process the raw text content
 		if (!raw.isEmpty()) {
 			segments.addAll(parseRawContent(raw, message, parseMentions, parseCustomEmojis,
 					parseUnicodeEmojis, parseMarkdown, parseHyperlinks));
 		}
 
-// Append attachments
+		// Append attachments
 		if (parseAttachments) {
 			for (Message.Attachment attachment : message.getAttachments()) {
 				if (!segments.isEmpty()) {
@@ -520,7 +520,7 @@ public class DiscordMessageParser {
 			}
 		}
 
-// Append stickers
+		// Append stickers
 		if (parseStickers) {
 			for (StickerItem sticker : message.getStickers()) {
 				if (!segments.isEmpty()) {
@@ -530,7 +530,7 @@ public class DiscordMessageParser {
 			}
 		}
 
-// Append embeds
+		// Append embeds
 		if (parseEmbeds) {
 			for (MessageEmbed embed : message.getEmbeds()) {
 				if (!segments.isEmpty()) {
@@ -549,7 +549,7 @@ public class DiscordMessageParser {
 			}
 		}
 
-// Append interactive components indicator
+		// Append interactive components indicator
 		if (parseComponents && !message.getComponents().isEmpty()) {
 			if (!segments.isEmpty()) {
 				segments.add(new TextSegment(" "));
@@ -557,7 +557,7 @@ public class DiscordMessageParser {
 			segments.add(new TextSegment("<components>", false, "yellow"));
 		}
 
-// Append poll indicator
+		// Append poll indicator
 		if (ConfigManager.getBoolean("message_parsing.discord_to_minecraft.polls")) {
 			MessagePoll poll = message.getPoll();
 			if (poll != null) {
@@ -592,20 +592,20 @@ public class DiscordMessageParser {
 			collectEveryoneHereTokens(raw, message, tokens);
 		}
 
-// Collect timestamps if configured
+		// Collect timestamps if configured
 		if (ConfigManager.getBoolean("message_parsing.discord_to_minecraft.timestamps")) {
 			collectTimestampTokens(raw, tokens);
 		}
 
-// Hyperlinks and emoji are parsed after Markdown so nested wrappers don't leak as plain text.
+		// Hyperlinks and emoji are parsed after Markdown so nested wrappers don't leak as plain text.
 
-// Sort tokens by start position
+		// Sort tokens by start position
 		tokens.sort(Comparator.comparingInt(a -> a.start));
 
-// Remove overlapping tokens (keep the first one)
+		// Remove overlapping tokens (keep the first one)
 		tokens = removeOverlaps(tokens);
 
-// Build segments from the raw text, inserting special tokens
+		// Build segments from the raw text, inserting special tokens
 		int cursor = 0;
 		for (TokenSpan token : tokens) {
 			if (token.start > cursor) {
@@ -620,7 +620,7 @@ public class DiscordMessageParser {
 			cursor = token.end;
 		}
 
-// Remaining text after last token
+		// Remaining text after last token
 		if (cursor < raw.length()) {
 			String remaining = raw.substring(cursor);
 			if (parseMarkdown) {
@@ -812,7 +812,7 @@ public class DiscordMessageParser {
 				TextSegment seg = new TextSegment("[" + formatted + "]", false, "yellow");
 				tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
 			} catch (Exception ignored) {
-// If parsing fails, leave the raw token as-is
+				// If parsing fails, leave the raw token as-is
 			}
 		}
 	}
@@ -893,8 +893,8 @@ public class DiscordMessageParser {
 		if (languageCode == null || languageCode.isBlank()) {
 			return Locale.ENGLISH;
 		}
-// DMCC language codes are configured as snake_case (e.g. en_us, zh_cn),
-// while Locale.forLanguageTag expects BCP-47 with hyphen separators.
+		// DMCC language codes are configured as snake_case (e.g. en_us, zh_cn),
+		// while Locale.forLanguageTag expects BCP-47 with hyphen separators.
 		String tag = languageCode.replace('_', '-');
 		Locale locale = Locale.forLanguageTag(tag);
 		if (locale.getLanguage().isBlank()) {
@@ -1461,7 +1461,7 @@ public class DiscordMessageParser {
 
 	private static void applySpoilerStyle(TextSegment segment) {
 		segment.obfuscated = true;
-// Obfuscated Minecraft text is unreadable in chat, so we keep original plain text as hover preview.
+		// Obfuscated Minecraft text is unreadable in chat, so we keep original plain text as hover preview.
 		segment.hoverText = segment.text;
 	}
 
