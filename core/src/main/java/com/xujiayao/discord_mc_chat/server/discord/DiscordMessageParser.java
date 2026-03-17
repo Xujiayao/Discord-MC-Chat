@@ -1015,12 +1015,12 @@ case 3 -> italic = true;
 case 4 -> underline = true;
 case 9 -> strikethrough = true;
 case 30 -> color = "black";
-case 31 -> color = "dark_red";
-case 32 -> color = "dark_green";
+case 31 -> color = "red";
+case 32 -> color = "green";
 case 33 -> color = "gold";
-case 34 -> color = "dark_blue";
-case 35 -> color = "dark_purple";
-case 36 -> color = "dark_aqua";
+case 34 -> color = "blue";
+case 35 -> color = "purple";
+case 36 -> color = "aqua";
 case 37 -> color = "white";
 }
 } catch (NumberFormatException ignored) {
