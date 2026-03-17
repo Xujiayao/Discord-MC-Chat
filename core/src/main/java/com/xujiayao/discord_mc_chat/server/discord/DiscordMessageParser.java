@@ -92,9 +92,13 @@ private static final Pattern BOLD_ITALIC_URL_PATTERN = Pattern.compile("\\*\\*\\
 private static final Pattern BOLD_URL_PATTERN = Pattern.compile("\\*\\*(https?://[^\\s*|~`<>)\\]]+)\\*\\*");
 private static final Pattern SPOILER_ITALIC_URL_PATTERN = Pattern.compile("\\|\\|\\*(https?://[^\\s*|~`<>)\\]]+)\\*\\|\\|");
 private static final Pattern SPOILER_URL_PATTERN = Pattern.compile("\\|\\|(https?://[^\\s*|~`<>)\\]]+)\\|\\|");
+// Matches spoiler-wrapped user mentions: ||<@123>|| / ||<@!123>||
 private static final Pattern SPOILER_USER_MENTION_PATTERN = Pattern.compile("\\|\\|<@!?(\\d+)>\\|\\|");
+// Matches spoiler-wrapped role mentions: ||<@&123>||
 private static final Pattern SPOILER_ROLE_MENTION_PATTERN = Pattern.compile("\\|\\|<@&(\\d+)>\\|\\|");
+// Matches spoiler-wrapped channel mentions: ||<#123>||
 private static final Pattern SPOILER_CHANNEL_MENTION_PATTERN = Pattern.compile("\\|\\|<#(\\d+)>\\|\\|");
+// Matches spoiler-wrapped @everyone/@here tokens: ||@everyone|| / ||@here||
 private static final Pattern SPOILER_EVERYONE_HERE_PATTERN = Pattern.compile("\\|\\|@(everyone|here)\\|\\|");
 private static final Pattern SPOILER_CONTENT_PATTERN = Pattern.compile("\\|\\|(.+?)\\|\\|");
 private static final Pattern LINK_TOKEN_PATTERN = Pattern.compile("\\[([^]]+)]\\((https?://[^)]+)\\)");
@@ -106,6 +110,9 @@ private static final int REPLY_TRUNCATE_LIMIT_NARROW = 40;
 private static final int MAIN_TRUNCATE_LIMIT_WIDE = 200;
 private static final int MAIN_TRUNCATE_LIMIT_NARROW = 400;
 private static final String URL_COLOR = "#3366CC";
+private static final String ATTACHMENT_LABEL_PREFIX = "<attachment type=[%s] name=[";
+private static final String EMBED_LABEL_PREFIX = "<embed title=[";
+private static final String LABEL_SUFFIX = "]>";
 
 /**
  * Builds the main message line segments for a Discord chat message.
@@ -758,9 +765,8 @@ break;
 if (displayName == null) {
 displayName = userId;
 }
-TextSegment seg = new TextSegment("[@" + displayName + "]", false, color != null ? color : "white");
-seg.obfuscated = true;
-seg.hoverText = seg.text;
+TextSegment seg = new TextSegment("[@" + displayName + "]", false, colorOrDefault(color));
+applySpoilerStyle(seg);
 tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
 }
 }
@@ -782,8 +788,7 @@ break;
 }
 }
 TextSegment seg = new TextSegment("[@" + roleName + "]", false, color);
-seg.obfuscated = true;
-seg.hoverText = seg.text;
+applySpoilerStyle(seg);
 tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
 }
 }
@@ -800,8 +805,7 @@ break;
 }
 }
 TextSegment seg = new TextSegment("[#" + channelName + "]", false, "yellow");
-seg.obfuscated = true;
-seg.hoverText = seg.text;
+applySpoilerStyle(seg);
 tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
 }
 }
@@ -814,8 +818,7 @@ Matcher matcher = SPOILER_EVERYONE_HERE_PATTERN.matcher(raw);
 while (matcher.find()) {
 String mention = matcher.group(1);
 TextSegment seg = new TextSegment("[@" + mention + "]", false, "yellow");
-seg.obfuscated = true;
-seg.hoverText = seg.text;
+applySpoilerStyle(seg);
 tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
 }
 }
@@ -1486,9 +1489,9 @@ return false;
 
 private static List<TextSegment> buildAttachmentSegments(String type, String fileName, String url, boolean spoiler) {
 List<TextSegment> segments = new ArrayList<>();
-TextSegment prefix = new TextSegment("<attachment type=[" + type + "] name=[", false, URL_COLOR);
+TextSegment prefix = new TextSegment(String.format(ATTACHMENT_LABEL_PREFIX, type), false, URL_COLOR);
 TextSegment fileNameSegment = new TextSegment(fileName, false, URL_COLOR);
-TextSegment suffix = new TextSegment("]>", false, URL_COLOR);
+TextSegment suffix = new TextSegment(LABEL_SUFFIX, false, URL_COLOR);
 
 applyLinkStyle(prefix, url);
 applyLinkStyle(fileNameSegment, url);
@@ -1508,9 +1511,9 @@ return segments;
 private static List<TextSegment> buildEmbedSegments(String title, String url, boolean spoiler) {
 List<TextSegment> segments = new ArrayList<>();
 String color = url == null ? "yellow" : URL_COLOR;
-TextSegment prefix = new TextSegment("<embed title=[", false, color);
+TextSegment prefix = new TextSegment(EMBED_LABEL_PREFIX, false, color);
 TextSegment titleSegment = new TextSegment(title, false, color);
-TextSegment suffix = new TextSegment("]>", false, color);
+TextSegment suffix = new TextSegment(LABEL_SUFFIX, false, color);
 
 if (url != null) {
 applyLinkStyle(prefix, url);
@@ -1532,7 +1535,19 @@ return segments;
 private static void applyLinkStyle(TextSegment segment, String url) {
 segment.underlined = true;
 segment.clickUrl = url;
+if (segment.hoverText == null) {
 segment.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
+}
+}
+
+private static void applySpoilerStyle(TextSegment segment) {
+segment.obfuscated = true;
+// Obfuscated Minecraft text is unreadable in chat, so we keep original plain text as hover preview.
+segment.hoverText = segment.text;
+}
+
+private static String colorOrDefault(String color) {
+return color != null ? color : "white";
 }
 
 private static String truncateMainRaw(String raw) {
