@@ -95,13 +95,13 @@ discord_to_minecraft:
     - text: "编辑了此消息！编辑后的消息为："
       bold: false
       color: "gray"
-  edited_message: # 编辑后的消息内容格式（与 response 反向）
-    - text: "    <{effective_name}> "
-      bold: false
-      color: "{role_color}"
-    - text: "└──── "
+  edited_message: # 编辑后的消息内容格式
+    - text: "    └──── "
       bold: true
       color: "dark_gray"
+    - text: "<{effective_name}> "
+      bold: false
+      color: "{role_color}"
     - text: "{message}"
       bold: false
       color: "dark_gray"
