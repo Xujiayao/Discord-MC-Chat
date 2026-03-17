@@ -498,9 +498,6 @@ public class DiscordEventHandler extends ListenerAdapter {
 		}
 
 		Message message = event.getMessage();
-		if (message.getAuthor().isBot() || message.isWebhookMessage()) {
-			return;
-		}
 
 		Member member = message.getMember();
 		String editorName = member != null ? member.getEffectiveName() : message.getAuthor().getName();
