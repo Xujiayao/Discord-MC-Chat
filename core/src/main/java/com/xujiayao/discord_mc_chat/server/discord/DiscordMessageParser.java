@@ -51,7 +51,7 @@ private static final Pattern STRIKETHROUGH_PATTERN = Pattern.compile("~~(.+?)~~"
 private static final Pattern SPOILER_PATTERN = Pattern.compile("\\|\\|(.+?)\\|\\|");
 private static final Pattern CODE_BLOCK_PATTERN = Pattern.compile("```(\\w*)\\n?([\\s\\S]*?)```");
 private static final Pattern INLINE_CODE_PATTERN = Pattern.compile("`([^`]+)`");
-private static final Pattern HEADING_PATTERN = Pattern.compile("(?m)^#{1,6}\\s+(.+)$");
+private static final Pattern HEADING_PATTERN = Pattern.compile("(?m)^(#{1,6}\\s+.+)$");
 
 // Discord mention patterns in raw content
 private static final Pattern USER_MENTION_PATTERN = Pattern.compile("<@!?(\\d+)>");
@@ -62,7 +62,7 @@ private static final Pattern CHANNEL_MENTION_PATTERN = Pattern.compile("<#(\\d+)
 private static final Pattern EVERYONE_HERE_PATTERN = Pattern.compile("@(everyone|here)");
 
 // Discord timestamp pattern: <t:EPOCH> or <t:EPOCH:STYLE>
-private static final Pattern DISCORD_TIMESTAMP_PATTERN = Pattern.compile("<t:(\\d+)(?::([tTdDfFR]))?>");
+private static final Pattern DISCORD_TIMESTAMP_PATTERN = Pattern.compile("<t:(\\d+)(?::([tTdDfFRsS]))?>");
 
 // Discord custom emoji patterns
 private static final Pattern CUSTOM_EMOJI_PATTERN = Pattern.compile("<a?:(\\w+):\\d+>");
@@ -88,6 +88,8 @@ private static final Pattern ANSI_ESCAPE_PATTERN = Pattern.compile("\\x1B\\[(\\d
 // Hyperlink pattern: [text](url) or bare URLs (excluding trailing markdown delimiters)
 private static final Pattern MARKDOWN_LINK_PATTERN = Pattern.compile("\\[([^]]+)]\\((https?://[^)]+)\\)");
 private static final Pattern BARE_URL_PATTERN = Pattern.compile("(https?://[^\\s*|~`<>)\\]]+)");
+private static final Pattern BOLD_URL_PATTERN = Pattern.compile("\\*\\*(https?://[^\\s*|~`<>)\\]]+)\\*\\*");
+private static final Pattern SPOILER_URL_PATTERN = Pattern.compile("\\|\\|(https?://[^\\s*|~`<>)\\]]+)\\|\\|");
 
 /** Maximum number of content lines for multi-line messages. */
 private static final int MAX_CONTENT_LINES = 5;
@@ -219,25 +221,21 @@ public static List<TextSegment> buildReplySegments(Message referencedMessage) {
 if (referencedMessage == null) {
 return null;
 }
-
-List<TextSegment> segments = new ArrayList<>();
-
 Member refMember = referencedMessage.getMember();
 String refName = refMember != null ? refMember.getEffectiveName() : referencedMessage.getAuthor().getName();
 String refRoleColor = getRoleColorHex(refMember);
-
-// Truncate raw content for reply: first line only, max 20 chars if over 50
-String refRaw = referencedMessage.getContentRaw();
-int newlineIndex = refRaw.indexOf('\n');
-if (newlineIndex >= 0) {
-refRaw = refRaw.substring(0, newlineIndex) + "...";
-}
-if (refRaw.length() > 50) {
-refRaw = safeTruncate(refRaw, 20) + "...";
+return buildReplySegments(refName, refRoleColor, referencedMessage, referencedMessage.getContentRaw());
 }
 
-// Parse the truncated content through the same pipeline
-List<TextSegment> refContentSegments = parseMessageContent(referencedMessage, refRaw);
+public static List<TextSegment> buildReplySegments(String refName, String refRoleColor, Message contextMessage, String refRaw) {
+if (refRaw == null) {
+return null;
+}
+List<TextSegment> segments = new ArrayList<>();
+String truncatedRaw = truncateReplyRaw(refRaw);
+List<TextSegment> refContentSegments = contextMessage != null
+? parseMessageContent(contextMessage, truncatedRaw)
+: List.of(new TextSegment(truncatedRaw));
 
 JsonNode responseNode = I18nManager.getCustomMessages().path("discord_to_minecraft").path("response");
 if (responseNode.isArray()) {
@@ -254,11 +252,8 @@ String[] parts = text.split("\\{message}", -1);
 if (!parts[0].isEmpty()) {
 segments.add(new TextSegment(parts[0], bold, color));
 }
-
-// Apply default color inheritance for reply segments
 applyDefaultColor(refContentSegments, color);
 segments.addAll(refContentSegments);
-
 if (parts.length > 1 && !parts[1].isEmpty()) {
 segments.add(new TextSegment(parts[1], bold, color));
 }
@@ -567,6 +562,8 @@ collectCustomEmojiTokens(raw, tokens);
 }
 
 if (parseHyperlinks) {
+collectBoldUrlTokens(raw, tokens);
+collectSpoilerUrlTokens(raw, tokens);
 collectMarkdownLinkTokens(raw, tokens);
 collectBareUrlTokens(raw, tokens);
 }
@@ -705,7 +702,7 @@ tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
 
 private static String formatDiscordTimestamp(long epoch, String style) {
 Instant instant = Instant.ofEpochSecond(epoch);
-Locale locale = Locale.getDefault();
+Locale locale = getDmccLocale();
 ZoneId zone = ZoneId.systemDefault();
 
 if (style == null) {
@@ -724,6 +721,12 @@ DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(locale)
 .format(instant.atZone(zone));
 case "D" ->
 DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale)
+.format(instant.atZone(zone));
+case "s" ->
+DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.SHORT).withLocale(locale)
+.format(instant.atZone(zone));
+case "S" ->
+DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.MEDIUM).withLocale(locale)
 .format(instant.atZone(zone));
 case "F" ->
 DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL, FormatStyle.SHORT).withLocale(locale)
@@ -768,11 +771,50 @@ unit = value == 1 ? "year" : "years";
 return past ? value + " " + unit + " ago" : "in " + value + " " + unit;
 }
 
+private static Locale getDmccLocale() {
+String languageCode = I18nManager.getLanguage();
+if (languageCode == null || languageCode.isBlank()) {
+return Locale.ENGLISH;
+}
+String tag = languageCode.replace('_', '-');
+Locale locale = Locale.forLanguageTag(tag);
+if (locale.getLanguage().isBlank()) {
+return Locale.ENGLISH;
+}
+return locale;
+}
+
 private static void collectCustomEmojiTokens(String raw, List<TokenSpan> tokens) {
 Matcher matcher = CUSTOM_EMOJI_PATTERN.matcher(raw);
 while (matcher.find()) {
 String emojiName = matcher.group(1);
 TextSegment seg = new TextSegment(":" + emojiName + ":", false, "yellow");
+tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
+}
+}
+
+private static void collectBoldUrlTokens(String raw, List<TokenSpan> tokens) {
+Matcher matcher = BOLD_URL_PATTERN.matcher(raw);
+while (matcher.find()) {
+String url = matcher.group(1);
+TextSegment seg = new TextSegment(url, false, "#3366CC");
+seg.bold = true;
+seg.underlined = true;
+seg.clickUrl = url;
+seg.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
+tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
+}
+}
+
+private static void collectSpoilerUrlTokens(String raw, List<TokenSpan> tokens) {
+Matcher matcher = SPOILER_URL_PATTERN.matcher(raw);
+while (matcher.find()) {
+String url = matcher.group(1);
+TextSegment seg = new TextSegment(url, false, "#3366CC");
+seg.obfuscated = true;
+seg.underlined = true;
+seg.clickUrl = url;
+seg.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
 tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
 }
 }
@@ -931,7 +973,7 @@ while (matcher.find()) {
 if (matcher.start() > cursor) {
 String text = content.substring(cursor, matcher.start());
 if (!text.isEmpty()) {
-TextSegment seg = new TextSegment("[" + text + "]");
+TextSegment seg = new TextSegment(text);
 seg.bold = bold;
 seg.underlined = underline;
 seg.strikethrough = strikethrough;
@@ -978,7 +1020,7 @@ cursor = matcher.end();
 if (cursor < content.length()) {
 String text = content.substring(cursor);
 if (!text.isEmpty()) {
-TextSegment seg = new TextSegment("[" + text + "]");
+TextSegment seg = new TextSegment(text);
 seg.bold = bold;
 seg.underlined = underline;
 seg.strikethrough = strikethrough;
@@ -991,7 +1033,7 @@ segments.add(seg);
 }
 
 if (segments.isEmpty()) {
-segments.add(new TextSegment("[" + content + "]"));
+segments.add(new TextSegment(content));
 }
 
 return segments;
@@ -1030,6 +1072,15 @@ sb.append(lines[i]);
 }
 sb.append("\n...");
 return sb.toString();
+}
+
+private static String truncateReplyRaw(String raw) {
+int newlineIndex = raw.indexOf('\n');
+int cutoff = newlineIndex >= 0 ? Math.min(newlineIndex, 20) : 20;
+if (raw.length() <= cutoff) {
+return raw;
+}
+return safeTruncate(raw, cutoff) + "...";
 }
 
 private static void applyDefaultColor(List<TextSegment> segments, String defaultColor) {

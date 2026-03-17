@@ -429,10 +429,18 @@ public class DiscordEventHandler extends ListenerAdapter {
 		if (emoji.getType() == Emoji.Type.CUSTOM) {
 			emojiText = ":" + emoji.getName() + ":";
 		}
+		final String finalEmojiText = emojiText;
 
-		List<TextSegment> segments = DiscordMessageParser.buildReactionSegments(reactorName, roleColor, emojiText);
-		DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.REACTION, segments);
-		NetworkManager.broadcastToClients(packet);
+		event.retrieveMessage().queue(targetMessage -> {
+			List<TextSegment> segments = DiscordMessageParser.buildReactionSegments(reactorName, roleColor, finalEmojiText);
+			DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.REACTION, segments);
+			packet.replySegments = DiscordMessageParser.buildReplySegments(targetMessage);
+			NetworkManager.broadcastToClients(packet);
+		}, error -> {
+			List<TextSegment> segments = DiscordMessageParser.buildReactionSegments(reactorName, roleColor, finalEmojiText);
+			DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.REACTION, segments);
+			NetworkManager.broadcastToClients(packet);
+		});
 	}
 
 	@Override
@@ -462,6 +470,17 @@ public class DiscordEventHandler extends ListenerAdapter {
 		String editorName = member != null ? member.getEffectiveName() : message.getAuthor().getName();
 		String roleColor = DiscordMessageParser.getRoleColorHex(member);
 
+		CachedMessage cached = messageCache.get(message.getId());
+		List<TextSegment> replySegments = null;
+		if (cached != null && cached.contentRaw() != null) {
+			replySegments = DiscordMessageParser.buildReplySegments(
+					cached.authorName(),
+					cached.authorRoleColor(),
+					message,
+					cached.contentRaw()
+			);
+		}
+
 		// Build edit notification segments
 		List<TextSegment> notificationSegments = DiscordMessageParser.buildEditNotificationSegments(editorName, roleColor);
 
@@ -469,6 +488,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 		List<TextSegment> editedMessageSegments = DiscordMessageParser.buildChatSegments(message);
 
 		DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.EDIT, notificationSegments);
+		packet.replySegments = replySegments;
 		packet.editedMessageSegments = editedMessageSegments;
 		NetworkManager.broadcastToClients(packet);
 
@@ -505,6 +525,12 @@ public class DiscordEventHandler extends ListenerAdapter {
 
 		List<TextSegment> segments = DiscordMessageParser.buildDeleteSegments(cached.authorName(), cached.authorRoleColor());
 		DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.DELETE, segments);
+		packet.replySegments = DiscordMessageParser.buildReplySegments(
+				cached.authorName(),
+				cached.authorRoleColor(),
+				null,
+				cached.contentRaw()
+		);
 		NetworkManager.broadcastToClients(packet);
 	}
 
