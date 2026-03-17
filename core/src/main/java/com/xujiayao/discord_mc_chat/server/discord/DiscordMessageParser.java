@@ -529,17 +529,17 @@ type = "image";
 } else if (attachment.isVideo()) {
 type = "video";
 }
-		String label = "<attachment type=[" + type + "] name=[" + attachment.getFileName() + "]>";
+String label = "<attachment type=[" + type + "] name=[" + attachment.getFileName() + "]>";
 
-		TextSegment seg = new TextSegment(label, false, "#3366CC");
-		seg.underlined = true;
-		seg.clickUrl = attachment.getUrl();
-		seg.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
-		if (attachment.isSpoiler() || attachment.getFileName().startsWith("SPOILER_")) {
-			seg.obfuscated = true;
-		}
-		segments.add(seg);
-	}
+TextSegment seg = new TextSegment(label, false, "#3366CC");
+seg.underlined = true;
+seg.clickUrl = attachment.getUrl();
+seg.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
+if (attachment.isSpoiler() || attachment.getFileName().startsWith("SPOILER_")) {
+seg.obfuscated = true;
+}
+segments.add(seg);
+}
 }
 
 // Append stickers
@@ -567,19 +567,19 @@ title = safeTruncate(title, 20) + "...";
 }
 
 TextSegment seg;
-		if (embed.getUrl() == null) {
-			seg = new TextSegment("<embed title=[" + title + "]>", false, "yellow");
-		} else {
-			seg = new TextSegment("<embed title=[" + title + "]>", false, "#3366CC");
-			seg.underlined = true;
-			seg.clickUrl = embed.getUrl();
-			seg.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
-		}
-		if (isSpoilerWrappedUrl(raw, embed.getUrl())) {
-			seg.obfuscated = true;
-		}
-		segments.add(seg);
-	}
+if (embed.getUrl() == null) {
+seg = new TextSegment("<embed title=[" + title + "]>", false, "yellow");
+} else {
+seg = new TextSegment("<embed title=[" + title + "]>", false, "#3366CC");
+seg.underlined = true;
+seg.clickUrl = embed.getUrl();
+seg.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
+}
+if (isSpoilerWrappedUrl(raw, embed.getUrl())) {
+seg.obfuscated = true;
+}
+segments.add(seg);
+}
 }
 
 // Append interactive components indicator
@@ -1384,6 +1384,16 @@ lastEnd = span.end;
 return result;
 }
 
+/**
+ * Checks whether a URL appears inside a Discord spoiler wrapper in the raw message text.
+ * <p>
+ * Supports nested markdown wrappers inside the spoiler body (for example
+ * {@code ||***https://example.com***||}) by normalizing markdown delimiter characters.
+ *
+ * @param raw The raw Discord message content.
+ * @param url The URL to check.
+ * @return true if the URL is wrapped in {@code ||...||}; otherwise false.
+ */
 private static boolean isSpoilerWrappedUrl(String raw, String url) {
 if (raw == null || raw.isEmpty() || url == null || url.isEmpty()) {
 return false;
