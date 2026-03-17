@@ -104,7 +104,7 @@ discord_to_minecraft:
       color: "{role_color}"
     - text: "{message}"
       bold: false
-      color: "dark_gray"
+      color: "gray"
   delete: # 消息删除通知格式
     - text: "[Discord] "
       bold: true
