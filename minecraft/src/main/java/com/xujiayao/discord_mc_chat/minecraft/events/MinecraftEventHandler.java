@@ -906,6 +906,6 @@ public class MinecraftEventHandler {
 			}
 		}
 
-		player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.6F, 1.6F);
+		player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.9F, 1.05F);
 	}
 }

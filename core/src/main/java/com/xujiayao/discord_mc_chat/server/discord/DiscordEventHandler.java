@@ -334,8 +334,8 @@ public class DiscordEventHandler extends ListenerAdapter {
 
 	@Override
 	public void onMessageReceived(@NotNull MessageReceivedEvent event) {
-		// Ignore messages from DMCC Bot itself or from webhooks
-		if ((event.getAuthor() == event.getJDA().getSelfUser()) || event.isWebhookMessage()) {
+		// Ignore messages from DMCC Bot itself
+		if (event.getAuthor() == event.getJDA().getSelfUser()) {
 			return;
 		}
 
@@ -359,12 +359,29 @@ public class DiscordEventHandler extends ListenerAdapter {
 		}
 
 		Message message = event.getMessage();
+		if (event.isWebhookMessage()) {
+			// Webhook messages are not bridged back to Minecraft to avoid loops,
+			// but keep them cached so reply context can still be parsed consistently.
+			cacheMessage(message);
+			return;
+		}
 
 		// Build the main message line segments using DiscordMessageParser
 		List<TextSegment> mainSegments = DiscordMessageParser.buildChatSegments(message);
 
 		// Build reply segments if this is a reply to another message
 		List<TextSegment> replySegments = DiscordMessageParser.buildReplySegments(message.getReferencedMessage());
+		if (replySegments == null && message.getMessageReference() != null) {
+			CachedMessage cachedRef = messageCache.get(message.getMessageReference().getMessageId());
+			if (cachedRef != null) {
+				replySegments = DiscordMessageParser.buildReplySegments(
+						cachedRef.authorName(),
+						cachedRef.authorRoleColor(),
+						null,
+						cachedRef.contentRaw()
+				);
+			}
+		}
 
 		// Build mention notification data
 		String mentionNotificationText = null;
