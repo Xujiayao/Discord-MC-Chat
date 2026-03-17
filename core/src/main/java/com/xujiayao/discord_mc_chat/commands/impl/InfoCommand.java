@@ -37,7 +37,7 @@ public class InfoCommand implements Command {
 
 		String clientsInfo;
 		if (infoSnapshot.isEmpty()) {
-			clientsInfo = I18nManager.getDmccTranslation("commands.info.server_part.no_clients");
+			clientsInfo = "  " + I18nManager.getDmccTranslation("commands.info.server_part.no_clients");
 		} else {
 			StringBuilder clientsBuilder = new StringBuilder();
 			infoSnapshot.values().stream()
