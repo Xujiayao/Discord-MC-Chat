@@ -51,7 +51,7 @@ private static final Pattern STRIKETHROUGH_PATTERN = Pattern.compile("~~(.+?)~~"
 private static final Pattern SPOILER_PATTERN = Pattern.compile("\\|\\|(.+?)\\|\\|");
 private static final Pattern CODE_BLOCK_PATTERN = Pattern.compile("```(\\w*)\\n?([\\s\\S]*?)```");
 private static final Pattern INLINE_CODE_PATTERN = Pattern.compile("`([^`]+)`");
-private static final Pattern HEADING_PATTERN = Pattern.compile("(?m)^(#{1,6}\\s+.+)$");
+private static final Pattern HEADING_PATTERN = Pattern.compile("(?m)^(#{1,6}\\s+.*)$");
 
 // Discord mention patterns in raw content
 private static final Pattern USER_MENTION_PATTERN = Pattern.compile("<@!?(\\d+)>");
@@ -93,6 +93,8 @@ private static final Pattern SPOILER_URL_PATTERN = Pattern.compile("\\|\\|(https
 
 /** Maximum number of content lines for multi-line messages. */
 private static final int MAX_CONTENT_LINES = 5;
+private static final int REPLY_TRUNCATE_LIMIT = 20;
+private static final String URL_COLOR = "#3366CC";
 
 /**
  * Builds the main message line segments for a Discord chat message.
@@ -227,6 +229,15 @@ String refRoleColor = getRoleColorHex(refMember);
 return buildReplySegments(refName, refRoleColor, referencedMessage, referencedMessage.getContentRaw());
 }
 
+/**
+ * Builds reply context line segments from cached/reference fields.
+ *
+ * @param refName       referenced message author's display name
+ * @param refRoleColor  referenced message author's role color
+ * @param contextMessage message context for full parsing; may be null for cached/deleted messages
+ * @param refRaw        raw referenced message content
+ * @return reply line segments, or null when refRaw is null
+ */
 public static List<TextSegment> buildReplySegments(String refName, String refRoleColor, Message contextMessage, String refRaw) {
 if (refRaw == null) {
 return null;
@@ -776,6 +787,8 @@ String languageCode = I18nManager.getLanguage();
 if (languageCode == null || languageCode.isBlank()) {
 return Locale.ENGLISH;
 }
+// DMCC language codes are configured as snake_case (e.g. en_us, zh_cn),
+// while Locale.forLanguageTag expects BCP-47 with hyphen separators.
 String tag = languageCode.replace('_', '-');
 Locale locale = Locale.forLanguageTag(tag);
 if (locale.getLanguage().isBlank()) {
@@ -797,7 +810,7 @@ private static void collectBoldUrlTokens(String raw, List<TokenSpan> tokens) {
 Matcher matcher = BOLD_URL_PATTERN.matcher(raw);
 while (matcher.find()) {
 String url = matcher.group(1);
-TextSegment seg = new TextSegment(url, false, "#3366CC");
+TextSegment seg = new TextSegment(url, false, URL_COLOR);
 seg.bold = true;
 seg.underlined = true;
 seg.clickUrl = url;
@@ -810,7 +823,7 @@ private static void collectSpoilerUrlTokens(String raw, List<TokenSpan> tokens) 
 Matcher matcher = SPOILER_URL_PATTERN.matcher(raw);
 while (matcher.find()) {
 String url = matcher.group(1);
-TextSegment seg = new TextSegment(url, false, "#3366CC");
+TextSegment seg = new TextSegment(url, false, URL_COLOR);
 seg.obfuscated = true;
 seg.underlined = true;
 seg.clickUrl = url;
@@ -1076,7 +1089,10 @@ return sb.toString();
 
 private static String truncateReplyRaw(String raw) {
 int newlineIndex = raw.indexOf('\n');
-int cutoff = newlineIndex >= 0 ? Math.min(newlineIndex, 20) : 20;
+int cutoff = newlineIndex >= 0 ? Math.min(newlineIndex, REPLY_TRUNCATE_LIMIT) : REPLY_TRUNCATE_LIMIT;
+if (cutoff <= 0) {
+return "...";
+}
 if (raw.length() <= cutoff) {
 return raw;
 }
