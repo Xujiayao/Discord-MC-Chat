@@ -92,6 +92,10 @@ private static final Pattern BOLD_ITALIC_URL_PATTERN = Pattern.compile("\\*\\*\\
 private static final Pattern BOLD_URL_PATTERN = Pattern.compile("\\*\\*(https?://[^\\s*|~`<>)\\]]+)\\*\\*");
 private static final Pattern SPOILER_ITALIC_URL_PATTERN = Pattern.compile("\\|\\|\\*(https?://[^\\s*|~`<>)\\]]+)\\*\\|\\|");
 private static final Pattern SPOILER_URL_PATTERN = Pattern.compile("\\|\\|(https?://[^\\s*|~`<>)\\]]+)\\|\\|");
+private static final Pattern SPOILER_USER_MENTION_PATTERN = Pattern.compile("\\|\\|<@!?(\\d+)>\\|\\|");
+private static final Pattern SPOILER_ROLE_MENTION_PATTERN = Pattern.compile("\\|\\|<@&(\\d+)>\\|\\|");
+private static final Pattern SPOILER_CHANNEL_MENTION_PATTERN = Pattern.compile("\\|\\|<#(\\d+)>\\|\\|");
+private static final Pattern SPOILER_EVERYONE_HERE_PATTERN = Pattern.compile("\\|\\|@(everyone|here)\\|\\|");
 private static final Pattern SPOILER_CONTENT_PATTERN = Pattern.compile("\\|\\|(.+?)\\|\\|");
 private static final Pattern LINK_TOKEN_PATTERN = Pattern.compile("\\[([^]]+)]\\((https?://[^)]+)\\)");
 private static final List<String> MARKDOWN_DELIMITERS = List.of("***", "~~", "||", "**", "__", "*", "_");
@@ -529,16 +533,8 @@ type = "image";
 } else if (attachment.isVideo()) {
 type = "video";
 }
-String label = "<attachment type=[" + type + "] name=[" + attachment.getFileName() + "]>";
-
-TextSegment seg = new TextSegment(label, false, "#3366CC");
-seg.underlined = true;
-seg.clickUrl = attachment.getUrl();
-seg.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
-if (attachment.isSpoiler() || attachment.getFileName().startsWith("SPOILER_")) {
-seg.obfuscated = true;
-}
-segments.add(seg);
+boolean spoilerAttachment = attachment.isSpoiler() || attachment.getFileName().startsWith("SPOILER_");
+segments.addAll(buildAttachmentSegments(type, attachment.getFileName(), attachment.getUrl(), spoilerAttachment));
 }
 }
 
@@ -566,19 +562,8 @@ title = safeTruncate(title, 20) + "...";
 }
 }
 
-TextSegment seg;
-if (embed.getUrl() == null) {
-seg = new TextSegment("<embed title=[" + title + "]>", false, "yellow");
-} else {
-seg = new TextSegment("<embed title=[" + title + "]>", false, "#3366CC");
-seg.underlined = true;
-seg.clickUrl = embed.getUrl();
-seg.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
-}
-if (isSpoilerWrappedUrl(raw, embed.getUrl())) {
-seg.obfuscated = true;
-}
-segments.add(seg);
+boolean spoilerEmbed = isSpoilerWrappedUrl(raw, embed.getUrl());
+segments.addAll(buildEmbedSegments(title, embed.getUrl(), spoilerEmbed));
 }
 }
 
@@ -618,6 +603,7 @@ List<TextSegment> segments = new ArrayList<>();
 List<TokenSpan> tokens = new ArrayList<>();
 
 if (parseMentions) {
+collectSpoilerMentionTokens(raw, message, tokens);
 collectUserMentionTokens(raw, message, tokens);
 collectRoleMentionTokens(raw, message, tokens);
 collectChannelMentionTokens(raw, message, tokens);
@@ -744,6 +730,92 @@ Matcher matcher = EVERYONE_HERE_PATTERN.matcher(raw);
 while (matcher.find()) {
 String mention = matcher.group(1); // "everyone" or "here"
 TextSegment seg = new TextSegment("[@" + mention + "]", false, "yellow");
+tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
+}
+}
+
+private static void collectSpoilerMentionTokens(String raw, Message message, List<TokenSpan> tokens) {
+collectSpoilerUserMentionTokens(raw, message, tokens);
+collectSpoilerRoleMentionTokens(raw, message, tokens);
+collectSpoilerChannelMentionTokens(raw, message, tokens);
+collectSpoilerEveryoneHereTokens(raw, message, tokens);
+}
+
+private static void collectSpoilerUserMentionTokens(String raw, Message message, List<TokenSpan> tokens) {
+Matcher matcher = SPOILER_USER_MENTION_PATTERN.matcher(raw);
+while (matcher.find()) {
+String userId = matcher.group(1);
+String displayName = null;
+String color = null;
+for (User user : message.getMentions().getUsers()) {
+if (user.getId().equals(userId)) {
+Member member = message.getGuild().getMember(user);
+displayName = member != null ? member.getEffectiveName() : user.getName();
+color = getRoleColorHex(member);
+break;
+}
+}
+if (displayName == null) {
+displayName = userId;
+}
+TextSegment seg = new TextSegment("[@" + displayName + "]", false, color != null ? color : "white");
+seg.obfuscated = true;
+seg.hoverText = seg.text;
+tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
+}
+}
+
+private static void collectSpoilerRoleMentionTokens(String raw, Message message, List<TokenSpan> tokens) {
+Matcher matcher = SPOILER_ROLE_MENTION_PATTERN.matcher(raw);
+while (matcher.find()) {
+String roleId = matcher.group(1);
+String roleName = roleId;
+String color = "white";
+for (Role role : message.getMentions().getRoles()) {
+if (role.getId().equals(roleId)) {
+roleName = role.getName();
+Color roleColor = role.getColors().getPrimary();
+if (roleColor != null) {
+color = String.format("#%06X", roleColor.getRGB() & 0xFFFFFF);
+}
+break;
+}
+}
+TextSegment seg = new TextSegment("[@" + roleName + "]", false, color);
+seg.obfuscated = true;
+seg.hoverText = seg.text;
+tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
+}
+}
+
+private static void collectSpoilerChannelMentionTokens(String raw, Message message, List<TokenSpan> tokens) {
+Matcher matcher = SPOILER_CHANNEL_MENTION_PATTERN.matcher(raw);
+while (matcher.find()) {
+String channelId = matcher.group(1);
+String channelName = channelId;
+for (GuildChannel channel : message.getMentions().getChannels()) {
+if (channel.getId().equals(channelId)) {
+channelName = channel.getName();
+break;
+}
+}
+TextSegment seg = new TextSegment("[#" + channelName + "]", false, "yellow");
+seg.obfuscated = true;
+seg.hoverText = seg.text;
+tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
+}
+}
+
+private static void collectSpoilerEveryoneHereTokens(String raw, Message message, List<TokenSpan> tokens) {
+if (!message.getMentions().mentionsEveryone()) {
+return;
+}
+Matcher matcher = SPOILER_EVERYONE_HERE_PATTERN.matcher(raw);
+while (matcher.find()) {
+String mention = matcher.group(1);
+TextSegment seg = new TextSegment("[@" + mention + "]", false, "yellow");
+seg.obfuscated = true;
+seg.hoverText = seg.text;
 tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
 }
 }
@@ -1410,6 +1482,57 @@ return true;
 }
 }
 return false;
+}
+
+private static List<TextSegment> buildAttachmentSegments(String type, String fileName, String url, boolean spoiler) {
+List<TextSegment> segments = new ArrayList<>();
+TextSegment prefix = new TextSegment("<attachment type=[" + type + "] name=[", false, URL_COLOR);
+TextSegment fileNameSegment = new TextSegment(fileName, false, URL_COLOR);
+TextSegment suffix = new TextSegment("]>", false, URL_COLOR);
+
+applyLinkStyle(prefix, url);
+applyLinkStyle(fileNameSegment, url);
+applyLinkStyle(suffix, url);
+
+if (spoiler) {
+fileNameSegment.obfuscated = true;
+fileNameSegment.hoverText = fileName;
+}
+
+segments.add(prefix);
+segments.add(fileNameSegment);
+segments.add(suffix);
+return segments;
+}
+
+private static List<TextSegment> buildEmbedSegments(String title, String url, boolean spoiler) {
+List<TextSegment> segments = new ArrayList<>();
+String color = url == null ? "yellow" : URL_COLOR;
+TextSegment prefix = new TextSegment("<embed title=[", false, color);
+TextSegment titleSegment = new TextSegment(title, false, color);
+TextSegment suffix = new TextSegment("]>", false, color);
+
+if (url != null) {
+applyLinkStyle(prefix, url);
+applyLinkStyle(titleSegment, url);
+applyLinkStyle(suffix, url);
+}
+
+if (spoiler) {
+titleSegment.obfuscated = true;
+titleSegment.hoverText = title;
+}
+
+segments.add(prefix);
+segments.add(titleSegment);
+segments.add(suffix);
+return segments;
+}
+
+private static void applyLinkStyle(TextSegment segment, String url) {
+segment.underlined = true;
+segment.clickUrl = url;
+segment.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
 }
 
 private static String truncateMainRaw(String raw) {

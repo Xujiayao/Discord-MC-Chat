@@ -47,7 +47,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 	private static final ConcurrentHashMap<String, CachedMessage> messageCache = new ConcurrentHashMap<>();
 	private static final int MAX_CACHE_SIZE = 200;
 
-	private record CachedMessage(String authorName, String authorRoleColor, String contentRaw) {}
+	private record CachedMessage(String authorName, String authorRoleColor, String contentRaw, Message contextMessage) {}
 
 	/**
 	 * Resolves the OP Level credential for a Discord user based on config mappings.
@@ -131,6 +131,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 
 			List<TextSegment> segments = DiscordMessageParser.buildCommandSegments(effectiveName, roleColor, fullCommand.toString());
 			DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.COMMAND, segments);
+			logDiscordEventForConsole(packet);
 			NetworkManager.broadcastToClients(packet);
 		}
 	}
@@ -379,7 +380,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 				replySegments = DiscordMessageParser.buildReplySegments(
 						cachedRef.authorName(),
 						cachedRef.authorRoleColor(),
-						null,
+						cachedRef.contextMessage(),
 						cachedRef.contentRaw()
 				);
 			}
@@ -411,11 +412,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 		packet.mentionedPlayerUuids = mentionedPlayerUuids;
 		packet.mentionEveryone = isMentionEveryone;
 
-		if (replySegments != null && !replySegments.isEmpty()) {
-			LOGGER.info(TextSegment.toPlainText(replySegments));
-		}
-		LOGGER.info(TextSegment.toPlainText(mainSegments));
-
+		logDiscordEventForConsole(packet);
 		NetworkManager.broadcastToClients(packet);
 
 		// Cache message for edit/delete reference
@@ -458,10 +455,12 @@ public class DiscordEventHandler extends ListenerAdapter {
 			List<TextSegment> segments = DiscordMessageParser.buildReactionSegments(reactorName, roleColor, emojiText);
 			DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.REACTION, segments);
 			packet.replySegments = DiscordMessageParser.buildReplySegments(targetMessage);
+			logDiscordEventForConsole(packet);
 			NetworkManager.broadcastToClients(packet);
 		}, error -> {
 			List<TextSegment> segments = DiscordMessageParser.buildReactionSegments(reactorName, roleColor, emojiText);
 			DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.REACTION, segments);
+			logDiscordEventForConsole(packet);
 			NetworkManager.broadcastToClients(packet);
 		});
 	}
@@ -499,7 +498,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 			replySegments = DiscordMessageParser.buildReplySegments(
 					cached.authorName(),
 					cached.authorRoleColor(),
-					message,
+					cached.contextMessage(),
 					cached.contentRaw()
 			);
 		}
@@ -513,6 +512,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 		DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.EDIT, notificationSegments);
 		packet.replySegments = replySegments;
 		packet.editedMessageSegments = editedMessageSegments;
+		logDiscordEventForConsole(packet);
 		NetworkManager.broadcastToClients(packet);
 
 		// Update cache
@@ -542,6 +542,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 			// No cached info - send a generic delete notification
 			List<TextSegment> segments = DiscordMessageParser.buildDeleteSegments("Unknown", "white");
 			DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.DELETE, segments);
+			logDiscordEventForConsole(packet);
 			NetworkManager.broadcastToClients(packet);
 			return;
 		}
@@ -551,9 +552,10 @@ public class DiscordEventHandler extends ListenerAdapter {
 		packet.replySegments = DiscordMessageParser.buildReplySegments(
 				cached.authorName(),
 				cached.authorRoleColor(),
-				null,
+				cached.contextMessage(),
 				cached.contentRaw()
 		);
+		logDiscordEventForConsole(packet);
 		NetworkManager.broadcastToClients(packet);
 	}
 
@@ -573,6 +575,18 @@ public class DiscordEventHandler extends ListenerAdapter {
 		Member member = message.getMember();
 		String name = member != null ? member.getEffectiveName() : message.getAuthor().getName();
 		String roleColor = DiscordMessageParser.getRoleColorHex(member);
-		messageCache.put(message.getId(), new CachedMessage(name, roleColor, message.getContentRaw()));
+		messageCache.put(message.getId(), new CachedMessage(name, roleColor, message.getContentRaw(), message));
+	}
+
+	private static void logDiscordEventForConsole(DiscordEventPacket packet) {
+		if (packet.replySegments != null && !packet.replySegments.isEmpty()) {
+			LOGGER.info(TextSegment.toPlainText(packet.replySegments));
+		}
+		if (packet.segments != null && !packet.segments.isEmpty()) {
+			LOGGER.info(TextSegment.toPlainText(packet.segments));
+		}
+		if (packet.type == DiscordEventPacket.EventType.EDIT && packet.editedMessageSegments != null && !packet.editedMessageSegments.isEmpty()) {
+			LOGGER.info(TextSegment.toPlainText(packet.editedMessageSegments));
+		}
 	}
 }
