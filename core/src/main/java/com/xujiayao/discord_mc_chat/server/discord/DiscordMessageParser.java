@@ -92,6 +92,7 @@ private static final Pattern BOLD_ITALIC_URL_PATTERN = Pattern.compile("\\*\\*\\
 private static final Pattern BOLD_URL_PATTERN = Pattern.compile("\\*\\*(https?://[^\\s*|~`<>)\\]]+)\\*\\*");
 private static final Pattern SPOILER_ITALIC_URL_PATTERN = Pattern.compile("\\|\\|\\*(https?://[^\\s*|~`<>)\\]]+)\\*\\|\\|");
 private static final Pattern SPOILER_URL_PATTERN = Pattern.compile("\\|\\|(https?://[^\\s*|~`<>)\\]]+)\\|\\|");
+private static final Pattern LINK_TOKEN_PATTERN = Pattern.compile("\\[([^]]+)]\\((https?://[^)]+)\\)");
 private static final List<String> MARKDOWN_DELIMITERS = List.of("***", "~~", "||", "**", "__", "*", "_");
 
 private static final int MAX_CONTENT_LINES = 6;
@@ -574,22 +575,7 @@ if (ConfigManager.getBoolean("message_parsing.discord_to_minecraft.timestamps"))
 collectTimestampTokens(raw, tokens);
 }
 
-if (parseCustomEmojis) {
-collectCustomEmojiTokens(raw, tokens);
-}
-
-if (parseHyperlinks) {
-collectBoldItalicUrlTokens(raw, tokens);
-collectBoldUrlTokens(raw, tokens);
-collectSpoilerItalicUrlTokens(raw, tokens);
-collectSpoilerUrlTokens(raw, tokens);
-collectMarkdownLinkTokens(raw, tokens);
-collectBareUrlTokens(raw, tokens);
-}
-
-if (parseUnicodeEmojis) {
-collectUnicodeEmojiTokens(raw, tokens);
-}
+// Hyperlinks and emoji are parsed after markdown so nested wrappers don't leak as plain text.
 
 // Sort tokens by start position
 tokens.sort(Comparator.comparingInt(a -> a.start));
@@ -622,7 +608,7 @@ segments.add(new TextSegment(remaining));
 }
 }
 
-return segments;
+return postProcessInlineSegments(segments, parseCustomEmojis, parseUnicodeEmojis, parseHyperlinks);
 }
 
 private static List<TextSegment> parseMessageContentWithoutMessage(String raw) {
@@ -1060,7 +1046,160 @@ segment.italic = state.italic;
 segment.underlined = state.underlined;
 segment.strikethrough = state.strikethrough;
 segment.obfuscated = state.obfuscated;
+if (segment.obfuscated) {
+segment.hoverText = text;
+}
 segments.add(segment);
+}
+
+private static List<TextSegment> postProcessInlineSegments(List<TextSegment> segments,
+															boolean parseCustomEmojis,
+															boolean parseUnicodeEmojis,
+															boolean parseHyperlinks) {
+if ((!parseCustomEmojis && !parseUnicodeEmojis && !parseHyperlinks) || segments.isEmpty()) {
+return segments;
+}
+List<TextSegment> out = new ArrayList<>();
+for (TextSegment segment : segments) {
+if (segment.text == null || segment.text.isEmpty() || segment.clickUrl != null) {
+out.add(segment);
+continue;
+}
+List<TextSegment> current = List.of(segment);
+if (parseHyperlinks) {
+current = splitSegmentsByMarkdownLink(current);
+current = splitSegmentsByBareUrl(current);
+}
+if (parseCustomEmojis) {
+current = splitSegmentsByCustomEmoji(current);
+}
+if (parseUnicodeEmojis) {
+current = splitSegmentsByUnicodeEmoji(current);
+}
+for (TextSegment seg : current) {
+if (seg.obfuscated && (seg.clickUrl == null || seg.clickUrl.isEmpty()) && (seg.hoverText == null || seg.hoverText.isEmpty())) {
+seg.hoverText = seg.text;
+}
+out.add(seg);
+}
+}
+return out;
+}
+
+private static List<TextSegment> splitSegmentsByMarkdownLink(List<TextSegment> segments) {
+List<TextSegment> out = new ArrayList<>();
+for (TextSegment segment : segments) {
+if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
+out.add(segment);
+continue;
+}
+Matcher matcher = LINK_TOKEN_PATTERN.matcher(segment.text);
+int cursor = 0;
+while (matcher.find()) {
+if (matcher.start() > cursor) {
+out.add(copySegment(segment, segment.text.substring(cursor, matcher.start())));
+}
+TextSegment linkSegment = copySegment(segment, matcher.group(1));
+linkSegment.clickUrl = matcher.group(2);
+linkSegment.underlined = true;
+linkSegment.color = URL_COLOR;
+linkSegment.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
+out.add(linkSegment);
+cursor = matcher.end();
+}
+if (cursor == 0) {
+out.add(segment);
+} else if (cursor < segment.text.length()) {
+out.add(copySegment(segment, segment.text.substring(cursor)));
+}
+}
+return out;
+}
+
+private static List<TextSegment> splitSegmentsByBareUrl(List<TextSegment> segments) {
+List<TextSegment> out = new ArrayList<>();
+for (TextSegment segment : segments) {
+if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
+out.add(segment);
+continue;
+}
+Matcher matcher = BARE_URL_PATTERN.matcher(segment.text);
+int cursor = 0;
+while (matcher.find()) {
+if (matcher.start() > cursor) {
+out.add(copySegment(segment, segment.text.substring(cursor, matcher.start())));
+}
+TextSegment urlSegment = copySegment(segment, matcher.group(1));
+urlSegment.clickUrl = matcher.group(1);
+urlSegment.underlined = true;
+urlSegment.color = URL_COLOR;
+urlSegment.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
+out.add(urlSegment);
+cursor = matcher.end();
+}
+if (cursor == 0) {
+out.add(segment);
+} else if (cursor < segment.text.length()) {
+out.add(copySegment(segment, segment.text.substring(cursor)));
+}
+}
+return out;
+}
+
+private static List<TextSegment> splitSegmentsByCustomEmoji(List<TextSegment> segments) {
+List<TextSegment> out = new ArrayList<>();
+for (TextSegment segment : segments) {
+if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
+out.add(segment);
+continue;
+}
+Matcher matcher = CUSTOM_EMOJI_PATTERN.matcher(segment.text);
+int cursor = 0;
+while (matcher.find()) {
+if (matcher.start() > cursor) {
+out.add(copySegment(segment, segment.text.substring(cursor, matcher.start())));
+}
+TextSegment emojiSegment = copySegment(segment, ":" + matcher.group(1) + ":");
+emojiSegment.color = "yellow";
+out.add(emojiSegment);
+cursor = matcher.end();
+}
+if (cursor == 0) {
+out.add(segment);
+} else if (cursor < segment.text.length()) {
+out.add(copySegment(segment, segment.text.substring(cursor)));
+}
+}
+return out;
+}
+
+private static List<TextSegment> splitSegmentsByUnicodeEmoji(List<TextSegment> segments) {
+List<TextSegment> out = new ArrayList<>();
+for (TextSegment segment : segments) {
+if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
+out.add(segment);
+continue;
+}
+Matcher matcher = UNICODE_EMOJI_PATTERN.matcher(segment.text);
+int cursor = 0;
+while (matcher.find()) {
+if (matcher.start() > cursor) {
+out.add(copySegment(segment, segment.text.substring(cursor, matcher.start())));
+}
+String unicodeEmoji = matcher.group();
+String alias = EmojiManager.replaceAllEmojis(unicodeEmoji, emoji -> emoji.getDiscordAliases().getFirst());
+TextSegment emojiSegment = copySegment(segment, alias);
+emojiSegment.color = "yellow";
+out.add(emojiSegment);
+cursor = matcher.end();
+}
+if (cursor == 0) {
+out.add(segment);
+} else if (cursor < segment.text.length()) {
+out.add(copySegment(segment, segment.text.substring(cursor)));
+}
+}
+return out;
 }
 
 /**
@@ -1267,7 +1406,7 @@ if (segments.isEmpty()) {
 segments.add(new TextSegment("..."));
 return;
 }
-TextSegment tail = segments.getLast();
+TextSegment tail = segments.get(segments.size() - 1);
 segments.set(segments.size() - 1, copySegment(tail, tail.text + "..."));
 }
 
