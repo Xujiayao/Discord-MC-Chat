@@ -1012,6 +1012,9 @@ public class DiscordMessageParser {
 	private static String matchMarkdownDelimiter(String text, int index) {
 		for (String delimiter : MARKDOWN_DELIMITERS) {
 			if (text.startsWith(delimiter, index)) {
+				if (isUnderscoreDelimiter(delimiter) && isInsideDiscordAliasEmoji(text, index)) {
+					continue;
+				}
 				return delimiter;
 			}
 		}
@@ -1024,11 +1027,37 @@ public class DiscordMessageParser {
 				i++;
 				continue;
 			}
+			if (isUnderscoreDelimiter(delimiter) && isInsideDiscordAliasEmoji(text, i)) {
+				continue;
+			}
 			if (text.startsWith(delimiter, i)) {
 				return i;
 			}
 		}
 		return -1;
+	}
+
+	private static boolean isUnderscoreDelimiter(String delimiter) {
+		return "_".equals(delimiter) || "__".equals(delimiter);
+	}
+
+	private static boolean isInsideDiscordAliasEmoji(String text, int index) {
+		if (index <= 0 || index >= text.length()) {
+			return false;
+		}
+		int leftColon = text.lastIndexOf(':', index);
+		if (leftColon < 0) {
+			return false;
+		}
+		int rightColon = text.indexOf(':', index);
+		if (rightColon < 0 || rightColon <= leftColon + 1) {
+			return false;
+		}
+		if (index <= leftColon || index >= rightColon) {
+			return false;
+		}
+		String candidate = text.substring(leftColon, rightColon + 1);
+		return DISCORD_ALIAS_EMOJI_PATTERN.matcher(candidate).matches();
 	}
 
 	private static MarkdownState applyDelimiterStyle(MarkdownState base, String delimiter) {
