@@ -2,6 +2,7 @@ package com.xujiayao.discord_mc_chat.network.packets.events;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * Represents a single rich text segment for in-game rendering.
@@ -91,5 +92,21 @@ public class TextSegment implements Serializable {
 		this.text = text;
 		this.bold = bold;
 		this.color = color;
+	}
+
+	@Override
+	public String toString() {
+		return text == null ? "" : text;
+	}
+
+	public static String toPlainText(List<TextSegment> segments) {
+		if (segments == null || segments.isEmpty()) {
+			return "";
+		}
+		StringBuilder sb = new StringBuilder();
+		for (TextSegment segment : segments) {
+			sb.append(segment == null ? "" : segment.toString());
+		}
+		return sb.toString();
 	}
 }
