@@ -22,6 +22,7 @@ import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.fellbaum.jemoji.EmojiManager;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -424,20 +425,18 @@ public class DiscordEventHandler extends ListenerAdapter {
 		String roleColor = DiscordMessageParser.getRoleColorHex(member);
 
 		EmojiUnion emoji = event.getEmoji();
-		String emojiText = emoji.getFormatted();
-		// For custom emoji, use :name: format
-		if (emoji.getType() == Emoji.Type.CUSTOM) {
-			emojiText = ":" + emoji.getName() + ":";
-		}
-		final String finalEmojiText = emojiText;
+		String emojiText = switch (emoji.getType()) {
+			case UNICODE -> EmojiManager.replaceAllEmojis(emoji.getName(), e -> e.getDiscordAliases().getFirst());
+			case CUSTOM -> ":" + emoji.getName() + ":";
+		};
 
 		event.retrieveMessage().queue(targetMessage -> {
-			List<TextSegment> segments = DiscordMessageParser.buildReactionSegments(reactorName, roleColor, finalEmojiText);
+			List<TextSegment> segments = DiscordMessageParser.buildReactionSegments(reactorName, roleColor, emojiText);
 			DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.REACTION, segments);
 			packet.replySegments = DiscordMessageParser.buildReplySegments(targetMessage);
 			NetworkManager.broadcastToClients(packet);
 		}, error -> {
-			List<TextSegment> segments = DiscordMessageParser.buildReactionSegments(reactorName, roleColor, finalEmojiText);
+			List<TextSegment> segments = DiscordMessageParser.buildReactionSegments(reactorName, roleColor, emojiText);
 			DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.REACTION, segments);
 			NetworkManager.broadcastToClients(packet);
 		});
