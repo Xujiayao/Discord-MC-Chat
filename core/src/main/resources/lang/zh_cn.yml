@@ -181,6 +181,28 @@ discord:
     reply_failed_detail: "对于 reload/shutdown 命令，这是预期的行为。"
   message_parser:
     click_to_open_link: "点击打开链接"
+    relative:
+      past: "{}{}前"
+      future: "{}{}后"
+      units:
+        second:
+          one: "秒"
+          other: "秒"
+        minute:
+          one: "分钟"
+          other: "分钟"
+        hour:
+          one: "小时"
+          other: "小时"
+        day:
+          one: "天"
+          other: "天"
+        month:
+          one: "个月"
+          other: "个月"
+        year:
+          one: "年"
+          other: "年"
 
 server:
   discord_init_failed: "初始化 Discord 管理器失败。正在中止 DMCC 服务端启动。"
