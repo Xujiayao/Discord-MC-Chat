@@ -659,7 +659,7 @@ public class DiscordManager {
 	private static String resolvePlayerAvatarUrl(String clientName, Map<String, String> placeholders) {
 		String playerName = placeholders.getOrDefault("user_name", placeholders.getOrDefault("display_name", clientName));
 		String template = ConfigManager.getString("discord.webhook.players.avatar_url", "");
-		if (template != null && !template.isBlank()) {
+		if (!template.isBlank()) {
 			return template.replace("{player_name}", playerName);
 		}
 		return getClientAvatarUrl(clientName);

@@ -22,6 +22,7 @@ public class MinecraftMessageParser {
 	private static final Pattern USER_MENTION_PATTERN = Pattern.compile("<@!?(\\d+)>");
 	private static final Pattern ROLE_MENTION_PATTERN = Pattern.compile("<@&(\\d+)>");
 	private static final Pattern CHANNEL_MENTION_PATTERN = Pattern.compile("<#(\\d+)>");
+	// Matches Discord Markdown/meta characters. `\\\\` in Java string is a literal backslash in regex.
 	private static final Pattern MARKDOWN_SPECIAL_PATTERN = Pattern.compile("([\\\\`*_{}\\[\\]()#+\\-.!|>~])");
 
 	private MinecraftMessageParser() {
@@ -64,7 +65,8 @@ public class MinecraftMessageParser {
 		}
 
 		if (!ConfigManager.getBoolean("message_parsing.minecraft_to_discord.markdown")) {
-			parsed = MARKDOWN_SPECIAL_PATTERN.matcher(parsed).replaceAll("\\\\$1");
+			parsed = MARKDOWN_SPECIAL_PATTERN.matcher(parsed)
+					.replaceAll(match -> "\\\\" + match.group(1));
 		}
 
 		return parsed;

@@ -53,7 +53,8 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  */
 public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
-	private static final String DEFAULT_PLAYER_ROLE_COLOR = "white";
+	// Minecraft-side chat does not carry Discord role data, so relay uses a neutral fallback.
+	private static final String RELAY_DEFAULT_ROLE_COLOR = "white";
 	private final NettyServer server;
 	private String expectedNonce;
 	private boolean authenticated = false;
@@ -381,7 +382,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	private String applyRelayPlaceholders(String input, String sourceClientName, String serverColor, Map<String, String> placeholders) {
 		String value = input.replace("{server}", sourceClientName)
 				.replace("{server_color}", serverColor)
-				.replace("{role_color}", DEFAULT_PLAYER_ROLE_COLOR)
+				.replace("{role_color}", RELAY_DEFAULT_ROLE_COLOR)
 				.replace("{effective_name}", placeholders.getOrDefault("display_name", placeholders.getOrDefault("user_name", "")));
 
 		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
@@ -432,7 +433,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 				if (Pattern.compile(regex).matcher(command).matches()) {
 					return true;
 				}
-			} catch (Exception ignored) {
+			} catch (Exception e) {
+				LOGGER.warn("Invalid excluded_commands regex ignored: {}", regex, e);
 			}
 		}
 

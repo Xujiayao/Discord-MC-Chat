@@ -184,7 +184,6 @@ public class MinecraftEventHandler {
 			Map<String, String> placeholders = Map.of(
 					"user_name", event.serverPlayer().getName().getString(),
 					"display_name", event.serverPlayer().getDisplayName().getString(),
-					"effective_name", event.serverPlayer().getDisplayName().getString(),
 					"message", message
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_CHAT, placeholders));
@@ -199,8 +198,8 @@ public class MinecraftEventHandler {
 			Map<String, String> placeholders = Map.of(
 					"user_name", event.serverPlayer().getName().getString(),
 					"display_name", event.serverPlayer().getDisplayName().getString(),
-					"effective_name", event.serverPlayer().getDisplayName().getString(),
 					"command", command,
+					// "message" keeps compatibility with default chat template placeholders.
 					"message", command
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_COMMAND, placeholders));
@@ -255,7 +254,6 @@ public class MinecraftEventHandler {
 			Map<String, String> placeholders = Map.of(
 					"user_name", sourceName,
 					"display_name", sourceName,
-					"effective_name", sourceName,
 					"message", message
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_SAY, placeholders));
@@ -278,7 +276,6 @@ public class MinecraftEventHandler {
 			Map<String, String> placeholders = Map.of(
 					"user_name", sourceName,
 					"display_name", sourceName,
-					"effective_name", sourceName,
 					"message", command
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_TELL_RAW, placeholders));
