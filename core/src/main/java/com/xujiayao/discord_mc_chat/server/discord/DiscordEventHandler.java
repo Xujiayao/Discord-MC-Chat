@@ -477,7 +477,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 			packet.replySegments = DiscordMessageParser.buildReplySegments(targetMessage);
 			logDiscordEventForConsole(packet);
 			NetworkManager.broadcastToClients(packet);
-		}, error -> {
+		}, _ -> {
 			List<TextSegment> segments = DiscordMessageParser.buildReactionSegments(reactorName, roleColor, emojiText);
 			DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.REACTION, segments);
 			logDiscordEventForConsole(packet);
