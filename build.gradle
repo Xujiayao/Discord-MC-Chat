@@ -14,15 +14,15 @@ subprojects {
 
     version = mod_version
 
-    java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+    java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
     java {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_25
+        targetCompatibility = JavaVersion.VERSION_25
     }
 
     tasks.withType(JavaCompile).configureEach {
-        options.release = 21
+        options.release = 25
         options.encoding = "UTF-8"
     }
 
