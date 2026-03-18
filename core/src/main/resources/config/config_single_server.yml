@@ -37,6 +37,9 @@ discord:
 broadcasts:
   discord_to_minecraft: # true or false
     chat: true
+    reaction: true
+    edit: true
+    delete: true
     command: true
   minecraft_to_discord: # channel name, empty = disable
     server:
@@ -68,15 +71,13 @@ message_parsing:
     timestamps: true
     ansi_code_blocks: true
     polls: true
-    reactions: true
-    edits: true
-    deletes: true
   minecraft_to_discord:
     markdown: true
     unicode_emojis: true
     custom_emojis: true
     mentions: true
     hyperlinks: true
+    timestamps: true
 
 # 命令过滤设置
 excluded_commands:

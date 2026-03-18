@@ -442,8 +442,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 
 	@Override
 	public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
-		if (!ConfigManager.getBoolean("broadcasts.discord_to_minecraft.chat")
-				|| !ConfigManager.getBoolean("message_parsing.discord_to_minecraft.reactions")) {
+		if (!ConfigManager.getBoolean("broadcasts.discord_to_minecraft.reaction")) {
 			return;
 		}
 
@@ -488,8 +487,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 
 	@Override
 	public void onMessageUpdate(@NotNull MessageUpdateEvent event) {
-		if (!ConfigManager.getBoolean("broadcasts.discord_to_minecraft.chat")
-				|| !ConfigManager.getBoolean("message_parsing.discord_to_minecraft.edits")) {
+		if (!ConfigManager.getBoolean("broadcasts.discord_to_minecraft.edit")) {
 			return;
 		}
 
@@ -554,8 +552,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 
 	@Override
 	public void onMessageDelete(@NotNull MessageDeleteEvent event) {
-		if (!ConfigManager.getBoolean("broadcasts.discord_to_minecraft.chat")
-				|| !ConfigManager.getBoolean("message_parsing.discord_to_minecraft.deletes")) {
+		if (!ConfigManager.getBoolean("broadcasts.discord_to_minecraft.delete")) {
 			return;
 		}
 
