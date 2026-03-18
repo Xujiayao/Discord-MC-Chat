@@ -17,6 +17,7 @@ commands:
   execution_failed: "命令执行失败：{}"
   invalid_usage: "用法错误。正确用法：\"{}\""
   insufficient_permission: "你没有足够的权限执行此命令。"
+  remote_result_prefix: "[{}] {}"
   console:
     description: "执行 Minecraft 命令"
     args_desc:
@@ -172,6 +173,7 @@ discord:
     registering_commands: "正在注册 Discord DMCC 命令。这可能需要一段时间...（理应在 1 分钟以内）"
     commands_success: "Discord DMCC 命令注册成功！"
     commands_failed: "注册 Discord DMCC 命令失败。"
+    presence_update_failed: "更新机器人状态失败：{}"
     channel_not_found: "未找到 Discord 文字频道：\"{}\""
     channel_cannot_talk: "无法在 Discord 文字频道中发送消息：\"{}\""
     insufficient_permission: "Discord 机器人在频道 {} 中权限不足：\"{}\""
@@ -293,6 +295,8 @@ linking:
     generated: "已为 Minecraft 玩家 {} 生成账户绑定验证码。"
     refreshed: "已刷新 Minecraft 玩家 {} 的账户绑定验证码有效期。"
     consumed: "Minecraft 玩家 {} 完成了账户绑定。"
+  op_sync:
+    resolve_failed: "解析 Discord 用户 {} 的 OP 等级失败：{}"
   message:
     not_linked_1: "你尚未绑定 Discord 用户。在 Discord 上使用 "
     not_linked_2: " 命令完成绑定。验证码将在 5 分钟后过期，届时可在游戏内执行 "

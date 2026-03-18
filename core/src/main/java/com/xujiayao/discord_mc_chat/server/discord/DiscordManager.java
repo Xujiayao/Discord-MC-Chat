@@ -221,7 +221,7 @@ public class DiscordManager {
 				try {
 					doUpdateBotPresence(enableStatus, enableActivity);
 				} catch (Exception e) {
-					LOGGER.warn("Failed to update bot presence: " + e.getMessage());
+					LOGGER.warn(I18nManager.getDmccTranslation("discord.manager.presence_update_failed", e.getMessage()));
 				}
 			}, 0, 30, TimeUnit.SECONDS);
 		}

@@ -17,6 +17,7 @@ commands:
   execution_failed: "Command execution failed: {}"
   invalid_usage: "Invalid usage. Correct usage: \"{}\""
   insufficient_permission: "You do not have enough permissions to execute this command."
+  remote_result_prefix: "[{}] {}"
   console:
     description: "Execute a Minecraft command"
     args_desc:
@@ -172,6 +173,7 @@ discord:
     registering_commands: "Registering Discord DMCC commands. This may take a while... (should be within 1 minute)"
     commands_success: "Discord DMCC commands registered successfully!"
     commands_failed: "Failed to register Discord DMCC commands."
+    presence_update_failed: "Failed to update bot presence: {}"
     channel_not_found: "Discord text channel not found: \"{}\""
     channel_cannot_talk: "Cannot send messages in Discord text channel: \"{}\""
     insufficient_permission: "Discord bot has insufficient permissions in channel {}: \"{}\""
@@ -293,6 +295,8 @@ linking:
     generated: "Generated account linking verification code for Minecraft player {}."
     refreshed: "Refreshed account linking verification code validity for Minecraft player {}."
     consumed: "Minecraft player {} completed account linking."
+  op_sync:
+    resolve_failed: "Failed to resolve OP level for Discord user {}: {}"
   message:
     not_linked_1: "You are not linked to a Discord user. Use "
     not_linked_2: " command on Discord to complete linking. The code expires in 5 minutes. Run "

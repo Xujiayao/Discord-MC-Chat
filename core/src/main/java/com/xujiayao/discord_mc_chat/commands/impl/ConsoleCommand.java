@@ -247,7 +247,7 @@ public class ConsoleCommand implements Command {
 				} else {
 					String[] lines = response.response.split("\n");
 					for (String line : lines) {
-						sender.reply("[" + serverName + "] " + line);
+						sender.reply(I18nManager.getDmccTranslation("commands.remote_result_prefix", serverName, line));
 					}
 				}
 			} catch (Exception e) {

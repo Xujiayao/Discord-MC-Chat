@@ -106,7 +106,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 								DiscordManager.clientBroadcast(clientName, "player.die", "player.die", false, p.placeholders);
 						case PLAYER_ADVANCEMENT ->
 								DiscordManager.clientBroadcast(clientName, "player.advancement", "player.advancement." + p.placeholders.get("type"), false, p.placeholders);
-						// Unhandled events
+						// TODO Unhandled events
 						default ->
 								LOGGER.warn("Received MinecraftEventPacket from authenticated client {}: type={}, placeholders={}", clientName, p.type, p.placeholders);
 					}

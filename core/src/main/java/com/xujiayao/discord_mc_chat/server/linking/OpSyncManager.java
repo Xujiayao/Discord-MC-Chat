@@ -9,6 +9,7 @@ import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.events.CoreEvents;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
+import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 
@@ -117,7 +118,7 @@ public class OpSyncManager {
 				return OpLevelResolver.resolve(member, user);
 			}
 		} catch (Exception e) {
-			LOGGER.warn("Failed to resolve OP level for Discord user {}: {}", discordId, e.getMessage());
+			LOGGER.warn(I18nManager.getDmccTranslation("linking.op_sync.resolve_failed", discordId, e.getMessage()));
 			return -1;
 		}
 	}

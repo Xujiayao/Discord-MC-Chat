@@ -172,11 +172,11 @@ public class ExecuteCommand implements Command {
 				} else {
 					// Terminal: send result directly
 					if (response.fileData != null && response.fileName != null) {
-						sender.replyWithFile("[" + serverName + "] " + response.response, response.fileData, response.fileName);
+						sender.replyWithFile(I18nManager.getDmccTranslation("commands.remote_result_prefix", serverName, response.response), response.fileData, response.fileName);
 					} else {
 						String[] lines = response.response.split("\n");
 						for (String line : lines) {
-							sender.reply("[" + serverName + "] " + line);
+							sender.reply(I18nManager.getDmccTranslation("commands.remote_result_prefix", serverName, line));
 						}
 					}
 				}
