@@ -112,7 +112,7 @@ discord_to_minecraft:
     - text: "{effective_name} "
       bold: false
       color: "{role_color}"
-    - text: "删除了此消息！"
+    - text: "发送的消息已被删除！"
       bold: false
       color: "gray"
 

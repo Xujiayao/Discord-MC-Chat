@@ -109,10 +109,13 @@ discord_to_minecraft:
     - text: "[Discord] "
       bold: true
       color: "blue"
+    - text: "A message sent by "
+      bold: false
+      color: "gray"
     - text: "{effective_name} "
       bold: false
       color: "{role_color}"
-    - text: "deleted this message!"
+    - text: "has been deleted!"
       bold: false
       color: "gray"
 

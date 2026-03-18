@@ -183,6 +183,7 @@ discord:
     reply_failed_detail: "This is expected behavior for reload/shutdown commands."
   message_parser:
     click_to_open_link: "Click to open link"
+    unknown_user: "Unknown User"
     relative:
       past: "{} {} ago"
       future: "in {} {}"

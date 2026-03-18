@@ -183,6 +183,7 @@ discord:
     reply_failed_detail: "对于 reload/shutdown 命令，这是预期的行为。"
   message_parser:
     click_to_open_link: "点击打开链接"
+    unknown_user: "未知用户"
     relative:
       past: "{}{}前"
       future: "{}{}后"

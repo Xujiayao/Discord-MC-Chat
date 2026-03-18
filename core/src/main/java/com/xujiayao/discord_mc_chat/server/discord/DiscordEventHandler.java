@@ -7,6 +7,7 @@ import com.xujiayao.discord_mc_chat.network.packets.events.DiscordEventPacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.TextSegment;
 import com.xujiayao.discord_mc_chat.utils.LogFileUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
+import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
@@ -559,7 +560,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 		CachedMessage cached = messageCache.remove(event.getMessageId());
 		if (cached == null) {
 			// No cached info - send a generic delete notification
-			List<TextSegment> segments = DiscordMessageParser.buildDeleteSegments("Unknown", "white");
+			List<TextSegment> segments = DiscordMessageParser.buildDeleteSegments(I18nManager.getDmccTranslation("discord.message_parser.unknown_user"), "white");
 			DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.DELETE, segments);
 			logDiscordEventForConsole(packet);
 			NetworkManager.broadcastToClients(packet);
