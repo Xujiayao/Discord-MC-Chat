@@ -20,7 +20,9 @@ import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkRequestPac
 import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkRequestPacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.DiscordEventPacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftEventPacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.TextSegment;
 import com.xujiayao.discord_mc_chat.network.packets.misc.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPingPacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPongPacket;
@@ -37,6 +39,11 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
+
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
 /**
@@ -46,6 +53,7 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  */
 public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
+	private static final String DEFAULT_PLAYER_ROLE_COLOR = "white";
 	private final NettyServer server;
 	private String expectedNonce;
 	private boolean authenticated = false;
@@ -106,7 +114,27 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 								DiscordManager.clientBroadcast(clientName, "player.die", "player.die", false, p.placeholders);
 						case PLAYER_ADVANCEMENT ->
 								DiscordManager.clientBroadcast(clientName, "player.advancement", "player.advancement." + p.placeholders.get("type"), false, p.placeholders);
-						// TODO Unhandled events
+						case PLAYER_CHAT -> {
+							DiscordManager.clientBroadcast(clientName, "player.chat", "player.chat", true, p.placeholders);
+							relayToOtherClients(clientName, true, p.placeholders);
+						}
+						case PLAYER_COMMAND -> {
+							String command = p.placeholders.getOrDefault("message", p.placeholders.getOrDefault("command", ""));
+							if (!isExcludedCommand(command)) {
+								DiscordManager.clientBroadcast(clientName, "player.command", "player.command", true, p.placeholders);
+								relayToOtherClients(clientName, true, p.placeholders);
+							}
+						}
+						case SOURCE_SAY -> {
+							DiscordManager.clientBroadcast(clientName, "source.say", "source.say", true, p.placeholders);
+							relayToOtherClients(clientName, false, p.placeholders);
+						}
+						case SOURCE_TELL_RAW -> {
+							DiscordManager.clientBroadcast(clientName, "source.tell_raw", "source.tell_raw", true, p.placeholders);
+							relayToOtherClients(clientName, false, p.placeholders);
+						}
+						case SERVER_STOPPED ->
+								DiscordManager.clientBroadcast(clientName, "server.stopped", "server.stop", false, p.placeholders);
 						default ->
 								LOGGER.warn("Received MinecraftEventPacket from authenticated client {}: type={}, placeholders={}", clientName, p.type, p.placeholders);
 					}
@@ -273,5 +301,141 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	private String getMinecraftVersion(String serverName) {
 		JsonNode config = findServerConfig(serverName);
 		return config != null ? config.path("minecraft_version").asText() : "";
+	}
+
+	/**
+	 * Relays a Minecraft-originated message to all connected clients except the source server.
+	 * The server pre-builds rich segments so clients can render directly without custom_messages access.
+	 *
+	 * @param sourceClientName Source server name.
+	 * @param isChat           Whether to use common.chat (true) or common.others (false).
+	 * @param placeholders     Event placeholders.
+	 */
+	private void relayToOtherClients(String sourceClientName, boolean isChat, Map<String, String> placeholders) {
+		if ("single_server".equals(ModeManager.getMode())) {
+			return;
+		}
+		if (placeholders == null || placeholders.isEmpty()) {
+			return;
+		}
+
+		String message = placeholders.getOrDefault("message", placeholders.getOrDefault("command", ""));
+		if (message == null || message.isBlank()) {
+			return;
+		}
+
+		List<TextSegment> segments = buildRelaySegments(sourceClientName, isChat, placeholders);
+		if (segments.isEmpty()) {
+			return;
+		}
+
+		DiscordEventPacket relayPacket = new DiscordEventPacket(DiscordEventPacket.EventType.CHAT, segments);
+		NetworkManager.broadcastToClientsExcept(relayPacket, sourceClientName);
+	}
+
+	/**
+	 * Builds relay segments from custom_messages common templates.
+	 *
+	 * @param sourceClientName Source server name.
+	 * @param isChat           true for common.chat, false for common.others.
+	 * @param placeholders     Event placeholders.
+	 * @return Relay segments.
+	 */
+	private List<TextSegment> buildRelaySegments(String sourceClientName, boolean isChat, Map<String, String> placeholders) {
+		List<TextSegment> segments = new ArrayList<>();
+		JsonNode root = I18nManager.getCustomMessages();
+		if (root == null) {
+			return segments;
+		}
+
+		JsonNode node = root.path("common").path(isChat ? "chat" : "others");
+		if (!node.isArray()) {
+			return segments;
+		}
+
+		String serverColor = getClientColor(sourceClientName);
+
+		for (JsonNode segNode : node) {
+			String text = segNode.path("text").asText("");
+			boolean bold = segNode.path("bold").asBoolean(false);
+			String color = segNode.path("color").asText("");
+
+			text = applyRelayPlaceholders(text, sourceClientName, serverColor, placeholders);
+			color = applyRelayPlaceholders(color, sourceClientName, serverColor, placeholders);
+
+			segments.add(new TextSegment(text, bold, color));
+		}
+
+		return segments;
+	}
+
+	/**
+	 * Applies relay placeholders for cross-server messages.
+	 *
+	 * @param input            Template text/color.
+	 * @param sourceClientName Source server name.
+	 * @param serverColor      Source server color.
+	 * @param placeholders     Event placeholders.
+	 * @return Resolved text.
+	 */
+	private String applyRelayPlaceholders(String input, String sourceClientName, String serverColor, Map<String, String> placeholders) {
+		String value = input.replace("{server}", sourceClientName)
+				.replace("{server_color}", serverColor)
+				.replace("{role_color}", DEFAULT_PLAYER_ROLE_COLOR)
+				.replace("{effective_name}", placeholders.getOrDefault("display_name", placeholders.getOrDefault("user_name", "")));
+
+		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+			value = value.replace("{" + entry.getKey() + "}", entry.getValue());
+		}
+		return value;
+	}
+
+	/**
+	 * Gets configured color for a client in standalone mode.
+	 *
+	 * @param serverName Server name.
+	 * @return Color name or fallback value.
+	 */
+	private String getClientColor(String serverName) {
+		JsonNode config = findServerConfig(serverName);
+		if (config != null) {
+			String color = config.path("color").asText();
+			if (color != null && !color.isBlank()) {
+				return color;
+			}
+		}
+		return "white";
+	}
+
+	/**
+	 * Checks whether a player command should be excluded from broadcasting.
+	 *
+	 * @param command Command text.
+	 * @return true if excluded.
+	 */
+	private boolean isExcludedCommand(String command) {
+		if (command == null || command.isBlank()) {
+			return false;
+		}
+
+		JsonNode node = ConfigManager.getConfigNode("excluded_commands");
+		if (!node.isArray()) {
+			return false;
+		}
+
+		for (JsonNode patternNode : node) {
+			String regex = patternNode.asText("");
+			if (regex.isBlank()) {
+				continue;
+			}
+			try {
+				if (Pattern.compile(regex).matcher(command).matches()) {
+					return true;
+				}
+			} catch (Exception ignored) {
+			}
+		}
+
+		return false;
 	}
 }

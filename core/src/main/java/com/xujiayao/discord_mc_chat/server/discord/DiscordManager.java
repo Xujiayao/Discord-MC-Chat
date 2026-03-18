@@ -29,6 +29,7 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -528,10 +529,12 @@ public class DiscordManager {
 				messageNode = messageNode.path(part);
 			}
 
+			Map<String, String> parsedPlaceholders = parseMinecraftPlaceholders(clientName, placeholders);
+
 			if (!isTemplate) {
 				String message = messageNode.asText();
 
-				for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+				for (Map.Entry<String, String> entry : parsedPlaceholders.entrySet()) {
 					message = message.replace("{" + entry.getKey() + "}", entry.getValue());
 				}
 
@@ -550,6 +553,8 @@ public class DiscordManager {
 				} else {
 					sendBotMessage(channelIdentifier, message);
 				}
+			} else {
+				sendTemplateMessage(channelIdentifier, channel, clientName, messageNode.asText(), parsedPlaceholders);
 			}
 		} catch (InsufficientPermissionException e) {
 			String reason = I18nManager.getDmccTranslation("discord.manager.insufficient_permission", channel.getName(), e.getPermission().getName());
@@ -557,6 +562,107 @@ public class DiscordManager {
 		} catch (Exception e) {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
 		}
+	}
+
+	/**
+	 * Parses placeholders from Minecraft before they are rendered in Discord.
+	 *
+	 * @param clientName   DMCC client name.
+	 * @param placeholders Raw placeholder map.
+	 * @return Parsed placeholder map.
+	 */
+	private static Map<String, String> parseMinecraftPlaceholders(String clientName, Map<String, String> placeholders) {
+		Map<String, String> parsed = new LinkedHashMap<>();
+		if (placeholders == null || placeholders.isEmpty()) {
+			parsed.put("server", clientName);
+			return parsed;
+		}
+
+		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+			String key = entry.getKey();
+			String value = entry.getValue() == null ? "" : entry.getValue();
+			if ("message".equals(key) || "command".equals(key)) {
+				value = MinecraftMessageParser.parse(value);
+			}
+			parsed.put(key, value);
+		}
+		parsed.putIfAbsent("server", clientName);
+		return parsed;
+	}
+
+	/**
+	 * Sends a template-based Minecraft-to-Discord message.
+	 *
+	 * @param channelIdentifier Discord channel identifier.
+	 * @param channel           Discord text channel.
+	 * @param clientName        DMCC client name.
+	 * @param templateName      Template name from custom_messages.
+	 * @param placeholders      Placeholder map.
+	 */
+	private static void sendTemplateMessage(String channelIdentifier, TextChannel channel, String clientName, String templateName,
+											Map<String, String> placeholders) {
+		JsonNode templatesNode = I18nManager.getCustomMessages().path("templates");
+		if (!templatesNode.isArray()) {
+			return;
+		}
+
+		JsonNode templateNode = null;
+		for (JsonNode node : templatesNode) {
+			if (templateName.equals(node.path("name").asText())) {
+				templateNode = node;
+				break;
+			}
+		}
+		if (templateNode == null) {
+			return;
+		}
+
+		String mode = "standalone".equals(ModeManager.getMode()) ? "standalone" : "single_server";
+		boolean useWebhook = ConfigManager.getBoolean("discord.webhook.players.enable_fake_user_style");
+
+		if (useWebhook) {
+			String usernameTemplate = templateNode.path("with_webhook").path(mode).path("username").asText();
+			String contentTemplate = templateNode.path("with_webhook").path(mode).path("content").asText();
+			String username = applyPlaceholders(usernameTemplate, placeholders);
+			String content = applyPlaceholders(contentTemplate, placeholders);
+			String avatarUrl = resolvePlayerAvatarUrl(clientName, placeholders);
+			sendWebhookMessage(channel, username, avatarUrl, content);
+		} else {
+			String template = templateNode.path("without_webhook").path(mode).asText();
+			String content = applyPlaceholders(template, placeholders);
+			sendBotMessage(channelIdentifier, content);
+		}
+	}
+
+	/**
+	 * Applies placeholder replacements for a template string.
+	 *
+	 * @param template     Template text.
+	 * @param placeholders Placeholder values.
+	 * @return Replaced template text.
+	 */
+	private static String applyPlaceholders(String template, Map<String, String> placeholders) {
+		String result = template;
+		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+			result = result.replace("{" + entry.getKey() + "}", entry.getValue());
+		}
+		return result;
+	}
+
+	/**
+	 * Resolves avatar URL for template webhook messages.
+	 *
+	 * @param clientName   DMCC client name.
+	 * @param placeholders Placeholder map.
+	 * @return Avatar URL.
+	 */
+	private static String resolvePlayerAvatarUrl(String clientName, Map<String, String> placeholders) {
+		String playerName = placeholders.getOrDefault("user_name", placeholders.getOrDefault("display_name", clientName));
+		String template = ConfigManager.getString("discord.webhook.players.avatar_url", "");
+		if (template != null && !template.isBlank()) {
+			return template.replace("{player_name}", playerName);
+		}
+		return getClientAvatarUrl(clientName);
 	}
 
 	/**

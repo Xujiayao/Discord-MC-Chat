@@ -29,6 +29,7 @@ import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
@@ -44,6 +45,7 @@ import net.minecraft.server.players.PlayerList;
 import net.minecraft.server.players.ServerOpList;
 import net.minecraft.server.players.ServerOpListEntry;
 import net.minecraft.server.rcon.RconConsoleSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.StatType;
@@ -66,6 +68,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.Locale;
 
 /**
  * Handles Minecraft events posted from the event manager.
@@ -172,6 +175,37 @@ public class MinecraftEventHandler {
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_QUIT, placeholders));
 		});
 
+		EventManager.register(MinecraftEvents.PlayerChat.class, event -> {
+			String message = extractChatMessage(event.playerChatMessage());
+			if (message.isBlank()) {
+				return;
+			}
+
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.serverPlayer().getName().getString(),
+					"display_name", event.serverPlayer().getDisplayName().getString(),
+					"effective_name", event.serverPlayer().getDisplayName().getString(),
+					"message", message
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_CHAT, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.PlayerCommand.class, event -> {
+			String command = normalizeCommand(event.command());
+			if (command.isBlank()) {
+				return;
+			}
+
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.serverPlayer().getName().getString(),
+					"display_name", event.serverPlayer().getDisplayName().getString(),
+					"effective_name", event.serverPlayer().getDisplayName().getString(),
+					"command", command,
+					"message", command
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_COMMAND, placeholders));
+		});
+
 		EventManager.register(MinecraftEvents.PlayerDie.class, event -> {
 			Map<String, String> placeholders = Map.of(
 					"user_name", event.serverPlayer().getName().getString(),
@@ -203,6 +237,51 @@ public class MinecraftEventHandler {
 
 				NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_ADVANCEMENT, placeholders));
 			}
+		});
+
+		EventManager.register(MinecraftEvents.SourceSay.class, event -> {
+			Entity sourceEntity = event.commandContext().getSource().getEntity();
+			if (sourceEntity instanceof ServerPlayer) {
+				// Player-issued /say is already covered by PLAYER_COMMAND and should not be duplicated.
+				return;
+			}
+
+			String sourceName = event.commandContext().getSource().getDisplayName().getString();
+			String message = extractChatMessage(event.playerChatMessage());
+			if (message.isBlank()) {
+				return;
+			}
+
+			Map<String, String> placeholders = Map.of(
+					"user_name", sourceName,
+					"display_name", sourceName,
+					"effective_name", sourceName,
+					"message", message
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_SAY, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceTellRaw.class, event -> {
+			Entity sourceEntity = event.commandContext().getSource().getEntity();
+			if (sourceEntity instanceof ServerPlayer) {
+				// Player-issued /tellraw is already covered by PLAYER_COMMAND and should not be duplicated.
+				return;
+			}
+
+			String command = normalizeCommand(event.commandContext().getInput());
+			if (!isTellRawBroadcast(command)) {
+				// Only relay public broadcast tellraw events.
+				return;
+			}
+
+			String sourceName = event.commandContext().getSource().getDisplayName().getString();
+			Map<String, String> placeholders = Map.of(
+					"user_name", sourceName,
+					"display_name", sourceName,
+					"effective_name", sourceName,
+					"message", command
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_TELL_RAW, placeholders));
 		});
 
 		EventManager.register(MinecraftEvents.CommandRegister.class, event -> {
@@ -594,6 +673,50 @@ public class MinecraftEventHandler {
 				}
 			});
 		});
+	}
+
+	/**
+	 * Extracts translated plain text from Minecraft chat message payload.
+	 *
+	 * @param chatMessage The player chat message.
+	 * @return Plain translated text.
+	 */
+	private static String extractChatMessage(PlayerChatMessage chatMessage) {
+		if (chatMessage == null) {
+			return "";
+		}
+		return TranslationManager.get(chatMessage.decoratedContent());
+	}
+
+	/**
+	 * Normalizes command strings to slash-prefixed form.
+	 *
+	 * @param command Raw command text.
+	 * @return Slash-prefixed command text.
+	 */
+	private static String normalizeCommand(String command) {
+		if (command == null) {
+			return "";
+		}
+		String normalized = command.trim();
+		if (normalized.isEmpty()) {
+			return "";
+		}
+		if (!normalized.startsWith("/")) {
+			normalized = "/" + normalized;
+		}
+		return normalized;
+	}
+
+	/**
+	 * Checks whether a tellraw command is a public broadcast.
+	 *
+	 * @param command Command text.
+	 * @return true if this tellraw targets all players.
+	 */
+	private static boolean isTellRawBroadcast(String command) {
+		String normalized = command.toLowerCase(Locale.ROOT);
+		return normalized.startsWith("/tellraw @a ") || normalized.startsWith("/tellraw @a[");
 	}
 
 	private static List<String> getSuggestionsForInput(String input, CommandSourceStack source) throws Exception {
