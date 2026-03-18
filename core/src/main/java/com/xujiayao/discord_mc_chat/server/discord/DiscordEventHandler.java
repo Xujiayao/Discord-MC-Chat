@@ -28,6 +28,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -374,6 +375,11 @@ public class DiscordEventHandler extends ListenerAdapter {
 		}
 
 		Message message = event.getMessage();
+		if (message.getType().isSystem()) {
+			// Keep metadata for potential follow-up delete events, but don't bridge Discord system notices.
+			cacheMessage(message);
+			return;
+		}
 		if (event.isWebhookMessage()) {
 			// Webhook messages are not bridged back to Minecraft to avoid loops,
 			// but keep them cached so reply context can still be parsed consistently.
@@ -499,6 +505,9 @@ public class DiscordEventHandler extends ListenerAdapter {
 		}
 
 		Message message = event.getMessage();
+		if (message.getType().isSystem()) {
+			return;
+		}
 
 		// The bot will edit message when replying slash commands
 		if (event.getAuthor() == event.getJDA().getSelfUser()) {
@@ -510,6 +519,10 @@ public class DiscordEventHandler extends ListenerAdapter {
 		String roleColor = DiscordMessageParser.getRoleColorHex(member);
 
 		CachedMessage cached = messageCache.get(message.getId());
+		if (cached != null && Objects.equals(cached.contentRaw(), message.getContentRaw())) {
+			// Ignore metadata-only updates (e.g. pin/unpin) that do not change message text.
+			return;
+		}
 		List<TextSegment> replySegments = null;
 		if (cached != null && cached.contentRaw() != null) {
 			replySegments = cached.replySegments();
@@ -558,6 +571,9 @@ public class DiscordEventHandler extends ListenerAdapter {
 		}
 
 		CachedMessage cached = messageCache.remove(event.getMessageId());
+		if (cached != null && cached.systemMessage()) {
+			return;
+		}
 		if (cached == null) {
 			// No cached info - send a generic delete notification
 			List<TextSegment> segments = DiscordMessageParser.buildDeleteSegments(I18nManager.getDmccTranslation("discord.message_parser.unknown_user"), "white");
@@ -599,7 +615,7 @@ public class DiscordEventHandler extends ListenerAdapter {
 		String name = member != null ? member.getEffectiveName() : message.getAuthor().getName();
 		String roleColor = DiscordMessageParser.getRoleColorHex(member);
 		List<TextSegment> replySegments = DiscordMessageParser.buildReplySegments(message);
-		messageCache.put(message.getId(), new CachedMessage(name, roleColor, message.getContentRaw(), replySegments));
+		messageCache.put(message.getId(), new CachedMessage(name, roleColor, message.getContentRaw(), replySegments, message.getType().isSystem()));
 	}
 
 	/**
@@ -614,8 +630,10 @@ public class DiscordEventHandler extends ListenerAdapter {
 	 * @param authorRoleColor Cached role color of the message author.
 	 * @param contentRaw      Cached raw content for fallback rebuilding.
 	 * @param replySegments   Cached rendered reply preview, nullable.
+	 * @param systemMessage   Whether this is a Discord system message (e.g. pin notice).
 	 */
 	private record CachedMessage(String authorName, String authorRoleColor, String contentRaw,
-								 List<TextSegment> replySegments) {
+								 List<TextSegment> replySegments,
+								 boolean systemMessage) {
 	}
 }
