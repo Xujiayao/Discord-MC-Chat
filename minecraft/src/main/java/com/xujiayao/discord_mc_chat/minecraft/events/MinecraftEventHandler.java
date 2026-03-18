@@ -22,7 +22,6 @@ import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.DisplayInfo;
-import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -44,6 +43,7 @@ import net.minecraft.server.players.NameAndId;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.server.players.ServerOpList;
 import net.minecraft.server.players.ServerOpListEntry;
+import net.minecraft.server.rcon.RconConsoleSource;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.StatType;
@@ -64,6 +64,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -228,30 +229,12 @@ public class MinecraftEventHandler {
 
 			// Construct a virtual CommandSourceStack with the sender's OP level
 			// and a custom CommandSource that bridges output back to the DMCC sender
+			RconConsoleSource rconConsoleSource = new RconConsoleSource(serverInstance);
 			CommandSourceStack source = new CommandSourceStack(
-					new CommandSource() {
-						@Override
-						public void sendSystemMessage(Component component) {
-							event.sender().reply(TranslationManager.get(component));
-						}
-
-						@Override
-						public boolean acceptsSuccess() {
-							return true;
-						}
-
-						@Override
-						public boolean acceptsFailure() {
-							return true;
-						}
-
-						@Override
-						public boolean shouldInformAdmins() {
-							return true; // We want to relay all outputs
-						}
-					},
+					rconConsoleSource,
 					Vec3.atLowerCornerOf(serverInstance.getRespawnData().pos()),
-					Vec2.ZERO, serverInstance.findRespawnDimension(),
+					Vec2.ZERO,
+					serverInstance.findRespawnDimension(),
 					mcOp,
 					"DMCC",
 					Component.literal("DMCC"),
@@ -266,7 +249,35 @@ public class MinecraftEventHandler {
 				try {
 					serverInstance.getCommands().performPrefixedCommand(source, event.commandLine());
 				} finally {
-					event.completionFuture().complete(null);
+					// First check if there's an immediate response
+					// (for simple commands that execute synchronously and produce output right away)
+					if (!rconConsoleSource.getCommandResponse().isEmpty()) {
+						event.sender().reply(rconConsoleSource.getCommandResponse());
+						event.completionFuture().complete(null);
+					} else {
+						// For commands that execute asynchronously or produce output after a delay
+						// (e.g. due to network calls, database access, or scheduled tasks)
+						CompletableFuture.runAsync(() -> {
+							// Wait for up to 5 seconds for command output to be produced, checking every 100ms
+							for (int i = 0; i < 50; i++) {
+								if (!rconConsoleSource.getCommandResponse().isEmpty()) {
+									break;
+								}
+								try {
+									Thread.sleep(100);
+								} catch (InterruptedException ie) {
+									Thread.currentThread().interrupt();
+									break;
+								}
+							}
+
+							// Send any collected command output back to the sender
+							if (!rconConsoleSource.getCommandResponse().isEmpty()) {
+								event.sender().reply(rconConsoleSource.getCommandResponse());
+							}
+							event.completionFuture().complete(null);
+						});
+					}
 				}
 			});
 		});
@@ -277,29 +288,10 @@ public class MinecraftEventHandler {
 			int mcOp = Math.max(0, event.opLevel());
 
 			CommandSourceStack source = new CommandSourceStack(
-					new CommandSource() {
-						@Override
-						public void sendSystemMessage(Component component) {
-							// Not needed for auto-complete
-						}
-
-						@Override
-						public boolean acceptsSuccess() {
-							return true;
-						}
-
-						@Override
-						public boolean acceptsFailure() {
-							return true;
-						}
-
-						@Override
-						public boolean shouldInformAdmins() {
-							return true; // We want to relay all outputs
-						}
-					},
+					new RconConsoleSource(serverInstance),
 					Vec3.atLowerCornerOf(serverInstance.getRespawnData().pos()),
-					Vec2.ZERO, serverInstance.findRespawnDimension(),
+					Vec2.ZERO,
+					serverInstance.findRespawnDimension(),
 					mcOp,
 					"DMCC",
 					Component.literal("DMCC"),
