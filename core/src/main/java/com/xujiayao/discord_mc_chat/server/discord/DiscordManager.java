@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
+import com.xujiayao.discord_mc_chat.utils.StringUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
@@ -23,6 +24,7 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.FileUpload;
+import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 
 import java.time.Duration;
@@ -36,6 +38,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
@@ -535,6 +538,15 @@ public class DiscordManager {
 				if ("standalone".equals(ModeManager.getMode())) {
 					String avatarUrl = getClientAvatarUrl(clientName);
 					sendWebhookMessage(channel, clientName, avatarUrl, message);
+
+					for (String line : message.split("\n")) {
+						// Escape underscores in :emoji: to prevent being treated as Markdown formatting
+						line = Pattern.compile("(:[^:]+:)").matcher(line)
+								.replaceAll(m -> m.group().replace("_", "\\\\_"));
+						line = MarkdownSanitizer.sanitize(line).replace("\\_", "_");
+
+						LOGGER.info(StringUtils.format("[{}] {}"), clientName, line);
+					}
 				} else {
 					sendBotMessage(channelIdentifier, message);
 				}
