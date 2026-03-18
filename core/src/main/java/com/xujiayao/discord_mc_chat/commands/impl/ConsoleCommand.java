@@ -241,11 +241,22 @@ public class ConsoleCommand implements Command {
 
 			try {
 				ConsoleResponsePacket response = future.get(CONSOLE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+				String output = response.response;
 
 				if (sender instanceof JdaCommandSender) {
-					DiscordManager.sendExecuteResultViaWebhook(serverName, response.response);
+					if (output.isBlank()) {
+						String command = "/execute at: " + serverName + " command: log latest.log";
+						output = I18nManager.getDmccTranslation("commands.console.no_response", command);
+					}
+
+					DiscordManager.sendExecuteResultViaWebhook(serverName, output);
 				} else {
-					String[] lines = response.response.split("\n");
+					if (output.isBlank()) {
+						String command = "/execute " + serverName + " log latest.log";
+						output = I18nManager.getDmccTranslation("commands.console.no_response", command);
+					}
+
+					String[] lines = output.split("\n");
 					for (String line : lines) {
 						sender.reply(I18nManager.getDmccTranslation("commands.remote_result_prefix", serverName, line));
 					}

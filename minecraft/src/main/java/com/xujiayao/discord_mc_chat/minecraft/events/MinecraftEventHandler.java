@@ -272,9 +272,7 @@ public class MinecraftEventHandler {
 							}
 
 							// Send any collected command output back to the sender
-							if (!rconConsoleSource.getCommandResponse().isEmpty()) {
-								event.sender().reply(rconConsoleSource.getCommandResponse());
-							}
+							event.sender().reply(rconConsoleSource.getCommandResponse());
 							event.completionFuture().complete(null);
 						});
 					}

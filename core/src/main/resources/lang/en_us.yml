@@ -32,6 +32,11 @@ commands:
     no_online_clients: "No DMCC clients are online."
     dmcc_not_supported: "Executing DMCC commands through \"console\" command is not supported. Please use \"execute\" command."
     server_not_ready: "Minecraft Server is not ready yet."
+    no_response: |
+        No response received from DMCC Client.
+
+        This can be normal for certain Minecraft commands. If you expected a response, please check the Minecraft server log by executing "{}" command.
+
   help:
     description: "Show a list of available commands"
     help: "Help"
