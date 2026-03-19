@@ -521,7 +521,7 @@ public class DiscordManager {
 			JsonNode customMessages = I18nManager.getCustomMessages();
 			if (customMessages == null) return;
 
-			String[] parts = ("minecraft_to_discord." + lang).split("\\.");
+			String[] parts = ("minecraft_to_xxxxx." + lang).split("\\.");
 			JsonNode messageNode = customMessages;
 			for (String part : parts) {
 				messageNode = messageNode.path(part);
