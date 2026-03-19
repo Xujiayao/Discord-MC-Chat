@@ -16,7 +16,7 @@ version: ${mod_version}
 # ==================================================
 
 common:
-  chat:
+  message:
     - text: "[{server}] "
       bold: true
       color: "{server_color}"
