@@ -52,6 +52,8 @@ public class DiscordMessageParser {
 
 	// @everyone / @here pattern in raw content
 	private static final Pattern EVERYONE_HERE_PATTERN = Pattern.compile("@(everyone|here)");
+	// Minecraft-style mention token in plain text (e.g. @Xujiayao)
+	private static final Pattern MINECRAFT_MENTION_PATTERN = Pattern.compile("(?<![A-Za-z0-9_])@([A-Za-z0-9_]{1,16})(?![A-Za-z0-9_])");
 
 	// Discord timestamp pattern: <t:EPOCH> or <t:EPOCH:STYLE>
 	private static final Pattern DISCORD_TIMESTAMP_PATTERN = Pattern.compile("<t:(\\d+)(?::([tTdDfFRsS]))?>");
@@ -177,6 +179,67 @@ public class DiscordMessageParser {
 				} else {
 					segments.add(new TextSegment(text, bold, color));
 				}
+			}
+		}
+
+		return segments;
+	}
+
+	/**
+	 * Builds Minecraft-to-Minecraft broadcast segments from template.
+	 *
+	 * @param templateRoot   Template root key: "xxxxx_to_minecraft" or "single_server_overwrite".
+	 * @param serverName     Source server name.
+	 * @param serverColor    Source server color.
+	 * @param effectiveName  Display name of the sender.
+	 * @param roleColor      Sender role color for name segment.
+	 * @param rawMessage     Raw message body.
+	 * @param systemMessage  Whether to use system_message template.
+	 * @param commandLiteral Whether message must be kept literal (no markdown/mention/emoji/url/timestamp parsing).
+	 * @return Built segments ready for Minecraft rendering.
+	 */
+	public static List<TextSegment> buildMinecraftToMinecraftSegments(String templateRoot,
+																	   String serverName,
+																	   String serverColor,
+																	   String effectiveName,
+																	   String roleColor,
+																	   String rawMessage,
+																	   boolean systemMessage,
+																	   boolean commandLiteral) {
+		List<TextSegment> segments = new ArrayList<>();
+		String messageText = rawMessage == null ? "" : rawMessage;
+
+		JsonNode node = I18nManager.getCustomMessages()
+				.path(templateRoot)
+				.path(systemMessage ? "system_message" : "user_message");
+
+		if (!node.isArray()) {
+			return segments;
+		}
+
+		for (JsonNode segNode : node) {
+			String text = segNode.path("text").asText("");
+			boolean bold = segNode.path("bold").asBoolean(false);
+			String color = segNode.path("color").asText("");
+
+			text = replacePlaceholdersForMinecraft(text, serverName, serverColor, effectiveName, roleColor);
+			color = replacePlaceholdersForMinecraft(color, serverName, serverColor, effectiveName, roleColor);
+
+			if (text.contains("{message}")) {
+				String[] parts = text.split("\\{message}", -1);
+				if (!parts[0].isEmpty()) {
+					segments.add(new TextSegment(parts[0], bold, color));
+				}
+
+				List<TextSegment> messageSegments = parseMinecraftToMinecraftContent(messageText, commandLiteral);
+				applyDefaultColor(messageSegments, color);
+				segments.addAll(messageSegments);
+
+				if (parts.length > 1 && !parts[1].isEmpty()) {
+					segments.add(new TextSegment(parts[1], bold, color));
+				}
+			} else {
+				segments.add(new TextSegment(text, bold, color));
 			}
 		}
 
@@ -499,8 +562,9 @@ public class DiscordMessageParser {
 
 		// Process the raw text content
 		if (!raw.isEmpty()) {
-			segments.addAll(parseRawContent(raw, message, parseMentions, parseCustomEmojis,
-					parseUnicodeEmojis, parseMarkdown, parseHyperlinks));
+		boolean parseTimestamps = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.timestamps");
+		segments.addAll(parseRawContent(raw, message, parseMentions, parseCustomEmojis,
+					parseUnicodeEmojis, parseMarkdown, parseHyperlinks, parseTimestamps));
 		}
 
 		// Append attachments
@@ -579,7 +643,7 @@ public class DiscordMessageParser {
 	private static List<TextSegment> parseRawContent(String raw, Message message,
 													 boolean parseMentions, boolean parseCustomEmojis,
 													 boolean parseUnicodeEmojis, boolean parseMarkdown,
-													 boolean parseHyperlinks) {
+													 boolean parseHyperlinks, boolean parseTimestamps) {
 		List<TextSegment> segments = new ArrayList<>();
 
 		List<TokenSpan> tokens = new ArrayList<>();
@@ -593,7 +657,7 @@ public class DiscordMessageParser {
 		}
 
 		// Collect timestamps if configured
-		if (ConfigManager.getBoolean("message_parsing.discord_to_minecraft.timestamps")) {
+		if (parseTimestamps) {
 			collectTimestampTokens(raw, tokens);
 		}
 
@@ -638,7 +702,80 @@ public class DiscordMessageParser {
 		boolean parseUnicodeEmojis = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.unicode_emojis");
 		boolean parseMarkdown = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.markdown");
 		boolean parseHyperlinks = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.hyperlinks");
-		return parseRawContent(raw, null, false, parseCustomEmojis, parseUnicodeEmojis, parseMarkdown, parseHyperlinks);
+		boolean parseTimestamps = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.timestamps");
+		return parseRawContent(raw, null, false, parseCustomEmojis, parseUnicodeEmojis, parseMarkdown, parseHyperlinks, parseTimestamps);
+	}
+
+	private static List<TextSegment> parseMinecraftToMinecraftContent(String raw, boolean commandLiteral) {
+		if (commandLiteral) {
+			return List.of(new TextSegment(raw));
+		}
+
+		boolean parseMentions = ConfigManager.getBoolean("message_parsing.minecraft_to_minecraft.mentions");
+		boolean parseCustomEmojis = ConfigManager.getBoolean("message_parsing.minecraft_to_minecraft.custom_emojis");
+		boolean parseUnicodeEmojis = ConfigManager.getBoolean("message_parsing.minecraft_to_minecraft.unicode_emojis");
+		boolean parseMarkdown = ConfigManager.getBoolean("message_parsing.minecraft_to_minecraft.markdown");
+		boolean parseHyperlinks = ConfigManager.getBoolean("message_parsing.minecraft_to_minecraft.hyperlinks");
+		boolean parseTimestamps = ConfigManager.getBoolean("message_parsing.minecraft_to_minecraft.timestamps");
+
+		List<TextSegment> segments = parseRawContent(raw, null, false, parseCustomEmojis, parseUnicodeEmojis, parseMarkdown, parseHyperlinks, parseTimestamps);
+		if (parseMentions) {
+			segments = splitSegmentsByMinecraftMention(segments);
+		}
+		return segments;
+	}
+
+	private static List<TextSegment> splitSegmentsByMinecraftMention(List<TextSegment> segments) {
+		List<TextSegment> out = new ArrayList<>();
+		for (TextSegment segment : segments) {
+			if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
+				out.add(segment);
+				continue;
+			}
+
+			Matcher matcher = MINECRAFT_MENTION_PATTERN.matcher(segment.text);
+			int cursor = 0;
+			boolean matched = false;
+			while (matcher.find()) {
+				if (matcher.start() > cursor) {
+					out.add(copySegment(segment, segment.text.substring(cursor, matcher.start())));
+				}
+
+				String mentionName = matcher.group(1);
+				TextSegment mentionSegment = copySegment(segment, "[@" + mentionName + "]");
+				mentionSegment.color = getMinecraftMentionColor(mentionName);
+				out.add(mentionSegment);
+
+				cursor = matcher.end();
+				matched = true;
+			}
+
+			if (!matched) {
+				out.add(segment);
+			} else if (cursor < segment.text.length()) {
+				out.add(copySegment(segment, segment.text.substring(cursor)));
+			}
+		}
+		return out;
+	}
+
+	private static String getMinecraftMentionColor(String mentionName) {
+		if (!ConfigManager.getBoolean("account_linking.use_discord_role_color_for_mc_messages")) {
+			return "white";
+		}
+
+		for (var entry : LinkedAccountManager.getAllLinks().entrySet()) {
+			String discordId = entry.getKey();
+			for (var link : entry.getValue()) {
+				String offlineName = link.offlinePlayerName();
+				if (offlineName != null && offlineName.equalsIgnoreCase(mentionName)) {
+					Member member = DiscordManager.retrieveMember(discordId);
+					return getRoleColorHex(member);
+				}
+			}
+		}
+
+		return "white";
 	}
 
 	private static void collectUserMentionTokens(String raw, Message message, List<TokenSpan> tokens) {
@@ -1617,6 +1754,17 @@ public class DiscordMessageParser {
 		String serverName = getServerName();
 		String serverColor = getServerColor();
 
+		return text.replace("{server}", serverName)
+				.replace("{server_color}", serverColor)
+				.replace("{effective_name}", effectiveName)
+				.replace("{role_color}", roleColor);
+	}
+
+	private static String replacePlaceholdersForMinecraft(String text,
+														  String serverName,
+														  String serverColor,
+														  String effectiveName,
+														  String roleColor) {
 		return text.replace("{server}", serverName)
 				.replace("{server_color}", serverColor)
 				.replace("{effective_name}", effectiveName)

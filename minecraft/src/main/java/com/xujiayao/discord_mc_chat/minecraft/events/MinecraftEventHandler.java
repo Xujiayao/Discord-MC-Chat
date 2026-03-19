@@ -29,6 +29,7 @@ import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
@@ -212,6 +213,62 @@ public class MinecraftEventHandler {
 					"mode", TranslationManager.get(event.gameType().getLongDisplayName())
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_CHANGE_GAME_MODE, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.PlayerChat.class, event -> {
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.serverPlayer().getName().getString(),
+					"display_name", event.serverPlayer().getDisplayName().getString(),
+					"message", extractPlayerChatRaw(event.playerChatMessage())
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_CHAT, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.PlayerCommand.class, event -> {
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.serverPlayer().getName().getString(),
+					"display_name", event.serverPlayer().getDisplayName().getString(),
+					"command", "/" + event.command()
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_COMMAND, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceSay.class, event -> {
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.commandContext().getSource().getTextName(),
+					"display_name", event.commandContext().getSource().getDisplayName().getString(),
+					"message", extractPlayerChatRaw(event.playerChatMessage())
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_SAY, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceTellRaw.class, event -> {
+			String tellRawInput = event.commandContext().getInput();
+			String tellRawMessage = tellRawInput.replaceFirst("^/?tellraw\\s+@a\\s+", "");
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.commandContext().getSource().getTextName(),
+					"display_name", event.commandContext().getSource().getDisplayName().getString(),
+					"message", tellRawMessage
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_TELL_RAW, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceMsg.class, event -> {
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.commandContext().getSource().getTextName(),
+					"display_name", event.commandContext().getSource().getDisplayName().getString(),
+					"message", extractPlayerChatRaw(event.playerChatMessage())
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_MSG, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceMe.class, event -> {
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.commandContext().getSource().getTextName(),
+					"display_name", event.commandContext().getSource().getDisplayName().getString(),
+					"action", extractPlayerChatRaw(event.playerChatMessage())
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_ME, placeholders));
 		});
 
 		EventManager.register(MinecraftEvents.CommandRegister.class, event -> {
@@ -640,6 +697,30 @@ public class MinecraftEventHandler {
 			}
 		}
 		return result;
+	}
+
+	private static String extractPlayerChatRaw(PlayerChatMessage message) {
+		if (message == null) {
+			return "";
+		}
+		try {
+			Object value = message.getClass().getMethod("signedContent").invoke(message);
+			if (value instanceof String s && !s.isEmpty()) {
+				return s;
+			}
+		} catch (Exception ignored) {
+		}
+		try {
+			Object value = message.getClass().getMethod("decoratedContent").invoke(message);
+			if (value instanceof Component component) {
+				String translated = TranslationManager.get(component);
+				if (!translated.isEmpty()) {
+					return translated;
+				}
+			}
+		} catch (Exception ignored) {
+		}
+		return TranslationManager.get(message.decoratedContent());
 	}
 
 	private static boolean isExactPath(String input, CommandSourceStack source) {

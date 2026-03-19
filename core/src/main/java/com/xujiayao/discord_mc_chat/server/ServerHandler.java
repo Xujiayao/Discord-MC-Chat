@@ -20,11 +20,14 @@ import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkRequestPac
 import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkRequestPacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.DiscordEventPacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftEventPacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.TextSegment;
 import com.xujiayao.discord_mc_chat.network.packets.misc.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPingPacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPongPacket;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
+import com.xujiayao.discord_mc_chat.server.discord.DiscordMessageParser;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.server.linking.OpSyncManager;
 import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
@@ -36,6 +39,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
+
+import java.util.List;
+import java.util.Map;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
@@ -86,29 +92,64 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 						// Server events
 						case SERVER_STARTED -> {
 							DiscordManager.clientBroadcast(clientName, "server.started", "server.start", p.placeholders);
+							broadcastMinecraftEventToMinecraft(clientName, p.type, p.placeholders);
 
 							// After a Minecraft server starts, perform OP level sync if enabled
 							OpSyncManager.syncAll();
 							DiscordManager.updateBotPresence();
 						}
-						case SERVER_STOPPING ->
-								DiscordManager.clientBroadcast(clientName, "server.stopped", "server.stop", p.placeholders);
+						case SERVER_STOPPING -> {
+							DiscordManager.clientBroadcast(clientName, "server.stopped", "server.stop", p.placeholders);
+							broadcastMinecraftEventToMinecraft(clientName, p.type, p.placeholders);
+						}
 						// Player events
 						case PLAYER_JOIN -> {
 							DiscordManager.clientBroadcast(clientName, "player.join", "player.join", p.placeholders);
+							broadcastMinecraftEventToMinecraft(clientName, p.type, p.placeholders);
 							DiscordManager.updateBotPresence();
 						}
 						case PLAYER_QUIT -> {
 							DiscordManager.clientBroadcast(clientName, "player.quit", "player.quit", p.placeholders);
+							broadcastMinecraftEventToMinecraft(clientName, p.type, p.placeholders);
 							DiscordManager.updateBotPresence();
 						}
-						case PLAYER_DIE ->
-								DiscordManager.clientBroadcast(clientName, "player.die", "player.die", p.placeholders);
-						case PLAYER_ADVANCEMENT ->
-								DiscordManager.clientBroadcast(clientName, "player.advancement", "player.advancement." + p.placeholders.get("type"), p.placeholders);
-						case PLAYER_CHANGE_GAME_MODE ->
-								DiscordManager.clientBroadcast(clientName, "player.change_game_mode", "player.change_game_mode", p.placeholders);
-						// TODO Unhandled events
+						case PLAYER_CHAT -> {
+							DiscordManager.clientBroadcast(clientName, "player.chat", "player.chat", p.placeholders);
+							broadcastMinecraftEventToMinecraft(clientName, p.type, p.placeholders);
+						}
+						case PLAYER_COMMAND -> {
+							DiscordManager.clientBroadcast(clientName, "player.command", "player.command", p.placeholders);
+							broadcastMinecraftEventToMinecraft(clientName, p.type, p.placeholders);
+						}
+						case PLAYER_DIE -> {
+							DiscordManager.clientBroadcast(clientName, "player.die", "player.die", p.placeholders);
+							broadcastMinecraftEventToMinecraft(clientName, p.type, p.placeholders);
+						}
+						case PLAYER_ADVANCEMENT -> {
+							DiscordManager.clientBroadcast(clientName, "player.advancement", "player.advancement." + p.placeholders.get("type"), p.placeholders);
+							broadcastMinecraftEventToMinecraft(clientName, p.type, p.placeholders);
+						}
+						case PLAYER_CHANGE_GAME_MODE -> {
+							DiscordManager.clientBroadcast(clientName, "player.change_game_mode", "player.change_game_mode", p.placeholders);
+							broadcastMinecraftEventToMinecraft(clientName, p.type, p.placeholders);
+						}
+						// Source events
+						case SOURCE_SAY -> {
+							DiscordManager.clientBroadcast(clientName, "source.say", "source.say", p.placeholders);
+							broadcastMinecraftEventToMinecraft(clientName, p.type, p.placeholders);
+						}
+						case SOURCE_TELL_RAW -> {
+							DiscordManager.clientBroadcast(clientName, "source.tell_raw", "source.tell_raw", p.placeholders);
+							broadcastMinecraftEventToMinecraft(clientName, p.type, p.placeholders);
+						}
+						case SOURCE_MSG -> {
+							DiscordManager.clientBroadcast(clientName, "source.msg", "source.msg", p.placeholders);
+							broadcastMinecraftEventToMinecraft(clientName, p.type, p.placeholders);
+						}
+						case SOURCE_ME -> {
+							DiscordManager.clientBroadcast(clientName, "source.me", "source.me", p.placeholders);
+							broadcastMinecraftEventToMinecraft(clientName, p.type, p.placeholders);
+						}
 					}
 				}
 				case InfoResponsePacket p -> NetworkManager.cacheInfoResponse(clientName, p);
@@ -273,5 +314,107 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	private String getMinecraftVersion(String serverName) {
 		JsonNode config = findServerConfig(serverName);
 		return config != null ? config.path("minecraft_version").asText() : "";
+	}
+
+	private String getServerColor(String serverName) {
+		JsonNode config = findServerConfig(serverName);
+		if (config != null) {
+			String color = config.path("color").asText();
+			if (color != null && !color.isBlank()) {
+				return color;
+			}
+		}
+		return "white";
+	}
+
+	private void broadcastMinecraftEventToMinecraft(String sourceServerName,
+													MinecraftEventPacket.MessageType type,
+													Map<String, String> placeholders) {
+		boolean singleServerOverwrite = "single_server".equals(ModeManager.getMode())
+				&& ConfigManager.getBoolean("message_parsing.overwrite_minecraft_source_messages");
+
+		String eventNode = switch (type) {
+			case SERVER_STARTED -> "server.started";
+			case SERVER_STOPPING -> "server.stopped";
+			case PLAYER_JOIN -> "player.join";
+			case PLAYER_QUIT -> "player.quit";
+			case PLAYER_CHAT -> "player.chat";
+			case PLAYER_COMMAND -> "player.command";
+			case PLAYER_DIE -> "player.die";
+			case PLAYER_ADVANCEMENT -> "player.advancement";
+			case PLAYER_CHANGE_GAME_MODE -> "player.change_game_mode";
+			case SOURCE_SAY -> "source.say";
+			case SOURCE_TELL_RAW -> "source.tell_raw";
+			case SOURCE_MSG -> "source.msg";
+			case SOURCE_ME -> "source.me";
+		};
+		if (!singleServerOverwrite && !ConfigManager.getBoolean("broadcasts.minecraft_to_minecraft." + eventNode)) {
+			return;
+		}
+
+		String messageKey = switch (type) {
+			case SERVER_STARTED -> "server.start";
+			case SERVER_STOPPING -> "server.stop";
+			case PLAYER_JOIN -> "player.join";
+			case PLAYER_QUIT -> "player.quit";
+			case PLAYER_CHAT -> "player.chat";
+			case PLAYER_COMMAND -> "player.command";
+			case PLAYER_DIE -> "player.die";
+			case PLAYER_ADVANCEMENT -> "player.advancement." + placeholders.getOrDefault("type", "task");
+			case PLAYER_CHANGE_GAME_MODE -> "player.change_game_mode";
+			case SOURCE_SAY -> "source.say";
+			case SOURCE_TELL_RAW -> "source.tell_raw";
+			case SOURCE_MSG -> "source.msg";
+			case SOURCE_ME -> "source.me";
+		};
+
+		JsonNode customMessages = I18nManager.getCustomMessages();
+		if (customMessages == null) {
+			return;
+		}
+		JsonNode messageNode = customMessages.path("minecraft_to_xxxxx");
+		for (String part : messageKey.split("\\.")) {
+			messageNode = messageNode.path(part);
+		}
+		String message = messageNode.asText();
+		if (message == null || message.isBlank()) {
+			return;
+		}
+		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+			message = message.replace("{" + entry.getKey() + "}", entry.getValue());
+		}
+
+		boolean commandLiteral = type == MinecraftEventPacket.MessageType.PLAYER_COMMAND;
+		boolean systemMessage = switch (type) {
+			case PLAYER_CHAT, PLAYER_COMMAND, SOURCE_SAY, SOURCE_TELL_RAW, SOURCE_MSG -> false;
+			default -> true;
+		};
+
+		String templateRoot = singleServerOverwrite ? "single_server_overwrite" : "xxxxx_to_minecraft";
+
+		String effectiveName = placeholders.getOrDefault("display_name", "");
+		String roleColor = "white";
+		String serverColor = getServerColor(sourceServerName);
+
+		List<TextSegment> segments = DiscordMessageParser.buildMinecraftToMinecraftSegments(
+				templateRoot,
+				sourceServerName,
+				serverColor,
+				effectiveName,
+				roleColor,
+				message,
+				systemMessage,
+				commandLiteral
+		);
+		if (segments.isEmpty()) {
+			return;
+		}
+
+		DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.CHAT, segments);
+		if ("single_server".equals(ModeManager.getMode())) {
+			NetworkManager.sendPacketToClient(packet, "Internal");
+		} else {
+			NetworkManager.broadcastToClientsExcept(packet, sourceServerName);
+		}
 	}
 }
