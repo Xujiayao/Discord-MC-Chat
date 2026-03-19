@@ -556,6 +556,59 @@ public class DiscordManager {
 		}
 	}
 
+	public static void clientBroadcastUserMessage(String clientName, String channelNode, String displayName, String message) {
+		String channelIdentifier = ConfigManager.getString("broadcasts.minecraft_to_discord." + channelNode);
+		if (channelIdentifier == null || channelIdentifier.isBlank()) {
+			return;
+		}
+		TextChannel channel = getTextChannel(channelIdentifier);
+		if (channel == null) return;
+
+		try {
+			JsonNode customMessages = I18nManager.getCustomMessages();
+			if (customMessages == null) return;
+
+			JsonNode messageConfig = customMessages.path("minecraft_to_discord").path("user_message");
+			boolean fakeUserStyle = ConfigManager.getBoolean("discord.webhook.players.enable_fake_user_style");
+			String mode = ModeManager.getMode();
+			String messageContent;
+
+			if (fakeUserStyle) {
+				String usernameTemplate = messageConfig.path("enabled_fake_user_style").path(mode).path("username").asText("{display_name}");
+				String contentTemplate = messageConfig.path("enabled_fake_user_style").path(mode).path("content").asText("{message}");
+				String username = usernameTemplate
+						.replace("{server}", clientName)
+						.replace("{display_name}", displayName);
+				messageContent = contentTemplate.replace("{message}", message);
+				if ("standalone".equals(mode)) {
+					String avatarUrlTemplate = ConfigManager.getString("discord.webhook.players.avatar_url", "https://mc-heads.net/avatar/{player_name}.png");
+					String avatarUrl = avatarUrlTemplate.replace("{player_name}", displayName);
+					sendWebhookMessage(channel, username, avatarUrl, messageContent);
+				} else {
+					sendBotMessage(channelIdentifier, messageContent);
+				}
+			} else {
+				String lineTemplate = messageConfig.path("disabled_fake_user_style").path(mode).asText("<{display_name}> {message}");
+				messageContent = lineTemplate
+						.replace("{server}", clientName)
+						.replace("{display_name}", displayName)
+						.replace("{message}", message);
+
+				if ("standalone".equals(mode)) {
+					String avatarUrl = getClientAvatarUrl(clientName);
+					sendWebhookMessage(channel, clientName, avatarUrl, messageContent);
+				} else {
+					sendBotMessage(channelIdentifier, messageContent);
+				}
+			}
+		} catch (InsufficientPermissionException e) {
+			String reason = I18nManager.getDmccTranslation("discord.manager.insufficient_permission", channel.getName(), e.getPermission().getName());
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", reason));
+		} catch (Exception e) {
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
+		}
+	}
+
 	/**
 	 * Retrieves a TextChannel by its ID or name.
 	 *

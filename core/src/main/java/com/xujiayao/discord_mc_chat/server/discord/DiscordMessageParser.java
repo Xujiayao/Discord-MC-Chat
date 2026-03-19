@@ -183,6 +183,202 @@ public class DiscordMessageParser {
 		return segments;
 	}
 
+	public static List<TextSegment> buildMinecraftToMinecraftSegments(String effectiveName, String roleColor, String message,
+																	  boolean userMessage, boolean parseRichContent) {
+		List<TextSegment> segments = new ArrayList<>();
+		JsonNode messageNode = I18nManager.getCustomMessages()
+				.path("xxxxx_to_minecraft")
+				.path(userMessage ? "user_message" : "system_message");
+
+		if (!messageNode.isArray()) {
+			return segments;
+		}
+
+		for (JsonNode segNode : messageNode) {
+			String text = segNode.path("text").asText("");
+			boolean bold = segNode.path("bold").asBoolean(false);
+			String color = segNode.path("color").asText("");
+
+			text = replacePlaceholders(text, effectiveName, roleColor);
+			color = replacePlaceholders(color, effectiveName, roleColor);
+
+			if (text.contains("{message}")) {
+				String[] parts = text.split("\\{message}", -1);
+				if (!parts[0].isEmpty()) {
+					segments.add(new TextSegment(parts[0], bold, color));
+				}
+
+				List<TextSegment> contentSegments = parseRichContent
+						? parsePlainRawMinecraftToMinecraftContent(message)
+						: List.of(new TextSegment(message));
+				applyDefaultColor(contentSegments, color);
+				segments.addAll(contentSegments);
+
+				if (parts.length > 1 && !parts[1].isEmpty()) {
+					segments.add(new TextSegment(parts[1], bold, color));
+				}
+			} else {
+				segments.add(new TextSegment(text, bold, color));
+			}
+		}
+
+		return segments;
+	}
+
+	public static List<TextSegment> buildSingleServerOverwriteSegments(String effectiveName, String roleColor, String message,
+																		 boolean userMessage, boolean parseRichContent) {
+		List<TextSegment> segments = new ArrayList<>();
+		JsonNode messageNode = I18nManager.getCustomMessages()
+				.path("single_server_overwrite")
+				.path(userMessage ? "user_message" : "system_message");
+
+		if (!messageNode.isArray()) {
+			return buildMinecraftToMinecraftSegments(effectiveName, roleColor, message, userMessage, parseRichContent);
+		}
+
+		for (JsonNode segNode : messageNode) {
+			String text = segNode.path("text").asText("");
+			boolean bold = segNode.path("bold").asBoolean(false);
+			String color = segNode.path("color").asText("");
+
+			String serverName = getServerName();
+			String serverColor = getServerColor();
+			text = text.replace("{server}", serverName)
+					.replace("{server_color}", serverColor)
+					.replace("{effective_name}", effectiveName)
+					.replace("{role_color}", roleColor);
+			color = color.replace("{server_color}", serverColor)
+					.replace("{role_color}", roleColor);
+
+			if (text.contains("{message}")) {
+				String[] parts = text.split("\\{message}", -1);
+				if (!parts[0].isEmpty()) {
+					segments.add(new TextSegment(parts[0], bold, color));
+				}
+
+				List<TextSegment> contentSegments = parseRichContent
+						? parsePlainRawMinecraftToMinecraftContent(message)
+						: List.of(new TextSegment(message));
+				applyDefaultColor(contentSegments, color);
+				segments.addAll(contentSegments);
+
+				if (parts.length > 1 && !parts[1].isEmpty()) {
+					segments.add(new TextSegment(parts[1], bold, color));
+				}
+			} else {
+				segments.add(new TextSegment(text, bold, color));
+			}
+		}
+
+		return segments;
+	}
+
+	public static String resolveMinecraftMentionRoleColor(String mentionName) {
+		boolean useRoleColor = ConfigManager.getBoolean("account_linking.use_discord_role_color_for_mc_messages");
+		if (!useRoleColor || mentionName == null || mentionName.isBlank()) {
+			return "white";
+		}
+
+		var links = LinkedAccountManager.getAllLinks();
+		for (var entry : links.entrySet()) {
+			String discordId = entry.getKey();
+			for (var link : entry.getValue()) {
+				String linkedName = link.offlinePlayerName();
+				if (linkedName != null && linkedName.equalsIgnoreCase(mentionName)) {
+					Member member = DiscordManager.retrieveMember(discordId);
+					return member != null ? colorOrDefault(getRoleColorHex(member)) : "white";
+				}
+			}
+		}
+
+		return "white";
+	}
+
+	private static List<TextSegment> parsePlainRawMinecraftToMinecraftContent(String raw) {
+		boolean parseCustomEmojis = getBooleanOrDefault("message_parsing.minecraft_to_minecraft.custom_emojis", false);
+		if (!ConfigManager.getConfigNode("message_parsing.minecraft_to_minecraft.custom_emojis").isBoolean()) {
+			parseCustomEmojis = getBooleanOrDefault("message_parsing.between_minecraft_servers.custom_emojis", false);
+		}
+		boolean parseUnicodeEmojis = getBooleanOrDefault("message_parsing.minecraft_to_minecraft.unicode_emojis", false);
+		if (!ConfigManager.getConfigNode("message_parsing.minecraft_to_minecraft.unicode_emojis").isBoolean()) {
+			parseUnicodeEmojis = getBooleanOrDefault("message_parsing.between_minecraft_servers.unicode_emojis", false);
+		}
+		boolean parseMarkdown = getBooleanOrDefault("message_parsing.minecraft_to_minecraft.markdown", false);
+		if (!ConfigManager.getConfigNode("message_parsing.minecraft_to_minecraft.markdown").isBoolean()) {
+			parseMarkdown = getBooleanOrDefault("message_parsing.between_minecraft_servers.markdown", false);
+		}
+		boolean parseHyperlinks = getBooleanOrDefault("message_parsing.minecraft_to_minecraft.hyperlinks", false);
+		if (!ConfigManager.getConfigNode("message_parsing.minecraft_to_minecraft.hyperlinks").isBoolean()) {
+			parseHyperlinks = getBooleanOrDefault("message_parsing.between_minecraft_servers.hyperlinks", false);
+		}
+		boolean parseMentions = getBooleanOrDefault("message_parsing.minecraft_to_minecraft.mentions", false);
+		if (!ConfigManager.getConfigNode("message_parsing.minecraft_to_minecraft.mentions").isBoolean()) {
+			parseMentions = getBooleanOrDefault("message_parsing.between_minecraft_servers.mentions", false);
+		}
+		boolean parseTimestamps = getBooleanOrDefault("message_parsing.minecraft_to_minecraft.timestamps", false);
+		if (!ConfigManager.getConfigNode("message_parsing.minecraft_to_minecraft.timestamps").isBoolean()) {
+			parseTimestamps = getBooleanOrDefault("message_parsing.between_minecraft_servers.timestamps", false);
+		}
+
+		List<TextSegment> segments = new ArrayList<>();
+		segments.addAll(parseRawContentForMinecraft(raw, parseMentions, parseTimestamps, parseMarkdown));
+		return postProcessInlineSegments(segments, parseCustomEmojis, parseUnicodeEmojis, parseHyperlinks);
+	}
+
+	private static List<TextSegment> parseRawContentForMinecraft(String raw,
+																 boolean parseMentions,
+																 boolean parseTimestamps,
+																 boolean parseMarkdown) {
+		List<TextSegment> segments = new ArrayList<>();
+		List<TokenSpan> tokens = new ArrayList<>();
+
+		if (parseMentions) {
+			collectMinecraftMentionTokens(raw, tokens);
+		}
+		if (parseTimestamps) {
+			collectTimestampTokens(raw, tokens);
+		}
+
+		tokens.sort(Comparator.comparingInt(a -> a.start));
+		tokens = removeOverlaps(tokens);
+
+		int cursor = 0;
+		for (TokenSpan token : tokens) {
+			if (token.start > cursor) {
+				String plainText = raw.substring(cursor, token.start);
+				if (parseMarkdown) {
+					segments.addAll(parseMarkdownText(plainText));
+				} else {
+					segments.add(new TextSegment(plainText));
+				}
+			}
+			segments.add(token.segment);
+			cursor = token.end;
+		}
+
+		if (cursor < raw.length()) {
+			String remaining = raw.substring(cursor);
+			if (parseMarkdown) {
+				segments.addAll(parseMarkdownText(remaining));
+			} else {
+				segments.add(new TextSegment(remaining));
+			}
+		}
+
+		return segments;
+	}
+
+	private static void collectMinecraftMentionTokens(String raw, List<TokenSpan> tokens) {
+		Pattern atMentionPattern = Pattern.compile("(?<![A-Za-z0-9_])@([A-Za-z0-9_]+)(?![A-Za-z0-9_])");
+		Matcher matcher = atMentionPattern.matcher(raw);
+		while (matcher.find()) {
+			String mentionName = matcher.group(1);
+			String color = resolveMinecraftMentionRoleColor(mentionName);
+			TextSegment seg = new TextSegment("[@" + mentionName + "]", false, color);
+			tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
+		}
+	}
+
 	/**
 	 * Builds the command notification segments for when a Discord user executes a slash command.
 	 * <p>
@@ -1656,6 +1852,11 @@ public class DiscordMessageParser {
 			return text.substring(0, maxLen - 1);
 		}
 		return text.substring(0, maxLen);
+	}
+
+	private static boolean getBooleanOrDefault(String path, boolean defaultValue) {
+		Boolean value = ConfigManager.getBoolean(path);
+		return value != null ? value : defaultValue;
 	}
 
 	private enum MarkdownType {

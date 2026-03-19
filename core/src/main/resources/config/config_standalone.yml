@@ -75,7 +75,7 @@ broadcasts:
       tell_raw: "in-game-chat"
       msg: "in-game-chat" # msg / tell / w
       me: "in-game-chat"
-  between_minecraft_servers:
+  minecraft_to_minecraft:
     server:
       started: true
       stopped: true
@@ -115,7 +115,7 @@ message_parsing:
     mentions: true
     hyperlinks: true
     timestamps: true
-  between_minecraft_servers:
+  minecraft_to_minecraft:
     markdown: true
     unicode_emojis: true
     custom_emojis: true

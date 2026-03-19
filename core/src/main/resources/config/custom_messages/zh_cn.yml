@@ -34,6 +34,19 @@ xxxxx_to_minecraft: # for both discord_to_minecraft and between_minecraft_server
       bold: false
       color: "gray"
 
+single_server_overwrite:
+  user_message:
+    - text: "<{effective_name}> "
+      bold: false
+      color: "{role_color}"
+    - text: "{message}"
+      bold: false
+      color: "gray"
+  system_message:
+    - text: "{message}"
+      bold: false
+      color: "gray"
+
 discord_to_minecraft:
   mentioned: "{effective_name} 提及了你！"
   response: # 回复其它用户的消息时，原消息的格式

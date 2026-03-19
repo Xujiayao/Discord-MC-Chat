@@ -47,6 +47,7 @@ import net.minecraft.server.rcon.RconConsoleSource;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.StatType;
+import net.minecraft.util.StringUtil;
 import net.minecraft.util.TimeUtil;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.storage.LevelResource;
@@ -212,6 +213,74 @@ public class MinecraftEventHandler {
 					"mode", TranslationManager.get(event.gameType().getLongDisplayName())
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_CHANGE_GAME_MODE, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.PlayerChat.class, event -> {
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.serverPlayer().getName().getString(),
+					"display_name", event.serverPlayer().getDisplayName().getString(),
+					"message", event.playerChatMessage().signedContent()
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_CHAT, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.PlayerCommand.class, event -> {
+			String command = event.command() == null ? "" : event.command().trim();
+			if (!command.startsWith("/")) {
+				command = "/" + command;
+			}
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.serverPlayer().getName().getString(),
+					"display_name", event.serverPlayer().getDisplayName().getString(),
+					"message", command
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_COMMAND, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceSay.class, event -> {
+			String sourceName = event.commandContext().getSource().getDisplayName().getString();
+			String message = event.playerChatMessage().signedContent();
+			Map<String, String> placeholders = Map.of(
+					"user_name", sourceName,
+					"display_name", sourceName,
+					"message", message
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_SAY, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceTellRaw.class, event -> {
+			String sourceName = event.commandContext().getSource().getDisplayName().getString();
+			String input = event.commandContext().getInput();
+			String message = normalizeCommandInput(input);
+			Map<String, String> placeholders = Map.of(
+					"user_name", sourceName,
+					"display_name", sourceName,
+					"message", message
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_TELL_RAW, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceMsg.class, event -> {
+			String sourceName = event.commandContext().getSource().getDisplayName().getString();
+			String message = event.playerChatMessage().signedContent();
+			Map<String, String> placeholders = Map.of(
+					"user_name", sourceName,
+					"display_name", sourceName,
+					"message", message
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_MSG, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceMe.class, event -> {
+			String sourceName = event.commandContext().getSource().getDisplayName().getString();
+			String action = event.playerChatMessage().signedContent();
+			Map<String, String> placeholders = Map.of(
+					"user_name", sourceName,
+					"display_name", sourceName,
+					"action", action,
+					"message", sourceName + " " + action
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_ME, placeholders));
 		});
 
 		EventManager.register(MinecraftEvents.CommandRegister.class, event -> {
@@ -611,6 +680,14 @@ public class MinecraftEventHandler {
 				}
 			});
 		});
+	}
+
+	private static String normalizeCommandInput(String input) {
+		if (StringUtil.isNullOrEmpty(input)) {
+			return "";
+		}
+		String trimmed = input.trim();
+		return trimmed.startsWith("/") ? trimmed : "/" + trimmed;
 	}
 
 	private static List<String> getSuggestionsForInput(String input, CommandSourceStack source) throws Exception {
