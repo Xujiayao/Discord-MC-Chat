@@ -385,10 +385,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		}
 
 		boolean commandLiteral = type == MinecraftEventPacket.MessageType.PLAYER_COMMAND;
-		boolean systemMessage = switch (type) {
-			case PLAYER_CHAT, PLAYER_COMMAND, SOURCE_SAY, SOURCE_TELL_RAW, SOURCE_MSG -> false;
-			default -> true;
-		};
+		boolean systemMessage = isSystemMessage(type);
 
 		String templateRoot = singleServerOverwrite ? "single_server_overwrite" : "xxxxx_to_minecraft";
 
@@ -416,5 +413,12 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		} else {
 			NetworkManager.broadcastToClientsExcept(packet, sourceServerName);
 		}
+	}
+
+	private boolean isSystemMessage(MinecraftEventPacket.MessageType type) {
+		return switch (type) {
+			case PLAYER_CHAT, PLAYER_COMMAND, SOURCE_SAY, SOURCE_TELL_RAW, SOURCE_MSG -> false;
+			case SOURCE_ME, SERVER_STARTED, SERVER_STOPPING, PLAYER_JOIN, PLAYER_QUIT, PLAYER_DIE, PLAYER_ADVANCEMENT, PLAYER_CHANGE_GAME_MODE -> true;
+		};
 	}
 }

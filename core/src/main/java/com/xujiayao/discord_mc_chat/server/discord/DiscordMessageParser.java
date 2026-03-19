@@ -559,11 +559,11 @@ public class DiscordMessageParser {
 		boolean parseStickers = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.stickers");
 		boolean parseEmbeds = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.embeds");
 		boolean parseComponents = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.components");
+		boolean parseTimestamps = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.timestamps");
 
 		// Process the raw text content
 		if (!raw.isEmpty()) {
-		boolean parseTimestamps = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.timestamps");
-		segments.addAll(parseRawContent(raw, message, parseMentions, parseCustomEmojis,
+			segments.addAll(parseRawContent(raw, message, parseMentions, parseCustomEmojis,
 					parseUnicodeEmojis, parseMarkdown, parseHyperlinks, parseTimestamps));
 		}
 
