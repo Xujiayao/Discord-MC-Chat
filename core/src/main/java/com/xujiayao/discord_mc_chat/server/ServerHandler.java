@@ -37,6 +37,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 
+import java.util.Map;
+
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
 /**
@@ -108,7 +110,22 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 								DiscordManager.clientBroadcast(clientName, "player.advancement", "player.advancement." + p.placeholders.get("type"), p.placeholders);
 						case PLAYER_CHANGE_GAME_MODE ->
 								DiscordManager.clientBroadcast(clientName, "player.change_game_mode", "player.change_game_mode", p.placeholders);
-						// TODO Unhandled events
+						case PLAYER_CHAT ->
+								DiscordManager.clientBroadcast(clientName, "player.chat", "player.chat", p.placeholders);
+						case PLAYER_COMMAND ->
+								DiscordManager.clientBroadcast(clientName, "player.command", "player.command", p.placeholders);
+						case SOURCE_SAY ->
+								DiscordManager.clientBroadcast(clientName, "source.say", "source.say", p.placeholders);
+						case SOURCE_TELL_RAW ->
+								DiscordManager.clientBroadcast(clientName, "source.tell_raw", "source.tell_raw", p.placeholders);
+						case SOURCE_MSG ->
+								DiscordManager.clientBroadcast(clientName, "source.msg", "source.msg", p.placeholders);
+						case SOURCE_ME ->
+								DiscordManager.clientBroadcast(clientName, "source.me", "source.me", p.placeholders);
+					}
+					if ("standalone".equals(ModeManager.getMode()) && shouldRelayToOtherMinecraftServers(p.type)) {
+						String langKey = getMinecraftEventLangKey(p.type, p.placeholders);
+						DiscordManager.broadcastBetweenMinecraftServers(clientName, langKey, p.placeholders);
 					}
 				}
 				case InfoResponsePacket p -> NetworkManager.cacheInfoResponse(clientName, p);
@@ -273,5 +290,57 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	private String getMinecraftVersion(String serverName) {
 		JsonNode config = findServerConfig(serverName);
 		return config != null ? config.path("minecraft_version").asText() : "";
+	}
+
+	/**
+	 * Checks whether a Minecraft event should be forwarded to other connected Minecraft servers.
+	 *
+	 * @param type The Minecraft event type.
+	 * @return true if relay is enabled in config, false otherwise.
+	 */
+	private boolean shouldRelayToOtherMinecraftServers(MinecraftEventPacket.MessageType type) {
+		String nodePath = switch (type) {
+			case SERVER_STARTED -> "server.started";
+			case SERVER_STOPPING -> "server.stopped";
+			case PLAYER_JOIN -> "player.join";
+			case PLAYER_QUIT -> "player.quit";
+			case PLAYER_CHAT -> "player.chat";
+			case PLAYER_COMMAND -> "player.command";
+			case PLAYER_DIE -> "player.die";
+			case PLAYER_ADVANCEMENT -> "player.advancement";
+			case PLAYER_CHANGE_GAME_MODE -> "player.change_game_mode";
+			case SOURCE_SAY -> "source.say";
+			case SOURCE_TELL_RAW -> "source.tell_raw";
+			case SOURCE_MSG -> "source.msg";
+			case SOURCE_ME -> "source.me";
+		};
+
+		Boolean enabled = ConfigManager.getBoolean("broadcasts.between_minecraft_servers." + nodePath);
+		return enabled != null && enabled;
+	}
+
+	/**
+	 * Maps Minecraft event packet types to custom_messages minecraft_to_xxxxx language keys.
+	 *
+	 * @param type         The Minecraft event type.
+	 * @param placeholders Event placeholders.
+	 * @return The language key path.
+	 */
+	private String getMinecraftEventLangKey(MinecraftEventPacket.MessageType type, Map<String, String> placeholders) {
+		return switch (type) {
+			case SERVER_STARTED -> "server.start";
+			case SERVER_STOPPING -> "server.stop";
+			case PLAYER_JOIN -> "player.join";
+			case PLAYER_QUIT -> "player.quit";
+			case PLAYER_CHAT -> "player.chat";
+			case PLAYER_COMMAND -> "player.command";
+			case PLAYER_DIE -> "player.die";
+			case PLAYER_ADVANCEMENT -> "player.advancement." + placeholders.get("type");
+			case PLAYER_CHANGE_GAME_MODE -> "player.change_game_mode";
+			case SOURCE_SAY -> "source.say";
+			case SOURCE_TELL_RAW -> "source.tell_raw";
+			case SOURCE_MSG -> "source.msg";
+			case SOURCE_ME -> "source.me";
+		};
 	}
 }

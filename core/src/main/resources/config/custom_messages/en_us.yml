@@ -113,6 +113,8 @@ minecraft_to_xxxxx:
   player:
     join: ":wave: **{display_name} joined the server**"
     quit: ":cry: **{display_name} left the server**"
+    chat: "{message}"
+    command: ":keyboard: **{display_name} executed command** `{command}`"
     die: ":skull: **{death_message}**"
     advancement:
       task: ":partying_face: **{display_name} has made the advancement [{title}]**\\n       *{description}*"
@@ -120,6 +122,9 @@ minecraft_to_xxxxx:
       goal: ":partying_face: **{display_name} has reached the goal [{title}]**\\n       *{description}*"
     change_game_mode: ":arrows_counterclockwise: **{display_name} changed game mode to {mode}**"
   source:
+    say: ":loudspeaker: **{display_name}:** {message}"
+    tell_raw: ":incoming_envelope: **{display_name} executed tellraw:** `{message}`"
+    msg: ":speech_left: **{display_name} whispered:** {message}"
     me: ":eyes: **{display_name} {message}**"
 
 minecraft_to_discord:

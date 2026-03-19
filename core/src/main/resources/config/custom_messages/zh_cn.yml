@@ -110,6 +110,8 @@ minecraft_to_xxxxx:
   player:
     join: ":wave: **{display_name} 加入了服务器**"
     quit: ":cry: **{display_name} 离开了服务器**"
+    chat: "{message}"
+    command: ":keyboard: **{display_name} 执行了命令** `{command}`"
     die: ":skull: **{death_message}**"
     advancement:
       task: ":partying_face: **{display_name} 取得了进度 [{title}]**\\n       *{description}*"
@@ -117,6 +119,9 @@ minecraft_to_xxxxx:
       goal: ":partying_face: **{display_name} 达成了目标 [{title}]**\\n       *{description}*"
     change_game_mode: ":arrows_counterclockwise: **{display_name} 切换游戏模式为 {mode}**"
   source:
+    say: ":loudspeaker: **{display_name}:** {message}"
+    tell_raw: ":incoming_envelope: **{display_name} 执行了 tellraw:** `{message}`"
+    msg: ":speech_left: **{display_name} 发送了私聊:** {message}"
     me: ":eyes: **{display_name} {message}**"
 
 minecraft_to_discord:

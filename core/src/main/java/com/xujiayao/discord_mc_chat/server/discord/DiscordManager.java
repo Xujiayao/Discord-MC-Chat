@@ -3,6 +3,8 @@ package com.xujiayao.discord_mc_chat.server.discord;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.DiscordEventPacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.TextSegment;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
@@ -29,6 +31,7 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -527,9 +530,9 @@ public class DiscordManager {
 				messageNode = messageNode.path(part);
 			}
 
+			Map<String, String> parsedPlaceholders = parsePlaceholdersForOutbound(placeholders);
 			String message = messageNode.asText();
-
-			for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+			for (Map.Entry<String, String> entry : parsedPlaceholders.entrySet()) {
 				message = message.replace("{" + entry.getKey() + "}", entry.getValue());
 			}
 
@@ -554,6 +557,111 @@ public class DiscordManager {
 		} catch (Exception e) {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
 		}
+	}
+
+	/**
+	 * Broadcasts a Minecraft-originated event to all other connected Minecraft servers.
+	 * The server pre-builds text segments so clients do not need custom_messages access.
+	 *
+	 * @param sourceClientName The source server name.
+	 * @param placeholders     Event placeholders from the source client.
+	 */
+	public static void broadcastBetweenMinecraftServers(String sourceClientName, String lang, Map<String, String> placeholders) {
+		Map<String, String> parsedPlaceholders = parsePlaceholdersForOutbound(placeholders);
+		String eventMessage = buildMinecraftEventMessage(lang, parsedPlaceholders);
+		String effectiveName = parsedPlaceholders.getOrDefault("display_name", sourceClientName);
+		boolean useUserTemplate = "player.chat".equals(lang)
+				|| "source.say".equals(lang)
+				|| "source.tell_raw".equals(lang)
+				|| "source.msg".equals(lang)
+				|| "source.me".equals(lang);
+		List<TextSegment> segments = buildBetweenServerSegments(sourceClientName, effectiveName, eventMessage, useUserTemplate);
+		if (segments.isEmpty()) {
+			return;
+		}
+
+		DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.CHAT, segments);
+		NetworkManager.broadcastToClientsExcept(packet, sourceClientName);
+	}
+
+	private static Map<String, String> parsePlaceholdersForOutbound(Map<String, String> placeholders) {
+		Map<String, String> parsed = new HashMap<>();
+		if (placeholders == null || placeholders.isEmpty()) {
+			return parsed;
+		}
+		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+			String value = entry.getValue();
+			if (value == null) {
+				value = "";
+			}
+			if ("message".equals(entry.getKey()) || "command".equals(entry.getKey())) {
+				value = MinecraftMessageParser.parseMessage(value);
+			}
+			parsed.put(entry.getKey(), value);
+		}
+		return parsed;
+	}
+
+	private static List<TextSegment> buildBetweenServerSegments(String sourceClientName, String effectiveName, String message,
+																boolean userTemplate) {
+		List<TextSegment> segments = new ArrayList<>();
+		JsonNode customMessages = I18nManager.getCustomMessages();
+		if (customMessages == null) {
+			return segments;
+		}
+
+		String serverColor = getClientServerColor(sourceClientName);
+		String roleColor = "white";
+		JsonNode templateNode = customMessages.path("common").path(userTemplate ? "user_message" : "system_message");
+		if (!templateNode.isArray()) {
+			return segments;
+		}
+
+		for (JsonNode segNode : templateNode) {
+			String text = segNode.path("text").asText("")
+					.replace("{server}", sourceClientName)
+					.replace("{server_color}", serverColor)
+					.replace("{effective_name}", effectiveName)
+					.replace("{role_color}", roleColor)
+					.replace("{message}", message);
+			boolean bold = segNode.path("bold").asBoolean(false);
+			String color = segNode.path("color").asText("")
+					.replace("{server_color}", serverColor)
+					.replace("{role_color}", roleColor);
+			segments.add(new TextSegment(text, bold, color));
+		}
+
+		return segments;
+	}
+
+	private static String buildMinecraftEventMessage(String lang, Map<String, String> placeholders) {
+		JsonNode customMessages = I18nManager.getCustomMessages();
+		if (customMessages == null) {
+			return "";
+		}
+
+		JsonNode node = customMessages.path("minecraft_to_xxxxx");
+		for (String part : lang.split("\\.")) {
+			node = node.path(part);
+		}
+
+		String message = node.asText("");
+		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+			message = message.replace("{" + entry.getKey() + "}", entry.getValue());
+		}
+		return message;
+	}
+
+	private static String getClientServerColor(String clientName) {
+		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
+		if (serversNode != null && serversNode.isArray()) {
+			for (JsonNode node : serversNode) {
+				if (clientName.equals(node.path("name").asText())) {
+					return node.path("color").asText("yellow");
+				}
+			}
+		}
+		return "yellow";
 	}
 
 	/**

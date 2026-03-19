@@ -66,6 +66,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 /**
  * Handles Minecraft events posted from the event manager.
@@ -172,6 +173,28 @@ public class MinecraftEventHandler {
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_QUIT, placeholders));
 		});
 
+		EventManager.register(MinecraftEvents.PlayerChat.class, event -> {
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.serverPlayer().getName().getString(),
+					"display_name", event.serverPlayer().getDisplayName().getString(),
+					"message", event.playerChatMessage().signedContent()
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_CHAT, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.PlayerCommand.class, event -> {
+			String command = "/" + event.command();
+			if (isExcludedCommand(command)) {
+				return;
+			}
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.serverPlayer().getName().getString(),
+					"display_name", event.serverPlayer().getDisplayName().getString(),
+					"command", command
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_COMMAND, placeholders));
+		});
+
 		EventManager.register(MinecraftEvents.PlayerDie.class, event -> {
 			Map<String, String> placeholders = Map.of(
 					"user_name", event.serverPlayer().getName().getString(),
@@ -212,6 +235,50 @@ public class MinecraftEventHandler {
 					"mode", TranslationManager.get(event.gameType().getLongDisplayName())
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_CHANGE_GAME_MODE, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceSay.class, event -> {
+			String sourceName = event.commandContext().getSource().getTextName();
+			Map<String, String> placeholders = Map.of(
+					"display_name", sourceName,
+					"message", event.playerChatMessage().signedContent()
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_SAY, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceTellRaw.class, event -> {
+			String command = event.commandContext().getInput();
+			if (isExcludedCommand(command)) {
+				return;
+			}
+			String sourceName = event.commandContext().getSource().getTextName();
+			Map<String, String> placeholders = Map.of(
+					"display_name", sourceName,
+					"message", command
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_TELL_RAW, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceMsg.class, event -> {
+			String command = event.commandContext().getInput();
+			if (isExcludedCommand(command)) {
+				return;
+			}
+			String sourceName = event.commandContext().getSource().getTextName();
+			Map<String, String> placeholders = Map.of(
+					"display_name", sourceName,
+					"message", event.playerChatMessage().signedContent()
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_MSG, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceMe.class, event -> {
+			String sourceName = event.commandContext().getSource().getTextName();
+			Map<String, String> placeholders = Map.of(
+					"display_name", sourceName,
+					"message", event.playerChatMessage().signedContent()
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_ME, placeholders));
 		});
 
 		EventManager.register(MinecraftEvents.CommandRegister.class, event -> {
@@ -888,6 +955,34 @@ public class MinecraftEventHandler {
 		} catch (Exception e) {
 			return null;
 		}
+	}
+
+	/**
+	 * Checks whether a command should be excluded from broadcasting based on configured patterns.
+	 *
+	 * @param commandLine The full command line.
+	 * @return true if excluded, false otherwise.
+	 */
+	private static boolean isExcludedCommand(String commandLine) {
+		if (commandLine == null || commandLine.isBlank()) {
+			return false;
+		}
+
+		var patternsNode = ConfigManager.getConfigNode("excluded_commands");
+		if (!patternsNode.isArray()) {
+			return false;
+		}
+
+		for (var patternNode : patternsNode) {
+			String regex = patternNode.asText("");
+			if (regex.isBlank()) {
+				continue;
+			}
+			if (Pattern.compile(regex, Pattern.CASE_INSENSITIVE).matcher(commandLine).matches()) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
