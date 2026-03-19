@@ -3,11 +3,14 @@ package com.xujiayao.discord_mc_chat.server.discord;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePacket;
+import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
+import com.xujiayao.discord_mc_chat.server.minecraft.MinecraftMessagePatterns;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
+import com.xujiayao.discord_mc_chat.utils.time.TimestampFormatUtils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
@@ -28,14 +31,9 @@ import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.fellbaum.jemoji.EmojiManager;
 
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -629,7 +627,7 @@ public class DiscordManager {
 
 		String playerUuid = placeholders.get("player_uuid");
 		if (playerUuid != null) {
-			String discordId = com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager.getDiscordIdByMinecraftUuid(playerUuid);
+			String discordId = LinkedAccountManager.getDiscordIdByMinecraftUuid(playerUuid);
 			if (discordId != null) {
 				var user = retrieveUser(discordId);
 				if (user != null) {
@@ -653,13 +651,13 @@ public class DiscordManager {
 			message = parseTimestampsForDiscord(message);
 		}
 		if (ConfigManager.getBoolean(parsingBase + ".mentions")) {
-			message = USER_MENTION_PATTERN.matcher(message).replaceAll("[@$1]");
+			message = MinecraftMessagePatterns.USER_MENTION_PATTERN.matcher(message).replaceAll("[@$1]");
 		}
 		if (ConfigManager.getBoolean(parsingBase + ".hyperlinks")) {
-			message = BARE_URL_PATTERN.matcher(message).replaceAll("[$1]($1)");
+			message = MinecraftMessagePatterns.BARE_URL_PATTERN.matcher(message).replaceAll("[$1]($1)");
 		}
 		if (ConfigManager.getBoolean(parsingBase + ".custom_emojis")) {
-			message = CUSTOM_EMOJI_PATTERN.matcher(message).replaceAll("$0");
+			message = MinecraftMessagePatterns.CUSTOM_EMOJI_PATTERN.matcher(message).replaceAll("$0");
 		}
 		if (ConfigManager.getBoolean(parsingBase + ".unicode_emojis")) {
 			message = EmojiManager.replaceAllEmojis(message, emoji -> emoji.getDiscordAliases().isEmpty() ? emoji.getEmoji() : emoji.getDiscordAliases().getFirst());
@@ -671,13 +669,13 @@ public class DiscordManager {
 	}
 
 	private static String parseTimestampsForDiscord(String message) {
-		Matcher matcher = DISCORD_TIMESTAMP_PATTERN.matcher(message);
+		Matcher matcher = MinecraftMessagePatterns.DISCORD_TIMESTAMP_PATTERN.matcher(message);
 		StringBuffer sb = new StringBuffer();
 		while (matcher.find()) {
 			String replacement = matcher.group();
 			try {
 				long epoch = Long.parseLong(matcher.group(1));
-				replacement = "[" + formatDiscordTimestamp(epoch, matcher.group(2)) + "]";
+				replacement = "[" + TimestampFormatUtils.formatDiscordTimestamp(epoch, matcher.group(2)) + "]";
 			} catch (Exception ignored) {
 			}
 			matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
@@ -685,70 +683,6 @@ public class DiscordManager {
 		matcher.appendTail(sb);
 		return sb.toString();
 	}
-
-	private static String formatDiscordTimestamp(long epoch, String style) {
-		Instant instant = Instant.ofEpochSecond(epoch);
-		Locale locale = toLocale(I18nManager.getLanguage());
-		ZoneId zone = ZoneId.systemDefault();
-		String timestampStyle = style == null ? "f" : style;
-		return switch (timestampStyle) {
-			case "t" -> DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale).format(instant.atZone(zone));
-			case "T" -> DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM).withLocale(locale).format(instant.atZone(zone));
-			case "d" -> DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(locale).format(instant.atZone(zone));
-			case "D" -> DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale).format(instant.atZone(zone));
-			case "F" -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL, FormatStyle.SHORT).withLocale(locale).format(instant.atZone(zone));
-			case "R" -> formatRelative(Instant.now().getEpochSecond() - epoch);
-			case "s", "S" -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.SHORT).withLocale(locale).format(instant.atZone(zone));
-			default -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG, FormatStyle.SHORT).withLocale(locale).format(instant.atZone(zone));
-		};
-	}
-
-	private static String formatRelative(long diffSeconds) {
-		boolean past = diffSeconds >= 0;
-		long abs = Math.abs(diffSeconds);
-		String unitKey;
-		long value;
-		if (abs < 60) {
-			value = abs;
-			unitKey = "second";
-		} else if (abs < 3600) {
-			value = abs / 60;
-			unitKey = "minute";
-		} else if (abs < 86400) {
-			value = abs / 3600;
-			unitKey = "hour";
-		} else if (abs < 2592000) {
-			value = abs / 86400;
-			unitKey = "day";
-		} else if (abs < 31536000) {
-			value = abs / 2592000;
-			unitKey = "month";
-		} else {
-			value = abs / 31536000;
-			unitKey = "year";
-		}
-
-		String unit = I18nManager.getDmccTranslation(
-				"discord.message_parser.relative.units." + unitKey + "." + (value == 1 ? "one" : "other")
-		);
-		return past
-				? I18nManager.getDmccTranslation("discord.message_parser.relative.past", value, unit)
-				: I18nManager.getDmccTranslation("discord.message_parser.relative.future", value, unit);
-	}
-
-	private static Locale toLocale(String languageCode) {
-		if (languageCode == null || languageCode.isBlank()) {
-			return Locale.ENGLISH;
-		}
-		String tag = languageCode.replace('_', '-');
-		Locale locale = Locale.forLanguageTag(tag);
-		return locale.getLanguage().isBlank() ? Locale.ENGLISH : locale;
-	}
-
-	private static final Pattern USER_MENTION_PATTERN = Pattern.compile("(?<!\\w)@([A-Za-z0-9_]{3,16})");
-	private static final Pattern BARE_URL_PATTERN = Pattern.compile("(https?://[^\\s*|~`<>)\\]]+)");
-	private static final Pattern CUSTOM_EMOJI_PATTERN = Pattern.compile("(?<![A-Za-z0-9_]):[A-Za-z0-9_+\\-]+:(?![A-Za-z0-9_])");
-	private static final Pattern DISCORD_TIMESTAMP_PATTERN = Pattern.compile("<t:(\\d+)(?::([tTdDfFRsS]))?>");
 
 	/**
 	 * Retrieves a TextChannel by its ID or name.

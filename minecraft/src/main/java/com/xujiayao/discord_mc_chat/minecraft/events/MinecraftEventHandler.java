@@ -14,6 +14,7 @@ import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePa
 import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkRequestPacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.TextSegment;
+import com.xujiayao.discord_mc_chat.server.minecraft.MinecraftMessageParser;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
@@ -985,15 +986,7 @@ public class MinecraftEventHandler {
 	 * @return true when vanilla rendering should be cancelled.
 	 */
 	public static boolean shouldCancelVanillaChatRendering() {
-		String basePath = "single_server".equals(ModeManager.getMode())
-				? "message_parsing.minecraft_to_discord"
-				: "message_parsing.minecraft_to_xxxxx";
-		return Boolean.TRUE.equals(ConfigManager.getBoolean(basePath + ".markdown"))
-				|| Boolean.TRUE.equals(ConfigManager.getBoolean(basePath + ".unicode_emojis"))
-				|| Boolean.TRUE.equals(ConfigManager.getBoolean(basePath + ".custom_emojis"))
-				|| Boolean.TRUE.equals(ConfigManager.getBoolean(basePath + ".mentions"))
-				|| Boolean.TRUE.equals(ConfigManager.getBoolean(basePath + ".hyperlinks"))
-				|| Boolean.TRUE.equals(ConfigManager.getBoolean(basePath + ".timestamps"));
+		return MinecraftMessageParser.isAnyParsingEnabled();
 	}
 
 	/**
@@ -1004,7 +997,7 @@ public class MinecraftEventHandler {
 	 */
 	private static String normalizeCommandInput(String input) {
 		if (input == null || input.isBlank()) {
-			return "/";
+			return "";
 		}
 		return input.startsWith("/") ? input : "/" + input;
 	}

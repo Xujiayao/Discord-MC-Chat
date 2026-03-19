@@ -7,17 +7,13 @@ import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
+import com.xujiayao.discord_mc_chat.utils.time.TimestampFormatUtils;
 import net.dv8tion.jda.api.entities.Member;
 import net.fellbaum.jemoji.EmojiManager;
 
 import java.awt.Color;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,15 +26,11 @@ import java.util.regex.Pattern;
  */
 public class MinecraftMessageParser {
 
-	private static final Pattern USER_MENTION_PATTERN = Pattern.compile("(?<!\\w)@([A-Za-z0-9_]{3,16})");
-	private static final Pattern BARE_URL_PATTERN = Pattern.compile("(https?://[^\\s*|~`<>)\\]]+)");
-	private static final Pattern DISCORD_TIMESTAMP_PATTERN = Pattern.compile("<t:(\\d+)(?::([tTdDfFRsS]))?>");
 	private static final Pattern BOLD_PATTERN = Pattern.compile("\\*\\*([^*]+)\\*\\*");
 	private static final Pattern ITALIC_PATTERN = Pattern.compile("(?<!\\*)\\*([^*]+)\\*(?!\\*)");
 	private static final Pattern UNDERLINE_PATTERN = Pattern.compile("__([^_]+)__");
 	private static final Pattern STRIKE_PATTERN = Pattern.compile("~~([^~]+)~~");
 	private static final Pattern SPOILER_PATTERN = Pattern.compile("\\|\\|(.+?)\\|\\|");
-	private static final Pattern CUSTOM_EMOJI_PATTERN = Pattern.compile("(?<![A-Za-z0-9_]):[A-Za-z0-9_+\\-]+:(?![A-Za-z0-9_])");
 
 	private static final String URL_COLOR = "#3366CC";
 
@@ -52,12 +44,12 @@ public class MinecraftMessageParser {
 	 */
 	public static boolean isAnyParsingEnabled() {
 		String base = getParsingConfigPath();
-		return ConfigManager.getBoolean(base + ".markdown")
-				|| ConfigManager.getBoolean(base + ".unicode_emojis")
-				|| ConfigManager.getBoolean(base + ".custom_emojis")
-				|| ConfigManager.getBoolean(base + ".mentions")
-				|| ConfigManager.getBoolean(base + ".hyperlinks")
-				|| ConfigManager.getBoolean(base + ".timestamps");
+		return Boolean.TRUE.equals(ConfigManager.getBoolean(base + ".markdown"))
+				|| Boolean.TRUE.equals(ConfigManager.getBoolean(base + ".unicode_emojis"))
+				|| Boolean.TRUE.equals(ConfigManager.getBoolean(base + ".custom_emojis"))
+				|| Boolean.TRUE.equals(ConfigManager.getBoolean(base + ".mentions"))
+				|| Boolean.TRUE.equals(ConfigManager.getBoolean(base + ".hyperlinks"))
+				|| Boolean.TRUE.equals(ConfigManager.getBoolean(base + ".timestamps"));
 	}
 
 	/**
@@ -204,7 +196,7 @@ public class MinecraftMessageParser {
 				result.add(seg);
 				continue;
 			}
-			Matcher matcher = USER_MENTION_PATTERN.matcher(seg.text);
+			Matcher matcher = MinecraftMessagePatterns.USER_MENTION_PATTERN.matcher(seg.text);
 			int cursor = 0;
 			while (matcher.find()) {
 				if (matcher.start() > cursor) {
@@ -230,7 +222,7 @@ public class MinecraftMessageParser {
 				continue;
 			}
 
-			Matcher matcher = DISCORD_TIMESTAMP_PATTERN.matcher(seg.text);
+			Matcher matcher = MinecraftMessagePatterns.DISCORD_TIMESTAMP_PATTERN.matcher(seg.text);
 			int cursor = 0;
 			while (matcher.find()) {
 				if (matcher.start() > cursor) {
@@ -239,7 +231,7 @@ public class MinecraftMessageParser {
 				TextSegment ts = copySegmentWithText(seg, matcher.group());
 				try {
 					long epoch = Long.parseLong(matcher.group(1));
-					ts.text = "[" + formatDiscordTimestamp(epoch, matcher.group(2)) + "]";
+					ts.text = "[" + TimestampFormatUtils.formatDiscordTimestamp(epoch, matcher.group(2)) + "]";
 					ts.color = "yellow";
 				} catch (Exception ignored) {
 				}
@@ -278,7 +270,7 @@ public class MinecraftMessageParser {
 				result.add(seg);
 				continue;
 			}
-			Matcher matcher = BARE_URL_PATTERN.matcher(seg.text);
+			Matcher matcher = MinecraftMessagePatterns.BARE_URL_PATTERN.matcher(seg.text);
 			int cursor = 0;
 			while (matcher.find()) {
 				if (matcher.start() > cursor) {
@@ -307,7 +299,7 @@ public class MinecraftMessageParser {
 				result.add(seg);
 				continue;
 			}
-			Matcher matcher = CUSTOM_EMOJI_PATTERN.matcher(seg.text);
+			Matcher matcher = MinecraftMessagePatterns.CUSTOM_EMOJI_PATTERN.matcher(seg.text);
 			int cursor = 0;
 			while (matcher.find()) {
 				if (matcher.start() > cursor) {
@@ -378,64 +370,4 @@ public class MinecraftMessageParser {
 		return copy;
 	}
 
-	private static String formatDiscordTimestamp(long epoch, String style) {
-		Instant instant = Instant.ofEpochSecond(epoch);
-		Locale locale = toLocale(I18nManager.getLanguage());
-		ZoneId zone = ZoneId.systemDefault();
-		String timestampStyle = style == null ? "f" : style;
-
-		return switch (timestampStyle) {
-			case "t" -> DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale).format(instant.atZone(zone));
-			case "T" -> DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM).withLocale(locale).format(instant.atZone(zone));
-			case "d" -> DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(locale).format(instant.atZone(zone));
-			case "D" -> DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale).format(instant.atZone(zone));
-			case "F" -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL, FormatStyle.SHORT).withLocale(locale).format(instant.atZone(zone));
-			case "R" -> formatRelative(Instant.now().getEpochSecond() - epoch);
-			case "s", "S" -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.SHORT).withLocale(locale).format(instant.atZone(zone));
-			default -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG, FormatStyle.SHORT).withLocale(locale).format(instant.atZone(zone));
-		};
-	}
-
-	private static String formatRelative(long diffSeconds) {
-		boolean past = diffSeconds >= 0;
-		long abs = Math.abs(diffSeconds);
-
-		String unitKey;
-		long value;
-		if (abs < 60) {
-			unitKey = "second";
-			value = abs;
-		} else if (abs < 3600) {
-			unitKey = "minute";
-			value = abs / 60;
-		} else if (abs < 86400) {
-			unitKey = "hour";
-			value = abs / 3600;
-		} else if (abs < 2592000) {
-			unitKey = "day";
-			value = abs / 86400;
-		} else if (abs < 31536000) {
-			unitKey = "month";
-			value = abs / 2592000;
-		} else {
-			unitKey = "year";
-			value = abs / 31536000;
-		}
-
-		String unit = I18nManager.getDmccTranslation(
-				"discord.message_parser.relative.units." + unitKey + "." + (value == 1 ? "one" : "other")
-		);
-		return past
-				? I18nManager.getDmccTranslation("discord.message_parser.relative.past", value, unit)
-				: I18nManager.getDmccTranslation("discord.message_parser.relative.future", value, unit);
-	}
-
-	private static Locale toLocale(String languageCode) {
-		if (languageCode == null || languageCode.isBlank()) {
-			return Locale.ENGLISH;
-		}
-		String tag = languageCode.replace('_', '-');
-		Locale locale = Locale.forLanguageTag(tag);
-		return locale.getLanguage().isBlank() ? Locale.ENGLISH : locale;
-	}
 }

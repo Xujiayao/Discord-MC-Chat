@@ -42,7 +42,6 @@ import io.netty.handler.timeout.IdleStateEvent;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -55,6 +54,9 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  * @author Xujiayao
  */
 public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
+
+	private static final Pattern TELLRAW_TARGET_PATTERN = Pattern.compile("^/?tellraw\\s+([^\\s]+)\\s+.+$", Pattern.CASE_INSENSITIVE);
+	private static final Pattern DISCORD_MARKDOWN_SANITIZE_PATTERN = Pattern.compile(":[^:]+:|\\*\\*|\\*|__|~~");
 
 	private final NettyServer server;
 	private String expectedNonce;
@@ -401,11 +403,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		if (message == null) {
 			return "";
 		}
-		return message.replaceAll(":[^:]+:", "")
-				.replace("**", "")
-				.replace("*", "")
-				.replace("__", "")
-				.replace("~~", "");
+		return DISCORD_MARKDOWN_SANITIZE_PATTERN.matcher(message).replaceAll("");
 	}
 
 	private boolean isExcludedCommand(String rawCommand) {
@@ -433,8 +431,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		if (rawCommand == null || rawCommand.isBlank()) {
 			return false;
 		}
-		String command = rawCommand.trim().toLowerCase(Locale.ROOT);
-		Matcher matcher = Pattern.compile("^/?tellraw\\s+([^\\s]+)\\s+.+$", Pattern.CASE_INSENSITIVE).matcher(command);
+		String normalizedCommand = rawCommand.trim();
+		Matcher matcher = TELLRAW_TARGET_PATTERN.matcher(normalizedCommand);
 		if (!matcher.matches()) {
 			return false;
 		}
