@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -53,6 +54,7 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 public class DiscordManager {
 
 	private static final Map<String, String> DISCORD_NAME_CACHE = new ConcurrentHashMap<>();
+	private static final Set<String> PARSEABLE_MINECRAFT_PLACEHOLDERS = Set.of("message", "command");
 	private static JDA jda;
 	private static ScheduledExecutorService statusUpdateExecutor;
 	private static ScheduledFuture<?> presenceUpdateTask;
@@ -594,7 +596,7 @@ public class DiscordManager {
 			if (value == null) {
 				value = "";
 			}
-			if ("message".equals(entry.getKey()) || "command".equals(entry.getKey())) {
+			if (PARSEABLE_MINECRAFT_PLACEHOLDERS.contains(entry.getKey())) {
 				value = MinecraftMessageParser.parseMessage(value);
 			}
 			parsed.put(entry.getKey(), value);

@@ -97,7 +97,7 @@ public class MinecraftMessageParser {
 
 	private static String neutralizeMentions(String text) {
 		Matcher matcher = MINECRAFT_MENTION_PATTERN.matcher(text);
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		while (matcher.find()) {
 			matcher.appendReplacement(sb, "@\u200B" + Matcher.quoteReplacement(matcher.group(1)));
 		}
@@ -107,7 +107,7 @@ public class MinecraftMessageParser {
 
 	private static String neutralizeLinks(String text) {
 		Matcher matcher = LINK_PATTERN.matcher(text);
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		while (matcher.find()) {
 			String replacement = "<" + matcher.group() + ">";
 			matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
@@ -118,7 +118,7 @@ public class MinecraftMessageParser {
 
 	private static String neutralizeDiscordTimestamps(String text) {
 		Matcher matcher = DISCORD_TIMESTAMP_PATTERN.matcher(text);
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		while (matcher.find()) {
 			String replacement = "`" + matcher.group() + "`";
 			matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));

@@ -68,6 +68,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
+
 /**
  * Handles Minecraft events posted from the event manager.
  *
@@ -76,6 +78,9 @@ import java.util.regex.Pattern;
 public class MinecraftEventHandler {
 
 	private static final String DEFAULT_MENTION_STYLE = "title";
+	private static final Object EXCLUDED_COMMAND_PATTERNS_LOCK = new Object();
+	private static volatile List<Pattern> excludedCommandPatterns = List.of();
+	private static volatile boolean excludedCommandPatternsLoaded = false;
 	private static MinecraftServer serverInstance;
 
 	/**
@@ -968,21 +973,48 @@ public class MinecraftEventHandler {
 			return false;
 		}
 
-		var patternsNode = ConfigManager.getConfigNode("excluded_commands");
-		if (!patternsNode.isArray()) {
-			return false;
-		}
-
-		for (var patternNode : patternsNode) {
-			String regex = patternNode.asText("");
-			if (regex.isBlank()) {
-				continue;
-			}
-			if (Pattern.compile(regex, Pattern.CASE_INSENSITIVE).matcher(commandLine).matches()) {
+		for (Pattern pattern : getExcludedCommandPatterns()) {
+			if (pattern.matcher(commandLine).matches()) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Gets compiled excluded command regex patterns from config.
+	 *
+	 * @return Compiled regex patterns.
+	 */
+	private static List<Pattern> getExcludedCommandPatterns() {
+		if (excludedCommandPatternsLoaded) {
+			return excludedCommandPatterns;
+		}
+
+		synchronized (EXCLUDED_COMMAND_PATTERNS_LOCK) {
+			if (excludedCommandPatternsLoaded) {
+				return excludedCommandPatterns;
+			}
+
+			List<Pattern> compiled = new ArrayList<>();
+			var patternsNode = ConfigManager.getConfigNode("excluded_commands");
+			if (patternsNode.isArray()) {
+				for (var patternNode : patternsNode) {
+					String regex = patternNode.asText("");
+					if (regex.isBlank()) {
+						continue;
+					}
+					try {
+						compiled.add(Pattern.compile(regex, Pattern.CASE_INSENSITIVE));
+					} catch (Exception e) {
+						LOGGER.warn(I18nManager.getDmccTranslation("minecraft.event_handler.invalid_excluded_command_regex", regex));
+					}
+				}
+			}
+			excludedCommandPatterns = compiled;
+			excludedCommandPatternsLoaded = true;
+			return excludedCommandPatterns;
+		}
 	}
 
 	/**

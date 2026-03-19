@@ -327,3 +327,5 @@ minecraft:
     jar_open_failed: "无法打开 JAR 文件。"
     mods_scan_failed: "扫描模组目录时出错。"
     datapack_load_failed: "无法从数据包加载翻译。"
+  event_handler:
+    invalid_excluded_command_regex: "config.yml 中 excluded_commands 存在无效正则：{}"

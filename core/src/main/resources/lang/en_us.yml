@@ -328,3 +328,5 @@ minecraft:
     jar_open_failed: "Cannot open JAR file."
     mods_scan_failed: "Error scanning mods directory."
     datapack_load_failed: "Failed to load translations from datapack."
+  event_handler:
+    invalid_excluded_command_regex: "Invalid excluded_commands regex in config.yml: {}"
