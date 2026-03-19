@@ -5,6 +5,7 @@
   "mixins": [
     "MixinCommands",
     "MixinEmoteCommands",
+    "MixinGameModeCommand",
     "MixinMinecraftServer",
     "MixinMsgCommand",
     "MixinPlayerAdvancements",

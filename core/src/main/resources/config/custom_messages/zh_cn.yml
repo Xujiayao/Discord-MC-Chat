@@ -115,6 +115,7 @@ minecraft_to_xxxxx:
       task: ":partying_face: **{display_name} 取得了进度 [{title}]**\\n       *{description}*"
       challenge: ":partying_face: **{display_name} 完成了挑战 [{title}]**\\n       *{description}*"
       goal: ":partying_face: **{display_name} 达成了目标 [{title}]**\\n       *{description}*"
+    change_game_mode: ":arrows_counterclockwise: **{display_name} 切换游戏模式为 {mode}**"
   source:
     me: ":eyes: **{display_name} {message}**"
 

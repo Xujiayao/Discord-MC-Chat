@@ -35,6 +35,7 @@ public class MinecraftEventPacket extends Packet {
 		PLAYER_COMMAND,
 		PLAYER_DIE,
 		PLAYER_ADVANCEMENT,
+		PLAYER_CHANGE_GAME_MODE,
 
 		// Source events
 		SOURCE_SAY,

@@ -106,6 +106,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 								DiscordManager.clientBroadcast(clientName, "player.die", "player.die", p.placeholders);
 						case PLAYER_ADVANCEMENT ->
 								DiscordManager.clientBroadcast(clientName, "player.advancement", "player.advancement." + p.placeholders.get("type"), p.placeholders);
+						case PLAYER_CHANGE_GAME_MODE ->
+								DiscordManager.clientBroadcast(clientName, "player.change_game_mode", "player.change_game_mode", p.placeholders);
 						// TODO Unhandled events
 					}
 				}

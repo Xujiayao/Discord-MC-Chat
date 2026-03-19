@@ -69,6 +69,7 @@ broadcasts:
       command: "in-game-chat"
       die: "in-game-chat"
       advancement: "in-game-chat"
+      change_game_mode: "in-game-chat"
     source:
       say: "in-game-chat"
       tell_raw: "in-game-chat"
@@ -85,6 +86,7 @@ broadcasts:
       command: true
       die: true
       advancement: true
+      change_game_mode: true
     source:
       say: true
       tell_raw: true

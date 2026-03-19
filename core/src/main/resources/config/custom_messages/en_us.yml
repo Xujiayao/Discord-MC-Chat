@@ -118,6 +118,7 @@ minecraft_to_xxxxx:
       task: ":partying_face: **{display_name} has made the advancement [{title}]**\\n       *{description}*"
       challenge: ":partying_face: **{display_name} has completed the challenge [{title}]**\\n       *{description}*"
       goal: ":partying_face: **{display_name} has reached the goal [{title}]**\\n       *{description}*"
+    change_game_mode: ":arrows_counterclockwise: **{display_name} changed game mode to {mode}**"
   source:
     me: ":eyes: **{display_name} {message}**"
 

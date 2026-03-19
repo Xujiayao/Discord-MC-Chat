@@ -205,6 +205,15 @@ public class MinecraftEventHandler {
 			}
 		});
 
+		EventManager.register(MinecraftEvents.PlayerChangeGameMode.class, event -> {
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.serverPlayer().getName().getString(),
+					"display_name", event.serverPlayer().getDisplayName().getString(),
+					"mode", TranslationManager.get(event.gameType().getLongDisplayName())
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_CHANGE_GAME_MODE, placeholders));
+		});
+
 		EventManager.register(MinecraftEvents.CommandRegister.class, event -> {
 			// Register Minecraft /dmcc commands
 			MinecraftCommands.register(event.dispatcher());

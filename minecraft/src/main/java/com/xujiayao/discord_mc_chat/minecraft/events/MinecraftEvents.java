@@ -10,6 +10,7 @@ import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
+import net.minecraft.world.level.GameType;
 
 /**
  * A container for all Minecraft-related event classes.
@@ -90,6 +91,15 @@ public class MinecraftEvents {
 			String string,
 			ServerPlayer serverPlayer,
 			AdvancementProgress advancementProgress
+	) {
+	}
+
+	/**
+	 * Posted when a player changes game mode.
+	 */
+	public record PlayerChangeGameMode(
+			GameType gameType,
+			ServerPlayer serverPlayer
 	) {
 	}
 
