@@ -15,19 +15,6 @@ version: ${mod_version}
 # Only edit the items below if you know what you are doing!
 # ==================================================
 
-templates: # You can add your own templates here
-  - name: default
-    with_webhook:
-      standalone:
-        username: "[{server}] {display_name}"
-        content: "{message}"
-      single_server:
-        username: "{display_name}"
-        content: "{message}"
-    without_webhook:
-      standalone: "[{server}] <{display_name}> {message}"
-      single_server: "<{display_name}> {message}"
-
 common:
   chat:
     - text: "[{server}] "
@@ -123,16 +110,24 @@ minecraft_to_discord:
   player:
     join: ":wave: **{display_name} 加入了服务器**"
     quit: ":cry: **{display_name} 离开了服务器**"
-    chat: default
-    command: default
     die: ":skull: **{death_message}**"
     advancement:
       task: ":partying_face: **{display_name} 取得了进度 [{title}]**\\n       *{description}*"
       challenge: ":partying_face: **{display_name} 完成了挑战 [{title}]**\\n       *{description}*"
       goal: ":partying_face: **{display_name} 达成了目标 [{title}]**\\n       *{description}*"
   source:
-    say: default
-    tell_raw: default
+    me: ":eyes: **{display_name} {message}**"
+  message:
+    enabled_fake_user_style:
+      standalone:
+        username: "[{server}] {display_name}"
+        content: "{message}"
+      single_server:
+        username: "{display_name}"
+        content: "{message}"
+    disabled_fake_user_style:
+      standalone: "[{server}] <{display_name}> {message}"
+      single_server: "<{display_name}> {message}"
 
 activity:
   all_servers_offline: "Minecraft (服务器离线)"
