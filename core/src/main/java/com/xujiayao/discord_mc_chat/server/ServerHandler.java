@@ -327,6 +327,6 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 			return false;
 		}
 		String trimmed = commandInput.trim();
-		return trimmed.matches("^/?(?i)(msg|tell|w)\\s+@a\\s+.+$");
+		return trimmed.matches("(?i)^/?(?:msg|tell|w)\\s+@a\\s+.+$");
 	}
 }
