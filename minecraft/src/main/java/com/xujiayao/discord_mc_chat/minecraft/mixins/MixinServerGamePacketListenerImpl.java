@@ -23,7 +23,7 @@ public class MixinServerGamePacketListenerImpl {
 	@Shadow
 	public ServerPlayer player;
 
-	@Inject(method = "broadcastChatMessage", at = @At("HEAD"))
+	@Inject(method = "broadcastChatMessage", at = @At("HEAD"), cancellable = true)
 	private void broadcastChatMessage(PlayerChatMessage playerChatMessage, CallbackInfo ci) {
 		// PlayerChat Event
 		EventManager.post(new MinecraftEvents.PlayerChat(
@@ -35,7 +35,7 @@ public class MixinServerGamePacketListenerImpl {
 		}
 	}
 
-	@Inject(method = "performUnsignedChatCommand", at = @At("HEAD"))
+	@Inject(method = "performUnsignedChatCommand", at = @At("HEAD"), cancellable = true)
 	private void performUnsignedChatCommand(String string, CallbackInfo ci) {
 		// PlayerCommand Event
 		EventManager.post(new MinecraftEvents.PlayerCommand(
@@ -47,7 +47,7 @@ public class MixinServerGamePacketListenerImpl {
 		}
 	}
 
-	@Inject(method = "performSignedChatCommand", at = @At("HEAD"))
+	@Inject(method = "performSignedChatCommand", at = @At("HEAD"), cancellable = true)
 	private void performSignedChatCommand(ServerboundChatCommandSignedPacket serverboundChatCommandSignedPacket, LastSeenMessages lastSeenMessages, CallbackInfo ci) {
 		// PlayerCommand Event
 		EventManager.post(new MinecraftEvents.PlayerCommand(

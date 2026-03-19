@@ -728,23 +728,58 @@ public class DiscordManager {
 			return segments;
 		}
 
-		if (Boolean.TRUE.equals(ConfigManager.getBoolean("message_parsing.minecraft_to_xxxxx.mentions"))) {
+		boolean parseMentions = Boolean.TRUE.equals(ConfigManager.getBoolean("message_parsing.minecraft_to_xxxxx.mentions"));
+		boolean parseMarkdown = Boolean.TRUE.equals(ConfigManager.getBoolean("message_parsing.minecraft_to_xxxxx.markdown"));
+		if (parseMentions) {
 			Matcher matcher = TARGET_PATTERN.matcher(message);
 			int cursor = 0;
 			while (matcher.find()) {
 				if (matcher.start() > cursor) {
-					segments.add(new TextSegment(message.substring(cursor, matcher.start())));
+					appendPlainOrMarkdownSegments(segments, message.substring(cursor, matcher.start()), parseMarkdown);
 				}
 				segments.add(new TextSegment("[@" + matcher.group(1) + "]", false, "yellow"));
 				cursor = matcher.end();
 			}
 			if (cursor < message.length()) {
-				segments.add(new TextSegment(message.substring(cursor)));
+				appendPlainOrMarkdownSegments(segments, message.substring(cursor), parseMarkdown);
 			}
 		} else {
-			segments.add(new TextSegment(message));
+			appendPlainOrMarkdownSegments(segments, message, parseMarkdown);
 		}
 		return segments;
+	}
+
+	private static void appendPlainOrMarkdownSegments(List<TextSegment> segments, String input, boolean parseMarkdown) {
+		if (input == null || input.isEmpty()) {
+			return;
+		}
+		if (!parseMarkdown) {
+			segments.add(new TextSegment(input));
+			return;
+		}
+
+		int cursor = 0;
+		while (cursor < input.length()) {
+			int start = input.indexOf("**", cursor);
+			if (start < 0) {
+				segments.add(new TextSegment(input.substring(cursor)));
+				return;
+			}
+			int end = input.indexOf("**", start + 2);
+			if (end < 0) {
+				segments.add(new TextSegment(input.substring(cursor)));
+				return;
+			}
+
+			if (start > cursor) {
+				segments.add(new TextSegment(input.substring(cursor, start)));
+			}
+			String boldText = input.substring(start + 2, end);
+			TextSegment boldSegment = new TextSegment(boldText);
+			boldSegment.bold = true;
+			segments.add(boldSegment);
+			cursor = end + 2;
+		}
 	}
 
 	/**

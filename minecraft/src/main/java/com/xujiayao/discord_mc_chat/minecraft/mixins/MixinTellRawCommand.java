@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(TellRawCommand.class)
 public class MixinTellRawCommand {
 
-	@Inject(method = "lambda$register$0", at = @At("HEAD"))
+	@Inject(method = "lambda$register$0", at = @At("HEAD"), cancellable = true)
 	private static void lambda$register$0(CommandContext<CommandSourceStack> commandContext, CallbackInfoReturnable<Integer> cir) {
 		// SourceTellRaw Event
 		EventManager.post(new MinecraftEvents.SourceTellRaw(

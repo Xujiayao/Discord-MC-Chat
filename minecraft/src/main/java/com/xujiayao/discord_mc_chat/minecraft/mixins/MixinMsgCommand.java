@@ -21,7 +21,7 @@ import java.util.Collection;
 @Mixin(MsgCommand.class)
 public class MixinMsgCommand {
 
-	@Inject(method = "lambda$register$0", at = @At("HEAD"))
+	@Inject(method = "lambda$register$0", at = @At("HEAD"), cancellable = true)
 	private static void lambda$register$0(CommandContext<CommandSourceStack> commandContext, Collection<ServerPlayer> collection, PlayerChatMessage playerChatMessage, CallbackInfo ci) {
 		// SourceMsg Event
 		EventManager.post(new MinecraftEvents.SourceMsg(
