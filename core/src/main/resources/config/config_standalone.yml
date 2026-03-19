@@ -109,12 +109,14 @@ message_parsing:
     ansi_code_blocks: true
     polls: true
   minecraft_to_xxxxx: # both minecraft_to_discord and between_minecraft_servers
-    markdown: true
-    unicode_emojis: true
-    custom_emojis: true
-    mentions: true
-    hyperlinks: true
-    timestamps: true
+    overwrite_minecraft_source_messages: false
+    parsings:
+      markdown: true
+      unicode_emojis: true
+      custom_emojis: true
+      mentions: true
+      hyperlinks: true
+      timestamps: true
 
 # 命令过滤设置
 excluded_commands:
