@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.minecraft.mixins;
 
 import com.xujiayao.discord_mc_chat.minecraft.events.MinecraftEvents;
+import com.xujiayao.discord_mc_chat.minecraft.events.MinecraftEventHandler;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import net.minecraft.network.chat.LastSeenMessages;
 import net.minecraft.network.chat.PlayerChatMessage;
@@ -22,13 +23,16 @@ public class MixinServerGamePacketListenerImpl {
 	@Shadow
 	public ServerPlayer player;
 
-	@Inject(method = "broadcastChatMessage", at = @At("HEAD"))
+	@Inject(method = "broadcastChatMessage", at = @At("HEAD"), cancellable = true)
 	private void broadcastChatMessage(PlayerChatMessage playerChatMessage, CallbackInfo ci) {
 		// PlayerChat Event
 		EventManager.post(new MinecraftEvents.PlayerChat(
 				playerChatMessage,
 				player
 		));
+		if (MinecraftEventHandler.shouldCancelVanillaChatRendering()) {
+			ci.cancel();
+		}
 	}
 
 	@Inject(method = "performUnsignedChatCommand", at = @At("HEAD"))

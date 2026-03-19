@@ -26,10 +26,16 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import net.fellbaum.jemoji.EmojiManager;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,6 +44,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
@@ -528,28 +535,47 @@ public class DiscordManager {
 				messageNode = messageNode.path(part);
 			}
 
-			if (!isTemplate) {
-				String message = messageNode.asText();
-
+			String message;
+			if (isTemplate) {
+				message = buildTemplateMessage(clientName, messageNode, placeholders);
+			} else {
+				message = messageNode.asText();
 				for (Map.Entry<String, String> entry : placeholders.entrySet()) {
-					message = message.replace("{" + entry.getKey() + "}", entry.getValue());
+					String value = entry.getValue() == null ? "" : entry.getValue();
+					message = message.replace("{" + entry.getKey() + "}", value);
 				}
+			}
 
+			if ("standalone".equals(ModeManager.getMode()) && isTemplate) {
+				String username = messageNode.path("enabled_fake_user_style").path("standalone").path("username").asText("[{server}] {display_name}");
+				String content = messageNode.path("enabled_fake_user_style").path("standalone").path("content").asText("{message}");
+				username = replaceTemplatePlaceholders(username, placeholders, clientName);
+				content = replaceTemplatePlaceholders(content, placeholders, clientName);
+				String avatarUrl = getMinecraftPlayerAvatarUrl(placeholders);
+
+				if (ConfigManager.getBoolean("discord.webhook.players.enable_fake_user_style")) {
+					sendWebhookMessage(channel, username, avatarUrl, content);
+				} else {
+					String disabled = messageNode.path("disabled_fake_user_style").path("standalone").asText("[{server}] <{display_name}> {message}");
+					disabled = replaceTemplatePlaceholders(disabled, placeholders, clientName);
+					sendWebhookMessage(channel, clientName, getClientAvatarUrl(clientName), disabled);
+				}
+			} else {
 				if ("standalone".equals(ModeManager.getMode())) {
 					String avatarUrl = getClientAvatarUrl(clientName);
 					sendWebhookMessage(channel, clientName, avatarUrl, message);
-
-					for (String line : message.split("\n")) {
-						// Escape underscores in :emoji: to prevent being treated as Markdown formatting
-						line = Pattern.compile("(:[^:]+:)").matcher(line)
-								.replaceAll(m -> m.group().replace("_", "\\\\_"));
-						line = MarkdownSanitizer.sanitize(line).replace("\\_", "_");
-
-						LOGGER.info(StringUtils.format("[{}] {}"), clientName, line);
-					}
 				} else {
 					sendBotMessage(channelIdentifier, message);
 				}
+			}
+
+			for (String line : message.split("\n")) {
+				// Escape underscores in :emoji: to prevent being treated as Markdown formatting
+				line = Pattern.compile("(:[^:]+:)").matcher(line)
+						.replaceAll(m -> m.group().replace("_", "\\\\_"));
+				line = MarkdownSanitizer.sanitize(line).replace("\\_", "_");
+
+				LOGGER.info(StringUtils.format("[{}] {}"), clientName, line);
 			}
 		} catch (InsufficientPermissionException e) {
 			String reason = I18nManager.getDmccTranslation("discord.manager.insufficient_permission", channel.getName(), e.getPermission().getName());
@@ -558,6 +584,171 @@ public class DiscordManager {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
 		}
 	}
+
+	private static String buildTemplateMessage(String clientName, JsonNode messageNode, Map<String, String> placeholders) {
+		String mode = ModeManager.getMode();
+		boolean fakeUserStyle = ConfigManager.getBoolean("discord.webhook.players.enable_fake_user_style");
+		String template;
+
+		if (fakeUserStyle) {
+			template = messageNode.path("enabled_fake_user_style").path(mode).path("content").asText("{message}");
+		} else {
+			template = messageNode.path("disabled_fake_user_style").path(mode).asText("<{display_name}> {message}");
+		}
+
+		String parsedMessage = parseMinecraftMessageForDiscord(
+				placeholders.getOrDefault("message", placeholders.getOrDefault("raw_command", ""))
+		);
+
+		String result = template
+				.replace("{server}", clientName)
+				.replace("{message}", parsedMessage);
+		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+			String value = entry.getValue() == null ? "" : entry.getValue();
+			result = result.replace("{" + entry.getKey() + "}", value);
+		}
+		return result;
+	}
+
+	private static String replaceTemplatePlaceholders(String template, Map<String, String> placeholders, String clientName) {
+		String output = template.replace("{server}", clientName);
+		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+			String value = entry.getValue() == null ? "" : entry.getValue();
+			output = output.replace("{" + entry.getKey() + "}", value);
+		}
+		String parsedMessage = parseMinecraftMessageForDiscord(placeholders.getOrDefault("message", placeholders.getOrDefault("raw_command", "")));
+		return output.replace("{message}", parsedMessage);
+	}
+
+	private static String getMinecraftPlayerAvatarUrl(Map<String, String> placeholders) {
+		if (!ConfigManager.getBoolean("account_linking.discord_user_avatar_for_webhooks")) {
+			String avatarTemplate = ConfigManager.getString("discord.webhook.players.avatar_url", "https://mc-heads.net/avatar/{player_name}.png");
+			String playerName = placeholders.getOrDefault("user_name", placeholders.getOrDefault("display_name", "Steve"));
+			return avatarTemplate.replace("{player_name}", playerName);
+		}
+
+		String playerUuid = placeholders.get("player_uuid");
+		if (playerUuid != null) {
+			String discordId = com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager.getDiscordIdByMinecraftUuid(playerUuid);
+			if (discordId != null) {
+				var user = retrieveUser(discordId);
+				if (user != null) {
+					return user.getEffectiveAvatarUrl();
+				}
+			}
+		}
+
+		String avatarTemplate = ConfigManager.getString("discord.webhook.players.avatar_url", "https://mc-heads.net/avatar/{player_name}.png");
+		String playerName = placeholders.getOrDefault("user_name", placeholders.getOrDefault("display_name", "Steve"));
+		return avatarTemplate.replace("{player_name}", playerName);
+	}
+
+	private static String parseMinecraftMessageForDiscord(String rawMessage) {
+		String message = rawMessage == null ? "" : rawMessage;
+		String parsingBase = "single_server".equals(ModeManager.getMode())
+				? "message_parsing.minecraft_to_discord"
+				: "message_parsing.minecraft_to_xxxxx";
+
+		if (ConfigManager.getBoolean(parsingBase + ".timestamps")) {
+			message = parseTimestampsForDiscord(message);
+		}
+		if (ConfigManager.getBoolean(parsingBase + ".mentions")) {
+			message = USER_MENTION_PATTERN.matcher(message).replaceAll("[@$1]");
+		}
+		if (ConfigManager.getBoolean(parsingBase + ".hyperlinks")) {
+			message = BARE_URL_PATTERN.matcher(message).replaceAll("[$1]($1)");
+		}
+		if (ConfigManager.getBoolean(parsingBase + ".custom_emojis")) {
+			message = CUSTOM_EMOJI_PATTERN.matcher(message).replaceAll("$0");
+		}
+		if (ConfigManager.getBoolean(parsingBase + ".unicode_emojis")) {
+			message = EmojiManager.replaceAllEmojis(message, emoji -> emoji.getDiscordAliases().isEmpty() ? emoji.getEmoji() : emoji.getDiscordAliases().getFirst());
+		}
+		if (!ConfigManager.getBoolean(parsingBase + ".markdown")) {
+			message = message.replace("*", "\\*").replace("_", "\\_").replace("~", "\\~").replace("`", "\\`");
+		}
+		return message;
+	}
+
+	private static String parseTimestampsForDiscord(String message) {
+		Matcher matcher = DISCORD_TIMESTAMP_PATTERN.matcher(message);
+		StringBuffer sb = new StringBuffer();
+		while (matcher.find()) {
+			String replacement = matcher.group();
+			try {
+				long epoch = Long.parseLong(matcher.group(1));
+				replacement = "[" + formatDiscordTimestamp(epoch, matcher.group(2)) + "]";
+			} catch (Exception ignored) {
+			}
+			matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+		}
+		matcher.appendTail(sb);
+		return sb.toString();
+	}
+
+	private static String formatDiscordTimestamp(long epoch, String style) {
+		Instant instant = Instant.ofEpochSecond(epoch);
+		Locale locale = toLocale(I18nManager.getLanguage());
+		ZoneId zone = ZoneId.systemDefault();
+		String timestampStyle = style == null ? "f" : style;
+		return switch (timestampStyle) {
+			case "t" -> DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale).format(instant.atZone(zone));
+			case "T" -> DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM).withLocale(locale).format(instant.atZone(zone));
+			case "d" -> DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(locale).format(instant.atZone(zone));
+			case "D" -> DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale).format(instant.atZone(zone));
+			case "F" -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL, FormatStyle.SHORT).withLocale(locale).format(instant.atZone(zone));
+			case "R" -> formatRelative(Instant.now().getEpochSecond() - epoch);
+			case "s", "S" -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.SHORT).withLocale(locale).format(instant.atZone(zone));
+			default -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG, FormatStyle.SHORT).withLocale(locale).format(instant.atZone(zone));
+		};
+	}
+
+	private static String formatRelative(long diffSeconds) {
+		boolean past = diffSeconds >= 0;
+		long abs = Math.abs(diffSeconds);
+		String unitKey;
+		long value;
+		if (abs < 60) {
+			value = abs;
+			unitKey = "second";
+		} else if (abs < 3600) {
+			value = abs / 60;
+			unitKey = "minute";
+		} else if (abs < 86400) {
+			value = abs / 3600;
+			unitKey = "hour";
+		} else if (abs < 2592000) {
+			value = abs / 86400;
+			unitKey = "day";
+		} else if (abs < 31536000) {
+			value = abs / 2592000;
+			unitKey = "month";
+		} else {
+			value = abs / 31536000;
+			unitKey = "year";
+		}
+
+		String unit = I18nManager.getDmccTranslation(
+				"discord.message_parser.relative.units." + unitKey + "." + (value == 1 ? "one" : "other")
+		);
+		return past
+				? I18nManager.getDmccTranslation("discord.message_parser.relative.past", value, unit)
+				: I18nManager.getDmccTranslation("discord.message_parser.relative.future", value, unit);
+	}
+
+	private static Locale toLocale(String languageCode) {
+		if (languageCode == null || languageCode.isBlank()) {
+			return Locale.ENGLISH;
+		}
+		String tag = languageCode.replace('_', '-');
+		Locale locale = Locale.forLanguageTag(tag);
+		return locale.getLanguage().isBlank() ? Locale.ENGLISH : locale;
+	}
+
+	private static final Pattern USER_MENTION_PATTERN = Pattern.compile("(?<!\\w)@([A-Za-z0-9_]{3,16})");
+	private static final Pattern BARE_URL_PATTERN = Pattern.compile("(https?://[^\\s*|~`<>)\\]]+)");
+	private static final Pattern CUSTOM_EMOJI_PATTERN = Pattern.compile("(?<![A-Za-z0-9_]):[A-Za-z0-9_+\\-]+:(?![A-Za-z0-9_])");
+	private static final Pattern DISCORD_TIMESTAMP_PATTERN = Pattern.compile("<t:(\\d+)(?::([tTdDfFRsS]))?>");
 
 	/**
 	 * Retrieves a TextChannel by its ID or name.

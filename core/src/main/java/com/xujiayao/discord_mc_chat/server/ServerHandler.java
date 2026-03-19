@@ -20,11 +20,14 @@ import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkRequestPac
 import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkRequestPacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.DiscordEventPacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftEventPacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.TextSegment;
 import com.xujiayao.discord_mc_chat.network.packets.misc.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPingPacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPongPacket;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
+import com.xujiayao.discord_mc_chat.server.minecraft.MinecraftMessageParser;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.server.linking.OpSyncManager;
 import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
@@ -36,6 +39,13 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
@@ -86,27 +96,71 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 						// Server events
 						case SERVER_STARTED -> {
 							DiscordManager.clientBroadcast(clientName, "server.started", "server.start", false, p.placeholders);
+							broadcastToMinecraftClients(clientName, "server.started", p.placeholders);
 
 							// After a Minecraft server starts, perform OP level sync if enabled
 							OpSyncManager.syncAll();
 							DiscordManager.updateBotPresence();
 						}
-						case SERVER_STOPPING ->
-								DiscordManager.clientBroadcast(clientName, "server.stopped", "server.stop", false, p.placeholders);
+						case SERVER_STOPPING -> {
+							DiscordManager.clientBroadcast(clientName, "server.stopped", "server.stop", false, p.placeholders);
+							broadcastToMinecraftClients(clientName, "server.stopped", p.placeholders);
+						}
 						// Player events
 						case PLAYER_JOIN -> {
 							DiscordManager.clientBroadcast(clientName, "player.join", "player.join", false, p.placeholders);
+							broadcastToMinecraftClients(clientName, "player.join", p.placeholders);
 							DiscordManager.updateBotPresence();
 						}
 						case PLAYER_QUIT -> {
 							DiscordManager.clientBroadcast(clientName, "player.quit", "player.quit", false, p.placeholders);
+							broadcastToMinecraftClients(clientName, "player.quit", p.placeholders);
 							DiscordManager.updateBotPresence();
 						}
-						case PLAYER_DIE ->
-								DiscordManager.clientBroadcast(clientName, "player.die", "player.die", false, p.placeholders);
-						case PLAYER_ADVANCEMENT ->
-								DiscordManager.clientBroadcast(clientName, "player.advancement", "player.advancement." + p.placeholders.get("type"), false, p.placeholders);
-						// TODO Unhandled events
+						case PLAYER_CHAT -> {
+							DiscordManager.clientBroadcast(clientName, "player.chat", "message", true, p.placeholders);
+							broadcastToMinecraftClients(clientName, "player.chat", p.placeholders);
+						}
+						case PLAYER_COMMAND -> {
+							if (isExcludedCommand(p.placeholders.get("command"))) {
+								return;
+							}
+							DiscordManager.clientBroadcast(clientName, "player.command", "message", true, p.placeholders);
+							broadcastToMinecraftClients(clientName, "player.command", p.placeholders);
+						}
+						case PLAYER_DIE -> {
+							DiscordManager.clientBroadcast(clientName, "player.die", "player.die", false, p.placeholders);
+							broadcastToMinecraftClients(clientName, "player.die", p.placeholders);
+						}
+						case PLAYER_ADVANCEMENT -> {
+							DiscordManager.clientBroadcast(clientName, "player.advancement", "player.advancement." + p.placeholders.get("type"), false, p.placeholders);
+							broadcastToMinecraftClients(clientName, "player.advancement", p.placeholders);
+						}
+						// Source events
+						case SOURCE_SAY -> {
+							DiscordManager.clientBroadcast(clientName, "source.say", "message", true, p.placeholders);
+							broadcastToMinecraftClients(clientName, "source.say", p.placeholders);
+						}
+						case SOURCE_TELL_RAW -> {
+							String rawCommand = p.placeholders.getOrDefault("raw_command", "");
+							if (!isStrictTellrawAtAll(rawCommand)) {
+								return;
+							}
+							DiscordManager.clientBroadcast(clientName, "source.tell_raw", "message", true, p.placeholders);
+							broadcastToMinecraftClients(clientName, "source.tell_raw", p.placeholders);
+						}
+						case SOURCE_MSG -> {
+							String rawCommand = p.placeholders.getOrDefault("raw_command", "");
+							if (isExcludedCommand(rawCommand)) {
+								return;
+							}
+							DiscordManager.clientBroadcast(clientName, "source.msg", "message", true, p.placeholders);
+							broadcastToMinecraftClients(clientName, "source.msg", p.placeholders);
+						}
+						case SOURCE_ME -> {
+							DiscordManager.clientBroadcast(clientName, "source.me", "source.me", false, p.placeholders);
+							broadcastToMinecraftClients(clientName, "source.me", p.placeholders);
+						}
 					}
 				}
 				case InfoResponsePacket p -> NetworkManager.cacheInfoResponse(clientName, p);
@@ -271,5 +325,138 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	private String getMinecraftVersion(String serverName) {
 		JsonNode config = findServerConfig(serverName);
 		return config != null ? config.path("minecraft_version").asText() : "";
+	}
+
+	/**
+	 * Routes Minecraft-origin events to all online DMCC clients for cross-server broadcast.
+	 * The source client will also receive the parsed message so sender sees the final format.
+	 *
+	 * @param sourceClientName Source DMCC client.
+	 * @param eventPath        Event path under broadcasts.between_minecraft_servers.
+	 * @param placeholders     Event placeholders.
+	 */
+	private void broadcastToMinecraftClients(String sourceClientName, String eventPath, Map<String, String> placeholders) {
+		if (!Boolean.TRUE.equals(ConfigManager.getBoolean("broadcasts.between_minecraft_servers." + eventPath))) {
+			return;
+		}
+
+		String serverColor = getClientColor(sourceClientName);
+		DiscordEventPacket packet;
+
+		if (isMessageEvent(eventPath)) {
+			String displayName = placeholders.getOrDefault("display_name", placeholders.getOrDefault("source_name", "Unknown"));
+			String message = buildMessageBodyForMinecraftEvent(eventPath, placeholders);
+			String playerUuid = placeholders.getOrDefault("player_uuid", "");
+			String roleColor = MinecraftMessageParser.resolveSenderRoleColor(playerUuid);
+			List<TextSegment> segments = MinecraftMessageParser.buildCommonMessageSegments(sourceClientName, serverColor, displayName, roleColor, message);
+			packet = new DiscordEventPacket(DiscordEventPacket.EventType.CHAT, segments);
+		} else {
+			String line = buildOthersPlainMessage(sourceClientName, eventPath, placeholders);
+			List<TextSegment> segments = MinecraftMessageParser.buildCommonOthersSegments(sourceClientName, serverColor, line);
+			packet = new DiscordEventPacket(DiscordEventPacket.EventType.COMMAND, segments);
+		}
+
+		NetworkManager.broadcastToClients(packet);
+	}
+
+	private boolean isMessageEvent(String eventPath) {
+		return "player.chat".equals(eventPath)
+				|| "player.command".equals(eventPath)
+				|| "source.say".equals(eventPath)
+				|| "source.tell_raw".equals(eventPath)
+				|| "source.msg".equals(eventPath)
+				|| "source.me".equals(eventPath);
+	}
+
+	private String buildOthersPlainMessage(String clientName, String eventPath, Map<String, String> placeholders) {
+		String path = switch (eventPath) {
+			case "server.started" -> "minecraft_to_discord.server.start";
+			case "server.stopped" -> "minecraft_to_discord.server.stop";
+			case "player.join" -> "minecraft_to_discord.player.join";
+			case "player.quit" -> "minecraft_to_discord.player.quit";
+			case "player.die" -> "minecraft_to_discord.player.die";
+			case "player.advancement" -> "minecraft_to_discord.player.advancement." + placeholders.getOrDefault("type", "task");
+			case "source.me" -> "minecraft_to_discord.source.me";
+			default -> "";
+		};
+		if (path.isBlank()) {
+			return "";
+		}
+
+		JsonNode node = I18nManager.getCustomMessages();
+		for (String part : path.split("\\.")) {
+			node = node.path(part);
+		}
+		String message = node.asText();
+		message = message.replace("{server}", clientName)
+				.replace("{server_color}", getClientColor(clientName));
+		for (var entry : placeholders.entrySet()) {
+			String value = entry.getValue() == null ? "" : entry.getValue();
+			message = message.replace("{" + entry.getKey() + "}", value);
+		}
+		return sanitizeDiscordMarkdown(message);
+	}
+
+	private String sanitizeDiscordMarkdown(String message) {
+		if (message == null) {
+			return "";
+		}
+		return message.replaceAll(":[^:]+:", "")
+				.replace("**", "")
+				.replace("*", "")
+				.replace("__", "")
+				.replace("~~", "");
+	}
+
+	private boolean isExcludedCommand(String rawCommand) {
+		if (rawCommand == null || rawCommand.isBlank()) {
+			return false;
+		}
+		JsonNode excludedCommands = ConfigManager.getConfigNode("excluded_commands");
+		if (!excludedCommands.isArray()) {
+			return false;
+		}
+		String normalized = rawCommand.trim();
+		for (JsonNode node : excludedCommands) {
+			String regex = node.asText("");
+			if (regex.isBlank()) {
+				continue;
+			}
+			if (Pattern.compile(regex, Pattern.CASE_INSENSITIVE).matcher(normalized).matches()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isStrictTellrawAtAll(String rawCommand) {
+		if (rawCommand == null || rawCommand.isBlank()) {
+			return false;
+		}
+		String command = rawCommand.trim().toLowerCase(Locale.ROOT);
+		Matcher matcher = Pattern.compile("^/?tellraw\\s+([^\\s]+)\\s+.+$", Pattern.CASE_INSENSITIVE).matcher(command);
+		if (!matcher.matches()) {
+			return false;
+		}
+		return "@a".equals(matcher.group(1));
+	}
+
+	private String getClientColor(String serverName) {
+		JsonNode config = findServerConfig(serverName);
+		if (config == null) {
+			return "yellow";
+		}
+		String color = config.path("color").asText("");
+		return color == null || color.isBlank() ? "yellow" : color;
+	}
+
+	private String buildMessageBodyForMinecraftEvent(String eventPath, Map<String, String> placeholders) {
+		if ("player.command".equals(eventPath)) {
+			return placeholders.getOrDefault("command", placeholders.getOrDefault("message", ""));
+		}
+		if ("source.tell_raw".equals(eventPath)) {
+			return placeholders.getOrDefault("raw_command", "");
+		}
+		return placeholders.getOrDefault("message", placeholders.getOrDefault("raw_command", ""));
 	}
 }

@@ -155,6 +155,7 @@ account_linking:
     enable: true
     style: "title"  # action_bar, title, or chat
   discord_user_avatar_for_webhooks: false
+  use_linked_discord_role_color_for_minecraft_messages: true
 
 # DMCC 命令权限设置
 # 配置要求执行命令的最低 OP 等级。

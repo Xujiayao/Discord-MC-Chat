@@ -205,6 +205,75 @@ public class MinecraftEventHandler {
 			}
 		});
 
+		EventManager.register(MinecraftEvents.PlayerChat.class, event -> {
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.serverPlayer().getName().getString(),
+					"display_name", event.serverPlayer().getDisplayName().getString(),
+					"message", event.playerChatMessage().signedContent(),
+					"player_uuid", event.serverPlayer().getStringUUID()
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_CHAT, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.PlayerCommand.class, event -> {
+			String command = "/" + event.command();
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.serverPlayer().getName().getString(),
+					"display_name", event.serverPlayer().getDisplayName().getString(),
+					"command", command,
+					"message", command,
+					"player_uuid", event.serverPlayer().getStringUUID()
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_COMMAND, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceSay.class, event -> {
+			String sourcePlayerUuid = getSourcePlayerUuid(event.commandContext().getSource());
+			Map<String, String> placeholders = Map.of(
+					"source_name", event.commandContext().getSource().getTextName(),
+					"display_name", event.commandContext().getSource().getDisplayName().getString(),
+					"message", event.playerChatMessage().signedContent(),
+					"raw_command", normalizeCommandInput(event.commandContext().getInput()),
+					"player_uuid", sourcePlayerUuid
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_SAY, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceTellRaw.class, event -> {
+			String sourcePlayerUuid = getSourcePlayerUuid(event.commandContext().getSource());
+			Map<String, String> placeholders = Map.of(
+					"source_name", event.commandContext().getSource().getTextName(),
+					"display_name", event.commandContext().getSource().getDisplayName().getString(),
+					"raw_command", normalizeCommandInput(event.commandContext().getInput()),
+					"player_uuid", sourcePlayerUuid
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_TELL_RAW, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceMsg.class, event -> {
+			String sourcePlayerUuid = getSourcePlayerUuid(event.commandContext().getSource());
+			Map<String, String> placeholders = Map.of(
+					"source_name", event.commandContext().getSource().getTextName(),
+					"display_name", event.commandContext().getSource().getDisplayName().getString(),
+					"message", event.playerChatMessage().signedContent(),
+					"raw_command", normalizeCommandInput(event.commandContext().getInput()),
+					"player_uuid", sourcePlayerUuid
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_MSG, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceMe.class, event -> {
+			String sourcePlayerUuid = getSourcePlayerUuid(event.commandContext().getSource());
+			Map<String, String> placeholders = Map.of(
+					"source_name", event.commandContext().getSource().getTextName(),
+					"display_name", event.commandContext().getSource().getDisplayName().getString(),
+					"message", event.playerChatMessage().signedContent(),
+					"raw_command", normalizeCommandInput(event.commandContext().getInput()),
+					"player_uuid", sourcePlayerUuid
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_ME, placeholders));
+		});
+
 		EventManager.register(MinecraftEvents.CommandRegister.class, event -> {
 			// Register Minecraft /dmcc commands
 			MinecraftCommands.register(event.dispatcher());
@@ -905,5 +974,48 @@ public class MinecraftEventHandler {
 		}
 
 		player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.MASTER, 1.0F, 2.0F);
+	}
+
+	/**
+	 * Checks whether DMCC should cancel vanilla Minecraft chat rendering.
+	 * <p>
+	 * Cancellation is only enabled when at least one minecraft_to_xxxxx parsing option is enabled.
+	 * When all options are disabled, DMCC keeps vanilla rendering intact for mod compatibility.
+	 *
+	 * @return true when vanilla rendering should be cancelled.
+	 */
+	public static boolean shouldCancelVanillaChatRendering() {
+		String basePath = "single_server".equals(ModeManager.getMode())
+				? "message_parsing.minecraft_to_discord"
+				: "message_parsing.minecraft_to_xxxxx";
+		return Boolean.TRUE.equals(ConfigManager.getBoolean(basePath + ".markdown"))
+				|| Boolean.TRUE.equals(ConfigManager.getBoolean(basePath + ".unicode_emojis"))
+				|| Boolean.TRUE.equals(ConfigManager.getBoolean(basePath + ".custom_emojis"))
+				|| Boolean.TRUE.equals(ConfigManager.getBoolean(basePath + ".mentions"))
+				|| Boolean.TRUE.equals(ConfigManager.getBoolean(basePath + ".hyperlinks"))
+				|| Boolean.TRUE.equals(ConfigManager.getBoolean(basePath + ".timestamps"));
+	}
+
+	/**
+	 * Normalizes command input to always include leading slash.
+	 *
+	 * @param input Raw command input.
+	 * @return Normalized command input with leading slash.
+	 */
+	private static String normalizeCommandInput(String input) {
+		if (input == null || input.isBlank()) {
+			return "/";
+		}
+		return input.startsWith("/") ? input : "/" + input;
+	}
+
+	private static String getSourcePlayerUuid(CommandSourceStack source) {
+		if (source == null || source.getEntity() == null) {
+			return "";
+		}
+		if (source.getEntity() instanceof ServerPlayer player) {
+			return player.getStringUUID();
+		}
+		return "";
 	}
 }
