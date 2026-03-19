@@ -23,6 +23,13 @@ public class StandaloneDMCC {
 	 * @param args Command line arguments
 	 */
 	public static void main(String[] args) {
+		for (String arg : args) {
+			if ("--disable-ascii".equalsIgnoreCase(arg)) {
+				LoggerImpl.setConsoleAnsiEnabled(false);
+				break;
+			}
+		}
+
 		// Register shutdown hook for standalone mode
 		Runtime.getRuntime().addShutdownHook(SHUTDOWN_THREAD);
 

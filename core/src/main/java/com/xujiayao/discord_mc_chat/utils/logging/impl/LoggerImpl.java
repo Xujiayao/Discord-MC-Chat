@@ -26,6 +26,7 @@ public class LoggerImpl implements Logger {
 
 	private static volatile PrintWriter fileWriter;
 	private static boolean fileWriterInitialized = false;
+	private static volatile boolean consoleAnsiEnabled = true;
 
 	private final String name;
 
@@ -100,6 +101,15 @@ public class LoggerImpl implements Logger {
 		}
 	}
 
+	/**
+	 * Enable or disable ANSI color output in standalone console logs.
+	 *
+	 * @param enabled true to enable ANSI color output, false to disable
+	 */
+	public static void setConsoleAnsiEnabled(boolean enabled) {
+		consoleAnsiEnabled = enabled;
+	}
+
 	@Override
 	public String getName() {
 		return name;
@@ -144,15 +154,21 @@ public class LoggerImpl implements Logger {
 				}
 			}
 
-			// 2. Log to Console (With ANSI Color Codes)
-			String color = switch (level) {
-				case "INFO" -> "\u001B[32m";
-				case "WARN" -> "\u001B[33m";
-				case "ERROR" -> "\u001B[31m";
-				default -> "\u001B[0m";
-			};
+			// 2. Log to Console (ANSI colors are optional)
+			String consoleLine;
+			if (consoleAnsiEnabled) {
+				String color = switch (level) {
+					case "INFO" -> "\u001B[32m";
+					case "WARN" -> "\u001B[33m";
+					case "ERROR" -> "\u001B[31m";
+					default -> "\u001B[0m";
+				};
+				consoleLine = StringUtils.format("[{}] [{}/{}{}\u001B[0m]: {}", time, thread, color, level, msg);
+			} else {
+				consoleLine = StringUtils.format("[{}] [{}/{}]: {}", time, thread, level, msg);
+			}
 
-			System.out.println(StringUtils.format("[{}] [{}/{}{}\u001B[0m]: {}", time, thread, color, level, msg));
+			System.out.println(consoleLine);
 
 			if (t != null) {
 				t.printStackTrace(System.out);
