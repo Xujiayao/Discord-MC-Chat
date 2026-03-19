@@ -75,6 +75,14 @@ message_parsing:
     ansi_code_blocks: true
     polls: true
   minecraft_to_discord:
+    custom_emojis: true
+    mentions: true
+    # 这里被注释的选项，是因为 Discord 本来就能够自动处理。后面会删除这四个注释的开关。
+    # markdown: true
+    # unicode_emojis: true
+    # hyperlinks: true
+    # timestamps: true
+  minecraft_to_minecraft:
     markdown: true
     unicode_emojis: true
     custom_emojis: true

@@ -15,7 +15,7 @@ version: ${mod_version}
 # Only edit the items below if you know what you are doing!
 # ==================================================
 
-xxxxx_to_minecraft: # for both discord_to_minecraft and between_minecraft_servers
+xxxxx_to_minecraft: # for both discord_to_minecraft and minecraft_to_minecraft
   user_message:
     - text: "[{server}] "
       bold: true
@@ -30,6 +30,19 @@ xxxxx_to_minecraft: # for both discord_to_minecraft and between_minecraft_server
     - text: "[{server}] "
       bold: true
       color: "{server_color}"
+    - text: "{message}"
+      bold: false
+      color: "gray"
+
+single_server_overwrite:
+  user_message:
+    - text: "<{effective_name}> "
+      bold: false
+      color: "{role_color}"
+    - text: "{message}"
+      bold: false
+      color: "gray"
+  system_message:
     - text: "{message}"
       bold: false
       color: "gray"
