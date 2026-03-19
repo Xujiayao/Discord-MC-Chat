@@ -506,10 +506,9 @@ public class DiscordManager {
 	 * @param clientName   The name of the DMCC client.
 	 * @param channelNode  The broadcast channel identifier.
 	 * @param lang         The language key for the message.
-	 * @param isTemplate   Whether the message is a template.
 	 * @param placeholders A map of placeholders to replace in the message.
 	 */
-	public static void clientBroadcast(String clientName, String channelNode, String lang, boolean isTemplate, Map<String, String> placeholders) {
+	public static void clientBroadcast(String clientName, String channelNode, String lang, Map<String, String> placeholders) {
 		String channelIdentifier = ConfigManager.getString("broadcasts.minecraft_to_discord." + channelNode);
 		if (channelIdentifier == null || channelIdentifier.isBlank()) {
 			// User chooses not to broadcast this event
@@ -528,28 +527,26 @@ public class DiscordManager {
 				messageNode = messageNode.path(part);
 			}
 
-			if (!isTemplate) {
-				String message = messageNode.asText();
+			String message = messageNode.asText();
 
-				for (Map.Entry<String, String> entry : placeholders.entrySet()) {
-					message = message.replace("{" + entry.getKey() + "}", entry.getValue());
+			for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+				message = message.replace("{" + entry.getKey() + "}", entry.getValue());
+			}
+
+			if ("standalone".equals(ModeManager.getMode())) {
+				String avatarUrl = getClientAvatarUrl(clientName);
+				sendWebhookMessage(channel, clientName, avatarUrl, message);
+
+				for (String line : message.split("\n")) {
+					// Escape underscores in :emoji: to prevent being treated as Markdown formatting
+					line = Pattern.compile("(:[^:]+:)").matcher(line)
+							.replaceAll(m -> m.group().replace("_", "\\\\_"));
+					line = MarkdownSanitizer.sanitize(line).replace("\\_", "_");
+
+					LOGGER.info(StringUtils.format("[{}] {}"), clientName, line);
 				}
-
-				if ("standalone".equals(ModeManager.getMode())) {
-					String avatarUrl = getClientAvatarUrl(clientName);
-					sendWebhookMessage(channel, clientName, avatarUrl, message);
-
-					for (String line : message.split("\n")) {
-						// Escape underscores in :emoji: to prevent being treated as Markdown formatting
-						line = Pattern.compile("(:[^:]+:)").matcher(line)
-								.replaceAll(m -> m.group().replace("_", "\\\\_"));
-						line = MarkdownSanitizer.sanitize(line).replace("\\_", "_");
-
-						LOGGER.info(StringUtils.format("[{}] {}"), clientName, line);
-					}
-				} else {
-					sendBotMessage(channelIdentifier, message);
-				}
+			} else {
+				sendBotMessage(channelIdentifier, message);
 			}
 		} catch (InsufficientPermissionException e) {
 			String reason = I18nManager.getDmccTranslation("discord.manager.insufficient_permission", channel.getName(), e.getPermission().getName());

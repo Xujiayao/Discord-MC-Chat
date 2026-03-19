@@ -15,8 +15,8 @@ version: ${mod_version}
 # Only edit the items below if you know what you are doing!
 # ==================================================
 
-common:
-  message:
+common: # for both discord_to_minecraft and between_minecraft_servers
+  user_message:
     - text: "[{server}] "
       bold: true
       color: "{server_color}"
@@ -26,7 +26,7 @@ common:
     - text: "{message}"
       bold: false
       color: "gray"
-  others:
+  system_message:
     - text: "[{server}] "
       bold: true
       color: "{server_color}"
@@ -106,7 +106,7 @@ discord_to_minecraft:
       bold: false
       color: "gray"
 
-minecraft_to_discord:
+minecraft_to_xxxxx:
   server:
     start: ":white_check_mark: **Server started!**"
     stop: ":octagonal_sign: **Server stopped!**"
@@ -120,7 +120,9 @@ minecraft_to_discord:
       goal: ":partying_face: **{display_name} has reached the goal [{title}]**\\n       *{description}*"
   source:
     me: ":eyes: **{display_name} {message}**"
-  message:
+
+minecraft_to_discord:
+  user_message:
     enabled_fake_user_style:
       standalone:
         username: "[{server}] {display_name}"

@@ -31,13 +31,15 @@ public class MinecraftEventPacket extends Packet {
 		// Player events
 		PLAYER_JOIN,
 		PLAYER_QUIT,
+		PLAYER_CHAT,
+		PLAYER_COMMAND,
 		PLAYER_DIE,
 		PLAYER_ADVANCEMENT,
 
 		// Source events
-		SOURCE_ME,
-
-		// Player & Source events
-		MESSAGE
+		SOURCE_SAY,
+		SOURCE_TELL_RAW,
+		SOURCE_MSG,
+		SOURCE_ME
 	}
 }

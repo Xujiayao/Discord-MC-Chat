@@ -85,27 +85,27 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 					switch (p.type) {
 						// Server events
 						case SERVER_STARTED -> {
-							DiscordManager.clientBroadcast(clientName, "server.started", "server.start", false, p.placeholders);
+							DiscordManager.clientBroadcast(clientName, "server.started", "server.start", p.placeholders);
 
 							// After a Minecraft server starts, perform OP level sync if enabled
 							OpSyncManager.syncAll();
 							DiscordManager.updateBotPresence();
 						}
 						case SERVER_STOPPING ->
-								DiscordManager.clientBroadcast(clientName, "server.stopped", "server.stop", false, p.placeholders);
+								DiscordManager.clientBroadcast(clientName, "server.stopped", "server.stop", p.placeholders);
 						// Player events
 						case PLAYER_JOIN -> {
-							DiscordManager.clientBroadcast(clientName, "player.join", "player.join", false, p.placeholders);
+							DiscordManager.clientBroadcast(clientName, "player.join", "player.join", p.placeholders);
 							DiscordManager.updateBotPresence();
 						}
 						case PLAYER_QUIT -> {
-							DiscordManager.clientBroadcast(clientName, "player.quit", "player.quit", false, p.placeholders);
+							DiscordManager.clientBroadcast(clientName, "player.quit", "player.quit", p.placeholders);
 							DiscordManager.updateBotPresence();
 						}
 						case PLAYER_DIE ->
-								DiscordManager.clientBroadcast(clientName, "player.die", "player.die", false, p.placeholders);
+								DiscordManager.clientBroadcast(clientName, "player.die", "player.die", p.placeholders);
 						case PLAYER_ADVANCEMENT ->
-								DiscordManager.clientBroadcast(clientName, "player.advancement", "player.advancement." + p.placeholders.get("type"), false, p.placeholders);
+								DiscordManager.clientBroadcast(clientName, "player.advancement", "player.advancement." + p.placeholders.get("type"), p.placeholders);
 						// TODO Unhandled events
 					}
 				}

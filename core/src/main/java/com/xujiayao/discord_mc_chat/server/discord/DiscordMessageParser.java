@@ -128,8 +128,8 @@ public class DiscordMessageParser {
 		String truncatedRaw = truncateMainRaw(raw);
 		boolean isMultiLine = truncatedRaw.contains("\n");
 
-		// Build segments from common.chat template
-		JsonNode chatNode = I18nManager.getCustomMessages().path("common").path("message");
+		// Build segments from common.user_message template
+		JsonNode chatNode = I18nManager.getCustomMessages().path("common").path("user_message");
 		if (chatNode.isArray()) {
 			for (JsonNode segNode : chatNode) {
 				String text = segNode.path("text").asText("");
