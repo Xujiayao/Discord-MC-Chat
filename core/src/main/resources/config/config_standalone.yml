@@ -100,12 +100,15 @@ message_parsing:
 
 # 命令过滤设置
 excluded_commands:
+  # Can specify targets, only exclude private messages while allowing @a broadcasts
   - "/msg (?!@a)(.*)"
   - "/tell (?!@a)(.*)"
   - "/w (?!@a)(.*)"
   - "/tellraw (?!@a)(.*)"
+  # Team messages
   - "/teammsg (.*)"
   - "/tm (.*)"
+  # Authentication related commands
   - "/login (.*)"
   - "/l (.*)"
   - "/register (.*)"

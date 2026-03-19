@@ -258,9 +258,17 @@ public class MinecraftEventHandler {
 						// For commands that execute asynchronously or produce output after a delay
 						// (e.g. due to network calls, database access, or scheduled tasks)
 						CompletableFuture.runAsync(() -> {
-							// Wait for up to 5 seconds for command output to be produced, checking every 100ms
+							// Wait for up to 5 seconds for command output to be produced, checking every 100ms,
+							// and wait an extra 100ms after the first non-empty response.
 							for (int i = 0; i < 50; i++) {
 								if (!rconConsoleSource.getCommandResponse().isEmpty()) {
+									// Extra 100ms wait to allow for any additional output to be produced
+									try {
+										Thread.sleep(100);
+									} catch (InterruptedException ie) {
+										Thread.currentThread().interrupt();
+										break;
+									}
 									break;
 								}
 								try {
