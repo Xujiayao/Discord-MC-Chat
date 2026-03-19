@@ -37,6 +37,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 
+import java.util.Map;
+
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
 /**
@@ -108,7 +110,32 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 								DiscordManager.clientBroadcast(clientName, "player.advancement", "player.advancement." + p.placeholders.get("type"), p.placeholders);
 						case PLAYER_CHANGE_GAME_MODE ->
 								DiscordManager.clientBroadcast(clientName, "player.change_game_mode", "player.change_game_mode", p.placeholders);
-						// TODO Unhandled events
+						case PLAYER_CHAT -> {
+							DiscordManager.clientBroadcastUserMessage(clientName, "player.chat", p.placeholders);
+							broadcastToMinecraftServers(clientName, "player.chat", "user_message", p.placeholders, true);
+						}
+						case PLAYER_COMMAND -> {
+							DiscordManager.clientBroadcastUserMessage(clientName, "player.command", p.placeholders);
+							broadcastToMinecraftServers(clientName, "player.command", "user_message", p.placeholders, false);
+						}
+						case SOURCE_SAY -> {
+							DiscordManager.clientBroadcastUserMessage(clientName, "source.say", p.placeholders);
+							broadcastToMinecraftServers(clientName, "source.say", "user_message", p.placeholders, true);
+						}
+						case SOURCE_MSG -> {
+							if (isSourceMsgBroadcastToAll(p.placeholders.get("command_input"))) {
+								DiscordManager.clientBroadcastUserMessage(clientName, "source.msg", p.placeholders);
+								broadcastToMinecraftServers(clientName, "source.msg", "user_message", p.placeholders, true);
+							}
+						}
+						case SOURCE_TELL_RAW -> {
+							DiscordManager.clientBroadcastUserMessage(clientName, "source.tell_raw", p.placeholders);
+							broadcastToMinecraftServers(clientName, "source.tell_raw", "user_message", p.placeholders, true);
+						}
+						case SOURCE_ME -> {
+							DiscordManager.clientBroadcast(clientName, "source.me", "source.me", p.placeholders);
+							broadcastToMinecraftServers(clientName, "source.me", "system_message", p.placeholders, true);
+						}
 					}
 				}
 				case InfoResponsePacket p -> NetworkManager.cacheInfoResponse(clientName, p);
@@ -201,7 +228,10 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 						NetworkManager.addClientChannel(ctx.channel(), clientName);
 
 						LOGGER.info(I18nManager.getDmccTranslation("server.network.auth_success", clientName));
-						ctx.writeAndFlush(new LoginSuccessPacket(ConfigManager.getString("language")));
+						ctx.writeAndFlush(new LoginSuccessPacket(
+								ConfigManager.getString("language"),
+								Boolean.TRUE.equals(ConfigManager.getBoolean("broadcasts.between_minecraft_servers.echo_to_source_server"))
+						));
 
 						// After successful authentication, perform OP level sync if enabled
 						OpSyncManager.syncAll();
@@ -273,5 +303,30 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	private String getMinecraftVersion(String serverName) {
 		JsonNode config = findServerConfig(serverName);
 		return config != null ? config.path("minecraft_version").asText() : "";
+	}
+
+	private void broadcastToMinecraftServers(String clientName, String channelNode, String messageType, Map<String, String> placeholders, boolean parseMessage) {
+		if (!"standalone".equals(ModeManager.getMode())) {
+			return;
+		}
+		boolean includeSourceClient = Boolean.TRUE.equals(
+				ConfigManager.getBoolean("broadcasts.between_minecraft_servers.echo_to_source_server")
+		);
+		DiscordManager.clientBroadcastToMinecraftServers(
+				clientName,
+				channelNode,
+				messageType,
+				placeholders,
+				parseMessage,
+				includeSourceClient
+		);
+	}
+
+	private boolean isSourceMsgBroadcastToAll(String commandInput) {
+		if (commandInput == null) {
+			return false;
+		}
+		String trimmed = commandInput.trim();
+		return trimmed.matches("^/?(?i)(msg|tell|w)\\s+@a\\s+.+$");
 	}
 }

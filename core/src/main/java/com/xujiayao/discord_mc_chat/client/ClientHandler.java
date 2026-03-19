@@ -108,6 +108,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 			}
 			case LoginSuccessPacket p -> {
 				I18nManager.load(p.language);
+				ClientRuntimePolicy.setCancelLocalSourceMessages(p.cancelLocalSourceMessages);
 				LOGGER.info(I18nManager.getDmccTranslation("client.network.connected"));
 
 				if (!initialLoginFuture.isDone()) {

@@ -9,8 +9,10 @@ import com.xujiayao.discord_mc_chat.network.packets.Packet;
  */
 public class LoginSuccessPacket extends Packet {
 	public String language;
+	public boolean cancelLocalSourceMessages;
 
-	public LoginSuccessPacket(String language) {
+	public LoginSuccessPacket(String language, boolean cancelLocalSourceMessages) {
 		this.language = language;
+		this.cancelLocalSourceMessages = cancelLocalSourceMessages;
 	}
 }

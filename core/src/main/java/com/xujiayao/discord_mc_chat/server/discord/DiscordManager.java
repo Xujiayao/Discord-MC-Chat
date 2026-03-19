@@ -3,6 +3,9 @@ package com.xujiayao.discord_mc_chat.server.discord;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.DiscordEventPacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.TextSegment;
+import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
@@ -38,6 +41,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
@@ -53,6 +57,7 @@ public class DiscordManager {
 	private static JDA jda;
 	private static ScheduledExecutorService statusUpdateExecutor;
 	private static ScheduledFuture<?> presenceUpdateTask;
+	private static final Pattern TARGET_PATTERN = Pattern.compile("@([A-Za-z0-9_]+)");
 
 	/**
 	 * Initializes the Discord bot.
@@ -554,6 +559,192 @@ public class DiscordManager {
 		} catch (Exception e) {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
 		}
+	}
+
+	public static void clientBroadcastUserMessage(String clientName, String channelNode, Map<String, String> placeholders) {
+		String channelIdentifier = ConfigManager.getString("broadcasts.minecraft_to_discord." + channelNode);
+		if (channelIdentifier == null || channelIdentifier.isBlank()) {
+			return;
+		}
+
+		TextChannel channel = getTextChannel(channelIdentifier);
+		if (channel == null) return;
+
+		String mode = ModeManager.getMode();
+		JsonNode customMessages = I18nManager.getCustomMessages();
+		if (customMessages == null) return;
+
+		JsonNode userMessageNode = customMessages.path("minecraft_to_discord").path("user_message");
+		boolean fakeUserStyle = Boolean.TRUE.equals(ConfigManager.getBoolean("discord.webhook.players.enable_fake_user_style"));
+
+		try {
+			if ("standalone".equals(mode)) {
+				String avatarUrl = getClientAvatarUrl(clientName);
+
+				if (fakeUserStyle) {
+					String username = userMessageNode.path("enabled_fake_user_style").path("standalone").path("username").asText();
+					String content = userMessageNode.path("enabled_fake_user_style").path("standalone").path("content").asText();
+					for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+						String value = entry.getValue() == null ? "" : entry.getValue();
+						username = username.replace("{" + entry.getKey() + "}", value);
+						content = content.replace("{" + entry.getKey() + "}", value);
+					}
+					sendWebhookMessage(channel, username, avatarUrl, content);
+				} else {
+					String content = userMessageNode.path("disabled_fake_user_style").path("standalone").asText();
+					for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+						String value = entry.getValue() == null ? "" : entry.getValue();
+						content = content.replace("{" + entry.getKey() + "}", value);
+					}
+					sendWebhookMessage(channel, clientName, avatarUrl, content);
+				}
+				return;
+			}
+
+			String templatePath = fakeUserStyle
+					? "enabled_fake_user_style.single_server.content"
+					: "disabled_fake_user_style.single_server";
+			String[] parts = templatePath.split("\\.");
+			JsonNode node = userMessageNode;
+			for (String part : parts) {
+				node = node.path(part);
+			}
+			String content = node.asText();
+			for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+				String value = entry.getValue() == null ? "" : entry.getValue();
+				content = content.replace("{" + entry.getKey() + "}", value);
+			}
+			sendBotMessage(channelIdentifier, content);
+		} catch (InsufficientPermissionException e) {
+			String reason = I18nManager.getDmccTranslation("discord.manager.insufficient_permission", channel.getName(), e.getPermission().getName());
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", reason));
+		} catch (Exception e) {
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
+		}
+	}
+
+	public static void clientBroadcastToMinecraftServers(
+			String sourceClientName,
+			String channelNode,
+			String messageType,
+			Map<String, String> placeholders,
+			boolean parseMessage,
+			boolean includeSourceClient
+	) {
+		if (!"standalone".equals(ModeManager.getMode())) {
+			return;
+		}
+
+		if (!Boolean.TRUE.equals(ConfigManager.getBoolean("broadcasts.between_minecraft_servers." + channelNode))) {
+			return;
+		}
+
+		JsonNode templateNode = I18nManager.getCustomMessages().path("common").path(messageType);
+		if (!templateNode.isArray()) {
+			return;
+		}
+
+		String serverColor = "white";
+		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
+		if (serversNode != null && serversNode.isArray()) {
+			for (JsonNode node : serversNode) {
+				if (sourceClientName.equals(node.path("name").asText())) {
+					serverColor = node.path("color").asText("white");
+					break;
+				}
+			}
+		}
+
+		String roleColor = "white";
+		String userName = placeholders.get("user_name");
+		if (userName != null && !userName.isBlank()) {
+			String discordId = LinkedAccountManager.getDiscordIdByMinecraftUuid(placeholders.getOrDefault("uuid", ""));
+			if (discordId != null && !discordId.isBlank()) {
+				Member member = retrieveMember(discordId);
+				if (member != null) {
+					roleColor = DiscordMessageParser.getRoleColorHex(member);
+				}
+			}
+		}
+
+		List<TextSegment> segments = new ArrayList<>();
+		for (JsonNode segNode : templateNode) {
+			String text = segNode.path("text").asText("");
+			boolean bold = segNode.path("bold").asBoolean(false);
+			String color = segNode.path("color").asText("");
+
+			text = text
+					.replace("{server}", sourceClientName)
+					.replace("{server_color}", serverColor)
+					.replace("{role_color}", roleColor);
+			color = color
+					.replace("{server}", sourceClientName)
+					.replace("{server_color}", serverColor)
+					.replace("{role_color}", roleColor);
+
+			for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+				String key = entry.getKey();
+				String value = entry.getValue();
+				if (value == null) {
+					value = "";
+				}
+				text = text.replace("{" + key + "}", value);
+				color = color.replace("{" + key + "}", value);
+			}
+
+			if (!text.contains("{message}")) {
+				segments.add(new TextSegment(text, bold, color));
+				continue;
+			}
+
+			String[] parts = text.split("\\{message}", -1);
+			if (!parts[0].isEmpty()) {
+				segments.add(new TextSegment(parts[0], bold, color));
+			}
+
+			String message = placeholders.getOrDefault("message", "");
+			if (parseMessage) {
+				segments.addAll(parseMinecraftMessageToSegments(message));
+			} else {
+				segments.add(new TextSegment(message));
+			}
+
+			if (parts.length > 1 && !parts[1].isEmpty()) {
+				segments.add(new TextSegment(parts[1], bold, color));
+			}
+		}
+
+		DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.CHAT, segments);
+		if (includeSourceClient) {
+			NetworkManager.broadcastToClients(packet);
+		} else {
+			NetworkManager.broadcastToClientsExcept(packet, sourceClientName);
+		}
+	}
+
+	private static List<TextSegment> parseMinecraftMessageToSegments(String message) {
+		List<TextSegment> segments = new ArrayList<>();
+		if (message == null || message.isEmpty()) {
+			return segments;
+		}
+
+		if (Boolean.TRUE.equals(ConfigManager.getBoolean("message_parsing.minecraft_to_xxxxx.mentions"))) {
+			Matcher matcher = TARGET_PATTERN.matcher(message);
+			int cursor = 0;
+			while (matcher.find()) {
+				if (matcher.start() > cursor) {
+					segments.add(new TextSegment(message.substring(cursor, matcher.start())));
+				}
+				segments.add(new TextSegment("[@" + matcher.group(1) + "]", false, "yellow"));
+				cursor = matcher.end();
+			}
+			if (cursor < message.length()) {
+				segments.add(new TextSegment(message.substring(cursor)));
+			}
+		} else {
+			segments.add(new TextSegment(message));
+		}
+		return segments;
 	}
 
 	/**

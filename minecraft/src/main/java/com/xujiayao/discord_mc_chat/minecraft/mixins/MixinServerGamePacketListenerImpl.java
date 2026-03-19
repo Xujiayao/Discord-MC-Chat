@@ -1,5 +1,6 @@
 package com.xujiayao.discord_mc_chat.minecraft.mixins;
 
+import com.xujiayao.discord_mc_chat.client.ClientRuntimePolicy;
 import com.xujiayao.discord_mc_chat.minecraft.events.MinecraftEvents;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import net.minecraft.network.chat.LastSeenMessages;
@@ -29,6 +30,9 @@ public class MixinServerGamePacketListenerImpl {
 				playerChatMessage,
 				player
 		));
+		if (ClientRuntimePolicy.shouldCancelLocalSourceMessages()) {
+			ci.cancel();
+		}
 	}
 
 	@Inject(method = "performUnsignedChatCommand", at = @At("HEAD"))
@@ -38,6 +42,9 @@ public class MixinServerGamePacketListenerImpl {
 				string,
 				player
 		));
+		if (ClientRuntimePolicy.shouldCancelLocalSourceMessages()) {
+			ci.cancel();
+		}
 	}
 
 	@Inject(method = "performSignedChatCommand", at = @At("HEAD"))
@@ -47,5 +54,8 @@ public class MixinServerGamePacketListenerImpl {
 				serverboundChatCommandSignedPacket.command(),
 				player
 		));
+		if (ClientRuntimePolicy.shouldCancelLocalSourceMessages()) {
+			ci.cancel();
+		}
 	}
 }

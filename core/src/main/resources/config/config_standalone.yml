@@ -76,6 +76,7 @@ broadcasts:
       msg: "in-game-chat" # msg / tell / w
       me: "in-game-chat"
   between_minecraft_servers:
+    echo_to_source_server: false
     server:
       started: true
       stopped: true

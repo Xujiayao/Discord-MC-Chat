@@ -108,6 +108,21 @@ public class NetworkManager {
 	}
 
 	/**
+	 * Broadcasts a packet to all connected clients except the excluded client.
+	 * Should be called from server only.
+	 *
+	 * @param packet             The packet to send
+	 * @param excludedClientName The client name to exclude
+	 */
+	public static void broadcastToClientsExcept(Packet packet, String excludedClientName) {
+		clientChannels.forEach((channel, name) -> {
+			if (!name.equals(excludedClientName)) {
+				channel.writeAndFlush(packet);
+			}
+		});
+	}
+
+	/**
 	 * Adds a client channel to the managed list.
 	 *
 	 * @param channel The client channel

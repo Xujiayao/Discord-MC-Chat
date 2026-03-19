@@ -66,6 +66,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Handles Minecraft events posted from the event manager.
@@ -75,6 +77,8 @@ import java.util.concurrent.TimeUnit;
 public class MinecraftEventHandler {
 
 	private static final String DEFAULT_MENTION_STYLE = "title";
+	private static final Pattern SOURCE_MSG_INPUT_PATTERN = Pattern.compile("^/?(?:msg|tell|w)\\s+(\\S+)\\s+(.+)$", Pattern.CASE_INSENSITIVE);
+	private static final Pattern SOURCE_TELL_RAW_INPUT_PATTERN = Pattern.compile("^/?tellraw\\s+(\\S+)\\s+(.+)$", Pattern.CASE_INSENSITIVE);
 	private static MinecraftServer serverInstance;
 
 	/**
@@ -170,6 +174,71 @@ public class MinecraftEventHandler {
 					"display_name", event.serverPlayer().getDisplayName().getString()
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_QUIT, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.PlayerChat.class, event -> {
+			Map<String, String> placeholders = buildPlayerPlaceholders(
+					event.serverPlayer(),
+					event.playerChatMessage().signedContent()
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_CHAT, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.PlayerCommand.class, event -> {
+			String command = event.command();
+			if (command != null && !command.startsWith("/")) {
+				command = "/" + command;
+			}
+			Map<String, String> placeholders = buildPlayerPlaceholders(event.serverPlayer(), command);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_COMMAND, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceSay.class, event -> {
+			Map<String, String> placeholders = buildSourcePlaceholders(
+					event.commandContext().getSource(),
+					event.commandContext().getInput(),
+					event.playerChatMessage().signedContent()
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_SAY, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceMsg.class, event -> {
+			String input = event.commandContext().getInput();
+			String message = event.playerChatMessage().signedContent();
+			Matcher matcher = SOURCE_MSG_INPUT_PATTERN.matcher(input == null ? "" : input);
+			if (matcher.matches()) {
+				message = matcher.group(2);
+			}
+			Map<String, String> placeholders = buildSourcePlaceholders(
+					event.commandContext().getSource(),
+					input,
+					message
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_MSG, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceTellRaw.class, event -> {
+			String input = event.commandContext().getInput();
+			String message = input;
+			Matcher matcher = SOURCE_TELL_RAW_INPUT_PATTERN.matcher(input == null ? "" : input);
+			if (matcher.matches()) {
+				message = matcher.group(2);
+			}
+			Map<String, String> placeholders = buildSourcePlaceholders(
+					event.commandContext().getSource(),
+					input,
+					message
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_TELL_RAW, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceMe.class, event -> {
+			Map<String, String> placeholders = buildSourcePlaceholders(
+					event.commandContext().getSource(),
+					event.commandContext().getInput(),
+					event.playerChatMessage().signedContent()
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_ME, placeholders));
 		});
 
 		EventManager.register(MinecraftEvents.PlayerDie.class, event -> {
@@ -640,6 +709,41 @@ public class MinecraftEventHandler {
 			}
 		}
 		return result;
+	}
+
+	private static Map<String, String> buildPlayerPlaceholders(ServerPlayer player, String message) {
+		return Map.of(
+				"user_name", player.getName().getString(),
+				"display_name", player.getDisplayName().getString(),
+				"effective_name", player.getDisplayName().getString(),
+				"uuid", player.getStringUUID(),
+				"message", message == null ? "" : message
+		);
+	}
+
+	private static Map<String, String> buildSourcePlaceholders(CommandSourceStack source, String commandInput, String message) {
+		ServerPlayer player = source.getPlayer();
+		String userName;
+		String displayName;
+		String uuid;
+		if (player != null) {
+			userName = player.getName().getString();
+			displayName = player.getDisplayName().getString();
+			uuid = player.getStringUUID();
+		} else {
+			userName = source.getTextName();
+			displayName = source.getDisplayName().getString();
+			uuid = "";
+		}
+
+		Map<String, String> placeholders = new HashMap<>();
+		placeholders.put("user_name", userName);
+		placeholders.put("display_name", displayName);
+		placeholders.put("effective_name", displayName);
+		placeholders.put("uuid", uuid);
+		placeholders.put("message", message == null ? "" : message);
+		placeholders.put("command_input", commandInput == null ? "" : commandInput);
+		return placeholders;
 	}
 
 	private static boolean isExactPath(String input, CommandSourceStack source) {
