@@ -201,7 +201,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 						NetworkManager.addClientChannel(ctx.channel(), clientName);
 
 						LOGGER.info(I18nManager.getDmccTranslation("server.network.auth_success", clientName));
-						ctx.writeAndFlush(new LoginSuccessPacket(ConfigManager.getString("language")));
+						ctx.writeAndFlush(new LoginSuccessPacket(ConfigManager.getString("language"), ConfigManager.getBoolean("message_parsing.overwrite_minecraft_source_messages")));
 
 						// After successful authentication, perform OP level sync if enabled
 						OpSyncManager.syncAll();

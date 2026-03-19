@@ -75,14 +75,13 @@ message_parsing:
     ansi_code_blocks: true
     polls: true
   minecraft_to_discord:
-    overwrite_minecraft_source_messages: false
-    parsings:
-      markdown: true
-      unicode_emojis: true
-      custom_emojis: true
-      mentions: true
-      hyperlinks: true
-      timestamps: true
+    markdown: true
+    unicode_emojis: true
+    custom_emojis: true
+    mentions: true
+    hyperlinks: true
+    timestamps: true
+  overwrite_minecraft_source_messages: false
 
 # 命令过滤设置
 excluded_commands:
@@ -153,7 +152,6 @@ account_linking:
       # 示例 2：可将基础认证角色映射为 OP 0，使其有权执行无需特殊权限的 DMCC 命令（如委托执行白名单）。
       - role: "Players"
         op_level: 0
-  # 已隐藏 (2026/03/13)
   discord_mention_notifications:
     enable: true
     style: "title"  # action_bar, title, or chat

@@ -108,15 +108,21 @@ message_parsing:
     timestamps: true
     ansi_code_blocks: true
     polls: true
-  minecraft_to_xxxxx: # both minecraft_to_discord and between_minecraft_servers
-    overwrite_minecraft_source_messages: false
-    parsings:
-      markdown: true
-      unicode_emojis: true
-      custom_emojis: true
-      mentions: true
-      hyperlinks: true
-      timestamps: true
+  minecraft_to_discord:
+    markdown: true
+    unicode_emojis: true
+    custom_emojis: true
+    mentions: true
+    hyperlinks: true
+    timestamps: true
+  between_minecraft_servers:
+    markdown: true
+    unicode_emojis: true
+    custom_emojis: true
+    mentions: true
+    hyperlinks: true
+    timestamps: true
+  overwrite_minecraft_source_messages: false
 
 # 命令过滤设置
 excluded_commands:
@@ -207,7 +213,6 @@ account_linking:
             op_level: 0
           - server: "CMP"
             op_level: 2
-  # 已隐藏 (2026/03/13)
   discord_mention_notifications:
     enable: true
     style: "title"  # action_bar, title, or chat

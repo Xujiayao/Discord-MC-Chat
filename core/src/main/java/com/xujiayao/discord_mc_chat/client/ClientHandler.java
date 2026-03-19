@@ -108,6 +108,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 			}
 			case LoginSuccessPacket p -> {
 				I18nManager.load(p.language);
+				Constants.OVERWRITE_MINECRAFT_SOURCE_MESSAGES.set(p.overwriteMinecraftSourceMessages);
 				LOGGER.info(I18nManager.getDmccTranslation("client.network.connected"));
 
 				if (!initialLoginFuture.isDone()) {

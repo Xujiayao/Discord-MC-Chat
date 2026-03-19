@@ -7,6 +7,8 @@ import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.logging.Logger;
 import okhttp3.OkHttpClient;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * Static final constants used across the project.
  *
@@ -28,4 +30,7 @@ public class Constants {
 	public static final String VERSION = EnvironmentUtils.getDmccVersion();
 
 	public static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
+
+	// For DMCC Client use
+	public static final AtomicBoolean OVERWRITE_MINECRAFT_SOURCE_MESSAGES = new AtomicBoolean(false);
 }
