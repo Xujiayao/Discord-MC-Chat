@@ -29,7 +29,6 @@ import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
@@ -219,7 +218,7 @@ public class MinecraftEventHandler {
 			Map<String, String> placeholders = Map.of(
 					"user_name", event.serverPlayer().getName().getString(),
 					"display_name", event.serverPlayer().getDisplayName().getString(),
-					"message", extractPlayerChatRaw(event.playerChatMessage())
+					"message", TranslationManager.get(event.playerChatMessage().decoratedContent())
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_CHAT, placeholders));
 		});
@@ -237,18 +236,18 @@ public class MinecraftEventHandler {
 			Map<String, String> placeholders = Map.of(
 					"user_name", event.commandContext().getSource().getTextName(),
 					"display_name", event.commandContext().getSource().getDisplayName().getString(),
-					"message", extractPlayerChatRaw(event.playerChatMessage())
+					"message", TranslationManager.get(event.playerChatMessage().decoratedContent())
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_SAY, placeholders));
 		});
 
 		EventManager.register(MinecraftEvents.SourceTellRaw.class, event -> {
-			String tellRawInput = event.commandContext().getInput();
-			String tellRawMessage = tellRawInput.replaceFirst("^/?tellraw\\s+@a\\s+", "");
+			String input = event.commandContext().getInput();
+			String rawMessage = input.substring("tellraw @a ".length());
 			Map<String, String> placeholders = Map.of(
 					"user_name", event.commandContext().getSource().getTextName(),
 					"display_name", event.commandContext().getSource().getDisplayName().getString(),
-					"message", tellRawMessage
+					"message", rawMessage
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_TELL_RAW, placeholders));
 		});
@@ -257,7 +256,7 @@ public class MinecraftEventHandler {
 			Map<String, String> placeholders = Map.of(
 					"user_name", event.commandContext().getSource().getTextName(),
 					"display_name", event.commandContext().getSource().getDisplayName().getString(),
-					"message", extractPlayerChatRaw(event.playerChatMessage())
+					"message", TranslationManager.get(event.playerChatMessage().decoratedContent())
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_MSG, placeholders));
 		});
@@ -266,7 +265,7 @@ public class MinecraftEventHandler {
 			Map<String, String> placeholders = Map.of(
 					"user_name", event.commandContext().getSource().getTextName(),
 					"display_name", event.commandContext().getSource().getDisplayName().getString(),
-					"action", extractPlayerChatRaw(event.playerChatMessage())
+					"action", TranslationManager.get(event.playerChatMessage().decoratedContent())
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_ME, placeholders));
 		});
@@ -697,30 +696,6 @@ public class MinecraftEventHandler {
 			}
 		}
 		return result;
-	}
-
-	private static String extractPlayerChatRaw(PlayerChatMessage message) {
-		if (message == null) {
-			return "";
-		}
-		try {
-			Object value = message.getClass().getMethod("signedContent").invoke(message);
-			if (value instanceof String s && !s.isEmpty()) {
-				return s;
-			}
-		} catch (Exception ignored) {
-		}
-		try {
-			Object value = message.getClass().getMethod("decoratedContent").invoke(message);
-			if (value instanceof Component component) {
-				String translated = TranslationManager.get(component);
-				if (!translated.isEmpty()) {
-					return translated;
-				}
-			}
-		} catch (Exception ignored) {
-		}
-		return TranslationManager.get(message.decoratedContent());
 	}
 
 	private static boolean isExactPath(String input, CommandSourceStack source) {
