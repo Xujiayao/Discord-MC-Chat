@@ -111,6 +111,24 @@ public class MinecraftEvents {
 	}
 
 	/**
+	 * Posted when the /msg, /tell, /w command is used.
+	 */
+	public record SourceMsg(
+					CommandContext<CommandSourceStack> commandContext,
+					PlayerChatMessage playerChatMessage
+			) {
+	}
+
+	/**
+	 * Posted when the /me command is used.
+	 */
+	public record SourceMe(
+			CommandContext<CommandSourceStack> commandContext,
+			PlayerChatMessage playerChatMessage
+	) {
+	}
+
+	/**
 	 * Posted when commands are being registered.
 	 */
 	public record CommandRegister(

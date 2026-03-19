@@ -4,7 +4,9 @@
   "compatibilityLevel": "JAVA_25",
   "mixins": [
     "MixinCommands",
+    "MixinEmoteCommands",
     "MixinMinecraftServer",
+    "MixinMsgCommand",
     "MixinPlayerAdvancements",
     "MixinPlayerList",
     "MixinReloadableServerResources",
