@@ -27,7 +27,6 @@ public class MinecraftEventPacket extends Packet {
 		// Server events
 		SERVER_STARTED,
 		SERVER_STOPPING,
-		SERVER_STOPPED,
 
 		// Player events
 		PLAYER_JOIN,
@@ -37,8 +36,8 @@ public class MinecraftEventPacket extends Packet {
 		PLAYER_DIE,
 		PLAYER_ADVANCEMENT,
 
-		// Source events
-		SOURCE_SAY,
-		SOURCE_TELL_RAW
+		// Player & Source events
+		CHAT,
+		ME
 	}
 }

@@ -72,6 +72,8 @@ broadcasts:
     source:
       say: "in-game-chat"
       tell_raw: "in-game-chat"
+      msg: "in-game-chat" # msg / tell / w
+      me: "in-game-chat"
 
 # 消息格式设置
 message_parsing:
@@ -100,8 +102,8 @@ message_parsing:
 excluded_commands:
   - "/msg (?!@a)(.*)"
   - "/tell (?!@a)(.*)"
-  - "/tellraw (?!@a)(.*)"
   - "/w (?!@a)(.*)"
+  - "/tellraw (?!@a)(.*)"
   - "/teammsg (.*)"
   - "/tm (.*)"
   - "/login (.*)"
