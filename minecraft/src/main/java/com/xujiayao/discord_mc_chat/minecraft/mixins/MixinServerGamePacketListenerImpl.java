@@ -1,5 +1,6 @@
 package com.xujiayao.discord_mc_chat.minecraft.mixins;
 
+import com.xujiayao.discord_mc_chat.Constants;
 import com.xujiayao.discord_mc_chat.minecraft.events.MinecraftEvents;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import net.minecraft.network.chat.LastSeenMessages;
@@ -22,13 +23,17 @@ public class MixinServerGamePacketListenerImpl {
 	@Shadow
 	public ServerPlayer player;
 
-	@Inject(method = "broadcastChatMessage", at = @At("HEAD"))
+	@Inject(method = "broadcastChatMessage", at = @At("HEAD"), cancellable = true)
 	private void broadcastChatMessage(PlayerChatMessage playerChatMessage, CallbackInfo ci) {
 		// PlayerChat Event
 		EventManager.post(new MinecraftEvents.PlayerChat(
 				playerChatMessage,
 				player
 		));
+
+		if (Constants.OVERWRITE_MINECRAFT_SOURCE_MESSAGES.get()) {
+			ci.cancel();
+		}
 	}
 
 	@Inject(method = "performUnsignedChatCommand", at = @At("HEAD"))
@@ -38,6 +43,8 @@ public class MixinServerGamePacketListenerImpl {
 				string,
 				player
 		));
+
+		// No need to cancel, because vanilla Minecraft does not broadcast commands
 	}
 
 	@Inject(method = "performSignedChatCommand", at = @At("HEAD"))
@@ -47,5 +54,7 @@ public class MixinServerGamePacketListenerImpl {
 				serverboundChatCommandSignedPacket.command(),
 				player
 		));
+
+		// No need to cancel, because vanilla Minecraft does not broadcast commands
 	}
 }
