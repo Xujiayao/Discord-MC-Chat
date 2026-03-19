@@ -74,6 +74,22 @@ broadcasts:
       tell_raw: "in-game-chat"
       msg: "in-game-chat" # msg / tell / w
       me: "in-game-chat"
+  between_minecraft_servers:
+    server:
+      started: true
+      stopped: true
+    player:
+      join: true
+      quit: true
+      chat: true
+      command: true
+      die: true
+      advancement: true
+    source:
+      say: true
+      tell_raw: true
+      msg: true # msg / tell / w
+      me: true
 
 # 消息格式设置
 message_parsing:
@@ -90,7 +106,7 @@ message_parsing:
     timestamps: true
     ansi_code_blocks: true
     polls: true
-  minecraft_to_discord:
+  minecraft_to_xxxxx: # both minecraft_to_discord and between_minecraft_servers
     markdown: true
     unicode_emojis: true
     custom_emojis: true

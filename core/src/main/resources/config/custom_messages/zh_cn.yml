@@ -126,7 +126,7 @@ minecraft_to_discord:
         username: "{display_name}"
         content: "{message}"
     disabled_fake_user_style:
-      standalone: "[{server}] <{display_name}> {message}"
+      standalone: "[{server}] <{display_name}> {message}" # should still use each DMCC clients webhook to send
       single_server: "<{display_name}> {message}"
 
 activity:
