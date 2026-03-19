@@ -140,12 +140,12 @@ public class MinecraftEventHandler {
 			NetworkManager.registerInfoSupplier(() -> buildInfoResponse(event.minecraftServer()));
 		});
 
-		EventManager.register(MinecraftEvents.ServerStopping.class, event -> {
+		EventManager.register(MinecraftEvents.ServerStopping.class, _ -> {
 			Map<String, String> placeholders = Map.of();
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SERVER_STOPPING, placeholders));
 		});
 
-		EventManager.register(MinecraftEvents.ServerStopped.class, event -> {
+		EventManager.register(MinecraftEvents.ServerStopped.class, _ -> {
 			// Shutdown DMCC when the server is stopped
 			// Blocks until shutdown is complete
 			DMCC.shutdown();
@@ -219,7 +219,7 @@ public class MinecraftEventHandler {
 			MinecraftCommands.register(event.dispatcher());
 		});
 
-		EventManager.register(MinecraftEvents.ReloadResources.class, event -> {
+		EventManager.register(MinecraftEvents.ReloadResources.class, _ -> {
 			// Refresh Minecraft translations
 			TranslationManager.init();
 		});
