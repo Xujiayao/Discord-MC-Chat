@@ -348,7 +348,9 @@ public class DiscordManager {
 	private static void sendBotMessage(String channelIdentifier, String content) {
 		TextChannel channel = getTextChannel(channelIdentifier);
 		if (channel != null) {
-			channel.sendMessage(content).queue();
+			channel.sendMessage(content)
+					.setAllowedMentions(getAllowedMentions())
+					.queue();
 		}
 	}
 
@@ -364,12 +366,10 @@ public class DiscordManager {
 		// Find or create webhook
 		Webhook webhook = getOrCreateWebhook(channel);
 
-		List<Message.MentionType> allowedMentions = getAllowedMentions();
-
 		webhook.sendMessage(content)
 				.setUsername(username)
 				.setAvatarUrl(avatarUrl)
-				.setAllowedMentions(allowedMentions)
+				.setAllowedMentions(getAllowedMentions())
 				.queue();
 	}
 
@@ -419,7 +419,7 @@ public class DiscordManager {
 	 */
 	private static List<Message.MentionType> getAllowedMentions() {
 		List<Message.MentionType> allowedMentions = new ArrayList<>();
-		JsonNode allowMentionsNode = ConfigManager.getConfigNode("discord.webhook.allow_mentions");
+		JsonNode allowMentionsNode = ConfigManager.getConfigNode("discord.allow_mentions");
 		if (allowMentionsNode.isArray()) {
 			for (JsonNode node : allowMentionsNode) {
 				switch (node.asText()) {
