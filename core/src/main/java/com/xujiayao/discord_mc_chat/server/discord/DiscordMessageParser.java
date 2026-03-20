@@ -496,11 +496,12 @@ public class DiscordMessageParser {
 		boolean parseStickers = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.stickers");
 		boolean parseEmbeds = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.embeds");
 		boolean parseComponents = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.components");
+		boolean parseTimestamps = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.timestamps");
 
 		// Process the raw text content
 		if (!raw.isEmpty()) {
 			segments.addAll(parseRawContent(raw, message, parseMentions, parseCustomEmojis,
-					parseUnicodeEmojis, parseMarkdown, parseHyperlinks));
+					parseUnicodeEmojis, parseMarkdown, parseHyperlinks, parseTimestamps));
 		}
 
 		// Append attachments
@@ -579,7 +580,7 @@ public class DiscordMessageParser {
 	private static List<TextSegment> parseRawContent(String raw, Message message,
 													 boolean parseMentions, boolean parseCustomEmojis,
 													 boolean parseUnicodeEmojis, boolean parseMarkdown,
-													 boolean parseHyperlinks) {
+													 boolean parseHyperlinks, boolean parseTimestamps) {
 		List<TextSegment> segments = new ArrayList<>();
 
 		List<TokenSpan> tokens = new ArrayList<>();
@@ -593,7 +594,7 @@ public class DiscordMessageParser {
 		}
 
 		// Collect timestamps if configured
-		if (ConfigManager.getBoolean("message_parsing.discord_to_minecraft.timestamps")) {
+		if (parseTimestamps) {
 			collectTimestampTokens(raw, tokens);
 		}
 
@@ -638,7 +639,8 @@ public class DiscordMessageParser {
 		boolean parseUnicodeEmojis = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.unicode_emojis");
 		boolean parseMarkdown = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.markdown");
 		boolean parseHyperlinks = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.hyperlinks");
-		return parseRawContent(raw, null, false, parseCustomEmojis, parseUnicodeEmojis, parseMarkdown, parseHyperlinks);
+		boolean parseTimestamps = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.timestamps");
+		return parseRawContent(raw, null, false, parseCustomEmojis, parseUnicodeEmojis, parseMarkdown, parseHyperlinks, parseTimestamps);
 	}
 
 	private static void collectUserMentionTokens(String raw, Message message, List<TokenSpan> tokens) {
