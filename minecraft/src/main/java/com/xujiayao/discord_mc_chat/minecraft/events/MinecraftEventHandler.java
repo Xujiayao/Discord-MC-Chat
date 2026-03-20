@@ -214,6 +214,62 @@ public class MinecraftEventHandler {
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_CHANGE_GAME_MODE, placeholders));
 		});
 
+		EventManager.register(MinecraftEvents.PlayerChat.class, event -> {
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.serverPlayer().getName().getString(),
+					"display_name", event.serverPlayer().getDisplayName().getString(),
+					"message", TranslationManager.get(event.playerChatMessage().decoratedContent())
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_CHAT, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.PlayerCommand.class, event -> {
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.serverPlayer().getName().getString(),
+					"display_name", event.serverPlayer().getDisplayName().getString(),
+					"command", "/" + event.command()
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_COMMAND, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceSay.class, event -> {
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.commandContext().getSource().getTextName(),
+					"display_name", event.commandContext().getSource().getDisplayName().getString(),
+					"message", TranslationManager.get(event.playerChatMessage().decoratedContent())
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_SAY, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceTellRaw.class, event -> {
+			String input = event.commandContext().getInput();
+			String rawMessage = input.substring("tellraw @a ".length());
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.commandContext().getSource().getTextName(),
+					"display_name", event.commandContext().getSource().getDisplayName().getString(),
+					"message", rawMessage
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_TELL_RAW, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceMsg.class, event -> {
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.commandContext().getSource().getTextName(),
+					"display_name", event.commandContext().getSource().getDisplayName().getString(),
+					"message", TranslationManager.get(event.playerChatMessage().decoratedContent())
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_MSG, placeholders));
+		});
+
+		EventManager.register(MinecraftEvents.SourceMe.class, event -> {
+			Map<String, String> placeholders = Map.of(
+					"user_name", event.commandContext().getSource().getTextName(),
+					"display_name", event.commandContext().getSource().getDisplayName().getString(),
+					"action", TranslationManager.get(event.playerChatMessage().decoratedContent())
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_ME, placeholders));
+		});
+
 		EventManager.register(MinecraftEvents.CommandRegister.class, event -> {
 			// Register Minecraft /dmcc commands
 			MinecraftCommands.register(event.dispatcher());
