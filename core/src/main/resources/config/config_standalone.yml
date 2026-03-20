@@ -75,7 +75,7 @@ broadcasts:
       tell_raw: "in-game-chat"
       msg: "in-game-chat" # msg / tell / w
       me: "in-game-chat"
-  minecraft_to_minecraft:
+  minecraft_to_minecraft: # For other_dmcc_clients only
     server:
       started: true
       stopped: true
@@ -116,13 +116,19 @@ message_parsing:
     # unicode_emojis: true
     # hyperlinks: true
     # timestamps: true
-  minecraft_to_minecraft:
+  minecraft_to_minecraft: # For other_dmcc_clients & overwrite_minecraft_source_messages
     markdown: true
     unicode_emojis: true
     custom_emojis: true
     mentions: true
     hyperlinks: true
     timestamps: true
+  # Once enabled, ci.cancel() [PlayerChat, SourceSay, SourceTellRaw, SourceMsg, SourceMe]
+  # to prevent the original message from being processed by Minecraft, and instead broadcast
+  # the parsed message back (including the sender's own client).
+  # ---
+  # So, enabling this = enabling [player.chat, source.say, source.tell_raw, source.msg, source.me]
+  # for the source DMCC client.
   overwrite_minecraft_source_messages: false
 
 # 命令过滤设置
