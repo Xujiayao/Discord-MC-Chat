@@ -116,6 +116,7 @@ discord_to_minecraft:
       bold: false
       color: "gray"
 
+# These are for system_messages
 minecraft_to_xxxxx:
   server:
     start: ":white_check_mark: **服务器已启动！**"
@@ -132,6 +133,7 @@ minecraft_to_xxxxx:
   source:
     me: ":eyes: **{display_name} {action}**"
 
+# These are for user_messages
 minecraft_to_discord:
   user_message:
     enabled_fake_user_style:
