@@ -22,7 +22,6 @@ import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkReques
 import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftRelayPacket;
-import com.xujiayao.discord_mc_chat.utils.message.TextSegment;
 import com.xujiayao.discord_mc_chat.network.packets.misc.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPingPacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPongPacket;
@@ -36,6 +35,7 @@ import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
+import com.xujiayao.discord_mc_chat.utils.message.TextSegment;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;

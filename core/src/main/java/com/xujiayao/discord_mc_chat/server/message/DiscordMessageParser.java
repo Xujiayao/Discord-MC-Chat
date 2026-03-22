@@ -1,10 +1,11 @@
 package com.xujiayao.discord_mc_chat.server.message;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.xujiayao.discord_mc_chat.utils.message.TextSegment;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
+import com.xujiayao.discord_mc_chat.utils.message.TextSegment;
+import com.xujiayao.discord_mc_chat.utils.message.TextSegmentUtils;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -16,15 +17,10 @@ import net.dv8tion.jda.api.entities.sticker.StickerItem;
 import net.fellbaum.jemoji.EmojiManager;
 
 import java.awt.Color;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -60,26 +56,9 @@ public final class DiscordMessageParser {
 	private static final Pattern CUSTOM_EMOJI_PATTERN = Pattern.compile("<a?:(\\w+):\\d+>");
 	private static final Pattern DISCORD_ALIAS_EMOJI_PATTERN = Pattern.compile("(?<![A-Za-z0-9_]):[A-Za-z0-9_+\\-]+:(?![A-Za-z0-9_])");
 
-	// Unicode emoji pattern (basic, covering common emoji ranges)
-	private static final Pattern UNICODE_EMOJI_PATTERN = Pattern.compile(
-			"[\\x{1F600}-\\x{1F64F}]|[\\x{1F300}-\\x{1F5FF}]|[\\x{1F680}-\\x{1F6FF}]|" +
-					"[\\x{1F1E0}-\\x{1F1FF}]|[\\x{2600}-\\x{26FF}]|[\\x{2700}-\\x{27BF}]|" +
-					"[\\x{FE00}-\\x{FE0F}]|[\\x{1F900}-\\x{1F9FF}]|[\\x{1FA00}-\\x{1FA6F}]|" +
-					"[\\x{1FA70}-\\x{1FAFF}]|\\x{200D}|\\x{20E3}|" +
-					"[\\x{231A}-\\x{231B}]|[\\x{23E9}-\\x{23F3}]|[\\x{23F8}-\\x{23FA}]|" +
-					"[\\x{25AA}-\\x{25AB}]|\\x{25B6}|\\x{25C0}|[\\x{25FB}-\\x{25FE}]|" +
-					"[\\x{2614}-\\x{2615}]|[\\x{2648}-\\x{2653}]|\\x{267F}|\\x{2693}|" +
-					"\\x{26A1}|[\\x{26AA}-\\x{26AB}]|[\\x{26BD}-\\x{26BE}]|" +
-					"[\\x{26C4}-\\x{26C5}]|\\x{26CE}|\\x{26D4}|\\x{26EA}|" +
-					"[\\x{26F2}-\\x{26F3}]|\\x{26F5}|\\x{26FA}|\\x{26FD}|" +
-					"\\x{2702}|\\x{2705}|[\\x{2708}-\\x{270D}]|\\x{270F}"
-	);
-
 	// ANSI escape sequence pattern for ```ansi code blocks
 	private static final Pattern ANSI_ESCAPE_PATTERN = Pattern.compile("\\x1B\\[(\\d+(?:;\\d+)*)m");
 
-	// Hyperlink pattern: [text](url) or bare URLs (excluding trailing Markdown delimiters)
-	private static final Pattern BARE_URL_PATTERN = Pattern.compile("(https?://[^\\s*|~`<>)\\]]+)");
 	// Matches spoiler-wrapped user mentions: ||<@123>|| / ||<@!123>||
 	private static final Pattern SPOILER_USER_MENTION_PATTERN = Pattern.compile("\\|\\|<@!?(\\d+)>\\|\\|");
 	// Matches spoiler-wrapped role mentions: ||<@&123>||
@@ -89,7 +68,6 @@ public final class DiscordMessageParser {
 	// Matches spoiler-wrapped @everyone/@here tokens: ||@everyone|| / ||@here||
 	private static final Pattern SPOILER_EVERYONE_HERE_PATTERN = Pattern.compile("\\|\\|@(everyone|here)\\|\\|");
 	private static final Pattern SPOILER_CONTENT_PATTERN = Pattern.compile("\\|\\|(.+?)\\|\\|");
-	private static final Pattern LINK_TOKEN_PATTERN = Pattern.compile("\\[([^]]+)]\\((https?://[^)]+)\\)");
 	private static final List<String> MARKDOWN_DELIMITERS = List.of("***", "~~", "||", "**", "__", "*", "_");
 
 	private static final int MAX_CONTENT_LINES = 6;
@@ -158,7 +136,7 @@ public final class DiscordMessageParser {
 						List<TextSegment> contentSegments = parseMessageContent(message, truncatedRaw);
 
 						// Apply default color inheritance
-						applyDefaultColor(contentSegments, color);
+						TextSegmentUtils.applyDefaultColor(contentSegments, color);
 
 						// Prepend newline to first content segment
 						if (!contentSegments.isEmpty()) {
@@ -169,7 +147,7 @@ public final class DiscordMessageParser {
 						List<TextSegment> contentSegments = parseMessageContent(message, truncatedRaw);
 
 						// Apply default color inheritance
-						applyDefaultColor(contentSegments, color);
+						TextSegmentUtils.applyDefaultColor(contentSegments, color);
 
 						segments.addAll(contentSegments);
 					}
@@ -273,7 +251,7 @@ public final class DiscordMessageParser {
 					if (!parts[0].isEmpty()) {
 						segments.add(new TextSegment(parts[0], bold, color));
 					}
-					applyDefaultColor(refContentSegments, color);
+					TextSegmentUtils.applyDefaultColor(refContentSegments, color);
 					segments.addAll(refContentSegments);
 					if (parts.length > 1 && !parts[1].isEmpty()) {
 						segments.add(new TextSegment(parts[1], bold, color));
@@ -380,7 +358,7 @@ public final class DiscordMessageParser {
 					if (!parts[0].isEmpty()) {
 						segments.add(new TextSegment(parts[0], bold, color));
 					}
-					applyDefaultColor(contentSegments, color);
+					TextSegmentUtils.applyDefaultColor(contentSegments, color);
 					segments.addAll(contentSegments);
 					if (parts.length > 1 && !parts[1].isEmpty()) {
 						segments.add(new TextSegment(parts[1], bold, color));
@@ -813,99 +791,13 @@ public final class DiscordMessageParser {
 			try {
 				long epoch = Long.parseLong(matcher.group(1));
 				String style = matcher.group(2);
-				String formatted = formatDiscordTimestamp(epoch, style);
+				String formatted = MessageParserCommon.formatDiscordTimestamp(epoch, style);
 				TextSegment seg = new TextSegment("[" + formatted + "]", false, "yellow");
 				tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
 			} catch (Exception ignored) {
 				// If parsing fails, leave the raw token as-is
 			}
 		}
-	}
-
-	private static String formatDiscordTimestamp(long epoch, String style) {
-		Instant instant = Instant.ofEpochSecond(epoch);
-		Locale locale = getDmccLocale();
-		ZoneId zone = ZoneId.systemDefault();
-
-		if (style == null) {
-			style = "f"; // Discord default
-		}
-
-		return switch (style) {
-			case "t" -> DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale)
-					.format(instant.atZone(zone));
-			case "T" -> DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM).withLocale(locale)
-					.format(instant.atZone(zone));
-			case "d" -> DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(locale)
-					.format(instant.atZone(zone));
-			case "D" -> DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale)
-					.format(instant.atZone(zone));
-			case "s" -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.SHORT).withLocale(locale)
-					.format(instant.atZone(zone));
-			case "S" -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.MEDIUM).withLocale(locale)
-					.format(instant.atZone(zone));
-			case "F" -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL, FormatStyle.SHORT).withLocale(locale)
-					.format(instant.atZone(zone));
-			case "R" -> {
-				long now = Instant.now().getEpochSecond();
-				long diff = now - epoch;
-				yield formatRelativeTime(diff);
-			}
-			default -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG, FormatStyle.SHORT).withLocale(locale)
-					.format(instant.atZone(zone));
-		};
-	}
-
-	private static String formatRelativeTime(long diffSeconds) {
-		boolean past = diffSeconds >= 0;
-		long abs = Math.abs(diffSeconds);
-
-		String unitKey;
-		long value;
-		if (abs < 60) {
-			value = abs;
-			unitKey = "second";
-		} else if (abs < 3600) {
-			value = abs / 60;
-			unitKey = "minute";
-		} else if (abs < 86400) {
-			value = abs / 3600;
-			unitKey = "hour";
-		} else if (abs < 2592000) {
-			value = abs / 86400;
-			unitKey = "day";
-		} else if (abs < 31536000) {
-			value = abs / 2592000;
-			unitKey = "month";
-		} else {
-			value = abs / 31536000;
-			unitKey = "year";
-		}
-
-		String unitTranslationKey = String.format(
-				"discord.message_parser.relative.units.%s.%s",
-				unitKey,
-				value == 1 ? "one" : "other"
-		);
-		String unit = I18nManager.getDmccTranslation(unitTranslationKey);
-		return past
-				? I18nManager.getDmccTranslation("discord.message_parser.relative.past", value, unit)
-				: I18nManager.getDmccTranslation("discord.message_parser.relative.future", value, unit);
-	}
-
-	private static Locale getDmccLocale() {
-		String languageCode = I18nManager.getLanguage();
-		if (languageCode == null || languageCode.isBlank()) {
-			return Locale.ENGLISH;
-		}
-		// DMCC language codes are configured as snake_case (e.g. en_us, zh_cn),
-		// while Locale.forLanguageTag expects BCP-47 with hyphen separators.
-		String tag = languageCode.replace('_', '-');
-		Locale locale = Locale.forLanguageTag(tag);
-		if (locale.getLanguage().isBlank()) {
-			return Locale.ENGLISH;
-		}
-		return locale;
 	}
 
 	private static List<TokenSpan> removeOverlaps(List<TokenSpan> tokens) {
@@ -1017,7 +909,8 @@ public final class DiscordMessageParser {
 	private static String matchMarkdownDelimiter(String text, int index) {
 		for (String delimiter : MARKDOWN_DELIMITERS) {
 			if (text.startsWith(delimiter, index)) {
-				if (isUnderscoreDelimiter(delimiter) && isInsideDiscordAliasEmoji(text, index)) {
+				if (MessageParserCommon.isUnderscoreDelimiter(delimiter)
+						&& MessageParserCommon.isInsideDiscordAliasEmoji(text, index, DISCORD_ALIAS_EMOJI_PATTERN)) {
 					continue;
 				}
 				return delimiter;
@@ -1032,7 +925,8 @@ public final class DiscordMessageParser {
 				i++;
 				continue;
 			}
-			if (isUnderscoreDelimiter(delimiter) && isInsideDiscordAliasEmoji(text, i)) {
+			if (MessageParserCommon.isUnderscoreDelimiter(delimiter)
+					&& MessageParserCommon.isInsideDiscordAliasEmoji(text, i, DISCORD_ALIAS_EMOJI_PATTERN)) {
 				continue;
 			}
 			if (text.startsWith(delimiter, i)) {
@@ -1040,29 +934,6 @@ public final class DiscordMessageParser {
 			}
 		}
 		return -1;
-	}
-
-	private static boolean isUnderscoreDelimiter(String delimiter) {
-		return "_".equals(delimiter) || "__".equals(delimiter);
-	}
-
-	private static boolean isInsideDiscordAliasEmoji(String text, int index) {
-		if (index <= 0 || index >= text.length()) {
-			return false;
-		}
-		int leftColon = text.lastIndexOf(':', index);
-		if (leftColon < 0) {
-			return false;
-		}
-		int rightColon = text.indexOf(':', index);
-		if (rightColon < 0 || rightColon <= leftColon + 1) {
-			return false;
-		}
-		if (index <= leftColon || index >= rightColon) {
-			return false;
-		}
-		String candidate = text.substring(leftColon, rightColon + 1);
-		return DISCORD_ALIAS_EMOJI_PATTERN.matcher(candidate).matches();
 	}
 
 	private static MarkdownState applyDelimiterStyle(MarkdownState base, String delimiter) {
@@ -1131,18 +1002,18 @@ public final class DiscordMessageParser {
 				current = splitSegmentsByEveryoneHereMention(current, message);
 			}
 			if (parseTimestamps) {
-				current = splitSegmentsByTimestamp(current);
+				current = MessageParserCommon.splitSegmentsByTimestamp(current);
 			}
 			if (parseHyperlinks) {
-				current = splitSegmentsByMarkdownLink(current);
-				current = splitSegmentsByBareUrl(current);
+				current = MessageParserCommon.splitSegmentsByMarkdownLink(current);
+				current = MessageParserCommon.splitSegmentsByBareUrl(current);
 			}
 			if (parseCustomEmojis) {
 				current = splitSegmentsByCustomEmoji(current);
 				current = splitSegmentsByDiscordAliasEmoji(current);
 			}
 			if (parseUnicodeEmojis) {
-				current = splitSegmentsByUnicodeEmoji(current);
+				current = MessageParserCommon.splitSegmentsByUnicodeEmoji(current);
 			}
 			for (TextSegment seg : current) {
 				if (seg.obfuscated && seg.clickUrl == null && (seg.hoverText == null || seg.hoverText.isEmpty())) {
@@ -1165,7 +1036,7 @@ public final class DiscordMessageParser {
 			int cursor = 0;
 			while (matcher.find()) {
 				if (matcher.start() > cursor) {
-					out.add(copySegment(segment, segment.text.substring(cursor, matcher.start())));
+					out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor, matcher.start())));
 				}
 				String userId = matcher.group(1);
 				String displayName = userId;
@@ -1178,7 +1049,7 @@ public final class DiscordMessageParser {
 						break;
 					}
 				}
-				TextSegment mention = copySegment(segment, "[@" + displayName + "]");
+				TextSegment mention = TextSegmentUtils.copySegment(segment, "[@" + displayName + "]");
 				mention.color = color;
 				out.add(mention);
 				cursor = matcher.end();
@@ -1186,7 +1057,7 @@ public final class DiscordMessageParser {
 			if (cursor == 0) {
 				out.add(segment);
 			} else if (cursor < segment.text.length()) {
-				out.add(copySegment(segment, segment.text.substring(cursor)));
+				out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor)));
 			}
 		}
 		return out;
@@ -1203,7 +1074,7 @@ public final class DiscordMessageParser {
 			int cursor = 0;
 			while (matcher.find()) {
 				if (matcher.start() > cursor) {
-					out.add(copySegment(segment, segment.text.substring(cursor, matcher.start())));
+					out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor, matcher.start())));
 				}
 				String roleId = matcher.group(1);
 				String roleName = roleId;
@@ -1218,7 +1089,7 @@ public final class DiscordMessageParser {
 						break;
 					}
 				}
-				TextSegment mention = copySegment(segment, "[@" + roleName + "]");
+				TextSegment mention = TextSegmentUtils.copySegment(segment, "[@" + roleName + "]");
 				mention.color = color;
 				out.add(mention);
 				cursor = matcher.end();
@@ -1226,7 +1097,7 @@ public final class DiscordMessageParser {
 			if (cursor == 0) {
 				out.add(segment);
 			} else if (cursor < segment.text.length()) {
-				out.add(copySegment(segment, segment.text.substring(cursor)));
+				out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor)));
 			}
 		}
 		return out;
@@ -1243,7 +1114,7 @@ public final class DiscordMessageParser {
 			int cursor = 0;
 			while (matcher.find()) {
 				if (matcher.start() > cursor) {
-					out.add(copySegment(segment, segment.text.substring(cursor, matcher.start())));
+					out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor, matcher.start())));
 				}
 				String channelId = matcher.group(1);
 				String channelName = channelId;
@@ -1253,7 +1124,7 @@ public final class DiscordMessageParser {
 						break;
 					}
 				}
-				TextSegment mention = copySegment(segment, "[#" + channelName + "]");
+				TextSegment mention = TextSegmentUtils.copySegment(segment, "[#" + channelName + "]");
 				mention.color = "yellow";
 				out.add(mention);
 				cursor = matcher.end();
@@ -1261,7 +1132,7 @@ public final class DiscordMessageParser {
 			if (cursor == 0) {
 				out.add(segment);
 			} else if (cursor < segment.text.length()) {
-				out.add(copySegment(segment, segment.text.substring(cursor)));
+				out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor)));
 			}
 		}
 		return out;
@@ -1281,9 +1152,9 @@ public final class DiscordMessageParser {
 			int cursor = 0;
 			while (matcher.find()) {
 				if (matcher.start() > cursor) {
-					out.add(copySegment(segment, segment.text.substring(cursor, matcher.start())));
+					out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor, matcher.start())));
 				}
-				TextSegment mention = copySegment(segment, "[@" + matcher.group(1) + "]");
+				TextSegment mention = TextSegmentUtils.copySegment(segment, "[@" + matcher.group(1) + "]");
 				mention.color = "yellow";
 				out.add(mention);
 				cursor = matcher.end();
@@ -1291,100 +1162,7 @@ public final class DiscordMessageParser {
 			if (cursor == 0) {
 				out.add(segment);
 			} else if (cursor < segment.text.length()) {
-				out.add(copySegment(segment, segment.text.substring(cursor)));
-			}
-		}
-		return out;
-	}
-
-	private static List<TextSegment> splitSegmentsByTimestamp(List<TextSegment> segments) {
-		List<TextSegment> out = new ArrayList<>();
-		for (TextSegment segment : segments) {
-			if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
-				out.add(segment);
-				continue;
-			}
-			Matcher matcher = DISCORD_TIMESTAMP_PATTERN.matcher(segment.text);
-			int cursor = 0;
-			while (matcher.find()) {
-				if (matcher.start() > cursor) {
-					out.add(copySegment(segment, segment.text.substring(cursor, matcher.start())));
-				}
-				try {
-					long epoch = Long.parseLong(matcher.group(1));
-					String style = matcher.group(2);
-					TextSegment timestampSegment = copySegment(segment, "[" + formatDiscordTimestamp(epoch, style) + "]");
-					timestampSegment.color = "yellow";
-					out.add(timestampSegment);
-				} catch (Exception ignored) {
-					out.add(copySegment(segment, matcher.group()));
-				}
-				cursor = matcher.end();
-			}
-			if (cursor == 0) {
-				out.add(segment);
-			} else if (cursor < segment.text.length()) {
-				out.add(copySegment(segment, segment.text.substring(cursor)));
-			}
-		}
-		return out;
-	}
-
-	private static List<TextSegment> splitSegmentsByMarkdownLink(List<TextSegment> segments) {
-		List<TextSegment> out = new ArrayList<>();
-		for (TextSegment segment : segments) {
-			if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
-				out.add(segment);
-				continue;
-			}
-			Matcher matcher = LINK_TOKEN_PATTERN.matcher(segment.text);
-			int cursor = 0;
-			while (matcher.find()) {
-				if (matcher.start() > cursor) {
-					out.add(copySegment(segment, segment.text.substring(cursor, matcher.start())));
-				}
-				TextSegment linkSegment = copySegment(segment, matcher.group(1));
-				linkSegment.clickUrl = matcher.group(2);
-				linkSegment.underlined = true;
-				linkSegment.color = URL_COLOR;
-				linkSegment.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
-				out.add(linkSegment);
-				cursor = matcher.end();
-			}
-			if (cursor == 0) {
-				out.add(segment);
-			} else if (cursor < segment.text.length()) {
-				out.add(copySegment(segment, segment.text.substring(cursor)));
-			}
-		}
-		return out;
-	}
-
-	private static List<TextSegment> splitSegmentsByBareUrl(List<TextSegment> segments) {
-		List<TextSegment> out = new ArrayList<>();
-		for (TextSegment segment : segments) {
-			if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
-				out.add(segment);
-				continue;
-			}
-			Matcher matcher = BARE_URL_PATTERN.matcher(segment.text);
-			int cursor = 0;
-			while (matcher.find()) {
-				if (matcher.start() > cursor) {
-					out.add(copySegment(segment, segment.text.substring(cursor, matcher.start())));
-				}
-				TextSegment urlSegment = copySegment(segment, matcher.group(1));
-				urlSegment.clickUrl = matcher.group(1);
-				urlSegment.underlined = true;
-				urlSegment.color = URL_COLOR;
-				urlSegment.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
-				out.add(urlSegment);
-				cursor = matcher.end();
-			}
-			if (cursor == 0) {
-				out.add(segment);
-			} else if (cursor < segment.text.length()) {
-				out.add(copySegment(segment, segment.text.substring(cursor)));
+				out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor)));
 			}
 		}
 		return out;
@@ -1401,9 +1179,9 @@ public final class DiscordMessageParser {
 			int cursor = 0;
 			while (matcher.find()) {
 				if (matcher.start() > cursor) {
-					out.add(copySegment(segment, segment.text.substring(cursor, matcher.start())));
+					out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor, matcher.start())));
 				}
-				TextSegment emojiSegment = copySegment(segment, ":" + matcher.group(1) + ":");
+				TextSegment emojiSegment = TextSegmentUtils.copySegment(segment, ":" + matcher.group(1) + ":");
 				emojiSegment.color = "yellow";
 				out.add(emojiSegment);
 				cursor = matcher.end();
@@ -1411,7 +1189,7 @@ public final class DiscordMessageParser {
 			if (cursor == 0) {
 				out.add(segment);
 			} else if (cursor < segment.text.length()) {
-				out.add(copySegment(segment, segment.text.substring(cursor)));
+				out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor)));
 			}
 		}
 		return out;
@@ -1433,9 +1211,9 @@ public final class DiscordMessageParser {
 					continue;
 				}
 				if (matcher.start() > cursor) {
-					out.add(copySegment(segment, segment.text.substring(cursor, matcher.start())));
+					out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor, matcher.start())));
 				}
-				TextSegment emojiSegment = copySegment(segment, alias);
+				TextSegment emojiSegment = TextSegmentUtils.copySegment(segment, alias);
 				emojiSegment.color = "yellow";
 				out.add(emojiSegment);
 				cursor = matcher.end();
@@ -1444,36 +1222,7 @@ public final class DiscordMessageParser {
 			if (!matched) {
 				out.add(segment);
 			} else if (cursor < segment.text.length()) {
-				out.add(copySegment(segment, segment.text.substring(cursor)));
-			}
-		}
-		return out;
-	}
-
-	private static List<TextSegment> splitSegmentsByUnicodeEmoji(List<TextSegment> segments) {
-		List<TextSegment> out = new ArrayList<>();
-		for (TextSegment segment : segments) {
-			if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
-				out.add(segment);
-				continue;
-			}
-			Matcher matcher = UNICODE_EMOJI_PATTERN.matcher(segment.text);
-			int cursor = 0;
-			while (matcher.find()) {
-				if (matcher.start() > cursor) {
-					out.add(copySegment(segment, segment.text.substring(cursor, matcher.start())));
-				}
-				String unicodeEmoji = matcher.group();
-				String alias = EmojiManager.replaceAllEmojis(unicodeEmoji, emoji -> emoji.getDiscordAliases().getFirst());
-				TextSegment emojiSegment = copySegment(segment, alias);
-				emojiSegment.color = "yellow";
-				out.add(emojiSegment);
-				cursor = matcher.end();
-			}
-			if (cursor == 0) {
-				out.add(segment);
-			} else if (cursor < segment.text.length()) {
-				out.add(copySegment(segment, segment.text.substring(cursor)));
+				out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor)));
 			}
 		}
 		return out;
@@ -1739,36 +1488,16 @@ public final class DiscordMessageParser {
 			String text = segment.text == null ? "" : segment.text;
 			int newline = text.indexOf('\n');
 			if (newline < 0) {
-				result.add(copySegment(segment, text));
+				result.add(TextSegmentUtils.copySegment(segment, text));
 				continue;
 			}
 			if (newline > 0) {
-				result.add(copySegment(segment, text.substring(0, newline)));
+				result.add(TextSegmentUtils.copySegment(segment, text.substring(0, newline)));
 			}
-			appendEllipsis(result);
+			TextSegmentUtils.appendEllipsis(result);
 			cut = true;
 		}
 		return result;
-	}
-
-	private static TextSegment copySegment(TextSegment source, String text) {
-		TextSegment copy = new TextSegment(text, source.bold, source.color);
-		copy.italic = source.italic;
-		copy.underlined = source.underlined;
-		copy.strikethrough = source.strikethrough;
-		copy.obfuscated = source.obfuscated;
-		copy.clickUrl = source.clickUrl;
-		copy.hoverText = source.hoverText;
-		return copy;
-	}
-
-	private static void appendEllipsis(List<TextSegment> segments) {
-		if (segments.isEmpty()) {
-			segments.add(new TextSegment("..."));
-			return;
-		}
-		TextSegment tail = segments.getLast();
-		segments.set(segments.size() - 1, copySegment(tail, tail.text + "..."));
 	}
 
 	/**
@@ -1793,17 +1522,6 @@ public final class DiscordMessageParser {
 			i += Character.charCount(codePoint);
 		}
 		return false;
-	}
-
-	private static void applyDefaultColor(List<TextSegment> segments, String defaultColor) {
-		if (defaultColor == null || defaultColor.isEmpty()) {
-			return;
-		}
-		for (TextSegment seg : segments) {
-			if (seg.color == null || seg.color.isEmpty()) {
-				seg.color = defaultColor;
-			}
-		}
 	}
 
 	private static String replacePlaceholders(String text, String effectiveName, String roleColor) {
