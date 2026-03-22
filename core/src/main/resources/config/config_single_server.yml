@@ -87,11 +87,11 @@ message_parsing:
     mentions: true
     hyperlinks: true
     timestamps: true
-  # Once enabled, ci.cancel() [PlayerChat, SourceSay, SourceTellRaw, SourceMsg, SourceMe]
+  # Once enabled, ci.cancel() [PlayerChat, SourceSay, SourceMsg, SourceMe]
   # to prevent the original message from being processed by Minecraft, and instead broadcast
   # the parsed message back (including the sender's own client).
   # ---
-  # So, enabling this = enabling [player.chat, source.say, source.tell_raw, source.msg, source.me]
+  # So, enabling this = enabling [player.chat, source.say, source.msg, source.me]
   # for the source DMCC client.
   overwrite_minecraft_source_messages: false
 

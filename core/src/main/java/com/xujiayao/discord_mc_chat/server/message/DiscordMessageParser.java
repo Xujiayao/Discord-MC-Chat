@@ -1,4 +1,4 @@
-package com.xujiayao.discord_mc_chat.server.discord;
+package com.xujiayao.discord_mc_chat.server.message;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.network.packets.events.TextSegment;
@@ -1631,7 +1631,7 @@ public class DiscordMessageParser {
 	 * @param member The Discord member (may be null).
 	 * @return The hex color string (e.g. "#FF0000"), or "white" if no role color.
 	 */
-	static String getRoleColorHex(Member member) {
+	public static String getRoleColorHex(Member member) {
 		if (member == null) {
 			return "white";
 		}

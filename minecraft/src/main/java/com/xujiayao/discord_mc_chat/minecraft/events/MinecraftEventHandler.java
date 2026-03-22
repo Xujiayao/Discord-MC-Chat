@@ -153,7 +153,7 @@ public class MinecraftEventHandler {
 
 		EventManager.register(MinecraftEvents.PlayerJoin.class, event -> {
 			Map<String, String> placeholders = Map.of(
-					"user_name", event.serverPlayer().getName().getString(),
+					"player_name", event.serverPlayer().getName().getString(),
 					"display_name", event.serverPlayer().getDisplayName().getString()
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_JOIN, placeholders));
@@ -166,7 +166,7 @@ public class MinecraftEventHandler {
 
 		EventManager.register(MinecraftEvents.PlayerQuit.class, event -> {
 			Map<String, String> placeholders = Map.of(
-					"user_name", event.serverPlayer().getName().getString(),
+					"player_name", event.serverPlayer().getName().getString(),
 					"display_name", event.serverPlayer().getDisplayName().getString()
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_QUIT, placeholders));
@@ -174,7 +174,7 @@ public class MinecraftEventHandler {
 
 		EventManager.register(MinecraftEvents.PlayerDie.class, event -> {
 			Map<String, String> placeholders = Map.of(
-					"user_name", event.serverPlayer().getName().getString(),
+					"player_name", event.serverPlayer().getName().getString(),
 					"display_name", event.serverPlayer().getDisplayName().getString(),
 					"death_message", TranslationManager.get(event.serverPlayer().getCombatTracker().getDeathMessage())
 			);
@@ -195,7 +195,7 @@ public class MinecraftEventHandler {
 
 				Map<String, String> placeholders = Map.of(
 						"type", type,
-						"user_name", event.serverPlayer().getName().getString(),
+						"player_name", event.serverPlayer().getName().getString(),
 						"display_name", event.serverPlayer().getDisplayName().getString(),
 						"title", TranslationManager.get(displayInfo.getTitle()),
 						"description", TranslationManager.get(displayInfo.getDescription())
@@ -207,7 +207,7 @@ public class MinecraftEventHandler {
 
 		EventManager.register(MinecraftEvents.PlayerChangeGameMode.class, event -> {
 			Map<String, String> placeholders = Map.of(
-					"user_name", event.serverPlayer().getName().getString(),
+					"player_name", event.serverPlayer().getName().getString(),
 					"display_name", event.serverPlayer().getDisplayName().getString(),
 					"mode", TranslationManager.get(event.gameType().getLongDisplayName())
 			);
@@ -216,7 +216,8 @@ public class MinecraftEventHandler {
 
 		EventManager.register(MinecraftEvents.PlayerChat.class, event -> {
 			Map<String, String> placeholders = Map.of(
-					"user_name", event.serverPlayer().getName().getString(),
+					"player_uuid", event.serverPlayer().getStringUUID(),
+					"player_name", event.serverPlayer().getName().getString(),
 					"display_name", event.serverPlayer().getDisplayName().getString(),
 					"message", TranslationManager.get(event.playerChatMessage().decoratedContent())
 			);
@@ -225,7 +226,8 @@ public class MinecraftEventHandler {
 
 		EventManager.register(MinecraftEvents.PlayerCommand.class, event -> {
 			Map<String, String> placeholders = Map.of(
-					"user_name", event.serverPlayer().getName().getString(),
+					"player_uuid", event.serverPlayer().getStringUUID(),
+					"player_name", event.serverPlayer().getName().getString(),
 					"display_name", event.serverPlayer().getDisplayName().getString(),
 					"command", "/" + event.command()
 			);
@@ -234,7 +236,8 @@ public class MinecraftEventHandler {
 
 		EventManager.register(MinecraftEvents.SourceSay.class, event -> {
 			Map<String, String> placeholders = Map.of(
-					"user_name", event.commandContext().getSource().getTextName(),
+					"player_uuid", event.commandContext().getSource().getEntity() instanceof ServerPlayer player ? player.getStringUUID() : "",
+					"player_name", event.commandContext().getSource().getTextName(),
 					"display_name", event.commandContext().getSource().getDisplayName().getString(),
 					"message", TranslationManager.get(event.playerChatMessage().decoratedContent())
 			);
@@ -242,19 +245,13 @@ public class MinecraftEventHandler {
 		});
 
 		EventManager.register(MinecraftEvents.SourceTellRaw.class, event -> {
-			String input = event.commandContext().getInput();
-			String rawMessage = input.substring("tellraw @a ".length());
-			Map<String, String> placeholders = Map.of(
-					"user_name", event.commandContext().getSource().getTextName(),
-					"display_name", event.commandContext().getSource().getDisplayName().getString(),
-					"message", rawMessage
-			);
-			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_TELL_RAW, placeholders));
+			// TODO Rewrite
 		});
 
 		EventManager.register(MinecraftEvents.SourceMsg.class, event -> {
 			Map<String, String> placeholders = Map.of(
-					"user_name", event.commandContext().getSource().getTextName(),
+					"player_uuid", event.commandContext().getSource().getEntity() instanceof ServerPlayer player ? player.getStringUUID() : "",
+					"player_name", event.commandContext().getSource().getTextName(),
 					"display_name", event.commandContext().getSource().getDisplayName().getString(),
 					"message", TranslationManager.get(event.playerChatMessage().decoratedContent())
 			);
@@ -263,7 +260,7 @@ public class MinecraftEventHandler {
 
 		EventManager.register(MinecraftEvents.SourceMe.class, event -> {
 			Map<String, String> placeholders = Map.of(
-					"user_name", event.commandContext().getSource().getTextName(),
+					"player_name", event.commandContext().getSource().getTextName(),
 					"display_name", event.commandContext().getSource().getDisplayName().getString(),
 					"action", TranslationManager.get(event.playerChatMessage().decoratedContent())
 			);

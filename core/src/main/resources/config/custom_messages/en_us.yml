@@ -34,18 +34,37 @@ xxxxx_to_minecraft: # for both discord_to_minecraft and minecraft_to_minecraft
       bold: false
       color: "gray"
 
-single_server_overwrite:
-  user_message:
-    - text: "<{effective_name}> "
-      bold: false
-      color: "{role_color}"
-    - text: "{message}"
-      bold: false
-      color: "gray"
-  system_message:
-    - text: "{message}"
-      bold: false
-      color: "gray"
+overwrite:
+  standalone:
+    user_message:
+      - text: "[{server}] "
+        bold: true
+        color: "{server_color}"
+      - text: "<{display_name}> "
+        bold: false
+        color: "{role_color}"
+      - text: "{message}"
+        bold: false
+        color: "white"
+    system_message:
+      - text: "[{server}] "
+        bold: true
+        color: "{server_color}"
+      - text: "{message}"
+        bold: false
+        color: "white"
+  single_server:
+    user_message:
+      - text: "<{display_name}> "
+        bold: false
+        color: "{role_color}"
+      - text: "{message}"
+        bold: false
+        color: "white"
+    system_message:
+      - text: "{message}"
+        bold: false
+        color: "white"
 
 discord_to_minecraft:
   mentioned: "{effective_name} mentioned you!"

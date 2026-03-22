@@ -5,6 +5,7 @@ import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.events.DiscordEventPacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.TextSegment;
+import com.xujiayao.discord_mc_chat.server.message.DiscordMessageParser;
 import com.xujiayao.discord_mc_chat.utils.LogFileUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;

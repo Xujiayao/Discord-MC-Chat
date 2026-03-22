@@ -6,6 +6,7 @@ import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.Connection;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -116,7 +117,8 @@ public class MinecraftEvents {
 	 * Posted when the /tellraw command is used.
 	 */
 	public record SourceTellRaw(
-			CommandContext<CommandSourceStack> commandContext
+			CommandContext<CommandSourceStack> commandContext,
+			Component component
 	) {
 	}
 
@@ -124,9 +126,9 @@ public class MinecraftEvents {
 	 * Posted when the /msg, /tell, /w command is used.
 	 */
 	public record SourceMsg(
-					CommandContext<CommandSourceStack> commandContext,
-					PlayerChatMessage playerChatMessage
-			) {
+			CommandContext<CommandSourceStack> commandContext,
+			PlayerChatMessage playerChatMessage
+	) {
 	}
 
 	/**
