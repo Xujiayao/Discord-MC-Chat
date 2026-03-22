@@ -24,7 +24,7 @@ import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePa
 import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.link.OpSyncPacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.events.DiscordEventPacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.DiscordRelayPacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.TextSegment;
 import com.xujiayao.discord_mc_chat.network.packets.misc.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPongPacket;
@@ -64,14 +64,14 @@ public final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 		this.initialLoginFuture = initialLoginFuture;
 	}
 
-	private static void logDiscordEventForConsole(DiscordEventPacket p) {
+	private static void logDiscordEventForConsole(DiscordRelayPacket p) {
 		if (p.replySegments != null && !p.replySegments.isEmpty()) {
 			LOGGER.info(TextSegment.toPlainText(p.replySegments));
 		}
 		if (p.segments != null && !p.segments.isEmpty()) {
 			LOGGER.info(TextSegment.toPlainText(p.segments));
 		}
-		if (p.type == DiscordEventPacket.EventType.EDIT && p.editedMessageSegments != null && !p.editedMessageSegments.isEmpty()) {
+		if (p.type == DiscordRelayPacket.EventType.EDIT && p.editedMessageSegments != null && !p.editedMessageSegments.isEmpty()) {
 			LOGGER.info(TextSegment.toPlainText(p.editedMessageSegments));
 		}
 	}
@@ -215,7 +215,7 @@ public final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 					EventManager.post(new CoreEvents.UnlinkResponseEvent(p.minecraftUuid, p.success, p.discordName != null ? p.discordName : ""));
 			case OpSyncPacket p -> // Handle OP sync from server - apply OP levels to Minecraft players
 					EventManager.post(new CoreEvents.OpSyncEvent(p.opLevels));
-			case DiscordEventPacket p -> {
+			case DiscordRelayPacket p -> {
 				// Handle Discord event forwarded from server - render in Minecraft
 				if ("multi_server_client".equals(ModeManager.getMode())) {
 					logDiscordEventForConsole(p);

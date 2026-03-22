@@ -5,16 +5,18 @@ import com.xujiayao.discord_mc_chat.network.packets.Packet;
 import java.util.List;
 
 /**
- * Packet sent from DMCC Server to Client(s) when a Discord event needs to be
+ * Packet sent from DMCC Server to Client(s) when a message from Discord needs to be
  * rendered in Minecraft.
  * <p>
  * The server pre-processes the Discord message into a list of {@link TextSegment}
  * objects so that the client can directly build Minecraft Components without
  * needing access to Discord APIs or custom_messages resources.
+ * <p>
+ * This packet should be used for Discord messages only.
  *
  * @author Xujiayao
  */
-public final class DiscordEventPacket extends Packet {
+public final class DiscordRelayPacket extends Packet {
 
 	/**
 	 * The type of Discord event.
@@ -73,7 +75,7 @@ public final class DiscordEventPacket extends Packet {
 	 * @param type     The event type.
 	 * @param segments The pre-built text segments for the main message line.
 	 */
-	public DiscordEventPacket(EventType type, List<TextSegment> segments) {
+	public DiscordRelayPacket(EventType type, List<TextSegment> segments) {
 		this.type = type;
 		this.segments = segments;
 	}

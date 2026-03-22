@@ -13,7 +13,7 @@ import java.util.List;
  * Discord APIs or custom_messages.
  * <p>
  * This class is intentionally kept as a simple serializable POJO so that it can be
- * transmitted over the Netty channel inside {@link DiscordEventPacket}.
+ * transmitted over the Netty channel inside {@link DiscordRelayPacket}.
  *
  * @author Xujiayao
  */

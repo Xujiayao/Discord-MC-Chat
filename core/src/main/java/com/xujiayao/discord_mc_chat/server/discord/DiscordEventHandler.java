@@ -3,7 +3,7 @@ package com.xujiayao.discord_mc_chat.server.discord;
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
 import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
-import com.xujiayao.discord_mc_chat.network.packets.events.DiscordEventPacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.DiscordRelayPacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.TextSegment;
 import com.xujiayao.discord_mc_chat.server.message.DiscordMessageParser;
 import com.xujiayao.discord_mc_chat.utils.LogFileUtils;
@@ -51,14 +51,14 @@ public final class DiscordEventHandler extends ListenerAdapter {
 	private static final ConcurrentHashMap<String, CachedMessage> messageCache = new ConcurrentHashMap<>();
 	private static final int MAX_CACHE_SIZE = 200;
 
-	private static void logDiscordEventForConsole(DiscordEventPacket packet) {
+	private static void logDiscordEventForConsole(DiscordRelayPacket packet) {
 		if (packet.replySegments != null && !packet.replySegments.isEmpty()) {
 			LOGGER.info(TextSegment.toPlainText(packet.replySegments));
 		}
 		if (packet.segments != null && !packet.segments.isEmpty()) {
 			LOGGER.info(TextSegment.toPlainText(packet.segments));
 		}
-		if (packet.type == DiscordEventPacket.EventType.EDIT && packet.editedMessageSegments != null && !packet.editedMessageSegments.isEmpty()) {
+		if (packet.type == DiscordRelayPacket.EventType.EDIT && packet.editedMessageSegments != null && !packet.editedMessageSegments.isEmpty()) {
 			LOGGER.info(TextSegment.toPlainText(packet.editedMessageSegments));
 		}
 	}
@@ -144,7 +144,7 @@ public final class DiscordEventHandler extends ListenerAdapter {
 			}
 
 			List<TextSegment> segments = DiscordMessageParser.buildCommandSegments(effectiveName, roleColor, fullCommand.toString());
-			DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.COMMAND, segments);
+			DiscordRelayPacket packet = new DiscordRelayPacket(DiscordRelayPacket.EventType.COMMAND, segments);
 			logDiscordEventForConsole(packet);
 			NetworkManager.broadcastToClients(packet);
 		}
@@ -427,7 +427,7 @@ public final class DiscordEventHandler extends ListenerAdapter {
 		}
 
 		// Build and send the DiscordEventPacket to all connected clients
-		DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.CHAT, mainSegments);
+		DiscordRelayPacket packet = new DiscordRelayPacket(DiscordRelayPacket.EventType.CHAT, mainSegments);
 		packet.replySegments = replySegments;
 		packet.mentionNotificationText = mentionNotificationText;
 		packet.mentionNotificationStyle = mentionNotificationStyle;
@@ -474,13 +474,13 @@ public final class DiscordEventHandler extends ListenerAdapter {
 
 		event.retrieveMessage().queue(targetMessage -> {
 			List<TextSegment> segments = DiscordMessageParser.buildReactionSegments(reactorName, roleColor, emojiText);
-			DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.REACTION, segments);
+			DiscordRelayPacket packet = new DiscordRelayPacket(DiscordRelayPacket.EventType.REACTION, segments);
 			packet.replySegments = DiscordMessageParser.buildReplySegments(targetMessage);
 			logDiscordEventForConsole(packet);
 			NetworkManager.broadcastToClients(packet);
 		}, _ -> {
 			List<TextSegment> segments = DiscordMessageParser.buildReactionSegments(reactorName, roleColor, emojiText);
-			DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.REACTION, segments);
+			DiscordRelayPacket packet = new DiscordRelayPacket(DiscordRelayPacket.EventType.REACTION, segments);
 			logDiscordEventForConsole(packet);
 			NetworkManager.broadcastToClients(packet);
 		});
@@ -541,7 +541,7 @@ public final class DiscordEventHandler extends ListenerAdapter {
 		// Build new message content segments
 		List<TextSegment> editedMessageSegments = DiscordMessageParser.buildEditedMessageSegments(message);
 
-		DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.EDIT, notificationSegments);
+		DiscordRelayPacket packet = new DiscordRelayPacket(DiscordRelayPacket.EventType.EDIT, notificationSegments);
 		packet.replySegments = replySegments;
 		packet.editedMessageSegments = editedMessageSegments;
 		logDiscordEventForConsole(packet);
@@ -575,14 +575,14 @@ public final class DiscordEventHandler extends ListenerAdapter {
 		if (cached == null) {
 			// No cached info - send a generic delete notification
 			List<TextSegment> segments = DiscordMessageParser.buildDeleteSegments(I18nManager.getDmccTranslation("discord.message_parser.unknown_user"), "white");
-			DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.DELETE, segments);
+			DiscordRelayPacket packet = new DiscordRelayPacket(DiscordRelayPacket.EventType.DELETE, segments);
 			logDiscordEventForConsole(packet);
 			NetworkManager.broadcastToClients(packet);
 			return;
 		}
 
 		List<TextSegment> segments = DiscordMessageParser.buildDeleteSegments(cached.authorName(), cached.authorRoleColor());
-		DiscordEventPacket packet = new DiscordEventPacket(DiscordEventPacket.EventType.DELETE, segments);
+		DiscordRelayPacket packet = new DiscordRelayPacket(DiscordRelayPacket.EventType.DELETE, segments);
 		packet.replySegments = DiscordMessageParser.buildReplySegments(
 				cached.authorName(),
 				cached.authorRoleColor(),
