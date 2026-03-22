@@ -26,7 +26,7 @@ import com.xujiayao.discord_mc_chat.network.packets.commands.link.OpSyncPacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.DiscordRelayPacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftRelayPacket;
-import com.xujiayao.discord_mc_chat.network.packets.events.TextSegment;
+import com.xujiayao.discord_mc_chat.utils.message.TextSegment;
 import com.xujiayao.discord_mc_chat.network.packets.misc.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPongPacket;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;

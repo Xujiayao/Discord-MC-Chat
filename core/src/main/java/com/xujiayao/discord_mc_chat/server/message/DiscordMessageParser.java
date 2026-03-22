@@ -1,7 +1,7 @@
 package com.xujiayao.discord_mc_chat.server.message;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.xujiayao.discord_mc_chat.network.packets.events.TextSegment;
+import com.xujiayao.discord_mc_chat.utils.message.TextSegment;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;

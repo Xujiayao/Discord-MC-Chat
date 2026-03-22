@@ -1,7 +1,7 @@
 package com.xujiayao.discord_mc_chat.utils.events;
 
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
-import com.xujiayao.discord_mc_chat.network.packets.events.TextSegment;
+import com.xujiayao.discord_mc_chat.utils.message.TextSegment;
 
 import java.util.List;
 import java.util.Map;
