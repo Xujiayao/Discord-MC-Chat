@@ -430,7 +430,7 @@ public final class DiscordMessageParser {
 	 * @return The mention notification text.
 	 */
 	public static String getMentionNotificationText(String effectiveName) {
-		String template = I18nManager.getCustomMessages().path("discord_to_minecraft").path("mentioned").asText();
+		String template = I18nManager.getCustomMessages().path("xxxxx_to_minecraft").path("mentioned").asText();
 		return template.replace("{effective_name}", effectiveName);
 	}
 
