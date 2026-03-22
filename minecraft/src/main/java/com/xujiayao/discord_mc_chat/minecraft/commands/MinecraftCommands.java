@@ -63,7 +63,7 @@ public final class MinecraftCommands {
 		var stats = literal("stats")
 				.requires(source -> source.hasPermission(ConfigManager.getInt("command_permission_levels.stats", -1)))
 				.then(argument("type", ResourceLocationArgument.id())
-						.suggests((ctx, builder) -> SharedSuggestionProvider.suggestResource(
+						.suggests((_, builder) -> SharedSuggestionProvider.suggestResource(
 								BuiltInRegistries.STAT_TYPE.keySet(), builder))
 						.then(argument("stat", ResourceLocationArgument.id())
 								.suggests((ctx, builder) -> {

@@ -25,7 +25,7 @@ public final class StandaloneDMCC {
 	 *
 	 * @param args Command line arguments
 	 */
-	public static void main(String[] args) {
+	static void main(String[] args) {
 		for (String arg : args) {
 			if ("--disable-ascii".equalsIgnoreCase(arg)) {
 				LoggerImpl.setConsoleAnsiEnabled(false);

@@ -154,7 +154,7 @@ public final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 
 				try {
 					CommandManager.executeAndWait(captureSender, p.command, p.args)
-							.whenComplete((v, ex) -> {
+							.whenComplete((_, ex) -> {
 								ExecuteResponsePacket response;
 								if (ex != null) {
 									response = new ExecuteResponsePacket(p.requestId, I18nManager.getDmccTranslation("commands.execution_failed", ex.getMessage()));
@@ -196,7 +196,7 @@ public final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 				// Use the completion future with a timeout to send the response reliably
 				completionFuture
 						.orTimeout(CONSOLE_COMMAND_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-						.whenComplete((v, ex) -> ctx.writeAndFlush(new ConsoleResponsePacket(p.requestId, responseBuilder.toString())));
+						.whenComplete((_, _) -> ctx.writeAndFlush(new ConsoleResponsePacket(p.requestId, responseBuilder.toString())));
 			}
 			case ExecuteAutoCompleteRequestPacket p -> {
 				// Handle DMCC command auto-complete with OP level filtering

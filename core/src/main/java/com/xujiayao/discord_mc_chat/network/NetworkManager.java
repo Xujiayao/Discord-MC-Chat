@@ -107,7 +107,7 @@ public final class NetworkManager {
 	 * @param packet The packet to send
 	 */
 	public static void broadcastToClients(Packet packet) {
-		clientChannels.forEach((channel, name) -> channel.writeAndFlush(packet));
+		clientChannels.forEach((channel, _) -> channel.writeAndFlush(packet));
 	}
 
 	/**

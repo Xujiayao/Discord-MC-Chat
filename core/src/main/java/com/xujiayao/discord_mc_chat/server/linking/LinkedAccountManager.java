@@ -155,7 +155,7 @@ public final class LinkedAccountManager {
 			return false;
 		}
 
-		LINKED_ACCOUNTS.computeIfAbsent(discordId, k -> new ArrayList<>())
+		LINKED_ACCOUNTS.computeIfAbsent(discordId, _ -> new ArrayList<>())
 				.add(new LinkEntry(minecraftUuid, System.currentTimeMillis(), isOfflineUuid(minecraftUuid) ? minecraftName : null));
 		UUID_TO_DISCORD.put(minecraftUuid, discordId);
 

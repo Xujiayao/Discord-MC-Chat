@@ -25,7 +25,7 @@ public final class EventManager {
 	 * @param <T>        The type of the event
 	 */
 	public static <T> void register(Class<T> eventClass, Consumer<T> handler) {
-		handlers.computeIfAbsent(eventClass, k -> new CopyOnWriteArrayList<>()).add(handler);
+		handlers.computeIfAbsent(eventClass, _ -> new CopyOnWriteArrayList<>()).add(handler);
 	}
 
 	/**
