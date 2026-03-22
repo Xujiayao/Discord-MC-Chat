@@ -294,6 +294,9 @@ public final class MinecraftMessageParser {
 				if (!raw.startsWith(delimiter, i)) {
 					continue;
 				}
+				if (isUnderscoreDelimiter(delimiter) && isInsideDiscordAliasEmoji(raw, i)) {
+					continue;
+				}
 				if (!shouldConsumeDelimiter(state, delimiter, raw, i)) {
 					continue;
 				}
@@ -553,6 +556,29 @@ public final class MinecraftMessageParser {
 			return true;
 		}
 		return hasClosingDelimiter(text, at + delimiter.length(), delimiter);
+	}
+
+	private static boolean isUnderscoreDelimiter(String delimiter) {
+		return "_".equals(delimiter) || "__".equals(delimiter);
+	}
+
+	private static boolean isInsideDiscordAliasEmoji(String text, int index) {
+		if (index <= 0 || index >= text.length()) {
+			return false;
+		}
+		int leftColon = text.lastIndexOf(':', index);
+		if (leftColon < 0) {
+			return false;
+		}
+		int rightColon = text.indexOf(':', index);
+		if (rightColon < 0 || rightColon <= leftColon + 1) {
+			return false;
+		}
+		if (index <= leftColon || index >= rightColon) {
+			return false;
+		}
+		String candidate = text.substring(leftColon, rightColon + 1);
+		return DISCORD_ALIAS_EMOJI_PATTERN.matcher(candidate).matches();
 	}
 
 	private static boolean isDelimiterActive(MarkdownState state, String delimiter) {
