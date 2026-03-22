@@ -222,6 +222,7 @@ public final class MinecraftMessageParser {
 		Map<String, MentionTarget> roleByAlias = new HashMap<>();
 		Map<String, MentionTarget> allMentionByAlias = new HashMap<>();
 		Map<String, RichCustomEmoji> emojiByAlias = new HashMap<>();
+		Map<String, MentionTarget> targetByDiscordId = new HashMap<>();
 
 		Map<String, List<LinkedAccountManager.LinkEntry>> allLinks = LinkedAccountManager.getAllLinks();
 		for (Map.Entry<String, List<LinkedAccountManager.LinkEntry>> entry : allLinks.entrySet()) {
@@ -234,6 +235,7 @@ public final class MinecraftMessageParser {
 			String roleColor = DiscordMessageParser.getRoleColorHex(member);
 
 			MentionTarget target = new MentionTarget(MentionType.USER, discordId, displayName, roleColor, linkedUuids);
+			targetByDiscordId.put(discordId, target);
 
 			if (user != null) {
 				putMentionAlias(userByAlias, allMentionByAlias, user.getName(), target);
@@ -247,6 +249,21 @@ public final class MinecraftMessageParser {
 					putMentionAlias(userByAlias, allMentionByAlias, playerName, target);
 				}
 			}
+		}
+
+		for (Member member : DiscordManager.getAllMembers()) {
+			String discordId = member.getId();
+			MentionTarget target = targetByDiscordId.computeIfAbsent(discordId, id -> new MentionTarget(
+					MentionType.USER,
+					id,
+					member.getEffectiveName(),
+					DiscordMessageParser.getRoleColorHex(member),
+					List.of()
+			));
+
+			User user = member.getUser();
+			putMentionAlias(userByAlias, allMentionByAlias, user.getName(), target);
+			putMentionAlias(userByAlias, allMentionByAlias, member.getEffectiveName(), target);
 		}
 
 		for (Role role : DiscordManager.getAllRoles()) {

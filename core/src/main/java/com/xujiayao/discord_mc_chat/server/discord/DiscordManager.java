@@ -348,6 +348,25 @@ public final class DiscordManager {
 	}
 
 	/**
+	 * Gets all Discord members from every connected guild.
+	 */
+	public static List<Member> getAllMembers() {
+		if (jda == null) {
+			return List.of();
+		}
+		Set<String> seen = new LinkedHashSet<>();
+		List<Member> members = new ArrayList<>();
+		for (var guild : jda.getGuilds()) {
+			for (Member member : guild.getMembers()) {
+				if (seen.add(member.getId())) {
+					members.add(member);
+				}
+			}
+		}
+		return members;
+	}
+
+	/**
 	 * Gets all guild roles from every connected guild.
 	 */
 	public static List<Role> getAllRoles() {
