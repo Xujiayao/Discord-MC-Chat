@@ -583,6 +583,13 @@ public class DiscordMessageParser {
 													 boolean parseHyperlinks, boolean parseTimestamps) {
 		List<TextSegment> segments = new ArrayList<>();
 
+		// Mentions/timestamps are split after Markdown so nested formatting (e.g. **<@id>**) is preserved.
+		if (parseMarkdown) {
+			segments.addAll(parseMarkdownText(raw));
+			return postProcessInlineSegments(segments, message, parseMentions, parseTimestamps,
+					parseCustomEmojis, parseUnicodeEmojis, parseHyperlinks);
+		}
+
 		List<TokenSpan> tokens = new ArrayList<>();
 
 		if (parseMentions) {
@@ -611,11 +618,7 @@ public class DiscordMessageParser {
 		for (TokenSpan token : tokens) {
 			if (token.start > cursor) {
 				String plainText = raw.substring(cursor, token.start);
-				if (parseMarkdown) {
-					segments.addAll(parseMarkdownText(plainText));
-				} else {
-					segments.add(new TextSegment(plainText));
-				}
+				segments.add(new TextSegment(plainText));
 			}
 			segments.add(token.segment);
 			cursor = token.end;
@@ -624,14 +627,11 @@ public class DiscordMessageParser {
 		// Remaining text after last token
 		if (cursor < raw.length()) {
 			String remaining = raw.substring(cursor);
-			if (parseMarkdown) {
-				segments.addAll(parseMarkdownText(remaining));
-			} else {
-				segments.add(new TextSegment(remaining));
-			}
+			segments.add(new TextSegment(remaining));
 		}
 
-		return postProcessInlineSegments(segments, parseCustomEmojis, parseUnicodeEmojis, parseHyperlinks);
+		return postProcessInlineSegments(segments, message, false, false,
+				parseCustomEmojis, parseUnicodeEmojis, parseHyperlinks);
 	}
 
 	private static List<TextSegment> parseMessageContentWithoutMessage(String raw) {
@@ -1105,10 +1105,13 @@ public class DiscordMessageParser {
 	}
 
 	private static List<TextSegment> postProcessInlineSegments(List<TextSegment> segments,
+															   Message message,
+															   boolean parseMentions,
+															   boolean parseTimestamps,
 															   boolean parseCustomEmojis,
 															   boolean parseUnicodeEmojis,
 															   boolean parseHyperlinks) {
-		if ((!parseCustomEmojis && !parseUnicodeEmojis && !parseHyperlinks) || segments.isEmpty()) {
+		if ((!parseMentions && !parseTimestamps && !parseCustomEmojis && !parseUnicodeEmojis && !parseHyperlinks) || segments.isEmpty()) {
 			return segments;
 		}
 		List<TextSegment> out = new ArrayList<>();
@@ -1118,6 +1121,15 @@ public class DiscordMessageParser {
 				continue;
 			}
 			List<TextSegment> current = List.of(segment);
+			if (parseMentions && message != null) {
+				current = splitSegmentsByUserMention(current, message);
+				current = splitSegmentsByRoleMention(current, message);
+				current = splitSegmentsByChannelMention(current, message);
+				current = splitSegmentsByEveryoneHereMention(current, message);
+			}
+			if (parseTimestamps) {
+				current = splitSegmentsByTimestamp(current);
+			}
 			if (parseHyperlinks) {
 				current = splitSegmentsByMarkdownLink(current);
 				current = splitSegmentsByBareUrl(current);
@@ -1134,6 +1146,182 @@ public class DiscordMessageParser {
 					seg.hoverText = seg.text;
 				}
 				out.add(seg);
+			}
+		}
+		return out;
+	}
+
+	private static List<TextSegment> splitSegmentsByUserMention(List<TextSegment> segments, Message message) {
+		List<TextSegment> out = new ArrayList<>();
+		for (TextSegment segment : segments) {
+			if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
+				out.add(segment);
+				continue;
+			}
+			Matcher matcher = USER_MENTION_PATTERN.matcher(segment.text);
+			int cursor = 0;
+			while (matcher.find()) {
+				if (matcher.start() > cursor) {
+					out.add(copySegment(segment, segment.text.substring(cursor, matcher.start())));
+				}
+				String userId = matcher.group(1);
+				String displayName = userId;
+				String color = "white";
+				for (User user : message.getMentions().getUsers()) {
+					if (user.getId().equals(userId)) {
+						Member member = message.getGuild().getMember(user);
+						displayName = member != null ? member.getEffectiveName() : user.getName();
+						color = colorOrDefault(getRoleColorHex(member));
+						break;
+					}
+				}
+				TextSegment mention = copySegment(segment, "[@" + displayName + "]");
+				mention.color = color;
+				out.add(mention);
+				cursor = matcher.end();
+			}
+			if (cursor == 0) {
+				out.add(segment);
+			} else if (cursor < segment.text.length()) {
+				out.add(copySegment(segment, segment.text.substring(cursor)));
+			}
+		}
+		return out;
+	}
+
+	private static List<TextSegment> splitSegmentsByRoleMention(List<TextSegment> segments, Message message) {
+		List<TextSegment> out = new ArrayList<>();
+		for (TextSegment segment : segments) {
+			if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
+				out.add(segment);
+				continue;
+			}
+			Matcher matcher = ROLE_MENTION_PATTERN.matcher(segment.text);
+			int cursor = 0;
+			while (matcher.find()) {
+				if (matcher.start() > cursor) {
+					out.add(copySegment(segment, segment.text.substring(cursor, matcher.start())));
+				}
+				String roleId = matcher.group(1);
+				String roleName = roleId;
+				String color = "white";
+				for (Role role : message.getMentions().getRoles()) {
+					if (role.getId().equals(roleId)) {
+						roleName = role.getName();
+						Color roleColor = role.getColors().getPrimary();
+						if (roleColor != null) {
+							color = String.format("#%06X", roleColor.getRGB() & 0xFFFFFF);
+						}
+						break;
+					}
+				}
+				TextSegment mention = copySegment(segment, "[@" + roleName + "]");
+				mention.color = color;
+				out.add(mention);
+				cursor = matcher.end();
+			}
+			if (cursor == 0) {
+				out.add(segment);
+			} else if (cursor < segment.text.length()) {
+				out.add(copySegment(segment, segment.text.substring(cursor)));
+			}
+		}
+		return out;
+	}
+
+	private static List<TextSegment> splitSegmentsByChannelMention(List<TextSegment> segments, Message message) {
+		List<TextSegment> out = new ArrayList<>();
+		for (TextSegment segment : segments) {
+			if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
+				out.add(segment);
+				continue;
+			}
+			Matcher matcher = CHANNEL_MENTION_PATTERN.matcher(segment.text);
+			int cursor = 0;
+			while (matcher.find()) {
+				if (matcher.start() > cursor) {
+					out.add(copySegment(segment, segment.text.substring(cursor, matcher.start())));
+				}
+				String channelId = matcher.group(1);
+				String channelName = channelId;
+				for (GuildChannel channel : message.getMentions().getChannels()) {
+					if (channel.getId().equals(channelId)) {
+						channelName = channel.getName();
+						break;
+					}
+				}
+				TextSegment mention = copySegment(segment, "[#" + channelName + "]");
+				mention.color = "yellow";
+				out.add(mention);
+				cursor = matcher.end();
+			}
+			if (cursor == 0) {
+				out.add(segment);
+			} else if (cursor < segment.text.length()) {
+				out.add(copySegment(segment, segment.text.substring(cursor)));
+			}
+		}
+		return out;
+	}
+
+	private static List<TextSegment> splitSegmentsByEveryoneHereMention(List<TextSegment> segments, Message message) {
+		if (!message.getMentions().mentionsEveryone()) {
+			return segments;
+		}
+		List<TextSegment> out = new ArrayList<>();
+		for (TextSegment segment : segments) {
+			if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
+				out.add(segment);
+				continue;
+			}
+			Matcher matcher = EVERYONE_HERE_PATTERN.matcher(segment.text);
+			int cursor = 0;
+			while (matcher.find()) {
+				if (matcher.start() > cursor) {
+					out.add(copySegment(segment, segment.text.substring(cursor, matcher.start())));
+				}
+				TextSegment mention = copySegment(segment, "[@" + matcher.group(1) + "]");
+				mention.color = "yellow";
+				out.add(mention);
+				cursor = matcher.end();
+			}
+			if (cursor == 0) {
+				out.add(segment);
+			} else if (cursor < segment.text.length()) {
+				out.add(copySegment(segment, segment.text.substring(cursor)));
+			}
+		}
+		return out;
+	}
+
+	private static List<TextSegment> splitSegmentsByTimestamp(List<TextSegment> segments) {
+		List<TextSegment> out = new ArrayList<>();
+		for (TextSegment segment : segments) {
+			if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
+				out.add(segment);
+				continue;
+			}
+			Matcher matcher = DISCORD_TIMESTAMP_PATTERN.matcher(segment.text);
+			int cursor = 0;
+			while (matcher.find()) {
+				if (matcher.start() > cursor) {
+					out.add(copySegment(segment, segment.text.substring(cursor, matcher.start())));
+				}
+				try {
+					long epoch = Long.parseLong(matcher.group(1));
+					String style = matcher.group(2);
+					TextSegment timestampSegment = copySegment(segment, "[" + formatDiscordTimestamp(epoch, style) + "]");
+					timestampSegment.color = "yellow";
+					out.add(timestampSegment);
+				} catch (Exception ignored) {
+					out.add(copySegment(segment, matcher.group()));
+				}
+				cursor = matcher.end();
+			}
+			if (cursor == 0) {
+				out.add(segment);
+			} else if (cursor < segment.text.length()) {
+				out.add(copySegment(segment, segment.text.substring(cursor)));
 			}
 		}
 		return out;
