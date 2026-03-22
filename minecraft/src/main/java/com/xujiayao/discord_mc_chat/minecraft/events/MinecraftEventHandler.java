@@ -667,6 +667,38 @@ public final class MinecraftEventHandler {
 				}
 			});
 		});
+
+		EventManager.register(CoreEvents.MinecraftRelayMessageEvent.class, event -> {
+			if (serverInstance == null) return;
+
+			serverInstance.execute(() -> {
+				PlayerList playerList = serverInstance.getPlayerList();
+				Component component = buildComponentFromSegments(event.segments());
+				for (ServerPlayer player : playerList.getPlayers()) {
+					player.sendSystemMessage(component);
+				}
+
+				if (event.mentionNotificationText() != null) {
+					Component notificationComponent = Component.literal(event.mentionNotificationText())
+							.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD);
+					if (event.mentionEveryone()) {
+						for (ServerPlayer player : playerList.getPlayers()) {
+							sendMentionNotification(player, notificationComponent, event.mentionNotificationStyle());
+						}
+					} else if (event.mentionedPlayerUuids() != null && !event.mentionedPlayerUuids().isEmpty()) {
+						for (String uuidStr : event.mentionedPlayerUuids()) {
+							try {
+								ServerPlayer player = playerList.getPlayer(UUID.fromString(uuidStr));
+								if (player != null) {
+									sendMentionNotification(player, notificationComponent, event.mentionNotificationStyle());
+								}
+							} catch (Exception ignored) {
+							}
+						}
+					}
+				}
+			});
+		});
 	}
 
 	private static List<String> getSuggestionsForInput(String input, CommandSourceStack source) throws Exception {

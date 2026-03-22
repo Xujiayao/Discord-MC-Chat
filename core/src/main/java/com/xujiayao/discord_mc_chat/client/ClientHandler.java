@@ -25,6 +25,7 @@ import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkResponsePa
 import com.xujiayao.discord_mc_chat.network.packets.commands.link.OpSyncPacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.DiscordRelayPacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftRelayPacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.TextSegment;
 import com.xujiayao.discord_mc_chat.network.packets.misc.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPongPacket;
@@ -245,6 +246,13 @@ public final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 					));
 				}
 			}
+			case MinecraftRelayPacket p -> EventManager.post(new CoreEvents.MinecraftRelayMessageEvent(
+					p.segments,
+					p.mentionNotificationText,
+					p.mentionNotificationStyle,
+					p.mentionedPlayerUuids,
+					p.mentionEveryone
+			));
 			case DisconnectPacket p -> {
 				// If we receive a DisconnectPacket, it means the server explicitly rejected us.
 				// In most cases (whitelist, auth fail, version mismatch), retrying immediately won't help.

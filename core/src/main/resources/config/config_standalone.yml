@@ -218,7 +218,7 @@ account_linking:
             op_level: 0
           - server: "CMP"
             op_level: 2
-  discord_mention_notifications:
+  mention_notifications:
     enable: true
     style: "title"  # action_bar, title, or chat
   discord_user_avatar_for_webhooks: false

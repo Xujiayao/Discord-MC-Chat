@@ -164,7 +164,7 @@ account_linking:
       # 示例 2：可将基础认证角色映射为 OP 0，使其有权执行无需特殊权限的 DMCC 命令（如委托执行白名单）。
       - role: "Players"
         op_level: 0
-  discord_mention_notifications:
+  mention_notifications:
     enable: true
     style: "title"  # action_bar, title, or chat
   discord_user_avatar_for_webhooks: false

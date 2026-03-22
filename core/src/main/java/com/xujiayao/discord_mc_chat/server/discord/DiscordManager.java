@@ -3,6 +3,7 @@ package com.xujiayao.discord_mc_chat.server.discord;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePacket;
+import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
@@ -14,9 +15,11 @@ import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -29,8 +32,10 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -340,6 +345,142 @@ public final class DiscordManager {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Gets all guild roles from every connected guild.
+	 */
+	public static List<Role> getAllRoles() {
+		if (jda == null) {
+			return List.of();
+		}
+		Set<String> seen = new LinkedHashSet<>();
+		List<Role> roles = new ArrayList<>();
+		for (var guild : jda.getGuilds()) {
+			for (Role role : guild.getRoles()) {
+				if (seen.add(role.getId())) {
+					roles.add(role);
+				}
+			}
+		}
+		return roles;
+	}
+
+	/**
+	 * Gets all Discord user IDs for members that currently have the specified role.
+	 */
+	public static List<String> getDiscordIdsByRoleId(String roleId) {
+		if (jda == null || roleId == null || roleId.isBlank()) {
+			return List.of();
+		}
+		Set<String> ids = new LinkedHashSet<>();
+		for (var guild : jda.getGuilds()) {
+			Role role = guild.getRoleById(roleId);
+			if (role == null) {
+				continue;
+			}
+			for (Member member : guild.getMembersWithRoles(role)) {
+				ids.add(member.getId());
+			}
+		}
+		return new ArrayList<>(ids);
+	}
+
+	/**
+	 * Gets all custom emojis from every connected guild.
+	 */
+	public static List<RichCustomEmoji> getAllCustomEmojis() {
+		if (jda == null) {
+			return List.of();
+		}
+		Set<String> seen = new LinkedHashSet<>();
+		List<RichCustomEmoji> emojis = new ArrayList<>();
+		for (var guild : jda.getGuilds()) {
+			for (RichCustomEmoji emoji : guild.getEmojis()) {
+				if (seen.add(emoji.getId())) {
+					emojis.add(emoji);
+				}
+			}
+		}
+		return emojis;
+	}
+
+	/**
+	 * Sends a Minecraft user-originated message to Discord using the configured style template.
+	 */
+	public static void sendMinecraftUserMessage(String clientName, String channelNode, Map<String, String> placeholders) {
+		String channelIdentifier = ConfigManager.getString("broadcasts.minecraft_to_discord." + channelNode);
+		if (channelIdentifier == null || channelIdentifier.isBlank()) {
+			return;
+		}
+		TextChannel channel = getTextChannel(channelIdentifier);
+		if (channel == null) {
+			return;
+		}
+
+		try {
+			JsonNode node = I18nManager.getCustomMessages().path("minecraft_to_discord").path("user_message");
+			if (node.isMissingNode() || node.isNull()) {
+				return;
+			}
+
+			String mode = "standalone".equals(ModeManager.getMode()) ? "standalone" : "single_server";
+			boolean fakeUserStyle = Boolean.TRUE.equals(ConfigManager.getBoolean("discord.webhook.enable_fake_user_style"));
+
+			if (fakeUserStyle) {
+				JsonNode styleNode = node.path("enabled_fake_user_style").path(mode);
+				String usernameTemplate = styleNode.path("username").asText("{display_name}");
+				String contentTemplate = styleNode.path("content").asText("{message}");
+
+				String username = replacePlaceholders(usernameTemplate, placeholders);
+				String content = replacePlaceholders(contentTemplate, placeholders);
+
+				String avatarUrl = resolveWebhookAvatarUrl(placeholders);
+				sendWebhookMessage(channel, username, avatarUrl, content);
+				return;
+			}
+
+			String contentTemplate = node.path("disabled_fake_user_style").path(mode).asText("<{display_name}> {message}");
+			String content = replacePlaceholders(contentTemplate, placeholders);
+
+			if ("standalone".equals(ModeManager.getMode())) {
+				String avatarUrl = getClientAvatarUrl(clientName);
+				sendWebhookMessage(channel, clientName, avatarUrl, content);
+			} else {
+				sendBotMessage(channelIdentifier, content);
+			}
+		} catch (Exception e) {
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
+		}
+	}
+
+	private static String replacePlaceholders(String template, Map<String, String> placeholders) {
+		String out = template;
+		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+			out = out.replace("{" + entry.getKey() + "}", entry.getValue() == null ? "" : entry.getValue());
+		}
+		return out;
+	}
+
+	private static String resolveWebhookAvatarUrl(Map<String, String> placeholders) {
+		if (Boolean.TRUE.equals(ConfigManager.getBoolean("account_linking.discord_user_avatar_for_webhooks"))) {
+			String playerUuid = placeholders.getOrDefault("player_uuid", "");
+			if (!playerUuid.isBlank()) {
+				String discordId = LinkedAccountManager.getDiscordIdByMinecraftUuid(playerUuid);
+				if (discordId != null && !discordId.isBlank()) {
+					User user = retrieveUser(discordId);
+					if (user != null) {
+						String avatar = user.getEffectiveAvatarUrl();
+						if (!avatar.isBlank()) {
+							return avatar;
+						}
+					}
+				}
+			}
+		}
+
+		String avatarTemplate = ConfigManager.getString("discord.webhook.avatar_url", "https://mc-heads.net/avatar/{player_name}.png");
+		return replacePlaceholders(avatarTemplate, placeholders);
 	}
 
 	/**

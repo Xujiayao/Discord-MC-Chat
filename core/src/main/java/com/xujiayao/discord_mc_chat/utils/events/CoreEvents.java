@@ -178,4 +178,21 @@ public final class CoreEvents {
 			List<TextSegment> replySegments
 	) {
 	}
+
+	/**
+	 * Posted when a Minecraft-originated relayed message should be displayed in Minecraft.
+	 *
+	 * @param segments                 The parsed message segments.
+	 * @param mentionNotificationText  Mention notification text, or null.
+	 * @param mentionNotificationStyle Mention notification style.
+	 * @param mentionedPlayerUuids     UUIDs to receive mention notifications.
+	 */
+	public record MinecraftRelayMessageEvent(
+			List<TextSegment> segments,
+			String mentionNotificationText,
+			String mentionNotificationStyle,
+			List<String> mentionedPlayerUuids,
+			boolean mentionEveryone
+	) {
+	}
 }

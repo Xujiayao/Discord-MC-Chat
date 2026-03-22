@@ -21,6 +21,8 @@ import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkResponsePa
 import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkRequestPacket;
 import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftEventPacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftRelayPacket;
+import com.xujiayao.discord_mc_chat.network.packets.events.TextSegment;
 import com.xujiayao.discord_mc_chat.network.packets.misc.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPingPacket;
 import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPongPacket;
@@ -28,6 +30,8 @@ import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.server.linking.OpSyncManager;
 import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
+import com.xujiayao.discord_mc_chat.server.message.DiscordMessageParser;
+import com.xujiayao.discord_mc_chat.server.message.MinecraftMessageParser;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
@@ -36,6 +40,10 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
@@ -108,6 +116,11 @@ public final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 								DiscordManager.clientBroadcast(clientName, "player.advancement", "player.advancement." + p.placeholders.get("type"), p.placeholders);
 						case PLAYER_CHANGE_GAME_MODE ->
 								DiscordManager.clientBroadcast(clientName, "player.change_game_mode", "player.change_game_mode", p.placeholders);
+						case PLAYER_CHAT -> handleMinecraftUserMessage(p, clientName, "player.chat");
+						case PLAYER_COMMAND -> handleMinecraftCommandMessage(p, clientName);
+						case SOURCE_SAY -> handleMinecraftUserMessage(p, clientName, "source.say");
+						case SOURCE_MSG -> handleMinecraftUserMessage(p, clientName, "source.msg");
+						case SOURCE_ME -> handleMinecraftSystemMessage(p, clientName);
 						// TODO Unhandled events
 					}
 				}
@@ -273,5 +286,115 @@ public final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	private String getMinecraftVersion(String serverName) {
 		JsonNode config = findServerConfig(serverName);
 		return config != null ? config.path("minecraft_version").asText() : "";
+	}
+
+	private void handleMinecraftUserMessage(MinecraftEventPacket packet,
+											String sourceClientName,
+											String channelNode) {
+		String rawContent = packet.placeholders.getOrDefault("message", "");
+		String displayName = packet.placeholders.getOrDefault("display_name", packet.placeholders.getOrDefault("player_name", "Unknown"));
+		String roleColor = resolveDisplayRoleColor(packet.placeholders.getOrDefault("player_uuid", ""));
+
+		boolean parseForMinecraft = true;
+		MinecraftMessageParser.ParsedMessage parsed = MinecraftMessageParser.parseUserMessage(rawContent, parseForMinecraft);
+		List<TextSegment> relaySegments = MinecraftMessageParser.buildUserMessageSegments(sourceClientName, displayName, roleColor, parsed.minecraftSegments());
+		List<TextSegment> overwriteSegments = MinecraftMessageParser.buildOverwriteUserMessageSegments(sourceClientName, displayName, roleColor, parsed.minecraftSegments());
+
+		Map<String, String> discordPlaceholders = new HashMap<>(packet.placeholders);
+		discordPlaceholders.put("server", sourceClientName);
+		discordPlaceholders.put("message", parsed.discordContent());
+		DiscordManager.sendMinecraftUserMessage(sourceClientName, channelNode, discordPlaceholders);
+
+		broadcastMinecraftRelay(packet, sourceClientName, MinecraftRelayPacket.MessageType.USER_MESSAGE, relaySegments, overwriteSegments, parsed, true, true, channelNode);
+	}
+
+	private void handleMinecraftCommandMessage(MinecraftEventPacket packet, String sourceClientName) {
+		String command = packet.placeholders.getOrDefault("command", "");
+		String displayName = packet.placeholders.getOrDefault("display_name", packet.placeholders.getOrDefault("player_name", "Unknown"));
+		String roleColor = resolveDisplayRoleColor(packet.placeholders.getOrDefault("player_uuid", ""));
+		MinecraftMessageParser.ParsedMessage parsed = MinecraftMessageParser.parseCommandMessage(command);
+		List<TextSegment> relaySegments = MinecraftMessageParser.buildUserMessageSegments(sourceClientName, displayName, roleColor, parsed.minecraftSegments());
+		List<TextSegment> overwriteSegments = MinecraftMessageParser.buildOverwriteUserMessageSegments(sourceClientName, displayName, roleColor, parsed.minecraftSegments());
+
+		Map<String, String> discordPlaceholders = new HashMap<>(packet.placeholders);
+		discordPlaceholders.put("server", sourceClientName);
+		discordPlaceholders.put("message", parsed.discordContent());
+		DiscordManager.sendMinecraftUserMessage(sourceClientName, "player.command", discordPlaceholders);
+
+		broadcastMinecraftRelay(packet, sourceClientName, MinecraftRelayPacket.MessageType.COMMAND, relaySegments, overwriteSegments, parsed, false, false, "player.command");
+	}
+
+	private void handleMinecraftSystemMessage(MinecraftEventPacket packet, String sourceClientName) {
+		String rawAction = packet.placeholders.getOrDefault("action", "");
+		String displayName = packet.placeholders.getOrDefault("display_name", packet.placeholders.getOrDefault("player_name", "Unknown"));
+		String combined = (displayName + " " + rawAction).trim();
+
+		MinecraftMessageParser.ParsedMessage parsed = MinecraftMessageParser.parseSystemMessage(combined, true);
+		List<TextSegment> relaySegments = MinecraftMessageParser.buildSystemMessageSegments(sourceClientName, parsed.minecraftSegments());
+		List<TextSegment> overwriteSegments = MinecraftMessageParser.buildOverwriteSystemMessageSegments(sourceClientName, parsed.minecraftSegments());
+
+		Map<String, String> placeholders = new HashMap<>(packet.placeholders);
+		placeholders.put("action", parsed.discordContent());
+		DiscordManager.clientBroadcast(sourceClientName, "source.me", "source.me", placeholders);
+
+		broadcastMinecraftRelay(packet, sourceClientName, MinecraftRelayPacket.MessageType.SYSTEM_MESSAGE, relaySegments, overwriteSegments, parsed, true, true, "source.me");
+	}
+
+	private void broadcastMinecraftRelay(MinecraftEventPacket packet,
+										 String sourceClientName,
+										 MinecraftRelayPacket.MessageType relayType,
+										 List<TextSegment> relaySegments,
+										 List<TextSegment> overwriteSegments,
+										 MinecraftMessageParser.ParsedMessage parsed,
+										 boolean canOverwriteEchoToSource,
+										 boolean parseMentionsForNotifications,
+										 String broadcastNode) {
+		boolean overwrite = Boolean.TRUE.equals(ConfigManager.getBoolean("message_parsing.overwrite_minecraft_source_messages"));
+		boolean supportMinecraftToMinecraftConfig = "standalone".equals(ModeManager.getMode());
+		boolean toOtherClients = supportMinecraftToMinecraftConfig && Boolean.TRUE.equals(ConfigManager.getBoolean("broadcasts.minecraft_to_minecraft." + broadcastNode));
+
+		if (!toOtherClients && !(overwrite && canOverwriteEchoToSource)) {
+			return;
+		}
+
+		boolean notifyMentions = parseMentionsForNotifications
+				&& (parsed.mentionEveryone() || !parsed.mentionedPlayerUuids().isEmpty())
+				&& Boolean.TRUE.equals(ConfigManager.getBoolean("account_linking.mention_notifications.enable"));
+
+		if (toOtherClients) {
+			MinecraftRelayPacket relayPacket = new MinecraftRelayPacket(relayType, relaySegments);
+			if (notifyMentions) {
+				relayPacket.mentionNotificationText = MinecraftMessageParser.getMentionNotificationText(packet.placeholders.getOrDefault("display_name", "Unknown"));
+				relayPacket.mentionNotificationStyle = ConfigManager.getString("account_linking.mention_notifications.style", "title");
+				relayPacket.mentionedPlayerUuids = List.copyOf(parsed.mentionedPlayerUuids());
+				relayPacket.mentionEveryone = parsed.mentionEveryone();
+			}
+			NetworkManager.broadcastToClientsExcept(relayPacket, sourceClientName);
+		}
+
+		if (overwrite && canOverwriteEchoToSource) {
+			MinecraftRelayPacket sourcePacket = new MinecraftRelayPacket(relayType, overwriteSegments);
+			if (notifyMentions) {
+				sourcePacket.mentionNotificationText = MinecraftMessageParser.getMentionNotificationText(packet.placeholders.getOrDefault("display_name", "Unknown"));
+				sourcePacket.mentionNotificationStyle = ConfigManager.getString("account_linking.mention_notifications.style", "title");
+				sourcePacket.mentionedPlayerUuids = List.copyOf(parsed.mentionedPlayerUuids());
+				sourcePacket.mentionEveryone = parsed.mentionEveryone();
+			}
+			NetworkManager.sendPacketToClient(sourcePacket, sourceClientName);
+		}
+	}
+
+	private String resolveDisplayRoleColor(String playerUuid) {
+		if (!Boolean.TRUE.equals(ConfigManager.getBoolean("account_linking.use_discord_role_color_for_mc_chats"))) {
+			return "white";
+		}
+		if (playerUuid == null || playerUuid.isBlank()) {
+			return "white";
+		}
+		String discordId = LinkedAccountManager.getDiscordIdByMinecraftUuid(playerUuid);
+		if (discordId == null || discordId.isBlank()) {
+			return "white";
+		}
+		return DiscordMessageParser.getRoleColorHex(DiscordManager.retrieveMember(discordId));
 	}
 }
