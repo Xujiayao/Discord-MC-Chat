@@ -34,13 +34,16 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  *
  * @author Xujiayao
  */
-public class TranslationManager {
+public final class TranslationManager {
 
 	private static final Map<String, String> TRANSLATIONS = new HashMap<>();
 	private static final Path CACHE_DIR = Paths.get("./config/discord_mc_chat/cache/lang");
 
 	private static String currentLoadedLanguage = "";
 	private static MinecraftServer server;
+
+	private TranslationManager() {
+	}
 
 	/**
 	 * Sets the Minecraft server instance.

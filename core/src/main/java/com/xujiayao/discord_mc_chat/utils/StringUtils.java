@@ -5,7 +5,10 @@ package com.xujiayao.discord_mc_chat.utils;
  *
  * @author Xujiayao
  */
-public class StringUtils {
+public final class StringUtils {
+
+	private StringUtils() {
+	}
 
 	/**
 	 * Escape special characters in strings.

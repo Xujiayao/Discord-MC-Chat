@@ -18,7 +18,10 @@ import java.util.List;
  *
  * @author Xujiayao
  */
-public class OpLevelResolver {
+public final class OpLevelResolver {
+
+	private OpLevelResolver() {
+	}
 
 	/**
 	 * Resolves the top-level OP level for a Discord user (used by standalone/single_server).

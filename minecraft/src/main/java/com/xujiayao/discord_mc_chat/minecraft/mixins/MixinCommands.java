@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * @author Xujiayao
  */
 @Mixin(Commands.class)
-public class MixinCommands {
+public final class MixinCommands {
 
 	@Shadow
 	@Final

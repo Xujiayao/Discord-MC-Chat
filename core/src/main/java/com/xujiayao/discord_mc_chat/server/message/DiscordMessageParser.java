@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
  *
  * @author Xujiayao
  */
-public class DiscordMessageParser {
+public final class DiscordMessageParser {
 
 	// Discord Markdown patterns
 	private static final Pattern CODE_BLOCK_PATTERN = Pattern.compile("```(\\w*)\\n?([\\s\\S]*?)```");
@@ -101,6 +101,9 @@ public class DiscordMessageParser {
 	private static final String ATTACHMENT_LABEL_PREFIX = "<attachment type=[%s] name=[";
 	private static final String EMBED_LABEL_PREFIX = "<embed title=[";
 	private static final String LABEL_SUFFIX = "]>";
+
+	private DiscordMessageParser() {
+	}
 
 	/**
 	 * Builds the main message line segments for a Discord chat message.

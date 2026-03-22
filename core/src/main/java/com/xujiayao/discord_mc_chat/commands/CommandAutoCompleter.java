@@ -17,7 +17,10 @@ import java.util.List;
  *
  * @author Xujiayao
  */
-public class CommandAutoCompleter {
+public final class CommandAutoCompleter {
+
+	private CommandAutoCompleter() {
+	}
 
 	/**
 	 * Generates auto-complete suggestions based on the current input and sender's OP level.

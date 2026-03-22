@@ -9,7 +9,7 @@ import java.util.Map;
  *
  * @author Xujiayao
  */
-public class InfoResponsePacket extends Packet {
+public final class InfoResponsePacket extends Packet {
 	public String serverName;
 
 	public long connectionLatencyMillis;

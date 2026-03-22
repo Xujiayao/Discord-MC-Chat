@@ -12,7 +12,7 @@ import java.util.Map;
  *
  * @author Xujiayao
  */
-public class OpSyncPacket extends Packet {
+public final class OpSyncPacket extends Packet {
 	public Map<String, Integer> opLevels;
 
 	public OpSyncPacket(Map<String, Integer> opLevels) {

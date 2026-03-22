@@ -20,7 +20,7 @@ import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
  *
  * @author Xujiayao
  */
-public class LinkCommand implements Command {
+public final class LinkCommand implements Command {
 
 	@Override
 	public String name() {

@@ -7,7 +7,7 @@ import com.xujiayao.discord_mc_chat.network.packets.Packet;
  *
  * @author Xujiayao
  */
-public class ChallengePacket extends Packet {
+public final class ChallengePacket extends Packet {
 	public String salt;
 
 	public ChallengePacket(String salt) {

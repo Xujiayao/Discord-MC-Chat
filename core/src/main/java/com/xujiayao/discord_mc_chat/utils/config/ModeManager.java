@@ -21,12 +21,15 @@ import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
  *
  * @author Xujiayao
  */
-public class ModeManager {
+public final class ModeManager {
 
 	private static final Path MODE_FILE_PATH = Paths.get("./config/discord_mc_chat/mode.yml");
 	private static final String MODE_TEMPLATE_PATH = "/config/mode.yml";
 
 	private static String mode = "";
+
+	private ModeManager() {
+	}
 
 	/**
 	 * Loads and validates the mode from mode.yml. If the file does not exist,

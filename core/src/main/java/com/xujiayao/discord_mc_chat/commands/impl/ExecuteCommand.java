@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Xujiayao
  */
-public class ExecuteCommand implements Command {
+public final class ExecuteCommand implements Command {
 
 	private static final int EXECUTE_TIMEOUT_SECONDS = 30;
 	private static final Map<String, CompletableFuture<ExecuteResponsePacket>> pendingRequests = new ConcurrentHashMap<>();

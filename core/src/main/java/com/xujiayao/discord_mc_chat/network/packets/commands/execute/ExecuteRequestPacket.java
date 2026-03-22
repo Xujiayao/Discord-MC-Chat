@@ -11,7 +11,7 @@ import com.xujiayao.discord_mc_chat.network.packets.Packet;
  *
  * @author Xujiayao
  */
-public class ExecuteRequestPacket extends Packet {
+public final class ExecuteRequestPacket extends Packet {
 	public String requestId;
 	public int opLevel;
 	public String command;

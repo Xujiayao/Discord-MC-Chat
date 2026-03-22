@@ -10,7 +10,7 @@ import net.neoforged.fml.common.Mod;
  * @author Xujiayao
  */
 @Mod("discord_mc_chat")
-public class NeoForgeDMCC {
+public final class NeoForgeDMCC {
 
 	/**
 	 * Start NeoForge DMCC.

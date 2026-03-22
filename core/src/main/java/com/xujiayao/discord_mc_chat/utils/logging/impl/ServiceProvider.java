@@ -18,7 +18,7 @@ import org.slf4j.spi.SLF4JServiceProvider;
  * @author Ceki Gülcü
  * @author Xujiayao
  */
-public class ServiceProvider implements SLF4JServiceProvider {
+public final class ServiceProvider implements SLF4JServiceProvider {
 
 	/**
 	 * Declare the version of the SLF4J API this implementation is compiled against.

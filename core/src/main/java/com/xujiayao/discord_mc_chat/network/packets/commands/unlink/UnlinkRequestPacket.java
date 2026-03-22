@@ -9,7 +9,7 @@ import com.xujiayao.discord_mc_chat.network.packets.Packet;
  *
  * @author Xujiayao
  */
-public class UnlinkRequestPacket extends Packet {
+public final class UnlinkRequestPacket extends Packet {
 	public String minecraftUuid;
 	public String playerName;
 

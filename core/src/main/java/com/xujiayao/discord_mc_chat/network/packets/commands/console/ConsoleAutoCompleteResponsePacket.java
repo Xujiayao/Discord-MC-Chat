@@ -9,7 +9,7 @@ import java.util.List;
  *
  * @author Xujiayao
  */
-public class ConsoleAutoCompleteResponsePacket extends Packet {
+public final class ConsoleAutoCompleteResponsePacket extends Packet {
 	public String serverName;
 	public List<String> suggestions;
 

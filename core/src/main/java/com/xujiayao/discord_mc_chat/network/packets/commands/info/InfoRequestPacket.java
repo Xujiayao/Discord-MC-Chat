@@ -7,7 +7,7 @@ import com.xujiayao.discord_mc_chat.network.packets.Packet;
  *
  * @author Xujiayao
  */
-public class InfoRequestPacket extends Packet {
+public final class InfoRequestPacket extends Packet {
 	public long sentAtMillis;
 
 	public InfoRequestPacket(long sentAtMillis) {

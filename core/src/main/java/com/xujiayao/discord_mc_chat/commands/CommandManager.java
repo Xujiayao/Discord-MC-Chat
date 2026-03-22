@@ -30,10 +30,13 @@ import java.util.concurrent.Executors;
  *
  * @author Xujiayao
  */
-public class CommandManager {
+public final class CommandManager {
 
 	private static final Map<String, Command> COMMANDS = new ConcurrentHashMap<>();
 	private static ExecutorService commandExecutor;
+
+	private CommandManager() {
+	}
 
 	/**
 	 * Initialize and register built-in commands based on the current operating mode.

@@ -21,7 +21,10 @@ import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
  *
  * @author Xujiayao
  */
-public class JsonUtils {
+public final class JsonUtils {
+
+	private JsonUtils() {
+	}
 
 	/**
 	 * Converts a JSON String to a Map of String to String.

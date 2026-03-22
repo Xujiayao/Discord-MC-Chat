@@ -72,10 +72,13 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Xujiayao
  */
-public class MinecraftEventHandler {
+public final class MinecraftEventHandler {
 
 	private static final String DEFAULT_MENTION_STYLE = "title";
 	private static MinecraftServer serverInstance;
+
+	private MinecraftEventHandler() {
+	}
 
 	/**
 	 * Initializes the Minecraft event handlers.

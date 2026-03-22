@@ -24,7 +24,7 @@ import java.util.function.Supplier;
  *
  * @author Xujiayao
  */
-public class NetworkManager {
+public final class NetworkManager {
 
 	private static final AtomicReference<ClientDMCC> clientInstance = new AtomicReference<>();
 
@@ -42,6 +42,9 @@ public class NetworkManager {
 	// Minecraft command auto-complete cache
 	private static final Map<String, List<String>> consoleAutoCompleteCache = new ConcurrentHashMap<>();
 	private static final Object consoleAutoCompleteLock = new Object();
+
+	private NetworkManager() {
+	}
 
 	/**
 	 * Registers the client instance for network operations.

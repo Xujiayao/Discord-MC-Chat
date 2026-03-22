@@ -7,7 +7,7 @@ import com.xujiayao.discord_mc_chat.network.packets.Packet;
  *
  * @author Xujiayao
  */
-public class ExecuteResponsePacket extends Packet {
+public final class ExecuteResponsePacket extends Packet {
 	public String requestId;
 	public String response;
 	public byte[] fileData;

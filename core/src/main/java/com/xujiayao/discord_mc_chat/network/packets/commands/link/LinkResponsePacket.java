@@ -10,7 +10,7 @@ import com.xujiayao.discord_mc_chat.network.packets.Packet;
  *
  * @author Xujiayao
  */
-public class LinkResponsePacket extends Packet {
+public final class LinkResponsePacket extends Packet {
 	public String minecraftUuid;
 	public String code;
 	public boolean alreadyLinked;

@@ -20,9 +20,12 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  *
  * @author Xujiayao
  */
-public class TerminalManager {
+public final class TerminalManager {
 
 	private static final Path LOG_CACHE_DIR = Paths.get("./config/discord_mc_chat/cache/log");
+
+	private TerminalManager() {
+	}
 
 	/**
 	 * Initializes and starts the terminal.

@@ -23,10 +23,13 @@ import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
  *
  * @author Xujiayao
  */
-public class ConfigManager {
+public final class ConfigManager {
 
 	private static final Path CONFIG_FILE_PATH = Paths.get("./config/discord_mc_chat/config.yml");
 	private static JsonNode config;
+
+	private ConfigManager() {
+	}
 
 	/**
 	 * Loads the configuration file based on the determined operating mode.

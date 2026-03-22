@@ -13,7 +13,7 @@ import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
  *
  * @author Xujiayao
  */
-public class LogCommand implements Command {
+public final class LogCommand implements Command {
 
 	@Override
 	public String name() {

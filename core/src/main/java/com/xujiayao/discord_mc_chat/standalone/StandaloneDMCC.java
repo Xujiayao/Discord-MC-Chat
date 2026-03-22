@@ -8,7 +8,7 @@ import com.xujiayao.discord_mc_chat.utils.logging.impl.LoggerImpl;
  *
  * @author Xujiayao
  */
-public class StandaloneDMCC {
+public final class StandaloneDMCC {
 
 	public static final Thread SHUTDOWN_THREAD = new Thread(() -> {
 		DMCC.shutdown();
@@ -16,6 +16,9 @@ public class StandaloneDMCC {
 		// Logger cleanup
 		LoggerImpl.shutdown();
 	}, "DMCC-ShutdownHook");
+
+	private StandaloneDMCC() {
+	}
 
 	/**
 	 * Start Standalone DMCC.

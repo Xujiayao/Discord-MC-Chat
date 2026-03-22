@@ -7,7 +7,7 @@ import com.xujiayao.discord_mc_chat.network.packets.Packet;
  *
  * @author Xujiayao
  */
-public class HandshakePacket extends Packet {
+public final class HandshakePacket extends Packet {
 	public String serverName;
 	public String dmccVersion;
 	public String minecraftVersion;

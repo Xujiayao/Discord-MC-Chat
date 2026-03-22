@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Xujiayao
  */
-public class Logger {
+public final class Logger {
 
 	private final org.slf4j.Logger logger;
 

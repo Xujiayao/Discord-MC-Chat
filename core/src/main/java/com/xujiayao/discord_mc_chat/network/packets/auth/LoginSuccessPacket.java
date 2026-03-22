@@ -7,7 +7,7 @@ import com.xujiayao.discord_mc_chat.network.packets.Packet;
  *
  * @author Xujiayao
  */
-public class LoginSuccessPacket extends Packet {
+public final class LoginSuccessPacket extends Packet {
 	public String language;
 	public boolean overwriteMinecraftSourceMessages;
 

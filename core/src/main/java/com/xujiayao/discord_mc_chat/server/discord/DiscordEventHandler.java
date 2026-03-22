@@ -41,7 +41,7 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  *
  * @author Xujiayao
  */
-public class DiscordEventHandler extends ListenerAdapter {
+public final class DiscordEventHandler extends ListenerAdapter {
 
 	private static final int AUTOCOMPLETE_TIMEOUT_SECONDS = 5;
 

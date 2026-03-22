@@ -16,7 +16,7 @@ import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
  *
  * @author Xujiayao
  */
-public class UnlinkCommand implements Command {
+public final class UnlinkCommand implements Command {
 
 	@Override
 	public String name() {

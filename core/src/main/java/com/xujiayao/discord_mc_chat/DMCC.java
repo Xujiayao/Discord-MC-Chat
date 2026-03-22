@@ -24,10 +24,13 @@ import static com.xujiayao.discord_mc_chat.Constants.VERSION;
  *
  * @author Xujiayao
  */
-public class DMCC {
+public final class DMCC {
 
 	private static ServerDMCC serverInstance;
 	private static ClientDMCC clientInstance;
+
+	private DMCC() {
+	}
 
 	/**
 	 * Initialize DMCC. Blocks until initialization is complete.

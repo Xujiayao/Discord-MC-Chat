@@ -25,7 +25,10 @@ import static net.minecraft.commands.Commands.literal;
  *
  * @author Xujiayao
  */
-public class MinecraftCommands {
+public final class MinecraftCommands {
+
+	private MinecraftCommands() {
+	}
 
 	/**
 	 * Registers /dmcc commands.

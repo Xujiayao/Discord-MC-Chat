@@ -18,7 +18,10 @@ import net.minecraft.world.level.GameType;
  *
  * @author Xujiayao
  */
-public class MinecraftEvents {
+public final class MinecraftEvents {
+
+	private MinecraftEvents() {
+	}
 
 	/**
 	 * Posted when the server is started.

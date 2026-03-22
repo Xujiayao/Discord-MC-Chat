@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Xujiayao
  */
-public class InfoCommand implements Command {
+public final class InfoCommand implements Command {
 
 	private static final int INFO_REQUEST_TIMEOUT_SECONDS = 3;
 

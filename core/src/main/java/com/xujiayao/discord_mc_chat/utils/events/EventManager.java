@@ -10,9 +10,12 @@ import java.util.function.Consumer;
  *
  * @author Xujiayao
  */
-public class EventManager {
+public final class EventManager {
 
 	private static final ConcurrentHashMap<Class<?>, List<Consumer<?>>> handlers = new ConcurrentHashMap<>();
+
+	private EventManager() {
+	}
 
 	/**
 	 * Register a handler for a specific event type.

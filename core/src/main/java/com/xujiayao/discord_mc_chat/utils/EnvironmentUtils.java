@@ -12,7 +12,10 @@ import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
  *
  * @author Xujiayao
  */
-public class EnvironmentUtils {
+public final class EnvironmentUtils {
+
+	private EnvironmentUtils() {
+	}
 
 	/**
 	 * Check if running in a Minecraft environment.

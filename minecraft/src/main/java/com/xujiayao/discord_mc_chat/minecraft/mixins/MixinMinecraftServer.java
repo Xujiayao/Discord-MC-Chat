@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * @author Xujiayao
  */
 @Mixin(MinecraftServer.class)
-public class MixinMinecraftServer {
+public final class MixinMinecraftServer {
 
 	@Inject(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/Util;getNanos()J", ordinal = 0))
 	private void serverStarted(CallbackInfo ci) {

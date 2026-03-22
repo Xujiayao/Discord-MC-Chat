@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Xujiayao
  */
-public class ConsoleCommand implements Command {
+public final class ConsoleCommand implements Command {
 
 	private static final int CONSOLE_TIMEOUT_SECONDS = 30;
 	private static final int LOCAL_COMMAND_TIMEOUT_SECONDS = 10;

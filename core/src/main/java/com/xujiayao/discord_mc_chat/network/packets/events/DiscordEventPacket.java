@@ -14,7 +14,7 @@ import java.util.List;
  *
  * @author Xujiayao
  */
-public class DiscordEventPacket extends Packet {
+public final class DiscordEventPacket extends Packet {
 
 	/**
 	 * The type of Discord event.

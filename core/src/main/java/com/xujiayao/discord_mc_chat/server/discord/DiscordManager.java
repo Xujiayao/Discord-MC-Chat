@@ -47,12 +47,15 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  *
  * @author Xujiayao
  */
-public class DiscordManager {
+public final class DiscordManager {
 
 	private static final Map<String, String> DISCORD_NAME_CACHE = new ConcurrentHashMap<>();
 	private static JDA jda;
 	private static ScheduledExecutorService statusUpdateExecutor;
 	private static ScheduledFuture<?> presenceUpdateTask;
+
+	private DiscordManager() {
+	}
 
 	/**
 	 * Initializes the Discord bot.

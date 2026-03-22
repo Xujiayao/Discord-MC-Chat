@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Xujiayao
  */
-public class WhitelistCommand implements Command {
+public final class WhitelistCommand implements Command {
 
 	private static final int WHITELIST_COMMAND_TIMEOUT_SECONDS = 10;
 

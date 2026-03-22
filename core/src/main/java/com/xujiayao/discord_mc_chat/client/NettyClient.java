@@ -34,7 +34,7 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  *
  * @author Xujiayao
  */
-public class NettyClient {
+public final class NettyClient {
 
 	private static final int MAX_RECONNECT_DELAY = 512;
 	private final String host;

@@ -20,9 +20,12 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  *
  * @author Xujiayao
  */
-public class LogFileUtils {
+public final class LogFileUtils {
 
 	private static final String LOGS_DIR = "./logs";
+
+	private LogFileUtils() {
+	}
 
 	/**
 	 * Lists available log files in the given directory.

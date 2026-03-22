@@ -7,7 +7,7 @@ import com.xujiayao.discord_mc_chat.network.packets.Packet;
  *
  * @author Xujiayao
  */
-public class ConsoleResponsePacket extends Packet {
+public final class ConsoleResponsePacket extends Packet {
 	public String requestId;
 	public String response;
 

@@ -7,7 +7,7 @@ import com.xujiayao.discord_mc_chat.network.packets.Packet;
  *
  * @author Xujiayao
  */
-public class ConsoleAutoCompleteRequestPacket extends Packet {
+public final class ConsoleAutoCompleteRequestPacket extends Packet {
 	public String input;
 	public int opLevel;
 

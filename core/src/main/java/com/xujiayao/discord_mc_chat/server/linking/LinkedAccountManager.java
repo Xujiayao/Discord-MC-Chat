@@ -28,7 +28,7 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  *
  * @author Xujiayao
  */
-public class LinkedAccountManager {
+public final class LinkedAccountManager {
 
 	private static final Path LINKS_FILE = Paths.get("./config/discord_mc_chat/account_linking/links.json");
 
@@ -39,6 +39,9 @@ public class LinkedAccountManager {
 
 	// Discord name resolver, set by the server module to avoid circular dependencies
 	private static Function<String, String> discordNameResolver;
+
+	private LinkedAccountManager() {
+	}
 
 	/**
 	 * Registers a function that resolves Discord user ID to username.

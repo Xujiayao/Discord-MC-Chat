@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
  * @author Xujiayao
  */
 @Mixin(MsgCommand.class)
-public class MixinMsgCommand {
+public final class MixinMsgCommand {
 
 	@Unique
 	private static final Pattern MSG_PATTERN = Pattern.compile("^(?:msg|tell|w) @a .*");

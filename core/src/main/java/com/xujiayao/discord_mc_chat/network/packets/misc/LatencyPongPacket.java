@@ -7,7 +7,7 @@ import com.xujiayao.discord_mc_chat.network.packets.Packet;
  *
  * @author Xujiayao
  */
-public class LatencyPongPacket extends Packet {
+public final class LatencyPongPacket extends Packet {
 	public long sentAtMillis;
 
 	public LatencyPongPacket(long sentAtMillis) {

@@ -13,7 +13,7 @@ import static com.xujiayao.discord_mc_chat.standalone.StandaloneDMCC.SHUTDOWN_TH
  *
  * @author Xujiayao
  */
-public class ShutdownCommand implements Command {
+public final class ShutdownCommand implements Command {
 
 	@Override
 	public String name() {

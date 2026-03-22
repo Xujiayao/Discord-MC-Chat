@@ -11,7 +11,10 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Xujiayao
  */
-public class ExecutorServiceUtils {
+public final class ExecutorServiceUtils {
+
+	private ExecutorServiceUtils() {
+	}
 
 	/**
 	 * Creates a ThreadFactory that ensures all created threads inherit the current Mod ClassLoader.

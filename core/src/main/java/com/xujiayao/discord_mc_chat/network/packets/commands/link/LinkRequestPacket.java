@@ -13,7 +13,7 @@ import com.xujiayao.discord_mc_chat.network.packets.Packet;
  *
  * @author Xujiayao
  */
-public class LinkRequestPacket extends Packet {
+public final class LinkRequestPacket extends Packet {
 	public String minecraftUuid;
 	public String playerName;
 	public boolean joinCheck;

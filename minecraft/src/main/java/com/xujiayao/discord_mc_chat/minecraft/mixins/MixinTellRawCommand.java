@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
  * @author Xujiayao
  */
 @Mixin(TellRawCommand.class)
-public class MixinTellRawCommand {
+public final class MixinTellRawCommand {
 
 	@Unique
 	private static final Pattern TELLRAW_PATTERN = Pattern.compile("^tellraw @a .*");

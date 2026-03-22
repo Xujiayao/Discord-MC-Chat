@@ -12,7 +12,7 @@ import com.xujiayao.discord_mc_chat.network.packets.Packet;
  *
  * @author Xujiayao
  */
-public class ConsoleRequestPacket extends Packet {
+public final class ConsoleRequestPacket extends Packet {
 	public String requestId;
 	public int opLevel;
 	public String commandLine;

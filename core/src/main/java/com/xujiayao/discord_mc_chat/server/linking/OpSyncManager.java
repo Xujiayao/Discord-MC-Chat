@@ -33,10 +33,13 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  *
  * @author Xujiayao
  */
-public class OpSyncManager {
+public final class OpSyncManager {
 
 	private static final ExecutorService SYNC_EXECUTOR =
 			Executors.newSingleThreadExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-OpSync"));
+
+	private OpSyncManager() {
+	}
 
 	/**
 	 * Performs a full OP level sync for all linked accounts.

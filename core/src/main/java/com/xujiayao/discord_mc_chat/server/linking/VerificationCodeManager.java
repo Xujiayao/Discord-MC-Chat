@@ -18,7 +18,7 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  *
  * @author Xujiayao
  */
-public class VerificationCodeManager {
+public final class VerificationCodeManager {
 
 	private static final int CODE_LENGTH = 6;
 	private static final long CODE_EXPIRY_MILLIS = 5 * 60 * 1000L; // 5 minutes
@@ -30,6 +30,9 @@ public class VerificationCodeManager {
 
 	// Minecraft UUID -> Code (for fast lookup by player UUID)
 	private static final Map<String, String> UUID_TO_CODE = new ConcurrentHashMap<>();
+
+	private VerificationCodeManager() {
+	}
 
 	/**
 	 * Generates or refreshes a verification code for a Minecraft player.

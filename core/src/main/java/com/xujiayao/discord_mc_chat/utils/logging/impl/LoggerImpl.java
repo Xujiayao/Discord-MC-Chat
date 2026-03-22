@@ -22,7 +22,7 @@ import java.util.Map;
  *
  * @author Xujiayao
  */
-public class LoggerImpl implements Logger {
+public final class LoggerImpl implements Logger {
 
 	private static volatile PrintWriter fileWriter;
 	private static boolean fileWriterInitialized = false;

@@ -14,7 +14,7 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  *
  * @author Xujiayao
  */
-public class ServerDMCC {
+public final class ServerDMCC {
 
 	private final String host;
 	private final String sharedSecret;

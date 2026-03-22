@@ -17,7 +17,7 @@ import java.util.List;
  *
  * @author Xujiayao
  */
-public class TextSegment implements Serializable {
+public final class TextSegment implements Serializable {
 
 	@Serial
 	private static final long serialVersionUID = 1L;

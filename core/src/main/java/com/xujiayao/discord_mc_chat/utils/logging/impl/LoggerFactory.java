@@ -18,9 +18,9 @@ import java.util.concurrent.ConcurrentMap;
  * @author Ceki Gülcü
  * @author Xujiayao
  */
-public class LoggerFactory implements ILoggerFactory {
+public final class LoggerFactory implements ILoggerFactory {
 
-	ConcurrentMap<String, Logger> loggerMap;
+	private final ConcurrentMap<String, Logger> loggerMap;
 
 	public LoggerFactory() {
 		loggerMap = new ConcurrentHashMap<>();
@@ -45,7 +45,7 @@ public class LoggerFactory implements ILoggerFactory {
 	 * @param name The name of the logger to create
 	 * @return The newly created logger
 	 */
-	protected Logger createLogger(String name) {
+	private Logger createLogger(String name) {
 		return new LoggerImpl(name);
 	}
 }

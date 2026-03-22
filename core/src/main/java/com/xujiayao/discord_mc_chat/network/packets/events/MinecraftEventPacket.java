@@ -9,7 +9,7 @@ import java.util.Map;
  *
  * @author Xujiayao
  */
-public class MinecraftEventPacket extends Packet {
+public final class MinecraftEventPacket extends Packet {
 	public MessageType type;
 	public Map<String, String> placeholders;
 

@@ -15,13 +15,16 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  *
  * @author Xujiayao
  */
-public class YamlUtils {
+public final class YamlUtils {
 
 	private static final List<String> REQUIRED_MODIFIED_KEYS = List.of(
 			"discord.bot.token",
 			"multi_server.server_name",
 			"multi_server.connection.shared_secret"
 	);
+
+	private YamlUtils() {
+	}
 
 	/**
 	 * Validates the loaded config against the template with optional check for modification.

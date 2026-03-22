@@ -44,7 +44,7 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  *
  * @author Xujiayao
  */
-public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
+public final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 	private final NettyServer server;
 	private String expectedNonce;

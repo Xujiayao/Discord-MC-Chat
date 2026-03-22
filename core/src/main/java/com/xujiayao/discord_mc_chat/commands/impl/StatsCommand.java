@@ -19,7 +19,7 @@ import java.util.stream.Stream;
  *
  * @author Xujiayao
  */
-public class StatsCommand implements Command {
+public final class StatsCommand implements Command {
 
 	private static StatsProvider provider;
 

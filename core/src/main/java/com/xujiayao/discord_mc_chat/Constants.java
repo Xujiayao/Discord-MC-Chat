@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @author Xujiayao
  */
-public class Constants {
+public final class Constants {
 
 	public static final boolean IS_MINECRAFT_ENV = EnvironmentUtils.isMinecraftEnvironment();
 
@@ -33,4 +33,7 @@ public class Constants {
 
 	// For DMCC Client use
 	public static final AtomicBoolean OVERWRITE_MINECRAFT_SOURCE_MESSAGES = new AtomicBoolean(false);
+
+	private Constants() {
+	}
 }

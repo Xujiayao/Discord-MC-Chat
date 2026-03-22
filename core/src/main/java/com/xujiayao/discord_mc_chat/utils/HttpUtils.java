@@ -12,7 +12,10 @@ import static com.xujiayao.discord_mc_chat.Constants.OK_HTTP_CLIENT;
  *
  * @author Xujiayao
  */
-public class HttpUtils {
+public final class HttpUtils {
+
+	private HttpUtils() {
+	}
 
 	/**
 	 * Performs a GET request to the specified URL and returns the response body as a string.

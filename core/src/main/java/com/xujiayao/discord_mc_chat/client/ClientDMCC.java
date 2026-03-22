@@ -14,7 +14,7 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  *
  * @author Xujiayao
  */
-public class ClientDMCC {
+public final class ClientDMCC {
 
 	private final String host;
 	private final int port;

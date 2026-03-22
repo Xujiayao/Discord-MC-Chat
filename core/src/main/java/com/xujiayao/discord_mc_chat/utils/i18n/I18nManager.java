@@ -25,12 +25,15 @@ import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
  *
  * @author Xujiayao
  */
-public class I18nManager {
+public final class I18nManager {
 
 	private static final Map<String, String> DMCC_TRANSLATIONS = new HashMap<>();
 	private static final Path CUSTOM_MESSAGES_DIR = Paths.get("./config/discord_mc_chat/custom_messages");
 	private static String language = detectLanguage();
 	private static JsonNode customMessages;
+
+	private I18nManager() {
+	}
 
 	/**
 	 * Gets the currently selected language code.

@@ -15,7 +15,10 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author Xujiayao
  */
-public class CoreEvents {
+public final class CoreEvents {
+
+	private CoreEvents() {
+	}
 
 	/**
 	 * Posted when a Minecraft command needs to be executed on the local Minecraft server.

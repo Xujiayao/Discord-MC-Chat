@@ -21,7 +21,7 @@ import java.util.Map;
  *
  * @author Xujiayao
  */
-public class LinksCommand implements Command {
+public final class LinksCommand implements Command {
 
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 			.withZone(ZoneId.systemDefault());

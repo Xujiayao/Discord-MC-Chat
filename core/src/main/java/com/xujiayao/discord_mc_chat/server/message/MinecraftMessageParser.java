@@ -5,5 +5,8 @@ package com.xujiayao.discord_mc_chat.server.message;
  *
  * @author Xujiayao
  */
-public class MinecraftMessageParser {
+public final class MinecraftMessageParser {
+
+	private MinecraftMessageParser() {
+	}
 }

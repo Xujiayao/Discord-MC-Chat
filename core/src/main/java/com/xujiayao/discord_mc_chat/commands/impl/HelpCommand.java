@@ -20,7 +20,7 @@ import static com.xujiayao.discord_mc_chat.Constants.IS_MINECRAFT_ENV;
  *
  * @author Xujiayao
  */
-public class HelpCommand implements Command {
+public final class HelpCommand implements Command {
 
 	private static String padRight(String text, int width) {
 		if (text.length() >= width) {

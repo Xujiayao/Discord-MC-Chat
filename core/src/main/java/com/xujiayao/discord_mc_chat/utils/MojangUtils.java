@@ -17,10 +17,13 @@ import static com.xujiayao.discord_mc_chat.Constants.JSON_MAPPER;
  *
  * @author Xujiayao
  */
-public class MojangUtils {
+public final class MojangUtils {
 
 	private static final String PROFILE_URL = "https://sessionserver.mojang.com/session/minecraft/profile/";
 	private static final Map<String, String> NAME_CACHE = new ConcurrentHashMap<>();
+
+	private MojangUtils() {
+	}
 
 	/**
 	 * Resolves a Minecraft player name from a UUID string, with an optional fallback name

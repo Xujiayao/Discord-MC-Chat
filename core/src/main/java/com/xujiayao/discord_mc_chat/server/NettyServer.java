@@ -26,7 +26,7 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  *
  * @author Xujiayao
  */
-public class NettyServer {
+public final class NettyServer {
 
 	private final String host;
 	private final int port;

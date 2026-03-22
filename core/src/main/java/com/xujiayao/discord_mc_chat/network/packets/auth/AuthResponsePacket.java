@@ -7,7 +7,7 @@ import com.xujiayao.discord_mc_chat.network.packets.Packet;
  *
  * @author Xujiayao
  */
-public class AuthResponsePacket extends Packet {
+public final class AuthResponsePacket extends Packet {
 	public String hash;
 
 	public AuthResponsePacket(String hash) {
