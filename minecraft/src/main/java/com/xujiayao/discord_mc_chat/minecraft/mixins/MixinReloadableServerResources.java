@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * @author Xujiayao
  */
 @Mixin(ReloadableServerResources.class)
-public final class MixinReloadableServerResources {
+final class MixinReloadableServerResources {
 
 	@Inject(method = "lambda$loadResources$2", at = @At("RETURN"))
 	private static void loadResources(ReloadableServerResources reloadableserverresources, Void p_214306_, CallbackInfoReturnable<ReloadableServerResources> cir) {

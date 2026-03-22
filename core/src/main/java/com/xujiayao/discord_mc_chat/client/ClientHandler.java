@@ -52,7 +52,7 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  *
  * @author Xujiayao
  */
-public final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
+final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 
 	private static final int CONSOLE_COMMAND_TIMEOUT_SECONDS = 10;
 
@@ -60,7 +60,7 @@ public final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 	private final CompletableFuture<Boolean> initialLoginFuture;
 	private boolean allowReconnect = true; // Default to true for network errors
 
-	public ClientHandler(NettyClient client, CompletableFuture<Boolean> initialLoginFuture) {
+	ClientHandler(NettyClient client, CompletableFuture<Boolean> initialLoginFuture) {
 		this.client = client;
 		this.initialLoginFuture = initialLoginFuture;
 	}

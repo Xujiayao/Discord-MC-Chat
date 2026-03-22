@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * @author Xujiayao
  */
 @Mixin(ServerGamePacketListenerImpl.class)
-public final class MixinServerGamePacketListenerImpl {
+final class MixinServerGamePacketListenerImpl {
 
 	@Shadow
 	public ServerPlayer player;

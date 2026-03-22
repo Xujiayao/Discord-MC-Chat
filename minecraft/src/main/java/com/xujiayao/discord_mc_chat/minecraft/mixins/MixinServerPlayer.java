@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * @author Xujiayao
  */
 @Mixin(ServerPlayer.class)
-public final class MixinServerPlayer {
+final class MixinServerPlayer {
 
 	@Inject(method = "die", at = @At("HEAD"))
 	private void die(DamageSource damageSource, CallbackInfo ci) {

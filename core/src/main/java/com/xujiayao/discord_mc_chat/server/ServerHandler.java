@@ -52,14 +52,14 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  *
  * @author Xujiayao
  */
-public final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
+final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 	private final NettyServer server;
 	private String expectedNonce;
 	private boolean authenticated = false;
 	private String clientName;
 
-	public ServerHandler(NettyServer server) {
+	ServerHandler(NettyServer server) {
 		this.server = server;
 	}
 

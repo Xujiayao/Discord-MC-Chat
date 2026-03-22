@@ -34,7 +34,7 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  *
  * @author Xujiayao
  */
-public final class NettyClient {
+final class NettyClient {
 
 	private static final int MAX_RECONNECT_DELAY = 512;
 	private final String host;
@@ -49,22 +49,22 @@ public final class NettyClient {
 	private Channel channel;
 	private CompletableFuture<Boolean> initialLoginFuture;
 
-	public NettyClient(String host, int port, String serverName, String sharedSecret) {
+	NettyClient(String host, int port, String serverName, String sharedSecret) {
 		this.host = host;
 		this.port = port;
 		this.serverName = serverName;
 		this.sharedSecret = sharedSecret;
 	}
 
-	public String getServerName() {
+	String getServerName() {
 		return serverName;
 	}
 
-	public String getSharedSecret() {
+	String getSharedSecret() {
 		return sharedSecret;
 	}
 
-	public boolean start() {
+	boolean start() {
 		isRunning.set(true);
 		initialLoginFuture = new CompletableFuture<>();
 
@@ -129,7 +129,7 @@ public final class NettyClient {
 		});
 	}
 
-	public void sendPacket(Packet packet) {
+	void sendPacket(Packet packet) {
 		if (channel != null && channel.isActive()) {
 			channel.writeAndFlush(packet);
 		} else {
@@ -137,7 +137,7 @@ public final class NettyClient {
 		}
 	}
 
-	public void scheduleReconnect() {
+	void scheduleReconnect() {
 		if (!isRunning.get()) return;
 
 		int delay = reconnectDelay.get();
@@ -147,7 +147,7 @@ public final class NettyClient {
 		reconnectDelay.set(Math.min(delay * 2, MAX_RECONNECT_DELAY));
 	}
 
-	public void stop() {
+	void stop() {
 		isRunning.set(false);
 		if (channel != null) {
 			channel.close();
@@ -169,19 +169,19 @@ public final class NettyClient {
 		}
 	}
 
-	public boolean isRunning() {
+	boolean isRunning() {
 		return isRunning.get();
 	}
 
-	public boolean isConnected() {
+	boolean isConnected() {
 		return channel != null && channel.isActive();
 	}
 
-	public long getConnectionLatencyMillis() {
+	long getConnectionLatencyMillis() {
 		return connectionLatencyMillis;
 	}
 
-	public long requestLatencySample(long timeoutMillis) {
+	long requestLatencySample(long timeoutMillis) {
 		if (channel == null || !channel.isActive()) {
 			return -1;
 		}
@@ -203,7 +203,7 @@ public final class NettyClient {
 		}
 	}
 
-	public void updateConnectionLatency(long latencyMillis) {
+	void updateConnectionLatency(long latencyMillis) {
 		connectionLatencyMillis = latencyMillis;
 
 		CompletableFuture<Long> future = latencyFuture.getAndSet(null);

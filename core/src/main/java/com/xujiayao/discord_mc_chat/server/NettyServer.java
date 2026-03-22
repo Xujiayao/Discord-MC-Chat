@@ -26,7 +26,7 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  *
  * @author Xujiayao
  */
-public final class NettyServer {
+final class NettyServer {
 
 	private final String host;
 	private final int port;
@@ -34,17 +34,17 @@ public final class NettyServer {
 	private EventLoopGroup bossGroup;
 	private EventLoopGroup workerGroup;
 
-	public NettyServer(String host, int port, String sharedSecret) {
+	NettyServer(String host, int port, String sharedSecret) {
 		this.host = host;
 		this.port = port;
 		this.sharedSecret = sharedSecret;
 	}
 
-	public String getSharedSecret() {
+	String getSharedSecret() {
 		return sharedSecret;
 	}
 
-	public int start() {
+	int start() {
 		bossGroup = new MultiThreadIoEventLoopGroup(1,
 				ExecutorServiceUtils.newThreadFactory("DMCC-NettyServer-Boss"),
 				NioIoHandler.newFactory());
@@ -85,7 +85,7 @@ public final class NettyServer {
 		}
 	}
 
-	public void stop() {
+	void stop() {
 		if (workerGroup != null) {
 			workerGroup.shutdownGracefully();
 		}

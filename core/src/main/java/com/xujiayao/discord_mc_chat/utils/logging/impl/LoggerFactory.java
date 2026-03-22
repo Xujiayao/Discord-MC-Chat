@@ -18,11 +18,11 @@ import java.util.concurrent.ConcurrentMap;
  * @author Ceki Gülcü
  * @author Xujiayao
  */
-public final class LoggerFactory implements ILoggerFactory {
+final class LoggerFactory implements ILoggerFactory {
 
 	private final ConcurrentMap<String, Logger> loggerMap;
 
-	public LoggerFactory() {
+	LoggerFactory() {
 		loggerMap = new ConcurrentHashMap<>();
 	}
 

@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * @author Xujiayao
  */
 @Mixin(SayCommand.class)
-public final class MixinSayCommand {
+final class MixinSayCommand {
 
 	@Inject(method = "lambda$register$0", at = @At("HEAD"), cancellable = true)
 	private static void lambda$register$0(CommandContext<CommandSourceStack> commandContext, PlayerChatMessage playerChatMessage, CallbackInfo ci) {

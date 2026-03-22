@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
  *
  * @author Xujiayao
  */
-public final class MessageParserCommon {
+final class MessageParserCommon {
 
 	private static final Pattern DISCORD_TIMESTAMP_PATTERN = Pattern.compile("<t:(\\d+)(?::([tTdDfFRsS]))?>");
 	private static final Pattern LINK_TOKEN_PATTERN = Pattern.compile("\\[([^]]+)]\\((https?://[^)]+)\\)");

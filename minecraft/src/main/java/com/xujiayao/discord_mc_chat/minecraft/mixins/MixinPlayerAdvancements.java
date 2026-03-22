@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * @author Xujiayao
  */
 @Mixin(PlayerAdvancements.class)
-public abstract class MixinPlayerAdvancements {
+abstract class MixinPlayerAdvancements {
 
 	@Shadow
 	private ServerPlayer player;
