@@ -31,14 +31,17 @@ import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
+import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerTickRateManager;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.LevelBasedPermissionSet;
+import net.minecraft.server.permissions.PermissionLevel;
 import net.minecraft.server.players.NameAndId;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.server.players.ServerOpList;
@@ -48,7 +51,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.StatType;
 import net.minecraft.util.TimeUtil;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
@@ -109,7 +112,7 @@ public final class MinecraftEventHandler {
 				@Override
 				public List<String> getStatTypes() {
 					List<String> types = new ArrayList<>();
-					for (ResourceLocation loc : BuiltInRegistries.STAT_TYPE.keySet()) {
+					for (Identifier loc : BuiltInRegistries.STAT_TYPE.keySet()) {
 						types.add(loc.toString());
 					}
 					return types;
@@ -119,10 +122,10 @@ public final class MinecraftEventHandler {
 				public List<String> getStatNames(String typeStr) {
 					List<String> stats = new ArrayList<>();
 					try {
-						ResourceLocation typeLoc = ResourceLocation.parse(typeStr);
+						Identifier typeLoc = Identifier.parse(typeStr);
 						Optional<Holder.Reference<StatType<?>>> optional = BuiltInRegistries.STAT_TYPE.get(typeLoc);
 						if (optional.isPresent()) {
-							for (ResourceLocation loc : optional.get().value().getRegistry().keySet()) {
+							for (Identifier loc : optional.get().value().getRegistry().keySet()) {
 								stats.add(loc.toString());
 							}
 						}
@@ -189,7 +192,7 @@ public final class MinecraftEventHandler {
 			if (displayInfo != null
 					&& displayInfo.shouldAnnounceChat()
 					&& event.advancementProgress().isDone()
-					&& event.serverPlayer().level().getGameRules().getBoolean(GameRules.RULE_ANNOUNCE_ADVANCEMENTS)) {
+					&& event.serverPlayer().level().getGameRules().get(GameRules.SHOW_ADVANCEMENT_MESSAGES)) {
 				String type = switch (displayInfo.getType()) {
 					case TASK -> "task";
 					case CHALLENGE -> "challenge";
@@ -300,7 +303,7 @@ public final class MinecraftEventHandler {
 					Vec3.atLowerCornerOf(serverInstance.getRespawnData().pos()),
 					Vec2.ZERO,
 					serverInstance.findRespawnDimension(),
-					mcOp,
+					LevelBasedPermissionSet.forLevel(PermissionLevel.byId(mcOp)),
 					"DMCC",
 					Component.literal("DMCC"),
 					serverInstance,
@@ -363,7 +366,7 @@ public final class MinecraftEventHandler {
 					Vec3.atLowerCornerOf(serverInstance.getRespawnData().pos()),
 					Vec2.ZERO,
 					serverInstance.findRespawnDimension(),
-					mcOp,
+					LevelBasedPermissionSet.forLevel(PermissionLevel.byId(mcOp)),
 					"DMCC",
 					Component.literal("DMCC"),
 					serverInstance,
@@ -469,7 +472,7 @@ public final class MinecraftEventHandler {
 							if (user == null) continue;
 							UUID uuid = UUID.fromString(user.id().toString());
 							// Read level from entry
-							int level = entry.getLevel();
+							int level = entry.permissions().level().id();
 							if (level >= 0) currentOpLevels.put(uuid, level);
 						} catch (Exception ignored) {
 						}
@@ -522,7 +525,7 @@ public final class MinecraftEventHandler {
 						if (currentLevel != null && currentLevel == level) {
 							continue;
 						}
-						opList.add(new ServerOpListEntry(nameAndId, level, opList.canBypassPlayerLimit(nameAndId)));
+						opList.add(new ServerOpListEntry(nameAndId, LevelBasedPermissionSet.forLevel(PermissionLevel.byId(level)), opList.canBypassPlayerLimit(nameAndId)));
 						changed = true;
 					}
 
@@ -1001,6 +1004,15 @@ public final class MinecraftEventHandler {
 			}
 		}
 
-		player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.MASTER, 1.0F, 2.0F);
+		player.connection.send(new ClientboundSoundPacket(
+				SoundEvents.NOTE_BLOCK_PLING,
+				SoundSource.MASTER,
+				player.getX(),
+				player.getY(),
+				player.getZ(),
+				1.0F,
+				2.0F,
+				player.getRandom().nextLong()
+		));
 	}
 }
