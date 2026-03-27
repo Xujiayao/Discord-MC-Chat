@@ -44,6 +44,7 @@ import io.netty.handler.timeout.IdleStateEvent;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
@@ -312,6 +313,10 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 	private void handleMinecraftCommandMessage(MinecraftEventPacket packet, String sourceClientName) {
 		String command = packet.placeholders.getOrDefault("command", "");
+		if (isExcludedMinecraftCommand(command)) {
+			return;
+		}
+
 		String displayName = packet.placeholders.getOrDefault("display_name", packet.placeholders.getOrDefault("player_name", "Unknown"));
 		String roleColor = resolveDisplayRoleColor(packet.placeholders.getOrDefault("player_uuid", ""));
 		MinecraftMessageParser.ParsedMessage parsed = MinecraftMessageParser.parseCommandMessage(command);
@@ -324,6 +329,23 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		DiscordManager.sendMinecraftUserMessage(sourceClientName, "player.command", discordPlaceholders);
 
 		broadcastMinecraftRelay(packet, sourceClientName, MinecraftRelayPacket.MessageType.COMMAND, relaySegments, overwriteSegments, parsed, false, false, "player.command");
+	}
+
+	private boolean isExcludedMinecraftCommand(String command) {
+		if (command == null || command.isBlank()) {
+			return false;
+		}
+
+		JsonNode excludedCommands = ConfigManager.getConfigNode("excluded_commands");
+		if (excludedCommands.isArray()) {
+			for (JsonNode excludedCommand : excludedCommands) {
+				if (excludedCommand != null && excludedCommand.isTextual() && Pattern.matches(excludedCommand.asText(), command)) {
+					return true;
+				}
+			}
+		}
+
+		return false;
 	}
 
 	private void handleMinecraftSystemMessage(MinecraftEventPacket packet, String sourceClientName) {
