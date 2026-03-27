@@ -128,6 +128,17 @@ public final class MinecraftCommands {
 		return new MinecraftCommandSender(source);
 	}
 
+	private static PermissionCheck of(String configPath, int defaultLevel) {
+		int opLevel = ConfigManager.getInt(configPath, defaultLevel);
+		return switch (opLevel) {
+			case 4 -> Commands.LEVEL_OWNERS;
+			case 3 -> Commands.LEVEL_ADMINS;
+			case 2 -> Commands.LEVEL_GAMEMASTERS;
+			case 1 -> Commands.LEVEL_MODERATORS;
+			default -> Commands.LEVEL_ALL;
+		};
+	}
+
 	/**
 	 * Command sender implementation for Minecraft command sources.
 	 * <p>
@@ -216,16 +227,5 @@ public final class MinecraftCommands {
 			}
 			return null;
 		}
-	}
-	
-	private static PermissionCheck of(String configPath, int defaultLevel) {
-		int opLevel = ConfigManager.getInt(configPath, defaultLevel);
-		return switch (opLevel) {
-			case 4 -> Commands.LEVEL_OWNERS;
-			case 3 -> Commands.LEVEL_ADMINS;
-			case 2 -> Commands.LEVEL_GAMEMASTERS;
-			case 1 -> Commands.LEVEL_MODERATORS;
-			default -> Commands.LEVEL_ALL;
-		};
 	}
 }

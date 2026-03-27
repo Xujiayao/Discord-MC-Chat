@@ -29,8 +29,8 @@ public final class InfoResponsePacket extends Packet {
 	public long freeMemory;
 
 	public InfoResponsePacket(String serverName, long connectionLatencyMillis, String minecraftVersion, int onlinePlayerCount,
-							  int maxPlayerCount, Map<String, Integer> playersAndLatencies, double tps, double mspt,
-							  long uptimeSeconds, long totalMemory, long freeMemory) {
+	                          int maxPlayerCount, Map<String, Integer> playersAndLatencies, double tps, double mspt,
+	                          long uptimeSeconds, long totalMemory, long freeMemory) {
 		this.serverName = serverName;
 		this.connectionLatencyMillis = connectionLatencyMillis;
 		this.minecraftVersion = minecraftVersion;

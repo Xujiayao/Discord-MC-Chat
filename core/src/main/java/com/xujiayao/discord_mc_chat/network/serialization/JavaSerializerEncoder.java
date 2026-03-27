@@ -20,7 +20,7 @@ public class JavaSerializerEncoder extends MessageToByteEncoder<Serializable> {
 	protected void encode(ChannelHandlerContext ctx, Serializable msg, ByteBuf out) throws Exception {
 		// Use ObjectOutputStream to serialize the object into the ByteBuf
 		try (ByteBufOutputStream bbos = new ByteBufOutputStream(out);
-			 ObjectOutputStream oos = new ObjectOutputStream(bbos)) {
+		     ObjectOutputStream oos = new ObjectOutputStream(bbos)) {
 			oos.writeObject(msg);
 		}
 	}

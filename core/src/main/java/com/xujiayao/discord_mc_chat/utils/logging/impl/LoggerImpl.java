@@ -68,7 +68,7 @@ public final class LoggerImpl implements Logger {
 				logThrowMethods.put("WARN", loggerClass.getMethod("warn", String.class, Throwable.class));
 				logThrowMethods.put("ERROR", loggerClass.getMethod("error", String.class, Throwable.class));
 			} catch (ClassNotFoundException | InvocationTargetException | IllegalAccessException |
-					 NoSuchMethodException e) {
+			         NoSuchMethodException e) {
 				throw new RuntimeException("Failed to initialize DMCC Logger", e);
 			}
 		} else {

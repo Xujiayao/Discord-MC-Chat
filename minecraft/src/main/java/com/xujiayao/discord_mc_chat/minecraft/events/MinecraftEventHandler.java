@@ -759,9 +759,9 @@ public final class MinecraftEventHandler {
 	 * @return true if rawInput is a valid candidate to be included as a suggestion, false otherwise.
 	 */
 	private static boolean isSelfCandidate(String rawInput,
-										   CommandSourceStack source,
-										   List<String> nextResult,
-										   List<String> currentResult) {
+	                                       CommandSourceStack source,
+	                                       List<String> nextResult,
+	                                       List<String> currentResult) {
 		// Fast path: already present in computed suggestions.
 		if (nextResult.contains(rawInput) || currentResult.contains(rawInput)) {
 			return true;

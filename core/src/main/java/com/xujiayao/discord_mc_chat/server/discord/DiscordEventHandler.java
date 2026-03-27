@@ -631,7 +631,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 	 * @param systemMessage   Whether this is a Discord system message (e.g. pin notice).
 	 */
 	private record CachedMessage(String authorName, String authorRoleColor, String contentRaw,
-								 List<TextSegment> replySegments,
-								 boolean systemMessage) {
+	                             List<TextSegment> replySegments,
+	                             boolean systemMessage) {
 	}
 }

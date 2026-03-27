@@ -65,9 +65,9 @@ public final class MinecraftMessageParser {
 	}
 
 	public static List<TextSegment> buildUserMessageSegments(String serverName,
-															 String effectiveName,
-															 String roleColor,
-															 List<TextSegment> parsedMessageSegments) {
+	                                                         String effectiveName,
+	                                                         String roleColor,
+	                                                         List<TextSegment> parsedMessageSegments) {
 		return buildTemplateSegments(
 				I18nManager.getCustomMessages().path("xxxxx_to_minecraft").path("user_message"),
 				serverName,
@@ -88,9 +88,9 @@ public final class MinecraftMessageParser {
 	}
 
 	public static List<TextSegment> buildOverwriteUserMessageSegments(String serverName,
-																	  String effectiveName,
-																	  String roleColor,
-																	  List<TextSegment> parsedMessageSegments) {
+	                                                                  String effectiveName,
+	                                                                  String roleColor,
+	                                                                  List<TextSegment> parsedMessageSegments) {
 		String mode = ConfigManager.getString("mode", "single_server");
 		return buildTemplateSegments(
 				I18nManager.getCustomMessages().path("overwrite").path(mode).path("user_message"),
@@ -135,9 +135,9 @@ public final class MinecraftMessageParser {
 	}
 
 	private static String parseForDiscord(String raw,
-										  MentionContext context,
-										  boolean parseMentions,
-										  boolean parseCustomEmojis) {
+	                                      MentionContext context,
+	                                      boolean parseMentions,
+	                                      boolean parseCustomEmojis) {
 		if ((!parseMentions && !parseCustomEmojis) || raw.isEmpty()) {
 			return raw;
 		}
@@ -169,13 +169,13 @@ public final class MinecraftMessageParser {
 	}
 
 	private static List<TextSegment> parseForMinecraft(String raw,
-													   MentionContext context,
-													   boolean parseMentions,
-													   boolean parseCustomEmojis,
-													   boolean parseUnicodeEmojis,
-													   boolean parseMarkdown,
-													   boolean parseHyperlinks,
-													   boolean parseTimestamps) {
+	                                                   MentionContext context,
+	                                                   boolean parseMentions,
+	                                                   boolean parseCustomEmojis,
+	                                                   boolean parseUnicodeEmojis,
+	                                                   boolean parseMarkdown,
+	                                                   boolean parseHyperlinks,
+	                                                   boolean parseTimestamps) {
 		List<TextSegment> segments = parseMarkdown ? parseMarkdownSegments(raw) : List.of(new TextSegment(raw));
 
 		if (parseMentions) {
@@ -464,10 +464,10 @@ public final class MinecraftMessageParser {
 	}
 
 	private static List<TextSegment> buildTemplateSegments(JsonNode templateNode,
-														   String serverName,
-														   String effectiveName,
-														   String roleColor,
-														   List<TextSegment> parsedMessageSegments) {
+	                                                       String serverName,
+	                                                       String effectiveName,
+	                                                       String roleColor,
+	                                                       List<TextSegment> parsedMessageSegments) {
 		List<TextSegment> out = new ArrayList<>();
 		if (!templateNode.isArray()) {
 			return out;
@@ -526,9 +526,9 @@ public final class MinecraftMessageParser {
 	}
 
 	private static void putMentionAlias(Map<String, MentionTarget> localMap,
-										Map<String, MentionTarget> allMap,
-										String alias,
-										MentionTarget target) {
+	                                    Map<String, MentionTarget> allMap,
+	                                    String alias,
+	                                    MentionTarget target) {
 		if (alias == null) {
 			return;
 		}
@@ -619,7 +619,7 @@ public final class MinecraftMessageParser {
 	}
 
 	private record MentionTarget(MentionType type, String id, String displayName, String color,
-								 List<String> linkedMinecraftUuids) {
+	                             List<String> linkedMinecraftUuids) {
 	}
 
 	private record MentionMatch(MentionTarget target, int endExclusive) {
@@ -633,9 +633,9 @@ public final class MinecraftMessageParser {
 		private boolean mentionEveryone;
 
 		private MentionContext(Map<String, MentionTarget> allMentionByAlias,
-							   List<String> mentionAliasesByLengthDesc,
-							   Map<String, RichCustomEmoji> customEmojiByName,
-							   Set<String> mentionedPlayerUuids) {
+		                       List<String> mentionAliasesByLengthDesc,
+		                       Map<String, RichCustomEmoji> customEmojiByName,
+		                       Set<String> mentionedPlayerUuids) {
 			this.allMentionByAlias = allMentionByAlias;
 			this.mentionAliasesByLengthDesc = mentionAliasesByLengthDesc;
 			this.customEmojiByName = customEmojiByName;

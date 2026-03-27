@@ -116,7 +116,7 @@ public final class I18nManager {
 	 */
 	private static boolean checkLanguageResources() {
 		try (InputStream customMessagesStream = I18nManager.class.getResourceAsStream("/config/custom_messages/" + language + ".yml");
-			 InputStream dmccLangStream = I18nManager.class.getResourceAsStream("/lang/" + language + ".yml")) {
+		     InputStream dmccLangStream = I18nManager.class.getResourceAsStream("/lang/" + language + ".yml")) {
 
 			if (customMessagesStream == null || dmccLangStream == null) {
 				LOGGER.error(I18nManager.getDmccTranslation("utils.i18n.language_not_supported", language));

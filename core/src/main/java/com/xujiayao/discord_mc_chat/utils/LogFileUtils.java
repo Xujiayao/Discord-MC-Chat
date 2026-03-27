@@ -72,8 +72,8 @@ public final class LogFileUtils {
 			if (fileName.endsWith(".gz")) {
 				// Decompress gzip file
 				try (InputStream fis = Files.newInputStream(filePath);
-					 GZIPInputStream gzis = new GZIPInputStream(fis);
-					 ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+				     GZIPInputStream gzis = new GZIPInputStream(fis);
+				     ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 					byte[] buffer = new byte[8192];
 					int len;
 					while ((len = gzis.read(buffer)) != -1) {
