@@ -454,7 +454,7 @@ public final class DiscordManager {
 				String username = replacePlaceholders(usernameTemplate, placeholders);
 				String content = replacePlaceholders(contentTemplate, placeholders);
 
-				String avatarUrl = resolveWebhookAvatarUrl(placeholders);
+				String avatarUrl = resolveWebhookAvatarUrl(clientName, placeholders);
 				sendWebhookMessage(channel, username, avatarUrl, content);
 				return;
 			}
@@ -481,18 +481,20 @@ public final class DiscordManager {
 		return out;
 	}
 
-	private static String resolveWebhookAvatarUrl(Map<String, String> placeholders) {
+	private static String resolveWebhookAvatarUrl(String clientName, Map<String, String> placeholders) {
+		String playerUuid = placeholders.getOrDefault("player_uuid", "");
+		if (playerUuid.isBlank()) {
+			return getClientAvatarUrl(clientName);
+		}
+
 		if (Boolean.TRUE.equals(ConfigManager.getBoolean("account_linking.discord_user_avatar_for_webhooks"))) {
-			String playerUuid = placeholders.getOrDefault("player_uuid", "");
-			if (!playerUuid.isBlank()) {
-				String discordId = LinkedAccountManager.getDiscordIdByMinecraftUuid(playerUuid);
-				if (discordId != null && !discordId.isBlank()) {
-					User user = retrieveUser(discordId);
-					if (user != null) {
-						String avatar = user.getEffectiveAvatarUrl();
-						if (!avatar.isBlank()) {
-							return avatar;
-						}
+			String discordId = LinkedAccountManager.getDiscordIdByMinecraftUuid(playerUuid);
+			if (discordId != null && !discordId.isBlank()) {
+				User user = retrieveUser(discordId);
+				if (user != null) {
+					String avatar = user.getEffectiveAvatarUrl();
+					if (!avatar.isBlank()) {
+						return avatar;
 					}
 				}
 			}
