@@ -150,7 +150,7 @@ minecraft_to_xxxxx:
       goal: ":partying_face: **{display_name} 达成了目标 [{title}]**\\n       *{description}*"
     change_game_mode: ":arrows_counterclockwise: **{display_name} 切换游戏模式为 {mode}**"
   source:
-    me: ":eyes: **{display_name} {action}**"
+    me: ":eyes: **{action}**"
 
 # These are for user_messages
 minecraft_to_discord:

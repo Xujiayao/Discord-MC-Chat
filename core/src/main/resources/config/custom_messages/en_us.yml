@@ -152,7 +152,7 @@ minecraft_to_xxxxx:
       goal: ":partying_face: **{display_name} has reached the goal [{title}]**\\n       *{description}*"
     change_game_mode: ":arrows_counterclockwise: **{display_name} changed game mode to {mode}**"
   source:
-    me: ":eyes: **{display_name} {action}**"
+    me: ":eyes: **{action}**"
 
 minecraft_to_discord:
   user_message:
