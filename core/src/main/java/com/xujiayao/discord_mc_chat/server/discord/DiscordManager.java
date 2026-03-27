@@ -446,27 +446,35 @@ public final class DiscordManager {
 			String mode = "standalone".equals(ModeManager.getMode()) ? "standalone" : "single_server";
 			boolean fakeUserStyle = Boolean.TRUE.equals(ConfigManager.getBoolean("discord.webhook.enable_fake_user_style"));
 
-			if (fakeUserStyle) {
-				JsonNode styleNode = node.path("enabled_fake_user_style").path(mode);
-				String usernameTemplate = styleNode.path("username").asText("{display_name}");
-				String contentTemplate = styleNode.path("content").asText("{message}");
-
-				String username = replacePlaceholders(usernameTemplate, placeholders);
-				String content = replacePlaceholders(contentTemplate, placeholders);
-
-				String avatarUrl = resolveWebhookAvatarUrl(clientName, placeholders);
-				sendWebhookMessage(channel, username, avatarUrl, content);
-				return;
-			}
-
 			String contentTemplate = node.path("disabled_fake_user_style").path(mode).asText("<{display_name}> {message}");
 			String content = replacePlaceholders(contentTemplate, placeholders);
 
-			if ("standalone".equals(ModeManager.getMode())) {
-				String avatarUrl = getClientAvatarUrl(clientName);
-				sendWebhookMessage(channel, clientName, avatarUrl, content);
+			for (String line : content.split("\n")) {
+				// Escape underscores in :emoji: to prevent being treated as Markdown formatting
+				line = Pattern.compile("(:[^:]+:)").matcher(line)
+						.replaceAll(m -> m.group().replace("_", "\\\\_"));
+				line = MarkdownSanitizer.sanitize(line).replace("\\_", "_");
+
+				LOGGER.info(line);
+			}
+
+			if (fakeUserStyle) {
+				JsonNode styleNode = node.path("enabled_fake_user_style").path(mode);
+				String usernameTemplate = styleNode.path("username").asText("{display_name}");
+				contentTemplate = styleNode.path("content").asText("{message}");
+
+				String username = replacePlaceholders(usernameTemplate, placeholders);
+				content = replacePlaceholders(contentTemplate, placeholders);
+
+				String avatarUrl = resolveWebhookAvatarUrl(clientName, placeholders);
+				sendWebhookMessage(channel, username, avatarUrl, content);
 			} else {
-				sendBotMessage(channelIdentifier, content);
+				if ("standalone".equals(ModeManager.getMode())) {
+					String avatarUrl = getClientAvatarUrl(clientName);
+					sendWebhookMessage(channel, clientName, avatarUrl, content);
+				} else {
+					sendBotMessage(channelIdentifier, content);
+				}
 			}
 		} catch (Exception e) {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
@@ -549,7 +557,7 @@ public final class DiscordManager {
 	 * @param fileName  The file name.
 	 */
 	private static void sendWebhookMessageWithFile(TextChannel channel, String username, String avatarUrl,
-												   String content, byte[] fileData, String fileName) {
+	                                               String content, byte[] fileData, String fileName) {
 		Webhook webhook = getOrCreateWebhook(channel);
 
 		List<Message.MentionType> allowedMentions = getAllowedMentions();
@@ -651,7 +659,7 @@ public final class DiscordManager {
 	 * @param fileName   The file name
 	 */
 	public static void sendExecuteResultWithFileViaWebhook(String clientName, String message,
-														   byte[] fileData, String fileName) {
+	                                                       byte[] fileData, String fileName) {
 		String channelIdentifier = ConfigManager.getString("broadcasts.minecraft_to_discord.server.started", "in-game-chat");
 		TextChannel channel = getTextChannel(channelIdentifier);
 		if (channel == null) return;
