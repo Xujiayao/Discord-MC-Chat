@@ -140,7 +140,6 @@ public final class MinecraftCommands {
 
 		@Override
 		public void reply(String message) {
-			// TODO Ephemeral if false, visible to all admin if true
 			// For each line in the message, send a separate chat message
 			for (String line : message.split("\n")) {
 				source.sendSuccess(() -> Component.literal(line), false);
