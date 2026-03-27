@@ -18,8 +18,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(EmoteCommands.class)
 final class MixinEmoteCommands {
 
-	@Inject(method = "lambda$register$0", at = @At("HEAD"), cancellable = true)
-	private static void lambda$register$0(CommandContext<CommandSourceStack> commandContext, PlayerChatMessage playerChatMessage, CallbackInfo ci) {
+	@Inject(method = "lambda$register$1", at = @At("HEAD"), cancellable = true)
+	private static void lambda$register$1(CommandContext<CommandSourceStack> commandContext, PlayerChatMessage playerChatMessage, CallbackInfo ci) {
 		// SourceMe Event
 		EventManager.post(new MinecraftEvents.SourceMe(
 				commandContext,

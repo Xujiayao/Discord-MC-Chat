@@ -25,8 +25,8 @@ final class MixinMsgCommand {
 	@Unique
 	private static final Pattern MSG_PATTERN = Pattern.compile("^(?:msg|tell|w) @a .*");
 
-	@Inject(method = "lambda$register$1", at = @At("HEAD"), cancellable = true)
-	private static void lambda$register$1(CommandContext<CommandSourceStack> commandContext, CallbackInfoReturnable<Integer> cir) throws CommandSyntaxException {
+	@Inject(method = "lambda$register$0", at = @At("HEAD"), cancellable = true)
+	private static void lambda$register$0(CommandContext<CommandSourceStack> commandContext, CallbackInfoReturnable<Integer> cir) throws CommandSyntaxException {
 		if (MSG_PATTERN.matcher(commandContext.getInput()).matches()) {
 			MessageArgument.resolveChatMessage(commandContext, "message", playerChatMessage -> {
 				// SourceMsg Event

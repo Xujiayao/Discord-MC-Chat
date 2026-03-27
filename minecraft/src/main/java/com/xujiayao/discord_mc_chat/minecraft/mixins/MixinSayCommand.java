@@ -18,8 +18,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(SayCommand.class)
 final class MixinSayCommand {
 
-	@Inject(method = "lambda$register$0", at = @At("HEAD"), cancellable = true)
-	private static void lambda$register$0(CommandContext<CommandSourceStack> commandContext, PlayerChatMessage playerChatMessage, CallbackInfo ci) {
+	@Inject(method = "lambda$register$1", at = @At("HEAD"), cancellable = true)
+	private static void lambda$register$1(CommandContext<CommandSourceStack> commandContext, PlayerChatMessage playerChatMessage, CallbackInfo ci) {
 		// SourceSay Event
 		EventManager.post(new MinecraftEvents.SourceSay(
 				commandContext,
