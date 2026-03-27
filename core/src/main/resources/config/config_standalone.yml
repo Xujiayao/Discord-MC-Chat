@@ -23,11 +23,11 @@ multi_server:
   servers:
     # This list acts as a whitelist. Only clients with a server name defined here are allowed to connect.
     - name: "SMP"
-      minecraft_version: "1.21.10"
+      minecraft_version: "26.1"
       avatar_url: ""
       color: "yellow"
     - name: "CMP"
-      minecraft_version: "1.21.10"
+      minecraft_version: "26.1"
       avatar_url: ""
       color: "green"
 
