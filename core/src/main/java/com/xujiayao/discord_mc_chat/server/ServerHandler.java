@@ -95,14 +95,14 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 					switch (p.type) {
 						// Server events
 						case SERVER_STARTED -> {
-							DiscordManager.clientBroadcast(clientName, "server.started", "server.start", p.placeholders);
+							handleMinecraftSystemMessage(p, clientName, "server.started", "server.start");
 							DiscordManager.updateBotPresence();
 						}
 						case SERVER_STOPPING ->
-								DiscordManager.clientBroadcast(clientName, "server.stopped", "server.stop", p.placeholders);
+								handleMinecraftSystemMessage(p, clientName, "server.stopped", "server.stop");
 						// Player events
 						case PLAYER_JOIN -> {
-							DiscordManager.clientBroadcast(clientName, "player.join", "player.join", p.placeholders);
+							handleMinecraftSystemMessage(p, clientName, "player.join", "player.join");
 
 							// Perform the initial OP sync once, on the first player join for this DMCC client.
 							if (!initialOpSyncDone) {
@@ -113,20 +113,19 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 							DiscordManager.updateBotPresence();
 						}
 						case PLAYER_QUIT -> {
-							DiscordManager.clientBroadcast(clientName, "player.quit", "player.quit", p.placeholders);
+							handleMinecraftSystemMessage(p, clientName, "player.quit", "player.quit");
 							DiscordManager.updateBotPresence();
 						}
-						case PLAYER_DIE ->
-								DiscordManager.clientBroadcast(clientName, "player.die", "player.die", p.placeholders);
+						case PLAYER_DIE -> handleMinecraftSystemMessage(p, clientName, "player.die", "player.die");
 						case PLAYER_ADVANCEMENT ->
-								DiscordManager.clientBroadcast(clientName, "player.advancement", "player.advancement." + p.placeholders.get("type"), p.placeholders);
+								handleMinecraftSystemMessage(p, clientName, "player.advancement", "player.advancement." + p.placeholders.getOrDefault("type", ""));
 						case PLAYER_CHANGE_GAME_MODE ->
-								DiscordManager.clientBroadcast(clientName, "player.change_game_mode", "player.change_game_mode", p.placeholders);
+								handleMinecraftSystemMessage(p, clientName, "player.change_game_mode", "player.change_game_mode");
 						case PLAYER_CHAT -> handleMinecraftUserMessage(p, clientName, "player.chat");
 						case PLAYER_COMMAND -> handleMinecraftCommandMessage(p, clientName);
 						case SOURCE_SAY -> handleMinecraftUserMessage(p, clientName, "source.say");
 						case SOURCE_MSG -> handleMinecraftUserMessage(p, clientName, "source.msg");
-						case SOURCE_ME -> handleMinecraftSystemMessage(p, clientName);
+						case SOURCE_ME -> handleMinecraftSystemMessage(p, clientName, "source.me", "source.me");
 						// TODO Unhandled events
 					}
 				}
@@ -348,20 +347,46 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		return false;
 	}
 
-	private void handleMinecraftSystemMessage(MinecraftEventPacket packet, String sourceClientName) {
-		String rawAction = packet.placeholders.getOrDefault("action", "");
-		String displayName = packet.placeholders.getOrDefault("display_name", packet.placeholders.getOrDefault("player_name", "Unknown"));
-		String combined = (displayName + " " + rawAction).trim();
+	private void handleMinecraftSystemMessage(MinecraftEventPacket packet, String sourceClientName, String channelNode, String lang) {
+		String message;
+		if (packet.type == MinecraftEventPacket.MessageType.SOURCE_ME) {
+			String rawAction = packet.placeholders.getOrDefault("action", "");
+			String displayName = packet.placeholders.getOrDefault("display_name", packet.placeholders.getOrDefault("player_name", "Unknown"));
+			message = (displayName + " " + rawAction).trim();
+		} else {
+			message = resolveMinecraftToDiscordMessage(lang, packet.placeholders);
+		}
 
-		MinecraftMessageParser.ParsedMessage parsed = MinecraftMessageParser.parseSystemMessage(combined, true);
+		MinecraftMessageParser.ParsedMessage parsed = MinecraftMessageParser.parseSystemMessage(message, true);
 		List<TextSegment> relaySegments = MinecraftMessageParser.buildSystemMessageSegments(sourceClientName, parsed.minecraftSegments());
 		List<TextSegment> overwriteSegments = MinecraftMessageParser.buildOverwriteSystemMessageSegments(sourceClientName, parsed.minecraftSegments());
 
 		Map<String, String> placeholders = new HashMap<>(packet.placeholders);
-		placeholders.put("action", parsed.discordContent());
-		DiscordManager.clientBroadcast(sourceClientName, "source.me", "source.me", placeholders);
+		if (packet.type == MinecraftEventPacket.MessageType.SOURCE_ME) {
+			placeholders.put("action", parsed.discordContent());
+		}
+		DiscordManager.clientBroadcast(sourceClientName, channelNode, lang, placeholders);
 
-		broadcastMinecraftRelay(packet, sourceClientName, MinecraftRelayPacket.MessageType.SYSTEM_MESSAGE, relaySegments, overwriteSegments, parsed, true, true, "source.me");
+		broadcastMinecraftRelay(packet, sourceClientName, MinecraftRelayPacket.MessageType.SYSTEM_MESSAGE, relaySegments, overwriteSegments, parsed, true, true, channelNode);
+	}
+
+	private String resolveMinecraftToDiscordMessage(String lang, Map<String, String> placeholders) {
+		JsonNode customMessages = I18nManager.getCustomMessages();
+		if (customMessages == null) {
+			return "";
+		}
+
+		String[] parts = ("minecraft_to_xxxxx." + lang).split("\\.");
+		JsonNode messageNode = customMessages;
+		for (String part : parts) {
+			messageNode = messageNode.path(part);
+		}
+
+		String message = messageNode.asText("");
+		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+			message = message.replace("{" + entry.getKey() + "}", entry.getValue());
+		}
+		return message;
 	}
 
 	private void broadcastMinecraftRelay(MinecraftEventPacket packet,
