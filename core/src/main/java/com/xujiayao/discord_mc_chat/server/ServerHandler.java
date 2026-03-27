@@ -57,6 +57,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	private final NettyServer server;
 	private String expectedNonce;
 	private boolean authenticated = false;
+	private boolean initialOpSyncDone = false;
 	private String clientName;
 
 	ServerHandler(NettyServer server) {
@@ -94,9 +95,6 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 						// Server events
 						case SERVER_STARTED -> {
 							DiscordManager.clientBroadcast(clientName, "server.started", "server.start", p.placeholders);
-
-							// After a Minecraft server starts, perform OP level sync if enabled
-							OpSyncManager.syncAll();
 							DiscordManager.updateBotPresence();
 						}
 						case SERVER_STOPPING ->
@@ -104,6 +102,13 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 						// Player events
 						case PLAYER_JOIN -> {
 							DiscordManager.clientBroadcast(clientName, "player.join", "player.join", p.placeholders);
+
+							// Perform the initial OP sync once, on the first player join for this DMCC client.
+							if (!initialOpSyncDone) {
+								initialOpSyncDone = true;
+								OpSyncManager.syncAll();
+							}
+
 							DiscordManager.updateBotPresence();
 						}
 						case PLAYER_QUIT -> {
@@ -215,9 +220,6 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 						LOGGER.info(I18nManager.getDmccTranslation("server.network.auth_success", clientName));
 						ctx.writeAndFlush(new LoginSuccessPacket(ConfigManager.getString("language"), ConfigManager.getBoolean("message_parsing.overwrite_minecraft_source_messages")));
-
-						// After successful authentication, perform OP level sync if enabled
-						OpSyncManager.syncAll();
 						DiscordManager.updateBotPresence();
 					} else {
 						String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.auth_failed");
@@ -289,8 +291,8 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	}
 
 	private void handleMinecraftUserMessage(MinecraftEventPacket packet,
-											String sourceClientName,
-											String channelNode) {
+	                                        String sourceClientName,
+	                                        String channelNode) {
 		String rawContent = packet.placeholders.getOrDefault("message", "");
 		String displayName = packet.placeholders.getOrDefault("display_name", packet.placeholders.getOrDefault("player_name", "Unknown"));
 		String roleColor = resolveDisplayRoleColor(packet.placeholders.getOrDefault("player_uuid", ""));
@@ -341,14 +343,14 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	}
 
 	private void broadcastMinecraftRelay(MinecraftEventPacket packet,
-										 String sourceClientName,
-										 MinecraftRelayPacket.MessageType relayType,
-										 List<TextSegment> relaySegments,
-										 List<TextSegment> overwriteSegments,
-										 MinecraftMessageParser.ParsedMessage parsed,
-										 boolean canOverwriteEchoToSource,
-										 boolean parseMentionsForNotifications,
-										 String broadcastNode) {
+	                                     String sourceClientName,
+	                                     MinecraftRelayPacket.MessageType relayType,
+	                                     List<TextSegment> relaySegments,
+	                                     List<TextSegment> overwriteSegments,
+	                                     MinecraftMessageParser.ParsedMessage parsed,
+	                                     boolean canOverwriteEchoToSource,
+	                                     boolean parseMentionsForNotifications,
+	                                     String broadcastNode) {
 		boolean overwrite = Boolean.TRUE.equals(ConfigManager.getBoolean("message_parsing.overwrite_minecraft_source_messages"));
 		boolean supportMinecraftToMinecraftConfig = "standalone".equals(ModeManager.getMode());
 		boolean toOtherClients = supportMinecraftToMinecraftConfig && Boolean.TRUE.equals(ConfigManager.getBoolean("broadcasts.minecraft_to_minecraft." + broadcastNode));
