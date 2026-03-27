@@ -77,6 +77,12 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 		}
 	}
 
+	private static void logMinecraftEventForConsole(MinecraftRelayPacket p) {
+		if (p.segments != null && !p.segments.isEmpty()) {
+			LOGGER.info(TextSegment.toPlainText(p.segments));
+		}
+	}
+
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) {
 		ctx.writeAndFlush(new HandshakePacket(client.getServerName(), Constants.VERSION, EnvironmentUtils.getMinecraftVersion()));
@@ -246,13 +252,19 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 					));
 				}
 			}
-			case MinecraftRelayPacket p -> EventManager.post(new CoreEvents.MinecraftRelayMessageEvent(
-					p.segments,
-					p.mentionNotificationText,
-					p.mentionNotificationStyle,
-					p.mentionedPlayerUuids,
-					p.mentionEveryone
-			));
+			case MinecraftRelayPacket p -> {
+				if ("multi_server_client".equals(ModeManager.getMode())) {
+					logMinecraftEventForConsole(p);
+				}
+
+				EventManager.post(new CoreEvents.MinecraftRelayMessageEvent(
+						p.segments,
+						p.mentionNotificationText,
+						p.mentionNotificationStyle,
+						p.mentionedPlayerUuids,
+						p.mentionEveryone
+				));
+			}
 			case DisconnectPacket p -> {
 				// If we receive a DisconnectPacket, it means the server explicitly rejected us.
 				// In most cases (whitelist, auth fail, version mismatch), retrying immediately won't help.
