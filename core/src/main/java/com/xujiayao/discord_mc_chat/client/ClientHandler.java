@@ -79,7 +79,15 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 
 	private static void logMinecraftEventForConsole(MinecraftRelayPacket p) {
 		if (p.segments != null && !p.segments.isEmpty()) {
-			LOGGER.info(TextSegment.toPlainText(p.segments));
+			String plain = TextSegment.toPlainText(p.segments);
+			if (p.componentPlaceholder != null && !p.componentPlaceholder.isBlank() && plain.contains(p.componentPlaceholder)) {
+				String replacement = p.componentText != null ? p.componentText : "";
+				LOGGER.info(plain.replace(p.componentPlaceholder, replacement));
+			} else {
+				LOGGER.info(plain);
+			}
+		} else if (p.componentJson != null && !p.componentJson.isBlank()) {
+			LOGGER.info("[TellRaw] " + p.componentJson);
 		}
 	}
 
@@ -259,6 +267,8 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 
 				EventManager.post(new CoreEvents.MinecraftRelayMessageEvent(
 						p.segments,
+						p.componentJson,
+						p.componentPlaceholder,
 						p.mentionNotificationText,
 						p.mentionNotificationStyle,
 						p.mentionedPlayerUuids,

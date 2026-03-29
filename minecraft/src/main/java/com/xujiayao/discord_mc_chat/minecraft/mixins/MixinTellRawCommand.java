@@ -2,6 +2,7 @@ package com.xujiayao.discord_mc_chat.minecraft.mixins;
 
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.xujiayao.discord_mc_chat.Constants;
 import com.xujiayao.discord_mc_chat.minecraft.events.MinecraftEvents;
 import com.xujiayao.discord_mc_chat.utils.events.EventManager;
 import net.minecraft.commands.CommandSourceStack;
@@ -28,7 +29,7 @@ final class MixinTellRawCommand {
 	@Unique
 	private static final Pattern TELLRAW_PATTERN = Pattern.compile("^tellraw @a .*");
 
-	@Inject(method = "lambda$register$0", at = @At("HEAD"))
+	@Inject(method = "lambda$register$0", at = @At("HEAD"), cancellable = true)
 	private static void lambda$register$0(CommandContext<CommandSourceStack> commandContext, CallbackInfoReturnable<Integer> cir) throws CommandSyntaxException {
 		if (TELLRAW_PATTERN.matcher(commandContext.getInput()).matches()) {
 			Optional<ServerPlayer> optional = EntityArgument.getPlayers(commandContext, "targets").stream().findFirst();
@@ -41,6 +42,11 @@ final class MixinTellRawCommand {
 						commandContext,
 						component
 				));
+
+				if (Constants.OVERWRITE_MINECRAFT_SOURCE_MESSAGES.get()) {
+					cir.setReturnValue(1);
+					cir.cancel();
+				}
 			}
 		}
 	}

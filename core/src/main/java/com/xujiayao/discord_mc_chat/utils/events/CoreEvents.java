@@ -183,12 +183,16 @@ public final class CoreEvents {
 	 * Posted when a Minecraft-originated relayed message should be displayed in Minecraft.
 	 *
 	 * @param segments                 The parsed message segments.
+	 * @param componentJson            Serialized Minecraft component JSON for native tellraw relays, or null.
+	 * @param componentPlaceholder     Placeholder token in {@code segments} to be replaced by {@code componentJson}, or null.
 	 * @param mentionNotificationText  Mention notification text, or null.
 	 * @param mentionNotificationStyle Mention notification style.
 	 * @param mentionedPlayerUuids     UUIDs to receive mention notifications.
 	 */
 	public record MinecraftRelayMessageEvent(
 			List<TextSegment> segments,
+			String componentJson,
+			String componentPlaceholder,
 			String mentionNotificationText,
 			String mentionNotificationStyle,
 			List<String> mentionedPlayerUuids,

@@ -15,6 +15,9 @@ public final class MinecraftRelayPacket extends Packet {
 
 	public MessageType type;
 	public List<TextSegment> segments;
+	public String componentJson;
+	public String componentPlaceholder;
+	public String componentText;
 	public String mentionNotificationText;
 	public String mentionNotificationStyle;
 	public List<String> mentionedPlayerUuids;

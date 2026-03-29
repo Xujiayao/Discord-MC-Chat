@@ -54,6 +54,7 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  * @author Xujiayao
  */
 final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
+	private static final String TELLRAW_COMPONENT_PLACEHOLDER = "__DMCC_TELLRAW_COMPONENT__";
 
 	private final NettyServer server;
 	private String expectedNonce;
@@ -124,9 +125,9 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 						case PLAYER_CHAT -> handleMinecraftUserMessage(p, clientName, "player.chat");
 						case PLAYER_COMMAND -> handleMinecraftCommandMessage(p, clientName);
 						case SOURCE_SAY -> handleMinecraftUserMessage(p, clientName, "source.say");
+						case SOURCE_TELL_RAW -> handleMinecraftTellRawMessage(p, clientName);
 						case SOURCE_MSG -> handleMinecraftUserMessage(p, clientName, "source.msg");
 						case SOURCE_ME -> handleMinecraftSystemMessage(p, clientName, "source.me", "source.me");
-						// TODO Unhandled events
 					}
 				}
 				case InfoResponsePacket p -> NetworkManager.cacheInfoResponse(clientName, p);
@@ -331,6 +332,25 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		broadcastMinecraftRelay(packet, sourceClientName, MinecraftRelayPacket.MessageType.COMMAND, relaySegments, overwriteSegments, parsed, false, echoPlayerCommandToSource, false, "player.command");
 	}
 
+	private void handleMinecraftTellRawMessage(MinecraftEventPacket packet, String sourceClientName) {
+		String translatedMessage = packet.placeholders.getOrDefault("message", "");
+		String componentJson = packet.placeholders.getOrDefault("component_json", "");
+		boolean useSerializedComponent = !componentJson.isBlank();
+
+		List<TextSegment> relaySegments = MinecraftMessageParser.buildSystemMessageSegments(
+				sourceClientName,
+				List.of(new TextSegment(useSerializedComponent ? TELLRAW_COMPONENT_PLACEHOLDER : translatedMessage))
+		);
+		List<TextSegment> overwriteSegments = MinecraftMessageParser.buildOverwriteSystemMessageSegments(
+				sourceClientName,
+				List.of(new TextSegment(useSerializedComponent ? TELLRAW_COMPONENT_PLACEHOLDER : translatedMessage))
+		);
+
+		DiscordManager.sendMinecraftSystemMessage(sourceClientName, "source.tell_raw", translatedMessage);
+
+		broadcastMinecraftTellRawRelay(sourceClientName, relaySegments, overwriteSegments, componentJson, translatedMessage, useSerializedComponent, "source.tell_raw");
+	}
+
 	private boolean isExcludedMinecraftCommand(String command) {
 		if (command == null || command.isBlank()) {
 			return false;
@@ -431,6 +451,43 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 				sourcePacket.mentionNotificationStyle = ConfigManager.getString("account_linking.mention_notifications.style", "title");
 				sourcePacket.mentionedPlayerUuids = List.copyOf(parsed.mentionedPlayerUuids());
 				sourcePacket.mentionEveryone = parsed.mentionEveryone();
+			}
+			NetworkManager.sendPacketToClient(sourcePacket, sourceClientName);
+		}
+	}
+
+	private void broadcastMinecraftTellRawRelay(String sourceClientName,
+	                                            List<TextSegment> relaySegments,
+	                                            List<TextSegment> overwriteSegments,
+	                                            String componentJson,
+	                                            String componentText,
+	                                            boolean useSerializedComponent,
+	                                            String broadcastNode) {
+		boolean overwrite = Boolean.TRUE.equals(ConfigManager.getBoolean("message_parsing.overwrite_minecraft_source_messages"));
+		boolean sourceEchoEnabled = overwrite;
+		boolean supportMinecraftToMinecraftConfig = "standalone".equals(ModeManager.getMode());
+		boolean toOtherClients = supportMinecraftToMinecraftConfig && Boolean.TRUE.equals(ConfigManager.getBoolean("broadcasts.minecraft_to_minecraft." + broadcastNode));
+
+		if (!toOtherClients && !sourceEchoEnabled) {
+			return;
+		}
+
+		if (toOtherClients) {
+			MinecraftRelayPacket relayPacket = new MinecraftRelayPacket(MinecraftRelayPacket.MessageType.SYSTEM_MESSAGE, relaySegments);
+			if (useSerializedComponent) {
+				relayPacket.componentJson = componentJson;
+				relayPacket.componentPlaceholder = TELLRAW_COMPONENT_PLACEHOLDER;
+				relayPacket.componentText = componentText;
+			}
+			NetworkManager.broadcastToClientsExcept(relayPacket, sourceClientName);
+		}
+
+		if (sourceEchoEnabled) {
+			MinecraftRelayPacket sourcePacket = new MinecraftRelayPacket(MinecraftRelayPacket.MessageType.SYSTEM_MESSAGE, overwriteSegments);
+			if (useSerializedComponent) {
+				sourcePacket.componentJson = componentJson;
+				sourcePacket.componentPlaceholder = TELLRAW_COMPONENT_PLACEHOLDER;
+				sourcePacket.componentText = componentText;
 			}
 			NetworkManager.sendPacketToClient(sourcePacket, sourceClientName);
 		}

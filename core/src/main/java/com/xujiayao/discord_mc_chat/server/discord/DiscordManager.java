@@ -481,6 +481,43 @@ public final class DiscordManager {
 		}
 	}
 
+	/**
+	 * Sends an already-formatted Minecraft system message to Discord.
+	 */
+	public static void sendMinecraftSystemMessage(String clientName, String channelNode, String message) {
+		String channelIdentifier = ConfigManager.getString("broadcasts.minecraft_to_discord." + channelNode);
+		if (channelIdentifier == null || channelIdentifier.isBlank()) {
+			return;
+		}
+		TextChannel channel = getTextChannel(channelIdentifier);
+		if (channel == null) {
+			return;
+		}
+
+		try {
+			boolean standaloneMode = "standalone".equals(ModeManager.getMode());
+			for (String line : message.split("\\n")) {
+				line = Pattern.compile("(:[^:]+:)").matcher(line)
+						.replaceAll(m -> m.group().replace("_", "\\\\_"));
+				line = MarkdownSanitizer.sanitize(line).replace("\\_", "_");
+				if (standaloneMode) {
+					LOGGER.info(StringUtils.format("[{}] {}"), clientName, line);
+				} else {
+					LOGGER.info(line);
+				}
+			}
+
+			if (standaloneMode) {
+				String avatarUrl = getClientAvatarUrl(clientName);
+				sendWebhookMessage(channel, clientName, avatarUrl, message);
+			} else {
+				sendBotMessage(channelIdentifier, message);
+			}
+		} catch (Exception e) {
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
+		}
+	}
+
 	private static String replacePlaceholders(String template, Map<String, String> placeholders) {
 		String out = template;
 		for (Map.Entry<String, String> entry : placeholders.entrySet()) {

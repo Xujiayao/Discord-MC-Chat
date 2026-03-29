@@ -1,5 +1,7 @@
 package com.xujiayao.discord_mc_chat.minecraft.events;
 
+import com.google.gson.JsonParser;
+import com.mojang.serialization.JsonOps;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.suggestion.Suggestion;
@@ -27,6 +29,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -37,6 +40,7 @@ import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerTickRateManager;
 import net.minecraft.server.level.ServerPlayer;
@@ -251,7 +255,14 @@ public final class MinecraftEventHandler {
 		});
 
 		EventManager.register(MinecraftEvents.SourceTellRaw.class, event -> {
-			// TODO Rewrite
+			Map<String, String> placeholders = Map.of(
+					"player_uuid", event.commandContext().getSource().getEntity() instanceof ServerPlayer player ? player.getStringUUID() : "",
+					"player_name", event.commandContext().getSource().getTextName(),
+					"display_name", event.commandContext().getSource().getDisplayName().getString(),
+					"message", TranslationManager.get(event.component()),
+					"component_json", serializeComponent(event.component())
+			);
+			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_TELL_RAW, placeholders));
 		});
 
 		EventManager.register(MinecraftEvents.SourceMsg.class, event -> {
@@ -676,7 +687,20 @@ public final class MinecraftEventHandler {
 
 			serverInstance.execute(() -> {
 				PlayerList playerList = serverInstance.getPlayerList();
-				Component component = buildComponentFromSegments(event.segments());
+				Component component;
+				if (event.componentJson() != null && !event.componentJson().isBlank()) {
+					Component nativeComponent = deserializeComponent(event.componentJson());
+					if (nativeComponent != null && event.componentPlaceholder() != null && !event.componentPlaceholder().isBlank()) {
+						component = buildComponentFromSegmentsReplacingPlaceholder(event.segments(), event.componentPlaceholder(), nativeComponent);
+					} else if (nativeComponent != null) {
+						component = nativeComponent;
+					} else {
+						component = buildComponentFromSegments(event.segments());
+					}
+				} else {
+					component = buildComponentFromSegments(event.segments());
+				}
+
 				for (ServerPlayer player : playerList.getPlayers()) {
 					player.sendSystemMessage(component);
 				}
@@ -897,6 +921,10 @@ public final class MinecraftEventHandler {
 	 * @return A composite Minecraft Component.
 	 */
 	private static Component buildComponentFromSegments(List<TextSegment> segments) {
+		if (segments == null || segments.isEmpty()) {
+			return Component.empty();
+		}
+
 		MutableComponent root = Component.empty();
 
 		for (TextSegment seg : segments) {
@@ -947,6 +975,128 @@ public final class MinecraftEventHandler {
 		}
 
 		return root;
+	}
+
+	private static Component buildComponentFromSegmentsReplacingPlaceholder(List<TextSegment> segments,
+	                                                                       String placeholder,
+	                                                                       Component replacement) {
+		if (segments == null || segments.isEmpty()) {
+			return replacement;
+		}
+
+		MutableComponent root = Component.empty();
+		for (TextSegment segment : segments) {
+			if (segment.text == null || segment.text.isEmpty() || !segment.text.contains(placeholder)) {
+				root.append(buildComponentPart(segment));
+				continue;
+			}
+
+			int cursor = 0;
+			while (cursor < segment.text.length()) {
+				int placeholderStart = segment.text.indexOf(placeholder, cursor);
+				if (placeholderStart < 0) {
+					String tail = segment.text.substring(cursor);
+					if (!tail.isEmpty()) {
+						root.append(buildComponentPart(copySegmentWithText(segment, tail)));
+					}
+					break;
+				}
+
+				if (placeholderStart > cursor) {
+					String leading = segment.text.substring(cursor, placeholderStart);
+					root.append(buildComponentPart(copySegmentWithText(segment, leading)));
+				}
+
+				root.append(replacement.copy());
+				cursor = placeholderStart + placeholder.length();
+			}
+		}
+
+		return root;
+	}
+
+	private static TextSegment copySegmentWithText(TextSegment source, String text) {
+		TextSegment copy = new TextSegment(text);
+		copy.color = source.color;
+		copy.bold = source.bold;
+		copy.italic = source.italic;
+		copy.underlined = source.underlined;
+		copy.strikethrough = source.strikethrough;
+		copy.obfuscated = source.obfuscated;
+		copy.clickUrl = source.clickUrl;
+		copy.hoverText = source.hoverText;
+		return copy;
+	}
+
+	private static MutableComponent buildComponentPart(TextSegment segment) {
+		MutableComponent part = Component.literal(segment.text == null ? "" : segment.text);
+		Style style = Style.EMPTY;
+
+		if (segment.color != null && !segment.color.isEmpty()) {
+			TextColor textColor = parseTextColor(segment.color);
+			if (textColor != null) {
+				style = style.withColor(textColor);
+			}
+		}
+
+		if (segment.bold) {
+			style = style.withBold(true);
+		}
+		if (segment.italic) {
+			style = style.withItalic(true);
+		}
+		if (segment.underlined) {
+			style = style.withUnderlined(true);
+		}
+		if (segment.strikethrough) {
+			style = style.withStrikethrough(true);
+		}
+		if (segment.obfuscated) {
+			style = style.withObfuscated(true);
+		}
+
+		if (segment.clickUrl != null && !segment.clickUrl.isEmpty()) {
+			try {
+				style = style.withClickEvent(new ClickEvent.OpenUrl(URI.create(segment.clickUrl)));
+			} catch (Exception ignored) {
+			}
+		}
+
+		if (segment.hoverText != null && !segment.hoverText.isEmpty()) {
+			style = style.withHoverEvent(new HoverEvent.ShowText(Component.literal(segment.hoverText)));
+		}
+
+		part.withStyle(style);
+		return part;
+	}
+
+	private static String serializeComponent(Component component) {
+		if (component == null || serverInstance == null) {
+			return "";
+		}
+		try {
+			return ComponentSerialization.CODEC
+					.encodeStart(RegistryOps.create(JsonOps.INSTANCE, serverInstance.registryAccess()), component)
+					.result()
+					.map(Object::toString)
+					.orElse("");
+		} catch (Exception ignored) {
+			return "";
+		}
+	}
+
+	private static Component deserializeComponent(String json) {
+		if (json == null || json.isBlank() || serverInstance == null) {
+			return null;
+		}
+		try {
+			return ComponentSerialization.CODEC
+					.parse(RegistryOps.create(JsonOps.INSTANCE, serverInstance.registryAccess()), JsonParser.parseString(json))
+					.result()
+					.orElse(null);
+		} catch (Exception ignored) {
+			return null;
+		}
 	}
 
 	/**
