@@ -307,7 +307,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		discordPlaceholders.put("message", parsed.discordContent());
 		DiscordManager.sendMinecraftUserMessage(sourceClientName, channelNode, discordPlaceholders);
 
-		broadcastMinecraftRelay(packet, sourceClientName, MinecraftRelayPacket.MessageType.USER_MESSAGE, relaySegments, overwriteSegments, parsed, true, true, channelNode);
+		broadcastMinecraftRelay(packet, sourceClientName, MinecraftRelayPacket.MessageType.USER_MESSAGE, relaySegments, overwriteSegments, parsed, true, false, true, channelNode);
 	}
 
 	private void handleMinecraftCommandMessage(MinecraftEventPacket packet, String sourceClientName) {
@@ -327,7 +327,8 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		discordPlaceholders.put("message", parsed.discordContent());
 		DiscordManager.sendMinecraftUserMessage(sourceClientName, "player.command", discordPlaceholders);
 
-		broadcastMinecraftRelay(packet, sourceClientName, MinecraftRelayPacket.MessageType.COMMAND, relaySegments, overwriteSegments, parsed, false, false, "player.command");
+		boolean echoPlayerCommandToSource = Boolean.TRUE.equals(ConfigManager.getBoolean("broadcasts.echo_player_command_to_source"));
+		broadcastMinecraftRelay(packet, sourceClientName, MinecraftRelayPacket.MessageType.COMMAND, relaySegments, overwriteSegments, parsed, false, echoPlayerCommandToSource, false, "player.command");
 	}
 
 	private boolean isExcludedMinecraftCommand(String command) {
@@ -367,7 +368,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		}
 		DiscordManager.clientBroadcast(sourceClientName, channelNode, lang, placeholders);
 
-		broadcastMinecraftRelay(packet, sourceClientName, MinecraftRelayPacket.MessageType.SYSTEM_MESSAGE, relaySegments, overwriteSegments, parsed, true, true, channelNode);
+		broadcastMinecraftRelay(packet, sourceClientName, MinecraftRelayPacket.MessageType.SYSTEM_MESSAGE, relaySegments, overwriteSegments, parsed, true, false, true, channelNode);
 	}
 
 	private String resolveMinecraftToDiscordMessage(String lang, Map<String, String> placeholders) {
@@ -396,13 +397,15 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	                                     List<TextSegment> overwriteSegments,
 	                                     MinecraftMessageParser.ParsedMessage parsed,
 	                                     boolean canOverwriteEchoToSource,
+	                                     boolean forceEchoToSource,
 	                                     boolean parseMentionsForNotifications,
 	                                     String broadcastNode) {
 		boolean overwrite = Boolean.TRUE.equals(ConfigManager.getBoolean("message_parsing.overwrite_minecraft_source_messages"));
+		boolean sourceEchoEnabled = (overwrite && canOverwriteEchoToSource) || forceEchoToSource;
 		boolean supportMinecraftToMinecraftConfig = "standalone".equals(ModeManager.getMode());
 		boolean toOtherClients = supportMinecraftToMinecraftConfig && Boolean.TRUE.equals(ConfigManager.getBoolean("broadcasts.minecraft_to_minecraft." + broadcastNode));
 
-		if (!toOtherClients && !(overwrite && canOverwriteEchoToSource)) {
+		if (!toOtherClients && !sourceEchoEnabled) {
 			return;
 		}
 
@@ -421,7 +424,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 			NetworkManager.broadcastToClientsExcept(relayPacket, sourceClientName);
 		}
 
-		if (overwrite && canOverwriteEchoToSource) {
+		if (sourceEchoEnabled) {
 			MinecraftRelayPacket sourcePacket = new MinecraftRelayPacket(relayType, overwriteSegments);
 			if (notifyMentions) {
 				sourcePacket.mentionNotificationText = MinecraftMessageParser.getMentionNotificationText(packet.placeholders.getOrDefault("display_name", "Unknown"));

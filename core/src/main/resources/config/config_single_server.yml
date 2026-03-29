@@ -56,6 +56,10 @@ broadcasts:
       tell_raw: "in-game-chat"
       msg: "in-game-chat" # msg / tell / w
       me: "in-game-chat"
+  # Vanilla 不会把玩家执行命令本身回显给玩家。
+  # 开启后，DMCC 会将解析后的 player.command 消息回显给源客户端。
+  # 该开关独立于 overwrite_minecraft_source_messages。
+  echo_player_command_to_source: true
 
 # 消息格式设置
 message_parsing:
