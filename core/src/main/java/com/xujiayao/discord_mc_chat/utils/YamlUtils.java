@@ -215,6 +215,13 @@ public final class YamlUtils {
 		return unmodifiedKeys;
 	}
 
+	/**
+	 * Iterates over all fields of a JSON object node and computes a dot-notated path for each field.
+	 *
+	 * @param node   The JSON object node.
+	 * @param path   The base path to prepend (empty for root).
+	 * @param action Callback receiving the field name and its computed full path.
+	 */
 	private static void forEachObjectField(JsonNode node, String path, BiConsumer<String, String> action) {
 		Iterator<String> fieldNames = node.fieldNames();
 		while (fieldNames.hasNext()) {
