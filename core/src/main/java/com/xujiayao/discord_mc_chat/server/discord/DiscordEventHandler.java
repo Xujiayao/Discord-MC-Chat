@@ -97,6 +97,10 @@ final class DiscordEventHandler extends ListenerAdapter {
 				String file = event.getOption("file", OptionMapping::getAsString);
 				CommandManager.execute(new JdaCommandSender(event, opLevel), name, file);
 			}
+			case "whitelist" -> {
+				String player = event.getOption("player", OptionMapping::getAsString);
+				CommandManager.execute(new JdaCommandSender(event, opLevel), name, player);
+			}
 			case "stats" -> {
 				String type = event.getOption("type", OptionMapping::getAsString);
 				String stat = event.getOption("stat", OptionMapping::getAsString);

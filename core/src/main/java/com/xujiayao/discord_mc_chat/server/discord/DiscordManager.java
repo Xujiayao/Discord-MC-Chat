@@ -156,6 +156,8 @@ public final class DiscordManager {
 					commands.add(Commands.slash("stats", I18nManager.getDmccTranslation("commands.stats.description"))
 							.addOption(OptionType.STRING, "type", I18nManager.getDmccTranslation("commands.stats.args_desc.type"), true, true)
 							.addOption(OptionType.STRING, "stat", I18nManager.getDmccTranslation("commands.stats.args_desc.stat"), true, true));
+					commands.add(Commands.slash("whitelist", I18nManager.getDmccTranslation("commands.whitelist.description"))
+							.addOption(OptionType.STRING, "player", I18nManager.getDmccTranslation("commands.whitelist.args_desc.player"), true));
 				}
 
 				// Account linking commands (available in both standalone and single_server modes)
