@@ -322,33 +322,12 @@ public final class NetworkManager {
 	 * @return A map of client name to suggestion list
 	 */
 	public static Map<String, List<String>> requestExecuteAutoCompleteSnapshot(String input, int opLevel, int timeoutSeconds) {
-		executeAutoCompleteCache.clear();
-
-		int expectedResponses = clientChannels.size();
-		if (expectedResponses > 0) {
-			broadcastToClients(new ExecuteAutoCompleteRequestPacket(input, opLevel));
-		}
-
-		long deadlineMillis = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(timeoutSeconds);
-
-		if (expectedResponses > 0) {
-			synchronized (executeAutoCompleteLock) {
-				while (executeAutoCompleteCache.size() < expectedResponses) {
-					long remaining = deadlineMillis - System.currentTimeMillis();
-					if (remaining <= 0) break;
-					try {
-						executeAutoCompleteLock.wait(remaining);
-					} catch (InterruptedException e) {
-						Thread.currentThread().interrupt();
-						break;
-					}
-				}
-			}
-		}
-
-		Map<String, List<String>> snapshot = new LinkedHashMap<>(executeAutoCompleteCache);
-		executeAutoCompleteCache.clear();
-		return snapshot;
+		return requestAutoCompleteSnapshot(
+				executeAutoCompleteCache,
+				executeAutoCompleteLock,
+				new ExecuteAutoCompleteRequestPacket(input, opLevel),
+				timeoutSeconds
+		);
 	}
 
 	// ===== Minecraft Command Auto-Complete Methods =====
@@ -375,22 +354,44 @@ public final class NetworkManager {
 	 * @return A map of client name to suggestion list
 	 */
 	public static Map<String, List<String>> requestConsoleAutoCompleteSnapshot(String input, int opLevel, int timeoutSeconds) {
-		consoleAutoCompleteCache.clear();
+		return requestAutoCompleteSnapshot(
+				consoleAutoCompleteCache,
+				consoleAutoCompleteLock,
+				new ConsoleAutoCompleteRequestPacket(input, opLevel),
+				timeoutSeconds
+		);
+	}
+
+	/**
+	 * Shared implementation for requesting auto-complete suggestions from all connected clients.
+	 * Broadcasts the request packet, waits for all clients to respond (or timeout), then returns a snapshot.
+	 *
+	 * @param cache          The cache map to populate with responses
+	 * @param lock           The lock object used to wait/notify for responses
+	 * @param requestPacket  The packet to broadcast to clients
+	 * @param timeoutSeconds The maximum wait time in seconds
+	 * @return A snapshot of the collected suggestions, keyed by client name
+	 */
+	private static Map<String, List<String>> requestAutoCompleteSnapshot(Map<String, List<String>> cache,
+	                                                                      Object lock,
+	                                                                      Packet requestPacket,
+	                                                                      int timeoutSeconds) {
+		cache.clear();
 
 		int expectedResponses = clientChannels.size();
 		if (expectedResponses > 0) {
-			broadcastToClients(new ConsoleAutoCompleteRequestPacket(input, opLevel));
+			broadcastToClients(requestPacket);
 		}
 
 		long deadlineMillis = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(timeoutSeconds);
 
 		if (expectedResponses > 0) {
-			synchronized (consoleAutoCompleteLock) {
-				while (consoleAutoCompleteCache.size() < expectedResponses) {
+			synchronized (lock) {
+				while (cache.size() < expectedResponses) {
 					long remaining = deadlineMillis - System.currentTimeMillis();
 					if (remaining <= 0) break;
 					try {
-						consoleAutoCompleteLock.wait(remaining);
+						lock.wait(remaining);
 					} catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
 						break;
@@ -399,8 +400,8 @@ public final class NetworkManager {
 			}
 		}
 
-		Map<String, List<String>> snapshot = new LinkedHashMap<>(consoleAutoCompleteCache);
-		consoleAutoCompleteCache.clear();
+		Map<String, List<String>> snapshot = new LinkedHashMap<>(cache);
+		cache.clear();
 		return snapshot;
 	}
 

@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
@@ -63,29 +64,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 		}
 	}
 
-	/**
-	 * Resolves the OP Level credential for a Discord user based on config mappings.
-	 *
-	 * @param member The Discord Member object (null if in DMs).
-	 * @param user   The Discord User object.
-	 * @return The resolved OP level (-1 to 4).
-	 */
-	private int getOpLevel(Member member, User user) {
-		return OpLevelResolver.resolve(member, user);
-	}
-
-	/**
-	 * Resolves the OP Level credential for a specific target server.
-	 *
-	 * @param member     The Discord Member object (null if in DMs).
-	 * @param user       The Discord User object.
-	 * @param serverName The target DMCC client server name.
-	 * @return The resolved OP level (-1 to 4).
-	 */
-	private int getOpLevelForServer(Member member, User user, String serverName) {
-		return OpLevelResolver.resolveForServer(member, user, serverName);
-	}
-
 	@Override
 	public void onReady(@NotNull ReadyEvent event) {
 		DiscordManager.updateBotPresence();
@@ -95,7 +73,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 	public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
 		event.deferReply().queue();
 
-		int opLevel = getOpLevel(event.getMember(), event.getUser());
+		int opLevel = OpLevelResolver.resolve(event.getMember(), event.getUser());
 		String name = event.getName();
 
 		switch (name) {
@@ -156,7 +134,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 		String focusedOption = event.getFocusedOption().getName();
 		String currentValue = event.getFocusedOption().getValue();
 
-		int opLevel = getOpLevel(event.getMember(), event.getUser());
+		int opLevel = OpLevelResolver.resolve(event.getMember(), event.getUser());
 		if (opLevel < ConfigManager.getInt("command_permission_levels." + commandName, 4)) {
 			event.replyChoices(List.of()).queue();
 			return;
@@ -169,14 +147,18 @@ final class DiscordEventHandler extends ListenerAdapter {
 				if ("at".equals(focusedOption)) {
 					choices = getTargetAtChoices(currentValue);
 				} else if ("command".equals(focusedOption)) {
-					choices = getExecuteCommandChoices(currentValue, event);
+					choices = getCommandChoices(
+							(input, level) -> NetworkManager.requestExecuteAutoCompleteSnapshot(input, level, AUTOCOMPLETE_TIMEOUT_SECONDS),
+							currentValue, event);
 				}
 			}
 			case "console" -> {
 				if ("at".equals(focusedOption)) {
 					choices = getTargetAtChoices(currentValue);
 				} else if ("command".equals(focusedOption)) {
-					choices = getConsoleCommandChoices(currentValue, event);
+					choices = getCommandChoices(
+							(input, level) -> NetworkManager.requestConsoleAutoCompleteSnapshot(input, level, AUTOCOMPLETE_TIMEOUT_SECONDS),
+							currentValue, event);
 				}
 			}
 			case "log" -> {
@@ -226,64 +208,31 @@ final class DiscordEventHandler extends ListenerAdapter {
 	}
 
 	/**
-	 * Gets auto-complete choices for the 'command' parameter of the execute command.
-	 * Sends a real-time auto-complete request to connected clients with the current input and OP level,
-	 * so clients can provide DMCC command suggestions that the user is authorized to execute.
-	 * <p>
+	 * Gets auto-complete choices for the 'command' parameter of the execute or console command.
+	 * Sends a real-time auto-complete request to connected clients with the current input and OP level.
 	 * When a target server is selected, uses the per-server OP level for accurate suggestions.
 	 *
-	 * @param currentValue The current user input for filtering
-	 * @param event        The auto-complete event to read other options
+	 * @param autoCompleteProvider Function that fetches suggestions (execute vs. console variant)
+	 * @param currentValue         The current user input for filtering
+	 * @param event                The auto-complete event to read other options
 	 * @return List of choices
 	 */
-	private List<Command.Choice> getExecuteCommandChoices(String currentValue, CommandAutoCompleteInteractionEvent event) {
+	private List<Command.Choice> getCommandChoices(BiFunction<String, Integer, Map<String, List<String>>> autoCompleteProvider,
+	                                               String currentValue,
+	                                               CommandAutoCompleteInteractionEvent event) {
 		String target = event.getOption("at", OptionMapping::getAsString);
 		int opLevel;
 		if (target != null && !target.isBlank() && !"all_online_clients".equalsIgnoreCase(target)) {
-			opLevel = getOpLevelForServer(event.getMember(), event.getUser(), target);
+			opLevel = OpLevelResolver.resolveForServer(event.getMember(), event.getUser(), target);
 		} else {
-			opLevel = getOpLevel(event.getMember(), event.getUser());
+			opLevel = OpLevelResolver.resolve(event.getMember(), event.getUser());
 		}
 
 		if (currentValue.startsWith("/")) {
 			currentValue = currentValue.substring(1);
 		}
 
-		Map<String, List<String>> autoCompleteLists = NetworkManager.requestExecuteAutoCompleteSnapshot(currentValue, opLevel, AUTOCOMPLETE_TIMEOUT_SECONDS);
-
-		return autoCompleteLists.values().stream()
-				.flatMap(List::stream)
-				.distinct()
-				.limit(25)
-				.map(s -> new Command.Choice(s, s))
-				.collect(Collectors.toList());
-	}
-
-	/**
-	 * Gets auto-complete choices for the 'command' parameter of the console command.
-	 * Sends a real-time auto-complete request to connected clients with the current input and OP level,
-	 * so clients can provide Minecraft command suggestions via their Brigadier dispatcher.
-	 * <p>
-	 * When a target server is selected, uses the per-server OP level for accurate suggestions.
-	 *
-	 * @param currentValue The current user input for filtering
-	 * @param event        The auto-complete event to read other options
-	 * @return List of choices
-	 */
-	private List<Command.Choice> getConsoleCommandChoices(String currentValue, CommandAutoCompleteInteractionEvent event) {
-		String target = event.getOption("at", OptionMapping::getAsString);
-		int opLevel;
-		if (target != null && !target.isBlank() && !"all_online_clients".equalsIgnoreCase(target)) {
-			opLevel = getOpLevelForServer(event.getMember(), event.getUser(), target);
-		} else {
-			opLevel = getOpLevel(event.getMember(), event.getUser());
-		}
-
-		if (currentValue.startsWith("/")) {
-			currentValue = currentValue.substring(1);
-		}
-
-		Map<String, List<String>> autoCompleteLists = NetworkManager.requestConsoleAutoCompleteSnapshot(currentValue, opLevel, AUTOCOMPLETE_TIMEOUT_SECONDS);
+		Map<String, List<String>> autoCompleteLists = autoCompleteProvider.apply(currentValue, opLevel);
 
 		return autoCompleteLists.values().stream()
 				.flatMap(List::stream)

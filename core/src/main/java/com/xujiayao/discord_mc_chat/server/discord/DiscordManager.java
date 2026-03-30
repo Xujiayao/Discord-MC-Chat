@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
@@ -43,6 +44,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
@@ -55,6 +57,7 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 public final class DiscordManager {
 
 	private static final Map<String, String> DISCORD_NAME_CACHE = new ConcurrentHashMap<>();
+	private static final Pattern EMOJI_ALIAS_PATTERN = Pattern.compile("(:[^:]+:)");
 	private static JDA jda;
 	private static ScheduledExecutorService statusUpdateExecutor;
 	private static ScheduledFuture<?> presenceUpdateTask;
@@ -354,16 +357,7 @@ public final class DiscordManager {
 		if (jda == null) {
 			return List.of();
 		}
-		Set<String> seen = new LinkedHashSet<>();
-		List<Member> members = new ArrayList<>();
-		for (var guild : jda.getGuilds()) {
-			for (Member member : guild.getMembers()) {
-				if (seen.add(member.getId())) {
-					members.add(member);
-				}
-			}
-		}
-		return members;
+		return collectFromGuilds(Guild::getMembers, Member::getId);
 	}
 
 	/**
@@ -373,16 +367,7 @@ public final class DiscordManager {
 		if (jda == null) {
 			return List.of();
 		}
-		Set<String> seen = new LinkedHashSet<>();
-		List<Role> roles = new ArrayList<>();
-		for (var guild : jda.getGuilds()) {
-			for (Role role : guild.getRoles()) {
-				if (seen.add(role.getId())) {
-					roles.add(role);
-				}
-			}
-		}
-		return roles;
+		return collectFromGuilds(Guild::getRoles, Role::getId);
 	}
 
 	/**
@@ -412,16 +397,7 @@ public final class DiscordManager {
 		if (jda == null) {
 			return List.of();
 		}
-		Set<String> seen = new LinkedHashSet<>();
-		List<RichCustomEmoji> emojis = new ArrayList<>();
-		for (var guild : jda.getGuilds()) {
-			for (RichCustomEmoji emoji : guild.getEmojis()) {
-				if (seen.add(emoji.getId())) {
-					emojis.add(emoji);
-				}
-			}
-		}
-		return emojis;
+		return collectFromGuilds(Guild::getEmojis, RichCustomEmoji::getId);
 	}
 
 	/**
@@ -451,11 +427,7 @@ public final class DiscordManager {
 
 			for (String line : content.split("\n")) {
 				// Escape underscores in :emoji: to prevent being treated as Markdown formatting
-				line = Pattern.compile("(:[^:]+:)").matcher(line)
-						.replaceAll(m -> m.group().replace("_", "\\\\_"));
-				line = MarkdownSanitizer.sanitize(line).replace("\\_", "_");
-
-				LOGGER.info(line);
+				LOGGER.info(sanitizeLineForLogging(line));
 			}
 
 			if (fakeUserStyle) {
@@ -497,13 +469,11 @@ public final class DiscordManager {
 		try {
 			boolean standaloneMode = "standalone".equals(ModeManager.getMode());
 			for (String line : message.split("\\n")) {
-				line = Pattern.compile("(:[^:]+:)").matcher(line)
-						.replaceAll(m -> m.group().replace("_", "\\\\_"));
-				line = MarkdownSanitizer.sanitize(line).replace("\\_", "_");
+				String sanitized = sanitizeLineForLogging(line);
 				if (standaloneMode) {
-					LOGGER.info(StringUtils.format("[{}] {}"), clientName, line);
+					LOGGER.info(StringUtils.format("[{}] {}"), clientName, sanitized);
 				} else {
-					LOGGER.info(line);
+					LOGGER.info(sanitized);
 				}
 			}
 
@@ -524,6 +494,40 @@ public final class DiscordManager {
 			out = out.replace("{" + entry.getKey() + "}", entry.getValue() == null ? "" : entry.getValue());
 		}
 		return out;
+	}
+
+	/**
+	 * Escapes underscores inside :emoji: aliases (to prevent Markdown formatting) and
+	 * strips all other Discord Markdown formatting from a single line for console logging.
+	 *
+	 * @param line The raw message line.
+	 * @return The sanitized line, safe to write to the console logger.
+	 */
+	private static String sanitizeLineForLogging(String line) {
+		// Escape underscores in :emoji: to prevent being treated as Markdown formatting
+		line = EMOJI_ALIAS_PATTERN.matcher(line).replaceAll(m -> m.group().replace("_", "\\\\_"));
+		return MarkdownSanitizer.sanitize(line).replace("\\_", "_");
+	}
+
+	/**
+	 * Collects items from all connected guilds with deduplication by ID.
+	 *
+	 * @param <T>         The item type.
+	 * @param extractor   Extracts the item list from a guild.
+	 * @param idExtractor Extracts the unique ID string from an item.
+	 * @return A deduplicated list of items gathered across all guilds.
+	 */
+	private static <T> List<T> collectFromGuilds(Function<Guild, List<T>> extractor, Function<T, String> idExtractor) {
+		Set<String> seen = new LinkedHashSet<>();
+		List<T> result = new ArrayList<>();
+		for (var guild : jda.getGuilds()) {
+			for (T item : extractor.apply(guild)) {
+				if (seen.add(idExtractor.apply(item))) {
+					result.add(item);
+				}
+			}
+		}
+		return result;
 	}
 
 	private static String resolveWebhookAvatarUrl(String clientName, Map<String, String> placeholders) {
@@ -749,11 +753,7 @@ public final class DiscordManager {
 
 				for (String line : message.split("\n")) {
 					// Escape underscores in :emoji: to prevent being treated as Markdown formatting
-					line = Pattern.compile("(:[^:]+:)").matcher(line)
-							.replaceAll(m -> m.group().replace("_", "\\\\_"));
-					line = MarkdownSanitizer.sanitize(line).replace("\\_", "_");
-
-					LOGGER.info(StringUtils.format("[{}] {}"), clientName, line);
+					LOGGER.info(StringUtils.format("[{}] {}"), clientName, sanitizeLineForLogging(line));
 				}
 			} else {
 				sendBotMessage(channelIdentifier, message);
