@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
@@ -108,25 +109,19 @@ public final class YamlUtils {
 	private static void findKeyDiffs(JsonNode template, JsonNode config, String path, Set<String> missingKeys, Set<String> extraKeys) {
 		if (template.isObject() && config.isObject()) {
 			// Check for missing keys (in template but not in config)
-			Iterator<String> templateFields = template.fieldNames();
-			while (templateFields.hasNext()) {
-				String field = templateFields.next();
-				String currentPath = path.isEmpty() ? field : path + "." + field;
+			forEachObjectField(template, path, (field, currentPath) -> {
 				if (!config.has(field)) {
 					missingKeys.add(currentPath);
 				} else {
 					findKeyDiffs(template.get(field), config.get(field), currentPath, missingKeys, extraKeys);
 				}
-			}
+			});
 			// Check for extra keys (in config but not in template)
-			Iterator<String> configFields = config.fieldNames();
-			while (configFields.hasNext()) {
-				String field = configFields.next();
-				String currentPath = path.isEmpty() ? field : path + "." + field;
+			forEachObjectField(config, path, (field, currentPath) -> {
 				if (!template.has(field)) {
 					extraKeys.add(currentPath);
 				}
-			}
+			});
 		} else if (template.isArray() && config.isArray() && !template.isEmpty()) {
 			// For arrays, check elements recursively by using the first template element as the reference
 			JsonNode templateItem = template.get(0);
@@ -160,18 +155,14 @@ public final class YamlUtils {
 
 		// If the node is an object, recurse for each field
 		if (template.isObject()) {
-			Iterator<String> fieldNames = template.fieldNames();
-			while (fieldNames.hasNext()) {
-				String fieldName = fieldNames.next();
-				String currentPath = path.isEmpty() ? fieldName : path + "." + fieldName;
-
+			forEachObjectField(template, path, (fieldName, currentPath) -> {
 				JsonNode templateValue = template.get(fieldName);
 				JsonNode configValue = config.path(fieldName);
 
 				if (!configValue.isMissingNode()) {
 					issues.addAll(validateNodeTypes(templateValue, configValue, currentPath));
 				}
-			}
+			});
 		}
 
 		// If the node is an array, check each element against the template's first element (if present)
@@ -222,5 +213,14 @@ public final class YamlUtils {
 		}
 
 		return unmodifiedKeys;
+	}
+
+	private static void forEachObjectField(JsonNode node, String path, BiConsumer<String, String> action) {
+		Iterator<String> fieldNames = node.fieldNames();
+		while (fieldNames.hasNext()) {
+			String fieldName = fieldNames.next();
+			String currentPath = path.isEmpty() ? fieldName : path + "." + fieldName;
+			action.accept(fieldName, currentPath);
+		}
 	}
 }

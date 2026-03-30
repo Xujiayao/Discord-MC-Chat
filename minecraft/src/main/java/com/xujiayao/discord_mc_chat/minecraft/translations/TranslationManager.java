@@ -97,9 +97,7 @@ public final class TranslationManager {
 	 * @return The translated and formatted string, or the key if not found
 	 */
 	public static String get(String key, Object... args) {
-		if (!currentLoadedLanguage.equals(I18nManager.getLanguage())) {
-			init();
-		}
+		ensureTranslationsLoaded();
 
 		String translation = TRANSLATIONS.get(key);
 
@@ -125,9 +123,7 @@ public final class TranslationManager {
 	 * @return The translated string
 	 */
 	public static String get(Component component) {
-		if (!currentLoadedLanguage.equals(I18nManager.getLanguage())) {
-			init();
-		}
+		ensureTranslationsLoaded();
 
 		if (component == null) {
 			return "";
@@ -263,6 +259,12 @@ public final class TranslationManager {
 					});
 				}
 			});
+		}
+	}
+
+	private static void ensureTranslationsLoaded() {
+		if (!currentLoadedLanguage.equals(I18nManager.getLanguage())) {
+			init();
 		}
 	}
 }
