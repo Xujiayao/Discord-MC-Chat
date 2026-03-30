@@ -433,13 +433,12 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 				&& (parsed.mentionEveryone() || !parsed.mentionedPlayerUuids().isEmpty())
 				&& Boolean.TRUE.equals(ConfigManager.getBoolean("account_linking.mention_notifications.enable"));
 
+		String displayName = notifyMentions ? packet.placeholders.getOrDefault("display_name", "Unknown") : null;
+
 		if (toOtherClients) {
 			MinecraftRelayPacket relayPacket = new MinecraftRelayPacket(relayType, relaySegments);
 			if (notifyMentions) {
-				relayPacket.mentionNotificationText = MinecraftMessageParser.getMentionNotificationText(packet.placeholders.getOrDefault("display_name", "Unknown"));
-				relayPacket.mentionNotificationStyle = ConfigManager.getString("account_linking.mention_notifications.style", "title");
-				relayPacket.mentionedPlayerUuids = List.copyOf(parsed.mentionedPlayerUuids());
-				relayPacket.mentionEveryone = parsed.mentionEveryone();
+				applyMentionNotification(relayPacket, displayName, parsed);
 			}
 			NetworkManager.broadcastToClientsExcept(relayPacket, sourceClientName);
 		}
@@ -447,13 +446,24 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		if (sourceEchoEnabled) {
 			MinecraftRelayPacket sourcePacket = new MinecraftRelayPacket(relayType, overwriteSegments);
 			if (notifyMentions) {
-				sourcePacket.mentionNotificationText = MinecraftMessageParser.getMentionNotificationText(packet.placeholders.getOrDefault("display_name", "Unknown"));
-				sourcePacket.mentionNotificationStyle = ConfigManager.getString("account_linking.mention_notifications.style", "title");
-				sourcePacket.mentionedPlayerUuids = List.copyOf(parsed.mentionedPlayerUuids());
-				sourcePacket.mentionEveryone = parsed.mentionEveryone();
+				applyMentionNotification(sourcePacket, displayName, parsed);
 			}
 			NetworkManager.sendPacketToClient(sourcePacket, sourceClientName);
 		}
+	}
+
+	/**
+	 * Populates mention-notification fields on a relay packet.
+	 *
+	 * @param packet      The packet to populate.
+	 * @param displayName The display name of the originating player.
+	 * @param parsed      The parsed message containing mention data.
+	 */
+	private static void applyMentionNotification(MinecraftRelayPacket packet, String displayName, MinecraftMessageParser.ParsedMessage parsed) {
+		packet.mentionNotificationText = MinecraftMessageParser.getMentionNotificationText(displayName);
+		packet.mentionNotificationStyle = ConfigManager.getString("account_linking.mention_notifications.style", "title");
+		packet.mentionedPlayerUuids = List.copyOf(parsed.mentionedPlayerUuids());
+		packet.mentionEveryone = parsed.mentionEveryone();
 	}
 
 	private void broadcastMinecraftTellRawRelay(String sourceClientName,
