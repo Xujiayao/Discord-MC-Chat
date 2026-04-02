@@ -321,9 +321,9 @@ public final class NetworkManager {
 	public static Map<String, List<String>> requestExecuteAutoCompleteSnapshot(String input, int opLevel, int timeoutSeconds) {
 		return requestAutoCompleteSnapshot(
 				executeAutoCompleteCache,
-				executeAutoCompleteLock,
 				new CommandPackets.Execute.AutoCompleteRequestPacket(input, opLevel),
-				timeoutSeconds
+				timeoutSeconds,
+				true
 		);
 	}
 
@@ -353,9 +353,9 @@ public final class NetworkManager {
 	public static Map<String, List<String>> requestConsoleAutoCompleteSnapshot(String input, int opLevel, int timeoutSeconds) {
 		return requestAutoCompleteSnapshot(
 				consoleAutoCompleteCache,
-				consoleAutoCompleteLock,
 				new CommandPackets.Console.AutoCompleteRequestPacket(input, opLevel),
-				timeoutSeconds
+				timeoutSeconds,
+				false
 		);
 	}
 
@@ -364,15 +364,15 @@ public final class NetworkManager {
 	 * Broadcasts the request packet, waits for all clients to respond (or timeout), then returns a snapshot.
 	 *
 	 * @param cache          The cache map to populate with responses
-	 * @param lock           The lock object used to wait/notify for responses
 	 * @param requestPacket  The packet to broadcast to clients
 	 * @param timeoutSeconds The maximum wait time in seconds
+	 * @param executeRequest Whether this request is for execute-command auto-complete
 	 * @return A snapshot of the collected suggestions, keyed by client name
 	 */
 	private static Map<String, List<String>> requestAutoCompleteSnapshot(Map<String, List<String>> cache,
-	                                                                     Object lock,
 	                                                                     Packet requestPacket,
-	                                                                     int timeoutSeconds) {
+	                                                                     int timeoutSeconds,
+	                                                                     boolean executeRequest) {
 		cache.clear();
 
 		int expectedResponses = clientChannels.size();
@@ -383,15 +383,30 @@ public final class NetworkManager {
 		long deadlineMillis = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(timeoutSeconds);
 
 		if (expectedResponses > 0) {
-			synchronized (lock) {
-				while (cache.size() < expectedResponses) {
-					long remaining = deadlineMillis - System.currentTimeMillis();
-					if (remaining <= 0) break;
-					try {
-						lock.wait(remaining);
-					} catch (InterruptedException e) {
-						Thread.currentThread().interrupt();
-						break;
+			if (executeRequest) {
+				synchronized (executeAutoCompleteLock) {
+					while (cache.size() < expectedResponses) {
+						long remaining = deadlineMillis - System.currentTimeMillis();
+						if (remaining <= 0) break;
+						try {
+							executeAutoCompleteLock.wait(remaining);
+						} catch (InterruptedException e) {
+							Thread.currentThread().interrupt();
+							break;
+						}
+					}
+				}
+			} else {
+				synchronized (consoleAutoCompleteLock) {
+					while (cache.size() < expectedResponses) {
+						long remaining = deadlineMillis - System.currentTimeMillis();
+						if (remaining <= 0) break;
+						try {
+							consoleAutoCompleteLock.wait(remaining);
+						} catch (InterruptedException e) {
+							Thread.currentThread().interrupt();
+							break;
+						}
 					}
 				}
 			}
