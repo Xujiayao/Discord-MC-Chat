@@ -334,7 +334,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		discordPlaceholders.put("message", parsed.discordContent());
 		DiscordManager.sendMinecraftUserMessage(sourceClientName, "player.command", discordPlaceholders);
 
-		boolean echoPlayerCommandToSource = Boolean.TRUE.equals(ConfigManager.getBoolean("broadcasts.echo_player_command_to_source"));
+		boolean echoPlayerCommandToSource = ConfigManager.getBoolean("broadcasts.echo_player_command_to_source");
 		broadcastMinecraftRelay(packet, sourceClientName, MinecraftRelayPacket.MessageType.COMMAND, relaySegments, overwriteSegments, parsed, false, echoPlayerCommandToSource, false, "player.command");
 	}
 
@@ -354,7 +354,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 		DiscordManager.sendMinecraftSystemMessage(sourceClientName, "source.tell_raw", translatedMessage);
 
-		broadcastMinecraftTellRawRelay(sourceClientName, relaySegments, overwriteSegments, componentJson, translatedMessage, useSerializedComponent, "source.tell_raw");
+		broadcastMinecraftTellRawRelay(sourceClientName, relaySegments, overwriteSegments, componentJson, translatedMessage, useSerializedComponent);
 	}
 
 	private boolean isExcludedMinecraftCommand(String command) {
@@ -426,10 +426,10 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	                                     boolean forceEchoToSource,
 	                                     boolean parseMentionsForNotifications,
 	                                     String broadcastNode) {
-		boolean overwrite = Boolean.TRUE.equals(ConfigManager.getBoolean("message_parsing.overwrite_minecraft_source_messages"));
+		boolean overwrite = ConfigManager.getBoolean("message_parsing.overwrite_minecraft_source_messages");
 		boolean sourceEchoEnabled = (overwrite && canOverwriteEchoToSource) || forceEchoToSource;
 		boolean supportMinecraftToMinecraftConfig = "standalone".equals(ModeManager.getMode());
-		boolean toOtherClients = supportMinecraftToMinecraftConfig && Boolean.TRUE.equals(ConfigManager.getBoolean("broadcasts.minecraft_to_minecraft." + broadcastNode));
+		boolean toOtherClients = supportMinecraftToMinecraftConfig && ConfigManager.getBoolean("broadcasts.minecraft_to_minecraft." + broadcastNode);
 
 		if (!toOtherClients && !sourceEchoEnabled) {
 			return;
@@ -437,7 +437,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 		boolean notifyMentions = parseMentionsForNotifications
 				&& (parsed.mentionEveryone() || !parsed.mentionedPlayerUuids().isEmpty())
-				&& Boolean.TRUE.equals(ConfigManager.getBoolean("account_linking.mention_notifications.enable"));
+				&& ConfigManager.getBoolean("account_linking.mention_notifications.enable");
 
 		String displayName = notifyMentions ? packet.placeholders.getOrDefault("display_name", "Unknown") : null;
 
@@ -463,12 +463,10 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	                                            List<TextSegment> overwriteSegments,
 	                                            String componentJson,
 	                                            String componentText,
-	                                            boolean useSerializedComponent,
-	                                            String broadcastNode) {
-		boolean overwrite = Boolean.TRUE.equals(ConfigManager.getBoolean("message_parsing.overwrite_minecraft_source_messages"));
-		boolean sourceEchoEnabled = overwrite;
+	                                            boolean useSerializedComponent) {
+		boolean sourceEchoEnabled = ConfigManager.getBoolean("message_parsing.overwrite_minecraft_source_messages");
 		boolean supportMinecraftToMinecraftConfig = "standalone".equals(ModeManager.getMode());
-		boolean toOtherClients = supportMinecraftToMinecraftConfig && Boolean.TRUE.equals(ConfigManager.getBoolean("broadcasts.minecraft_to_minecraft." + broadcastNode));
+		boolean toOtherClients = supportMinecraftToMinecraftConfig && ConfigManager.getBoolean("broadcasts.minecraft_to_minecraft." + "source.tell_raw");
 
 		if (!toOtherClients && !sourceEchoEnabled) {
 			return;
@@ -496,7 +494,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	}
 
 	private String resolveDisplayRoleColor(String playerUuid) {
-		if (!Boolean.TRUE.equals(ConfigManager.getBoolean("account_linking.use_discord_role_color_for_mc_chats"))) {
+		if (!ConfigManager.getBoolean("account_linking.use_discord_role_color_for_mc_chats")) {
 			return "white";
 		}
 		if (playerUuid == null || playerUuid.isBlank()) {

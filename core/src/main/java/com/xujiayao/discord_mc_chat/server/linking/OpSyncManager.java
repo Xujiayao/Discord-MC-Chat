@@ -58,7 +58,7 @@ public final class OpSyncManager {
 	 * Internal sync implementation that runs on the dedicated executor thread.
 	 */
 	private static void doSyncAll() {
-		if (!Boolean.TRUE.equals(ConfigManager.getBoolean("account_linking.op_sync.sync_op_level_to_minecraft"))) {
+		if (!ConfigManager.getBoolean("account_linking.op_sync.sync_op_level_to_minecraft")) {
 			return;
 		}
 

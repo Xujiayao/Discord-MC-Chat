@@ -422,7 +422,7 @@ public final class DiscordManager {
 			}
 
 			String mode = "standalone".equals(ModeManager.getMode()) ? "standalone" : "single_server";
-			boolean fakeUserStyle = Boolean.TRUE.equals(ConfigManager.getBoolean("discord.webhook.enable_fake_user_style"));
+			boolean fakeUserStyle = ConfigManager.getBoolean("discord.webhook.enable_fake_user_style");
 
 			String contentTemplate = node.path("disabled_fake_user_style").path(mode).asText("<{display_name}> {message}");
 			String content = replacePlaceholders(contentTemplate, placeholders);
@@ -538,7 +538,7 @@ public final class DiscordManager {
 			return getClientAvatarUrl(clientName);
 		}
 
-		if (Boolean.TRUE.equals(ConfigManager.getBoolean("account_linking.discord_user_avatar_for_webhooks"))) {
+		if (ConfigManager.getBoolean("account_linking.discord_user_avatar_for_webhooks")) {
 			String discordId = LinkedAccountManager.getDiscordIdByMinecraftUuid(playerUuid);
 			if (discordId != null && !discordId.isBlank()) {
 				User user = retrieveUser(discordId);

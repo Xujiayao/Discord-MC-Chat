@@ -68,6 +68,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -692,11 +693,8 @@ public final class MinecraftEventHandler {
 					Component nativeComponent = deserializeComponent(event.componentJson());
 					if (nativeComponent != null && event.componentPlaceholder() != null && !event.componentPlaceholder().isBlank()) {
 						component = buildComponentFromSegmentsReplacingPlaceholder(event.segments(), event.componentPlaceholder(), nativeComponent);
-					} else if (nativeComponent != null) {
-						component = nativeComponent;
-					} else {
-						component = buildComponentFromSegments(event.segments());
-					}
+					} else
+						component = Objects.requireNonNullElseGet(nativeComponent, () -> buildComponentFromSegments(event.segments()));
 				} else {
 					component = buildComponentFromSegments(event.segments());
 				}
