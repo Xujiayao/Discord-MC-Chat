@@ -2,7 +2,7 @@ package com.xujiayao.discord_mc_chat.server.discord;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
-import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Info.ResponsePacket;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
@@ -253,9 +253,9 @@ public final class DiscordManager {
 
 		List<String> connectedClients = NetworkManager.getConnectedClientNames();
 		if (!connectedClients.isEmpty()) {
-			Map<String, InfoResponsePacket> infoMap = NetworkManager.requestInfoSnapshot(3);
+			Map<String, ResponsePacket> infoMap = NetworkManager.requestInfoSnapshot(3);
 			for (String client : connectedClients) {
-				InfoResponsePacket info = infoMap.get(client);
+				ResponsePacket info = infoMap.get(client);
 				if (info != null && info.maxPlayerCount > 0) {
 					onlinePlayerCount += info.onlinePlayerCount;
 					maxPlayerCount += info.maxPlayerCount;
@@ -837,3 +837,4 @@ public final class DiscordManager {
 	public record DiscordStatusInfo(String status, String tag, long gatewayPingMillis, long restPingMillis) {
 	}
 }
+

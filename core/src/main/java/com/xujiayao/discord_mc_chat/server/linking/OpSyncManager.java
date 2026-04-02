@@ -1,7 +1,7 @@
 package com.xujiayao.discord_mc_chat.server.linking;
 
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
-import com.xujiayao.discord_mc_chat.network.packets.commands.link.OpSyncPacket;
+import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Link.OpSyncPacket;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.discord.OpLevelResolver;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;

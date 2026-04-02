@@ -6,7 +6,7 @@ import com.xujiayao.discord_mc_chat.client.ClientDMCC;
 import com.xujiayao.discord_mc_chat.commands.Command;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
-import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Info.ResponsePacket;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager.DiscordStatusInfo;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
@@ -28,7 +28,7 @@ public final class InfoCommand implements Command {
 
 	private static final int INFO_REQUEST_TIMEOUT_SECONDS = 3;
 
-	private static String buildServerPart(Map<String, InfoResponsePacket> infoSnapshot) {
+	private static String buildServerPart(Map<String, ResponsePacket> infoSnapshot) {
 		int onlineClients = infoSnapshot.size();
 		int totalClients = getConfiguredClientCount();
 		if (totalClients == 0) {
@@ -52,7 +52,7 @@ public final class InfoCommand implements Command {
 		return I18nManager.getDmccTranslation("commands.info.server_part.base", onlineClients, totalClients, clientsInfo);
 	}
 
-	private static String buildServerClientInfo(InfoResponsePacket packet) {
+	private static String buildServerClientInfo(ResponsePacket packet) {
 		String playersInfo = buildPlayersInfo(packet);
 		long[] uptime = splitSeconds(packet.uptimeSeconds);
 		long usedMemoryMiB = toMiB(packet.totalMemory - packet.freeMemory);
@@ -71,8 +71,8 @@ public final class InfoCommand implements Command {
 				usedMemoryMiB, totalMemoryMiB);
 	}
 
-	private static String buildClientPart(Map<String, InfoResponsePacket> infoSnapshot, long latencyOverride, boolean clientConnected) {
-		InfoResponsePacket packet = getClientPacket(infoSnapshot);
+	private static String buildClientPart(Map<String, ResponsePacket> infoSnapshot, long latencyOverride, boolean clientConnected) {
+		ResponsePacket packet = getClientPacket(infoSnapshot);
 
 		String connectionStatus = "DISCONNECTED";
 		long connectionLatency = -1;
@@ -99,7 +99,7 @@ public final class InfoCommand implements Command {
 				String.format("%.2f", packet.mspt));
 	}
 
-	private static String buildPlayersInfo(InfoResponsePacket packet) {
+	private static String buildPlayersInfo(ResponsePacket packet) {
 		if (packet.playersAndLatencies == null || packet.playersAndLatencies.isEmpty()) {
 			return I18nManager.getDmccTranslation("commands.info.no_players");
 		}
@@ -115,16 +115,16 @@ public final class InfoCommand implements Command {
 		return playersBuilder.toString();
 	}
 
-	private static InfoResponsePacket getClientPacket(Map<String, InfoResponsePacket> infoSnapshot) {
+	private static ResponsePacket getClientPacket(Map<String, ResponsePacket> infoSnapshot) {
 		String serverName = NetworkManager.getClientServerName();
-		InfoResponsePacket packet = infoSnapshot.get(serverName);
+		ResponsePacket packet = infoSnapshot.get(serverName);
 
 		if (packet == null && !infoSnapshot.isEmpty()) {
 			packet = infoSnapshot.values().iterator().next();
 		}
 
 		if (packet == null) {
-			packet = NetworkManager.createInfoResponsePacket();
+			packet = NetworkManager.createResponsePacket();
 		}
 
 		return packet;
@@ -168,7 +168,7 @@ public final class InfoCommand implements Command {
 
 	@Override
 	public void execute(CommandSender sender, String... args) {
-		CompletableFuture<Map<String, InfoResponsePacket>> infoFuture =
+		CompletableFuture<Map<String, ResponsePacket>> infoFuture =
 				CompletableFuture.supplyAsync(() -> NetworkManager.requestInfoSnapshot(INFO_REQUEST_TIMEOUT_SECONDS));
 
 		CompletableFuture<DiscordStatusInfo> discordFuture = null;
@@ -185,7 +185,7 @@ public final class InfoCommand implements Command {
 			latencyFuture = CompletableFuture.supplyAsync(() -> client.requestLatencySample(timeoutMillis));
 		}
 
-		Map<String, InfoResponsePacket> infoSnapshot = infoFuture.join();
+		Map<String, ResponsePacket> infoSnapshot = infoFuture.join();
 		DiscordStatusInfo statusInfo = discordFuture == null ? null : discordFuture.join();
 		long latencyOverride = latencyFuture == null ? -1 : latencyFuture.join();
 
@@ -225,3 +225,4 @@ public final class InfoCommand implements Command {
 		sender.reply(builder.toString());
 	}
 }
+

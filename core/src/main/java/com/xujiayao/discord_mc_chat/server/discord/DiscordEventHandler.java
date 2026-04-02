@@ -3,7 +3,7 @@ package com.xujiayao.discord_mc_chat.server.discord;
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
 import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
-import com.xujiayao.discord_mc_chat.network.packets.events.DiscordRelayPacket;
+import com.xujiayao.discord_mc_chat.network.packets.EventPackets.DiscordRelayPacket;
 import com.xujiayao.discord_mc_chat.server.message.DiscordMessageParser;
 import com.xujiayao.discord_mc_chat.utils.LogFileUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
@@ -11,7 +11,6 @@ import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import com.xujiayao.discord_mc_chat.utils.message.TextSegment;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.emoji.EmojiUnion;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -588,3 +587,4 @@ final class DiscordEventHandler extends ListenerAdapter {
 	                             boolean systemMessage) {
 	}
 }
+

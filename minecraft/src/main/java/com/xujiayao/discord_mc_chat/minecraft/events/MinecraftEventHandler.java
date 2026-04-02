@@ -1,20 +1,20 @@
 package com.xujiayao.discord_mc_chat.minecraft.events;
 
 import com.google.gson.JsonParser;
-import com.mojang.serialization.JsonOps;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.tree.CommandNode;
+import com.mojang.serialization.JsonOps;
 import com.xujiayao.discord_mc_chat.DMCC;
 import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.minecraft.commands.MinecraftCommands;
 import com.xujiayao.discord_mc_chat.minecraft.translations.TranslationManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
-import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkRequestPacket;
-import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftEventPacket;
+import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Info.ResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Link.RequestPacket;
+import com.xujiayao.discord_mc_chat.network.packets.EventPackets.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
@@ -34,11 +34,11 @@ import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
+import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.MinecraftServer;
@@ -171,7 +171,7 @@ public final class MinecraftEventHandler {
 			// Account linking: check if this player is linked (via network packet)
 			String playerUuid = event.serverPlayer().getStringUUID();
 			String playerName = event.serverPlayer().getName().getString();
-			NetworkManager.sendPacketToServer(new LinkRequestPacket(playerUuid, playerName, true));
+			NetworkManager.sendPacketToServer(new RequestPacket(playerUuid, playerName, true));
 		});
 
 		EventManager.register(MinecraftEvents.PlayerQuit.class, event -> {
@@ -869,12 +869,12 @@ public final class MinecraftEventHandler {
 	}
 
 	/**
-	 * Builds an InfoResponsePacket containing real-time metrics of the Minecraft server.
+	 * Builds an ResponsePacket containing real-time metrics of the Minecraft server.
 	 *
 	 * @param server The Minecraft server instance.
-	 * @return The populated InfoResponsePacket.
+	 * @return The populated ResponsePacket.
 	 */
-	private static InfoResponsePacket buildInfoResponse(MinecraftServer server) {
+	private static ResponsePacket buildInfoResponse(MinecraftServer server) {
 		String serverName = "single_server".equals(ModeManager.getMode()) ? "Internal" : ConfigManager.getString("multi_server.server_name");
 		String minecraftVersion = EnvironmentUtils.getMinecraftVersion();
 
@@ -896,7 +896,7 @@ public final class MinecraftEventHandler {
 		long uptimeSeconds = TimeUnit.MILLISECONDS.toSeconds(ManagementFactory.getRuntimeMXBean().getUptime());
 
 		Runtime runtime = Runtime.getRuntime();
-		return new InfoResponsePacket(
+		return new ResponsePacket(
 				serverName,
 				-1,
 				minecraftVersion,
@@ -978,8 +978,8 @@ public final class MinecraftEventHandler {
 	}
 
 	private static Component buildComponentFromSegmentsReplacingPlaceholder(List<TextSegment> segments,
-	                                                                       String placeholder,
-	                                                                       Component replacement) {
+	                                                                        String placeholder,
+	                                                                        Component replacement) {
 		if (segments == null || segments.isEmpty()) {
 			return replacement;
 		}
@@ -1166,3 +1166,4 @@ public final class MinecraftEventHandler {
 		));
 	}
 }
+

@@ -5,26 +5,18 @@ import com.xujiayao.discord_mc_chat.Constants;
 import com.xujiayao.discord_mc_chat.commands.impl.ConsoleCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.ExecuteCommand;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
+import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.AuthResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.ChallengePacket;
+import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.DisconnectPacket;
+import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.HandshakePacket;
+import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.LoginSuccessPacket;
+import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
+import com.xujiayao.discord_mc_chat.network.packets.EventPackets.MinecraftEventPacket;
+import com.xujiayao.discord_mc_chat.network.packets.EventPackets.MinecraftRelayPacket;
+import com.xujiayao.discord_mc_chat.network.packets.MiscPackets.KeepAlivePacket;
+import com.xujiayao.discord_mc_chat.network.packets.MiscPackets.LatencyPingPacket;
+import com.xujiayao.discord_mc_chat.network.packets.MiscPackets.LatencyPongPacket;
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
-import com.xujiayao.discord_mc_chat.network.packets.auth.AuthResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.auth.ChallengePacket;
-import com.xujiayao.discord_mc_chat.network.packets.auth.DisconnectPacket;
-import com.xujiayao.discord_mc_chat.network.packets.auth.HandshakePacket;
-import com.xujiayao.discord_mc_chat.network.packets.auth.LoginSuccessPacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.console.ConsoleAutoCompleteResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.console.ConsoleResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.execute.ExecuteAutoCompleteResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.execute.ExecuteResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkRequestPacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkRequestPacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftEventPacket;
-import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftRelayPacket;
-import com.xujiayao.discord_mc_chat.network.packets.misc.KeepAlivePacket;
-import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPingPacket;
-import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPongPacket;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.server.linking.OpSyncManager;
@@ -64,6 +56,20 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 	ServerHandler(NettyServer server) {
 		this.server = server;
+	}
+
+	/**
+	 * Populates mention-notification fields on a relay packet.
+	 *
+	 * @param packet      The packet to populate.
+	 * @param displayName The display name of the originating player.
+	 * @param parsed      The parsed message containing mention data.
+	 */
+	private static void applyMentionNotification(MinecraftRelayPacket packet, String displayName, MinecraftMessageParser.ParsedMessage parsed) {
+		packet.mentionNotificationText = MinecraftMessageParser.getMentionNotificationText(displayName);
+		packet.mentionNotificationStyle = ConfigManager.getString("account_linking.mention_notifications.style", "title");
+		packet.mentionedPlayerUuids = List.copyOf(parsed.mentionedPlayerUuids());
+		packet.mentionEveryone = parsed.mentionEveryone();
 	}
 
 	@Override
@@ -130,34 +136,34 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 						case SOURCE_ME -> handleMinecraftSystemMessage(p, clientName, "source.me", "source.me");
 					}
 				}
-				case InfoResponsePacket p -> NetworkManager.cacheInfoResponse(clientName, p);
+				case CommandPackets.Info.ResponsePacket p -> NetworkManager.cacheInfoResponse(clientName, p);
 				case LatencyPingPacket p -> ctx.writeAndFlush(new LatencyPongPacket(p.sentAtMillis));
-				case ExecuteResponsePacket p -> ExecuteCommand.completeRequest(p.requestId, p);
-				case ConsoleResponsePacket p -> ConsoleCommand.completeRequest(p.requestId, p);
-				case ExecuteAutoCompleteResponsePacket p ->
+				case CommandPackets.Execute.ResponsePacket p -> ExecuteCommand.completeRequest(p.requestId, p);
+				case CommandPackets.Console.ResponsePacket p -> ConsoleCommand.completeRequest(p.requestId, p);
+				case CommandPackets.Execute.AutoCompleteResponsePacket p ->
 						NetworkManager.cacheExecuteAutoCompleteResponse(clientName, p.suggestions);
-				case ConsoleAutoCompleteResponsePacket p ->
+				case CommandPackets.Console.AutoCompleteResponsePacket p ->
 						NetworkManager.cacheConsoleAutoCompleteResponse(clientName, p.suggestions);
-				case LinkRequestPacket p -> {
+				case CommandPackets.Link.RequestPacket p -> {
 					if (LinkedAccountManager.isMinecraftUuidLinked(p.minecraftUuid)) {
 						if (!p.joinCheck) {
 							// Only notify "already linked" for explicit /dmcc link commands, not join checks
 							String discordId = LinkedAccountManager.getDiscordIdByMinecraftUuid(p.minecraftUuid);
 							String discordName = DiscordManager.resolveDiscordUserName(discordId != null ? discordId : "");
-							ctx.writeAndFlush(new LinkResponsePacket(p.minecraftUuid, null, true, discordName));
+							ctx.writeAndFlush(new CommandPackets.Link.ResponsePacket(p.minecraftUuid, null, true, discordName));
 						}
 					} else {
 						String code = VerificationCodeManager.generateOrRefreshCode(p.minecraftUuid, p.playerName);
-						ctx.writeAndFlush(new LinkResponsePacket(p.minecraftUuid, code, false, ""));
+						ctx.writeAndFlush(new CommandPackets.Link.ResponsePacket(p.minecraftUuid, code, false, ""));
 					}
 				}
-				case UnlinkRequestPacket p -> {
+				case CommandPackets.Unlink.RequestPacket p -> {
 					String unlinkedDiscordId = LinkedAccountManager.unlinkByMinecraftUuid(p.minecraftUuid, p.playerName);
 					String discordName = "";
 					if (unlinkedDiscordId != null) {
 						discordName = DiscordManager.resolveDiscordUserName(unlinkedDiscordId);
 					}
-					ctx.writeAndFlush(new UnlinkResponsePacket(p.minecraftUuid, unlinkedDiscordId != null, discordName));
+					ctx.writeAndFlush(new CommandPackets.Unlink.ResponsePacket(p.minecraftUuid, unlinkedDiscordId != null, discordName));
 				}
 				case null, default -> LOGGER.warn(unexpectedPacketMessage);
 			}
@@ -452,20 +458,6 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		}
 	}
 
-	/**
-	 * Populates mention-notification fields on a relay packet.
-	 *
-	 * @param packet      The packet to populate.
-	 * @param displayName The display name of the originating player.
-	 * @param parsed      The parsed message containing mention data.
-	 */
-	private static void applyMentionNotification(MinecraftRelayPacket packet, String displayName, MinecraftMessageParser.ParsedMessage parsed) {
-		packet.mentionNotificationText = MinecraftMessageParser.getMentionNotificationText(displayName);
-		packet.mentionNotificationStyle = ConfigManager.getString("account_linking.mention_notifications.style", "title");
-		packet.mentionedPlayerUuids = List.copyOf(parsed.mentionedPlayerUuids());
-		packet.mentionEveryone = parsed.mentionEveryone();
-	}
-
 	private void broadcastMinecraftTellRawRelay(String sourceClientName,
 	                                            List<TextSegment> relaySegments,
 	                                            List<TextSegment> overwriteSegments,
@@ -517,3 +509,4 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		return DiscordMessageParser.getRoleColorHex(DiscordManager.retrieveMember(discordId));
 	}
 }
+

@@ -4,8 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.commands.Command;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
-import com.xujiayao.discord_mc_chat.network.packets.commands.console.ConsoleRequestPacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.console.ConsoleResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.discord.JdaCommandSender;
 import com.xujiayao.discord_mc_chat.server.discord.OpLevelResolver;
@@ -39,7 +38,7 @@ public final class ConsoleCommand implements Command {
 
 	private static final int CONSOLE_TIMEOUT_SECONDS = 30;
 	private static final int LOCAL_COMMAND_TIMEOUT_SECONDS = 10;
-	private static final Map<String, CompletableFuture<ConsoleResponsePacket>> pendingRequests = new ConcurrentHashMap<>();
+	private static final Map<String, CompletableFuture<CommandPackets.Console.ResponsePacket>> pendingRequests = new ConcurrentHashMap<>();
 
 	/**
 	 * Completes a pending console request with the given response.
@@ -47,8 +46,8 @@ public final class ConsoleCommand implements Command {
 	 * @param requestId The request ID
 	 * @param response  The response packet
 	 */
-	public static void completeRequest(String requestId, ConsoleResponsePacket response) {
-		CompletableFuture<ConsoleResponsePacket> future = pendingRequests.remove(requestId);
+	public static void completeRequest(String requestId, CommandPackets.Console.ResponsePacket response) {
+		CompletableFuture<CommandPackets.Console.ResponsePacket> future = pendingRequests.remove(requestId);
 		if (future != null && !future.isDone()) {
 			future.complete(response);
 		}
@@ -166,7 +165,7 @@ public final class ConsoleCommand implements Command {
 
 	/**
 	 * Executes a Minecraft command on a remote client (standalone mode).
-	 * Routes via Netty ConsoleRequestPacket.
+	 * Routes via Netty RequestPacket.
 	 *
 	 * @param sender The command sender.
 	 * @param args   args[0] = at, args[1...] = command.
@@ -227,7 +226,7 @@ public final class ConsoleCommand implements Command {
 			}
 
 			String requestId = CryptUtils.generateRandomString(16);
-			CompletableFuture<ConsoleResponsePacket> future = new CompletableFuture<>();
+			CompletableFuture<CommandPackets.Console.ResponsePacket> future = new CompletableFuture<>();
 			pendingRequests.put(requestId, future);
 
 			// Resolve per-server OP level for the target client
@@ -237,10 +236,10 @@ public final class ConsoleCommand implements Command {
 			}
 
 			// Send with the sender's per-server OP level for Minecraft's own permission check on the client
-			NetworkManager.sendPacketToClient(new ConsoleRequestPacket(requestId, opLevel, commandLine), serverName);
+			NetworkManager.sendPacketToClient(new CommandPackets.Console.RequestPacket(requestId, opLevel, commandLine), serverName);
 
 			try {
-				ConsoleResponsePacket response = future.get(CONSOLE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+				CommandPackets.Console.ResponsePacket response = future.get(CONSOLE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 				String output = response.response;
 
 				if (sender instanceof JdaCommandSender) {
@@ -292,3 +291,4 @@ public final class ConsoleCommand implements Command {
 		return false;
 	}
 }
+

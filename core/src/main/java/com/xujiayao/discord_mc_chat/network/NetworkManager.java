@@ -1,11 +1,8 @@
 package com.xujiayao.discord_mc_chat.network;
 
 import com.xujiayao.discord_mc_chat.client.ClientDMCC;
+import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
-import com.xujiayao.discord_mc_chat.network.packets.commands.console.ConsoleAutoCompleteRequestPacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.execute.ExecuteAutoCompleteRequestPacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoRequestPacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePacket;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import io.netty.channel.Channel;
 
@@ -31,8 +28,8 @@ public final class NetworkManager {
 	// Server-side: Manage connected client channels
 	private static final Map<Channel, String> clientChannels = new ConcurrentHashMap<>();
 
-	private static final Map<String, InfoResponsePacket> infoCache = new ConcurrentHashMap<>();
-	private static final AtomicReference<Supplier<InfoResponsePacket>> infoSupplier = new AtomicReference<>();
+	private static final Map<String, CommandPackets.Info.ResponsePacket> infoCache = new ConcurrentHashMap<>();
+	private static final AtomicReference<Supplier<CommandPackets.Info.ResponsePacket>> infoSupplier = new AtomicReference<>();
 	private static final Object infoLock = new Object();
 
 	// DMCC command auto-complete cache
@@ -60,7 +57,7 @@ public final class NetworkManager {
 	 *
 	 * @param supplier The supplier to register
 	 */
-	public static void registerInfoSupplier(Supplier<InfoResponsePacket> supplier) {
+	public static void registerInfoSupplier(Supplier<CommandPackets.Info.ResponsePacket> supplier) {
 		infoSupplier.set(supplier);
 	}
 
@@ -179,12 +176,12 @@ public final class NetworkManager {
 	// ===== Info Methods =====
 
 	/**
-	 * Stores a received InfoResponsePacket into cache.
+	 * Stores a received ResponsePacket into cache.
 	 *
 	 * @param clientName The client name
 	 * @param packet     The packet to cache
 	 */
-	public static void cacheInfoResponse(String clientName, InfoResponsePacket packet) {
+	public static void cacheInfoResponse(String clientName, CommandPackets.Info.ResponsePacket packet) {
 		if (packet == null) {
 			return;
 		}
@@ -212,20 +209,20 @@ public final class NetworkManager {
 	 * Sends InfoRequest packets, blocks the current thread, then returns a snapshot of cached responses.
 	 *
 	 * @param timeoutSeconds The waiting time in seconds
-	 * @return A snapshot of cached InfoResponsePacket items
+	 * @return A snapshot of cached ResponsePacket items
 	 */
-	public static Map<String, InfoResponsePacket> requestInfoSnapshot(int timeoutSeconds) {
+	public static Map<String, CommandPackets.Info.ResponsePacket> requestInfoSnapshot(int timeoutSeconds) {
 		infoCache.clear();
 
 		int expectedResponses = clientChannels.size();
 
 		if (expectedResponses > 0) {
-			broadcastToClients(new InfoRequestPacket(System.currentTimeMillis()));
+			broadcastToClients(new CommandPackets.Info.RequestPacket(System.currentTimeMillis()));
 		}
 
 		boolean includeLocalPacket = expectedResponses == 0 && clientInstance.get() != null;
 		if (includeLocalPacket) {
-			InfoResponsePacket localPacket = createInfoResponsePacket();
+			CommandPackets.Info.ResponsePacket localPacket = createResponsePacket();
 			cacheInfoResponse(localPacket.serverName, localPacket);
 			expectedResponses += 1;
 		}
@@ -249,19 +246,19 @@ public final class NetworkManager {
 			}
 		}
 
-		Map<String, InfoResponsePacket> snapshot = new LinkedHashMap<>(infoCache);
+		Map<String, CommandPackets.Info.ResponsePacket> snapshot = new LinkedHashMap<>(infoCache);
 		infoCache.clear();
 		return snapshot;
 	}
 
 	/**
-	 * Creates an InfoResponsePacket using the registered supplier or a fallback.
+	 * Creates an ResponsePacket using the registered supplier or a fallback.
 	 *
-	 * @return The InfoResponsePacket instance
+	 * @return The ResponsePacket instance
 	 */
-	public static InfoResponsePacket createInfoResponsePacket() {
-		Supplier<InfoResponsePacket> supplier = infoSupplier.get();
-		InfoResponsePacket packet = supplier != null ? supplier.get() : null;
+	public static CommandPackets.Info.ResponsePacket createResponsePacket() {
+		Supplier<CommandPackets.Info.ResponsePacket> supplier = infoSupplier.get();
+		CommandPackets.Info.ResponsePacket packet = supplier != null ? supplier.get() : null;
 
 		if (packet == null) {
 			Runtime runtime = Runtime.getRuntime();
@@ -270,7 +267,7 @@ public final class NetworkManager {
 					? EnvironmentUtils.getMinecraftVersion()
 					: "unknown";
 
-			packet = new InfoResponsePacket(
+			packet = new CommandPackets.Info.ResponsePacket(
 					serverName,
 					-1,
 					minecraftVersion,
@@ -325,7 +322,7 @@ public final class NetworkManager {
 		return requestAutoCompleteSnapshot(
 				executeAutoCompleteCache,
 				executeAutoCompleteLock,
-				new ExecuteAutoCompleteRequestPacket(input, opLevel),
+				new CommandPackets.Execute.AutoCompleteRequestPacket(input, opLevel),
 				timeoutSeconds
 		);
 	}
@@ -357,7 +354,7 @@ public final class NetworkManager {
 		return requestAutoCompleteSnapshot(
 				consoleAutoCompleteCache,
 				consoleAutoCompleteLock,
-				new ConsoleAutoCompleteRequestPacket(input, opLevel),
+				new CommandPackets.Console.AutoCompleteRequestPacket(input, opLevel),
 				timeoutSeconds
 		);
 	}
@@ -373,9 +370,9 @@ public final class NetworkManager {
 	 * @return A snapshot of the collected suggestions, keyed by client name
 	 */
 	private static Map<String, List<String>> requestAutoCompleteSnapshot(Map<String, List<String>> cache,
-	                                                                      Object lock,
-	                                                                      Packet requestPacket,
-	                                                                      int timeoutSeconds) {
+	                                                                     Object lock,
+	                                                                     Packet requestPacket,
+	                                                                     int timeoutSeconds) {
 		cache.clear();
 
 		int expectedResponses = clientChannels.size();
@@ -429,3 +426,4 @@ public final class NetworkManager {
 		return client.getServerName();
 	}
 }
+

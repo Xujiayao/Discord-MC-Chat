@@ -3,7 +3,7 @@ package com.xujiayao.discord_mc_chat.commands.impl;
 import com.xujiayao.discord_mc_chat.commands.Command;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
-import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkRequestPacket;
+import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Link.RequestPacket;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
@@ -107,7 +107,7 @@ public final class LinkCommand implements Command {
 
 		switch (ModeManager.getMode()) {
 			case "single_server", "multi_server_client" -> // Send request to server via network (same for both modes)
-					NetworkManager.sendPacketToServer(new LinkRequestPacket(uuid, name, false));
+					NetworkManager.sendPacketToServer(new RequestPacket(uuid, name, false));
 			default -> sender.reply(I18nManager.getDmccTranslation("commands.link.not_available"));
 		}
 	}
@@ -180,3 +180,4 @@ public final class LinkCommand implements Command {
 		String getDiscordUserName();
 	}
 }
+

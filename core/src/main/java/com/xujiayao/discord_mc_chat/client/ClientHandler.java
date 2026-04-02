@@ -5,29 +5,18 @@ import com.xujiayao.discord_mc_chat.commands.CommandAutoCompleter;
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
+import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.AuthResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.ChallengePacket;
+import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.DisconnectPacket;
+import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.HandshakePacket;
+import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.LoginSuccessPacket;
+import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
+import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Link.OpSyncPacket;
+import com.xujiayao.discord_mc_chat.network.packets.EventPackets.DiscordRelayPacket;
+import com.xujiayao.discord_mc_chat.network.packets.EventPackets.MinecraftRelayPacket;
+import com.xujiayao.discord_mc_chat.network.packets.MiscPackets.KeepAlivePacket;
+import com.xujiayao.discord_mc_chat.network.packets.MiscPackets.LatencyPongPacket;
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
-import com.xujiayao.discord_mc_chat.network.packets.auth.AuthResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.auth.ChallengePacket;
-import com.xujiayao.discord_mc_chat.network.packets.auth.DisconnectPacket;
-import com.xujiayao.discord_mc_chat.network.packets.auth.HandshakePacket;
-import com.xujiayao.discord_mc_chat.network.packets.auth.LoginSuccessPacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.console.ConsoleAutoCompleteRequestPacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.console.ConsoleAutoCompleteResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.console.ConsoleRequestPacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.console.ConsoleResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.execute.ExecuteAutoCompleteRequestPacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.execute.ExecuteAutoCompleteResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.execute.ExecuteRequestPacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.execute.ExecuteResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoRequestPacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.info.InfoResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.link.LinkResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.link.OpSyncPacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.unlink.UnlinkResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.events.DiscordRelayPacket;
-import com.xujiayao.discord_mc_chat.network.packets.events.MinecraftRelayPacket;
-import com.xujiayao.discord_mc_chat.network.packets.misc.KeepAlivePacket;
-import com.xujiayao.discord_mc_chat.network.packets.misc.LatencyPongPacket;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
@@ -130,8 +119,8 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 					initialLoginFuture.complete(true);
 				}
 			}
-			case InfoRequestPacket p -> {
-				InfoResponsePacket response = NetworkManager.createInfoResponsePacket();
+			case CommandPackets.Info.RequestPacket p -> {
+				CommandPackets.Info.ResponsePacket response = NetworkManager.createResponsePacket();
 				response.connectionLatencyMillis = Math.max(0, System.currentTimeMillis() - p.sentAtMillis);
 				ctx.writeAndFlush(response);
 			}
@@ -139,7 +128,7 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 				long latency = Math.max(0, System.currentTimeMillis() - p.sentAtMillis);
 				client.updateConnectionLatency(latency);
 			}
-			case ExecuteRequestPacket p -> {
+			case CommandPackets.Execute.RequestPacket p -> {
 				// Handle DMCC command execution with OP level credential for edge authorization
 				StringBuilder responseBuilder = new StringBuilder();
 				byte[][] fileDataHolder = new byte[1][];
@@ -170,22 +159,22 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 				try {
 					CommandManager.executeAndWait(captureSender, p.command, p.args)
 							.whenComplete((_, ex) -> {
-								ExecuteResponsePacket response;
+								CommandPackets.Execute.ResponsePacket response;
 								if (ex != null) {
-									response = new ExecuteResponsePacket(p.requestId, I18nManager.getDmccTranslation("commands.execution_failed", ex.getMessage()));
+									response = new CommandPackets.Execute.ResponsePacket(p.requestId, I18nManager.getDmccTranslation("commands.execution_failed", ex.getMessage()));
 								} else if (fileDataHolder[0] != null) {
 									String prefixedFileName = client.getServerName() + "_" + fileNameHolder[0];
-									response = new ExecuteResponsePacket(p.requestId, responseBuilder.toString(), fileDataHolder[0], prefixedFileName);
+									response = new CommandPackets.Execute.ResponsePacket(p.requestId, responseBuilder.toString(), fileDataHolder[0], prefixedFileName);
 								} else {
-									response = new ExecuteResponsePacket(p.requestId, responseBuilder.toString());
+									response = new CommandPackets.Execute.ResponsePacket(p.requestId, responseBuilder.toString());
 								}
 								ctx.writeAndFlush(response);
 							});
 				} catch (Exception e) {
-					ctx.writeAndFlush(new ExecuteResponsePacket(p.requestId, I18nManager.getDmccTranslation("commands.execution_failed", e.getMessage())));
+					ctx.writeAndFlush(new CommandPackets.Execute.ResponsePacket(p.requestId, I18nManager.getDmccTranslation("commands.execution_failed", e.getMessage())));
 				}
 			}
-			case ConsoleRequestPacket p -> {
+			case CommandPackets.Console.RequestPacket p -> {
 				// Handle Minecraft command execution via CoreEvents with callback-based completion
 				StringBuilder responseBuilder = new StringBuilder();
 
@@ -211,22 +200,22 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 				// Use the completion future with a timeout to send the response reliably
 				completionFuture
 						.orTimeout(CONSOLE_COMMAND_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-						.whenComplete((_, _) -> ctx.writeAndFlush(new ConsoleResponsePacket(p.requestId, responseBuilder.toString())));
+						.whenComplete((_, _) -> ctx.writeAndFlush(new CommandPackets.Console.ResponsePacket(p.requestId, responseBuilder.toString())));
 			}
-			case ExecuteAutoCompleteRequestPacket p -> {
+			case CommandPackets.Execute.AutoCompleteRequestPacket p -> {
 				// Handle DMCC command auto-complete with OP level filtering
 				List<String> suggestions = CommandAutoCompleter.getSuggestions(p.input, p.opLevel);
-				ctx.writeAndFlush(new ExecuteAutoCompleteResponsePacket(client.getServerName(), suggestions));
+				ctx.writeAndFlush(new CommandPackets.Execute.AutoCompleteResponsePacket(client.getServerName(), suggestions));
 			}
-			case ConsoleAutoCompleteRequestPacket p -> {
+			case CommandPackets.Console.AutoCompleteRequestPacket p -> {
 				// Handle Minecraft command auto-complete via CoreEvents
 				List<String> suggestions = new ArrayList<>();
 				EventManager.post(new CoreEvents.MinecraftCommandAutoCompleteEvent(p.input, p.opLevel, suggestions));
-				ctx.writeAndFlush(new ConsoleAutoCompleteResponsePacket(client.getServerName(), suggestions));
+				ctx.writeAndFlush(new CommandPackets.Console.AutoCompleteResponsePacket(client.getServerName(), suggestions));
 			}
-			case LinkResponsePacket p -> // Handle link code response from server - notify the player
+			case CommandPackets.Link.ResponsePacket p -> // Handle link code response from server - notify the player
 					EventManager.post(new CoreEvents.LinkCodeResponseEvent(p.minecraftUuid, p.code, p.alreadyLinked, p.discordName != null ? p.discordName : ""));
-			case UnlinkResponsePacket p -> // Handle unlink response from server - notify the player
+			case CommandPackets.Unlink.ResponsePacket p -> // Handle unlink response from server - notify the player
 					EventManager.post(new CoreEvents.UnlinkResponseEvent(p.minecraftUuid, p.success, p.discordName != null ? p.discordName : ""));
 			case OpSyncPacket p -> // Handle OP sync from server - apply OP levels to Minecraft players
 					EventManager.post(new CoreEvents.OpSyncEvent(p.opLevels));
@@ -314,3 +303,4 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 		ctx.close();
 	}
 }
+

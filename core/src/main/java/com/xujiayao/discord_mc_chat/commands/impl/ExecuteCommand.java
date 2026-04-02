@@ -4,8 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.commands.Command;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
-import com.xujiayao.discord_mc_chat.network.packets.commands.execute.ExecuteRequestPacket;
-import com.xujiayao.discord_mc_chat.network.packets.commands.execute.ExecuteResponsePacket;
+import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.discord.JdaCommandSender;
 import com.xujiayao.discord_mc_chat.server.discord.OpLevelResolver;
@@ -30,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 public final class ExecuteCommand implements Command {
 
 	private static final int EXECUTE_TIMEOUT_SECONDS = 30;
-	private static final Map<String, CompletableFuture<ExecuteResponsePacket>> pendingRequests = new ConcurrentHashMap<>();
+	private static final Map<String, CompletableFuture<CommandPackets.Execute.ResponsePacket>> pendingRequests = new ConcurrentHashMap<>();
 
 	/**
 	 * Completes a pending execute request with the given response.
@@ -38,8 +37,8 @@ public final class ExecuteCommand implements Command {
 	 * @param requestId The request ID
 	 * @param response  The response packet
 	 */
-	public static void completeRequest(String requestId, ExecuteResponsePacket response) {
-		CompletableFuture<ExecuteResponsePacket> future = pendingRequests.remove(requestId);
+	public static void completeRequest(String requestId, CommandPackets.Execute.ResponsePacket response) {
+		CompletableFuture<CommandPackets.Execute.ResponsePacket> future = pendingRequests.remove(requestId);
 		if (future != null && !future.isDone()) {
 			future.complete(response);
 		}
@@ -152,14 +151,14 @@ public final class ExecuteCommand implements Command {
 			}
 
 			String requestId = CryptUtils.generateRandomString(16);
-			CompletableFuture<ExecuteResponsePacket> future = new CompletableFuture<>();
+			CompletableFuture<CommandPackets.Execute.ResponsePacket> future = new CompletableFuture<>();
 			pendingRequests.put(requestId, future);
 
 			// Append sender's per-server OP level credential to the packet for client-side edge authorization
-			NetworkManager.sendPacketToClient(new ExecuteRequestPacket(requestId, opLevel, commandName, commandArgs), serverName);
+			NetworkManager.sendPacketToClient(new CommandPackets.Execute.RequestPacket(requestId, opLevel, commandName, commandArgs), serverName);
 
 			try {
-				ExecuteResponsePacket response = future.get(EXECUTE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+				CommandPackets.Execute.ResponsePacket response = future.get(EXECUTE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
 				if (sender instanceof JdaCommandSender) {
 					// Discord: send result via webhook with server name
@@ -211,3 +210,4 @@ public final class ExecuteCommand implements Command {
 		return false;
 	}
 }
+

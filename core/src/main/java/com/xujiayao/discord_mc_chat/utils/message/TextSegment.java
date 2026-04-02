@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.utils.message;
 
-import com.xujiayao.discord_mc_chat.network.packets.events.DiscordRelayPacket;
+import com.xujiayao.discord_mc_chat.network.packets.EventPackets.DiscordRelayPacket;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -112,3 +112,4 @@ public final class TextSegment implements Serializable {
 		return text == null ? "" : text;
 	}
 }
+
