@@ -1,8 +1,6 @@
 package com.xujiayao.discord_mc_chat.server.discord;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.xujiayao.discord_mc_chat.network.NetworkManager;
-import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Info.ResponsePacket;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
@@ -11,8 +9,6 @@ import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.OnlineStatus;
-import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -41,8 +37,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -59,8 +53,6 @@ public final class DiscordManager {
 	private static final Map<String, String> DISCORD_NAME_CACHE = new ConcurrentHashMap<>();
 	private static final Pattern EMOJI_ALIAS_PATTERN = Pattern.compile("(:[^:]+:)");
 	private static JDA jda;
-	private static ScheduledExecutorService statusUpdateExecutor;
-	private static ScheduledFuture<?> presenceUpdateTask;
 
 	private DiscordManager() {
 	}
@@ -71,10 +63,6 @@ public final class DiscordManager {
 	 * @return true if initialization is successful, false otherwise.
 	 */
 	public static boolean init() {
-		if (statusUpdateExecutor == null || statusUpdateExecutor.isShutdown()) {
-			statusUpdateExecutor = Executors.newSingleThreadScheduledExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-BotPresence"));
-		}
-
 		String token = ConfigManager.getString("discord.bot.token");
 		if (token.isBlank()) {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.token_missing"));
@@ -211,85 +199,12 @@ public final class DiscordManager {
 	}
 
 	/**
-	 * Updates the Discord bot's status and activity based on the current server state.
-	 * Debounce rapid calls and automatically updates every 30 seconds.
+	 * Gets the JDA instance.
+	 *
+	 * @return The JDA instance, or null if not initialized
 	 */
-	public static void updateBotPresence() {
-		if (jda == null) return;
-
-		boolean enableStatus = ConfigManager.getBoolean("discord.bot.enable_status");
-		boolean enableActivity = ConfigManager.getBoolean("discord.bot.enable_activity");
-
-		if (!enableStatus && !enableActivity) return;
-
-		if (statusUpdateExecutor == null || statusUpdateExecutor.isShutdown()) return;
-
-		synchronized (DiscordManager.class) {
-			// Cancel the previously scheduled update.
-			// If it is currently running, cancel(false) allows it to finish safely.
-			// If it is in the queue, it is removed, naturally achieving debounce.
-			if (presenceUpdateTask != null) {
-				presenceUpdateTask.cancel(false);
-			}
-
-			// Schedule a new task to run immediately (0 delay), then repeat every 30 seconds.
-			presenceUpdateTask = statusUpdateExecutor.scheduleWithFixedDelay(() -> {
-				try {
-					doUpdateBotPresence(enableStatus, enableActivity);
-				} catch (Exception e) {
-					LOGGER.warn(I18nManager.getDmccTranslation("discord.manager.presence_update_failed", e.getMessage()));
-				}
-			}, 0, 30, TimeUnit.SECONDS);
-		}
-	}
-
-	/**
-	 * Internal method to perform the network fetching and JDA Presence updating.
-	 */
-	private static void doUpdateBotPresence(boolean enableStatus, boolean enableActivity) {
-		int onlinePlayerCount = 0;
-		int maxPlayerCount = 0;
-		int onlineServerCount = 0;
-
-		List<String> connectedClients = NetworkManager.getConnectedClientNames();
-		if (!connectedClients.isEmpty()) {
-			Map<String, ResponsePacket> infoMap = NetworkManager.requestInfoSnapshot(3);
-			for (String client : connectedClients) {
-				ResponsePacket info = infoMap.get(client);
-				if (info != null && info.maxPlayerCount > 0) {
-					onlinePlayerCount += info.onlinePlayerCount;
-					maxPlayerCount += info.maxPlayerCount;
-					onlineServerCount++;
-				}
-			}
-		}
-
-		if (enableStatus) {
-			if (onlineServerCount == 0) {
-				jda.getPresence().setStatus(OnlineStatus.DO_NOT_DISTURB);
-			} else if (onlinePlayerCount == 0) {
-				jda.getPresence().setStatus(OnlineStatus.IDLE);
-			} else {
-				jda.getPresence().setStatus(OnlineStatus.ONLINE);
-			}
-		}
-
-		if (enableActivity) {
-			JsonNode customMessages = I18nManager.getCustomMessages();
-			if (customMessages != null) {
-				String activityText;
-				if (onlineServerCount == 0) {
-					activityText = customMessages.path("activity").path("all_servers_offline").asText();
-				} else {
-					activityText = customMessages.path("activity").path("at_least_one_server_online").asText();
-				}
-
-				activityText = activityText.replace("{online_player_count}", String.valueOf(onlinePlayerCount))
-						.replace("{max_player_count}", String.valueOf(maxPlayerCount));
-
-				jda.getPresence().setActivity(Activity.playing(activityText));
-			}
-		}
+	static JDA getJda() {
+		return jda;
 	}
 
 	/**
@@ -803,10 +718,7 @@ public final class DiscordManager {
 	 * Shuts down the Discord bot.
 	 */
 	public static void shutdown() {
-		if (statusUpdateExecutor != null) {
-			ExecutorServiceUtils.shutdownAnExecutor(statusUpdateExecutor);
-			statusUpdateExecutor = null;
-		}
+		BotPresenceManager.shutdown();
 
 		if (jda != null) {
 			jda.shutdown();

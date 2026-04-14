@@ -17,6 +17,7 @@ import com.xujiayao.discord_mc_chat.network.packets.MiscPackets.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.MiscPackets.LatencyPingPacket;
 import com.xujiayao.discord_mc_chat.network.packets.MiscPackets.LatencyPongPacket;
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
+import com.xujiayao.discord_mc_chat.server.discord.BotPresenceManager;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.server.linking.OpSyncManager;
@@ -84,7 +85,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		}
 		// Clean up from NetworkManager
 		NetworkManager.removeClientChannel(ctx.channel());
-		DiscordManager.updateBotPresence();
+		BotPresenceManager.update();
 	}
 
 	@Override
@@ -103,7 +104,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 						// Server events
 						case SERVER_STARTED -> {
 							handleMinecraftSystemMessage(p, clientName, "server.started", "server.start");
-							DiscordManager.updateBotPresence();
+							BotPresenceManager.update();
 						}
 						case SERVER_STOPPING ->
 								handleMinecraftSystemMessage(p, clientName, "server.stopped", "server.stop");
@@ -117,11 +118,11 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 								OpSyncManager.syncAll();
 							}
 
-							DiscordManager.updateBotPresence();
+							BotPresenceManager.update();
 						}
 						case PLAYER_QUIT -> {
 							handleMinecraftSystemMessage(p, clientName, "player.quit", "player.quit");
-							DiscordManager.updateBotPresence();
+							BotPresenceManager.update();
 						}
 						case PLAYER_DIE -> handleMinecraftSystemMessage(p, clientName, "player.die", "player.die");
 						case PLAYER_ADVANCEMENT ->
@@ -227,7 +228,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 						LOGGER.info(I18nManager.getDmccTranslation("server.network.auth_success", clientName));
 						ctx.writeAndFlush(new LoginSuccessPacket(ConfigManager.getString("language"), ConfigManager.getBoolean("message_parsing.overwrite_minecraft_source_messages")));
-						DiscordManager.updateBotPresence();
+						BotPresenceManager.update();
 					} else {
 						String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.auth_failed");
 						LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", clientName, reason));
