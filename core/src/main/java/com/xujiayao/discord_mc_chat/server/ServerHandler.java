@@ -106,8 +106,10 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 							handleMinecraftSystemMessage(p, clientName, "server.started", "server.start");
 							BotPresenceManager.update();
 						}
-						case SERVER_STOPPING ->
-								handleMinecraftSystemMessage(p, clientName, "server.stopped", "server.stop");
+						case SERVER_STOPPING -> {
+							handleMinecraftSystemMessage(p, clientName, "server.stopped", "server.stop");
+							ctx.close();
+						}
 						// Player events
 						case PLAYER_JOIN -> {
 							handleMinecraftSystemMessage(p, clientName, "player.join", "player.join");
