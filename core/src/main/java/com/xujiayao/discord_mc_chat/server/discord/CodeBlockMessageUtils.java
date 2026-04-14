@@ -53,4 +53,3 @@ public final class CodeBlockMessageUtils {
 				.replace("```", "'''");
 	}
 }
-

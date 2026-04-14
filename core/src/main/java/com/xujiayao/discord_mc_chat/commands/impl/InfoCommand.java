@@ -225,4 +225,3 @@ public final class InfoCommand implements Command {
 		sender.reply(builder.toString());
 	}
 }
-

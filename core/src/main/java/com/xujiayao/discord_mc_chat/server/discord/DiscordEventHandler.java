@@ -617,4 +617,3 @@ final class DiscordEventHandler extends ListenerAdapter {
 	                             boolean systemMessage) {
 	}
 }
-

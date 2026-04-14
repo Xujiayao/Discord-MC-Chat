@@ -180,4 +180,3 @@ public final class LinkCommand implements Command {
 		String getDiscordUserName();
 	}
 }
-

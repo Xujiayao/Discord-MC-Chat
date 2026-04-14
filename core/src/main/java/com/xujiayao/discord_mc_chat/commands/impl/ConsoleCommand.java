@@ -293,4 +293,3 @@ public final class ConsoleCommand implements Command {
 		return false;
 	}
 }
-

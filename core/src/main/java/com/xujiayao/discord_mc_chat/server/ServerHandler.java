@@ -537,4 +537,3 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		return !ConfigManager.getString("console_forwarding.channel", "").isBlank();
 	}
 }
-

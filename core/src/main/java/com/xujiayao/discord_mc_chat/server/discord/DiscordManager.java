@@ -946,4 +946,3 @@ public final class DiscordManager {
 	public record DiscordStatusInfo(String status, String tag, long gatewayPingMillis, long restPingMillis) {
 	}
 }
-

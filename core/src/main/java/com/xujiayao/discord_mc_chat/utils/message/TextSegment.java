@@ -112,4 +112,3 @@ public final class TextSegment implements Serializable {
 		return text == null ? "" : text;
 	}
 }
-

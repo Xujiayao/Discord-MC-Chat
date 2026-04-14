@@ -462,4 +462,3 @@ public final class NetworkManager {
 		return client.getServerName();
 	}
 }
-

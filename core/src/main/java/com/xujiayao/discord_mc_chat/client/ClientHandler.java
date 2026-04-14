@@ -306,4 +306,3 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 		ctx.close();
 	}
 }
-

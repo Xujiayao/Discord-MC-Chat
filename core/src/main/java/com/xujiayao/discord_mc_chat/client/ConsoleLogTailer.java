@@ -167,4 +167,3 @@ final class ConsoleLogTailer {
 		pointer = 0;
 	}
 }
-

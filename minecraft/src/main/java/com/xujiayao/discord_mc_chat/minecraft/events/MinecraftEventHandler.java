@@ -1164,4 +1164,3 @@ public final class MinecraftEventHandler {
 		));
 	}
 }
-
