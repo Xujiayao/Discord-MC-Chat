@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.server;
 
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
+import com.xujiayao.discord_mc_chat.server.discord.MsptMonitor;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
@@ -51,6 +52,7 @@ public final class ServerDMCC {
 
 				nettyServer = new NettyServer(host, port, sharedSecret);
 				port = nettyServer.start();
+				MsptMonitor.start();
 
 				return port;
 			}).get();
@@ -65,6 +67,7 @@ public final class ServerDMCC {
 			nettyServer.stop();
 		}
 
+		MsptMonitor.shutdown();
 		LinkedAccountManager.shutdown();
 		DiscordManager.shutdown();
 	}

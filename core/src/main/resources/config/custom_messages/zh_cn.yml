@@ -177,4 +177,6 @@ channel_topic_updating:
     single_server: ":white_check_mark: {online_player_count}/{max_player_count} 位玩家在线 | {total_player_count} 位玩家曾加入过 | 服务器启动于 <t:{server_started_time}:R> | 最后更新于：<t:{last_update_time}:f>"
 
 mspt_monitoring:
-  high_mspt: ":warning: **服务器 MSPT 已达 {mspt}！**"
+  first_exceeded: ":warning: **服务器 MSPT ({mspt}) 超过阈值 ({threshold})！下次检查将在 <t:{next_check_time}:R> 进行。**"
+  still_exceeded: ":warning: **服务器 MSPT ({mspt}) 仍超过阈值 ({threshold})！下次检查将在 <t:{next_check_time}:R> 进行。**"
+  first_recovered: ":white_check_mark: **服务器 MSPT ({mspt}) 已恢复到阈值 ({threshold}) 以下！**"

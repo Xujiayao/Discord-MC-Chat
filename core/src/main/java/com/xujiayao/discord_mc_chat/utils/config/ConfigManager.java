@@ -200,6 +200,18 @@ public final class ConfigManager {
 	}
 
 	/**
+	 * Gets a configuration value as a double, with a default value if not found.
+	 *
+	 * @param path The path to the configuration value
+	 * @param defaultValue The default value to return if the path is not found
+	 * @return The double value at the specified path
+	 */
+	public static Double getDouble(String path, double defaultValue) {
+		Double value = getValue(path, JsonNode::asDouble);
+		return value == null ? defaultValue : value;
+	}
+
+	/**
 	 * Gets a configuration value as a boolean.
 	 *
 	 * @param path The path to the configuration value

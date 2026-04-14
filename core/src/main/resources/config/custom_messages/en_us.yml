@@ -178,4 +178,6 @@ channel_topic_updating:
     single_server: ":white_check_mark: {online_player_count}/{max_player_count} player(s) online | {total_player_count} player(s) ever joined | Server started <t:{server_started_time}:R> | Last updated: <t:{last_update_time}:f>"
 
 mspt_monitoring:
-  high_mspt: ":warning: **Server MSPT has reached {mspt}!**"
+  first_exceeded: ":warning: **Server MSPT ({mspt}) is over the threshold ({threshold})! Next check in <t:{next_check_time}:R>."
+  still_exceeded: ":warning: **Server MSPT ({mspt}) is over the threshold ({threshold})! Next check in <t:{next_check_time}:R>."
+  first_recovered: ":white_check_mark: **Server MSPT ({mspt}) is back below the threshold ({threshold})!"

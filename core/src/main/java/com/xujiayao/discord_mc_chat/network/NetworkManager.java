@@ -27,6 +27,7 @@ public final class NetworkManager {
 
 	// Server-side: Manage connected client channels
 	private static final Map<Channel, String> clientChannels = new ConcurrentHashMap<>();
+	private static final Map<String, Long> clientConnectedAt = new ConcurrentHashMap<>();
 
 	private static final Map<String, CommandPackets.Info.ResponsePacket> infoCache = new ConcurrentHashMap<>();
 	private static final AtomicReference<Supplier<CommandPackets.Info.ResponsePacket>> infoSupplier = new AtomicReference<>();
@@ -67,6 +68,7 @@ public final class NetworkManager {
 	public static void clear() {
 		clientInstance.set(null);
 		clientChannels.clear();
+		clientConnectedAt.clear();
 		infoCache.clear();
 		executeAutoCompleteCache.clear();
 		consoleAutoCompleteCache.clear();
@@ -130,6 +132,7 @@ public final class NetworkManager {
 	 */
 	public static void addClientChannel(Channel channel, String name) {
 		clientChannels.put(channel, name);
+		clientConnectedAt.put(name, System.currentTimeMillis());
 	}
 
 	/**
@@ -138,7 +141,10 @@ public final class NetworkManager {
 	 * @param channel The client channel
 	 */
 	public static void removeClientChannel(Channel channel) {
-		clientChannels.remove(channel);
+		String name = clientChannels.remove(channel);
+		if (name != null) {
+			clientConnectedAt.remove(name);
+		}
 	}
 
 	/**
@@ -158,6 +164,21 @@ public final class NetworkManager {
 	 */
 	public static boolean isClientConnected(String clientName) {
 		return clientChannels.containsValue(clientName);
+	}
+
+	/**
+	 * Gets the age of the current client connection in seconds.
+	 *
+	 * @param clientName The client name to check.
+	 * @return The connection age in seconds, or Long.MAX_VALUE if the client is unknown.
+	 */
+	public static long getClientConnectionAgeSeconds(String clientName) {
+		Long connectedAtMillis = clientConnectedAt.get(clientName);
+		if (connectedAtMillis == null) {
+			return Long.MAX_VALUE;
+		}
+
+		return TimeUnit.MILLISECONDS.toSeconds(Math.max(0L, System.currentTimeMillis() - connectedAtMillis));
 	}
 
 	/**

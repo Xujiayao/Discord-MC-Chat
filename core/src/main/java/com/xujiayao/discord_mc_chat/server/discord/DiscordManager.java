@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.server.discord;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.xujiayao.discord_mc_chat.server.message.DiscordMessageParser;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
@@ -678,6 +679,45 @@ public final class DiscordManager {
 		} catch (InsufficientPermissionException e) {
 			String reason = I18nManager.getDmccTranslation("discord.manager.insufficient_permission", channel.getName(), e.getPermission().getName());
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", reason));
+		} catch (Exception e) {
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
+		}
+	}
+
+	/**
+	 * Sends an MSPT monitoring message to the configured monitoring channel.
+	 * In standalone mode, messages are sent through each client's webhook identity.
+	 * In single_server mode, messages are sent directly by the bot.
+	 *
+	 * @param clientName The DMCC client/server name (used for standalone webhook identity)
+	 * @param message    The already-formatted message content
+	 */
+	public static void sendMsptMonitoringMessage(String clientName, String message) {
+		String channelIdentifier = ConfigManager.getString("mspt_monitoring.channel");
+		if (channelIdentifier == null || channelIdentifier.isBlank()) {
+			return;
+		}
+
+		TextChannel channel = getTextChannel(channelIdentifier);
+		if (channel == null) {
+			return;
+		}
+
+		try {
+			String logReadyMessage = DiscordMessageParser.formatDiscordTimestampsForPlainText(message);
+
+			if ("standalone".equals(ModeManager.getMode())) {
+				String avatarUrl = getClientAvatarUrl(clientName);
+				sendWebhookMessage(channel, clientName, avatarUrl, message);
+				for (String line : logReadyMessage.split("\\n")) {
+					LOGGER.info(StringUtils.format("[{}] {}"), clientName, sanitizeLineForLogging(line));
+				}
+			} else {
+				sendBotMessage(channelIdentifier, message);
+				for (String line : logReadyMessage.split("\\n")) {
+					LOGGER.info(sanitizeLineForLogging(line));
+				}
+			}
 		} catch (Exception e) {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
 		}

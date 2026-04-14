@@ -800,6 +800,31 @@ public final class DiscordMessageParser {
 		}
 	}
 
+	/**
+	 * Replaces Discord timestamp tokens (e.g. {@code <t:1234567890:R>}) with
+	 * localized, human-readable text used by the message parser.
+	 */
+	public static String formatDiscordTimestampsForPlainText(String text) {
+		if (text == null || text.isEmpty()) {
+			return text;
+		}
+
+		Matcher matcher = DISCORD_TIMESTAMP_PATTERN.matcher(text);
+		StringBuilder out = new StringBuilder();
+		while (matcher.find()) {
+			String replacement = matcher.group();
+			try {
+				long epoch = Long.parseLong(matcher.group(1));
+				String style = matcher.group(2);
+				replacement = "[" + MessageParserCommon.formatDiscordTimestamp(epoch, style) + "]";
+			} catch (Exception ignored) {
+			}
+			matcher.appendReplacement(out, Matcher.quoteReplacement(replacement));
+		}
+		matcher.appendTail(out);
+		return out.toString();
+	}
+
 	private static List<TokenSpan> removeOverlaps(List<TokenSpan> tokens) {
 		List<TokenSpan> result = new ArrayList<>();
 		int lastEnd = -1;
