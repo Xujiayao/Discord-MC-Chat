@@ -12,6 +12,7 @@ import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.HandshakePacket;
 import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.LoginSuccessPacket;
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
 import com.xujiayao.discord_mc_chat.network.packets.EventPackets.MinecraftEventPacket;
+import com.xujiayao.discord_mc_chat.network.packets.EventPackets.ConsoleLogBatchPacket;
 import com.xujiayao.discord_mc_chat.network.packets.EventPackets.MinecraftRelayPacket;
 import com.xujiayao.discord_mc_chat.network.packets.MiscPackets.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.MiscPackets.LatencyPingPacket;
@@ -99,6 +100,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 		if (authenticated) {
 			switch (packet) {
+				case ConsoleLogBatchPacket p -> DiscordManager.sendConsoleForwardedBatchMessage(clientName, p.lines);
 				case MinecraftEventPacket p -> {
 					switch (p.type) {
 						// Server events
@@ -229,7 +231,11 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 						NetworkManager.addClientChannel(ctx.channel(), clientName);
 
 						LOGGER.info(I18nManager.getDmccTranslation("server.network.auth_success", clientName));
-						ctx.writeAndFlush(new LoginSuccessPacket(ConfigManager.getString("language"), ConfigManager.getBoolean("message_parsing.overwrite_minecraft_source_messages")));
+						ctx.writeAndFlush(new LoginSuccessPacket(
+								ConfigManager.getString("language"),
+								ConfigManager.getBoolean("message_parsing.overwrite_minecraft_source_messages"),
+								isConsoleForwardingEnabledForClient(clientName)
+						));
 						BotPresenceManager.update();
 					} else {
 						String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.auth_failed");
@@ -508,6 +514,27 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 			return "white";
 		}
 		return DiscordMessageParser.getRoleColorHex(DiscordManager.retrieveMember(discordId));
+	}
+
+	private boolean isConsoleForwardingEnabledForClient(String serverName) {
+		if (!ConfigManager.getBoolean("console_forwarding.enable")) {
+			return false;
+		}
+
+		if ("standalone".equals(ModeManager.getMode())) {
+			JsonNode channelsNode = ConfigManager.getConfigNode("console_forwarding.channels");
+			if (!channelsNode.isArray()) {
+				return false;
+			}
+			for (JsonNode node : channelsNode) {
+				if (serverName.equals(node.path("server").asText("")) && !node.path("channel").asText("").isBlank()) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		return !ConfigManager.getString("console_forwarding.channel", "").isBlank();
 	}
 }
 

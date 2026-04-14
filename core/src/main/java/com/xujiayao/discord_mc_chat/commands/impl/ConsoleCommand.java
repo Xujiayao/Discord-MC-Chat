@@ -7,6 +7,7 @@ import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.discord.JdaCommandSender;
+import com.xujiayao.discord_mc_chat.server.discord.MessageCommandSender;
 import com.xujiayao.discord_mc_chat.server.discord.OpLevelResolver;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
@@ -216,7 +217,7 @@ public final class ConsoleCommand implements Command {
 
 		for (String serverName : targets) {
 			if (!NetworkManager.isClientConnected(serverName)) {
-				if (sender instanceof JdaCommandSender) {
+				if (sender instanceof JdaCommandSender || sender instanceof MessageCommandSender) {
 					DiscordManager.sendExecuteResultViaWebhook(serverName,
 							I18nManager.getDmccTranslation("commands.console.client_offline", serverName));
 				} else {
@@ -242,7 +243,7 @@ public final class ConsoleCommand implements Command {
 				CommandPackets.Console.ResponsePacket response = future.get(CONSOLE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 				String output = response.response;
 
-				if (sender instanceof JdaCommandSender) {
+				if (sender instanceof JdaCommandSender || sender instanceof MessageCommandSender) {
 					if (output.isBlank()) {
 						String command = "/execute at: " + serverName + " command: log latest.log";
 						output = I18nManager.getDmccTranslation("commands.console.no_response", command);
@@ -262,7 +263,7 @@ public final class ConsoleCommand implements Command {
 				}
 			} catch (Exception e) {
 				String timeoutMsg = I18nManager.getDmccTranslation("commands.console.timeout", serverName);
-				if (sender instanceof JdaCommandSender) {
+				if (sender instanceof JdaCommandSender || sender instanceof MessageCommandSender) {
 					DiscordManager.sendExecuteResultViaWebhook(serverName, timeoutMsg);
 				} else {
 					sender.reply(timeoutMsg);
@@ -272,6 +273,7 @@ public final class ConsoleCommand implements Command {
 			}
 		}
 	}
+
 
 	/**
 	 * Checks if the target server name is valid according to the configuration.

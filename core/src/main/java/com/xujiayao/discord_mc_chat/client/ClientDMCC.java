@@ -47,6 +47,7 @@ public final class ClientDMCC {
 	}
 
 	public void shutdown() {
+		ConsoleLogTailer.stop();
 		if (nettyClient != null) {
 			nettyClient.stop();
 		}

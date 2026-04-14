@@ -65,10 +65,12 @@ public final class AuthPackets {
 	public static final class LoginSuccessPacket extends Packet {
 		public String language;
 		public boolean overwriteMinecraftSourceMessages;
+		public boolean consoleForwardingEnabled;
 
-		public LoginSuccessPacket(String language, boolean overwriteMinecraftSourceMessages) {
+		public LoginSuccessPacket(String language, boolean overwriteMinecraftSourceMessages, boolean consoleForwardingEnabled) {
 			this.language = language;
 			this.overwriteMinecraftSourceMessages = overwriteMinecraftSourceMessages;
+			this.consoleForwardingEnabled = consoleForwardingEnabled;
 		}
 	}
 }

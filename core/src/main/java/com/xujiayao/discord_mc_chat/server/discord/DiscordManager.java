@@ -41,6 +41,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
@@ -50,6 +51,9 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  * @author Xujiayao
  */
 public final class DiscordManager {
+
+	private static final int CONSOLE_FORWARDING_CHUNK_LIMIT = 1800;
+	private static final int CONSOLE_FORWARDING_INLINE_LIMIT = 1200;
 
 	private static final Map<String, String> DISCORD_NAME_CACHE = new ConcurrentHashMap<>();
 	private static final Pattern EMOJI_ALIAS_PATTERN = Pattern.compile("(:[^:]+:)");
@@ -406,6 +410,154 @@ public final class DiscordManager {
 		}
 	}
 
+	/**
+	 * Sends batched console logs to the configured console forwarding channel.
+	 */
+	public static void sendConsoleForwardedBatchMessage(String clientName, List<String> lines) {
+		if (!ConfigManager.getBoolean("console_forwarding.enable") || lines == null || lines.isEmpty()) {
+			return;
+		}
+
+		String channelIdentifier = resolveConsoleChannel(clientName);
+		if (channelIdentifier == null || channelIdentifier.isBlank()) {
+			return;
+		}
+
+		TextChannel channel = getTextChannel(channelIdentifier);
+		if (channel == null) {
+			return;
+		}
+
+		StringBuilder batch = new StringBuilder();
+		for (String rawLine : lines) {
+			for (String line : formatConsoleLinePartsForDiscord(rawLine)) {
+				if (!batch.isEmpty() && batch.length() + line.length() + 1 > CONSOLE_FORWARDING_CHUNK_LIMIT) {
+					sendConsoleChunk(channel, channelIdentifier, clientName, batch.toString());
+					batch.setLength(0);
+				}
+
+				if (!batch.isEmpty()) {
+					batch.append("\n");
+				}
+				batch.append(line);
+			}
+		}
+
+		if (!batch.isEmpty()) {
+			sendConsoleChunk(channel, channelIdentifier, clientName, batch.toString());
+		}
+	}
+
+	/**
+	 * Resolves which server should run /console when a message is sent in a console forwarding channel.
+	 */
+	public static String resolveConsoleTargetServer(String channelId, String channelName) {
+		if (!ConfigManager.getBoolean("console_forwarding.enable")) {
+			return null;
+		}
+
+		if ("standalone".equals(ModeManager.getMode())) {
+			JsonNode channels = ConfigManager.getConfigNode("console_forwarding.channels");
+			if (!channels.isArray()) {
+				return null;
+			}
+			for (JsonNode node : channels) {
+				String configuredChannel = node.path("channel").asText("");
+				String server = node.path("server").asText("");
+				if (!server.isBlank() && matchesChannelIdentifier(configuredChannel, channelId, channelName)) {
+					return server;
+				}
+			}
+			return null;
+		}
+
+		String configured = ConfigManager.getString("console_forwarding.channel", "");
+		return matchesChannelIdentifier(configured, channelId, channelName) ? "Internal" : null;
+	}
+
+	private static String resolveConsoleChannel(String clientName) {
+		if ("standalone".equals(ModeManager.getMode())) {
+			JsonNode channels = ConfigManager.getConfigNode("console_forwarding.channels");
+			if (!channels.isArray()) {
+				return "";
+			}
+			for (JsonNode node : channels) {
+				if (clientName.equals(node.path("server").asText(""))) {
+					return node.path("channel").asText("");
+				}
+			}
+			return "";
+		}
+
+		return ConfigManager.getString("console_forwarding.channel", "");
+	}
+
+	private static boolean matchesChannelIdentifier(String configuredChannel, String channelId, String channelName) {
+		if (configuredChannel == null || configuredChannel.isBlank()) {
+			return false;
+		}
+		return configuredChannel.equals(channelId) || configuredChannel.equalsIgnoreCase(channelName);
+	}
+
+	private static String applySensitiveRedaction(String message) {
+		String output = message;
+		JsonNode regexList = ConfigManager.getConfigNode("console_forwarding.filter_regex");
+		if (!regexList.isArray()) {
+			return output;
+		}
+
+		for (JsonNode node : regexList) {
+			if (node == null || !node.isTextual()) {
+				continue;
+			}
+			String regex = node.asText("");
+			if (regex.isBlank()) {
+				continue;
+			}
+			try {
+				output = Pattern.compile(regex).matcher(output).replaceAll("redacted");
+			} catch (PatternSyntaxException e) {
+				LOGGER.warn("Invalid console_forwarding.filter_regex: {}", regex);
+			}
+		}
+
+		return output;
+	}
+
+	private static List<String> formatConsoleLinePartsForDiscord(String rawLine) {
+		String line = applySensitiveRedaction(rawLine == null ? "" : rawLine)
+				.replace("\r", " ")
+				.replace("\n", " ")
+				.replace("`", "'");
+		if (line.isBlank()) {
+			return List.of();
+		}
+
+		List<String> result = new ArrayList<>();
+		int index = 0;
+		while (index < line.length()) {
+			int end = Math.min(index + CONSOLE_FORWARDING_INLINE_LIMIT, line.length());
+			result.add("`" + line.substring(index, end) + "`");
+			index = end;
+		}
+		return result;
+	}
+
+	private static void sendConsoleChunk(TextChannel channel, String channelIdentifier, String clientName, String chunk) {
+		if (chunk == null || chunk.isBlank()) {
+			return;
+		}
+		try {
+			if ("standalone".equals(ModeManager.getMode())) {
+				sendWebhookMessage(channel, clientName, getClientAvatarUrl(clientName), chunk);
+			} else {
+				sendBotMessage(channelIdentifier, chunk);
+			}
+		} catch (Exception e) {
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
+		}
+	}
+
 	private static String replacePlaceholders(String template, Map<String, String> placeholders) {
 		String out = template;
 		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
@@ -597,13 +749,15 @@ public final class DiscordManager {
 	 * @param message    The result message
 	 */
 	public static void sendExecuteResultViaWebhook(String clientName, String message) {
-		String channelIdentifier = ConfigManager.getString("broadcasts.minecraft_to_discord.server.started", "in-game-chat");
+		String channelIdentifier = resolveConsoleChannel(clientName);
 		TextChannel channel = getTextChannel(channelIdentifier);
 		if (channel == null) return;
 
 		try {
 			String avatarUrl = getClientAvatarUrl(clientName);
-			sendWebhookMessage(channel, clientName, avatarUrl, "```\n" + message + "\n```");
+			for (String block : CodeBlockMessageUtils.splitToCodeBlocks(message)) {
+				sendWebhookMessage(channel, clientName, avatarUrl, block);
+			}
 		} catch (Exception e) {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
 		}
@@ -619,14 +773,17 @@ public final class DiscordManager {
 	 */
 	public static void sendExecuteResultWithFileViaWebhook(String clientName, String message,
 	                                                       byte[] fileData, String fileName) {
-		String channelIdentifier = ConfigManager.getString("broadcasts.minecraft_to_discord.server.started", "in-game-chat");
+		String channelIdentifier = resolveConsoleChannel(clientName);
 		TextChannel channel = getTextChannel(channelIdentifier);
 		if (channel == null) return;
 
 		try {
 			String avatarUrl = getClientAvatarUrl(clientName);
-			sendWebhookMessageWithFile(channel, clientName, avatarUrl,
-					"```\n" + message + "\n```", fileData, fileName);
+			List<String> blocks = CodeBlockMessageUtils.splitToCodeBlocks(message);
+			sendWebhookMessageWithFile(channel, clientName, avatarUrl, blocks.getFirst(), fileData, fileName);
+			for (int i = 1; i < blocks.size(); i++) {
+				sendWebhookMessage(channel, clientName, avatarUrl, blocks.get(i));
+			}
 		} catch (Exception e) {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
 		}

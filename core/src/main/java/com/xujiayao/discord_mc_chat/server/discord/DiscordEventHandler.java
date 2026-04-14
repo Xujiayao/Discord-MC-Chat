@@ -7,6 +7,7 @@ import com.xujiayao.discord_mc_chat.network.packets.EventPackets.DiscordRelayPac
 import com.xujiayao.discord_mc_chat.server.message.DiscordMessageParser;
 import com.xujiayao.discord_mc_chat.utils.LogFileUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
+import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import com.xujiayao.discord_mc_chat.utils.message.TextSegment;
 import net.dv8tion.jda.api.entities.Member;
@@ -308,6 +309,21 @@ final class DiscordEventHandler extends ListenerAdapter {
 			return;
 		}
 
+		Message message = event.getMessage();
+		if (message.getType().isSystem()) {
+			cacheMessage(message);
+			return;
+		}
+		if (event.isWebhookMessage()) {
+			cacheMessage(message);
+			return;
+		}
+
+		if (tryExecuteConsoleMessage(event, message)) {
+			cacheMessage(message);
+			return;
+		}
+
 		// Check if Discord-to-Minecraft chat is enabled
 		if (!ConfigManager.getBoolean("broadcasts.discord_to_minecraft.chat")) {
 			return;
@@ -324,19 +340,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 		String channelId = event.getChannel().getId();
 		String channelName = event.getChannel().getName();
 		if (!channelId.equals(configuredChannel) && !channelName.equalsIgnoreCase(configuredChannel)) {
-			return;
-		}
-
-		Message message = event.getMessage();
-		if (message.getType().isSystem()) {
-			// Keep metadata for potential follow-up delete events, but don't bridge Discord system notices.
-			cacheMessage(message);
-			return;
-		}
-		if (event.isWebhookMessage()) {
-			// Webhook messages are not bridged back to Minecraft to avoid loops,
-			// but keep them cached so reply context can still be parsed consistently.
-			cacheMessage(message);
 			return;
 		}
 
@@ -391,6 +394,33 @@ final class DiscordEventHandler extends ListenerAdapter {
 
 		// Cache message for edit/delete reference
 		cacheMessage(message);
+	}
+
+	private boolean tryExecuteConsoleMessage(MessageReceivedEvent event, Message message) {
+		if (!ConfigManager.getBoolean("console_forwarding.enable")
+				|| !ConfigManager.getBoolean("console_forwarding.execute_messages_from_channel")) {
+			return false;
+		}
+
+		String targetServer = DiscordManager.resolveConsoleTargetServer(event.getChannel().getId(), event.getChannel().getName());
+		if (targetServer == null || targetServer.isBlank()) {
+			return false;
+		}
+
+		String content = message.getContentRaw();
+		if (content.isBlank()) {
+			return false;
+		}
+
+		if ("standalone".equals(ModeManager.getMode())) {
+			int opLevel = OpLevelResolver.resolveForServer(event.getMember(), event.getAuthor(), targetServer);
+			CommandManager.execute(new MessageCommandSender(event, opLevel), "console", targetServer, content);
+		} else {
+			int opLevel = OpLevelResolver.resolve(event.getMember(), event.getAuthor());
+			CommandManager.execute(new MessageCommandSender(event, opLevel), "console", content);
+		}
+
+		return true;
 	}
 
 	@Override

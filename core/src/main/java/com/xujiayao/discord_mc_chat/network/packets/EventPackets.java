@@ -86,5 +86,13 @@ public final class EventPackets {
 			COMMAND
 		}
 	}
+
+	public static final class ConsoleLogBatchPacket extends Packet {
+		public List<String> lines;
+
+		public ConsoleLogBatchPacket(List<String> lines) {
+			this.lines = lines;
+		}
+	}
 }
 

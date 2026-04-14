@@ -45,7 +45,9 @@ public final class JdaCommandSender implements CommandSender, LinkCommand.Discor
 			// Use complete() instead of queue() to ensure the message is actually sent
 			// before the code proceeds. This is critical for commands like 'reload' or 'shutdown'
 			// which might kill the JDA connection immediately after this method returns.
-			event.getHook().sendMessage("```" + message + "```").complete();
+			for (String block : CodeBlockMessageUtils.splitToCodeBlocks(message)) {
+				event.getHook().sendMessage(block).complete();
+			}
 		} catch (RejectedExecutionException e) {
 			// This usually happens when trying to send the "Success" message after a reload/shutdown,
 			// because the JDA instance belonging to this event has been shut down.
@@ -58,9 +60,13 @@ public final class JdaCommandSender implements CommandSender, LinkCommand.Discor
 	@Override
 	public void replyWithFile(String message, byte[] fileData, String fileName) {
 		try {
-			event.getHook().sendMessage("```" + message + "```")
+			var blocks = CodeBlockMessageUtils.splitToCodeBlocks(message);
+			event.getHook().sendMessage(blocks.getFirst())
 					.addFiles(FileUpload.fromData(fileData, fileName))
 					.complete();
+			for (int i = 1; i < blocks.size(); i++) {
+				event.getHook().sendMessage(blocks.get(i)).complete();
+			}
 		} catch (RejectedExecutionException e) {
 			LOGGER.warn(I18nManager.getDmccTranslation("discord.command.reply_failed"));
 			LOGGER.warn(I18nManager.getDmccTranslation("discord.command.reply_failed_detail"));
