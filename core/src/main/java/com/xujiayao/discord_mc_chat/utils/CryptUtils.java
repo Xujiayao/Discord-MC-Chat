@@ -9,10 +9,13 @@ import java.security.SecureRandom;
  *
  * @author Xujiayao
  */
-public class CryptUtils {
+public final class CryptUtils {
 
 	private static final SecureRandom RANDOM = new SecureRandom();
 	private static final char[] ALPHANUMERIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".toCharArray();
+
+	private CryptUtils() {
+	}
 
 	/**
 	 * Calculates the SHA-256 hash of a string.

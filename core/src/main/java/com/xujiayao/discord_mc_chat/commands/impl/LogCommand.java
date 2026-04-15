@@ -15,6 +15,12 @@ import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
  */
 public final class LogCommand implements Command {
 
+	/**
+	 * Creates a log command instance.
+	 */
+	public LogCommand() {
+	}
+
 	@Override
 	public String name() {
 		return "log";

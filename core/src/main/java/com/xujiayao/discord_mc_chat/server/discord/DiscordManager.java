@@ -1,8 +1,8 @@
 package com.xujiayao.discord_mc_chat.server.discord;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.xujiayao.discord_mc_chat.server.message.DiscordMessageParser;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
+import com.xujiayao.discord_mc_chat.server.message.DiscordMessageParser;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
@@ -274,6 +274,8 @@ public final class DiscordManager {
 
 	/**
 	 * Gets all Discord members from every connected guild.
+	 *
+	 * @return Deduplicated member list from all connected guilds.
 	 */
 	public static List<Member> getAllMembers() {
 		if (jda == null) {
@@ -284,6 +286,8 @@ public final class DiscordManager {
 
 	/**
 	 * Gets all guild roles from every connected guild.
+	 *
+	 * @return Deduplicated role list from all connected guilds.
 	 */
 	public static List<Role> getAllRoles() {
 		if (jda == null) {
@@ -294,6 +298,9 @@ public final class DiscordManager {
 
 	/**
 	 * Gets all Discord user IDs for members that currently have the specified role.
+	 *
+	 * @param roleId Discord role ID.
+	 * @return User ID list for members owning the role.
 	 */
 	public static List<String> getDiscordIdsByRoleId(String roleId) {
 		if (jda == null || roleId == null || roleId.isBlank()) {
@@ -314,6 +321,8 @@ public final class DiscordManager {
 
 	/**
 	 * Gets all custom emojis from every connected guild.
+	 *
+	 * @return Deduplicated custom emoji list from all connected guilds.
 	 */
 	public static List<RichCustomEmoji> getAllCustomEmojis() {
 		if (jda == null) {
@@ -324,6 +333,10 @@ public final class DiscordManager {
 
 	/**
 	 * Sends a Minecraft user-originated message to Discord using the configured style template.
+	 *
+	 * @param clientName   DMCC client/server name.
+	 * @param channelNode  Config node under {@code broadcasts.minecraft_to_discord}.
+	 * @param placeholders Placeholder values used by the selected message template.
 	 */
 	public static void sendMinecraftUserMessage(String clientName, String channelNode, Map<String, String> placeholders) {
 		String channelIdentifier = ConfigManager.getString("broadcasts.minecraft_to_discord." + channelNode);
@@ -377,6 +390,10 @@ public final class DiscordManager {
 
 	/**
 	 * Sends an already-formatted Minecraft system message to Discord.
+	 *
+	 * @param clientName  DMCC client/server name.
+	 * @param channelNode Config node under {@code broadcasts.minecraft_to_discord}.
+	 * @param message     Already formatted message content.
 	 */
 	public static void sendMinecraftSystemMessage(String clientName, String channelNode, String message) {
 		String channelIdentifier = ConfigManager.getString("broadcasts.minecraft_to_discord." + channelNode);
@@ -412,6 +429,9 @@ public final class DiscordManager {
 
 	/**
 	 * Sends batched console logs to the configured console forwarding channel.
+	 *
+	 * @param clientName DMCC client/server name.
+	 * @param lines      Console log lines to forward.
 	 */
 	public static void sendConsoleForwardedBatchMessage(String clientName, List<String> lines) {
 		if (!ConfigManager.getBoolean("console_forwarding.enable") || lines == null || lines.isEmpty()) {
@@ -450,6 +470,10 @@ public final class DiscordManager {
 
 	/**
 	 * Resolves which server should run /console when a message is sent in a console forwarding channel.
+	 *
+	 * @param channelId   Discord channel ID.
+	 * @param channelName Discord channel name.
+	 * @return Target server name, or {@code null} if channel is not configured for console forwarding.
 	 */
 	public static String resolveConsoleTargetServer(String channelId, String channelName) {
 		if (!ConfigManager.getBoolean("console_forwarding.enable")) {
@@ -517,7 +541,7 @@ public final class DiscordManager {
 			try {
 				output = Pattern.compile(regex).matcher(output).replaceAll("redacted");
 			} catch (PatternSyntaxException e) {
-				LOGGER.warn("Invalid console_forwarding.filter_regex: {}", regex);
+				LOGGER.warn(I18nManager.getDmccTranslation("discord.manager.invalid_console_filter_regex", regex));
 			}
 		}
 

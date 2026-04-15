@@ -15,6 +15,15 @@ public final class CodeBlockMessageUtils {
 	private CodeBlockMessageUtils() {
 	}
 
+	/**
+	 * Splits a message into multiple Discord code block payloads under the 2000-character limit.
+	 * <p>
+	 * Input text is normalized to LF line endings and backticks are replaced to avoid breaking
+	 * markdown fences.
+	 *
+	 * @param message Source message text.
+	 * @return One or more code block strings safe to send to Discord.
+	 */
 	public static List<String> splitToCodeBlocks(String message) {
 		String normalized = normalize(message);
 		if (normalized.isEmpty()) {

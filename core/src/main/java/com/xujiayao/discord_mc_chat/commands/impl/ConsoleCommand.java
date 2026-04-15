@@ -42,6 +42,12 @@ public final class ConsoleCommand implements Command {
 	private static final Map<String, CompletableFuture<CommandPackets.Console.ResponsePacket>> pendingRequests = new ConcurrentHashMap<>();
 
 	/**
+	 * Creates a console command instance.
+	 */
+	public ConsoleCommand() {
+	}
+
+	/**
 	 * Completes a pending console request with the given response.
 	 *
 	 * @param requestId The request ID

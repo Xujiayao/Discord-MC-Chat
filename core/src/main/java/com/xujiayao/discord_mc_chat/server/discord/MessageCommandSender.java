@@ -12,6 +12,12 @@ public final class MessageCommandSender implements CommandSender {
 	private final MessageReceivedEvent event;
 	private final int opLevel;
 
+	/**
+	 * Creates a command sender wrapper for a Discord message event.
+	 *
+	 * @param event   Source Discord message event.
+	 * @param opLevel Resolved DMCC OP level for command authorization.
+	 */
 	public MessageCommandSender(MessageReceivedEvent event, int opLevel) {
 		this.event = event;
 		this.opLevel = opLevel;

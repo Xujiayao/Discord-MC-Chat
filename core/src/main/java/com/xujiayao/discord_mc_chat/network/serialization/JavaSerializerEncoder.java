@@ -16,6 +16,12 @@ import java.io.Serializable;
  */
 public class JavaSerializerEncoder extends MessageToByteEncoder<Serializable> {
 
+	/**
+	 * Creates a Java object encoder.
+	 */
+	public JavaSerializerEncoder() {
+	}
+
 	@Override
 	protected void encode(ChannelHandlerContext ctx, Serializable msg, ByteBuf out) throws Exception {
 		// Use ObjectOutputStream to serialize the object into the ByteBuf

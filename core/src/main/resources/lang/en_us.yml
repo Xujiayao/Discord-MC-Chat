@@ -183,6 +183,7 @@ discord:
     channel_cannot_talk: "Cannot send messages in Discord text channel: \"{}\""
     insufficient_permission: "Discord bot has insufficient permissions in channel {}: \"{}\""
     broadcast_failed: "Failed to broadcast message to Discord channel. Reason: {}"
+    invalid_console_filter_regex: "Invalid console forwarding filter regex: {}"
   command:
     reply_failed: "Failed to send reply message to Discord command sender."
     reply_failed_detail: "This is expected behavior for reload/shutdown commands."
@@ -243,6 +244,8 @@ client:
     reconnect_failed: "Reconnection failed. Retrying in {} seconds."
     send_while_disconnected: "Attempted to send packet while disconnected: {}"
     unexpected_packet: "Ignored unexpected packet from DMCC Server: {}"
+  console_log_tailer:
+    poll_failed: "Console log tailer polling failed: {}"
 
 utils:
   config:

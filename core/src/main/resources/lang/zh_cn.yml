@@ -182,6 +182,7 @@ discord:
     channel_cannot_talk: "无法在 Discord 文字频道中发送消息：\"{}\""
     insufficient_permission: "Discord 机器人在频道 {} 中权限不足：\"{}\""
     broadcast_failed: "无法将消息广播到 Discord 频道。原因：{}"
+    invalid_console_filter_regex: "无效的控制台转发过滤器正则表达式：{}"
   command:
     reply_failed: "无法向 Discord 命令发送者发送回复消息。"
     reply_failed_detail: "对于 reload/shutdown 命令，这是预期的行为。"
@@ -242,6 +243,8 @@ client:
     reconnect_failed: "重连失败。将在 {} 秒后重试。"
     send_while_disconnected: "尝试在断开连接时发送数据包：{}"
     unexpected_packet: "已忽略来自 DMCC 服务端的意外数据包：{}"
+  console_log_tailer:
+    poll_failed: "控制台日志转发轮询失败：{}"
 
 utils:
   config:

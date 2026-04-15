@@ -2,6 +2,7 @@ package com.xujiayao.discord_mc_chat.client;
 
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.EventPackets.ConsoleLogBatchPacket;
+import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -100,7 +101,7 @@ final class ConsoleLogTailer {
 
 			sendBatches(lines);
 		} catch (Exception e) {
-			LOGGER.warn("Console log tailer polling failed: {}", e.getMessage());
+			LOGGER.warn(I18nManager.getDmccTranslation("client.console_log_tailer.poll_failed", e.getMessage()));
 			closeReader();
 		}
 	}

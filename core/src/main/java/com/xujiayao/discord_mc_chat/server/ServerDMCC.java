@@ -22,6 +22,13 @@ public final class ServerDMCC {
 	private NettyServer nettyServer;
 	private int port;
 
+	/**
+	 * Creates a server-side DMCC lifecycle manager.
+	 *
+	 * @param host         Bind host.
+	 * @param port         Bind port (0 for ephemeral).
+	 * @param sharedSecret Shared secret for client authentication.
+	 */
 	public ServerDMCC(String host, int port, String sharedSecret) {
 		this.host = host;
 		this.port = port;
@@ -62,6 +69,9 @@ public final class ServerDMCC {
 		}
 	}
 
+	/**
+	 * Stops server networking and dependent server-side services.
+	 */
 	public void shutdown() {
 		if (nettyServer != null) {
 			nettyServer.stop();

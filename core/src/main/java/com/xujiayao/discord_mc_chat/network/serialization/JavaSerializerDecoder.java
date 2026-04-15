@@ -16,6 +16,12 @@ import java.util.List;
  */
 public class JavaSerializerDecoder extends ByteToMessageDecoder {
 
+	/**
+	 * Creates a Java object decoder.
+	 */
+	public JavaSerializerDecoder() {
+	}
+
 	@Override
 	protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
 		// Use ObjectInputStream to deserialize the object from the ByteBuf

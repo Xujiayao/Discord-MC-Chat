@@ -18,6 +18,12 @@ import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
  */
 public final class UnlinkCommand implements Command {
 
+	/**
+	 * Creates an unlink command instance.
+	 */
+	public UnlinkCommand() {
+	}
+
 	@Override
 	public String name() {
 		return "unlink";

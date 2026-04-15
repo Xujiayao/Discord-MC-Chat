@@ -32,6 +32,9 @@ public final class ServiceProvider implements SLF4JServiceProvider {
 	private final MDCAdapter mdcAdapter;
 	private ILoggerFactory loggerFactory;
 
+	/**
+	 * Creates an SLF4J service provider instance.
+	 */
 	public ServiceProvider() {
 		markerFactory = new BasicMarkerFactory();
 		mdcAdapter = new NOPMDCAdapter();

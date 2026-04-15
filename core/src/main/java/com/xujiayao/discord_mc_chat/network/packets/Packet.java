@@ -11,4 +11,10 @@ import java.io.Serializable;
 public abstract class Packet implements Serializable {
 	@Serial
 	private static final long serialVersionUID = 1L;
+
+	/**
+	 * Creates a packet base instance.
+	 */
+	protected Packet() {
+	}
 }

@@ -23,10 +23,26 @@ public final class StatsCommand implements Command {
 
 	private static StatsProvider provider;
 
+	/**
+	 * Creates a stats command instance.
+	 */
+	public StatsCommand() {
+	}
+
+	/**
+	 * Gets the currently registered stats provider.
+	 *
+	 * @return Current stats provider, or {@code null} when Minecraft is not ready.
+	 */
 	public static StatsProvider getProvider() {
 		return provider;
 	}
 
+	/**
+	 * Registers the stats provider implementation.
+	 *
+	 * @param provider Stats provider implementation.
+	 */
 	public static void setProvider(StatsProvider provider) {
 		StatsCommand.provider = provider;
 	}
@@ -150,15 +166,43 @@ public final class StatsCommand implements Command {
 		sender.reply(sb.toString());
 	}
 
+	/**
+	 * Abstraction for reading Minecraft statistics from runtime/storage.
+	 */
 	public interface StatsProvider {
+		/**
+		 * Flushes in-memory stats to disk before reading.
+		 */
 		void saveAll();
 
+		/**
+		 * Gets the stats directory path.
+		 *
+		 * @return Stats directory path.
+		 */
 		Path getStatsDirectory();
 
+		/**
+		 * Resolves a player name from UUID.
+		 *
+		 * @param uuid Player UUID.
+		 * @return Player name, or {@code null} if unknown.
+		 */
 		String getPlayerName(UUID uuid);
 
+		/**
+		 * Gets available stat categories/types.
+		 *
+		 * @return Available stat type identifiers.
+		 */
 		List<String> getStatTypes();
 
+		/**
+		 * Gets available stat names for a category/type.
+		 *
+		 * @param type Stat category/type.
+		 * @return Available stat names within the category.
+		 */
 		List<String> getStatNames(String type);
 	}
 }

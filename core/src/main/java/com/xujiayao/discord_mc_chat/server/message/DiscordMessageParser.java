@@ -803,6 +803,9 @@ public final class DiscordMessageParser {
 	/**
 	 * Replaces Discord timestamp tokens (e.g. {@code <t:1234567890:R>}) with
 	 * localized, human-readable text used by the message parser.
+	 *
+	 * @param text Source text that may contain Discord timestamp tokens.
+	 * @return Text with Discord timestamp tokens replaced by human-readable values.
 	 */
 	public static String formatDiscordTimestampsForPlainText(String text) {
 		if (text == null || text.isEmpty()) {

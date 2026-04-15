@@ -100,6 +100,9 @@ public interface Command {
 	 */
 	void execute(CommandSender sender, String... args);
 
+	/**
+	 * Describes a single command argument displayed in help and usage text.
+	 */
 	interface CommandArgument {
 		/**
 		 * Gets the name of the argument.

@@ -22,6 +22,12 @@ import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
  */
 public final class LinkCommand implements Command {
 
+	/**
+	 * Creates a link command instance.
+	 */
+	public LinkCommand() {
+	}
+
 	@Override
 	public String name() {
 		return "link";

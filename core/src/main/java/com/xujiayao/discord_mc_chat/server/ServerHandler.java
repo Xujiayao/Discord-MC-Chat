@@ -11,8 +11,8 @@ import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.DisconnectPacket
 import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.HandshakePacket;
 import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.LoginSuccessPacket;
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
-import com.xujiayao.discord_mc_chat.network.packets.EventPackets.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.network.packets.EventPackets.ConsoleLogBatchPacket;
+import com.xujiayao.discord_mc_chat.network.packets.EventPackets.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.network.packets.EventPackets.MinecraftRelayPacket;
 import com.xujiayao.discord_mc_chat.network.packets.MiscPackets.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.MiscPackets.LatencyPingPacket;

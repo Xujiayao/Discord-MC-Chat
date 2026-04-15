@@ -25,6 +25,8 @@ public final class MinecraftEvents {
 
 	/**
 	 * Posted when the server is started.
+	 *
+	 * @param minecraftServer The running Minecraft server instance.
 	 */
 	public record ServerStarted(
 			MinecraftServer minecraftServer
@@ -45,6 +47,10 @@ public final class MinecraftEvents {
 
 	/**
 	 * Posted when a player joins the server.
+	 *
+	 * @param connection           The low-level network connection.
+	 * @param serverPlayer         The joining player.
+	 * @param commonListenerCookie Login metadata captured during handshake.
 	 */
 	public record PlayerJoin(
 			Connection connection,
@@ -55,6 +61,8 @@ public final class MinecraftEvents {
 
 	/**
 	 * Posted when a player leaves the server.
+	 *
+	 * @param serverPlayer The leaving player.
 	 */
 	public record PlayerQuit(
 			ServerPlayer serverPlayer
@@ -63,6 +71,9 @@ public final class MinecraftEvents {
 
 	/**
 	 * Posted when a player sends a chat message.
+	 *
+	 * @param playerChatMessage The signed chat message payload.
+	 * @param serverPlayer      The speaking player.
 	 */
 	public record PlayerChat(
 			PlayerChatMessage playerChatMessage,
@@ -72,6 +83,9 @@ public final class MinecraftEvents {
 
 	/**
 	 * Posted when a player executes a command.
+	 *
+	 * @param command      The raw command string.
+	 * @param serverPlayer The player executing the command.
 	 */
 	public record PlayerCommand(
 			String command,
@@ -81,6 +95,8 @@ public final class MinecraftEvents {
 
 	/**
 	 * Posted when a player dies.
+	 *
+	 * @param serverPlayer The player who died.
 	 */
 	public record PlayerDie(
 			ServerPlayer serverPlayer
@@ -89,6 +105,11 @@ public final class MinecraftEvents {
 
 	/**
 	 * Posted when a player makes an advancement.
+	 *
+	 * @param advancementHolder   The advancement definition.
+	 * @param string              The advancement key or display text supplied by hook source.
+	 * @param serverPlayer        The player who made progress.
+	 * @param advancementProgress The advancement progress state.
 	 */
 	public record PlayerAdvancement(
 			AdvancementHolder advancementHolder,
@@ -100,6 +121,9 @@ public final class MinecraftEvents {
 
 	/**
 	 * Posted when a player changes game mode.
+	 *
+	 * @param gameType     The new game mode.
+	 * @param serverPlayer The affected player.
 	 */
 	public record PlayerChangeGameMode(
 			GameType gameType,
@@ -109,6 +133,9 @@ public final class MinecraftEvents {
 
 	/**
 	 * Posted when the /say command is used.
+	 *
+	 * @param commandContext    The Brigadier command context.
+	 * @param playerChatMessage The parsed chat message argument.
 	 */
 	public record SourceSay(
 			CommandContext<CommandSourceStack> commandContext,
@@ -118,6 +145,9 @@ public final class MinecraftEvents {
 
 	/**
 	 * Posted when the /tellraw command is used.
+	 *
+	 * @param commandContext The Brigadier command context.
+	 * @param component      The resolved tellraw component.
 	 */
 	public record SourceTellRaw(
 			CommandContext<CommandSourceStack> commandContext,
@@ -127,6 +157,9 @@ public final class MinecraftEvents {
 
 	/**
 	 * Posted when the /msg, /tell, /w command is used.
+	 *
+	 * @param commandContext    The Brigadier command context.
+	 * @param playerChatMessage The parsed private message payload.
 	 */
 	public record SourceMsg(
 			CommandContext<CommandSourceStack> commandContext,
@@ -136,6 +169,9 @@ public final class MinecraftEvents {
 
 	/**
 	 * Posted when the /me command is used.
+	 *
+	 * @param commandContext    The Brigadier command context.
+	 * @param playerChatMessage The parsed emote message payload.
 	 */
 	public record SourceMe(
 			CommandContext<CommandSourceStack> commandContext,
@@ -145,6 +181,8 @@ public final class MinecraftEvents {
 
 	/**
 	 * Posted when commands are being registered.
+	 *
+	 * @param dispatcher The command dispatcher to register into.
 	 */
 	public record CommandRegister(
 			CommandDispatcher<CommandSourceStack> dispatcher

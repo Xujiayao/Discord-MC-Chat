@@ -6,5 +6,8 @@ package com.xujiayao.discord_mc_chat.minecraft;
  * @author Xujiayao
  */
 public final class FabricDMCC {
+	private FabricDMCC() {
+	}
+
 	// TODO Fabric support will be added in the future.
 }

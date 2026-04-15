@@ -117,6 +117,7 @@ public final class CoreEvents {
 	 * @param mentionNotificationText  The mention notification text (may be null).
 	 * @param mentionNotificationStyle The notification style: "action_bar", "title", or "chat".
 	 * @param mentionedPlayerUuids     UUIDs of players who should receive mention notifications.
+	 * @param mentionEveryone          Whether @everyone should be treated as a global mention in Minecraft.
 	 */
 	public record DiscordChatMessageEvent(
 			List<TextSegment> segments,
@@ -188,6 +189,7 @@ public final class CoreEvents {
 	 * @param mentionNotificationText  Mention notification text, or null.
 	 * @param mentionNotificationStyle Mention notification style.
 	 * @param mentionedPlayerUuids     UUIDs to receive mention notifications.
+	 * @param mentionEveryone          Whether @everyone should be treated as a global mention in Minecraft.
 	 */
 	public record MinecraftRelayMessageEvent(
 			List<TextSegment> segments,

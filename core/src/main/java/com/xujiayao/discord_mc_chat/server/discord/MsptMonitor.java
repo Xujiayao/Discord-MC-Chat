@@ -216,6 +216,9 @@ public final class MsptMonitor {
 		return Math.min(seconds, MAX_BACKOFF_SECONDS);
 	}
 
+	/**
+	 * Stops MSPT monitoring and releases scheduler resources.
+	 */
 	public static void shutdown() {
 		synchronized (MsptMonitor.class) {
 			if (monitorTask != null) {

@@ -32,6 +32,12 @@ public final class ExecuteCommand implements Command {
 	private static final Map<String, CompletableFuture<CommandPackets.Execute.ResponsePacket>> pendingRequests = new ConcurrentHashMap<>();
 
 	/**
+	 * Creates an execute command instance.
+	 */
+	public ExecuteCommand() {
+	}
+
+	/**
 	 * Completes a pending execute request with the given response.
 	 *
 	 * @param requestId The request ID

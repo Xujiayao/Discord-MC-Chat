@@ -28,6 +28,12 @@ public final class InfoCommand implements Command {
 
 	private static final int INFO_REQUEST_TIMEOUT_SECONDS = 3;
 
+	/**
+	 * Creates an info command instance.
+	 */
+	public InfoCommand() {
+	}
+
 	private static String buildServerPart(Map<String, ResponsePacket> infoSnapshot) {
 		int onlineClients = infoSnapshot.size();
 		int totalClients = getConfiguredClientCount();

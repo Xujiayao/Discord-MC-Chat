@@ -92,6 +92,12 @@ public final class TerminalManager {
 	 */
 	public static class TerminalCommandSender implements LocalCommandSender {
 
+		/**
+		 * Creates a terminal command sender.
+		 */
+		public TerminalCommandSender() {
+		}
+
 		@Override
 		public void reply(String message) {
 			// For each line in the message, send a separate log message

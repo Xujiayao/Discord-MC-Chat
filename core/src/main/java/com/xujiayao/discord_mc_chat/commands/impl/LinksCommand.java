@@ -26,6 +26,12 @@ public final class LinksCommand implements Command {
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 			.withZone(ZoneId.systemDefault());
 
+	/**
+	 * Creates a links command instance.
+	 */
+	public LinksCommand() {
+	}
+
 	@Override
 	public String name() {
 		return "links";

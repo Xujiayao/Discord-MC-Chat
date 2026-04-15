@@ -15,6 +15,12 @@ import static com.xujiayao.discord_mc_chat.standalone.StandaloneDMCC.SHUTDOWN_TH
  */
 public final class ShutdownCommand implements Command {
 
+	/**
+	 * Creates a shutdown command instance.
+	 */
+	public ShutdownCommand() {
+	}
+
 	@Override
 	public String name() {
 		return "shutdown";

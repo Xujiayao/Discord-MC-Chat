@@ -10,6 +10,9 @@ import com.xujiayao.discord_mc_chat.utils.logging.impl.LoggerImpl;
  */
 public final class StandaloneDMCC {
 
+	/**
+	 * Standalone shutdown hook thread that stops DMCC and logging.
+	 */
 	public static final Thread SHUTDOWN_THREAD = new Thread(() -> {
 		DMCC.shutdown();
 

@@ -96,6 +96,12 @@ public final class TextSegment implements Serializable {
 		this.color = color;
 	}
 
+	/**
+	 * Concatenates segment text into plain text.
+	 *
+	 * @param segments Source segments.
+	 * @return Concatenated plain text.
+	 */
 	public static String toPlainText(List<TextSegment> segments) {
 		if (segments == null || segments.isEmpty()) {
 			return "";
