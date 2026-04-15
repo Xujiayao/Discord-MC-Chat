@@ -380,16 +380,6 @@ public final class NetworkManager {
 		);
 	}
 
-	/**
-	 * Shared implementation for requesting auto-complete suggestions from all connected clients.
-	 * Broadcasts the request packet, waits for all clients to respond (or timeout), then returns a snapshot.
-	 *
-	 * @param cache          The cache map to populate with responses
-	 * @param requestPacket  The packet to broadcast to clients
-	 * @param timeoutSeconds The maximum wait time in seconds
-	 * @param executeRequest Whether this request is for execute-command auto-complete
-	 * @return A snapshot of the collected suggestions, keyed by client name
-	 */
 	private static Map<String, List<String>> requestAutoCompleteSnapshot(Map<String, List<String>> cache,
 	                                                                     Packet requestPacket,
 	                                                                     int timeoutSeconds,

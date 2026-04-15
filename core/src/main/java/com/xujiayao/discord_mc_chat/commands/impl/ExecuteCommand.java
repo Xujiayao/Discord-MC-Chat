@@ -198,12 +198,6 @@ public final class ExecuteCommand implements Command {
 		}
 	}
 
-	/**
-	 * Checks if the target server name is valid according to the configuration.
-	 *
-	 * @param target The target server name.
-	 * @return true if valid, false otherwise.
-	 */
 	private boolean isValidTarget(String target) {
 		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
 		if (serversNode.isArray()) {

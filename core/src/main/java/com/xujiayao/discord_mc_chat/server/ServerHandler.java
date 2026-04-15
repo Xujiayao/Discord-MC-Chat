@@ -60,13 +60,6 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		this.server = server;
 	}
 
-	/**
-	 * Populates mention-notification fields on a relay packet.
-	 *
-	 * @param packet      The packet to populate.
-	 * @param displayName The display name of the originating player.
-	 * @param parsed      The parsed message containing mention data.
-	 */
 	private static void applyMentionNotification(MinecraftRelayPacket packet, String displayName, MinecraftMessageParser.ParsedMessage parsed) {
 		packet.mentionNotificationText = MinecraftMessageParser.getMentionNotificationText(displayName);
 		packet.mentionNotificationStyle = ConfigManager.getString("account_linking.mention_notifications.style", "title");
@@ -267,12 +260,6 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		ctx.close();
 	}
 
-	/**
-	 * Finds the configuration node for the given server name from the multi-server servers list.
-	 *
-	 * @param serverName The server name to look up.
-	 * @return The matching JsonNode, or null if not found.
-	 */
 	private JsonNode findServerConfig(String serverName) {
 		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
 		if (serversNode.isArray()) {
@@ -285,22 +272,10 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		return null;
 	}
 
-	/**
-	 * Checks if the given server name is whitelisted in the configuration.
-	 *
-	 * @param serverName The server name to check.
-	 * @return true if whitelisted, false otherwise.
-	 */
 	private boolean isWhitelisted(String serverName) {
 		return findServerConfig(serverName) != null;
 	}
 
-	/**
-	 * Gets the expected Minecraft version for a given server name from the configuration.
-	 *
-	 * @param serverName The server name to look up.
-	 * @return The expected Minecraft version, or an empty string if not found.
-	 */
 	private String getMinecraftVersion(String serverName) {
 		JsonNode config = findServerConfig(serverName);
 		return config != null ? config.path("minecraft_version").asText() : "";

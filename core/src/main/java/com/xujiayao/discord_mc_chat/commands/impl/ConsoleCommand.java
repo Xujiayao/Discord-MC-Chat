@@ -136,13 +136,6 @@ public final class ConsoleCommand implements Command {
 		}
 	}
 
-	/**
-	 * Executes a Minecraft command on the local server (single_server mode).
-	 * Dispatches via CoreEvents.MinecraftCommandExecutionEvent with callback-based completion.
-	 *
-	 * @param sender The command sender.
-	 * @param args   args[0] = command (may contain spaces from acceptsExtraArgs).
-	 */
 	private void executeLocal(CommandSender sender, String[] args) {
 		// Rebuild the full command line from all args
 		String commandLine = String.join(" ", args);
@@ -170,13 +163,6 @@ public final class ConsoleCommand implements Command {
 		}
 	}
 
-	/**
-	 * Executes a Minecraft command on a remote client (standalone mode).
-	 * Routes via Netty RequestPacket.
-	 *
-	 * @param sender The command sender.
-	 * @param args   args[0] = at, args[1...] = command.
-	 */
 	private void executeStandalone(CommandSender sender, String[] args) {
 		String target = args[0];
 		// Rebuild the command from remaining args
@@ -281,12 +267,6 @@ public final class ConsoleCommand implements Command {
 	}
 
 
-	/**
-	 * Checks if the target server name is valid according to the configuration.
-	 *
-	 * @param target The target server name.
-	 * @return true if valid, false otherwise.
-	 */
 	private boolean isValidTarget(String target) {
 		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
 		if (serversNode.isArray()) {

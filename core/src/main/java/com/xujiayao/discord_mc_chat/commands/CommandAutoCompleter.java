@@ -288,13 +288,6 @@ public final class CommandAutoCompleter {
 		return suggestions;
 	}
 
-	/**
-	 * Adds a command's signature to the suggestions list if the sender is authorized to use it.
-	 *
-	 * @param cmd         The command to check and add.
-	 * @param opLevel     The sender's OP level.
-	 * @param suggestions The list to append to.
-	 */
 	private static void addCommandIfAuthorized(Command cmd, int opLevel, List<String> suggestions) {
 		if (!cmd.isAutoCompletable()) {
 			return;

@@ -61,9 +61,6 @@ public final class UnlinkCommand implements Command {
 		}
 	}
 
-	/**
-	 * Minecraft-side unlink: removes the executing player's link.
-	 */
 	private void executeMcUnlink(CommandSender sender, LinkCommand.PlayerContextProvider player) {
 		String uuid = player.getPlayerUuid();
 		String name = player.getPlayerName();
@@ -80,9 +77,6 @@ public final class UnlinkCommand implements Command {
 		}
 	}
 
-	/**
-	 * Discord-side unlink: removes all links for the Discord user.
-	 */
 	private void executeDiscordUnlink(CommandSender sender, LinkCommand.DiscordUserContextProvider discord) {
 		String discordId = discord.getDiscordUserId();
 		String discordName = discord.getDiscordUserName();

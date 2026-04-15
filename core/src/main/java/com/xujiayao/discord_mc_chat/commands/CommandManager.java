@@ -94,7 +94,7 @@ public final class CommandManager {
 	 *
 	 * @param command The command to register
 	 */
-	public static void register(Command command) {
+	private static void register(Command command) {
 		COMMANDS.put(command.name().toLowerCase(), command);
 	}
 
@@ -151,16 +151,6 @@ public final class CommandManager {
 		return future;
 	}
 
-	/**
-	 * Internal command execution logic.
-	 * <p>
-	 * Performs edge authorization by comparing the sender's OP level against
-	 * the required permission level from the local config before execution.
-	 *
-	 * @param sender The command sender
-	 * @param name   The command name
-	 * @param args   The command arguments
-	 */
 	private static void executeInternal(CommandSender sender, String name, String... args) {
 		Command command = COMMANDS.get(name);
 		if (command == null) {

@@ -94,9 +94,6 @@ public final class LinkCommand implements Command {
 		}
 	}
 
-	/**
-	 * Minecraft-side link: generates or refreshes a verification code.
-	 */
 	private void executeMcLink(CommandSender sender) {
 		if (!(sender instanceof PlayerContextProvider player)) {
 			sender.reply(I18nManager.getDmccTranslation("commands.link.player_only"));
@@ -118,9 +115,6 @@ public final class LinkCommand implements Command {
 		}
 	}
 
-	/**
-	 * Discord-side link: validates the code and creates the account link.
-	 */
 	private void executeDiscordLink(CommandSender sender, String code) {
 		if (!(sender instanceof DiscordUserContextProvider discord)) {
 			sender.reply(I18nManager.getDmccTranslation("commands.link.discord_only"));
