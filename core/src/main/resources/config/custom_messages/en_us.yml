@@ -181,3 +181,11 @@ mspt_monitoring:
   first_exceeded: ":warning: **Server MSPT ({mspt}) is over the threshold ({threshold})! Next check in <t:{next_check_time}:R>."
   still_exceeded: ":warning: **Server MSPT ({mspt}) is over the threshold ({threshold})! Next check in <t:{next_check_time}:R>."
   first_recovered: ":white_check_mark: **Server MSPT ({mspt}) is back below the threshold ({threshold})!"
+
+console_forwarding:
+  started:
+    standalone: ":white_check_mark: :satellite: **Started forwarding console logs from {server}!**"
+    single_server: ":white_check_mark: :satellite: **Started forwarding console logs!**"
+  stopped:
+    standalone: ":octagonal_sign: :satellite: **Stopped forwarding console logs from {server}!**"
+    single_server: ":octagonal_sign: :satellite: **Stopped forwarding console logs!**"

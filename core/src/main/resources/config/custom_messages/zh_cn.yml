@@ -180,3 +180,11 @@ mspt_monitoring:
   first_exceeded: ":warning: **服务器 MSPT ({mspt}) 超过阈值 ({threshold})！下次检查将在 <t:{next_check_time}:R> 进行。**"
   still_exceeded: ":warning: **服务器 MSPT ({mspt}) 仍超过阈值 ({threshold})！下次检查将在 <t:{next_check_time}:R> 进行。**"
   first_recovered: ":white_check_mark: **服务器 MSPT ({mspt}) 已恢复到阈值 ({threshold}) 以下！**"
+
+console_forwarding:
+  started:
+    standalone: ":white_check_mark: :satellite: **已开始转发来自 {server} 的控制台日志！**"
+    single_server: ":white_check_mark: :satellite: **已开始转发控制台日志！**"
+  stopped:
+    standalone: ":octagonal_sign: :satellite: **已停止转发来自 {server} 的控制台日志！**"
+    single_server: ":octagonal_sign: :satellite: **已停止转发控制台日志！**"

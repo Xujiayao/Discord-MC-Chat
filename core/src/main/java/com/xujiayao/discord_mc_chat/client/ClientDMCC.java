@@ -6,6 +6,7 @@ import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
@@ -15,6 +16,7 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  * @author Xujiayao
  */
 public final class ClientDMCC {
+	private static final AtomicBoolean PRESERVE_LOG_TAILER_ON_NEXT_SHUTDOWN = new AtomicBoolean(false);
 
 	private final String host;
 	private final int port;
@@ -35,6 +37,13 @@ public final class ClientDMCC {
 		this.port = port;
 		this.serverName = serverName;
 		this.sharedSecret = sharedSecret;
+	}
+
+	/**
+	 * Requests keeping the log tailer alive for the next client shutdown.
+	 */
+	public static void preserveLogTailerOnNextShutdown() {
+		PRESERVE_LOG_TAILER_ON_NEXT_SHUTDOWN.set(true);
 	}
 
 	/**
@@ -63,7 +72,10 @@ public final class ClientDMCC {
 	 * Stops client networking and console log tailing.
 	 */
 	public void shutdown() {
-		ConsoleLogTailer.stop();
+		boolean preserveLogTailerState = PRESERVE_LOG_TAILER_ON_NEXT_SHUTDOWN.getAndSet(false);
+		if (!preserveLogTailerState) {
+			ConsoleLogTailer.stop();
+		}
 		if (nettyClient != null) {
 			nettyClient.stop();
 		}

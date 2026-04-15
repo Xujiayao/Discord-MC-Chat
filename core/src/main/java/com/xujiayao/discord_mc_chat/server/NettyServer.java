@@ -86,11 +86,21 @@ final class NettyServer {
 	}
 
 	void stop() {
+		io.netty.util.concurrent.Future<?> workerFuture = null;
+		io.netty.util.concurrent.Future<?> bossFuture = null;
+
 		if (workerGroup != null) {
-			workerGroup.shutdownGracefully();
+			workerFuture = workerGroup.shutdownGracefully();
 		}
 		if (bossGroup != null) {
-			bossGroup.shutdownGracefully();
+			bossFuture = bossGroup.shutdownGracefully();
+		}
+
+		if (workerFuture != null) {
+			workerFuture.awaitUninterruptibly();
+		}
+		if (bossFuture != null) {
+			bossFuture.awaitUninterruptibly();
 		}
 	}
 }

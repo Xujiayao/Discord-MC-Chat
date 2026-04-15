@@ -165,12 +165,19 @@ public final class DMCC {
 	 * @return true if shutdown is successful, false otherwise
 	 */
 	public static boolean shutdown() {
+		return shutdownInternal(false);
+	}
+
+	private static boolean shutdownInternal(boolean forReload) {
 		try (ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Shutdown"))) {
 			return executor.submit(() -> {
 				// Clear the network manager references first
 				NetworkManager.clear();
 
 				if (clientInstance != null) {
+					if (forReload) {
+						ClientDMCC.preserveLogTailerOnNextShutdown();
+					}
 					clientInstance.shutdown();
 					clientInstance = null;
 				}
@@ -214,6 +221,6 @@ public final class DMCC {
 	 * @return true if reload is successful, false otherwise
 	 */
 	public static boolean reload() {
-		return shutdown() && init();
+		return shutdownInternal(true) && init();
 	}
 }

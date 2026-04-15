@@ -38,6 +38,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -469,6 +470,48 @@ public final class DiscordManager {
 	}
 
 	/**
+	 * Sends a localized reminder message when console forwarding starts/stops.
+	 *
+	 * @param clientName DMCC client/server name.
+	 * @param started    true when forwarding starts; false when it stops.
+	 */
+	public static void sendConsoleForwardingStatusMessage(String clientName, boolean started) {
+		if (!ConfigManager.getBoolean("console_forwarding.enable")) {
+			return;
+		}
+		if (jda == null || jda.getStatus() == JDA.Status.SHUTTING_DOWN || jda.getStatus() == JDA.Status.SHUTDOWN) {
+			return;
+		}
+
+		String channelIdentifier = resolveConsoleChannel(clientName);
+		if (channelIdentifier == null || channelIdentifier.isBlank()) {
+			return;
+		}
+
+		TextChannel channel = getTextChannel(channelIdentifier);
+		if (channel == null) {
+			return;
+		}
+
+		String message = buildConsoleForwardingStatusMessage(started ? "started" : "stopped", clientName);
+		if (message.isBlank()) {
+			return;
+		}
+
+		try {
+			if ("standalone".equals(ModeManager.getMode())) {
+				sendWebhookMessageSync(channel, clientName, getClientAvatarUrl(clientName), message);
+			} else {
+				sendBotMessageSync(channelIdentifier, message);
+			}
+		} catch (RejectedExecutionException ignored) {
+			// JDA may reject tasks during shutdown races; ignore to avoid noisy stack traces.
+		} catch (Exception e) {
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
+		}
+	}
+
+	/**
 	 * Resolves which server should run /console when a message is sent in a console forwarding channel.
 	 *
 	 * @param channelId   Discord channel ID.
@@ -514,6 +557,26 @@ public final class DiscordManager {
 		}
 
 		return ConfigManager.getString("console_forwarding.channel", "");
+	}
+
+	private static String buildConsoleForwardingStatusMessage(String key, String clientName) {
+		JsonNode customMessages = I18nManager.getCustomMessages();
+		if (customMessages == null) {
+			return "";
+		}
+
+		JsonNode statusNode = customMessages.path("console_forwarding").path(key);
+		if (statusNode.isMissingNode() || statusNode.isNull()) {
+			return "";
+		}
+
+		String mode = "standalone".equals(ModeManager.getMode()) ? "standalone" : "single_server";
+		String template = statusNode.path(mode).asText(statusNode.asText(""));
+		if (template.isBlank()) {
+			return "";
+		}
+
+		return template.replace("{server}", clientName == null ? "" : clientName);
 	}
 
 	private static boolean matchesChannelIdentifier(String configuredChannel, String channelId, String channelName) {
@@ -662,6 +725,15 @@ public final class DiscordManager {
 		}
 	}
 
+	private static void sendBotMessageSync(String channelIdentifier, String content) {
+		TextChannel channel = getTextChannel(channelIdentifier);
+		if (channel != null) {
+			channel.sendMessage(content)
+					.setAllowedMentions(getAllowedMentions())
+					.complete();
+		}
+	}
+
 	/**
 	 * Sends a message using a Discord webhook. Uses allowed_mention specified in config.
 	 *
@@ -679,6 +751,16 @@ public final class DiscordManager {
 				.setAvatarUrl(avatarUrl)
 				.setAllowedMentions(getAllowedMentions())
 				.queue();
+	}
+
+	private static void sendWebhookMessageSync(TextChannel channel, String username, String avatarUrl, String content) {
+		Webhook webhook = getOrCreateWebhook(channel);
+
+		webhook.sendMessage(content)
+				.setUsername(username)
+				.setAvatarUrl(avatarUrl)
+				.setAllowedMentions(getAllowedMentions())
+				.complete();
 	}
 
 	/**
@@ -911,6 +993,10 @@ public final class DiscordManager {
 	 * @return The TextChannel if found, null otherwise.
 	 */
 	private static TextChannel getTextChannel(String identifier) {
+		if (jda == null || jda.getStatus() == JDA.Status.SHUTTING_DOWN || jda.getStatus() == JDA.Status.SHUTDOWN) {
+			return null;
+		}
+
 		TextChannel tc;
 
 		// Try search by name

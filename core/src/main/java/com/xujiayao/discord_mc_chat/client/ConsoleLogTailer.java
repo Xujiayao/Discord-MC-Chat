@@ -4,10 +4,12 @@ import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.EventPackets.ConsoleLogBatchPacket;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
-import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -18,43 +20,49 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
 /**
- * Tails logs/latest.log on the client and forwards appended lines in batches.
+ * Tails logs/latest.log on the client and forwards lines in batches.
+ *
+ * <p>Design notes:
+ * - The listener stays alive across network reconnects.
+ * - New lines are buffered while disconnected and flushed after reconnect.
+ * - On first enable, history is replayed from the start of latest.log.
  */
 final class ConsoleLogTailer {
 
 	private static final long POLL_INTERVAL_MS = 1000;
 	private static final int MAX_LINES_PER_BATCH = 80;
 	private static final int MAX_CHARS_PER_BATCH = 6000;
+	private static final Path LATEST_LOG_PATH = Path.of("logs", "latest.log");
 
 	private static final AtomicBoolean ENABLED = new AtomicBoolean(false);
-
+	private static final ArrayDeque<String> pendingLines = new ArrayDeque<>();
 	private static ScheduledExecutorService executor;
-	private static RandomAccessFile reader;
-	private static File currentFile;
+	private static Object currentFileKey;
 	private static long pointer;
 
 	private ConsoleLogTailer() {
 	}
 
 	static synchronized void updateEnabled(boolean enabled) {
+		boolean wasEnabled = ENABLED.getAndSet(enabled);
 		if (enabled) {
-			ENABLED.set(true);
 			startIfNeeded();
-		} else {
-			ENABLED.set(false);
+		} else if (wasEnabled) {
 			stop();
 		}
 	}
 
 	static synchronized void stop() {
-		closeReader();
+		ENABLED.set(false);
+		resetFileTracking(true);
+		pendingLines.clear();
 		if (executor != null) {
 			executor.shutdownNow();
 			executor = null;
 		}
 	}
 
-	private static void startIfNeeded() {
+	private static synchronized void startIfNeeded() {
 		if (executor != null && !executor.isShutdown()) {
 			return;
 		}
@@ -62,109 +70,104 @@ final class ConsoleLogTailer {
 		executor.scheduleWithFixedDelay(ConsoleLogTailer::poll, 0, POLL_INTERVAL_MS, TimeUnit.MILLISECONDS);
 	}
 
-	private static void poll() {
+	private static synchronized void poll() {
 		if (!ENABLED.get()) {
 			return;
 		}
 
 		try {
-			ensureReader();
-			if (reader == null) {
+			if (!Files.exists(LATEST_LOG_PATH)) {
+				// latest.log can be absent briefly during rollover; wait for recreation.
+				resetFileTracking(false);
 				return;
 			}
 
-			if (currentFile == null || !currentFile.exists()) {
-				closeReader();
-				return;
+			Object latestKey = readFileKey();
+			long latestLength = Files.size(LATEST_LOG_PATH);
+
+			boolean replaced = currentFileKey != null && latestKey != null && !currentFileKey.equals(latestKey);
+			boolean truncated = latestLength < pointer;
+			if (replaced || truncated) {
+				pointer = 0;
 			}
 
-			long fileLength = currentFile.length();
-			if (fileLength < pointer) {
-				// latest.log rotated or truncated: reopen and continue from start of new file.
-				reopenReader(false);
-			}
+			readAvailableLinesIntoBuffer();
+			currentFileKey = latestKey;
 
-			if (reader == null) {
-				return;
-			}
-
-			reader.seek(pointer);
-			List<String> lines = new ArrayList<>();
-			String line;
-			while ((line = reader.readLine()) != null) {
-				String utf8 = new String(line.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
-				if (!utf8.isBlank()) {
-					lines.add(utf8);
-				}
-			}
-			pointer = reader.getFilePointer();
-
-			sendBatches(lines);
+			flushPendingBatchesIfConnected();
 		} catch (Exception e) {
 			LOGGER.warn(I18nManager.getDmccTranslation("client.console_log_tailer.poll_failed", e.getMessage()));
-			closeReader();
+			resetFileTracking(false);
 		}
 	}
 
-	private static void ensureReader() {
-		if (reader != null) {
-			return;
-		}
-		reopenReader(true);
-	}
-
-	private static void reopenReader(boolean skipHistory) {
-		closeReader();
-		try {
-			File latestLog = Path.of("logs", "latest.log").toFile();
-			if (!latestLog.exists()) {
-				return;
+	private static void readAvailableLinesIntoBuffer() throws Exception {
+		try (RandomAccessFile localReader = new RandomAccessFile(LATEST_LOG_PATH.toFile(), "r")) {
+			long length = localReader.length();
+			if (pointer > length) {
+				pointer = 0;
 			}
-			currentFile = latestLog;
-			reader = new RandomAccessFile(latestLog, "r");
-			pointer = skipHistory ? latestLog.length() : 0;
-			reader.seek(pointer);
-		} catch (Exception e) {
-			closeReader();
+
+			localReader.seek(pointer);
+			String line;
+			while ((line = localReader.readLine()) != null) {
+				String utf8 = new String(line.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+				if (!utf8.isBlank()) {
+					pendingLines.addLast(normalizeLine(utf8));
+				}
+			}
+			pointer = localReader.getFilePointer();
 		}
 	}
 
-	private static void sendBatches(List<String> lines) {
-		if (lines == null || lines.isEmpty()) {
+	private static void flushPendingBatchesIfConnected() {
+		if (pendingLines.isEmpty() || !isClientConnected()) {
 			return;
 		}
 
-		List<String> batch = new ArrayList<>();
-		int chars = 0;
-		for (String line : lines) {
-			String safeLine = line == null ? "" : line;
-			if (safeLine.length() > MAX_CHARS_PER_BATCH) {
-				safeLine = safeLine.substring(0, MAX_CHARS_PER_BATCH);
+		while (!pendingLines.isEmpty() && isClientConnected()) {
+			List<String> batch = new ArrayList<>();
+			int chars = 0;
+			while (!pendingLines.isEmpty()) {
+				String line = pendingLines.peekFirst();
+				int nextChars = chars + line.length() + 1;
+				if (!batch.isEmpty() && (batch.size() >= MAX_LINES_PER_BATCH || nextChars > MAX_CHARS_PER_BATCH)) {
+					break;
+				}
+				batch.add(pendingLines.removeFirst());
+				chars = nextChars;
 			}
-
-			int nextChars = chars + safeLine.length() + 1;
-			if (!batch.isEmpty() && (batch.size() >= MAX_LINES_PER_BATCH || nextChars > MAX_CHARS_PER_BATCH)) {
+			if (!batch.isEmpty()) {
 				NetworkManager.sendPacketToServer(new ConsoleLogBatchPacket(List.copyOf(batch)));
-				batch.clear();
-				chars = 0;
 			}
-
-			batch.add(safeLine);
-			chars += safeLine.length() + 1;
 		}
-
-		NetworkManager.sendPacketToServer(new ConsoleLogBatchPacket(List.copyOf(batch)));
 	}
 
-	private static void closeReader() {
-		if (reader != null) {
-			try {
-				reader.close();
-			} catch (Exception ignored) {
-			}
+	private static String normalizeLine(String line) {
+		if (line == null) {
+			return "";
 		}
-		reader = null;
-		currentFile = null;
-		pointer = 0;
+		return line.length() > MAX_CHARS_PER_BATCH ? line.substring(0, MAX_CHARS_PER_BATCH) : line;
+	}
+
+	private static boolean isClientConnected() {
+		ClientDMCC client = NetworkManager.getClient();
+		return client != null && client.isConnected();
+	}
+
+	private static Object readFileKey() {
+		try {
+			BasicFileAttributes attributes = Files.readAttributes(LATEST_LOG_PATH, BasicFileAttributes.class);
+			return attributes.fileKey();
+		} catch (Exception ignored) {
+			return null;
+		}
+	}
+
+	private static void resetFileTracking(boolean resetPointer) {
+		currentFileKey = null;
+		if (resetPointer) {
+			pointer = 0;
+		}
 	}
 }

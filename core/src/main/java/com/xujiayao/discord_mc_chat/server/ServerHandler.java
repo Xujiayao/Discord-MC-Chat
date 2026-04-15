@@ -74,8 +74,15 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) {
+		boolean announceConsoleForwardingStop = authenticated
+				&& clientName != null
+				&& isConsoleForwardingEnabledForClient(clientName);
+
 		if (clientName != null) {
 			LOGGER.warn(I18nManager.getDmccTranslation("server.network.client_disconnected_normal", clientName));
+		}
+		if (announceConsoleForwardingStop) {
+			DiscordManager.sendConsoleForwardingStatusMessage(clientName, false);
 		}
 		// Clean up from NetworkManager
 		NetworkManager.removeClientChannel(ctx.channel());
@@ -224,11 +231,15 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 						NetworkManager.addClientChannel(ctx.channel(), clientName);
 
 						LOGGER.info(I18nManager.getDmccTranslation("server.network.auth_success", clientName));
+						boolean consoleForwardingEnabled = isConsoleForwardingEnabledForClient(clientName);
 						ctx.writeAndFlush(new LoginSuccessPacket(
 								ConfigManager.getString("language"),
 								ConfigManager.getBoolean("message_parsing.overwrite_minecraft_source_messages"),
-								isConsoleForwardingEnabledForClient(clientName)
+								consoleForwardingEnabled
 						));
+						if (consoleForwardingEnabled) {
+							DiscordManager.sendConsoleForwardingStatusMessage(clientName, true);
+						}
 						BotPresenceManager.update();
 					} else {
 						String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.auth_failed");

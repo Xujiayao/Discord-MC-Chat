@@ -87,7 +87,6 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) {
-		ConsoleLogTailer.stop();
 		LOGGER.warn(I18nManager.getDmccTranslation("client.network.disconnected_generic"));
 
 		// Trigger reconnection if this was not an intentional stop AND the server didn't explicitly reject us
@@ -298,7 +297,6 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-		ConsoleLogTailer.stop();
 		LOGGER.error(I18nManager.getDmccTranslation("client.network.connect_failed"), cause);
 		if (!initialLoginFuture.isDone()) {
 			initialLoginFuture.complete(false);
