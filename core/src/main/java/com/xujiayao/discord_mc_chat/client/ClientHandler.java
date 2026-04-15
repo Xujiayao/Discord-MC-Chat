@@ -76,7 +76,7 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 				LOGGER.info(plain);
 			}
 		} else if (p.componentJson != null && !p.componentJson.isBlank()) {
-			LOGGER.info("[TellRaw] " + p.componentJson);
+			LOGGER.warn(p.componentJson);
 		}
 	}
 
