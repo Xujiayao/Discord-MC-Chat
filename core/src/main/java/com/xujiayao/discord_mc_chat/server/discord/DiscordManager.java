@@ -528,10 +528,20 @@ public final class DiscordManager {
 			if (!channels.isArray()) {
 				return null;
 			}
-			for (JsonNode node : channels) {
-				String configuredChannel = node.path("channel").asText("");
-				String server = node.path("server").asText("");
-				if (!server.isBlank() && matchesChannelIdentifier(configuredChannel, channelId, channelName)) {
+			for (int i = 0; i < channels.size(); i++) {
+				JsonNode node = channels.get(i);
+				String server = node.path("server").asText("").trim();
+				String configuredChannel = node.path("channel").asText("").trim();
+				String configPath = "console_forwarding.channels[" + i + "]";
+				if (server.isBlank()) {
+					LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_identifier_missing", configPath + ".server"));
+					continue;
+				}
+				if (configuredChannel.isBlank()) {
+					LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_identifier_missing", configPath + ".channel"));
+					continue;
+				}
+				if (matchesChannelIdentifier(configuredChannel, channelId, channelName)) {
 					return server;
 				}
 			}
@@ -539,6 +549,10 @@ public final class DiscordManager {
 		}
 
 		String configured = ConfigManager.getString("console_forwarding.channel", "");
+		if (configured == null || configured.isBlank()) {
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_identifier_missing", "console_forwarding.channel"));
+			return null;
+		}
 		return matchesChannelIdentifier(configured, channelId, channelName) ? "Internal" : null;
 	}
 
@@ -996,16 +1010,35 @@ public final class DiscordManager {
 			return null;
 		}
 
+		if (identifier == null || identifier.isBlank()) {
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_not_found", identifier));
+			return null;
+		}
+
 		TextChannel tc;
+		String normalizedIdentifier = identifier.trim();
 
 		// Try search by name
 		// Return first result. Use with caution if multiple channels have the same name.
-		List<TextChannel> channels = jda.getTextChannelsByName(identifier, true);
+		List<TextChannel> channels = jda.getTextChannelsByName(normalizedIdentifier, true);
 		if (!channels.isEmpty()) {
 			tc = channels.getFirst();
 		} else {
-			// Try parsing as ID
-			tc = jda.getTextChannelById(identifier);
+			// Try parsing as ID only when the identifier is a valid snowflake.
+			boolean numericId = !normalizedIdentifier.isEmpty();
+			for (int i = 0; i < normalizedIdentifier.length(); i++) {
+				if (!Character.isDigit(normalizedIdentifier.charAt(i))) {
+					numericId = false;
+					break;
+				}
+			}
+
+			if (!numericId) {
+				LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_not_found", identifier));
+				return null;
+			}
+
+			tc = jda.getTextChannelById(normalizedIdentifier);
 			if (tc == null) {
 				LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_not_found", identifier));
 				return null;

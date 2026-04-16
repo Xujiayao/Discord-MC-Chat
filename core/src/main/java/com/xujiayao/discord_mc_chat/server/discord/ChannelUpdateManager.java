@@ -166,12 +166,15 @@ public final class ChannelUpdateManager {
 			return;
 		}
 
-		for (JsonNode node : channelsNode) {
+		for (int i = 0; i < channelsNode.size(); i++) {
+			JsonNode node = channelsNode.get(i);
 			String identifier = node.asText("").trim();
+			String configPath = "channel_updating.channel_topic_updating.channels[" + i + "]";
 			if (identifier.isBlank()) {
+				LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_identifier_missing", configPath));
 				continue;
 			}
-			TextChannel channel = resolveTextChannel(identifier);
+			TextChannel channel = resolveTextChannel(identifier, configPath);
 			if (channel == null) {
 				continue;
 			}
@@ -193,18 +196,31 @@ public final class ChannelUpdateManager {
 			return;
 		}
 
-		updateVoiceChannelName(
-				ConfigManager.getString("channel_updating.voice_channel_updating.server_status_channel_id", ""),
-				buildServerStatusChannelName(context),
-				dropWhenRateLimited,
-				synchronous
-		);
-		updateVoiceChannelName(
-				ConfigManager.getString("channel_updating.voice_channel_updating.player_count_channel_id", ""),
-				buildPlayerCountChannelName(context),
-				dropWhenRateLimited,
-				synchronous
-		);
+		String serverStatusChannelId = ConfigManager.getString("channel_updating.voice_channel_updating.server_status_channel_id", "");
+		if (serverStatusChannelId == null || serverStatusChannelId.isBlank()) {
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_identifier_missing", "channel_updating.voice_channel_updating.server_status_channel_id"));
+		} else {
+			updateVoiceChannelName(
+					serverStatusChannelId,
+					buildServerStatusChannelName(context),
+					dropWhenRateLimited,
+					synchronous,
+					"channel_updating.voice_channel_updating.server_status_channel_id"
+			);
+		}
+
+		String playerCountChannelId = ConfigManager.getString("channel_updating.voice_channel_updating.player_count_channel_id", "");
+		if (playerCountChannelId == null || playerCountChannelId.isBlank()) {
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_identifier_missing", "channel_updating.voice_channel_updating.player_count_channel_id"));
+		} else {
+			updateVoiceChannelName(
+					playerCountChannelId,
+					buildPlayerCountChannelName(context),
+					dropWhenRateLimited,
+					synchronous,
+					"channel_updating.voice_channel_updating.player_count_channel_id"
+			);
+		}
 	}
 
 	private static void updateTextChannelTopic(TextChannel channel, String topic, boolean dropWhenRateLimited, boolean synchronous) {
@@ -242,9 +258,21 @@ public final class ChannelUpdateManager {
 		}
 	}
 
-	private static void updateVoiceChannelName(String channelId, String name, boolean dropWhenRateLimited, boolean synchronous) {
-		if (channelId == null || channelId.isBlank() || name == null || name.isBlank()) {
+	private static void updateVoiceChannelName(String channelId, String name, boolean dropWhenRateLimited, boolean synchronous, String configPath) {
+		if (channelId == null || channelId.isBlank()) {
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_identifier_missing", configPath));
 			return;
+		}
+		if (name == null || name.isBlank()) {
+			return;
+		}
+
+		String normalizedChannelId = channelId.trim();
+		for (int i = 0; i < normalizedChannelId.length(); i++) {
+			if (!Character.isDigit(normalizedChannelId.charAt(i))) {
+				LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_not_found", channelId));
+				return;
+			}
 		}
 
 		JDA jda = DiscordManager.getJda();
@@ -252,8 +280,9 @@ public final class ChannelUpdateManager {
 			return;
 		}
 
-		VoiceChannel channel = jda.getVoiceChannelById(channelId);
+		VoiceChannel channel = jda.getVoiceChannelById(normalizedChannelId);
 		if (channel == null) {
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_not_found", channelId));
 			return;
 		}
 
@@ -287,9 +316,13 @@ public final class ChannelUpdateManager {
 		}
 	}
 
-	private static TextChannel resolveTextChannel(String identifier) {
+	private static TextChannel resolveTextChannel(String identifier, String configPath) {
 		JDA jda = DiscordManager.getJda();
 		if (jda == null) {
+			return null;
+		}
+		if (identifier == null || identifier.isBlank()) {
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_identifier_missing", configPath));
 			return null;
 		}
 
@@ -298,7 +331,19 @@ public final class ChannelUpdateManager {
 			return channels.getFirst();
 		}
 
-		return jda.getTextChannelById(identifier);
+		String normalizedChannelId = identifier.trim();
+		for (int i = 0; i < normalizedChannelId.length(); i++) {
+			if (!Character.isDigit(normalizedChannelId.charAt(i))) {
+				LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_not_found", identifier));
+				return null;
+			}
+		}
+
+		TextChannel channel = jda.getTextChannelById(identifier);
+		if (channel == null) {
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_not_found", identifier));
+		}
+		return channel;
 	}
 
 	private static String buildTopic(ChannelUpdateContext context) {

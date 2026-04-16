@@ -437,8 +437,8 @@ final class DiscordEventHandler extends ListenerAdapter {
 			return;
 		}
 
-		String configuredChannel = ConfigManager.getString("broadcasts.minecraft_to_discord.player.chat", "in-game-chat");
-		if (configuredChannel.isBlank()) {
+		String configuredChannel = getRequiredPlayerChatChannel();
+		if (configuredChannel == null) {
 			return;
 		}
 
@@ -482,8 +482,8 @@ final class DiscordEventHandler extends ListenerAdapter {
 			return;
 		}
 
-		String configuredChannel = ConfigManager.getString("broadcasts.minecraft_to_discord.player.chat", "in-game-chat");
-		if (configuredChannel.isBlank()) {
+		String configuredChannel = getRequiredPlayerChatChannel();
+		if (configuredChannel == null) {
 			return;
 		}
 
@@ -547,8 +547,8 @@ final class DiscordEventHandler extends ListenerAdapter {
 			return;
 		}
 
-		String configuredChannel = ConfigManager.getString("broadcasts.minecraft_to_discord.player.chat", "in-game-chat");
-		if (configuredChannel.isBlank()) {
+		String configuredChannel = getRequiredPlayerChatChannel();
+		if (configuredChannel == null) {
 			return;
 		}
 
@@ -584,6 +584,19 @@ final class DiscordEventHandler extends ListenerAdapter {
 		}
 		logDiscordEventForConsole(packet);
 		NetworkManager.broadcastToClients(packet);
+	}
+
+	/**
+	 * Caches a message for later edit/delete reference.
+	 */
+	private String getRequiredPlayerChatChannel() {
+		String configPath = "broadcasts.minecraft_to_discord.player.chat";
+		String configuredChannel = ConfigManager.getString(configPath, "in-game-chat");
+		if (configuredChannel == null || configuredChannel.isBlank()) {
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_identifier_missing", configPath));
+			return null;
+		}
+		return configuredChannel;
 	}
 
 	/**
