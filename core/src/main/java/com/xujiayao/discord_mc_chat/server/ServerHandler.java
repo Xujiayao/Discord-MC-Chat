@@ -19,6 +19,7 @@ import com.xujiayao.discord_mc_chat.network.packets.MiscPackets.LatencyPingPacke
 import com.xujiayao.discord_mc_chat.network.packets.MiscPackets.LatencyPongPacket;
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
 import com.xujiayao.discord_mc_chat.server.discord.BotPresenceManager;
+import com.xujiayao.discord_mc_chat.server.discord.ChannelUpdateManager;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.server.linking.OpSyncManager;
@@ -110,6 +111,9 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 						}
 						case SERVER_STOPPING -> {
 							handleMinecraftSystemMessage(p, clientName, "server.stopped", "server.stop");
+							if ("single_server".equals(ModeManager.getMode())) {
+								ChannelUpdateManager.updateOfflineForSingleServerShutdownAndWait();
+							}
 							ctx.close();
 						}
 						// Player events

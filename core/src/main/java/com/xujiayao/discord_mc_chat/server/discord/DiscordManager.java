@@ -1025,6 +1025,7 @@ public final class DiscordManager {
 	 */
 	public static void shutdown() {
 		BotPresenceManager.shutdown();
+		ChannelUpdateManager.shutdown();
 
 		if (jda != null) {
 			jda.shutdown();

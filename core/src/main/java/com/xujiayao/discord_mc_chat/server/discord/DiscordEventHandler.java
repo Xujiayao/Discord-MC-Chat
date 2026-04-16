@@ -71,6 +71,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 	@Override
 	public void onReady(@NotNull ReadyEvent event) {
 		BotPresenceManager.update();
+		ChannelUpdateManager.start();
 	}
 
 	@Override

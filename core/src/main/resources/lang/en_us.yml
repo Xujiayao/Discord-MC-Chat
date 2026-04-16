@@ -181,6 +181,7 @@ discord:
     commands_success: "Discord DMCC commands registered successfully!"
     commands_failed: "Failed to register Discord DMCC commands."
     presence_update_failed: "Failed to update bot presence: {}"
+    channel_update_failed: "Failed to update Discord channel metadata: {}"
     channel_not_found: "Discord text channel not found: \"{}\""
     channel_cannot_talk: "Cannot send messages in Discord text channel: \"{}\""
     insufficient_permission: "Discord bot has insufficient permissions in channel {}: \"{}\""
