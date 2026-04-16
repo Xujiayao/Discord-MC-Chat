@@ -176,6 +176,16 @@ channel_topic_updating:
     standalone: ":white_check_mark: {online_player_count}/{max_player_count} 位玩家在线 | {total_player_count} 位玩家曾加入过 | {online_server_count} 个服务器在线 [{online_server_list}] | 服务器启动于 <t:{server_started_time}:R> | 最后更新于：<t:{last_update_time}:f>"
     single_server: ":white_check_mark: {online_player_count}/{max_player_count} 位玩家在线 | {total_player_count} 位玩家曾加入过 | 服务器启动于 <t:{server_started_time}:R> | 最后更新于：<t:{last_update_time}:f>"
 
+voice_channels_updating:
+  server_status:
+    all_servers_offline: "状态：离线"
+    at_least_one_server_online:
+      standalone: "状态：{online_server_count} 个服务器在线"
+      single_server: "状态：在线"
+  player_count:
+    all_servers_offline: "玩家：0"
+    at_least_one_server_online: "玩家：{online_player_count}/{max_player_count}"
+
 mspt_monitoring:
   first_exceeded: ":warning: **服务器 MSPT ({mspt}) 超过阈值 ({threshold})！下次检查将在 <t:{next_check_time}:R> 进行。**"
   still_exceeded: ":warning: **服务器 MSPT ({mspt}) 仍超过阈值 ({threshold})！下次检查将在 <t:{next_check_time}:R> 进行。**"
