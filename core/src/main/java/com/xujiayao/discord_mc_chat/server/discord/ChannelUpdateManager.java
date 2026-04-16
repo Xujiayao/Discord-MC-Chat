@@ -44,8 +44,7 @@ public final class ChannelUpdateManager {
 			return;
 		}
 
-		JDA jda = DiscordManager.getJda();
-		if (jda == null) {
+		if (isJdaUnavailable(DiscordManager.getJda())) {
 			return;
 		}
 
@@ -84,8 +83,7 @@ public final class ChannelUpdateManager {
 	}
 
 	private static void doUpdateChannelsAsync() {
-		JDA jda = DiscordManager.getJda();
-		if (jda == null || jda.getStatus() == JDA.Status.SHUTTING_DOWN || jda.getStatus() == JDA.Status.SHUTDOWN) {
+		if (isJdaUnavailable(DiscordManager.getJda())) {
 			return;
 		}
 
@@ -96,8 +94,7 @@ public final class ChannelUpdateManager {
 	}
 
 	private static void doUpdateChannelsSync(ChannelUpdateContext context) {
-		JDA jda = DiscordManager.getJda();
-		if (jda == null || jda.getStatus() == JDA.Status.SHUTTING_DOWN || jda.getStatus() == JDA.Status.SHUTDOWN) {
+		if (isJdaUnavailable(DiscordManager.getJda())) {
 			return;
 		}
 
@@ -107,7 +104,7 @@ public final class ChannelUpdateManager {
 
 	private static ChannelUpdateContext buildOfflineContext() {
 		long nowEpochSeconds = Instant.now().getEpochSecond();
-		return new ChannelUpdateContext(nowEpochSeconds, 0, 0, 0, 0, "", 0);
+		return emptyContext(nowEpochSeconds);
 	}
 
 	private static ChannelUpdateContext collectContext() {
@@ -120,7 +117,7 @@ public final class ChannelUpdateManager {
 				.toList();
 
 		if (onlinePackets.isEmpty()) {
-			return new ChannelUpdateContext(nowEpochSeconds, 0, 0, 0, 0, "", 0);
+			return emptyContext(nowEpochSeconds);
 		}
 
 		int onlinePlayerCount = onlinePackets.stream().mapToInt(packet -> packet.onlinePlayerCount).sum();
@@ -147,6 +144,14 @@ public final class ChannelUpdateManager {
 	}
 
 	private static void updateTextChannelTopicsAsync(ChannelUpdateContext context, boolean dropWhenRateLimited) {
+		updateTextChannelTopics(context, dropWhenRateLimited, false);
+	}
+
+	private static void updateTextChannelTopicsSync(ChannelUpdateContext context) {
+		updateTextChannelTopics(context, false, true);
+	}
+
+	private static void updateTextChannelTopics(ChannelUpdateContext context, boolean dropWhenRateLimited, boolean synchronous) {
 		if (!ConfigManager.getBoolean("channel_updating.channel_topic_updating.enable")) {
 			return;
 		}
@@ -169,6 +174,48 @@ public final class ChannelUpdateManager {
 			TextChannel channel = resolveTextChannel(identifier);
 			if (channel == null) {
 				continue;
+			}
+
+			updateTextChannelTopic(channel, topic, dropWhenRateLimited, synchronous);
+		}
+	}
+
+	private static void updateVoiceChannelNamesAsync(ChannelUpdateContext context, boolean dropWhenRateLimited) {
+		updateVoiceChannelNames(context, dropWhenRateLimited, false);
+	}
+
+	private static void updateVoiceChannelNamesSync(ChannelUpdateContext context) {
+		updateVoiceChannelNames(context, false, true);
+	}
+
+	private static void updateVoiceChannelNames(ChannelUpdateContext context, boolean dropWhenRateLimited, boolean synchronous) {
+		if (!ConfigManager.getBoolean("channel_updating.voice_channel_updating.enable")) {
+			return;
+		}
+
+		updateVoiceChannelName(
+				ConfigManager.getString("channel_updating.voice_channel_updating.server_status_channel_id", ""),
+				buildServerStatusChannelName(context),
+				dropWhenRateLimited,
+				synchronous
+		);
+		updateVoiceChannelName(
+				ConfigManager.getString("channel_updating.voice_channel_updating.player_count_channel_id", ""),
+				buildPlayerCountChannelName(context),
+				dropWhenRateLimited,
+				synchronous
+		);
+	}
+
+	private static void updateTextChannelTopic(TextChannel channel, String topic, boolean dropWhenRateLimited, boolean synchronous) {
+		if (channel == null || topic == null || topic.isBlank()) {
+			return;
+		}
+
+		try {
+			if (synchronous) {
+				channel.getManager().setTopic(topic).complete();
+				return;
 			}
 
 			if (dropWhenRateLimited) {
@@ -190,111 +237,12 @@ public final class ChannelUpdateManager {
 								e -> LOGGER.warn(I18nManager.getDmccTranslation("discord.manager.channel_update_failed", e.getMessage()))
 						);
 			}
+		} catch (Exception e) {
+			LOGGER.warn(I18nManager.getDmccTranslation("discord.manager.channel_update_failed", e.getMessage()));
 		}
 	}
 
-	private static void updateTextChannelTopicsSync(ChannelUpdateContext context) {
-		if (!ConfigManager.getBoolean("channel_updating.channel_topic_updating.enable")) {
-			return;
-		}
-
-		JsonNode channelsNode = ConfigManager.getConfigNode("channel_updating.channel_topic_updating.channels");
-		if (!channelsNode.isArray()) {
-			return;
-		}
-
-		String topic = buildTopic(context);
-		if (topic.isBlank()) {
-			return;
-		}
-
-		for (JsonNode node : channelsNode) {
-			String identifier = node.asText("").trim();
-			if (identifier.isBlank()) {
-				continue;
-			}
-			TextChannel channel = resolveTextChannel(identifier);
-			if (channel == null) {
-				continue;
-			}
-
-			try {
-				channel.getManager().setTopic(topic).complete();
-			} catch (Exception e) {
-				LOGGER.warn(I18nManager.getDmccTranslation("discord.manager.channel_update_failed", e.getMessage()));
-			}
-		}
-	}
-
-	private static void updateVoiceChannelNamesAsync(ChannelUpdateContext context, boolean dropWhenRateLimited) {
-		if (!ConfigManager.getBoolean("channel_updating.voice_channel_updating.enable")) {
-			return;
-		}
-
-		updateVoiceChannelNameAsync(
-				ConfigManager.getString("channel_updating.voice_channel_updating.server_status_channel_id", ""),
-				buildServerStatusChannelName(context),
-				dropWhenRateLimited
-		);
-		updateVoiceChannelNameAsync(
-				ConfigManager.getString("channel_updating.voice_channel_updating.player_count_channel_id", ""),
-				buildPlayerCountChannelName(context),
-				dropWhenRateLimited
-		);
-	}
-
-	private static void updateVoiceChannelNamesSync(ChannelUpdateContext context) {
-		if (!ConfigManager.getBoolean("channel_updating.voice_channel_updating.enable")) {
-			return;
-		}
-
-		updateVoiceChannelNameSync(
-				ConfigManager.getString("channel_updating.voice_channel_updating.server_status_channel_id", ""),
-				buildServerStatusChannelName(context)
-		);
-		updateVoiceChannelNameSync(
-				ConfigManager.getString("channel_updating.voice_channel_updating.player_count_channel_id", ""),
-				buildPlayerCountChannelName(context)
-		);
-	}
-
-	private static void updateVoiceChannelNameAsync(String channelId, String name, boolean dropWhenRateLimited) {
-		if (channelId == null || channelId.isBlank() || name == null || name.isBlank()) {
-			return;
-		}
-
-		JDA jda = DiscordManager.getJda();
-		if (jda == null) {
-			return;
-		}
-
-		VoiceChannel channel = jda.getVoiceChannelById(channelId);
-		if (channel == null) {
-			return;
-		}
-
-		if (dropWhenRateLimited) {
-			channel.getManager()
-					.setName(name)
-					.timeout(ONLINE_ASYNC_UPDATE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-					.queue(
-							_ -> {
-							},
-							_ -> {
-							}
-					);
-		} else {
-			channel.getManager()
-					.setName(name)
-					.queue(
-							_ -> {
-							},
-							e -> LOGGER.warn(I18nManager.getDmccTranslation("discord.manager.channel_update_failed", e.getMessage()))
-					);
-		}
-	}
-
-	private static void updateVoiceChannelNameSync(String channelId, String name) {
+	private static void updateVoiceChannelName(String channelId, String name, boolean dropWhenRateLimited, boolean synchronous) {
 		if (channelId == null || channelId.isBlank() || name == null || name.isBlank()) {
 			return;
 		}
@@ -310,7 +258,30 @@ public final class ChannelUpdateManager {
 		}
 
 		try {
-			channel.getManager().setName(name).complete();
+			if (synchronous) {
+				channel.getManager().setName(name).complete();
+				return;
+			}
+
+			if (dropWhenRateLimited) {
+				channel.getManager()
+						.setName(name)
+						.timeout(ONLINE_ASYNC_UPDATE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+						.queue(
+								_ -> {
+								},
+								_ -> {
+								}
+						);
+			} else {
+				channel.getManager()
+						.setName(name)
+						.queue(
+								_ -> {
+								},
+								e -> LOGGER.warn(I18nManager.getDmccTranslation("discord.manager.channel_update_failed", e.getMessage()))
+						);
+			}
 		} catch (Exception e) {
 			LOGGER.warn(I18nManager.getDmccTranslation("discord.manager.channel_update_failed", e.getMessage()));
 		}
@@ -336,15 +307,7 @@ public final class ChannelUpdateManager {
 			return "";
 		}
 
-		JsonNode node = customMessages.path("channel_topic_updating");
-		String template;
-		if (context.onlineServerCount() == 0) {
-			template = node.path("all_servers_offline").asText("");
-		} else {
-			template = node.path("at_least_one_server_online").path(getModeKey()).asText("");
-		}
-
-		return applyPlaceholders(template, context);
+		return buildTemplate(customMessages.path("channel_topic_updating"), context, true);
 	}
 
 	private static String buildServerStatusChannelName(ChannelUpdateContext context) {
@@ -353,15 +316,7 @@ public final class ChannelUpdateManager {
 			return "";
 		}
 
-		JsonNode node = customMessages.path("voice_channels_updating").path("server_status");
-		String template;
-		if (context.onlineServerCount() == 0) {
-			template = node.path("all_servers_offline").asText("");
-		} else {
-			template = node.path("at_least_one_server_online").path(getModeKey()).asText("");
-		}
-
-		return applyPlaceholders(template, context);
+		return buildTemplate(customMessages.path("voice_channels_updating").path("server_status"), context, true);
 	}
 
 	private static String buildPlayerCountChannelName(ChannelUpdateContext context) {
@@ -370,10 +325,15 @@ public final class ChannelUpdateManager {
 			return "";
 		}
 
-		JsonNode node = customMessages.path("voice_channels_updating").path("player_count");
+		return buildTemplate(customMessages.path("voice_channels_updating").path("player_count"), context, false);
+	}
+
+	private static String buildTemplate(JsonNode node, ChannelUpdateContext context, boolean useModeKeyWhenOnline) {
 		String template;
 		if (context.onlineServerCount() == 0) {
 			template = node.path("all_servers_offline").asText("");
+		} else if (useModeKeyWhenOnline) {
+			template = node.path("at_least_one_server_online").path(getModeKey()).asText("");
 		} else {
 			template = node.path("at_least_one_server_online").asText("");
 		}
@@ -399,6 +359,14 @@ public final class ChannelUpdateManager {
 	private static boolean isAllUpdateDisabled() {
 		return !ConfigManager.getBoolean("channel_updating.channel_topic_updating.enable")
 				&& !ConfigManager.getBoolean("channel_updating.voice_channel_updating.enable");
+	}
+
+	private static boolean isJdaUnavailable(JDA jda) {
+		return jda == null || jda.getStatus() == JDA.Status.SHUTTING_DOWN || jda.getStatus() == JDA.Status.SHUTDOWN;
+	}
+
+	private static ChannelUpdateContext emptyContext(long nowEpochSeconds) {
+		return new ChannelUpdateContext(nowEpochSeconds, 0, 0, 0, 0, "", 0);
 	}
 
 	private static String getModeKey() {
