@@ -208,9 +208,16 @@ public final class ConsoleCommand implements Command {
 		sender.reply(I18nManager.getDmccTranslation("commands.console.executing", commandLine, targetName));
 
 		for (String serverName : targets) {
+			String discordChannelId = null;
+			if (sender instanceof JdaCommandSender jdaSender) {
+				discordChannelId = jdaSender.getChannelId();
+			} else if (sender instanceof MessageCommandSender messageSender) {
+				discordChannelId = messageSender.getChannelId();
+			}
+
 			if (!NetworkManager.isClientConnected(serverName)) {
 				if (sender instanceof JdaCommandSender || sender instanceof MessageCommandSender) {
-					DiscordManager.sendExecuteResultViaWebhook(serverName,
+					DiscordManager.sendExecuteResultViaWebhook(discordChannelId, serverName,
 							I18nManager.getDmccTranslation("commands.console.client_offline", serverName));
 				} else {
 					sender.reply(I18nManager.getDmccTranslation("commands.console.client_offline", serverName));
@@ -241,7 +248,7 @@ public final class ConsoleCommand implements Command {
 						output = I18nManager.getDmccTranslation("commands.console.no_response", command);
 					}
 
-					DiscordManager.sendExecuteResultViaWebhook(serverName, output);
+					DiscordManager.sendExecuteResultViaWebhook(discordChannelId, serverName, output);
 				} else {
 					if (output.isBlank()) {
 						String command = "/execute " + serverName + " log latest.log";
@@ -256,7 +263,7 @@ public final class ConsoleCommand implements Command {
 			} catch (Exception e) {
 				String timeoutMsg = I18nManager.getDmccTranslation("commands.console.timeout", serverName);
 				if (sender instanceof JdaCommandSender || sender instanceof MessageCommandSender) {
-					DiscordManager.sendExecuteResultViaWebhook(serverName, timeoutMsg);
+					DiscordManager.sendExecuteResultViaWebhook(discordChannelId, serverName, timeoutMsg);
 				} else {
 					sender.reply(timeoutMsg);
 				}

@@ -139,10 +139,12 @@ public final class ExecuteCommand implements Command {
 		sender.reply(I18nManager.getDmccTranslation("commands.execute.executing", command, targetName));
 
 		for (String serverName : targets) {
+			String discordChannelId = sender instanceof JdaCommandSender jdaSender ? jdaSender.getChannelId() : null;
+
 			if (!NetworkManager.isClientConnected(serverName)) {
 				// Offline status is sent via webhook for each server, or directly to sender for terminal
 				if (sender instanceof JdaCommandSender) {
-					DiscordManager.sendExecuteResultViaWebhook(serverName,
+					DiscordManager.sendExecuteResultViaWebhook(discordChannelId, serverName,
 							I18nManager.getDmccTranslation("commands.execute.client_offline", serverName));
 				} else {
 					sender.reply(I18nManager.getDmccTranslation("commands.execute.client_offline", serverName));
@@ -169,10 +171,10 @@ public final class ExecuteCommand implements Command {
 				if (sender instanceof JdaCommandSender) {
 					// Discord: send result via webhook with server name
 					if (response.fileData != null && response.fileName != null) {
-						DiscordManager.sendExecuteResultWithFileViaWebhook(serverName,
+						DiscordManager.sendExecuteResultWithFileViaWebhook(discordChannelId, serverName,
 								response.response, response.fileData, response.fileName);
 					} else {
-						DiscordManager.sendExecuteResultViaWebhook(serverName, response.response);
+						DiscordManager.sendExecuteResultViaWebhook(discordChannelId, serverName, response.response);
 					}
 				} else {
 					// Terminal: send result directly
@@ -188,7 +190,7 @@ public final class ExecuteCommand implements Command {
 			} catch (Exception e) {
 				String timeoutMsg = I18nManager.getDmccTranslation("commands.execute.timeout", serverName);
 				if (sender instanceof JdaCommandSender) {
-					DiscordManager.sendExecuteResultViaWebhook(serverName, timeoutMsg);
+					DiscordManager.sendExecuteResultViaWebhook(discordChannelId, serverName, timeoutMsg);
 				} else {
 					sender.reply(timeoutMsg);
 				}

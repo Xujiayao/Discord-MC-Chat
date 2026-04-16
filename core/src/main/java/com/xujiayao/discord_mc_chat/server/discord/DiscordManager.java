@@ -848,14 +848,13 @@ public final class DiscordManager {
 	}
 
 	/**
-	 * Sends an execute command result via webhook, using the client's server name as the webhook username.
-	 * The result is sent to the in-game-chat channel (same as server events).
+	 * Sends an execute command result via webhook to the specified Discord channel.
 	 *
-	 * @param clientName The name of the DMCC client
-	 * @param message    The result message
+	 * @param channelIdentifier The target Discord channel identifier.
+	 * @param clientName        The name of the DMCC client.
+	 * @param message           The result message.
 	 */
-	public static void sendExecuteResultViaWebhook(String clientName, String message) {
-		String channelIdentifier = resolveConsoleChannel(clientName);
+	public static void sendExecuteResultViaWebhook(String channelIdentifier, String clientName, String message) {
 		TextChannel channel = getTextChannel(channelIdentifier);
 		if (channel == null) return;
 
@@ -870,16 +869,16 @@ public final class DiscordManager {
 	}
 
 	/**
-	 * Sends an execute command result with a file attachment via webhook.
+	 * Sends an execute command result with a file attachment via webhook to the specified Discord channel.
 	 *
-	 * @param clientName The name of the DMCC client
-	 * @param message    The result message
-	 * @param fileData   The file data
-	 * @param fileName   The file name
+	 * @param channelIdentifier The target Discord channel identifier.
+	 * @param clientName        The name of the DMCC client.
+	 * @param message           The result message.
+	 * @param fileData          The file data.
+	 * @param fileName          The file name.
 	 */
-	public static void sendExecuteResultWithFileViaWebhook(String clientName, String message,
+	public static void sendExecuteResultWithFileViaWebhook(String channelIdentifier, String clientName, String message,
 	                                                       byte[] fileData, String fileName) {
-		String channelIdentifier = resolveConsoleChannel(clientName);
 		TextChannel channel = getTextChannel(channelIdentifier);
 		if (channel == null) return;
 
