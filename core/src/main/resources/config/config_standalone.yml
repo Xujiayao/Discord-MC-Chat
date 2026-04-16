@@ -171,21 +171,21 @@ console_forwarding:
     - server: "CMP"
       channel: "console-cmp"
 
-# 频道主题更新设置
-channel_topic_updating:
-  enable: true
+# 频道更新设置
+channel_updating:
   interval_minutes: 10
-  channels:
-    - "in-game-chat"
-    - "console-smp"
-    - "console-cmp"
-
-# 语音频道状态更新设置
-voice_channels_updating:
-  enable: true
-  interval_minutes: 10
-  server_status_channel_id: "111111"
-  player_count_channel_id: "222222"
+  # 频道主题更新
+  channel_topic_updating:
+    enable: true
+    channels:
+      - "in-game-chat"
+      - "console-smp"
+      - "console-cmp"
+  # 语音频道状态更新
+  voice_channel_updating:
+    enable: true
+    server_status_channel_id: "111111"
+    player_count_channel_id: "222222"
 
 # 账户绑定设置
 # 强制启用
