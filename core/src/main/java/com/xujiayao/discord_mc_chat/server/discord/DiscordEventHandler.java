@@ -275,7 +275,8 @@ final class DiscordEventHandler extends ListenerAdapter {
 		StatsCommand.StatsProvider provider = StatsCommand.getProvider();
 		if (provider == null) return List.of();
 
-		String lowerValue = currentValue.toLowerCase();
+		String normalizedValue = normalizeMinecraftNamespace(currentValue);
+		String lowerValue = normalizedValue == null ? "" : normalizedValue.toLowerCase();
 		return provider.getStatTypes().stream()
 				.filter(t -> t.toLowerCase().contains(lowerValue))
 				.limit(25)
@@ -294,12 +295,18 @@ final class DiscordEventHandler extends ListenerAdapter {
 		StatsCommand.StatsProvider provider = StatsCommand.getProvider();
 		if (provider == null || type == null || type.isBlank()) return List.of();
 
-		String lowerValue = currentValue.toLowerCase();
-		return provider.getStatNames(type).stream()
+		String normalizedType = normalizeMinecraftNamespace(type);
+		String normalizedValue = normalizeMinecraftNamespace(currentValue);
+		String lowerValue = normalizedValue == null ? "" : normalizedValue.toLowerCase();
+		return provider.getStatNames(normalizedType).stream()
 				.filter(s -> s.toLowerCase().contains(lowerValue))
 				.limit(25)
 				.map(s -> new Command.Choice(s, s))
 				.collect(Collectors.toList());
+	}
+
+	private static String normalizeMinecraftNamespace(String value) {
+		return StatsCommand.normalizeMinecraftNamespace(value);
 	}
 
 	@Override

@@ -127,7 +127,7 @@ public final class MinecraftEventHandler {
 				public List<String> getStatNames(String typeStr) {
 					List<String> stats = new ArrayList<>();
 					try {
-						Identifier typeLoc = Identifier.parse(typeStr);
+						Identifier typeLoc = Identifier.parse(StatsCommand.normalizeMinecraftNamespace(typeStr));
 						Optional<Holder.Reference<StatType<?>>> optional = BuiltInRegistries.STAT_TYPE.get(typeLoc);
 						if (optional.isPresent()) {
 							for (Identifier loc : optional.get().value().getRegistry().keySet()) {

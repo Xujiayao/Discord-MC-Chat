@@ -39,6 +39,20 @@ public final class StatsCommand implements Command {
 	}
 
 	/**
+	 * Adds the default Minecraft namespace when the identifier has no colon.
+	 *
+	 * @param value Identifier value entered by the user.
+	 * @return Canonical Minecraft namespaced identifier, or the original value when empty/null or already namespaced.
+	 */
+	public static String normalizeMinecraftNamespace(String value) {
+		if (value == null || value.isBlank() || value.contains(":")) {
+			return value;
+		}
+
+		return "minecraft:" + value;
+	}
+
+	/**
 	 * Registers the stats provider implementation.
 	 *
 	 * @param provider Stats provider implementation.
@@ -94,8 +108,8 @@ public final class StatsCommand implements Command {
 
 		provider.saveAll(); // Ensure data is written to disk
 
-		String type = args[0];
-		String stat = args[1];
+		String type = normalizeMinecraftNamespace(args[0]);
+		String stat = normalizeMinecraftNamespace(args[1]);
 
 		Path statsDir = provider.getStatsDirectory();
 
@@ -114,7 +128,7 @@ public final class StatsCommand implements Command {
 						String uuidStr = fileName.substring(0, fileName.length() - 5);
 						try {
 							UUID uuid = UUID.fromString(uuidStr);
-							int value = JsonUtils.getStat(p, type, stat);
+													int value = JsonUtils.getStat(p, normalizeMinecraftNamespace(type), normalizeMinecraftNamespace(stat));
 							if (value > 0) {
 								String name = provider.getPlayerName(uuid);
 								if (name == null || name.isBlank()) {
@@ -199,7 +213,7 @@ public final class StatsCommand implements Command {
 				String uuidStr = fileName.substring(0, fileName.length() - 5);
 				try {
 					UUID.fromString(uuidStr);
-					int value = JsonUtils.getStat(p, type, stat);
+					int value = JsonUtils.getStat(p, normalizeMinecraftNamespace(type), normalizeMinecraftNamespace(stat));
 					if (value > 0) {
 						count++;
 					}
