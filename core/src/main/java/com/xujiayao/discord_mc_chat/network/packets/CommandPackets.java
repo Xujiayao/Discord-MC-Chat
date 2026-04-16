@@ -326,6 +326,10 @@ public final class CommandPackets {
 			 */
 			public Map<String, Integer> playersAndLatencies;
 			/**
+			 * Number of players that have ever joined.
+			 */
+			public int playersEverJoined;
+			/**
 			 * Server TPS metric.
 			 */
 			public double tps;
@@ -355,6 +359,7 @@ public final class CommandPackets {
 			 * @param onlinePlayerCount       Current online player count.
 			 * @param maxPlayerCount          Maximum player capacity.
 			 * @param playersAndLatencies     Per-player latency map.
+			 * @param playersEverJoined       Number of players that have ever joined.
 			 * @param tps                     Server TPS metric.
 			 * @param mspt                    Server MSPT metric.
 			 * @param uptimeSeconds           Uptime in seconds.
@@ -363,7 +368,7 @@ public final class CommandPackets {
 			 */
 			public ResponsePacket(String serverName, long connectionLatencyMillis, String minecraftVersion,
 			                      int onlinePlayerCount, int maxPlayerCount,
-			                      Map<String, Integer> playersAndLatencies, double tps, double mspt,
+			                      Map<String, Integer> playersAndLatencies, int playersEverJoined, double tps, double mspt,
 			                      long uptimeSeconds, long totalMemory, long freeMemory) {
 				this.serverName = serverName;
 				this.connectionLatencyMillis = connectionLatencyMillis;
@@ -371,6 +376,7 @@ public final class CommandPackets {
 				this.onlinePlayerCount = onlinePlayerCount;
 				this.maxPlayerCount = maxPlayerCount;
 				this.playersAndLatencies = playersAndLatencies;
+				this.playersEverJoined = playersEverJoined;
 				this.tps = tps;
 				this.mspt = mspt;
 				this.uptimeSeconds = uptimeSeconds;

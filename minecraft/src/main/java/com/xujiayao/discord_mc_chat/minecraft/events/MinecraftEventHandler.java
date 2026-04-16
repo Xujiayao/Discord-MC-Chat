@@ -884,6 +884,8 @@ public final class MinecraftEventHandler {
 			playersAndLatencies.put(player.getDisplayName().getString(), player.connection.latency());
 		}
 
+		int playersEverJoined = StatsCommand.countStatResultEntries("minecraft:custom", "minecraft:play_time");
+
 		double mspt = ((double) server.getAverageTickTimeNanos()) / TimeUtil.NANOSECONDS_PER_MILLISECOND;
 		ServerTickRateManager manager = server.tickRateManager();
 		double tps = 1000.0D / Math.max(manager.isSprinting() ? 0.0 : manager.millisecondsPerTick(), mspt);
@@ -901,6 +903,7 @@ public final class MinecraftEventHandler {
 				onlinePlayers,
 				maxPlayers,
 				playersAndLatencies,
+				playersEverJoined,
 				tps,
 				mspt,
 				uptimeSeconds,

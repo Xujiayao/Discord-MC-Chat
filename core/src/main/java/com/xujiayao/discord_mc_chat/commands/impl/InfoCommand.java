@@ -71,6 +71,7 @@ public final class InfoCommand implements Command {
 				packet.onlinePlayerCount,
 				packet.maxPlayerCount,
 				playersInfo,
+				packet.playersEverJoined,
 				String.format("%.2f", packet.tps),
 				String.format("%.2f", packet.mspt),
 				uptime[0], uptime[1], uptime[2], uptime[3],
@@ -101,6 +102,7 @@ public final class InfoCommand implements Command {
 				packet.onlinePlayerCount,
 				packet.maxPlayerCount,
 				playersInfo,
+				packet.playersEverJoined,
 				String.format("%.2f", packet.tps),
 				String.format("%.2f", packet.mspt));
 	}

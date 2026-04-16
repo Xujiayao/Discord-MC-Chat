@@ -298,6 +298,7 @@ public final class NetworkManager {
 					0,
 					0,
 					0,
+					0,
 					runtime.totalMemory(),
 					runtime.freeMemory()
 			);

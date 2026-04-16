@@ -78,6 +78,7 @@ commands:
               Minecraft version: {}
               Online players: ({}/{})
               {}
+              Players ever joined: {}
               Server TPS: {}
               Server MSPT: {}
               Uptime: {}d {}h {}m {}s
@@ -89,6 +90,7 @@ commands:
         Minecraft version: {}
         Online players: ({}/{})
         {}
+        Players ever joined: {}
         Server TPS: {}
         Server MSPT: {}
     players: "- [{}ms] {}"

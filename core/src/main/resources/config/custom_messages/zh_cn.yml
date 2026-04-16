@@ -173,8 +173,8 @@ activity:
 channel_topic_updating:
   all_servers_offline: ":octagonal_sign: 服务器离线 | 最后更新于：<t:{last_update_time}:f>"
   at_least_one_server_online:
-    standalone: ":white_check_mark: {online_player_count}/{max_player_count} 位玩家在线 | {total_player_count} 位玩家曾加入过 | {online_server_count} 个服务器在线 [{online_server_list}] | 服务器启动于 <t:{server_started_time}:R> | 最后更新于：<t:{last_update_time}:f>"
-    single_server: ":white_check_mark: {online_player_count}/{max_player_count} 位玩家在线 | {total_player_count} 位玩家曾加入过 | 服务器启动于 <t:{server_started_time}:R> | 最后更新于：<t:{last_update_time}:f>"
+    standalone: ":white_check_mark: {online_player_count}/{max_player_count} 位玩家在线 | {players_ever_joined} 位玩家曾加入过 | {online_server_count} 个服务器在线 [{online_server_list}] | 服务器启动于 <t:{server_started_time}:R> | 最后更新于：<t:{last_update_time}:f>"
+    single_server: ":white_check_mark: {online_player_count}/{max_player_count} 位玩家在线 | {players_ever_joined} 位玩家曾加入过 | 服务器启动于 <t:{server_started_time}:R> | 最后更新于：<t:{last_update_time}:f>"
 
 voice_channels_updating:
   server_status:
