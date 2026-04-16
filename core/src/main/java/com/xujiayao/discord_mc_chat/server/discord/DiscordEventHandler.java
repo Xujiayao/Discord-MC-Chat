@@ -64,6 +64,10 @@ final class DiscordEventHandler extends ListenerAdapter {
 		}
 	}
 
+	private static String normalizeMinecraftNamespace(String value) {
+		return StatsCommand.normalizeMinecraftNamespace(value);
+	}
+
 	@Override
 	public void onReady(@NotNull ReadyEvent event) {
 		BotPresenceManager.update();
@@ -303,10 +307,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 				.limit(25)
 				.map(s -> new Command.Choice(s, s))
 				.collect(Collectors.toList());
-	}
-
-	private static String normalizeMinecraftNamespace(String value) {
-		return StatsCommand.normalizeMinecraftNamespace(value);
 	}
 
 	@Override

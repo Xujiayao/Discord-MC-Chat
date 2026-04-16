@@ -39,6 +39,15 @@ public final class StatsCommand implements Command {
 	}
 
 	/**
+	 * Registers the stats provider implementation.
+	 *
+	 * @param provider Stats provider implementation.
+	 */
+	public static void setProvider(StatsProvider provider) {
+		StatsCommand.provider = provider;
+	}
+
+	/**
 	 * Adds the default Minecraft namespace when the identifier has no colon.
 	 *
 	 * @param value Identifier value entered by the user.
@@ -53,12 +62,50 @@ public final class StatsCommand implements Command {
 	}
 
 	/**
-	 * Registers the stats provider implementation.
+	 * Counts how many player stats files contain a value for the given stat.
 	 *
-	 * @param provider Stats provider implementation.
+	 * @param type Stat category/type.
+	 * @param stat Stat name.
+	 * @return Number of matching player entries.
 	 */
-	public static void setProvider(StatsProvider provider) {
-		StatsCommand.provider = provider;
+	public static int countStatResultEntries(String type, String stat) {
+		if (provider == null) {
+			return 0;
+		}
+
+		try {
+			provider.saveAll();
+		} catch (Exception ignored) {
+			return 0;
+		}
+
+		Path statsDir = provider.getStatsDirectory();
+		if (statsDir == null || !Files.exists(statsDir) || !Files.isDirectory(statsDir)) {
+			return 0;
+		}
+
+		int count = 0;
+
+		try (Stream<Path> stream = Files.list(statsDir)) {
+			for (Path p : stream.filter(Files::isRegularFile)
+					.filter(path -> path.getFileName().toString().endsWith(".json"))
+					.toList()) {
+				String fileName = p.getFileName().toString();
+				String uuidStr = fileName.substring(0, fileName.length() - 5);
+				try {
+					UUID.fromString(uuidStr);
+					int value = JsonUtils.getStat(p, normalizeMinecraftNamespace(type), normalizeMinecraftNamespace(stat));
+					if (value > 0) {
+						count++;
+					}
+				} catch (Exception ignored) {
+				}
+			}
+		} catch (Exception ignored) {
+			return 0;
+		}
+
+		return count;
 	}
 
 	@Override
@@ -128,7 +175,7 @@ public final class StatsCommand implements Command {
 						String uuidStr = fileName.substring(0, fileName.length() - 5);
 						try {
 							UUID uuid = UUID.fromString(uuidStr);
-													int value = JsonUtils.getStat(p, normalizeMinecraftNamespace(type), normalizeMinecraftNamespace(stat));
+							int value = JsonUtils.getStat(p, normalizeMinecraftNamespace(type), normalizeMinecraftNamespace(stat));
 							if (value > 0) {
 								String name = provider.getPlayerName(uuid);
 								if (name == null || name.isBlank()) {
@@ -178,53 +225,6 @@ public final class StatsCommand implements Command {
 		}
 
 		sender.reply(sb.toString());
-	}
-
-	/**
-	 * Counts how many player stats files contain a value for the given stat.
-	 *
-	 * @param type Stat category/type.
-	 * @param stat Stat name.
-	 * @return Number of matching player entries.
-	 */
-	public static int countStatResultEntries(String type, String stat) {
-		if (provider == null) {
-			return 0;
-		}
-
-		try {
-			provider.saveAll();
-		} catch (Exception ignored) {
-			return 0;
-		}
-
-		Path statsDir = provider.getStatsDirectory();
-		if (statsDir == null || !Files.exists(statsDir) || !Files.isDirectory(statsDir)) {
-			return 0;
-		}
-
-		int count = 0;
-
-		try (Stream<Path> stream = Files.list(statsDir)) {
-			for (Path p : stream.filter(Files::isRegularFile)
-					.filter(path -> path.getFileName().toString().endsWith(".json"))
-					.toList()) {
-				String fileName = p.getFileName().toString();
-				String uuidStr = fileName.substring(0, fileName.length() - 5);
-				try {
-					UUID.fromString(uuidStr);
-					int value = JsonUtils.getStat(p, normalizeMinecraftNamespace(type), normalizeMinecraftNamespace(stat));
-					if (value > 0) {
-						count++;
-					}
-				} catch (Exception ignored) {
-				}
-			}
-		} catch (Exception ignored) {
-			return 0;
-		}
-
-		return count;
 	}
 
 	/**
