@@ -18,7 +18,7 @@ import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
  * JSON utility class that wraps Jackson operations.
  * <p>
  * Uses the YAML_MAPPER from Constants for JSON processing to support # comments in JSON (BlazeAndCaves).
- * Leading tab indentation is normalized before parsing to tolerate legacy translation resources.
+ * Translation-resource input is normalized before parsing to tolerate legacy translation resources.
  *
  * @author Xujiayao
  */
@@ -35,7 +35,7 @@ public final class JsonUtils {
 	 * @throws IOException If parsing fails
 	 */
 	public static Map<String, String> toStringMap(String json) throws IOException {
-		return YAML_MAPPER.readValue(normalizeLeadingTabs(json), new TypeReference<>() {
+		return YAML_MAPPER.readValue(normalize(json), new TypeReference<>() {
 		});
 	}
 
@@ -47,7 +47,7 @@ public final class JsonUtils {
 	 * @throws IOException If reading or parsing fails
 	 */
 	public static Map<String, String> toStringMap(Reader reader) throws IOException {
-		return YAML_MAPPER.readValue(normalizeLeadingTabs(readAll(reader)), new TypeReference<>() {
+		return YAML_MAPPER.readValue(normalize(readAll(reader)), new TypeReference<>() {
 		});
 	}
 
@@ -59,7 +59,7 @@ public final class JsonUtils {
 	 * @throws IOException If parsing fails
 	 */
 	public static Map<String, String> toStringMap(InputStream inputStream) throws IOException {
-		return YAML_MAPPER.readValue(normalizeLeadingTabs(new String(inputStream.readAllBytes(), StandardCharsets.UTF_8)), new TypeReference<>() {
+		return YAML_MAPPER.readValue(normalize(new String(inputStream.readAllBytes(), StandardCharsets.UTF_8)), new TypeReference<>() {
 		});
 	}
 
@@ -75,12 +75,53 @@ public final class JsonUtils {
 		return builder.toString();
 	}
 
-	private static String normalizeLeadingTabs(String input) {
+	private static String normalize(String input) {
 		StringBuilder normalized = new StringBuilder(input.length());
+		boolean inString = false;
+		boolean escaping = false;
+		boolean inLineComment = false;
+		boolean inBlockComment = false;
 		boolean lineStart = true;
 
 		for (int i = 0; i < input.length(); i++) {
 			char ch = input.charAt(i);
+			char next = i + 1 < input.length() ? input.charAt(i + 1) : '\0';
+
+			if (inLineComment) {
+				if (ch == '\r' || ch == '\n') {
+					inLineComment = false;
+					normalized.append(ch);
+					lineStart = true;
+				}
+				continue;
+			}
+
+			if (inBlockComment) {
+				if (ch == '*' && next == '/') {
+					inBlockComment = false;
+					i++;
+					continue;
+				}
+
+				if (ch == '\r' || ch == '\n') {
+					normalized.append(ch);
+					lineStart = true;
+				}
+				continue;
+			}
+
+			if (inString) {
+				normalized.append(ch);
+				if (escaping) {
+					escaping = false;
+				} else if (ch == '\\') {
+					escaping = true;
+				} else if (ch == '"') {
+					inString = false;
+				}
+				lineStart = ch == '\n' || ch == '\r';
+				continue;
+			}
 
 			if (lineStart) {
 				if (ch == '\t') {
@@ -92,6 +133,25 @@ public final class JsonUtils {
 					normalized.append(ch);
 					continue;
 				}
+			}
+
+			if (ch == '"') {
+				inString = true;
+				normalized.append(ch);
+				lineStart = false;
+				continue;
+			}
+
+			if (ch == '/' && next == '/') {
+				inLineComment = true;
+				i++;
+				continue;
+			}
+
+			if (ch == '/' && next == '*') {
+				inBlockComment = true;
+				i++;
+				continue;
 			}
 
 			normalized.append(ch);
