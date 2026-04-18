@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "discord_mc_chat",
+  "version": "${version}",
+  "name": "Discord-MC-Chat",
+  "description": "Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCDC), is a practical and powerful Fabric Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric.",
+  "authors": [
+    "Xujiayao"
+  ],
+  "contact": {
+    "homepage": "https://dmcc.xujiayao.com/",
+    "sources": "https://github.com/Xujiayao/Discord-MC-Chat"
+  },
+  "license": "MIT",
+  "icon": "icon/icon.png",
+  "environment": "server",
+  "entrypoints": {
+    "server": [
+      "com.xujiayao.discord_mc_chat.minecraft.FabricDMCC"
+    ]
+  },
+  "mixins": [
+    "dmcc.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.18.4",
+    "minecraft": "${minecraft_version}",
+    "java": ">=25"
+  }
+}
+

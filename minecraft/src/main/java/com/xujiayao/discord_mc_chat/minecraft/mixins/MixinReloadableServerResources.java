@@ -14,8 +14,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ReloadableServerResources.class)
 final class MixinReloadableServerResources {
 
-	@Inject(method = "lambda$loadResources$5", at = @At("RETURN"))
-	private static void loadResources(ReloadableServerResources reloadableServerResources, Void ignore, CallbackInfoReturnable<ReloadableServerResources> cir) {
+	@Inject(method = "lambda$loadResources$3", at = @At("RETURN"))
+	private static void lambda$loadResources$3(ReloadableServerResources reloadableServerResources, Object ignore, CallbackInfoReturnable<ReloadableServerResources> cir) {
 		// ReloadResources Event
 		EventManager.post(new MinecraftEvents.ReloadResources());
 	}

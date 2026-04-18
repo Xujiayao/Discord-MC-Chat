@@ -240,25 +240,23 @@ public final class TranslationManager {
 
 		// Step 3: Scan datapacks directory
 		for (Pack pack : server.getPackRepository().getSelectedPacks()) {
-			pack.streamSelfAndChildren().forEach(packResources0 -> {
-				try (PackResources packResources1 = packResources0.open()) {
-					packResources1.getNamespaces(PackType.CLIENT_RESOURCES).forEach(namespace -> {
-						IoSupplier<InputStream> supplier = packResources1.getResource(
-								PackType.CLIENT_RESOURCES,
-								Identifier.fromNamespaceAndPath(namespace, "lang/" + language + ".json")
-						);
+			try (PackResources packResources1 = pack.open()) {
+				packResources1.getNamespaces(PackType.CLIENT_RESOURCES).forEach(namespace -> {
+					IoSupplier<InputStream> supplier = packResources1.getResource(
+							PackType.CLIENT_RESOURCES,
+							Identifier.fromNamespaceAndPath(namespace, "lang/" + language + ".json")
+					);
 
-						if (supplier != null) {
-							try (InputStream is = supplier.get()) {
-								Map<String, String> translations = JsonUtils.toStringMap(is);
-								translations.forEach(TRANSLATIONS::putIfAbsent);
-							} catch (Exception e) {
-								LOGGER.error(I18nManager.getDmccTranslation("minecraft.translations.datapack_load_failed"), e);
-							}
+					if (supplier != null) {
+						try (InputStream is = supplier.get()) {
+							Map<String, String> translations = JsonUtils.toStringMap(is);
+							translations.forEach(TRANSLATIONS::putIfAbsent);
+						} catch (Exception e) {
+							LOGGER.error(I18nManager.getDmccTranslation("minecraft.translations.datapack_load_failed"), e);
 						}
-					});
-				}
-			});
+					}
+				});
+			}
 		}
 	}
 
