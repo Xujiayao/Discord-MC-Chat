@@ -18,6 +18,7 @@ import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
  * JSON utility class that wraps Jackson operations.
  * <p>
  * Uses the YAML_MAPPER from Constants for JSON processing to support # comments in JSON (BlazeAndCaves).
+ * Leading tab indentation is normalized before parsing to tolerate legacy translation resources.
  *
  * @author Xujiayao
  */
@@ -34,7 +35,7 @@ public final class JsonUtils {
 	 * @throws IOException If parsing fails
 	 */
 	public static Map<String, String> toStringMap(String json) throws IOException {
-		return YAML_MAPPER.convertValue(YAML_MAPPER.readTree(json), new TypeReference<>() {
+		return YAML_MAPPER.readValue(normalizeLeadingTabs(json), new TypeReference<>() {
 		});
 	}
 
@@ -46,7 +47,7 @@ public final class JsonUtils {
 	 * @throws IOException If reading or parsing fails
 	 */
 	public static Map<String, String> toStringMap(Reader reader) throws IOException {
-		return YAML_MAPPER.convertValue(YAML_MAPPER.readTree(reader), new TypeReference<>() {
+		return YAML_MAPPER.readValue(normalizeLeadingTabs(readAll(reader)), new TypeReference<>() {
 		});
 	}
 
@@ -58,8 +59,46 @@ public final class JsonUtils {
 	 * @throws IOException If parsing fails
 	 */
 	public static Map<String, String> toStringMap(InputStream inputStream) throws IOException {
-		return YAML_MAPPER.readValue(inputStream, new TypeReference<>() {
+		return YAML_MAPPER.readValue(normalizeLeadingTabs(new String(inputStream.readAllBytes(), StandardCharsets.UTF_8)), new TypeReference<>() {
 		});
+	}
+
+	private static String readAll(Reader reader) throws IOException {
+		StringBuilder builder = new StringBuilder();
+		char[] buffer = new char[4096];
+		int length;
+
+		while ((length = reader.read(buffer)) != -1) {
+			builder.append(buffer, 0, length);
+		}
+
+		return builder.toString();
+	}
+
+	private static String normalizeLeadingTabs(String input) {
+		StringBuilder normalized = new StringBuilder(input.length());
+		boolean lineStart = true;
+
+		for (int i = 0; i < input.length(); i++) {
+			char ch = input.charAt(i);
+
+			if (lineStart) {
+				if (ch == '\t') {
+					normalized.append("  ");
+					continue;
+				}
+
+				if (ch == ' ') {
+					normalized.append(ch);
+					continue;
+				}
+			}
+
+			normalized.append(ch);
+			lineStart = ch == '\n' || ch == '\r';
+		}
+
+		return normalized.toString();
 	}
 
 	/**
