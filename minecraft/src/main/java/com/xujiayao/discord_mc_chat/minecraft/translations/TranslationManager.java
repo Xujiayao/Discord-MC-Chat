@@ -240,9 +240,9 @@ public final class TranslationManager {
 
 		// Step 3: Scan datapacks directory
 		for (Pack pack : server.getPackRepository().getSelectedPacks()) {
-			try (PackResources packResources1 = pack.open()) {
-				packResources1.getNamespaces(PackType.CLIENT_RESOURCES).forEach(namespace -> {
-					IoSupplier<InputStream> supplier = packResources1.getResource(
+			try (PackResources packResources = pack.open()) {
+				packResources.getNamespaces(PackType.CLIENT_RESOURCES).forEach(namespace -> {
+					IoSupplier<InputStream> supplier = packResources.getResource(
 							PackType.CLIENT_RESOURCES,
 							Identifier.fromNamespaceAndPath(namespace, "lang/" + language + ".json")
 					);
