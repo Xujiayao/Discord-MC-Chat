@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 final class MixinServerPlayer {
 
 	@Inject(method = "die", at = @At("HEAD"))
-	private void die(DamageSource damageSource, CallbackInfo ci) {
+	private void die(DamageSource source, CallbackInfo ci) {
 		// PlayerDie Event
 		EventManager.post(new MinecraftEvents.PlayerDie(
 				(ServerPlayer) (Object) this

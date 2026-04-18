@@ -18,20 +18,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 final class MixinPlayerList {
 
 	@Inject(method = "placeNewPlayer", at = @At("RETURN"))
-	private void placeNewPlayer(Connection connection, ServerPlayer serverPlayer, CommonListenerCookie commonListenerCookie, CallbackInfo ci) {
+	private void placeNewPlayer(Connection connection, ServerPlayer player, CommonListenerCookie cookie, CallbackInfo ci) {
 		// PlayerJoin Event
 		EventManager.post(new MinecraftEvents.PlayerJoin(
 				connection,
-				serverPlayer,
-				commonListenerCookie
+				player,
+				cookie
 		));
 	}
 
 	@Inject(method = "remove", at = @At("RETURN"))
-	private void remove(ServerPlayer serverPlayer, CallbackInfo ci) {
+	private void remove(ServerPlayer player, CallbackInfo ci) {
 		// PlayerQuit Event
 		EventManager.post(new MinecraftEvents.PlayerQuit(
-				serverPlayer
+				player
 		));
 	}
 }

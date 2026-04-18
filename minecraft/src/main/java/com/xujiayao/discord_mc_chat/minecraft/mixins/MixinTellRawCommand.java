@@ -30,16 +30,16 @@ final class MixinTellRawCommand {
 	private static final Pattern TELLRAW_PATTERN = Pattern.compile("^tellraw @a .*");
 
 	@Inject(method = "lambda$register$0", at = @At("HEAD"), cancellable = true)
-	private static void lambda$register$0(CommandContext<CommandSourceStack> commandContext, CallbackInfoReturnable<Integer> cir) throws CommandSyntaxException {
-		if (TELLRAW_PATTERN.matcher(commandContext.getInput()).matches()) {
-			Optional<ServerPlayer> optional = EntityArgument.getPlayers(commandContext, "targets").stream().findFirst();
+	private static void lambda$register$0(CommandContext<CommandSourceStack> c, CallbackInfoReturnable<Integer> cir) throws CommandSyntaxException {
+		if (TELLRAW_PATTERN.matcher(c.getInput()).matches()) {
+			Optional<ServerPlayer> optional = EntityArgument.getPlayers(c, "targets").stream().findFirst();
 			if (optional.isPresent()) {
 				ServerPlayer player = optional.get();
-				Component component = ComponentArgument.getResolvedComponent(commandContext, "message", player);
+				Component component = ComponentArgument.getResolvedComponent(c, "message", player);
 
 				// SourceTellRaw Event
 				EventManager.post(new MinecraftEvents.SourceTellRaw(
-						commandContext,
+						c,
 						component
 				));
 

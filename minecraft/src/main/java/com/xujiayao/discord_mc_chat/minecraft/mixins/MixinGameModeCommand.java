@@ -18,11 +18,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 final class MixinGameModeCommand {
 
 	@Inject(method = "setGameMode(Lnet/minecraft/commands/CommandSourceStack;Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/level/GameType;)Z", at = @At("HEAD"))
-	private static void setGameMode(CommandSourceStack commandSourceStack, ServerPlayer serverPlayer, GameType gameType, CallbackInfoReturnable<Boolean> cir) {
+	private static void setGameMode(CommandSourceStack source, ServerPlayer player, GameType type, CallbackInfoReturnable<Boolean> cir) {
 		// PlayerChangeGameMode Event
 		EventManager.post(new MinecraftEvents.PlayerChangeGameMode(
-				gameType,
-				serverPlayer
+				type,
+				player
 		));
 	}
 }

@@ -24,7 +24,7 @@ final class MixinCommands {
 	private CommandDispatcher<CommandSourceStack> dispatcher;
 
 	@Inject(method = "<init>", at = @At("RETURN"))
-	private void init(Commands.CommandSelection commandSelection, CommandBuildContext commandBuildContext, CallbackInfo ci) {
+	private void init(Commands.CommandSelection commandSelection, CommandBuildContext context, CallbackInfo ci) {
 		// CommandRegister Event
 		EventManager.post(new MinecraftEvents.CommandRegister(
 				dispatcher
