@@ -28,7 +28,7 @@ subprojects {
 
     processResources {
         def propertiesToExpand = new HashMap<String, Object>(project.properties)
-        filesMatching(["**/*.txt", "**/*.yml", "**/*.toml"]) {
+        filesMatching(["**/*.txt", "**/*.yml", "**/*.toml", "**/*.json"]) {
             expand(propertiesToExpand)
         }
     }
