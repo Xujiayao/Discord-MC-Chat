@@ -676,27 +676,12 @@ public final class DiscordManager {
 		return out;
 	}
 
-	/**
-	 * Escapes underscores inside :emoji: aliases (to prevent Markdown formatting) and
-	 * strips all other Discord Markdown formatting from a single line for console logging.
-	 *
-	 * @param line The raw message line.
-	 * @return The sanitized line, safe to write to the console logger.
-	 */
 	private static String sanitizeLineForLogging(String line) {
 		// Escape underscores in :emoji: to prevent being treated as Markdown formatting
 		line = EMOJI_ALIAS_PATTERN.matcher(line).replaceAll(m -> m.group().replace("_", "\\\\_"));
 		return MarkdownSanitizer.sanitize(line).replace("\\_", "_");
 	}
 
-	/**
-	 * Collects items from all connected guilds with deduplication by ID.
-	 *
-	 * @param <T>         The item type.
-	 * @param extractor   Extracts the item list from a guild.
-	 * @param idExtractor Extracts the unique ID string from an item.
-	 * @return A deduplicated list of items gathered across all guilds.
-	 */
 	private static <T> List<T> collectFromGuilds(Function<Guild, List<T>> extractor, Function<T, String> idExtractor) {
 		Set<String> seen = new LinkedHashSet<>();
 		List<T> result = new ArrayList<>();
@@ -733,12 +718,6 @@ public final class DiscordManager {
 		return replacePlaceholders(avatarTemplate, placeholders);
 	}
 
-	/**
-	 * Sends a message to a Discord channel using the JDA bot.
-	 *
-	 * @param channelIdentifier The ID or Name of the channel.
-	 * @param content           The message content.
-	 */
 	private static void sendBotMessage(String channelIdentifier, String content) {
 		TextChannel channel = getTextChannel(channelIdentifier);
 		if (channel != null) {
@@ -757,14 +736,6 @@ public final class DiscordManager {
 		}
 	}
 
-	/**
-	 * Sends a message using a Discord webhook. Uses allowed_mention specified in config.
-	 *
-	 * @param channel   The target channel.
-	 * @param username  The username to display.
-	 * @param avatarUrl The avatar URL to use.
-	 * @param content   The message content.
-	 */
 	private static void sendWebhookMessage(TextChannel channel, String username, String avatarUrl, String content) {
 		// Find or create webhook
 		Webhook webhook = getOrCreateWebhook(channel);
@@ -786,16 +757,6 @@ public final class DiscordManager {
 				.complete();
 	}
 
-	/**
-	 * Sends a message with a file attachment using a Discord webhook.
-	 *
-	 * @param channel   The target channel.
-	 * @param username  The username to display.
-	 * @param avatarUrl The avatar URL to use.
-	 * @param content   The message content.
-	 * @param fileData  The file data.
-	 * @param fileName  The file name.
-	 */
 	private static void sendWebhookMessageWithFile(TextChannel channel, String username, String avatarUrl,
 	                                               String content, byte[] fileData, String fileName) {
 		Webhook webhook = getOrCreateWebhook(channel);
@@ -810,12 +771,6 @@ public final class DiscordManager {
 				.queue();
 	}
 
-	/**
-	 * Gets or creates the DMCC webhook for a channel.
-	 *
-	 * @param channel The target channel
-	 * @return The webhook
-	 */
 	private static Webhook getOrCreateWebhook(TextChannel channel) {
 		return channel.retrieveWebhooks().complete()
 				.stream()
@@ -825,11 +780,6 @@ public final class DiscordManager {
 				.orElseGet(() -> channel.createWebhook("DMCC Webhook").complete()); // Must use orElseGet to avoid unnecessary creation
 	}
 
-	/**
-	 * Gets the allowed mention types from config.
-	 *
-	 * @return The list of allowed mention types
-	 */
 	private static List<Message.MentionType> getAllowedMentions() {
 		List<Message.MentionType> allowedMentions = new ArrayList<>();
 		JsonNode allowMentionsNode = ConfigManager.getConfigNode("discord.allow_mentions");
@@ -848,12 +798,6 @@ public final class DiscordManager {
 		return allowedMentions;
 	}
 
-	/**
-	 * Gets the avatar URL for a given client server name from config.
-	 *
-	 * @param clientName The client server name
-	 * @return The avatar URL, or the bot's own avatar URL if not configured
-	 */
 	private static String getClientAvatarUrl(String clientName) {
 		String avatarUrl = "";
 		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
@@ -1008,12 +952,6 @@ public final class DiscordManager {
 		}
 	}
 
-	/**
-	 * Retrieves a TextChannel by its ID or name.
-	 *
-	 * @param identifier The ID or name of the channel.
-	 * @return The TextChannel if found, null otherwise.
-	 */
 	private static TextChannel getTextChannel(String identifier) {
 		if (jda == null || jda.getStatus() == JDA.Status.SHUTTING_DOWN || jda.getStatus() == JDA.Status.SHUTDOWN) {
 			return null;

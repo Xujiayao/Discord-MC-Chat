@@ -151,11 +151,6 @@ public final class TranslationManager {
 		return component.getString();
 	}
 
-	/**
-	 * Loads translations for a specific language.
-	 *
-	 * @param language The language code
-	 */
 	private static void loadTranslations(String language) {
 		// Step 1: Official Minecraft translations
 		try {

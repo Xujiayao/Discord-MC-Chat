@@ -117,16 +117,6 @@ public final class LoggerImpl implements Logger {
 
 	// Helper methods
 
-	/**
-	 * Log a message at the specified level, optionally with a throwable.
-	 * <p>
-	 * If running in a Minecraft environment, uses the Minecraft logger via reflection.
-	 * Otherwise, logs to standard output in Minecraft style.
-	 *
-	 * @param level Logging level (TRACE, DEBUG, INFO, WARN, ERROR)
-	 * @param msg   Message to log
-	 * @param t     Throwable to log (can be null)
-	 */
 	private void log(String level, String msg, Throwable t) {
 		msg = StringUtils.escape(msg);
 
@@ -176,12 +166,6 @@ public final class LoggerImpl implements Logger {
 		}
 	}
 
-	/**
-	 * Log a message at the specified level without a throwable.
-	 *
-	 * @param level Logging level (TRACE, DEBUG, INFO, WARN, ERROR)
-	 * @param msg   Message to log
-	 */
 	private void log(String level, String msg) {
 		log(level, msg, null);
 	}

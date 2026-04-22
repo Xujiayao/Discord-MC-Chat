@@ -49,14 +49,6 @@ public final class OpLevelResolver {
 		return resolveInternal(member, user, serverName);
 	}
 
-	/**
-	 * Internal OP level resolution logic.
-	 *
-	 * @param member     The Discord Member object (null if in DMs).
-	 * @param user       The Discord User object.
-	 * @param serverName If non-null, resolve per-server OP from the {@code servers} list.
-	 * @return The resolved OP level (-1 to 4).
-	 */
 	private static int resolveInternal(Member member, User user, String serverName) {
 		int maxOp = -1;
 
@@ -93,16 +85,6 @@ public final class OpLevelResolver {
 		return maxOp;
 	}
 
-	/**
-	 * Reads the OP level from a mapping node, optionally for a specific server.
-	 * <p>
-	 * If {@code serverName} is non-null but no matching entry exists in the {@code servers} array,
-	 * falls back to the top-level {@code op_level} of the mapping node.
-	 *
-	 * @param node       The mapping node (user_mappings or role_mappings entry).
-	 * @param serverName The target server name (null for top-level OP).
-	 * @return The OP level from the mapping.
-	 */
 	private static int resolveOpFromNode(JsonNode node, String serverName) {
 		if (serverName != null) {
 			JsonNode serversArray = node.path("server_overrides");

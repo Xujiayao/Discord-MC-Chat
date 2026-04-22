@@ -113,9 +113,6 @@ public final class VerificationCodeManager {
 		UUID_TO_CODE.clear();
 	}
 
-	/**
-	 * Removes expired codes from the pending map.
-	 */
 	private static void purgeExpired() {
 		long now = System.currentTimeMillis();
 		PENDING_CODES.entrySet().removeIf(entry -> {
@@ -127,11 +124,6 @@ public final class VerificationCodeManager {
 		});
 	}
 
-	/**
-	 * Generates a random 6-character verification code.
-	 *
-	 * @return The generated code.
-	 */
 	private static String generateCode() {
 		StringBuilder sb = new StringBuilder(CODE_LENGTH);
 		for (int i = 0; i < CODE_LENGTH; i++) {

@@ -112,15 +112,6 @@ public final class MinecraftCommands {
 				.then(unlink));
 	}
 
-	/**
-	 * Creates the appropriate command sender based on whether the source is a player or console.
-	 * <p>
-	 * Players get a {@link MinecraftPlayerCommandSender} which provides player context
-	 * for commands like link/unlink. Console/command blocks get a plain {@link MinecraftCommandSender}.
-	 *
-	 * @param source The command source stack.
-	 * @return The appropriate command sender.
-	 */
 	private static LocalCommandSender createSenderForSource(CommandSourceStack source) {
 		if (source.getEntity() instanceof ServerPlayer) {
 			return new MinecraftPlayerCommandSender(source);
@@ -139,14 +130,6 @@ public final class MinecraftCommands {
 		};
 	}
 
-	/**
-	 * Command sender implementation for Minecraft command sources.
-	 * <p>
-	 * Resolves the OP level from the Minecraft permission system by probing
-	 * permission levels from 4 down to 0.
-	 *
-	 * @author Xujiayao
-	 */
 	private record MinecraftCommandSender(CommandSourceStack source) implements LocalCommandSender {
 
 		@Override
@@ -176,15 +159,6 @@ public final class MinecraftCommands {
 		}
 	}
 
-	/**
-	 * Command sender implementation for Minecraft players, providing player context
-	 * (UUID and name) for account linking commands.
-	 * <p>
-	 * If the command source is not a player (e.g., console or command block),
-	 * the player context methods return null/empty values.
-	 *
-	 * @author Xujiayao
-	 */
 	private record MinecraftPlayerCommandSender(CommandSourceStack source)
 			implements LocalCommandSender, LinkCommand.PlayerContextProvider {
 

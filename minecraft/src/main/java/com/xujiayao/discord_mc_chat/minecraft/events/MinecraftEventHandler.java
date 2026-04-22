@@ -770,16 +770,6 @@ public final class MinecraftEventHandler {
 		return !ctx.getNodes().isEmpty();
 	}
 
-	/**
-	 * Determines whether the raw input itself should be included as the "self" suggestion.
-	 * This avoids showing invalid partial tokens such as "dmcc stats minecraft:cust".
-	 *
-	 * @param rawInput      The original user input.
-	 * @param source        The command source stack for permission context.
-	 * @param nextResult    The suggestions for "<input> " (if applicable).
-	 * @param currentResult The suggestions for the current input.
-	 * @return true if rawInput is a valid candidate to be included as a suggestion, false otherwise.
-	 */
 	private static boolean isSelfCandidate(String rawInput,
 	                                       CommandSourceStack source,
 	                                       List<String> nextResult,
@@ -804,15 +794,6 @@ public final class MinecraftEventHandler {
 		}
 	}
 
-	/**
-	 * Builds a rich Component for the "not linked" notification shown on both player join
-	 * and /dmcc link when the account is not linked.
-	 * Contains inline clickable elements: [/link code: CODE] for copy-to-clipboard
-	 * and [/dmcc link] for suggest-command.
-	 *
-	 * @param code The verification code.
-	 * @return A rich Component with inline clickable elements.
-	 */
 	private static Component buildNotLinkedMessage(String code) {
 		return Component.empty()
 				.append(Component.literal(I18nManager.getDmccTranslation("linking.message.not_linked_1")))
@@ -822,13 +803,6 @@ public final class MinecraftEventHandler {
 				.append(Component.literal(I18nManager.getDmccTranslation("linking.message.not_linked_3")));
 	}
 
-	/**
-	 * Builds a rich Component for the "already linked" response from /dmcc link.
-	 * Contains an inline clickable [/dmcc unlink] suggest-command element.
-	 *
-	 * @param discordName The Discord user's display name.
-	 * @return A rich Component with inline clickable element.
-	 */
 	private static Component buildAlreadyLinkedMessage(String discordName) {
 		return Component.empty()
 				.append(Component.literal(I18nManager.getDmccTranslation("linking.message.already_linked_1", discordName)))
@@ -836,13 +810,6 @@ public final class MinecraftEventHandler {
 				.append(Component.literal(I18nManager.getDmccTranslation("linking.message.already_linked_2")));
 	}
 
-	/**
-	 * Builds a clickable Component that copies the given text to clipboard when clicked.
-	 * Displayed in green with brackets.
-	 *
-	 * @param text The text to copy and display.
-	 * @return A clickable Component.
-	 */
 	private static Component buildCopyToClipboard(String text) {
 		return Component.literal("[" + text + "]").withStyle(style -> style
 				.withClickEvent(new ClickEvent.CopyToClipboard(text))
@@ -851,13 +818,6 @@ public final class MinecraftEventHandler {
 				.withColor(ChatFormatting.GREEN));
 	}
 
-	/**
-	 * Builds a clickable Component that suggests a command (fills the chat input) when clicked.
-	 * Displayed in green with brackets.
-	 *
-	 * @param command The command to suggest (fill into chat input).
-	 * @return A clickable Component.
-	 */
 	private static Component buildSuggestCommand(String command) {
 		return Component.literal("[" + command + "]").withStyle(style -> style
 				.withClickEvent(new ClickEvent.SuggestCommand(command))
@@ -866,12 +826,6 @@ public final class MinecraftEventHandler {
 				.withColor(ChatFormatting.GREEN));
 	}
 
-	/**
-	 * Builds an ResponsePacket containing real-time metrics of the Minecraft server.
-	 *
-	 * @param server The Minecraft server instance.
-	 * @return The populated ResponsePacket.
-	 */
 	private static ResponsePacket buildInfoResponse(MinecraftServer server) {
 		String serverName = "single_server".equals(ModeManager.getMode()) ? "Internal" : ConfigManager.getString("multi_server.server_name");
 		String minecraftVersion = EnvironmentUtils.getMinecraftVersion();
@@ -912,15 +866,6 @@ public final class MinecraftEventHandler {
 		);
 	}
 
-	/**
-	 * Converts a list of {@link TextSegment} objects into a Minecraft {@link Component}.
-	 * <p>
-	 * Each segment is converted into a styled literal component with the appropriate
-	 * color, formatting, click events, and hover text as specified by the segment.
-	 *
-	 * @param segments The text segments to convert.
-	 * @return A composite Minecraft Component.
-	 */
 	private static Component buildComponentFromSegments(List<TextSegment> segments) {
 		if (segments == null || segments.isEmpty()) {
 			return Component.empty();
@@ -1100,15 +1045,6 @@ public final class MinecraftEventHandler {
 		}
 	}
 
-	/**
-	 * Parses a color string into a Minecraft {@link TextColor}.
-	 * <p>
-	 * Supports named Minecraft colors (e.g. "gold", "dark_gray") and hex color codes
-	 * (e.g. "#3366CC").
-	 *
-	 * @param colorStr The color string.
-	 * @return The parsed TextColor, or null if the string is invalid.
-	 */
 	private static TextColor parseTextColor(String colorStr) {
 		if (colorStr.startsWith("#")) {
 			try {
@@ -1132,13 +1068,6 @@ public final class MinecraftEventHandler {
 		}
 	}
 
-	/**
-	 * Sends a mention notification to a player using the configured style.
-	 *
-	 * @param player    The target player.
-	 * @param component The notification component.
-	 * @param style     The notification style: "action_bar", "title", or "chat".
-	 */
 	private static void sendMentionNotification(ServerPlayer player, Component component, String style) {
 		if (style == null) {
 			style = DEFAULT_MENTION_STYLE;

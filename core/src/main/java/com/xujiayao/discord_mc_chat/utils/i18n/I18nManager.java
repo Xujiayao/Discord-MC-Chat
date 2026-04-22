@@ -109,11 +109,6 @@ public final class I18nManager {
 		return true;
 	}
 
-	/**
-	 * Checks if the necessary language files exist as resources within the JAR.
-	 *
-	 * @return true if all required language resources are found.
-	 */
 	private static boolean checkLanguageResources() {
 		try (InputStream customMessagesStream = I18nManager.class.getResourceAsStream("/config/custom_messages/" + language + ".yml");
 		     InputStream dmccLangStream = I18nManager.class.getResourceAsStream("/lang/" + language + ".yml")) {
@@ -131,11 +126,6 @@ public final class I18nManager {
 		return true;
 	}
 
-	/**
-	 * Loads DMCC's internal translation file from resources.
-	 *
-	 * @return true if the translations were loaded successfully.
-	 */
 	private static boolean loadDmccTranslations() {
 		DMCC_TRANSLATIONS.clear();
 		String resourcePath = "/lang/" + language + ".yml";
@@ -151,11 +141,6 @@ public final class I18nManager {
 		return true;
 	}
 
-	/**
-	 * Loads the custom messages configuration file.
-	 *
-	 * @return true if the custom messages were loaded and validated successfully.
-	 */
 	private static boolean loadCustomMessages() {
 		try {
 			Files.createDirectories(CUSTOM_MESSAGES_DIR);
@@ -224,13 +209,6 @@ public final class I18nManager {
 		return customMessages;
 	}
 
-	/**
-	 * Recursively flattens a JsonNode object into a Map with dot-separated keys.
-	 *
-	 * @param node The JsonNode to flatten.
-	 * @param path The current path prefix.
-	 * @param map  The map to store the flattened key-value pairs.
-	 */
 	private static void flattenJsonToMap(JsonNode node, String path, Map<String, String> map) {
 		if (node.isObject()) {
 			String prefix = path.isEmpty() ? "" : path + ".";

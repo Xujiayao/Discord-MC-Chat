@@ -265,12 +265,6 @@ public final class LinkedAccountManager {
 		return Collections.unmodifiableMap(LINKED_ACCOUNTS);
 	}
 
-	/**
-	 * Checks if a Minecraft UUID is an offline-mode UUID (version 3).
-	 *
-	 * @param uuidString The UUID string.
-	 * @return true if the UUID is offline-mode (version 3), false otherwise.
-	 */
 	private static boolean isOfflineUuid(String uuidString) {
 		try {
 			return UUID.fromString(uuidString).version() == 3;

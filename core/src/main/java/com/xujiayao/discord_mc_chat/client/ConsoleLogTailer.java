@@ -21,11 +21,15 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
 /**
  * Tails logs/latest.log on the client and forwards lines in batches.
+ * <p>
+ * Design notes:
+ * <ul>
+ *   <li>The listener stays alive across network reconnects.</li>
+ *   <li>New lines are buffered while disconnected and flushed after reconnect.</li>
+ *   <li>On first enable, history is replayed from the start of latest.log.</li>
+ * </ul>
  *
- * <p>Design notes:
- * - The listener stays alive across network reconnects.
- * - New lines are buffered while disconnected and flushed after reconnect.
- * - On first enable, history is replayed from the start of latest.log.
+ * @author Xujiayao
  */
 final class ConsoleLogTailer {
 

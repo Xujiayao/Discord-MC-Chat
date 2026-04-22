@@ -45,10 +45,6 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 final class DiscordEventHandler extends ListenerAdapter {
 
 	private static final int AUTOCOMPLETE_TIMEOUT_SECONDS = 5;
-
-	/**
-	 * Cache of recent messages for edit/delete reference. Maps message ID to cached data.
-	 */
 	private static final ConcurrentHashMap<String, CachedMessage> messageCache = new ConcurrentHashMap<>();
 	private static final int MAX_CACHE_SIZE = 200;
 
@@ -188,13 +184,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 		event.replyChoices(choices).queue();
 	}
 
-	/**
-	 * Gets auto-complete choices for the 'at' parameter (shared by execute and console).
-	 * Includes "all_online_clients" as the first option, followed by configured server names.
-	 *
-	 * @param currentValue The current user input for filtering
-	 * @return List of choices
-	 */
 	private List<Command.Choice> getTargetAtChoices(String currentValue) {
 		List<Command.Choice> choices = new ArrayList<>();
 		String lowerValue = currentValue.toLowerCase();
@@ -216,16 +205,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 		return choices.stream().limit(25).collect(Collectors.toList());
 	}
 
-	/**
-	 * Gets auto-complete choices for the 'command' parameter of the execute or console command.
-	 * Sends a real-time auto-complete request to connected clients with the current input and OP level.
-	 * When a target server is selected, uses the per-server OP level for accurate suggestions.
-	 *
-	 * @param autoCompleteProvider Function that fetches suggestions (execute vs. console variant)
-	 * @param currentValue         The current user input for filtering
-	 * @param event                The auto-complete event to read other options
-	 * @return List of choices
-	 */
 	private List<Command.Choice> getCommandChoices(BiFunction<String, Integer, Map<String, List<String>>> autoCompleteProvider,
 	                                               String currentValue,
 	                                               CommandAutoCompleteInteractionEvent event) {
@@ -251,14 +230,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 				.collect(Collectors.toList());
 	}
 
-	/**
-	 * Gets auto-complete choices for the 'file' parameter of the log command.
-	 * In standalone mode, lists DMCC log files locally.
-	 * Otherwise, lists Minecraft log files.
-	 *
-	 * @param currentValue The current user input for filtering
-	 * @return List of choices
-	 */
 	private List<Command.Choice> getLogFileChoices(String currentValue) {
 		List<String> logFiles = LogFileUtils.listLogFiles();
 		String lowerValue = currentValue.toLowerCase();
@@ -270,12 +241,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 				.collect(Collectors.toList());
 	}
 
-	/**
-	 * Gets auto-complete choices for the 'type' parameter of the stats command.
-	 *
-	 * @param currentValue The current user input for filtering
-	 * @return List of choices
-	 */
 	private List<Command.Choice> getStatsTypeChoices(String currentValue) {
 		StatsCommand.StatsProvider provider = StatsCommand.getProvider();
 		if (provider == null) return List.of();
@@ -289,13 +254,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 				.collect(Collectors.toList());
 	}
 
-	/**
-	 * Gets auto-complete choices for the 'stat' parameter of the stats command.
-	 *
-	 * @param type         The selected stat type
-	 * @param currentValue The current user input for filtering
-	 * @return List of choices
-	 */
 	private List<Command.Choice> getStatsStatChoices(String type, String currentValue) {
 		StatsCommand.StatsProvider provider = StatsCommand.getProvider();
 		if (provider == null || type == null || type.isBlank()) return List.of();
@@ -586,9 +544,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 		NetworkManager.broadcastToClients(packet);
 	}
 
-	/**
-	 * Caches a message for later edit/delete reference.
-	 */
 	private String getRequiredPlayerChatChannel() {
 		String configPath = "broadcasts.minecraft_to_discord.player.chat";
 		String configuredChannel = ConfigManager.getString(configPath, "in-game-chat");
@@ -599,9 +554,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 		return configuredChannel;
 	}
 
-	/**
-	 * Caches a message for later edit/delete reference.
-	 */
 	private void cacheMessage(Message message) {
 		// Evict entries if cache is full
 		if (messageCache.size() >= MAX_CACHE_SIZE) {
@@ -619,20 +571,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 		messageCache.put(message.getId(), new CachedMessage(name, roleColor, message.getContentRaw(), replySegments, message.getType().isSystem()));
 	}
 
-	/**
-	 * Cached Discord message metadata for reply/edit/delete context rendering.
-	 * <p>
-	 * Stores the already-rendered one-line reply preview so fallback rendering keeps the
-	 * same formatting pipeline (including webhook message formatting) without retaining full
-	 * JDA {@link Message} objects in memory.
-	 * {@code replySegments} may be null when a preview cannot be produced for a message.
-	 *
-	 * @param authorName      Cached effective name of the message author.
-	 * @param authorRoleColor Cached role color of the message author.
-	 * @param contentRaw      Cached raw content for fallback rebuilding.
-	 * @param replySegments   Cached rendered reply preview, nullable.
-	 * @param systemMessage   Whether this is a Discord system message (e.g. pin notice).
-	 */
 	private record CachedMessage(String authorName, String authorRoleColor, String contentRaw,
 	                             List<TextSegment> replySegments,
 	                             boolean systemMessage) {

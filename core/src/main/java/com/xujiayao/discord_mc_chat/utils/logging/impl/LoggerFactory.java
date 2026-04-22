@@ -39,12 +39,6 @@ final class LoggerFactory implements ILoggerFactory {
 		return loggerMap.computeIfAbsent(name, this::createLogger);
 	}
 
-	/**
-	 * Actually creates the logger for the given name.
-	 *
-	 * @param name The name of the logger to create
-	 * @return The newly created logger
-	 */
 	private Logger createLogger(String name) {
 		return new LoggerImpl(name);
 	}

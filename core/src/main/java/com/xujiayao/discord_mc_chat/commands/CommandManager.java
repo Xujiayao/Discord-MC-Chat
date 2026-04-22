@@ -89,11 +89,6 @@ public final class CommandManager {
 		}
 	}
 
-	/**
-	 * Register a command.
-	 *
-	 * @param command The command to register
-	 */
 	private static void register(Command command) {
 		COMMANDS.put(command.name().toLowerCase(), command);
 	}

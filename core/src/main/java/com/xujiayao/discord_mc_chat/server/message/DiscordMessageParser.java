@@ -554,10 +554,6 @@ public final class DiscordMessageParser {
 		return segments;
 	}
 
-	/**
-	 * Parses the raw text content of a Discord message, handling mentions, emojis,
-	 * Markdown, hyperlinks, timestamps, and @everyone/@here inline.
-	 */
 	private static List<TextSegment> parseRawContent(String raw, Message message,
 	                                                 boolean parseMentions, boolean parseCustomEmojis,
 	                                                 boolean parseUnicodeEmojis, boolean parseMarkdown,
@@ -683,10 +679,6 @@ public final class DiscordMessageParser {
 		}
 	}
 
-	/**
-	 * Collects @everyone and @here mention tokens from the raw content.
-	 * Only active when the message actually has the mentionsEveryone flag set.
-	 */
 	private static void collectEveryoneHereTokens(String raw, Message message, List<TokenSpan> tokens) {
 		if (!message.getMentions().mentionsEveryone()) {
 			return;
@@ -781,10 +773,6 @@ public final class DiscordMessageParser {
 		}
 	}
 
-	/**
-	 * Collects Discord timestamp tokens from the raw content.
-	 * Timestamps like {@code <t:1234567890:f>} are resolved using the server's locale.
-	 */
 	private static void collectTimestampTokens(String raw, List<TokenSpan> tokens) {
 		Matcher matcher = DISCORD_TIMESTAMP_PATTERN.matcher(raw);
 		while (matcher.find()) {
@@ -840,13 +828,6 @@ public final class DiscordMessageParser {
 		return result;
 	}
 
-	/**
-	 * Parses simple Markdown formatting in plain text into styled segments.
-	 * <p>
-	 * Handles: bold-italic (***), bold (**), italic (* or _), underline (__),
-	 * strikethrough (~~), spoiler (||), code blocks (```), inline code (`),
-	 * and headings (# at start of line).
-	 */
 	private static List<TextSegment> parseMarkdownText(String text) {
 		List<TextSegment> segments = new ArrayList<>();
 
@@ -1256,9 +1237,6 @@ public final class DiscordMessageParser {
 		return out;
 	}
 
-	/**
-	 * Collects code block spans from the text, handling ANSI code blocks specially.
-	 */
 	private static void collectCodeBlockSpans(String text, List<MarkdownSpan> spans) {
 		Matcher matcher = CODE_BLOCK_PATTERN.matcher(text);
 		while (matcher.find()) {
@@ -1281,9 +1259,6 @@ public final class DiscordMessageParser {
 		}
 	}
 
-	/**
-	 * Parses ANSI escape codes in content and converts them to styled TextSegments.
-	 */
 	private static List<TextSegment> parseAnsiContent(String content) {
 		List<TextSegment> segments = new ArrayList<>();
 		Matcher matcher = ANSI_ESCAPE_PATTERN.matcher(content);
@@ -1377,16 +1352,6 @@ public final class DiscordMessageParser {
 		return result;
 	}
 
-	/**
-	 * Checks whether a URL appears inside a Discord spoiler wrapper in the raw message text.
-	 * <p>
-	 * Supports nested Markdown wrappers inside the spoiler body (for example
-	 * {@code ||***https://example.com***||}) by normalizing Markdown delimiter characters.
-	 *
-	 * @param raw The raw Discord message content.
-	 * @param url The URL to check.
-	 * @return true if the URL is wrapped in {@code ||...||}; otherwise false.
-	 */
 	private static boolean isSpoilerWrappedUrl(String raw, String url) {
 		if (raw == null || raw.isEmpty() || url == null || url.isEmpty()) {
 			return false;
@@ -1528,10 +1493,6 @@ public final class DiscordMessageParser {
 		return result;
 	}
 
-	/**
-	 * Detects whether text contains full-width CJK characters/punctuation.
-	 * Used to choose stricter truncation limits for visually wider glyphs.
-	 */
 	private static boolean containsFullWidthCharacter(String text) {
 		for (int i = 0; i < text.length(); ) {
 			int codePoint = text.codePointAt(i);

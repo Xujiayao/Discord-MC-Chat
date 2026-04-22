@@ -97,15 +97,6 @@ public final class YamlUtils {
 		return true;
 	}
 
-	/**
-	 * Recursively finds missing and extra keys between the template and the user config.
-	 *
-	 * @param template    The template node
-	 * @param config      The user config node
-	 * @param path        The current path in the configuration hierarchy
-	 * @param missingKeys Set to accumulate missing keys (present in template but not in config)
-	 * @param extraKeys   Set to accumulate extra keys (present in config but not in template)
-	 */
 	private static void findKeyDiffs(JsonNode template, JsonNode config, String path, Set<String> missingKeys, Set<String> extraKeys) {
 		if (template.isObject() && config.isObject()) {
 			// Check for missing keys (in template but not in config)
@@ -131,14 +122,6 @@ public final class YamlUtils {
 		}
 	}
 
-	/**
-	 * Recursively validates all node types in the config against the template.
-	 *
-	 * @param template The template node
-	 * @param config   The user config node
-	 * @param path     The current path in the configuration hierarchy
-	 * @return A set of type mismatch or structural issues
-	 */
 	private static Set<String> validateNodeTypes(JsonNode template, JsonNode config, String path) {
 		Set<String> issues = new HashSet<>();
 
@@ -181,13 +164,6 @@ public final class YamlUtils {
 		return issues;
 	}
 
-	/**
-	 * Finds keys from a given list that have not been changed from the template config.
-	 *
-	 * @param config         The user config node
-	 * @param templateConfig The template config node
-	 * @return A set of keys that are unmodified
-	 */
 	private static Set<String> findUnmodifiedKeys(JsonNode config, JsonNode templateConfig) {
 		Set<String> unmodifiedKeys = new HashSet<>();
 
@@ -215,13 +191,6 @@ public final class YamlUtils {
 		return unmodifiedKeys;
 	}
 
-	/**
-	 * Iterates over all fields of a JSON object node and computes a dot-notated path for each field.
-	 *
-	 * @param node   The JSON object node.
-	 * @param path   The base path to prepend (empty for root).
-	 * @param action Callback receiving the field name and its computed full path.
-	 */
 	private static void forEachObjectField(JsonNode node, String path, BiConsumer<String, String> action) {
 		Iterator<String> fieldNames = node.fieldNames();
 		while (fieldNames.hasNext()) {

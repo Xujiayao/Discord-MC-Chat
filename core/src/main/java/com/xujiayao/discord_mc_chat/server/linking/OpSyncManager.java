@@ -54,9 +54,6 @@ public final class OpSyncManager {
 		SYNC_EXECUTOR.execute(OpSyncManager::doSyncAll);
 	}
 
-	/**
-	 * Internal sync implementation that runs on the dedicated executor thread.
-	 */
 	private static void doSyncAll() {
 		if (!ConfigManager.getBoolean("account_linking.op_sync.sync_op_level_to_minecraft")) {
 			return;
@@ -99,15 +96,6 @@ public final class OpSyncManager {
 		}
 	}
 
-	/**
-	 * Resolves the OP level for a Discord user, optionally for a specific server.
-	 * <p>
-	 * Uses the JDA API to retrieve the user's guild member information for role-based resolution.
-	 *
-	 * @param discordId  The Discord user ID.
-	 * @param serverName The target server name (null for top-level/single_server).
-	 * @return The resolved OP level (-1 to 4).
-	 */
 	private static int resolveOpForDiscordUser(String discordId, String serverName) {
 		try {
 			User user = DiscordManager.retrieveUser(discordId);
