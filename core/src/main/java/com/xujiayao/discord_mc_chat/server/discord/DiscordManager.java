@@ -57,6 +57,7 @@ public final class DiscordManager {
 	private static final int CONSOLE_FORWARDING_INLINE_LIMIT = 1200;
 
 	private static final Map<String, String> DISCORD_NAME_CACHE = new ConcurrentHashMap<>();
+	private static final Set<String> CONSOLE_FORWARDING_DISABLED_CLIENTS = ConcurrentHashMap.newKeySet();
 	private static final Pattern EMOJI_ALIAS_PATTERN = Pattern.compile("(:[^:]+:)");
 	private static JDA jda;
 
@@ -438,6 +439,9 @@ public final class DiscordManager {
 		if (!ConfigManager.getBoolean("console_forwarding.enable") || lines == null || lines.isEmpty()) {
 			return;
 		}
+		if (CONSOLE_FORWARDING_DISABLED_CLIENTS.contains(clientName)) {
+			return;
+		}
 
 		String channelIdentifier = resolveConsoleChannel(clientName);
 		if (channelIdentifier == null || channelIdentifier.isBlank()) {
@@ -446,6 +450,7 @@ public final class DiscordManager {
 
 		TextChannel channel = getTextChannel(channelIdentifier);
 		if (channel == null) {
+			CONSOLE_FORWARDING_DISABLED_CLIENTS.add(clientName);
 			return;
 		}
 
@@ -479,6 +484,9 @@ public final class DiscordManager {
 		if (!ConfigManager.getBoolean("console_forwarding.enable")) {
 			return;
 		}
+		if (started) {
+			CONSOLE_FORWARDING_DISABLED_CLIENTS.remove(clientName);
+		}
 		if (jda == null || jda.getStatus() == JDA.Status.SHUTTING_DOWN || jda.getStatus() == JDA.Status.SHUTDOWN) {
 			return;
 		}
@@ -490,6 +498,7 @@ public final class DiscordManager {
 
 		TextChannel channel = getTextChannel(channelIdentifier);
 		if (channel == null) {
+			CONSOLE_FORWARDING_DISABLED_CLIENTS.add(clientName);
 			return;
 		}
 
