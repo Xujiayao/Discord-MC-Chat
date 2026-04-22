@@ -66,25 +66,10 @@ public final class EventPackets {
 		 * Event types relayed from Discord to Minecraft.
 		 */
 		public enum EventType {
-			/**
-			 * Discord chat message relay.
-			 */
 			CHAT,
-			/**
-			 * Discord command execution notification relay.
-			 */
 			COMMAND,
-			/**
-			 * Discord reaction relay.
-			 */
 			REACTION,
-			/**
-			 * Discord message edit relay.
-			 */
 			EDIT,
-			/**
-			 * Discord message delete relay.
-			 */
 			DELETE
 		}
 	}
@@ -117,57 +102,18 @@ public final class EventPackets {
 		 * Supported Minecraft event types for Discord broadcast templates.
 		 */
 		public enum MessageType {
-			/**
-			 * Server start event.
-			 */
 			SERVER_STARTED,
-			/**
-			 * Server stopping event.
-			 */
 			SERVER_STOPPING,
-			/**
-			 * Player join event.
-			 */
 			PLAYER_JOIN,
-			/**
-			 * Player quit event.
-			 */
 			PLAYER_QUIT,
-			/**
-			 * Player chat event.
-			 */
 			PLAYER_CHAT,
-			/**
-			 * Player command event.
-			 */
 			PLAYER_COMMAND,
-			/**
-			 * Player death event.
-			 */
 			PLAYER_DIE,
-			/**
-			 * Player advancement event.
-			 */
 			PLAYER_ADVANCEMENT,
-			/**
-			 * Player game mode change event.
-			 */
 			PLAYER_CHANGE_GAME_MODE,
-			/**
-			 * /say source command event.
-			 */
 			SOURCE_SAY,
-			/**
-			 * /tellraw source command event.
-			 */
 			SOURCE_TELL_RAW,
-			/**
-			 * /msg source command event.
-			 */
 			SOURCE_MSG,
-			/**
-			 * /me source command event.
-			 */
 			SOURCE_ME
 		}
 	}
@@ -176,10 +122,6 @@ public final class EventPackets {
 	 * Packet that relays Minecraft-originated messages back to Minecraft clients.
 	 */
 	public static final class MinecraftRelayPacket extends Packet {
-		/**
-		 * Relay message type.
-		 */
-		public MessageType type;
 		/**
 		 * Parsed message segments.
 		 */
@@ -216,30 +158,10 @@ public final class EventPackets {
 		/**
 		 * Creates a Minecraft relay packet.
 		 *
-		 * @param type     Relay message type.
 		 * @param segments Parsed message segments.
 		 */
-		public MinecraftRelayPacket(MessageType type, List<TextSegment> segments) {
-			this.type = type;
+		public MinecraftRelayPacket(List<TextSegment> segments) {
 			this.segments = segments;
-		}
-
-		/**
-		 * Message types for Minecraft relays.
-		 */
-		public enum MessageType {
-			/**
-			 * Player-originated message.
-			 */
-			USER_MESSAGE,
-			/**
-			 * System-originated message.
-			 */
-			SYSTEM_MESSAGE,
-			/**
-			 * Command-originated message.
-			 */
-			COMMAND
 		}
 	}
 

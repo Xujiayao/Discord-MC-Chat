@@ -313,7 +313,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		discordPlaceholders.put("message", parsed.discordContent());
 		DiscordManager.sendMinecraftUserMessage(sourceClientName, channelNode, discordPlaceholders);
 
-		broadcastMinecraftRelay(packet, sourceClientName, MinecraftRelayPacket.MessageType.USER_MESSAGE, relaySegments, overwriteSegments, parsed, true, false, true, channelNode);
+		broadcastMinecraftRelay(packet, sourceClientName, relaySegments, overwriteSegments, parsed, true, false, true, channelNode);
 	}
 
 	private void handleMinecraftCommandMessage(MinecraftEventPacket packet, String sourceClientName) {
@@ -334,7 +334,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		DiscordManager.sendMinecraftUserMessage(sourceClientName, "player.command", discordPlaceholders);
 
 		boolean echoPlayerCommandToSource = ConfigManager.getBoolean("broadcasts.echo_player_command_to_source");
-		broadcastMinecraftRelay(packet, sourceClientName, MinecraftRelayPacket.MessageType.COMMAND, relaySegments, overwriteSegments, parsed, false, echoPlayerCommandToSource, false, "player.command");
+		broadcastMinecraftRelay(packet, sourceClientName, relaySegments, overwriteSegments, parsed, false, echoPlayerCommandToSource, false, "player.command");
 	}
 
 	private void handleMinecraftTellRawMessage(MinecraftEventPacket packet, String sourceClientName) {
@@ -393,7 +393,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		}
 		DiscordManager.clientBroadcast(sourceClientName, channelNode, lang, placeholders);
 
-		broadcastMinecraftRelay(packet, sourceClientName, MinecraftRelayPacket.MessageType.SYSTEM_MESSAGE, relaySegments, overwriteSegments, parsed, true, false, true, channelNode);
+		broadcastMinecraftRelay(packet, sourceClientName, relaySegments, overwriteSegments, parsed, true, false, true, channelNode);
 	}
 
 	private String resolveMinecraftToDiscordMessage(String lang, Map<String, String> placeholders) {
@@ -417,7 +417,6 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 	private void broadcastMinecraftRelay(MinecraftEventPacket packet,
 	                                     String sourceClientName,
-	                                     MinecraftRelayPacket.MessageType relayType,
 	                                     List<TextSegment> relaySegments,
 	                                     List<TextSegment> overwriteSegments,
 	                                     MinecraftMessageParser.ParsedMessage parsed,
@@ -441,7 +440,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		String displayName = notifyMentions ? packet.placeholders.getOrDefault("display_name", "Unknown") : null;
 
 		if (toOtherClients) {
-			MinecraftRelayPacket relayPacket = new MinecraftRelayPacket(relayType, relaySegments);
+			MinecraftRelayPacket relayPacket = new MinecraftRelayPacket(relaySegments);
 			if (notifyMentions) {
 				applyMentionNotification(relayPacket, displayName, parsed);
 			}
@@ -449,7 +448,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		}
 
 		if (sourceEchoEnabled) {
-			MinecraftRelayPacket sourcePacket = new MinecraftRelayPacket(relayType, overwriteSegments);
+			MinecraftRelayPacket sourcePacket = new MinecraftRelayPacket(overwriteSegments);
 			if (notifyMentions) {
 				applyMentionNotification(sourcePacket, displayName, parsed);
 			}
@@ -472,7 +471,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		}
 
 		if (toOtherClients) {
-			MinecraftRelayPacket relayPacket = new MinecraftRelayPacket(MinecraftRelayPacket.MessageType.SYSTEM_MESSAGE, relaySegments);
+			MinecraftRelayPacket relayPacket = new MinecraftRelayPacket(relaySegments);
 			if (useSerializedComponent) {
 				relayPacket.componentJson = componentJson;
 				relayPacket.componentPlaceholder = TELLRAW_COMPONENT_PLACEHOLDER;
@@ -482,7 +481,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		}
 
 		if (sourceEchoEnabled) {
-			MinecraftRelayPacket sourcePacket = new MinecraftRelayPacket(MinecraftRelayPacket.MessageType.SYSTEM_MESSAGE, overwriteSegments);
+			MinecraftRelayPacket sourcePacket = new MinecraftRelayPacket(overwriteSegments);
 			if (useSerializedComponent) {
 				sourcePacket.componentJson = componentJson;
 				sourcePacket.componentPlaceholder = TELLRAW_COMPONENT_PLACEHOLDER;
