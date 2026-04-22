@@ -90,12 +90,8 @@ public final class TerminalManager {
 	 *
 	 * @author Xujiayao
 	 */
-	public static class TerminalCommandSender implements LocalCommandSender {
-
-		/**
-		 * Creates a terminal command sender.
-		 */
-		public TerminalCommandSender() {
+	public static final class TerminalCommandSender implements LocalCommandSender {
+		private TerminalCommandSender() {
 		}
 
 		@Override
