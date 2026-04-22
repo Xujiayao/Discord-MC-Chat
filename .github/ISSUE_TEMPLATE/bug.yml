@@ -25,6 +25,8 @@ body:
         If a version is not listed below, it is not supported by DMCC.
       multiple: false
       options:
+        - "26.1.2"
+        - "26.1.1"
         - "26.1"
         - "1.21.11"
         - "1.21.10"
