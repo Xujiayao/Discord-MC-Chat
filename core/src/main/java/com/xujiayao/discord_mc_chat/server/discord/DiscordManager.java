@@ -714,7 +714,7 @@ public final class DiscordManager {
 			}
 		}
 
-		String avatarTemplate = ConfigManager.getString("discord.webhook.avatar_url", "https://mc-heads.net/avatar/{player_name}.png");
+		String avatarTemplate = ConfigManager.getString("discord.webhook.avatar_url", "https://mc-heads.net/avatar/{player_name}");
 		return replacePlaceholders(avatarTemplate, placeholders);
 	}
 

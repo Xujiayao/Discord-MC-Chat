@@ -42,7 +42,7 @@ discord:
   # 多服务器模式下，Webhook 用于发送 DMCC 客户端消息，
   webhook:
     enable_fake_user_style: true  # 是否使用伪用户样式的 Webhook 发送玩家聊天消息
-    avatar_url: "https://mc-heads.net/avatar/{player_name}.png"
+    avatar_url: "https://mc-heads.net/avatar/{player_name}"
   allow_mentions: # 允许 Bot 和 Webhook 触发提及的对象
     - "everyone"
     - "users"
