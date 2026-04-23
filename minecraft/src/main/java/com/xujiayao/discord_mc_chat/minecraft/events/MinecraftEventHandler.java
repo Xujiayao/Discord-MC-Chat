@@ -50,7 +50,6 @@ import net.minecraft.server.players.NameAndId;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.server.players.ServerOpList;
 import net.minecraft.server.players.ServerOpListEntry;
-import net.minecraft.server.rcon.RconConsoleSource;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.StatType;
@@ -309,7 +308,7 @@ public final class MinecraftEventHandler {
 
 			// Construct a virtual CommandSourceStack with the sender's OP level
 			// and a custom CommandSource that bridges output back to the DMCC sender
-			RconConsoleSource rconConsoleSource = new RconConsoleSource(serverInstance);
+			DmccRconConsoleSource rconConsoleSource = new DmccRconConsoleSource(serverInstance);
 			CommandSourceStack source = new CommandSourceStack(
 					rconConsoleSource,
 					Vec3.atLowerCornerOf(serverInstance.getRespawnData().pos()),
@@ -374,7 +373,7 @@ public final class MinecraftEventHandler {
 			int mcOp = Math.max(0, event.opLevel());
 
 			CommandSourceStack source = new CommandSourceStack(
-					new RconConsoleSource(serverInstance),
+					new DmccRconConsoleSource(serverInstance),
 					Vec3.atLowerCornerOf(serverInstance.getRespawnData().pos()),
 					Vec2.ZERO,
 					serverInstance.findRespawnDimension(),
