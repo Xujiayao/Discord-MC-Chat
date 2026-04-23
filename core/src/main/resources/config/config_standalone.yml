@@ -11,17 +11,14 @@ mode: standalone
 # https://dmcc.xujiayao.com/
 # ==================================================
 
-# 语言设置
 language: "to_be_auto_replaced"
 
-# 多服务器功能
 multi_server:
   connection:
     host: "127.0.0.1"  # Limit accessibility, change to "0.0.0.0" if allow external connections
     port: 5000
     shared_secret: "to_be_auto_replaced"
-  servers:
-    # This list acts as a whitelist. Only clients with a server name defined here are allowed to connect.
+  servers:  # This list acts as a whitelist. Only clients with a server name defined here are allowed to connect.
     - name: "SMP"
       minecraft_version: "26.1.2"
       avatar_url: ""
@@ -31,32 +28,28 @@ multi_server:
       avatar_url: ""
       color: "green"
 
-# Discord 设置
 discord:
-  # 机器人设置
   bot:
-    token: "your_token_here"  # Discord 机器人令牌
-    enable_status: true  # 有玩家在线时 Online / 没玩家在线时 Idle / 没有DMCC客户端在线时 Do Not Disturb
+    token: "your_token_here"
+    enable_status: true  # Online when players are online / Idle when no players are online / Do Not Disturb when no DMCC client is online
     enable_activity: true
-  # 玩家聊天消息 Webhook 设置
-  # 多服务器模式下，Webhook 用于发送 DMCC 客户端消息，
+  # In multi-server mode, webhook is always used to send DMCC client messages.
   webhook:
-    enable_fake_user_style: true  # 是否使用伪用户样式的 Webhook 发送玩家聊天消息
+    enable_fake_user_style: true  # Whether to send player chat messages using fake-user-style webhooks
     avatar_url: "https://mc-heads.net/avatar/{player_name}"
-  allow_mentions: # 允许 Bot 和 Webhook 触发提及的对象
+  allow_mentions:  # Mention targets allowed for webhook messages
     - "everyone"
     - "users"
     - "roles"
 
-# 消息广播设置
 broadcasts:
-  discord_to_minecraft: # true or false
+  discord_to_minecraft:  # true or false
     chat: true
     reaction: true
     edit: true
     delete: true
     command: true
-  minecraft_to_discord: # channel name, empty = disable
+  minecraft_to_discord:  # channel name, empty = disable
     server:
       started: "in-game-chat"
       stopped: "in-game-chat"
@@ -71,9 +64,9 @@ broadcasts:
     source:
       say: "in-game-chat"
       tell_raw: "in-game-chat"
-      msg: "in-game-chat" # msg / tell / w
+      msg: "in-game-chat"  # msg / tell / w
       me: "in-game-chat"
-  minecraft_to_minecraft: # For other_dmcc_clients only
+  minecraft_to_minecraft:  # For other_dmcc_clients only
     server:
       started: true
       stopped: true
@@ -88,14 +81,29 @@ broadcasts:
     source:
       say: true
       tell_raw: true
-      msg: true # msg / tell / w
+      msg: true  # msg / tell / w
       me: true
-  # Vanilla 不会把玩家执行命令本身回显给玩家。
-  # 开启后，DMCC 会将解析后的 player.command 消息回显给源客户端。
-  # 该开关独立于 overwrite_minecraft_source_messages。
+  excluded_commands:
+    # Can specify targets, only exclude private messages while allowing @a broadcasts
+    - "/msg (?!@a)(.*)"
+    - "/tell (?!@a)(.*)"
+    - "/w (?!@a)(.*)"
+    - "/tellraw (?!@a)(.*)"
+    # Team messages
+    - "/teammsg (.*)"
+    - "/tm (.*)"
+    # Authentication related commands
+    - "/login (.*)"
+    - "/l (.*)"
+    - "/register (.*)"
+    - "/reg (.*)"
+    - "/account (.*)"
+    - "/auth (.*)"
+  # Vanilla does not echo a player's own command input back to that player.
+  # When enabled, DMCC echoes the parsed player.command message back to the source client.
+  # This switch is independent from overwrite_minecraft_source_messages.
   echo_player_command_to_source: true
 
-# 消息格式设置
 message_parsing:
   discord_to_minecraft:
     markdown: true
@@ -113,12 +121,7 @@ message_parsing:
   minecraft_to_discord:
     custom_emojis: true
     mentions: true
-    # 这里被注释的选项，是因为 Discord 本来就能够自动处理。后面会删除这四个注释的开关。
-    # markdown: true
-    # unicode_emojis: true
-    # hyperlinks: true
-    # timestamps: true
-  minecraft_to_minecraft: # For other_dmcc_clients & overwrite_minecraft_source_messages
+  minecraft_to_minecraft:  # For other_dmcc_clients & overwrite_minecraft_source_messages
     markdown: true
     unicode_emojis: true
     custom_emojis: true
@@ -133,91 +136,69 @@ message_parsing:
   # for the source DMCC client.
   overwrite_minecraft_source_messages: false
 
-# 命令过滤设置
-excluded_commands:
-  # Can specify targets, only exclude private messages while allowing @a broadcasts
-  - "/msg (?!@a)(.*)"
-  - "/tell (?!@a)(.*)"
-  - "/w (?!@a)(.*)"
-  - "/tellraw (?!@a)(.*)"
-  # Team messages
-  - "/teammsg (.*)"
-  - "/tm (.*)"
-  # Authentication related commands
-  - "/login (.*)"
-  - "/l (.*)"
-  - "/register (.*)"
-  - "/reg (.*)"
-  - "/account (.*)"
-  - "/auth (.*)"
-
-# MSPT 监控设置
 mspt_monitoring:
   enable: true
   interval_seconds: 10
   threshold: 50
   channel: "in-game-chat"
 
-# 控制台转发设置
 console_forwarding:
   enable: true
   execute_messages_from_channel: true
-  # 敏感信息正则过滤
+  # Sensitive information regex filters
   filter_regex:
-    - "\\\\b(?:[0-9]{1,3}\\\\.){3}[0-9]{1,3}\\\\b"  # IPv4 地址
+    - "\\\\b(?:[0-9]{1,3}\\\\.){3}[0-9]{1,3}\\\\b"  # IPv4 address
   channels:
     - server: "SMP"
       channel: "console-smp"
     - server: "CMP"
       channel: "console-cmp"
 
-# 频道更新设置
 channel_updating:
   interval_minutes: 10
-  # 频道主题更新
   channel_topic_updating:
     enable: true
     channels:
       - "in-game-chat"
       - "console-smp"
       - "console-cmp"
-  # 语音频道状态更新
   voice_channel_updating:
     enable: true
     server_status_channel_id: "111111"
     player_count_channel_id: "222222"
 
-# 账户绑定设置
-# 强制启用
+# Force enabled
 account_linking:
-  # 权限映射与同步：将 Discord 的身份映射为 Minecraft 的 OP 等级。
-  # 这个 OP 等级将被用于决定该用户是否有权执行某些 DMCC 命令（包括 execute 的委托鉴权）。
+  # Permission mapping and sync: map Discord identity to Minecraft OP levels.
+  # This OP level is used to decide whether a user can execute specific DMCC commands
+  # (including delegated authorization for execute).
   op_sync:
-    # 开启后，DMCC 还会自动在游戏内赋予/撤销已绑定玩家实际的 OP 权限。
+    # When enabled, DMCC also grants/revokes actual in-game OP permissions for linked players.
     sync_op_level_to_minecraft: false
-    # 基于特定用户的映射（优先级最高）。
+    # User-specific mappings (highest priority).
     user_mappings:
       - user: "xujiayao"
         op_level: 4
-        server_overrides: # 如果该子服务器不需要覆盖上方定义的 OP 等级设置，可以删除该项。此列表可以为空。
+        server_overrides:  # Remove this key if this sub-server does not need to override the OP level above. The list can be empty.
           - server: "SMP"
             op_level: 4
           - server: "CMP"
             op_level: 4
-    # 基于身份组的映射。若用户有多个身份组，取映射的最高 OP 等级。
+    # Role-based mappings. If a user has multiple roles, the highest mapped OP level is used.
     role_mappings:
-      # 示例 1：拥有 "Admins" 角色的用户将被视为 OP 3。
+      # Example 1: users with the "Admins" role are treated as OP level 3.
       - role: "Admins"
         op_level: 3
-        server_overrides: # 如果该子服务器不需要覆盖上方定义的 OP 等级设置，可以删除该项。此列表可以为空。
+        server_overrides:  # Remove this key if this sub-server does not need to override the OP level above. The list can be empty.
           - server: "SMP"
             op_level: 3
           - server: "CMP"
             op_level: 3
-      # 示例 2：可将基础认证角色映射为 OP 0，使其有权执行无需特殊权限的 DMCC 命令（如委托执行白名单）。
+      # Example 2: map a basic verified role to OP level 0 so users can run DMCC commands
+      # that do not require elevated privileges (such as delegated whitelist execution).
       - role: "Players"
         op_level: 0
-        server_overrides: # 如果该子服务器不需要覆盖上方定义的 OP 等级设置，可以删除该项。此列表可以为空。
+        server_overrides:  # Remove this key if this sub-server does not need to override the OP level above. The list can be empty.
           - server: "SMP"
             op_level: 0
           - server: "CMP"
@@ -228,12 +209,11 @@ account_linking:
   discord_user_avatar_for_webhooks: false
   use_discord_role_color_for_mc_chats: true
 
-# DMCC 命令权限设置
-# 配置要求执行命令的最低 OP 等级。
-# 特殊值：
+# Configure the minimum OP level required to run each command.
+# Special value:
 #   Level -1
-#     允许任何人执行（包括未绑定账号的 Discord 游客）
-# OP 等级对应的官方 Minecraft 权限级别：
+#     Allow anyone to execute (including unlinked Discord users)
+# Official Minecraft permission levels corresponding to OP levels:
 #   Level 0 (normal)
 #     Player has no special permissions.
 #   Level 1 (moderator)
@@ -253,15 +233,13 @@ command_permission_levels:
   links: 4
   log: 4
   reload: 4
-  shutdown: 4 # This is for standalone DMCC only, which will exit JVM
+  shutdown: 4  # This is for standalone DMCC only, which will exit JVM
   unlink: 0
 
-# 检查更新设置
 check_for_updates:
-  enable: true  # 是否检查更新
-  mention_admins: true  # 是否在更新通知中提及管理员
+  enable: true
+  mention_owner: true  # Whether to mention the owner (op level 4) in update notifications
   channel: "in-game-chat"
 
-# 关闭设置
 shutdown:
-  graceful_shutdown: true  # 是否优雅关闭 DMCC
+  graceful_shutdown: true

@@ -15,7 +15,7 @@ version: ${mod_version}
 # Only edit the items below if you know what you are doing!
 # ==================================================
 
-xxxxx_to_minecraft: # for both discord_to_minecraft and minecraft_to_minecraft
+xxxxx_to_minecraft:  # for both discord_to_minecraft and minecraft_to_minecraft
   mentioned: "{effective_name} mentioned you!"
   user_message:
     - text: "[{server}] "
@@ -35,7 +35,7 @@ xxxxx_to_minecraft: # for both discord_to_minecraft and minecraft_to_minecraft
       bold: false
       color: "gray"
 
-overwrite: # for source DMCC client only
+overwrite:  # for source DMCC client only
   standalone:
     user_message:
       - text: "[{server}] "
@@ -68,7 +68,7 @@ overwrite: # for source DMCC client only
         color: "white"
 
 discord_to_minecraft:
-  response: # 回复其它用户的消息时，原消息的格式
+  response:  # Original message format when replying to another user's message
     - text: "    ┌──── "
       bold: true
       color: "dark_gray"
@@ -88,7 +88,7 @@ discord_to_minecraft:
     - text: "executed [{command}] command!"
       bold: false
       color: "gray"
-  reaction: # Reaction message format
+  reaction:  # Reaction message format
     - text: "[Discord] "
       bold: true
       color: "blue"
@@ -104,7 +104,7 @@ discord_to_minecraft:
     - text: " to this message!"
       bold: false
       color: "gray"
-  edit: # Message edit notification format
+  edit:  # Message edit notification format
     - text: "[Discord] "
       bold: true
       color: "blue"
@@ -114,7 +114,7 @@ discord_to_minecraft:
     - text: "edited this message! Edited message becomes:"
       bold: false
       color: "gray"
-  edited_message: # Edited message content format
+  edited_message:  # Edited message content format
     - text: "    └──── "
       bold: true
       color: "dark_gray"
@@ -124,7 +124,7 @@ discord_to_minecraft:
     - text: "{message}"
       bold: false
       color: "gray"
-  delete: # Message delete notification format
+  delete:  # Message delete notification format
     - text: "[Discord] "
       bold: true
       color: "blue"
@@ -138,6 +138,7 @@ discord_to_minecraft:
       bold: false
       color: "gray"
 
+# These are for system_messages
 minecraft_to_xxxxx:
   server:
     start: ":white_check_mark: **Server started!**"
@@ -154,6 +155,7 @@ minecraft_to_xxxxx:
   source:
     me: ":eyes: **{action}**"
 
+# These are for user_messages
 minecraft_to_discord:
   user_message:
     enabled_fake_user_style:
@@ -164,7 +166,7 @@ minecraft_to_discord:
         username: "{display_name}"
         content: "{message}"
     disabled_fake_user_style:
-      standalone: "[{server}] <{display_name}> {message}" # should still use each DMCC clients webhook to send
+      standalone: "[{server}] <{display_name}> {message}"
       single_server: "<{display_name}> {message}"
 
 activity:

@@ -11,7 +11,6 @@ mode: multi_server_client
 # https://dmcc.xujiayao.com/
 # ==================================================
 
-# 多服务器功能
 multi_server:
   server_name: "your_server_name_here"
   connection:
@@ -19,12 +18,11 @@ multi_server:
     port: 5000
     shared_secret: "your_shared_secret_here"
 
-# DMCC 命令权限设置
-# 配置要求执行命令的最低 OP 等级。
-# 特殊值：
+# Configure the minimum OP level required to run each command.
+# Special value:
 #   Level -1
-#     允许任何人执行（包括未绑定账号的 Discord 游客）
-# OP 等级对应的官方 Minecraft 权限级别：
+#     Allow anyone to execute (including unlinked Discord users)
+# Official Minecraft permission levels corresponding to OP levels:
 #   Level 0 (normal)
 #     Player has no special permissions.
 #   Level 1 (moderator)

@@ -361,7 +361,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 			return false;
 		}
 
-		JsonNode excludedCommands = ConfigManager.getConfigNode("excluded_commands");
+		JsonNode excludedCommands = ConfigManager.getConfigNode("broadcasts.excluded_commands");
 		if (excludedCommands.isArray()) {
 			for (JsonNode excludedCommand : excludedCommands) {
 				if (excludedCommand != null && excludedCommand.isTextual() && Pattern.matches(excludedCommand.asText(), command)) {
