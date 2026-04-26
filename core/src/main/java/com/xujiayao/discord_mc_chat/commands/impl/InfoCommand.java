@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.commands.impl;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.Constants;
 import com.xujiayao.discord_mc_chat.client.ClientDMCC;
 import com.xujiayao.discord_mc_chat.commands.Command;

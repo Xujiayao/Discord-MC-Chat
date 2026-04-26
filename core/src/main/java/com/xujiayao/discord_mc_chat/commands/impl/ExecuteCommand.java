@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.commands.impl;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.commands.Command;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
@@ -204,7 +204,7 @@ public final class ExecuteCommand implements Command {
 		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
 		if (serversNode.isArray()) {
 			for (JsonNode node : serversNode) {
-				if (target.equals(node.path("name").asText())) {
+				if (target.equals(node.path("name").asString())) {
 					return true;
 				}
 			}

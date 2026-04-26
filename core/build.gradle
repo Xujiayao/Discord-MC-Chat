@@ -9,16 +9,17 @@ dependencies {
         exclude module: "opus-java" // for encoding audio into opus
         exclude module: "tink" // for encrypting and decrypting audio
         exclude module: "slf4j-api"
-        exclude module: "jackson-core"
-        exclude module: "jackson-databind"
-        exclude module: "jackson-annotations"
+// TODO
+//        exclude module: "jackson-core"
+//        exclude module: "jackson-databind"
+//        exclude module: "jackson-annotations"
         exclude module: "okhttp"
     }
 
     shadow api("org.slf4j:slf4j-api:${slf4j_api_version}")
 
-    shadow api("com.fasterxml.jackson.core:jackson-databind:${jackson_databind_version}")
-    shadow api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jackson_dataformat_yaml_version}")
+    shadow api("tools.jackson.core:jackson-databind:${jackson_version}")
+    shadow api("tools.jackson.dataformat:jackson-dataformat-yaml:${jackson_version}")
 
     shadow api("com.squareup.okhttp3:okhttp:${okhttp_version}")
 
@@ -58,21 +59,23 @@ shadowJar {
     exclude "META-INF/*kotlin_module*"
     exclude "META-INF/io.netty.versions.properties"
 
+    // TODO to be removed
     relocate "com.fasterxml", "dmcc_dep.com.fasterxml"
+
     relocate "com.neovisionaries", "dmcc_dep.com.neovisionaries"
-    relocate "gnu", "dmcc_dep.gnu"
-    relocate "io", "dmcc_dep.io"
+    relocate "gnu.trove", "dmcc_dep.gnu.trove"
+    relocate "io.netty", "dmcc_dep.io.netty"
     relocate "kotlin", "dmcc_dep.kotlin"
     relocate "net.dv8tion", "dmcc_dep.net.dv8tion"
+    relocate "net.fellbaum", "dmcc_dep.net.fellbaum"
     relocate "okhttp3", "dmcc_dep.okhttp3"
     relocate "okio", "dmcc_dep.okio"
     relocate "org.apache", "dmcc_dep.org.apache"
     relocate "org.intellij", "dmcc_dep.org.intellij"
     relocate "org.jetbrains", "dmcc_dep.org.jetbrains"
     relocate "org.slf4j", "dmcc_dep.org.slf4j"
-    relocate "org.yaml", "dmcc_dep.org.yaml"
-    // TODO does not work
-    // relocate "net.fellbaum", "dmcc_dep.net.fellbaum"
+    relocate "org.snakeyaml", "dmcc_dep.org.snakeyaml"
+    relocate "tools.jackson", "dmcc_dep.tools.jackson"
 
     from "../LICENSE"
 }

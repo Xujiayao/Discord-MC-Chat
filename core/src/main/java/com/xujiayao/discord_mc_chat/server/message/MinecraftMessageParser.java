@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.server.message;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.utils.MojangUtils;
@@ -86,7 +86,7 @@ public final class MinecraftMessageParser {
 	 * @return Localized mention notification text.
 	 */
 	public static String getMentionNotificationText(String senderDisplayName) {
-		String template = I18nManager.getCustomMessages().path("xxxxx_to_minecraft").path("mentioned").asText("{effective_name} mentioned you!");
+		String template = I18nManager.getCustomMessages().path("xxxxx_to_minecraft").path("mentioned").asString("{effective_name} mentioned you!");
 		return template.replace("{effective_name}", senderDisplayName);
 	}
 
@@ -531,9 +531,9 @@ public final class MinecraftMessageParser {
 			return out;
 		}
 		for (JsonNode segNode : templateNode) {
-			String text = segNode.path("text").asText("");
+			String text = segNode.path("text").asString("");
 			boolean bold = segNode.path("bold").asBoolean(false);
-			String color = segNode.path("color").asText("");
+			String color = segNode.path("color").asString("");
 
 			text = replaceTemplatePlaceholders(text, serverName, effectiveName, roleColor);
 			color = replaceTemplatePlaceholders(color, serverName, effectiveName, roleColor);
@@ -574,8 +574,8 @@ public final class MinecraftMessageParser {
 		JsonNode servers = ConfigManager.getConfigNode("multi_server.servers");
 		if (servers.isArray()) {
 			for (JsonNode node : servers) {
-				if (serverName.equals(node.path("name").asText())) {
-					String color = node.path("color").asText("white");
+				if (serverName.equals(node.path("name").asString())) {
+					String color = node.path("color").asString("white");
 					return color == null || color.isBlank() ? "white" : color;
 				}
 			}

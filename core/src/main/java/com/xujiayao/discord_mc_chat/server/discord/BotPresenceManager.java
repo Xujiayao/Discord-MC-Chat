@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.server.discord;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Info.ResponsePacket;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
@@ -101,9 +101,9 @@ public final class BotPresenceManager {
 			if (customMessages != null) {
 				String activityText;
 				if (onlineServerCount == 0) {
-					activityText = customMessages.path("activity").path("all_servers_offline").asText();
+					activityText = customMessages.path("activity").path("all_servers_offline").asString();
 				} else {
-					activityText = customMessages.path("activity").path("at_least_one_server_online").asText();
+					activityText = customMessages.path("activity").path("at_least_one_server_online").asString();
 				}
 
 				activityText = activityText.replace("{online_player_count}", String.valueOf(onlinePlayerCount))

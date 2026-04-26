@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.server.discord;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
@@ -188,7 +188,7 @@ public final class MsptMonitor {
 			return;
 		}
 
-		String template = customMessages.path("mspt_monitoring").path(messageKey).asText();
+		String template = customMessages.path("mspt_monitoring").path(messageKey).asString();
 		if (template == null || template.isBlank()) {
 			return;
 		}

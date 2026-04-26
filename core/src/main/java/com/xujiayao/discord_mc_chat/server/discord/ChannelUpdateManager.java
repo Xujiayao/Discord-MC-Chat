@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.server.discord;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
@@ -168,7 +168,7 @@ public final class ChannelUpdateManager {
 
 		for (int i = 0; i < channelsNode.size(); i++) {
 			JsonNode node = channelsNode.get(i);
-			String identifier = node.asText("").trim();
+			String identifier = node.asString("").trim();
 			String configPath = "channel_updating.channel_topic_updating.channels[" + i + "]";
 			if (identifier.isBlank()) {
 				LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_identifier_missing", configPath));
@@ -376,11 +376,11 @@ public final class ChannelUpdateManager {
 	private static String buildTemplate(JsonNode node, ChannelUpdateContext context, boolean useModeKeyWhenOnline) {
 		String template;
 		if (context.onlineServerCount() == 0) {
-			template = node.path("all_servers_offline").asText("");
+			template = node.path("all_servers_offline").asString("");
 		} else if (useModeKeyWhenOnline) {
-			template = node.path("at_least_one_server_online").path(getModeKey()).asText("");
+			template = node.path("at_least_one_server_online").path(getModeKey()).asString("");
 		} else {
-			template = node.path("at_least_one_server_online").asText("");
+			template = node.path("at_least_one_server_online").asString("");
 		}
 
 		return applyPlaceholders(template, context);

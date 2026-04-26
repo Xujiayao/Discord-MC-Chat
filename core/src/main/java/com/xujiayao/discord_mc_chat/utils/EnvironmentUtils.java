@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.utils;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -65,7 +65,7 @@ public final class EnvironmentUtils {
 			JsonNode templateConfig = YAML_MAPPER.readTree(templateStream);
 
 			// Extract version field
-			String version = templateConfig.path("version").asText();
+			String version = templateConfig.path("version").asString();
 
 			if (version.isBlank()) {
 				throw new RuntimeException("Version field not found in template configuration");

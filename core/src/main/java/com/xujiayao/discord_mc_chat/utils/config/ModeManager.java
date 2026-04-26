@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.utils.config;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.utils.YamlUtils;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
@@ -79,7 +79,7 @@ public final class ModeManager {
 				return false;
 			}
 
-			String loadedMode = userModeConfig.path("mode").asText();
+			String loadedMode = userModeConfig.path("mode").asString();
 
 			if (!"single_server".equals(loadedMode) && !"multi_server_client".equals(loadedMode)) {
 				LOGGER.error(I18nManager.getDmccTranslation("utils.config.mode.invalid_selection", loadedMode, MODE_FILE_PATH));

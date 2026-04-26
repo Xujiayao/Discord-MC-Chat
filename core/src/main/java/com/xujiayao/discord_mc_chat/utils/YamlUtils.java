@@ -1,11 +1,11 @@
 package com.xujiayao.discord_mc_chat.utils;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
@@ -43,8 +43,8 @@ public final class YamlUtils {
 		}
 
 		// Check config version
-		String configVersion = userConfig.path("version").asText();
-		String templateVersion = templateConfig.path("version").asText();
+		String configVersion = userConfig.path("version").asString();
+		String templateVersion = templateConfig.path("version").asString();
 
 		if (!templateVersion.equals(configVersion)) {
 			LOGGER.error(I18nManager.getDmccTranslation("utils.yaml.version_mismatch", templateVersion, configVersion));
@@ -192,9 +192,8 @@ public final class YamlUtils {
 	}
 
 	private static void forEachObjectField(JsonNode node, String path, BiConsumer<String, String> action) {
-		Iterator<String> fieldNames = node.fieldNames();
-		while (fieldNames.hasNext()) {
-			String fieldName = fieldNames.next();
+		for (Map.Entry<String, JsonNode> field : node.properties()) {
+			String fieldName = field.getKey();
 			String currentPath = path.isEmpty() ? fieldName : path + "." + fieldName;
 			action.accept(fieldName, currentPath);
 		}

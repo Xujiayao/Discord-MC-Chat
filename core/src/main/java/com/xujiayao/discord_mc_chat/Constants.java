@@ -1,11 +1,12 @@
 package com.xujiayao.discord_mc_chat;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.yaml.YAMLFactory;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.logging.Logger;
 import okhttp3.OkHttpClient;
+import tools.jackson.dataformat.yaml.YAMLMapper;
+import tools.jackson.dataformat.yaml.YAMLWriteFeature;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -30,9 +31,9 @@ public final class Constants {
 	/**
 	 * Shared YAML mapper configured for DMCC config files.
 	 */
-	public static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory()
-			.enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
-			.disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
+	public static final ObjectMapper YAML_MAPPER = new YAMLMapper.Builder(new YAMLFactory())
+			.enable(YAMLWriteFeature.MINIMIZE_QUOTES)
+			.disable(YAMLWriteFeature.WRITE_DOC_START_MARKER).build();
 
 	/**
 	 * Shared JSON mapper.

@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.server;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.Constants;
 import com.xujiayao.discord_mc_chat.commands.impl.ConsoleCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.ExecuteCommand;
@@ -279,7 +279,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
 		if (serversNode.isArray()) {
 			for (JsonNode node : serversNode) {
-				if (serverName.equals(node.path("name").asText())) {
+				if (serverName.equals(node.path("name").asString())) {
 					return node;
 				}
 			}
@@ -293,7 +293,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 	private String getMinecraftVersion(String serverName) {
 		JsonNode config = findServerConfig(serverName);
-		return config != null ? config.path("minecraft_version").asText() : "";
+		return config != null ? config.path("minecraft_version").asString() : "";
 	}
 
 	private void handleMinecraftUserMessage(MinecraftEventPacket packet,
@@ -364,7 +364,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		JsonNode excludedCommands = ConfigManager.getConfigNode("broadcasts.excluded_commands");
 		if (excludedCommands.isArray()) {
 			for (JsonNode excludedCommand : excludedCommands) {
-				if (excludedCommand != null && excludedCommand.isTextual() && Pattern.matches(excludedCommand.asText(), command)) {
+				if (excludedCommand != null && excludedCommand.isString() && Pattern.matches(excludedCommand.asString(), command)) {
 					return true;
 				}
 			}
@@ -408,7 +408,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 			messageNode = messageNode.path(part);
 		}
 
-		String message = messageNode.asText("");
+		String message = messageNode.asString("");
 		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
 			message = message.replace("{" + entry.getKey() + "}", entry.getValue());
 		}
@@ -516,7 +516,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 				return false;
 			}
 			for (JsonNode node : channelsNode) {
-				if (serverName.equals(node.path("server").asText("")) && !node.path("channel").asText("").isBlank()) {
+				if (serverName.equals(node.path("server").asString("")) && !node.path("channel").asString("").isBlank()) {
 					return true;
 				}
 			}

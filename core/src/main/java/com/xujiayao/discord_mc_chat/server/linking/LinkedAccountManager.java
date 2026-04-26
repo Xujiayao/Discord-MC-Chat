@@ -1,7 +1,6 @@
 package com.xujiayao.discord_mc_chat.server.linking;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.type.TypeReference;
+import tools.jackson.core.type.TypeReference;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
 import java.io.IOException;
@@ -284,7 +283,7 @@ public final class LinkedAccountManager {
 	public record LinkEntry(
 			String minecraftUuid,
 			long linkedAt,
-			@JsonInclude(JsonInclude.Include.NON_NULL) String offlinePlayerName
+			String offlinePlayerName
 	) {
 	}
 }

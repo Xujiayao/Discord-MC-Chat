@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.server.discord;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.server.message.DiscordMessageParser;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
@@ -359,7 +359,7 @@ public final class DiscordManager {
 			String mode = "standalone".equals(ModeManager.getMode()) ? "standalone" : "single_server";
 			boolean fakeUserStyle = ConfigManager.getBoolean("discord.webhook.enable_fake_user_style");
 
-			String contentTemplate = node.path("disabled_fake_user_style").path(mode).asText("<{display_name}> {message}");
+			String contentTemplate = node.path("disabled_fake_user_style").path(mode).asString("<{display_name}> {message}");
 			String content = replacePlaceholders(contentTemplate, placeholders);
 
 			for (String line : content.split("\n")) {
@@ -369,8 +369,8 @@ public final class DiscordManager {
 
 			if (fakeUserStyle) {
 				JsonNode styleNode = node.path("enabled_fake_user_style").path(mode);
-				String usernameTemplate = styleNode.path("username").asText("{display_name}");
-				contentTemplate = styleNode.path("content").asText("{message}");
+				String usernameTemplate = styleNode.path("username").asString("{display_name}");
+				contentTemplate = styleNode.path("content").asString("{message}");
 
 				String username = replacePlaceholders(usernameTemplate, placeholders);
 				content = replacePlaceholders(contentTemplate, placeholders);
@@ -539,8 +539,8 @@ public final class DiscordManager {
 			}
 			for (int i = 0; i < channels.size(); i++) {
 				JsonNode node = channels.get(i);
-				String server = node.path("server").asText("").trim();
-				String configuredChannel = node.path("channel").asText("").trim();
+				String server = node.path("server").asString("").trim();
+				String configuredChannel = node.path("channel").asString("").trim();
 				String configPath = "console_forwarding.channels[" + i + "]";
 				if (server.isBlank()) {
 					LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_identifier_missing", configPath + ".server"));
@@ -572,8 +572,8 @@ public final class DiscordManager {
 				return "";
 			}
 			for (JsonNode node : channels) {
-				if (clientName.equals(node.path("server").asText(""))) {
-					return node.path("channel").asText("");
+				if (clientName.equals(node.path("server").asString(""))) {
+					return node.path("channel").asString("");
 				}
 			}
 			return "";
@@ -594,7 +594,7 @@ public final class DiscordManager {
 		}
 
 		String mode = "standalone".equals(ModeManager.getMode()) ? "standalone" : "single_server";
-		String template = statusNode.path(mode).asText(statusNode.asText(""));
+		String template = statusNode.path(mode).asString(statusNode.asString(""));
 		if (template.isBlank()) {
 			return "";
 		}
@@ -617,10 +617,10 @@ public final class DiscordManager {
 		}
 
 		for (JsonNode node : regexList) {
-			if (node == null || !node.isTextual()) {
+			if (node == null || !node.isString()) {
 				continue;
 			}
-			String regex = node.asText("");
+			String regex = node.asString("");
 			if (regex.isBlank()) {
 				continue;
 			}
@@ -785,7 +785,7 @@ public final class DiscordManager {
 		JsonNode allowMentionsNode = ConfigManager.getConfigNode("discord.allow_mentions");
 		if (allowMentionsNode.isArray()) {
 			for (JsonNode node : allowMentionsNode) {
-				switch (node.asText()) {
+				switch (node.asString()) {
 					case "everyone" -> {
 						allowedMentions.add(Message.MentionType.EVERYONE);
 						allowedMentions.add(Message.MentionType.HERE);
@@ -803,8 +803,8 @@ public final class DiscordManager {
 		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
 		if (serversNode != null && serversNode.isArray()) {
 			for (JsonNode node : serversNode) {
-				if (clientName.equals(node.path("name").asText())) {
-					avatarUrl = node.path("avatar_url").asText();
+				if (clientName.equals(node.path("name").asString())) {
+					avatarUrl = node.path("avatar_url").asString();
 				}
 			}
 		}
@@ -888,7 +888,7 @@ public final class DiscordManager {
 				messageNode = messageNode.path(part);
 			}
 
-			String message = messageNode.asText();
+			String message = messageNode.asString();
 
 			for (Map.Entry<String, String> entry : placeholders.entrySet()) {
 				message = message.replace("{" + entry.getKey() + "}", entry.getValue());

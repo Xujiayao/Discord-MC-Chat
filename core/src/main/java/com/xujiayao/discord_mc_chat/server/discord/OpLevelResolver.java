@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.server.discord;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import net.dv8tion.jda.api.entities.Member;
@@ -56,7 +56,7 @@ public final class OpLevelResolver {
 		JsonNode userMappings = ConfigManager.getConfigNode("account_linking.op_sync.user_mappings");
 		if (userMappings.isArray()) {
 			for (JsonNode node : userMappings) {
-				if (user.getId().equals(node.path("user").asText()) || user.getName().equals(node.path("user").asText())) {
+				if (user.getId().equals(node.path("user").asString()) || user.getName().equals(node.path("user").asString())) {
 					maxOp = Math.max(maxOp, resolveOpFromNode(node, serverName));
 				}
 			}
@@ -68,7 +68,7 @@ public final class OpLevelResolver {
 			if (roleMappings.isArray()) {
 				for (Role role : member.getRoles()) {
 					for (JsonNode node : roleMappings) {
-						if (role.getId().equals(node.path("role").asText()) || role.getName().equals(node.path("role").asText())) {
+						if (role.getId().equals(node.path("role").asString()) || role.getName().equals(node.path("role").asString())) {
 							maxOp = Math.max(maxOp, resolveOpFromNode(node, serverName));
 						}
 					}
@@ -90,7 +90,7 @@ public final class OpLevelResolver {
 			JsonNode serversArray = node.path("server_overrides");
 			if (serversArray.isArray()) {
 				for (JsonNode serverEntry : serversArray) {
-					if (serverName.equals(serverEntry.path("server").asText())) {
+					if (serverName.equals(serverEntry.path("server").asString())) {
 						return serverEntry.path("op_level").asInt(-1);
 					}
 				}

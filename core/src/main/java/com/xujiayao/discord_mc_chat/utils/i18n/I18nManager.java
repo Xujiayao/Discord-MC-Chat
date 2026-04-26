@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.utils.i18n;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
 import com.xujiayao.discord_mc_chat.utils.YamlUtils;
 import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
@@ -215,8 +215,8 @@ public final class I18nManager {
 			for (Map.Entry<String, JsonNode> field : node.properties()) {
 				flattenJsonToMap(field.getValue(), prefix + field.getKey(), map);
 			}
-		} else if (node.isTextual()) {
-			map.put(path, node.asText());
+		} else if (node.isString()) {
+			map.put(path, node.asString());
 		}
 	}
 }

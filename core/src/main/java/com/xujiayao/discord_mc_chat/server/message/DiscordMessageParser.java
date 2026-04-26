@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.server.message;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
@@ -113,9 +113,9 @@ public final class DiscordMessageParser {
 		JsonNode chatNode = I18nManager.getCustomMessages().path("xxxxx_to_minecraft").path("user_message");
 		if (chatNode.isArray()) {
 			for (JsonNode segNode : chatNode) {
-				String text = segNode.path("text").asText("");
+				String text = segNode.path("text").asString("");
 				boolean bold = segNode.path("bold").asBoolean(false);
-				String color = segNode.path("color").asText("");
+				String color = segNode.path("color").asString("");
 
 				// Replace placeholders
 				text = replacePlaceholders(text, effectiveName, roleColor);
@@ -180,9 +180,9 @@ public final class DiscordMessageParser {
 		JsonNode commandNode = I18nManager.getCustomMessages().path("discord_to_minecraft").path("command");
 		if (commandNode.isArray()) {
 			for (JsonNode segNode : commandNode) {
-				String text = segNode.path("text").asText("");
+				String text = segNode.path("text").asString("");
 				boolean bold = segNode.path("bold").asBoolean(false);
-				String color = segNode.path("color").asText("");
+				String color = segNode.path("color").asString("");
 
 				text = text.replace("{effective_name}", effectiveName)
 						.replace("{role_color}", roleColor)
@@ -239,9 +239,9 @@ public final class DiscordMessageParser {
 		JsonNode responseNode = I18nManager.getCustomMessages().path("discord_to_minecraft").path("response");
 		if (responseNode.isArray()) {
 			for (JsonNode segNode : responseNode) {
-				String text = segNode.path("text").asText("");
+				String text = segNode.path("text").asString("");
 				boolean bold = segNode.path("bold").asBoolean(false);
-				String color = segNode.path("color").asText("");
+				String color = segNode.path("color").asString("");
 
 				text = text.replace("{effective_name}", refName);
 				color = color.replace("{role_color}", refRoleColor);
@@ -281,9 +281,9 @@ public final class DiscordMessageParser {
 		JsonNode reactionNode = I18nManager.getCustomMessages().path("discord_to_minecraft").path("reaction");
 		if (reactionNode.isArray()) {
 			for (JsonNode segNode : reactionNode) {
-				String text = segNode.path("text").asText("");
+				String text = segNode.path("text").asString("");
 				boolean bold = segNode.path("bold").asBoolean(false);
-				String color = segNode.path("color").asText("");
+				String color = segNode.path("color").asString("");
 
 				text = text.replace("{effective_name}", reactorName)
 						.replace("{emoji}", emojiText);
@@ -311,9 +311,9 @@ public final class DiscordMessageParser {
 		JsonNode editNode = I18nManager.getCustomMessages().path("discord_to_minecraft").path("edit");
 		if (editNode.isArray()) {
 			for (JsonNode segNode : editNode) {
-				String text = segNode.path("text").asText("");
+				String text = segNode.path("text").asString("");
 				boolean bold = segNode.path("bold").asBoolean(false);
-				String color = segNode.path("color").asText("");
+				String color = segNode.path("color").asString("");
 
 				text = text.replace("{effective_name}", editorName);
 				color = color.replace("{role_color}", roleColor);
@@ -346,9 +346,9 @@ public final class DiscordMessageParser {
 		JsonNode editedNode = I18nManager.getCustomMessages().path("discord_to_minecraft").path("edited_message");
 		if (editedNode.isArray()) {
 			for (JsonNode segNode : editedNode) {
-				String text = segNode.path("text").asText("");
+				String text = segNode.path("text").asString("");
 				boolean bold = segNode.path("bold").asBoolean(false);
-				String color = segNode.path("color").asText("");
+				String color = segNode.path("color").asString("");
 
 				text = text.replace("{effective_name}", effectiveName);
 				color = color.replace("{role_color}", roleColor);
@@ -387,9 +387,9 @@ public final class DiscordMessageParser {
 		JsonNode deleteNode = I18nManager.getCustomMessages().path("discord_to_minecraft").path("delete");
 		if (deleteNode.isArray()) {
 			for (JsonNode segNode : deleteNode) {
-				String text = segNode.path("text").asText("");
+				String text = segNode.path("text").asString("");
 				boolean bold = segNode.path("bold").asBoolean(false);
-				String color = segNode.path("color").asText("");
+				String color = segNode.path("color").asString("");
 
 				text = text.replace("{effective_name}", deleterName);
 				color = color.replace("{role_color}", roleColor);
@@ -408,7 +408,7 @@ public final class DiscordMessageParser {
 	 * @return The mention notification text.
 	 */
 	public static String getMentionNotificationText(String effectiveName) {
-		String template = I18nManager.getCustomMessages().path("xxxxx_to_minecraft").path("mentioned").asText();
+		String template = I18nManager.getCustomMessages().path("xxxxx_to_minecraft").path("mentioned").asString();
 		return template.replace("{effective_name}", effectiveName);
 	}
 

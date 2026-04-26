@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.utils.config;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
 import com.xujiayao.discord_mc_chat.utils.YamlUtils;
@@ -79,7 +79,7 @@ public final class ConfigManager {
 			JsonNode userConfig = YAML_MAPPER.readTree(Files.newBufferedReader(CONFIG_FILE_PATH, StandardCharsets.UTF_8));
 
 			// Check for mode consistency
-			String configMode = userConfig.path("mode").asText();
+			String configMode = userConfig.path("mode").asString();
 			if (!expectedMode.equals(configMode)) {
 				LOGGER.error(I18nManager.getDmccTranslation("utils.config.config.mode_mismatch"));
 				LOGGER.error(I18nManager.getDmccTranslation("utils.config.config.mode_mismatch_detail", expectedMode, configMode));
@@ -162,7 +162,7 @@ public final class ConfigManager {
 	 * @return The string value at the specified path, or null if not found
 	 */
 	public static String getString(String path) {
-		return getValue(path, JsonNode::asText);
+		return getValue(path, JsonNode::asString);
 	}
 
 	/**
@@ -173,7 +173,7 @@ public final class ConfigManager {
 	 * @return The string value at the specified path, or null if not found
 	 */
 	public static String getString(String path, String defaultValue) {
-		String value = getValue(path, JsonNode::asText);
+		String value = getValue(path, JsonNode::asString);
 		return value == null ? defaultValue : value;
 	}
 

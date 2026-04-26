@@ -1,7 +1,7 @@
 package com.xujiayao.discord_mc_chat.utils;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,9 +32,8 @@ public final class JsonUtils {
 	 *
 	 * @param json The JSON String to convert
 	 * @return The converted Map
-	 * @throws IOException If parsing fails
 	 */
-	public static Map<String, String> toStringMap(String json) throws IOException {
+	public static Map<String, String> toStringMap(String json) {
 		return YAML_MAPPER.readValue(normalize(json), new TypeReference<>() {
 		});
 	}

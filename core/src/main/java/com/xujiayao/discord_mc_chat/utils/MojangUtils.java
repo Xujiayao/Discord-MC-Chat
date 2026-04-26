@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.utils;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 
 import java.util.Map;
 import java.util.UUID;
@@ -60,7 +60,7 @@ public final class MojangUtils {
 			String response = HttpUtils.get(PROFILE_URL + dashlessUuid);
 			JsonNode profile = JSON_MAPPER.readTree(response);
 
-			String name = profile.path("name").asText(null);
+			String name = profile.path("name").asString(null);
 			if (name != null && !name.isEmpty()) {
 				NAME_CACHE.put(uuidString, name);
 				return name;

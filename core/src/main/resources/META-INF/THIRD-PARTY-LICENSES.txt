@@ -20,8 +20,8 @@ This project includes the following third-party libraries. Each is distributed u
 
 3. Jackson
    - Maven coordinates:
-     - com.fasterxml.jackson.core:jackson-databind:${jackson_databind_version}
-     - com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jackson_dataformat_yaml_version}
+     - tools.jackson.core:jackson-databind:${jackson_version}
+     - tools.jackson.dataformat:jackson-dataformat-yaml:${jackson_version}
    - License: Apache License 2.0
    - Homepage:
      - https://github.com/FasterXML/jackson-databind
