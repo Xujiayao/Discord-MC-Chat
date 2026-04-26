@@ -41,6 +41,13 @@ This project includes the following third-party libraries. Each is distributed u
    - Homepage:
      - https://netty.io/
 
+6. JEmoji
+   - Maven coordinates:
+     - net.fellbaum:jemoji:${jemoji_version}
+   - License: Apache License 2.0
+   - Homepage:
+     - https://github.com/felldo/JEmoji
+
 ---
 
 All third-party dependencies have been relocated to the "dmcc_dep" package and may themselves contain additional transitive dependencies, which are distributed under their own respective licenses. For details, please refer to the relevant library's homepage or distribution package.

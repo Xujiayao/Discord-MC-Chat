@@ -62,6 +62,7 @@ shadowJar {
     // TODO to be removed
     relocate "com.fasterxml", "dmcc_dep.com.fasterxml"
 
+    // Classes
     relocate "com.neovisionaries", "dmcc_dep.com.neovisionaries"
     relocate "gnu.trove", "dmcc_dep.gnu.trove"
     relocate "io.netty", "dmcc_dep.io.netty"
@@ -73,9 +74,13 @@ shadowJar {
     relocate "org.apache", "dmcc_dep.org.apache"
     relocate "org.intellij", "dmcc_dep.org.intellij"
     relocate "org.jetbrains", "dmcc_dep.org.jetbrains"
+    relocate "org.jspecify", "dmcc_dep.org.jspecify"
     relocate "org.slf4j", "dmcc_dep.org.slf4j"
     relocate "org.snakeyaml", "dmcc_dep.org.snakeyaml"
     relocate "tools.jackson", "dmcc_dep.tools.jackson"
+
+    // Resources
+    relocate "jemoji", "dmcc_dep.jemoji"
 
     from "../LICENSE"
 }
