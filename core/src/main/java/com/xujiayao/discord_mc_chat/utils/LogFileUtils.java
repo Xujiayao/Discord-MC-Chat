@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.utils;
 
-import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
+import com.xujiayao.discord_mc_chat.config.I18nManager;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

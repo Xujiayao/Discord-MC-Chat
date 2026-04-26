@@ -1,4 +1,4 @@
-package com.xujiayao.discord_mc_chat.utils.logging.impl;
+package com.xujiayao.discord_mc_chat.logging.impl;
 
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;

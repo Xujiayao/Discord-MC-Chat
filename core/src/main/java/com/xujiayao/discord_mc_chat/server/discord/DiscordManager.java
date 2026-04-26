@@ -1,13 +1,12 @@
 package com.xujiayao.discord_mc_chat.server.discord;
 
-import tools.jackson.databind.JsonNode;
+import com.xujiayao.discord_mc_chat.config.ConfigManager;
+import com.xujiayao.discord_mc_chat.config.I18nManager;
+import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.server.message.DiscordMessageParser;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
-import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
-import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
-import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -27,6 +26,7 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import tools.jackson.databind.JsonNode;
 
 import java.time.Duration;
 import java.util.ArrayList;

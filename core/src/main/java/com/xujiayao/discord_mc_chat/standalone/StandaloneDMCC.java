@@ -1,7 +1,7 @@
 package com.xujiayao.discord_mc_chat.standalone;
 
 import com.xujiayao.discord_mc_chat.DMCC;
-import com.xujiayao.discord_mc_chat.utils.logging.impl.LoggerImpl;
+import com.xujiayao.discord_mc_chat.logging.impl.LoggerImpl;
 
 /**
  * The entry point for Standalone environment.

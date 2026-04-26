@@ -1,10 +1,10 @@
 package com.xujiayao.discord_mc_chat.minecraft.translations;
 
+import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.HttpUtils;
 import com.xujiayao.discord_mc_chat.utils.JsonUtils;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
-import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.Identifier;

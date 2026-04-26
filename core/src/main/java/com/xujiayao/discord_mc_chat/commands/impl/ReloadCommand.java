@@ -3,7 +3,7 @@ package com.xujiayao.discord_mc_chat.commands.impl;
 import com.xujiayao.discord_mc_chat.DMCC;
 import com.xujiayao.discord_mc_chat.commands.Command;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
-import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
+import com.xujiayao.discord_mc_chat.config.I18nManager;
 
 /**
  * Reload command implementation.

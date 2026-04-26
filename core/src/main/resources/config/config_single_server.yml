@@ -22,19 +22,19 @@ discord:
   webhook:
     enable_fake_user_style: true  # Whether to send player chat messages using fake-user-style webhooks
     avatar_url: "https://mc-heads.net/avatar/{player_name}"
-  allow_mentions:  # Mention targets allowed for webhook messages
+  allow_mentions: # Mention targets allowed for webhook messages
     - "everyone"
     - "users"
     - "roles"
 
 broadcasts:
-  discord_to_minecraft:  # true or false
+  discord_to_minecraft: # true or false
     chat: true
     reaction: true
     edit: true
     delete: true
     command: true
-  minecraft_to_discord:  # channel name, empty = disable
+  minecraft_to_discord: # channel name, empty = disable
     server:
       started: "in-game-chat"
       stopped: "in-game-chat"
@@ -89,7 +89,7 @@ message_parsing:
   minecraft_to_discord:
     custom_emojis: true
     mentions: true
-  minecraft_to_minecraft:  # For overwrite_minecraft_source_messages only
+  minecraft_to_minecraft: # For overwrite_minecraft_source_messages only
     markdown: true
     unicode_emojis: true
     custom_emojis: true

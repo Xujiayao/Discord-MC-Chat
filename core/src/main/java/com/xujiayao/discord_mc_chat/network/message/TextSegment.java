@@ -1,4 +1,4 @@
-package com.xujiayao.discord_mc_chat.utils.message;
+package com.xujiayao.discord_mc_chat.network.message;
 
 import com.xujiayao.discord_mc_chat.network.packets.EventPackets.DiscordRelayPacket;
 

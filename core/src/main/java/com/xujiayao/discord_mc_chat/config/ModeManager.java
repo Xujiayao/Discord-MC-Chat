@@ -1,8 +1,7 @@
-package com.xujiayao.discord_mc_chat.utils.config;
+package com.xujiayao.discord_mc_chat.config;
 
-import tools.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.utils.YamlUtils;
-import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
+import tools.jackson.databind.JsonNode;
 
 import java.io.IOException;
 import java.io.InputStream;

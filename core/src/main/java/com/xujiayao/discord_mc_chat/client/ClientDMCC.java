@@ -1,8 +1,8 @@
 package com.xujiayao.discord_mc_chat.client;
 
+import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
-import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

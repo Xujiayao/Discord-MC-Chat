@@ -1,9 +1,9 @@
 package com.xujiayao.discord_mc_chat.server;
 
+import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.discord.MsptMonitor;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
-import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

@@ -1,4 +1,4 @@
-package com.xujiayao.discord_mc_chat.utils.events;
+package com.xujiayao.discord_mc_chat.events;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;

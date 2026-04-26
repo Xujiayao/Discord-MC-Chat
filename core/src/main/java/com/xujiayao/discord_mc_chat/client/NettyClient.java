@@ -1,11 +1,11 @@
 package com.xujiayao.discord_mc_chat.client;
 
+import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.packets.MiscPackets.LatencyPingPacket;
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
 import com.xujiayao.discord_mc_chat.network.serialization.JavaSerializerDecoder;
 import com.xujiayao.discord_mc_chat.network.serialization.JavaSerializerEncoder;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
-import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;

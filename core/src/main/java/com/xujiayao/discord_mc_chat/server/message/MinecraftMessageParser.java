@@ -1,18 +1,18 @@
 package com.xujiayao.discord_mc_chat.server.message;
 
-import tools.jackson.databind.JsonNode;
+import com.xujiayao.discord_mc_chat.config.ConfigManager;
+import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.utils.MojangUtils;
-import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
-import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
-import com.xujiayao.discord_mc_chat.utils.message.TextSegment;
-import com.xujiayao.discord_mc_chat.utils.message.TextSegmentUtils;
+import com.xujiayao.discord_mc_chat.network.message.TextSegment;
+import com.xujiayao.discord_mc_chat.utils.TextSegmentUtils;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
 import net.fellbaum.jemoji.EmojiManager;
+import tools.jackson.databind.JsonNode;
 
 import java.awt.Color;
 import java.util.ArrayList;

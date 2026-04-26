@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.utils;
 
-import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
+import com.xujiayao.discord_mc_chat.config.ConfigManager;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;

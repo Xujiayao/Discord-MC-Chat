@@ -1,9 +1,11 @@
 package com.xujiayao.discord_mc_chat.server;
 
-import tools.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.Constants;
 import com.xujiayao.discord_mc_chat.commands.impl.ConsoleCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.ExecuteCommand;
+import com.xujiayao.discord_mc_chat.config.ConfigManager;
+import com.xujiayao.discord_mc_chat.config.I18nManager;
+import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.AuthResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.ChallengePacket;
@@ -27,14 +29,12 @@ import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
 import com.xujiayao.discord_mc_chat.server.message.DiscordMessageParser;
 import com.xujiayao.discord_mc_chat.server.message.MinecraftMessageParser;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
-import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
-import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
-import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
-import com.xujiayao.discord_mc_chat.utils.message.TextSegment;
+import com.xujiayao.discord_mc_chat.network.message.TextSegment;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
+import tools.jackson.databind.JsonNode;
 
 import java.util.HashMap;
 import java.util.List;

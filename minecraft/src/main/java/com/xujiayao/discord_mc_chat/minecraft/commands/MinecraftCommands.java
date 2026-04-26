@@ -4,7 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
 import com.xujiayao.discord_mc_chat.commands.LocalCommandSender;
 import com.xujiayao.discord_mc_chat.commands.impl.LinkCommand;
-import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
+import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;

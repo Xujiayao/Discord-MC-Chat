@@ -1,16 +1,16 @@
 package com.xujiayao.discord_mc_chat.commands.impl;
 
-import tools.jackson.databind.JsonNode;
 import com.xujiayao.discord_mc_chat.commands.Command;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
+import com.xujiayao.discord_mc_chat.config.ConfigManager;
+import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.discord.JdaCommandSender;
 import com.xujiayao.discord_mc_chat.server.discord.OpLevelResolver;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
-import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
-import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
+import tools.jackson.databind.JsonNode;
 
 import java.util.ArrayList;
 import java.util.List;

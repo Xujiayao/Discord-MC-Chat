@@ -1,11 +1,10 @@
 package com.xujiayao.discord_mc_chat.server.message;
 
-import tools.jackson.databind.JsonNode;
+import com.xujiayao.discord_mc_chat.config.ConfigManager;
+import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
-import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
-import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
-import com.xujiayao.discord_mc_chat.utils.message.TextSegment;
-import com.xujiayao.discord_mc_chat.utils.message.TextSegmentUtils;
+import com.xujiayao.discord_mc_chat.network.message.TextSegment;
+import com.xujiayao.discord_mc_chat.utils.TextSegmentUtils;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -15,6 +14,7 @@ import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.entities.messages.MessagePoll;
 import net.dv8tion.jda.api.entities.sticker.StickerItem;
 import net.fellbaum.jemoji.EmojiManager;
+import tools.jackson.databind.JsonNode;
 
 import java.awt.Color;
 import java.util.ArrayList;

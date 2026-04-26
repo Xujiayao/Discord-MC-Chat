@@ -2,7 +2,7 @@ package com.xujiayao.discord_mc_chat.standalone;
 
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
 import com.xujiayao.discord_mc_chat.commands.LocalCommandSender;
-import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
+import com.xujiayao.discord_mc_chat.config.I18nManager;
 
 import java.io.IOException;
 import java.nio.file.Files;

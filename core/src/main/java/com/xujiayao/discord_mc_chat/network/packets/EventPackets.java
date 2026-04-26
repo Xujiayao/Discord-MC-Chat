@@ -1,6 +1,6 @@
 package com.xujiayao.discord_mc_chat.network.packets;
 
-import com.xujiayao.discord_mc_chat.utils.message.TextSegment;
+import com.xujiayao.discord_mc_chat.network.message.TextSegment;
 
 import java.util.List;
 import java.util.Map;

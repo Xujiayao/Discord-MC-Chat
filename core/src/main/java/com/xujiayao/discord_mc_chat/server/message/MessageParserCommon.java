@@ -1,8 +1,8 @@
 package com.xujiayao.discord_mc_chat.server.message;
 
-import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
-import com.xujiayao.discord_mc_chat.utils.message.TextSegment;
-import com.xujiayao.discord_mc_chat.utils.message.TextSegmentUtils;
+import com.xujiayao.discord_mc_chat.config.I18nManager;
+import com.xujiayao.discord_mc_chat.network.message.TextSegment;
+import com.xujiayao.discord_mc_chat.utils.TextSegmentUtils;
 import net.fellbaum.jemoji.EmojiManager;
 
 import java.time.Instant;

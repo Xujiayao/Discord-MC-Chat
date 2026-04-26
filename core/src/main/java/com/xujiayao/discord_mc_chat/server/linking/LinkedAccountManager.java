@@ -1,7 +1,7 @@
 package com.xujiayao.discord_mc_chat.server.linking;
 
+import com.xujiayao.discord_mc_chat.config.I18nManager;
 import tools.jackson.core.type.TypeReference;
-import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
 import java.io.IOException;
 import java.nio.file.Files;

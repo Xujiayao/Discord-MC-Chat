@@ -1,9 +1,9 @@
 package com.xujiayao.discord_mc_chat.server;
 
+import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.serialization.JavaSerializerDecoder;
 import com.xujiayao.discord_mc_chat.network.serialization.JavaSerializerEncoder;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
-import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;

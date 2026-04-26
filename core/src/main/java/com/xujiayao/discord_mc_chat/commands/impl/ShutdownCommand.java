@@ -3,8 +3,8 @@ package com.xujiayao.discord_mc_chat.commands.impl;
 import com.xujiayao.discord_mc_chat.DMCC;
 import com.xujiayao.discord_mc_chat.commands.Command;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
-import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
-import com.xujiayao.discord_mc_chat.utils.logging.impl.LoggerImpl;
+import com.xujiayao.discord_mc_chat.config.I18nManager;
+import com.xujiayao.discord_mc_chat.logging.impl.LoggerImpl;
 
 import static com.xujiayao.discord_mc_chat.standalone.StandaloneDMCC.SHUTDOWN_THREAD;
 

@@ -2,13 +2,13 @@ package com.xujiayao.discord_mc_chat;
 
 import com.xujiayao.discord_mc_chat.client.ClientDMCC;
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
+import com.xujiayao.discord_mc_chat.config.ConfigManager;
+import com.xujiayao.discord_mc_chat.config.I18nManager;
+import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.server.ServerDMCC;
 import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
-import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
-import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
-import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 import okhttp3.Cache;
 
 import java.util.concurrent.ExecutorService;

@@ -12,10 +12,10 @@ import com.xujiayao.discord_mc_chat.commands.impl.ShutdownCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.UnlinkCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.WhitelistCommand;
+import com.xujiayao.discord_mc_chat.config.ConfigManager;
+import com.xujiayao.discord_mc_chat.config.I18nManager;
+import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
-import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
-import com.xujiayao.discord_mc_chat.utils.config.ModeManager;
-import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
 import java.util.ArrayList;
 import java.util.Collection;

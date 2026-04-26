@@ -2,10 +2,10 @@ package com.xujiayao.discord_mc_chat.commands.impl;
 
 import com.xujiayao.discord_mc_chat.commands.Command;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
+import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.utils.MojangUtils;
-import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
 
 import java.time.Instant;
 import java.time.ZoneId;

@@ -2,7 +2,7 @@ package com.xujiayao.discord_mc_chat.server.discord;
 
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.commands.impl.LinkCommand;
-import com.xujiayao.discord_mc_chat.utils.i18n.I18nManager;
+import com.xujiayao.discord_mc_chat.config.I18nManager;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;

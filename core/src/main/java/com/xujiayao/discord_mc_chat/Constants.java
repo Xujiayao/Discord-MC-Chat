@@ -1,10 +1,10 @@
 package com.xujiayao.discord_mc_chat;
 
+import com.xujiayao.discord_mc_chat.logging.Logger;
+import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
+import okhttp3.OkHttpClient;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.dataformat.yaml.YAMLFactory;
-import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
-import com.xujiayao.discord_mc_chat.utils.logging.Logger;
-import okhttp3.OkHttpClient;
 import tools.jackson.dataformat.yaml.YAMLMapper;
 import tools.jackson.dataformat.yaml.YAMLWriteFeature;
 

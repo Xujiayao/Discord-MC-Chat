@@ -1,4 +1,4 @@
-package com.xujiayao.discord_mc_chat.utils.logging;
+package com.xujiayao.discord_mc_chat.logging;
 
 import org.slf4j.LoggerFactory;
 

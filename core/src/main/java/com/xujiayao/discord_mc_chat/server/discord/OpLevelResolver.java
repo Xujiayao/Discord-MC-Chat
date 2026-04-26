@@ -1,11 +1,11 @@
 package com.xujiayao.discord_mc_chat.server.discord;
 
-import tools.jackson.databind.JsonNode;
+import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
-import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
+import tools.jackson.databind.JsonNode;
 
 import java.util.List;
 

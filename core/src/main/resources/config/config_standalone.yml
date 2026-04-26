@@ -18,7 +18,7 @@ multi_server:
     host: "127.0.0.1"  # Limit accessibility, change to "0.0.0.0" if allow external connections
     port: 5000
     shared_secret: "to_be_auto_replaced"
-  servers:  # This list acts as a whitelist. Only clients with a server name defined here are allowed to connect.
+  servers: # This list acts as a whitelist. Only clients with a server name defined here are allowed to connect.
     - name: "SMP"
       minecraft_version: "26.1.2"
       avatar_url: ""
@@ -37,19 +37,19 @@ discord:
   webhook:
     enable_fake_user_style: true  # Whether to send player chat messages using fake-user-style webhooks
     avatar_url: "https://mc-heads.net/avatar/{player_name}"
-  allow_mentions:  # Mention targets allowed for webhook messages
+  allow_mentions: # Mention targets allowed for webhook messages
     - "everyone"
     - "users"
     - "roles"
 
 broadcasts:
-  discord_to_minecraft:  # true or false
+  discord_to_minecraft: # true or false
     chat: true
     reaction: true
     edit: true
     delete: true
     command: true
-  minecraft_to_discord:  # channel name, empty = disable
+  minecraft_to_discord: # channel name, empty = disable
     server:
       started: "in-game-chat"
       stopped: "in-game-chat"
@@ -66,7 +66,7 @@ broadcasts:
       tell_raw: "in-game-chat"
       msg: "in-game-chat"  # msg / tell / w
       me: "in-game-chat"
-  minecraft_to_minecraft:  # For other_dmcc_clients only
+  minecraft_to_minecraft: # For other_dmcc_clients only
     server:
       started: true
       stopped: true
@@ -121,7 +121,7 @@ message_parsing:
   minecraft_to_discord:
     custom_emojis: true
     mentions: true
-  minecraft_to_minecraft:  # For other_dmcc_clients & overwrite_minecraft_source_messages
+  minecraft_to_minecraft: # For other_dmcc_clients & overwrite_minecraft_source_messages
     markdown: true
     unicode_emojis: true
     custom_emojis: true
@@ -179,7 +179,7 @@ account_linking:
     user_mappings:
       - user: "xujiayao"
         op_level: 4
-        server_overrides:  # Remove this key if this sub-server does not need to override the OP level above. The list can be empty.
+        server_overrides: # Remove this key if this sub-server does not need to override the OP level above. The list can be empty.
           - server: "SMP"
             op_level: 4
           - server: "CMP"
@@ -189,7 +189,7 @@ account_linking:
       # Example 1: users with the "Admins" role are treated as OP level 3.
       - role: "Admins"
         op_level: 3
-        server_overrides:  # Remove this key if this sub-server does not need to override the OP level above. The list can be empty.
+        server_overrides: # Remove this key if this sub-server does not need to override the OP level above. The list can be empty.
           - server: "SMP"
             op_level: 3
           - server: "CMP"
@@ -198,7 +198,7 @@ account_linking:
       # that do not require elevated privileges (such as delegated whitelist execution).
       - role: "Players"
         op_level: 0
-        server_overrides:  # Remove this key if this sub-server does not need to override the OP level above. The list can be empty.
+        server_overrides: # Remove this key if this sub-server does not need to override the OP level above. The list can be empty.
           - server: "SMP"
             op_level: 0
           - server: "CMP"

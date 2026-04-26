@@ -1,8 +1,8 @@
 package com.xujiayao.discord_mc_chat.commands;
 
 import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
+import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.utils.LogFileUtils;
-import com.xujiayao.discord_mc_chat.utils.config.ConfigManager;
 
 import java.util.ArrayList;
 import java.util.Comparator;
