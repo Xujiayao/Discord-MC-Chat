@@ -102,6 +102,12 @@ public final class MinecraftCommands {
 					CommandManager.execute(new MinecraftPlayerCommandSender(ctx.getSource()), "unlink");
 					return 1;
 				});
+		var update = literal("update")
+				.requires(Commands.hasPermission(of("command_permission_levels.update", -1)))
+				.executes(ctx -> {
+					CommandManager.execute(new MinecraftCommandSender(ctx.getSource()), "update");
+					return 1;
+				});
 
 		dispatcher.register(root
 				.then(help)
@@ -109,7 +115,8 @@ public final class MinecraftCommands {
 				.then(reload)
 				.then(stats)
 				.then(link)
-				.then(unlink));
+				.then(unlink)
+				.then(update));
 	}
 
 	private static LocalCommandSender createSenderForSource(CommandSourceStack source) {

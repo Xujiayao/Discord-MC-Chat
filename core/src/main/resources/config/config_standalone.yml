@@ -235,6 +235,7 @@ command_permission_levels:
   reload: 4
   shutdown: 4  # This is for standalone DMCC only, which will exit JVM
   unlink: 0
+  update: -1
 
 check_for_updates:
   enable: true

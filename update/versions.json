@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "versions": [
+    {
+      "version": "3.0.0-beta.0",
+      "compatibility": [
+        "26.1.2",
+        "26.1.1",
+        "26.1",
+        "1.21.11"
+      ],
+      "notes": {
+        "en_us": "First line\n\nSecond line\n\nThird line",
+        "zh_cn": "第一行\n\n第二行\n\n第三行"
+      },
+      "changelog_url": "https://github.com/Xujiayao/Discord-MC-Chat/releases/tag/3.0.0-beta.0",
+      "download_url": "https://modrinth.com/mod/discord-mc-chat/versions",
+      "published_at": 1777216200
+    }
+  ]
+}

@@ -11,6 +11,7 @@ import com.xujiayao.discord_mc_chat.commands.impl.ReloadCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.ShutdownCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.UnlinkCommand;
+import com.xujiayao.discord_mc_chat.commands.impl.UpdateCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.WhitelistCommand;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
@@ -50,31 +51,32 @@ public final class CommandManager {
 
 		register(new HelpCommand());
 		register(new InfoCommand());
-		register(new ReloadCommand());
 		register(new LogCommand());
+		register(new ReloadCommand());
+		register(new UpdateCommand());
 
 		switch (ModeManager.getMode()) {
 			case "standalone" -> {
-				register(new ExecuteCommand());
 				register(new ConsoleCommand());
-				register(new ShutdownCommand());
+				register(new ExecuteCommand());
 				register(new LinkCommand());
-				register(new UnlinkCommand());
 				register(new LinksCommand());
+				register(new ShutdownCommand());
+				register(new UnlinkCommand());
 			}
 			case "single_server" -> {
 				register(new ConsoleCommand());
-				register(new StatsCommand());
-				register(new WhitelistCommand());
 				register(new LinkCommand());
-				register(new UnlinkCommand());
 				register(new LinksCommand());
+				register(new StatsCommand());
+				register(new UnlinkCommand());
+				register(new WhitelistCommand());
 			}
 			case "multi_server_client" -> {
-				register(new StatsCommand());
-				register(new WhitelistCommand());
 				register(new LinkCommand());
+				register(new StatsCommand());
 				register(new UnlinkCommand());
+				register(new WhitelistCommand());
 			}
 		}
 	}

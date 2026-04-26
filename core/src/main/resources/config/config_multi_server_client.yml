@@ -41,4 +41,5 @@ command_permission_levels:
   reload: 4
   stats: -1
   unlink: 0
+  update: -1
   whitelist: 0

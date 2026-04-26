@@ -44,6 +44,8 @@ commands:
     reloading: "正在重新加载 DMCC..."
     success: "DMCC 重新加载成功！"
     failure: "DMCC 重新加载失败。"
+  update:
+    description: "检查 DMCC 更新"
   shutdown:
     description: "关闭独立 DMCC 应用程序"
     shutting_down: "正在关闭 DMCC..."
