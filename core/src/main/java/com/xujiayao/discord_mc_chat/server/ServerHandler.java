@@ -150,7 +150,10 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 				case LatencyPingPacket p -> ctx.writeAndFlush(new LatencyPongPacket(p.sentAtMillis));
 				case CommandPackets.Execute.ResponsePacket p -> ExecuteCommand.completeRequest(p.requestId, p);
 				case CommandPackets.Console.ResponsePacket p -> ConsoleCommand.completeRequest(p.requestId, p);
-				case CommandPackets.Update.RequestPacket _ -> UpdateCheckManager.checkNow();
+				case CommandPackets.Update.RequestPacket p -> {
+					UpdateCheckManager.CheckResult result = UpdateCheckManager.checkNow();
+					ctx.writeAndFlush(new CommandPackets.Update.ResponsePacket(p.requestId, result.message()));
+				}
 				case CommandPackets.Execute.AutoCompleteResponsePacket p ->
 						NetworkManager.cacheExecuteAutoCompleteResponse(clientName, p.suggestions);
 				case CommandPackets.Console.AutoCompleteResponsePacket p ->

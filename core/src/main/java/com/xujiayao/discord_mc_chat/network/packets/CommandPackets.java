@@ -282,6 +282,44 @@ public final class CommandPackets {
 		 * Request to perform an update check on the connected DMCC Server.
 		 */
 		public static final class RequestPacket extends Packet {
+			/**
+			 * Unique request identifier.
+			 */
+			public String requestId;
+
+			/**
+			 * Creates an update check request packet.
+			 *
+			 * @param requestId Unique request identifier.
+			 */
+			public RequestPacket(String requestId) {
+				this.requestId = requestId;
+			}
+		}
+
+		/**
+		 * Response for an update check request.
+		 */
+		public static final class ResponsePacket extends Packet {
+			/**
+			 * Unique request identifier.
+			 */
+			public String requestId;
+			/**
+			 * Check result message.
+			 */
+			public String response;
+
+			/**
+			 * Creates an update check response packet.
+			 *
+			 * @param requestId Request identifier.
+			 * @param response  Result message.
+			 */
+			public ResponsePacket(String requestId, String response) {
+				this.requestId = requestId;
+				this.response = response;
+			}
 		}
 	}
 
