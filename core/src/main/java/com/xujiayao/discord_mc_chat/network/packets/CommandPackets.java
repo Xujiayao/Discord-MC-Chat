@@ -272,6 +272,20 @@ public final class CommandPackets {
 	}
 
 	/**
+	 * Packet group for the /update command flow.
+	 */
+	public static final class Update {
+		private Update() {
+		}
+
+		/**
+		 * Request to perform an update check on the connected DMCC Server.
+		 */
+		public static final class RequestPacket extends Packet {
+		}
+	}
+
+	/**
 	 * Packet group for runtime info requests.
 	 */
 	public static final class Info {

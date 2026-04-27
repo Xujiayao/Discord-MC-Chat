@@ -7,6 +7,7 @@ import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
+import com.xujiayao.discord_mc_chat.network.message.TextSegment;
 import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.AuthResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.ChallengePacket;
 import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.DisconnectPacket;
@@ -28,8 +29,8 @@ import com.xujiayao.discord_mc_chat.server.linking.OpSyncManager;
 import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
 import com.xujiayao.discord_mc_chat.server.message.DiscordMessageParser;
 import com.xujiayao.discord_mc_chat.server.message.MinecraftMessageParser;
+import com.xujiayao.discord_mc_chat.update.UpdateCheckManager;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
-import com.xujiayao.discord_mc_chat.network.message.TextSegment;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
@@ -149,6 +150,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 				case LatencyPingPacket p -> ctx.writeAndFlush(new LatencyPongPacket(p.sentAtMillis));
 				case CommandPackets.Execute.ResponsePacket p -> ExecuteCommand.completeRequest(p.requestId, p);
 				case CommandPackets.Console.ResponsePacket p -> ConsoleCommand.completeRequest(p.requestId, p);
+				case CommandPackets.Update.RequestPacket _ -> UpdateCheckManager.checkNow();
 				case CommandPackets.Execute.AutoCompleteResponsePacket p ->
 						NetworkManager.cacheExecuteAutoCompleteResponse(clientName, p.suggestions);
 				case CommandPackets.Console.AutoCompleteResponsePacket p ->

@@ -43,6 +43,3 @@ command_permission_levels:
   unlink: 0
   update: -1
   whitelist: 0
-
-check_for_updates:
-  enable: true

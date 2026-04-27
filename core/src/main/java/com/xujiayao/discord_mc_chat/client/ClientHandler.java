@@ -9,13 +9,13 @@ import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.events.CoreEvents;
 import com.xujiayao.discord_mc_chat.events.EventManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
+import com.xujiayao.discord_mc_chat.network.message.TextSegment;
 import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.AuthResponsePacket;
 import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.ChallengePacket;
 import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.DisconnectPacket;
 import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.HandshakePacket;
 import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.LoginSuccessPacket;
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
-import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Link.OpSyncPacket;
 import com.xujiayao.discord_mc_chat.network.packets.EventPackets.DiscordRelayPacket;
 import com.xujiayao.discord_mc_chat.network.packets.EventPackets.MinecraftRelayPacket;
 import com.xujiayao.discord_mc_chat.network.packets.MiscPackets.KeepAlivePacket;
@@ -23,7 +23,6 @@ import com.xujiayao.discord_mc_chat.network.packets.MiscPackets.LatencyPongPacke
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
-import com.xujiayao.discord_mc_chat.network.message.TextSegment;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
@@ -218,7 +217,7 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 					EventManager.post(new CoreEvents.LinkCodeResponseEvent(p.minecraftUuid, p.code, p.alreadyLinked, p.discordName != null ? p.discordName : ""));
 			case CommandPackets.Unlink.ResponsePacket p -> // Handle unlink response from server - notify the player
 					EventManager.post(new CoreEvents.UnlinkResponseEvent(p.minecraftUuid, p.success, p.discordName != null ? p.discordName : ""));
-			case OpSyncPacket p -> // Handle OP sync from server - apply OP levels to Minecraft players
+			case CommandPackets.Link.OpSyncPacket p -> // Handle OP sync from server - apply OP levels to Minecraft players
 					EventManager.post(new CoreEvents.OpSyncEvent(p.opLevels));
 			case DiscordRelayPacket p -> {
 				// Handle Discord event forwarded from server - render in Minecraft

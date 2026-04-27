@@ -719,7 +719,6 @@ public final class DiscordManager {
 		return replacePlaceholders(avatarTemplate, placeholders);
 	}
 
-
 	/**
 	 * Sends a message to the specified Discord channel identifier using the bot account.
 	 *
@@ -728,6 +727,25 @@ public final class DiscordManager {
 	 */
 	public static void sendBotMessage(String channelIdentifier, String content) {
 		TextChannel channel = getTextChannel(channelIdentifier);
+		if (channel != null) {
+			channel.sendMessage(content)
+					.setAllowedMentions(getAllowedMentions())
+					.queue();
+		}
+	}
+
+	/**
+	 * Sends a message to the specified Discord channel identifier using the bot account.
+	 *
+	 * @param channelIdentifier         Channel name or channel ID.
+	 * @param fallbackChannelIdentifier Fallback channel name or ID if the primary identifier fails to resolve.
+	 * @param content                   Message content.
+	 */
+	public static void sendBotMessage(String channelIdentifier, String fallbackChannelIdentifier, String content) {
+		TextChannel channel = getTextChannel(channelIdentifier);
+		if (channel == null) {
+			channel = getTextChannel(fallbackChannelIdentifier);
+		}
 		if (channel != null) {
 			channel.sendMessage(content)
 					.setAllowedMentions(getAllowedMentions())

@@ -1,8 +1,8 @@
 package com.xujiayao.discord_mc_chat.utils;
 
+import okhttp3.CacheControl;
 import okhttp3.Request;
 import okhttp3.Response;
-import okhttp3.CacheControl;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
