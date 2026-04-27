@@ -29,7 +29,9 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import tools.jackson.databind.JsonNode;
 
 import java.time.Duration;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +57,10 @@ public final class DiscordManager {
 
 	private static final int CONSOLE_FORWARDING_CHUNK_LIMIT = 1800;
 	private static final int CONSOLE_FORWARDING_INLINE_LIMIT = 1200;
+	private static final long PLAYER_COMMAND_RATE_LIMIT_WINDOW_NANOS = Duration.ofSeconds(10).toNanos();
+	private static final int PLAYER_COMMAND_RATE_LIMIT_MAX_MESSAGES = 10;
+	private static final Object PLAYER_COMMAND_RATE_LIMIT_LOCK = new Object();
+	private static final Deque<Long> PLAYER_COMMAND_RATE_LIMIT_TIMESTAMPS = new ArrayDeque<>();
 
 	private static final Map<String, String> DISCORD_NAME_CACHE = new ConcurrentHashMap<>();
 	private static final Set<String> CONSOLE_FORWARDING_DISABLED_CLIENTS = ConcurrentHashMap.newKeySet();
@@ -350,6 +356,9 @@ public final class DiscordManager {
 		if (channel == null) {
 			return;
 		}
+		if ("player.command".equals(channelNode) && !tryAcquirePlayerCommandRateLimitPermit()) {
+			return;
+		}
 
 		try {
 			JsonNode node = I18nManager.getCustomMessages().path("minecraft_to_discord").path("user_message");
@@ -388,6 +397,23 @@ public final class DiscordManager {
 			}
 		} catch (Exception e) {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
+		}
+	}
+
+	private static boolean tryAcquirePlayerCommandRateLimitPermit() {
+		long now = System.nanoTime();
+		synchronized (PLAYER_COMMAND_RATE_LIMIT_LOCK) {
+			while (!PLAYER_COMMAND_RATE_LIMIT_TIMESTAMPS.isEmpty()
+					&& now - PLAYER_COMMAND_RATE_LIMIT_TIMESTAMPS.peekFirst() >= PLAYER_COMMAND_RATE_LIMIT_WINDOW_NANOS) {
+				PLAYER_COMMAND_RATE_LIMIT_TIMESTAMPS.removeFirst();
+			}
+
+			if (PLAYER_COMMAND_RATE_LIMIT_TIMESTAMPS.size() >= PLAYER_COMMAND_RATE_LIMIT_MAX_MESSAGES) {
+				return false;
+			}
+
+			PLAYER_COMMAND_RATE_LIMIT_TIMESTAMPS.addLast(now);
+			return true;
 		}
 	}
 
