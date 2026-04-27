@@ -22,7 +22,7 @@ discord:
   webhook:
     enable_fake_user_style: true  # Whether to send player chat messages using fake-user-style webhooks
     avatar_url: "https://mc-heads.net/avatar/{player_name}"
-  allow_mentions: # Mention targets allowed for webhook messages
+  allow_mentions: # Mention targets allowed for both webhook and bot messages
     - "everyone"
     - "users"
     - "roles"
@@ -187,7 +187,6 @@ command_permission_levels:
 
 check_for_updates:
   enable: true
-  mention_owner: true  # Whether to mention the owner (op level 4) in update notifications
   channel: "in-game-chat"
 
 shutdown:

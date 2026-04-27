@@ -47,6 +47,24 @@ commands:
     failure: "DMCC reload failed."
   update:
     description: "Check for DMCC updates"
+    checking: "Checking for DMCC updates..."
+    available: |
+      # :arrow_up: :partying_face: A new version of Discord-MC-Chat (DMCC) is available!
+      
+      ## Version {} -> {}
+      
+      :clock4: Released on <t:{}:F> (<t:{}:R>)
+      
+      :inbox_tray: [Download new version](<{}>)
+      
+      :clipboard: [View changelog](<{}>)
+      
+      :warning: Update notes:
+      
+      {}
+    up_to_date: "You are already on the latest compatible DMCC version!"
+    no_compatible: "No DMCC version is available for Minecraft version {}."
+    check_failed: "Failed to check for updates: {}"
   shutdown:
     description: "Shut down the Standalone DMCC application"
     shutting_down: "Shutting down DMCC..."

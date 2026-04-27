@@ -135,6 +135,7 @@ public final class DiscordManager {
 				commands.add(Commands.slash("log", I18nManager.getDmccTranslation("commands.log.description"))
 						.addOption(OptionType.STRING, "file", I18nManager.getDmccTranslation("commands.log.args_desc.file"), true, true));
 				commands.add(Commands.slash("reload", I18nManager.getDmccTranslation("commands.reload.description")));
+				commands.add(Commands.slash("update", I18nManager.getDmccTranslation("commands.update.description")));
 
 				if ("standalone".equals(ModeManager.getMode())) {
 					commands.add(Commands.slash("console", I18nManager.getDmccTranslation("commands.console.description"))
@@ -718,7 +719,14 @@ public final class DiscordManager {
 		return replacePlaceholders(avatarTemplate, placeholders);
 	}
 
-	private static void sendBotMessage(String channelIdentifier, String content) {
+
+	/**
+	 * Sends a message to the specified Discord channel identifier using the bot account.
+	 *
+	 * @param channelIdentifier Channel name or channel ID.
+	 * @param content           Message content.
+	 */
+	public static void sendBotMessage(String channelIdentifier, String content) {
 		TextChannel channel = getTextChannel(channelIdentifier);
 		if (channel != null) {
 			channel.sendMessage(content)

@@ -35,6 +35,7 @@ public final class UpdateCommand implements Command {
 
 	@Override
 	public void execute(CommandSender sender, String... args) {
-		sender.reply(UpdateCheckManager.checkNow());
+		sender.reply(I18nManager.getDmccTranslation("commands.update.checking"));
+		UpdateCheckManager.checkNow();
 	}
 }

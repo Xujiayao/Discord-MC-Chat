@@ -46,6 +46,24 @@ commands:
     failure: "DMCC 重新加载失败。"
   update:
     description: "检查 DMCC 更新"
+    checking: "正在检查 DMCC 更新..."
+    available: |
+      # :arrow_up: :partying_face: Discord-MC-Chat (DMCC) 新版本已发布！
+      
+      ## 版本 {} -> {}
+      
+      :clock4: 发布于 <t:{}:F>（<t:{}:R>）
+      
+      :inbox_tray: [下载新版本](<{}>)
+      
+      :clipboard: [查看更新日志](<{}>)
+      
+      :warning: 升级须知：
+      
+      {}
+    up_to_date: "你目前使用的已是最新兼容的 DMCC 版本！"
+    no_compatible: "没有适用于 Minecraft 版本 {} 的 DMCC 版本。"
+    check_failed: "检查更新失败：{}"
   shutdown:
     description: "关闭独立 DMCC 应用程序"
     shutting_down: "正在关闭 DMCC..."

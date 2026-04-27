@@ -2,8 +2,10 @@ package com.xujiayao.discord_mc_chat.utils;
 
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.CacheControl;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import static com.xujiayao.discord_mc_chat.Constants.OK_HTTP_CLIENT;
 
@@ -26,6 +28,32 @@ public final class HttpUtils {
 	 */
 	public static String get(String url) throws IOException {
 		Request request = new Request.Builder().url(url).build();
+
+		try (Response response = OK_HTTP_CLIENT.newCall(request).execute()) {
+			if (!response.isSuccessful()) {
+				throw new IOException("HTTP request failed with status code: " + response.code());
+			}
+
+			return response.body().string();
+		}
+	}
+
+	/**
+	 * Performs a GET request while forcing network usage to bypass local cache.
+	 *
+	 * @param url The URL to request
+	 * @return The response body as a string
+	 * @throws IOException If the request fails or returns a non-successful status code
+	 */
+	public static String getNoCache(String url) throws IOException {
+		Request request = new Request.Builder()
+				.url(url)
+				.cacheControl(new CacheControl.Builder()
+						.noCache()
+						.noStore()
+						.maxAge(0, TimeUnit.SECONDS)
+						.build())
+				.build();
 
 		try (Response response = OK_HTTP_CLIENT.newCall(request).execute()) {
 			if (!response.isSuccessful()) {
