@@ -342,18 +342,6 @@ public final class CommandPackets {
 		 */
 		public static final class ResponsePacket extends Packet {
 			/**
-			 * Server name.
-			 */
-			public String serverName;
-			/**
-			 * Connection latency in milliseconds.
-			 */
-			public long connectionLatencyMillis;
-			/**
-			 * Minecraft version.
-			 */
-			public String minecraftVersion;
-			/**
 			 * Current online player count.
 			 */
 			public final int onlinePlayerCount;
@@ -389,6 +377,18 @@ public final class CommandPackets {
 			 * JVM free memory in bytes.
 			 */
 			public final long freeMemory;
+			/**
+			 * Server name.
+			 */
+			public String serverName;
+			/**
+			 * Connection latency in milliseconds.
+			 */
+			public long connectionLatencyMillis;
+			/**
+			 * Minecraft version.
+			 */
+			public String minecraftVersion;
 
 			/**
 			 * Creates a runtime info response packet.
