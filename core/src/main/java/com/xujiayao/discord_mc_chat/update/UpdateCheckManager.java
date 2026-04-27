@@ -32,15 +32,12 @@ public final class UpdateCheckManager {
 
 	private static final String UPDATE_URL = "https://cdn.jsdelivr.net/gh/Xujiayao/Discord-MC-Chat@vv3/update/versions.json";
 	private static final int AUTO_CHECK_INTERVAL_SECONDS = 21600;
-	private static final long AUTO_NOTIFICATION_SUPPRESSION_WINDOW_MILLIS = TimeUnit.HOURS.toMillis(24);
 
 	private static ScheduledExecutorService updateExecutor;
 	private static ScheduledFuture<?> updateTask;
 
-	private static final Object AUTO_NOTIFICATION_LOCK = new Object();
 	private static String lastAutoNotifiedVersion;
-	// private static int autoNotificationXxxx = 0; // Only notify when this value % 4 == 0
-	private static long lastAutoNotifiedAtMillis;
+	private static int autoNotificationCount = 3; // Only notify when this value % 4 == 0
 
 	private UpdateCheckManager() {
 	}
@@ -94,29 +91,27 @@ public final class UpdateCheckManager {
 			return checkAndNotify(false);
 		} catch (Exception e) {
 			String message = I18nManager.getDmccTranslation("commands.update.check_failed", e.getMessage());
-			LOGGER.error(message);
-			return CheckResult.failure(message, e.getMessage());
+			for (String line : message.split("\n", -1)) {
+				LOGGER.error(line);
+			}
+			return CheckResult.failure(message);
 		}
 	}
 
 	private static CheckResult checkAndNotify(boolean auto) throws Exception {
 		CheckResult result = check();
-		if (auto) {
-			if (result.status() == CheckStatus.AVAILABLE) {
-				long now = System.currentTimeMillis();
-				synchronized (AUTO_NOTIFICATION_LOCK) {
-					if (shouldSuppressAutoNotification(result.version(), now)) {
-						return result;
-					}
-					lastAutoNotifiedVersion = result.version();
-					lastAutoNotifiedAtMillis = now;
-				}
+
+		if (auto && result.status() == CheckStatus.AVAILABLE) {
+			if (!result.version().equals(lastAutoNotifiedVersion)) {
+				lastAutoNotifiedVersion = result.version();
+				autoNotificationCount = 3;
 			}
 
-			if (result.shouldBroadcastAutomatically()) {
+			autoNotificationCount++;
+			if (autoNotificationCount % 4 == 0) {
 				notify(result);
 			}
-		} else if (result.shouldNotifyManually()) {
+		} else if (result.status() == CheckStatus.AVAILABLE) {
 			notify(result);
 		}
 
@@ -148,10 +143,10 @@ public final class UpdateCheckManager {
 			}
 
 			if (version.equals(Constants.VERSION)) {
-				return CheckResult.upToDate(version, minecraftVersion);
+				return CheckResult.upToDate(version);
 			}
 
-			return CheckResult.available(version, minecraftVersion, notes, changelogUrl, downloadUrl, publishedAt);
+			return CheckResult.available(version, notes, changelogUrl, downloadUrl, publishedAt);
 		}
 
 		return CheckResult.noCompatible(minecraftVersion);
@@ -183,23 +178,13 @@ public final class UpdateCheckManager {
 	}
 
 	private static void notify(CheckResult result) {
-		if (result == null || result.message().isBlank()) {
-			return;
-		}
-
-		String mode = ModeManager.getMode();
-		String consoleMessage = DiscordMessageParser.formatDiscordTimestampsForPlainText(result.message());
+		String consoleMessage = DiscordMessageParser.formatDiscordTimestampsForPlainText(result.fullMessage());
 		for (String line : consoleMessage.split("\n", -1)) {
-			LOGGER.info(line);
+			LOGGER.warn(line);
 		}
 
-		if (result.shouldBroadcastToDiscord()) {
-			notifyDiscord(result.message());
-		}
-
-		if (result.shouldBroadcastToMinecraft()) {
-			notifyMinecraft(mode, result.message());
-		}
+		notifyDiscord(result.fullMessage());
+		notifyMinecraft(ModeManager.getMode(), result.fullMessage());
 	}
 
 	private static void notifyDiscord(String message) {
@@ -226,13 +211,6 @@ public final class UpdateCheckManager {
 		} else if ("standalone".equals(mode)) {
 			NetworkManager.broadcastToClients(packet);
 		}
-	}
-
-	private static boolean shouldSuppressAutoNotification(String version, long now) {
-		if (lastAutoNotifiedVersion == null || !lastAutoNotifiedVersion.equals(version)) {
-			return false;
-		}
-		return now - lastAutoNotifiedAtMillis < AUTO_NOTIFICATION_SUPPRESSION_WINDOW_MILLIS;
 	}
 
 	private static String resolveReleaseNotes(JsonNode notesNode) {
@@ -277,17 +255,13 @@ public final class UpdateCheckManager {
 	public record CheckResult(
 			CheckStatus status,
 			String message,
-			String version,
-			String minecraftVersion,
-			String notes,
-			String changelogUrl,
-			String downloadUrl,
-			long publishedAt,
-			String errorMessage
+			String fullMessage,
+			String version
 	) {
-		static CheckResult available(String version, String minecraftVersion, String notes, String changelogUrl, String downloadUrl, long publishedAt) {
-			String message = I18nManager.getDmccTranslation(
-					"commands.update.available",
+		static CheckResult available(String version, String notes, String changelogUrl, String downloadUrl, long publishedAt) {
+			String message = I18nManager.getDmccTranslation("commands.update.available_short", version);
+			String fullMessage = I18nManager.getDmccTranslation(
+					"commands.update.available_full",
 					Constants.VERSION,
 					version,
 					publishedAt,
@@ -295,38 +269,22 @@ public final class UpdateCheckManager {
 					downloadUrl,
 					changelogUrl,
 					formatNotesForDiscord(notes)
-			);
-			return new CheckResult(CheckStatus.AVAILABLE, message, version, minecraftVersion, notes, changelogUrl, downloadUrl, publishedAt, null);
+			).trim();
+			return new CheckResult(CheckStatus.AVAILABLE, message, fullMessage, version);
 		}
 
-		static CheckResult upToDate(String version, String minecraftVersion) {
+		static CheckResult upToDate(String version) {
 			String message = I18nManager.getDmccTranslation("commands.update.up_to_date");
-			return new CheckResult(CheckStatus.UP_TO_DATE, message, version, minecraftVersion, "", "", "", 0L, null);
+			return new CheckResult(CheckStatus.UP_TO_DATE, message, "", version);
 		}
 
 		static CheckResult noCompatible(String minecraftVersion) {
 			String message = I18nManager.getDmccTranslation("commands.update.no_compatible", minecraftVersion);
-			return new CheckResult(CheckStatus.NO_COMPATIBLE, message, "", minecraftVersion, "", "", "", 0L, null);
+			return new CheckResult(CheckStatus.NO_COMPATIBLE, message, "", "");
 		}
 
-		static CheckResult failure(String message, String errorMessage) {
-			return new CheckResult(CheckStatus.FAILED, message, "", "", "", "", "", 0L, errorMessage);
-		}
-
-		boolean shouldBroadcastAutomatically() {
-			return status == CheckStatus.AVAILABLE || status == CheckStatus.NO_COMPATIBLE;
-		}
-
-		boolean shouldNotifyManually() {
-			return status != CheckStatus.FAILED;
-		}
-
-		boolean shouldBroadcastToDiscord() {
-			return shouldBroadcastAutomatically();
-		}
-
-		boolean shouldBroadcastToMinecraft() {
-			return shouldBroadcastAutomatically();
+		static CheckResult failure(String message) {
+			return new CheckResult(CheckStatus.FAILED, message, "", "");
 		}
 	}
 }

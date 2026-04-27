@@ -8,8 +8,8 @@ import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
 import com.xujiayao.discord_mc_chat.server.message.DiscordMessageParser;
-import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import com.xujiayao.discord_mc_chat.update.UpdateCheckManager;
+import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -43,6 +43,13 @@ public final class UpdateCommand implements Command {
 		if (future != null && !future.isDone()) {
 			future.complete(response);
 		}
+	}
+
+	private static void replyResult(CommandSender sender, String message) {
+		String output = sender instanceof LocalCommandSender
+				? DiscordMessageParser.formatDiscordTimestampsForPlainText(message)
+				: message;
+		sender.reply(output);
 	}
 
 	@Override
@@ -85,12 +92,5 @@ public final class UpdateCommand implements Command {
 			UpdateCheckManager.CheckResult result = UpdateCheckManager.checkNow();
 			replyResult(sender, result.message());
 		}
-	}
-
-	private static void replyResult(CommandSender sender, String message) {
-		String output = sender instanceof LocalCommandSender
-				? DiscordMessageParser.formatDiscordTimestampsForPlainText(message)
-				: message;
-		sender.reply(output);
 	}
 }

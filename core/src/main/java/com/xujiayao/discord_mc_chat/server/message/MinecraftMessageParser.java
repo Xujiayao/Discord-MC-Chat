@@ -41,6 +41,7 @@ public final class MinecraftMessageParser {
 	private static final Pattern DISCORD_ALIAS_EMOJI_PATTERN = Pattern.compile("(?<![A-Za-z0-9_]):([A-Za-z0-9_+\\-]+):(?![A-Za-z0-9_])");
 
 	private static final List<String> MARKDOWN_DELIMITERS = List.of("***", "~~", "||", "**", "__", "*", "_");
+	private static final String QUOTE_COLOR = "gray";
 
 	private MinecraftMessageParser() {
 	}
@@ -341,6 +342,39 @@ public final class MinecraftMessageParser {
 
 		List<TextSegment> out = new ArrayList<>();
 		MarkdownState state = new MarkdownState();
+		int start = 0;
+		while (start < raw.length()) {
+			int newline = raw.indexOf('\n', start);
+			int lineEnd = newline >= 0 ? newline : raw.length();
+			String line = raw.substring(start, lineEnd);
+
+			MarkdownState lineState = new MarkdownState();
+			lineState.bold = state.bold;
+			lineState.italic = state.italic;
+			lineState.underlined = state.underlined;
+			lineState.strikethrough = state.strikethrough;
+			lineState.obfuscated = state.obfuscated;
+
+			List<TextSegment> lineSegments = parseMarkdownLine(line, lineState);
+			out.addAll(applyLineMarkdownDecorations(line, lineSegments));
+
+			state.bold = lineState.bold;
+			state.italic = lineState.italic;
+			state.underlined = lineState.underlined;
+			state.strikethrough = lineState.strikethrough;
+			state.obfuscated = lineState.obfuscated;
+
+			if (newline < 0) {
+				break;
+			}
+			out.add(new TextSegment("\n"));
+			start = newline + 1;
+		}
+		return out;
+	}
+
+	private static List<TextSegment> parseMarkdownLine(String raw, MarkdownState state) {
+		List<TextSegment> out = new ArrayList<>();
 		StringBuilder plain = new StringBuilder();
 
 		int i = 0;
@@ -370,7 +404,39 @@ public final class MinecraftMessageParser {
 		}
 
 		appendStyled(out, plain, state);
-		return out.isEmpty() ? List.of(new TextSegment(raw)) : out;
+		return out;
+	}
+
+	private static List<TextSegment> applyLineMarkdownDecorations(String line, List<TextSegment> lineSegments) {
+		if (lineSegments.isEmpty()) {
+			return lineSegments;
+		}
+
+		boolean quote = false;
+		boolean heading = false;
+
+		if (MessageParserCommon.isMarkdownQuoteLine(line)) {
+			quote = true;
+		}
+		if (MessageParserCommon.isMarkdownHeadingLine(line)) {
+			heading = true;
+		}
+
+		if (!quote && !heading) {
+			return lineSegments;
+		}
+
+		if (quote) {
+			for (TextSegment segment : lineSegments) {
+				segment.color = QUOTE_COLOR;
+			}
+		}
+		if (heading) {
+			for (TextSegment segment : lineSegments) {
+				segment.bold = true;
+			}
+		}
+		return lineSegments;
 	}
 
 	private static List<TextSegment> splitSegmentsByMentions(List<TextSegment> segments, MentionContext context) {
@@ -391,29 +457,26 @@ public final class MinecraftMessageParser {
 		int cursor = 0;
 		int i = 0;
 		while (i < text.length()) {
-			if (text.charAt(i) != '@' || !isMentionStartBoundary(text, i)) {
-				i++;
-				continue;
-			}
-			MentionMatch match = findMentionMatch(text, i + 1, context);
-			if (match == null) {
-				i++;
-				continue;
-			}
+			if (text.charAt(i) == '@' && isMentionStartBoundary(text, i)) {
+				MentionMatch match = findMentionMatch(text, i + 1, context);
+				if (match != null) {
+					if (i > cursor) {
+						out.add(TextSegmentUtils.copySegment(segment, text.substring(cursor, i)));
+					}
+					TextSegment mention = TextSegmentUtils.copySegment(segment, "[@" + match.target.displayName + "]");
+					mention.color = match.target.color;
+					out.add(mention);
+					context.mentionedPlayerUuids.addAll(match.target.linkedMinecraftUuids);
+					if (match.target.type == MentionType.EVERYONE_HERE) {
+						context.mentionEveryone = true;
+					}
 
-			if (i > cursor) {
-				out.add(TextSegmentUtils.copySegment(segment, text.substring(cursor, i)));
+					i = match.endExclusive;
+					cursor = i;
+					continue;
+				}
 			}
-			TextSegment mention = TextSegmentUtils.copySegment(segment, "[@" + match.target.displayName + "]");
-			mention.color = match.target.color;
-			out.add(mention);
-			context.mentionedPlayerUuids.addAll(match.target.linkedMinecraftUuids);
-			if (match.target.type == MentionType.EVERYONE_HERE) {
-				context.mentionEveryone = true;
-			}
-
-			i = match.endExclusive;
-			cursor = i;
+			i++;
 		}
 		if (cursor == 0) {
 			out.add(segment);
@@ -603,23 +666,21 @@ public final class MinecraftMessageParser {
 		int cursor = 0;
 		int i = 0;
 		while (i < raw.length()) {
-			if (raw.charAt(i) != '@' || !isMentionStartBoundary(raw, i)) {
-				i++;
-				continue;
+			if (raw.charAt(i) == '@' && isMentionStartBoundary(raw, i)) {
+				MentionMatch match = findMentionMatch(raw, i + 1, context);
+				if (match != null) {
+					out.append(raw, cursor, i);
+					switch (match.target.type) {
+						case USER -> out.append("<@").append(match.target.id).append(">");
+						case ROLE -> out.append("<@&").append(match.target.id).append(">");
+						case EVERYONE_HERE -> out.append("@").append(match.target.displayName);
+					}
+					i = match.endExclusive;
+					cursor = i;
+					continue;
+				}
 			}
-			MentionMatch match = findMentionMatch(raw, i + 1, context);
-			if (match == null) {
-				i++;
-				continue;
-			}
-			out.append(raw, cursor, i);
-			switch (match.target.type) {
-				case USER -> out.append("<@").append(match.target.id).append(">");
-				case ROLE -> out.append("<@&").append(match.target.id).append(">");
-				case EVERYONE_HERE -> out.append("@").append(match.target.displayName);
-			}
-			i = match.endExclusive;
-			cursor = i;
+			i++;
 		}
 		out.append(raw.substring(cursor));
 		return out.toString();

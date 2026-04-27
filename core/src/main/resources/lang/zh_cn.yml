@@ -47,7 +47,8 @@ commands:
   update:
     description: "检查 DMCC 更新"
     checking: "正在检查 DMCC 更新..."
-    available: |
+    available_short: "发现 DMCC 有新版本 {} 可用！"
+    available_full: |
       # :arrow_up: :partying_face: Discord-MC-Chat (DMCC) 新版本已发布！
       
       ## 版本 {} -> {}

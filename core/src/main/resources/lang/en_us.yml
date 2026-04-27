@@ -48,7 +48,8 @@ commands:
   update:
     description: "Check for DMCC updates"
     checking: "Checking for DMCC updates..."
-    available: |
+    available_short: "Found new DMCC version {} available!"
+    available_full: |
       # :arrow_up: :partying_face: A new version of Discord-MC-Chat (DMCC) is available!
       
       ## Version {} -> {}

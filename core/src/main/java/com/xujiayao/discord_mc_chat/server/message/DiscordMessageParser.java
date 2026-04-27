@@ -39,7 +39,6 @@ public final class DiscordMessageParser {
 
 	// Discord Markdown patterns
 	private static final Pattern CODE_BLOCK_PATTERN = Pattern.compile("```(\\w*)\\n?([\\s\\S]*?)```");
-	private static final Pattern HEADING_PATTERN = Pattern.compile("(?m)^(#{1,6}\\s+.*)$");
 
 	// Discord mention patterns in raw content
 	private static final Pattern USER_MENTION_PATTERN = Pattern.compile("<@!?(\\d+)>");
@@ -76,6 +75,7 @@ public final class DiscordMessageParser {
 	private static final int MAIN_TRUNCATE_LIMIT_WIDE = 200;
 	private static final int MAIN_TRUNCATE_LIMIT_NARROW = 400;
 	private static final String URL_COLOR = "#3366CC";
+	private static final String QUOTE_COLOR = "gray";
 	private static final String ATTACHMENT_LABEL_PREFIX = "<attachment type=[%s] name=[";
 	private static final String EMBED_LABEL_PREFIX = "<embed title=[";
 	private static final String LABEL_SUFFIX = "]>";
@@ -863,7 +863,10 @@ public final class DiscordMessageParser {
 			int lineEnd = newline >= 0 ? newline : text.length();
 			String line = text.substring(start, lineEnd);
 			MarkdownState lineState = baseState.copy();
-			if (HEADING_PATTERN.matcher(line).matches()) {
+			if (MessageParserCommon.isMarkdownQuoteLine(line)) {
+				lineState.color = QUOTE_COLOR;
+			}
+			if (MessageParserCommon.isMarkdownHeadingLine(line)) {
 				lineState.bold = true;
 			}
 			result.addAll(parseNestedMarkdown(line, lineState));
@@ -981,6 +984,9 @@ public final class DiscordMessageParser {
 		segment.underlined = state.underlined;
 		segment.strikethrough = state.strikethrough;
 		segment.obfuscated = state.obfuscated;
+		if (state.color != null) {
+			segment.color = state.color;
+		}
 		if (segment.obfuscated) {
 			segment.hoverText = text;
 		}
@@ -1583,6 +1589,7 @@ public final class DiscordMessageParser {
 		boolean underlined;
 		boolean strikethrough;
 		boolean obfuscated;
+		String color;
 
 		MarkdownState copy() {
 			MarkdownState copy = new MarkdownState();
@@ -1591,6 +1598,7 @@ public final class DiscordMessageParser {
 			copy.underlined = underlined;
 			copy.strikethrough = strikethrough;
 			copy.obfuscated = obfuscated;
+			copy.color = color;
 			return copy;
 		}
 	}

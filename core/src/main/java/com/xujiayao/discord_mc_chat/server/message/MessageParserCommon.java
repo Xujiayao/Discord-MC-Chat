@@ -23,7 +23,8 @@ import java.util.regex.Pattern;
 final class MessageParserCommon {
 
 	private static final Pattern DISCORD_TIMESTAMP_PATTERN = Pattern.compile("<t:(\\d+)(?::([tTdDfFRsS]))?>");
-	private static final Pattern LINK_TOKEN_PATTERN = Pattern.compile("\\[([^]]+)]\\((https?://[^)]+)\\)");
+	private static final Pattern LINK_TOKEN_PATTERN = Pattern.compile("\\[([^]]+)]\\(<?(https?://[^>\\s)]+)>?\\)");
+	private static final Pattern HEADING_LINE_PATTERN = Pattern.compile("^#{1,6}\\s+\\S.*$");
 	private static final Pattern BARE_URL_PATTERN = Pattern.compile("(https?://[^\\s*|~`<>)\\]]+)");
 	private static final Pattern UNICODE_EMOJI_PATTERN = Pattern.compile(
 			"[\\x{1F600}-\\x{1F64F}]|[\\x{1F300}-\\x{1F5FF}]|[\\x{1F680}-\\x{1F6FF}]|" +
@@ -169,6 +170,18 @@ final class MessageParserCommon {
 
 	static boolean isUnderscoreDelimiter(String delimiter) {
 		return "_".equals(delimiter) || "__".equals(delimiter);
+	}
+
+	static boolean isMarkdownHeadingLine(String line) {
+		return line != null && !line.isEmpty() && HEADING_LINE_PATTERN.matcher(line.stripLeading()).matches();
+	}
+
+	static boolean isMarkdownQuoteLine(String line) {
+		if (line == null || line.isEmpty()) {
+			return false;
+		}
+		String stripped = line.stripLeading();
+		return !stripped.isEmpty() && stripped.charAt(0) == '>';
 	}
 
 	static boolean isInsideDiscordAliasEmoji(String text, int index, Pattern discordAliasEmojiPattern) {
