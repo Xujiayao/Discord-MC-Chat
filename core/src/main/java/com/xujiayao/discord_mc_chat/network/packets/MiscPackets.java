@@ -27,7 +27,7 @@ public final class MiscPackets {
 		/**
 		 * Sender timestamp in milliseconds.
 		 */
-		public long sentAtMillis;
+		public final long sentAtMillis;
 
 		/**
 		 * Creates a latency ping packet.
@@ -46,7 +46,7 @@ public final class MiscPackets {
 		/**
 		 * Echoed sender timestamp in milliseconds.
 		 */
-		public long sentAtMillis;
+		public final long sentAtMillis;
 
 		/**
 		 * Creates a latency pong packet.

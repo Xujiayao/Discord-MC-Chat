@@ -26,11 +26,11 @@ public final class CommandPackets {
 			/**
 			 * Raw input to complete.
 			 */
-			public String input;
+			public final String input;
 			/**
 			 * Requester's OP level.
 			 */
-			public int opLevel;
+			public final int opLevel;
 
 			/**
 			 * Creates an auto-complete request packet.
@@ -49,22 +49,16 @@ public final class CommandPackets {
 		 */
 		public static final class AutoCompleteResponsePacket extends Packet {
 			/**
-			 * Server name that produced this suggestion list.
-			 */
-			public String serverName;
-			/**
 			 * Suggested completions.
 			 */
-			public List<String> suggestions;
+			public final List<String> suggestions;
 
 			/**
 			 * Creates an auto-complete response packet.
 			 *
-			 * @param serverName  Server name that produced this suggestion list.
 			 * @param suggestions Suggested completions.
 			 */
-			public AutoCompleteResponsePacket(String serverName, List<String> suggestions) {
-				this.serverName = serverName;
+			public AutoCompleteResponsePacket(List<String> suggestions) {
 				this.suggestions = suggestions;
 			}
 		}
@@ -76,15 +70,15 @@ public final class CommandPackets {
 			/**
 			 * Unique request identifier.
 			 */
-			public String requestId;
+			public final String requestId;
 			/**
 			 * Requester's OP level.
 			 */
-			public int opLevel;
+			public final int opLevel;
 			/**
 			 * Full Minecraft command line.
 			 */
-			public String commandLine;
+			public final String commandLine;
 
 			/**
 			 * Creates a /console execution request packet.
@@ -107,11 +101,11 @@ public final class CommandPackets {
 			/**
 			 * Request identifier.
 			 */
-			public String requestId;
+			public final String requestId;
 			/**
 			 * Command output.
 			 */
-			public String response;
+			public final String response;
 
 			/**
 			 * Creates a /console execution response packet.
@@ -140,11 +134,11 @@ public final class CommandPackets {
 			/**
 			 * Raw input to complete.
 			 */
-			public String input;
+			public final String input;
 			/**
 			 * Requester's OP level.
 			 */
-			public int opLevel;
+			public final int opLevel;
 
 			/**
 			 * Creates an auto-complete request packet.
@@ -163,22 +157,16 @@ public final class CommandPackets {
 		 */
 		public static final class AutoCompleteResponsePacket extends Packet {
 			/**
-			 * Server name that produced this suggestion list.
-			 */
-			public String serverName;
-			/**
 			 * Suggested completions.
 			 */
-			public List<String> suggestions;
+			public final List<String> suggestions;
 
 			/**
 			 * Creates an auto-complete response packet.
 			 *
-			 * @param serverName  Server name that produced this suggestion list.
 			 * @param suggestions Suggested completions.
 			 */
-			public AutoCompleteResponsePacket(String serverName, List<String> suggestions) {
-				this.serverName = serverName;
+			public AutoCompleteResponsePacket(List<String> suggestions) {
 				this.suggestions = suggestions;
 			}
 		}
@@ -190,19 +178,19 @@ public final class CommandPackets {
 			/**
 			 * Unique request identifier.
 			 */
-			public String requestId;
+			public final String requestId;
 			/**
 			 * Requester's OP level.
 			 */
-			public int opLevel;
+			public final int opLevel;
 			/**
 			 * DMCC command name.
 			 */
-			public String command;
+			public final String command;
 			/**
 			 * DMCC command arguments.
 			 */
-			public String[] args;
+			public final String[] args;
 
 			/**
 			 * Creates an /execute request packet.
@@ -227,19 +215,19 @@ public final class CommandPackets {
 			/**
 			 * Request identifier.
 			 */
-			public String requestId;
+			public final String requestId;
 			/**
 			 * Command output.
 			 */
-			public String response;
+			public final String response;
 			/**
 			 * Optional file data returned by command.
 			 */
-			public byte[] fileData;
+			public final byte[] fileData;
 			/**
 			 * Optional file name returned by command.
 			 */
-			public String fileName;
+			public final String fileName;
 
 			/**
 			 * Creates an /execute response packet without file attachment.
@@ -285,7 +273,7 @@ public final class CommandPackets {
 			/**
 			 * Unique request identifier.
 			 */
-			public String requestId;
+			public final String requestId;
 
 			/**
 			 * Creates an update check request packet.
@@ -304,11 +292,11 @@ public final class CommandPackets {
 			/**
 			 * Unique request identifier.
 			 */
-			public String requestId;
+			public final String requestId;
 			/**
 			 * Check result message.
 			 */
-			public String response;
+			public final String response;
 
 			/**
 			 * Creates an update check response packet.
@@ -337,7 +325,7 @@ public final class CommandPackets {
 			/**
 			 * Sender timestamp in milliseconds.
 			 */
-			public long sentAtMillis;
+			public final long sentAtMillis;
 
 			/**
 			 * Creates a runtime info request packet.
@@ -368,39 +356,39 @@ public final class CommandPackets {
 			/**
 			 * Current online player count.
 			 */
-			public int onlinePlayerCount;
+			public final int onlinePlayerCount;
 			/**
 			 * Maximum player capacity.
 			 */
-			public int maxPlayerCount;
+			public final int maxPlayerCount;
 			/**
 			 * Per-player latency map.
 			 */
-			public Map<String, Integer> playersAndLatencies;
+			public final Map<String, Integer> playersAndLatencies;
 			/**
 			 * Number of players that have ever joined.
 			 */
-			public int playersEverJoined;
+			public final int playersEverJoined;
 			/**
 			 * Server TPS metric.
 			 */
-			public double tps;
+			public final double tps;
 			/**
 			 * Server MSPT metric.
 			 */
-			public double mspt;
+			public final double mspt;
 			/**
 			 * Uptime in seconds.
 			 */
-			public long uptimeSeconds;
+			public final long uptimeSeconds;
 			/**
 			 * JVM total memory in bytes.
 			 */
-			public long totalMemory;
+			public final long totalMemory;
 			/**
 			 * JVM free memory in bytes.
 			 */
-			public long freeMemory;
+			public final long freeMemory;
 
 			/**
 			 * Creates a runtime info response packet.
@@ -452,15 +440,15 @@ public final class CommandPackets {
 			/**
 			 * Minecraft player UUID.
 			 */
-			public String minecraftUuid;
+			public final String minecraftUuid;
 			/**
 			 * Minecraft player name.
 			 */
-			public String playerName;
+			public final String playerName;
 			/**
 			 * Whether this request is a join-time pre-check.
 			 */
-			public boolean joinCheck;
+			public final boolean joinCheck;
 
 			/**
 			 * Creates a link request packet.
@@ -483,19 +471,19 @@ public final class CommandPackets {
 			/**
 			 * Minecraft player UUID.
 			 */
-			public String minecraftUuid;
+			public final String minecraftUuid;
 			/**
 			 * Verification code, or empty when already linked.
 			 */
-			public String code;
+			public final String code;
 			/**
 			 * Whether the player is already linked.
 			 */
-			public boolean alreadyLinked;
+			public final boolean alreadyLinked;
 			/**
 			 * Linked Discord display name when already linked.
 			 */
-			public String discordName;
+			public final String discordName;
 
 			/**
 			 * Creates a link response packet.
@@ -520,7 +508,7 @@ public final class CommandPackets {
 			/**
 			 * Mapping of Minecraft UUID to OP level.
 			 */
-			public Map<String, Integer> opLevels;
+			public final Map<String, Integer> opLevels;
 
 			/**
 			 * Creates an OP sync packet.
@@ -547,11 +535,11 @@ public final class CommandPackets {
 			/**
 			 * Minecraft player UUID.
 			 */
-			public String minecraftUuid;
+			public final String minecraftUuid;
 			/**
 			 * Minecraft player name.
 			 */
-			public String playerName;
+			public final String playerName;
 
 			/**
 			 * Creates an unlink request packet.
@@ -572,15 +560,15 @@ public final class CommandPackets {
 			/**
 			 * Minecraft player UUID.
 			 */
-			public String minecraftUuid;
+			public final String minecraftUuid;
 			/**
 			 * Whether unlink succeeded.
 			 */
-			public boolean success;
+			public final boolean success;
 			/**
 			 * Previously linked Discord display name.
 			 */
-			public String discordName;
+			public final String discordName;
 
 			/**
 			 * Creates an unlink response packet.

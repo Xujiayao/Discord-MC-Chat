@@ -206,13 +206,13 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 			case CommandPackets.Execute.AutoCompleteRequestPacket p -> {
 				// Handle DMCC command auto-complete with OP level filtering
 				List<String> suggestions = CommandAutoCompleter.getSuggestions(p.input, p.opLevel);
-				ctx.writeAndFlush(new CommandPackets.Execute.AutoCompleteResponsePacket(client.getServerName(), suggestions));
+				ctx.writeAndFlush(new CommandPackets.Execute.AutoCompleteResponsePacket(suggestions));
 			}
 			case CommandPackets.Console.AutoCompleteRequestPacket p -> {
 				// Handle Minecraft command auto-complete via CoreEvents
 				List<String> suggestions = new ArrayList<>();
 				EventManager.post(new CoreEvents.MinecraftCommandAutoCompleteEvent(p.input, p.opLevel, suggestions));
-				ctx.writeAndFlush(new CommandPackets.Console.AutoCompleteResponsePacket(client.getServerName(), suggestions));
+				ctx.writeAndFlush(new CommandPackets.Console.AutoCompleteResponsePacket(suggestions));
 			}
 			case CommandPackets.Link.ResponsePacket p -> // Handle link code response from server - notify the player
 					EventManager.post(new CoreEvents.LinkCodeResponseEvent(p.minecraftUuid, p.code, p.alreadyLinked, p.discordName != null ? p.discordName : ""));

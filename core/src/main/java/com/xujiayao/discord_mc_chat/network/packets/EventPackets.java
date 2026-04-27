@@ -21,11 +21,11 @@ public final class EventPackets {
 		/**
 		 * Discord event type.
 		 */
-		public EventType type;
+		public final EventType type;
 		/**
 		 * Main message segments.
 		 */
-		public List<TextSegment> segments;
+		public final List<TextSegment> segments;
 		/**
 		 * Reply/reference message segments.
 		 */
@@ -81,11 +81,11 @@ public final class EventPackets {
 		/**
 		 * Minecraft event type.
 		 */
-		public MessageType type;
+		public final MessageType type;
 		/**
 		 * Placeholder map used for rendering message templates.
 		 */
-		public Map<String, String> placeholders;
+		public final Map<String, String> placeholders;
 
 		/**
 		 * Creates a Minecraft event packet.
@@ -125,7 +125,7 @@ public final class EventPackets {
 		/**
 		 * Parsed message segments.
 		 */
-		public List<TextSegment> segments;
+		public final List<TextSegment> segments;
 		/**
 		 * Raw component JSON for tellraw relay.
 		 */
@@ -172,7 +172,7 @@ public final class EventPackets {
 		/**
 		 * Log lines in this batch.
 		 */
-		public List<String> lines;
+		public final List<String> lines;
 
 		/**
 		 * Creates a console log batch packet.

@@ -1261,7 +1261,7 @@ public final class DiscordMessageParser {
 				codeSegments.add(new TextSegment("\n</code>", false, "yellow"));
 			}
 
-			spans.add(new MarkdownSpan(matcher.start(), matcher.end(), content, MarkdownType.CODE_BLOCK, codeSegments));
+			spans.add(new MarkdownSpan(matcher.start(), matcher.end(), content, codeSegments));
 		}
 	}
 
@@ -1564,23 +1564,10 @@ public final class DiscordMessageParser {
 		return text.substring(0, maxLen);
 	}
 
-	private enum MarkdownType {
-		BOLD,
-		ITALIC,
-		BOLD_ITALIC,
-		UNDERLINE,
-		STRIKETHROUGH,
-		SPOILER,
-		CODE_BLOCK,
-		INLINE_CODE,
-		HEADING
-	}
-
 	private record TokenSpan(int start, int end, TextSegment segment) {
 	}
 
-	private record MarkdownSpan(int start, int end, String innerText, MarkdownType type,
-	                            List<TextSegment> codeBlockSegments) {
+	private record MarkdownSpan(int start, int end, String innerText, List<TextSegment> codeBlockSegments) {
 	}
 
 	private static class MarkdownState {

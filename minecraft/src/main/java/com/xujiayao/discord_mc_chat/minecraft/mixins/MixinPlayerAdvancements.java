@@ -22,7 +22,7 @@ abstract class MixinPlayerAdvancements {
 	private ServerPlayer player;
 
 	@Shadow
-	public abstract AdvancementProgress getOrStartProgress(AdvancementHolder advancementHolder);
+	public abstract AdvancementProgress getOrStartProgress(AdvancementHolder advancement);
 
 	@Inject(method = "award", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/AdvancementRewards;grant(Lnet/minecraft/server/level/ServerPlayer;)V", shift = At.Shift.AFTER))
 	private void award(AdvancementHolder holder, String criterion, CallbackInfoReturnable<Boolean> cir) {
