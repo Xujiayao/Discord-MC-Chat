@@ -73,6 +73,7 @@ body:
       multiple: false
       options:
         - "Latest Build (GitHub Actions)"
+        - "3.0.0-beta.1"
         - "2.7.1-compat.1"
         - "2.7.1"
         - "2.7.0"
