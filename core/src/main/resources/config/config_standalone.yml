@@ -103,6 +103,7 @@ broadcasts:
   # When enabled, DMCC echoes the parsed player.command message back to the source client.
   # This switch is independent from overwrite_minecraft_source_messages.
   echo_player_command_to_source: true
+  echo_player_change_game_mode_to_source: true
 
 message_parsing:
   discord_to_minecraft:
@@ -128,11 +129,11 @@ message_parsing:
     mentions: true
     hyperlinks: true
     timestamps: true
-  # Once enabled, ci.cancel() [PlayerChat, SourceSay, SourceMsg, SourceMe]
+  # Once enabled, ci.cancel() [PlayerChat, SourceSay, SourceMsg, SourceMe, SourceTellRaw]
   # to prevent the original message from being processed by Minecraft, and instead broadcast
   # the parsed message back (including the sender's own client).
   # ---
-  # So, enabling this = enabling [player.chat, source.say, source.msg, source.me]
+  # So, enabling this = enabling [player.chat, source.say, source.msg, source.me, source.tell_raw]
   # for the source DMCC client.
   overwrite_minecraft_source_messages: false
 

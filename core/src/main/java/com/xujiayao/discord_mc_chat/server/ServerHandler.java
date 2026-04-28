@@ -107,11 +107,11 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 					switch (p.type) {
 						// Server events
 						case SERVER_STARTED -> {
-							handleMinecraftSystemMessage(p, clientName, "server.started", "server.start");
+							handleMinecraftSystemMessage(p, clientName, "server.started", "server.start", false, false);
 							BotPresenceManager.update();
 						}
 						case SERVER_STOPPING -> {
-							handleMinecraftSystemMessage(p, clientName, "server.stopped", "server.stop");
+							handleMinecraftSystemMessage(p, clientName, "server.stopped", "server.stop", false, false);
 							if ("single_server".equals(ModeManager.getMode())) {
 								ChannelUpdateManager.updateOfflineForSingleServerShutdownAndWait();
 							}
@@ -119,7 +119,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 						}
 						// Player events
 						case PLAYER_JOIN -> {
-							handleMinecraftSystemMessage(p, clientName, "player.join", "player.join");
+							handleMinecraftSystemMessage(p, clientName, "player.join", "player.join", false, false);
 
 							// Perform the initial OP sync once, on the first player join for this DMCC client.
 							if (!initialOpSyncDone) {
@@ -130,20 +130,24 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 							BotPresenceManager.update();
 						}
 						case PLAYER_QUIT -> {
-							handleMinecraftSystemMessage(p, clientName, "player.quit", "player.quit");
+							handleMinecraftSystemMessage(p, clientName, "player.quit", "player.quit", false, false);
 							BotPresenceManager.update();
 						}
-						case PLAYER_DIE -> handleMinecraftSystemMessage(p, clientName, "player.die", "player.die");
+						case PLAYER_DIE ->
+								handleMinecraftSystemMessage(p, clientName, "player.die", "player.die", false, false);
 						case PLAYER_ADVANCEMENT ->
-								handleMinecraftSystemMessage(p, clientName, "player.advancement", "player.advancement." + p.placeholders.getOrDefault("type", ""));
-						case PLAYER_CHANGE_GAME_MODE ->
-								handleMinecraftSystemMessage(p, clientName, "player.change_game_mode", "player.change_game_mode");
+								handleMinecraftSystemMessage(p, clientName, "player.advancement", "player.advancement." + p.placeholders.getOrDefault("type", ""), false, false);
+						case PLAYER_CHANGE_GAME_MODE -> {
+							boolean forceEchoToSource = ConfigManager.getBoolean("broadcasts.echo_player_change_game_mode_to_source");
+							handleMinecraftSystemMessage(p, clientName, "player.change_game_mode", "player.change_game_mode", false, forceEchoToSource);
+						}
 						case PLAYER_CHAT -> handleMinecraftUserMessage(p, clientName, "player.chat");
 						case PLAYER_COMMAND -> handleMinecraftCommandMessage(p, clientName);
 						case SOURCE_SAY -> handleMinecraftUserMessage(p, clientName, "source.say");
 						case SOURCE_TELL_RAW -> handleMinecraftTellRawMessage(p, clientName);
 						case SOURCE_MSG -> handleMinecraftUserMessage(p, clientName, "source.msg");
-						case SOURCE_ME -> handleMinecraftSystemMessage(p, clientName, "source.me", "source.me");
+						case SOURCE_ME ->
+								handleMinecraftSystemMessage(p, clientName, "source.me", "source.me", true, false);
 					}
 				}
 				case CommandPackets.Info.ResponsePacket p -> NetworkManager.cacheInfoResponse(clientName, p);
@@ -378,7 +382,8 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		return false;
 	}
 
-	private void handleMinecraftSystemMessage(MinecraftEventPacket packet, String sourceClientName, String channelNode, String lang) {
+	private void handleMinecraftSystemMessage(MinecraftEventPacket packet, String sourceClientName, String channelNode,
+	                                          String lang, boolean canOverwriteEchoToSource, boolean forceEchoToSource) {
 		String message;
 		if (packet.type == MinecraftEventPacket.MessageType.SOURCE_ME) {
 			String rawAction = packet.placeholders.getOrDefault("action", "");
@@ -398,7 +403,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		}
 		DiscordManager.clientBroadcast(sourceClientName, channelNode, lang, placeholders);
 
-		broadcastMinecraftRelay(packet, sourceClientName, relaySegments, overwriteSegments, parsed, true, false, true, channelNode);
+		broadcastMinecraftRelay(packet, sourceClientName, relaySegments, overwriteSegments, parsed, canOverwriteEchoToSource, forceEchoToSource, true, channelNode);
 	}
 
 	private String resolveMinecraftToDiscordMessage(String lang, Map<String, String> placeholders) {
