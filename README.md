@@ -1,168 +1,152 @@
-# Discord-MC-Chat (DMCC) 重构设计文档 (v3)
+# Discord-MC-Chat (DMCC) Design Document (v3)
 
-## 1. 项目概述
+## 1. Project Overview
 
-Discord-MC-Chat (DMCC) 是一个 Minecraft 模组，旨在为 Discord 和 Minecraft 服务器之间建立一个功能强大、可高度定制的双向通信桥梁。
+Discord-MC-Chat (DMCC) is a Minecraft mod designed to establish a powerful, highly customizable bidirectional communication bridge between a Discord server and some Minecraft servers.
 
-本次 v3 重构的核心目标是实现一个**统一的、基于"服务端-客户端 (Server-Client)"的通信架构**
-。在此架构下，所有运行模式都将复用同一套核心逻辑，以达到最大程度的代码复用、架构一致性和未来的可扩展性。
+The core goal of this v3 refactoring is to implement a **unified communication architecture based on "Server-Client"**. Under this architecture, all operation modes reuse the same core logic to achieve maximum code reuse, architectural consistency, and future extensibility.
 
-项目初期将优先实现对 **Fabric 26.1.2** 的兼容。但为了未来能够无缝支持 NeoForge
-等其他加载器，整体架构设计严格遵循平台无关原则，所有核心代码中**不得含有任何启动器专属的调用**，仅通过 Mixin 进行注入。
+In the early stage, the project prioritizes compatibility with **Fabric 26.1.2**. However, to seamlessly support other loaders like NeoForge in the future, the overall architecture design strictly follows platform-agnostic principles. All core code **must not contain any loader-specific calls**, and injection is performed exclusively via Mixins.
 
-## 2. 核心功能需求
+## 2. Core Feature Requirements
 
-### 2.1 双向通信与格式处理
+### 2.1 Bidirectional Communication and Format Handling
 
-- **全方位消息转发**: 在 Discord 和 Minecraft 之间实时转发普通聊天。不仅如此，系统还会拦截并转发原版系统广播（如 `/say` 和
-  `/tellraw @a`），确保 Discord 玩家不会错过任何游戏内公共事件。
-- **玩家指令广播与过滤**: 支持将玩家在游戏内执行的命令广播至 Discord。内置强大的正则过滤列表（`excluded_commands`
-  ），自动拦截私密指令（如 `/login`, `/msg`），保障服务器与玩家安全。
-- **富文本与多媒体解析**: 支持 Markdown、Discord 表情符号、Unicode 表情符号、`@` 提及、图片、GIF 和超链接在两个平台间的自动双向解析与渲染。
-- **伪用户 Webhook 支持**: 可选通过 Webhook 发送 Minecraft 消息，在 Discord 端完美呈现玩家的独立头像与游戏名。
-- **自定义格式与国际化**: 允许用户高度自定义所有消息的显示格式（基于 YAML
-  模板）。此外，系统内置动态翻译拉取机制，自动从官方源获取各语言资产，精准翻译成就、进度与死亡信息。
+- **Omnidirectional message forwarding**: Forward normal chat between Discord and Minecraft in real time. Furthermore, the system intercepts and forwards vanilla system broadcasts (such as `/say` and `/tellraw @a`), ensuring Discord players never miss any in-game public events.
+- **Player command broadcasting and filtering**: Supports broadcasting commands executed by players in-game to Discord. A built-in powerful regex filter list (`excluded_commands`) automatically blocks private commands (e.g., `/login`, `/msg`) to ensure server and player safety.
+- **Rich text and media parsing**: Supports automatic bidirectional parsing and rendering of Markdown, Discord emojis, Unicode emojis, `@` mentions, images, GIFs, and hyperlinks between the two platforms.
+- **Pseudo-user Webhook support**: Optionally send Minecraft messages via Webhooks to perfectly present a player's individual avatar and in-game name on the Discord side.
+- **Custom formatting and internationalization**: Highly customize display formats for all messages (based on YAML templates). Additionally, the system has a built-in dynamic translation fetching mechanism that automatically retrieves language assets from official sources, accurately translating advancements, statistics, and death messages.
 
-### 2.2 状态同步与事件通知
+### 2.2 Status Synchronization and Event Notifications
 
-- **玩家与服务器事件**: 实时播报玩家加入/离开服务器、死亡、获得进度/成就，以及服务器启动/关闭事件。
-- **频道看板与状态监控 (Channel Monitor)**:
-    - **文字频道 Topic**: 定期动态更新频道的 Topic（如在线人数、历史总玩家数、各子服状态）。
-    - **语音频道名称**: 动态更新指定的语音频道名称，用作服务器状态（Status: Online）和人数（Players: X/Y）的直观数据看板。
-- **Bot 状态展示**: 根据游戏内在线人数与状态，实时同步更新 Discord Bot 的活动状态（Activity）和在线状态。
-- **性能预警**: 定期监控服务器 MSPT（每 tick 毫秒数），超过设定阈值时在 Discord 频道自动发出警告。
-- **自动更新检查**: 自动校验 DMCC 版本并对比兼容性，发现新版本时在指定频道发送更新日志，并支持一键提醒管理员（Ping Admins）。
+- **Player and server events**: Broadcast player join/leave, death, advancement/achievement, and server start/stop events in real time.
+- **Channel Monitor**:
+    - **Text Channel Topic**: Dynamically update the channel topic periodically (e.g., online player count, total historical players, sub-server status).
+    - **Voice Channel Name**: Dynamically update specified voice channel names to serve as an intuitive dashboard for server status (Status: Online) and player count (Players: X/Y).
+- **Bot Status Display**: Synchronize and update the Discord bot's activity and online status in real time based on in-game player counts and status.
+- **Performance Alerts**: Periodically monitor server MSPT (milliseconds per tick), and automatically issue a warning in the Discord channel when a set threshold is exceeded.
+- **Auto Update Check**: Automatically verify the DMCC version and compare compatibility, sending update logs to a specified channel when a new version is found.
 
-### 2.3 深度管理与控制功能
+### 2.3 In-Depth Management and Control Features
 
-- **双向控制台日志流 (Console Forwarding)**:
-    - **实时推流**: 专设后台线程将 `latest.log` 增量实时切片推送到 Discord 指定控制台频道。
-    - **频道直连终端**: 拥有权限的管理员可直接在该 Discord 控制台频道中发送文本，系统会将其等同于控制台指令在游戏内直接执行。
-    - **敏感信息过滤**: 考虑到有些人会选择公开此 Discord 频道，因此提供可选但默认启用的敏感信息过滤器（如 IP 地址），确保安全。
-- **Discord 侧斜杠命令**: 提供 `/info`, `/stats`, `/log`, `/whitelist` 等管理命令。支持通过 Discord 查阅完整日志文件（打包传输）与计分板排行。
-- **系统重载**: 动态重载 DMCC 配置文件（`/dmcc reload` 或 Discord `/reload`）。
-- **账户绑定管辖**: 提供完整的账户绑定管理命令（`link` / `unlink` / `links`），支持跨端协同认证。
+- **Bidirectional Console Log Stream (Console Forwarding)**:
+    - **Real-time push**: A dedicated background thread incrementally slices `latest.log` in real time and pushes it to a designated Discord console channel.
+    - **Channel Direct Terminal**: Administrators with permission can directly send text in this Discord console channel, and the system will treat it as a console command executed directly in-game.
+    - **Sensitive Information Filtering**: Considering some may choose to make this Discord channel public, an optional (but enabled by default) sensitive information filter (e.g., IP addresses) is provided to ensure security.
+- **Discord-side slash commands**: Provide management commands such as `/info`, `/stats`, `/log`, `/whitelist`. Supports viewing complete log files (packaged transfer) and scoreboard leaderboards via Discord.
+- **System reload**: Dynamically reload DMCC configuration files (`/dmcc reload` or Discord `/reload`).
+- **Account binding governance**: Provide full account binding management commands (`link` / `unlink` / `links`), supporting cross-side co-authentication.
 
-## 3. 系统架构
+## 3. System Architecture
 
-### 3.1 统一的"服务端-客户端 (Server-Client)"架构
+### 3.1 Unified "Server-Client" Architecture
 
-DMCC 所有运行模式都基于一个统一的通信模型，该模型包含两个核心组件：
+All DMCC operation modes are based on a unified communication model consisting of two core components:
 
-1. **服务端 (Server)**: 整个系统的"大脑"与中央路由。它作为后台服务运行，是**唯一**负责与 Discord API (通过 JDA)
-   直接通信的组件。它处理所有跨服路由、身份解析和鉴权凭证下发。**此组件不得包含任何 `net.minecraft` 的导入（反射除外）**。
-2. **客户端 (Client)**: 部署在每个 Minecraft 服务器上的"触手"。负责捕获游戏内的所有事件发送给 Server，并接收来自 Server
-   的指令（执行本地命令与委托鉴权）。
+1. **Server**: The "brain" and central router of the entire system. It runs as a background service and is **the only** component responsible for direct communication with the Discord API (via JDA). It handles all cross-server routing, identity resolution, and credential issuance. **This component must not contain any `net.minecraft` imports (except via reflection)**.
+2. **Client**: The "tentacle" deployed on each Minecraft server. It is responsible for capturing all in-game events and sending them to the Server, and receiving instructions from the Server (executing local commands and delegated authentication).
 
-两者之间通过基于 **Netty** 的 TCP 协议（共享密钥与一次性哈希质询认证）进行安全通信。
+The two communicate securely over a Netty-based TCP protocol (shared secret and one-time hash challenge authentication).
 
-### 3.2 运行模式与部署
+### 3.2 Operation Modes and Deployment
 
-1. **单体服务器模式 (`single_server`)**: 在同一 JVM 中同时启动内部 Server 和内部 Client，直接连通 Discord。推荐绝大多数普通服主使用。
-2. **多服务器-客户端模式 (`multi_server_client`)**: 只启动 Client 端，不连接 Discord API，而是作为子服连接到外部独立运行的
-   DMCC Server。
-3. **独立模式 (`standalone`)**: 只启动 Server 端（无 Minecraft 进程），作为多服务器架构的中央中枢，负责聚合各个子服的消息与状态，并与
-   Discord 进行数据交换。
+1. **Single Server Mode (`single_server`)**: Starts both an internal Server and internal Client in the same JVM, connecting directly to Discord. Recommended for the vast majority of regular server owners.
+2. **Multi-Server Client Mode (`multi_server_client`)**: Starts only the Client, does not connect to the Discord API, but connects as a sub-server to an externally running independent DMCC Server.
+3. **Standalone Mode (`standalone`)**: Starts only the Server (no Minecraft process), acting as the central hub of a multi-server architecture, aggregating messages and statuses from various sub-servers and exchanging data with Discord.
 
-## 4. 账户绑定系统 (Account Linking)
+## 4. Account Linking System
 
-账户绑定系统是连接无状态 Discord 社区和有状态 Minecraft 世界的数据总线，也是 DMCC 权限系统的基石。
+The account linking system is the data bus connecting a stateless Discord community and a stateful Minecraft world, and is also the cornerstone of DMCC's permission system.
 
-### 4.1 非对称映射关系
+### 4.1 Asymmetric Mapping Relationship
 
-- **一个 Discord 账户可关联多个 Minecraft 账户**（方便玩家管理大号与小号）。
-- **一个 Minecraft 账户只能关联一个 Discord 账户**（确保游戏内身份的绝对唯一性）。
-- **数据持久化**: 绑定关系作为永久数据存储在 `Server` 端的 `account_linking/links.json` 中，以 Discord ID 为主键。查询时，Discord
-  显示名与正版玩家名均通过 API 实时动态解析，离线玩家则保留绑定时的历史快照。
+- **One Discord account can be linked to multiple Minecraft accounts** (allowing players to manage main accounts and alt accounts).
+- **One Minecraft account can only be linked to one Discord account** (ensuring absolute uniqueness of in-game identity).
+- **Data Persistence**: Binding relationships are stored as permanent data in `account_linking/links.json` on the `Server` side, using the Discord ID as the primary key. During queries, Discord display names and premium player names are resolved dynamically in real time via the API, while offline players retain the snapshot from the time of binding.
 
-### 4.2 安全绑定工作流 (严格的 MC 优先原则)
+### 4.2 Secure Binding Workflow (Strict MC-First Principle)
 
-为防止在正版/离线服务器中出现身份冒用，**严禁在 Discord 端直接输入游戏名进行绑定**。
+To prevent identity spoofing on premium/cracked servers, **entering a game name directly on the Discord side to bind is strictly prohibited**.
 
-1. **玩家进服自动检查**: 玩家每次进入 Minecraft 服务器时，Client 通过网络包请求 Server 检查其 UUID 是否已绑定。
-2. **自动生成凭证**: 若未绑定，Server 生成一个 6 位临时验证码（如 `A7X9P2`），Client 在游戏内发送包含内联可点击元素的消息指引玩家在
-   Discord 执行 `/link A7X9P2`，验证码 5 分钟有效。
-3. **手动刷新凭证**: Minecraft 端提供 `/dmcc link` 命令进行验证码续期或重新生成。
-4. **确认所有权**: 玩家前往 Discord，使用斜杠命令 `/link A7X9P2` 完成最终绑定。
+1. **Auto-check on player join**: Every time a player joins a Minecraft server, the Client requests the Server via a network packet to check if their UUID is already bound.
+2. **Automatic credential generation**: If not bound, the Server generates a 6-digit temporary verification code (e.g., `A7X9P2`). The Client sends a message in-game containing an inline clickable element instructing the player to use `/link A7X9P2` on Discord. The code is valid for 5 minutes.
+3. **Manual credential refresh**: The Minecraft end provides the `/dmcc link` command to renew or regenerate the verification code.
+4. **Confirm ownership**: The player goes to Discord and uses the slash command `/link A7X9P2` to complete the final binding.
 
-### 4.3 跨平台交互反馈
+### 4.3 Cross-Platform Interaction Feedback
 
-- **同频渲染**: 玩家在游戏内的聊天名字颜色，将自动同步为其绑定的 Discord 账户的最高角色颜色。
-- **跨平台艾特提醒**: 跨平台提及 (`@`) 时，自动在游戏内通过 Action Bar、Title 或 Chat 高亮提醒对应的玩家。
+- **Synced Name Color**: A player's in-game chat name color is automatically synchronized to the highest role color of their bound Discord account.
+- **Cross-Platform Mention Alerts**: When cross-platform mentions (`@`) occur, the corresponding player is automatically highlighted in-game via Action Bar, Title, or Chat.
 
-## 5. 零信任委托权限系统 (Delegated Authorization)
+## 5. Zero-Trust Delegated Authorization System
 
-DMCC v3 彻底摒弃了在 Discord 端硬编码判定命令权限的做法，转而采用 **“身份映射 + 边缘委托鉴权”** 的微服务安全架构。
+DMCC v3 completely abandons hard-coding command permission checks on the Discord side, adopting a microservice security architecture of **"Identity Mapping + Edge Delegated Authorization"**.
 
-### 5.1 扩展的权限基准 (-1 到 4)
+### 5.1 Extended Permission Baseline (-1 to 4)
 
-所有权限均对齐 Minecraft 原生的 OP 等级，并向下扩展：
+All permissions align with the native Minecraft OP levels, extended downward:
 
-- **`-1` 级**: 任意 Discord 用户（包括未绑定账号的游客）。适用于无害的查询命令（如 `help`, `info`）。
-- **`0` 级**: 基础绑定玩家，或被赋予基础信任身份的未绑定用户，对应 Minecraft 原生的 OP 等级 0。
-- **`1 ~ 4` 级**: 对应 Minecraft 原生的 OP 等级 1-4。
+- **`-1` Level**: Any Discord user (including unlinked guests). Suitable for harmless query commands (e.g., `help`, `info`).
+- **`0` Level**: Basic linked player, or an unlinked user granted a basic trust identity, corresponding to Minecraft native OP level 0.
+- **`1 ~ 4` Levels**: Correspond to Minecraft native OP levels 1-4.
 
-### 5.2 身份与 OP 映射 (Mappings)
+### 5.2 Identity and OP Mappings
 
-Discord 用户的身份将通过以下规则在 Server 端结算为一个具体的 **OP 等级凭证**：
+A Discord user's identity will be settled into a specific **OP level credential** on the Server side based on the following rules:
 
-1. **`user_mappings`**: 基于特定 Discord User ID 指定 OP 等级（优先级最高）。
-2. **`role_mappings`**: 遍历用户拥有的 Discord 角色，取映射的最高 OP 等级。
-3. **绑定账号保底**: 如果用户有绑定 Minecraft 玩家，则保底获得 OP 0 等级。
+1. **`user_mappings`**: Assign OP level based on a specific Discord User ID (highest priority).
+2. **`role_mappings`**: Iterate over the user's Discord roles, taking the highest mapped OP level.
+3. **Linked Account Fallback**: If the user has a linked Minecraft player, they are guaranteed an OP level of 0.
 
-*(注：系统将取上述条件中命中的最高 OP 等级作为该请求的最终凭证。)*
+*(Note: The system takes the highest OP level matched from the above conditions as the final credential for that request.)*
 
-### 5.3 核心路由与委托鉴权
+### 5.3 Core Routing and Delegated Authorization
 
-当 Discord 用户发起命令时（如 `/reload` 或 `/execute SMP reload`）：
+When a Discord user initiates a command (e.g., `/reload` or `/execute SMP reload`):
 
-1. **Server 不负责拦截业务逻辑**，它仅计算出该用户的 OP 凭证（例如：OP=2），并将“指令内容”连同“凭证标签”一起打包，通过 Netty
-   发送给对应的目标 Client。
-2. **Client 边缘鉴权**：目标客户端收到请求后，读取自身本地 `config.yml` 中设定的安全阀值（例如 `reload: 4`），发现凭证（OP
-   2）不足，由 Minecraft 客户端直接驳回请求。
-3. **动态 UI**：Discord 端斜杠命令的参数补全，同样附带 OP 凭证请求给 Client，Client 仅返回该凭证有权查看的补全项（例如仅为管理员自动补全系统文件名）。
+1. **The Server does not intercept business logic**. It only calculates the user's OP credential (e.g., OP=2), packages the "command content" together with the "credential tag", and sends it to the corresponding target Client via Netty.
+2. **Client Edge Authorization**: Upon receiving the request, the target Client reads the security threshold set in its local `config.yml` (e.g., `reload: 4`), finds the credential (OP 2) is insufficient, and the Minecraft client directly rejects the request.
+3. **Dynamic UI**: Parameter auto-completion for Discord-side slash commands also attaches OP credentials to requests sent to the Client. The Client only returns completion items that the credential is authorized to view (e.g., auto-completing system filenames only for administrators).
 
-### 5.4 优雅解决白名单悖论 (Whitelist Catch-22)
+### 5.4 Elegantly Resolving the Whitelist Catch-22
 
-玩家因白名单进不去服务器 -> 无法证明身份绑定 -> 无法获得白名单。
-**解决方案**：
-DMCC 在 Client 端提供独立的 `whitelist` 代理命令（默认所需权限为 `0` 级）。玩家加入 Discord 频道并获得基础角色（映射为 OP
-0）后，即可在 Discord 执行 `/whitelist <他的ID>` 预先上白名单，进服后再走正常绑定流程。
+A player cannot join the server due to the whitelist -> cannot prove identity binding -> cannot be added to the whitelist.
+**Solution**:
+DMCC provides an independent `whitelist` proxy command on the Client side (default required permission is level `0`). After a player joins the Discord channel and obtains a base role (mapped to OP 0), they can execute `/whitelist <their ID>` on Discord to be pre-whitelisted, then go through the normal binding process after joining the server.
 
-### 5.5 Minecraft OP 强制同步机制 (`sync_op_level_to_minecraft`)
+### 5.5 Minecraft OP Force Sync Mechanism (`sync_op_level_to_minecraft`)
 
-开启此项后，DMCC 将成为服务器权限的“唯一真理来源”（Single Source of Truth）：
+When this is enabled, DMCC becomes the **Single Source of Truth (SSOT)** for server permissions:
 
-- 每次同步均执行“全量重算 + 强制覆盖”。
-- Discord 身份映射将被硬写入服务器的原生 OP 列表中；管理员在游戏内手打的原生 `/op` 授权，会在下一次同步时被 DMCC 依据配置冲刷覆盖。
-- 解绑账号将触发 OP 自动降级与回收。
+- Each sync performs a "full recomputation + forced overwrite".
+- Discord identity mappings will be hard-written into the server's native OP list; any native `/op` grants manually executed by an admin in-game will be flushed and overwritten by DMCC according to the configuration during the next sync.
+- Unlinking an account triggers automatic OP revocation and demotion.
 
-## 6. 多服务器配置模型（Standalone + Multi Server）
+## 6. Multi-Server Configuration Model (Standalone + Multi Server)
 
-当 DMCC 处于 `standalone + multi_server_client` 架构时，不同子服务器可使用不同 OP 映射策略。
+When DMCC is in the `standalone + multi_server_client` architecture, different sub-servers can use different OP mapping strategies.
 
-在 `standalone` 配置的 `user_mappings` 与 `role_mappings` 中，每个条目包含一个顶层 `op_level`（给 Standalone 自身查询使用），以及一个
-`server_overrides` 列表字典。若 `server_overrides` 中没有某子服务器的对应条目，则该子服务器自动降级使用顶层 `op_level`
-作为默认回退值。
+In the `user_mappings` and `role_mappings` of the `standalone` configuration, each entry contains a top-level `op_level` (used for the Standalone's own queries) and a `server_overrides` list dictionary. If there is no corresponding entry in `server_overrides` for a particular sub-server, that sub-server automatically falls back to using the top-level `op_level` as the default.
 
-## 7. 命令列表与权限参考
+## 7. Command List and Permission Reference
 
-| 命令                       | 默认 OP 等级 | 模组运行 `multi_server_client` | 模组运行 `single_server` | 独立运行 `standalone` | 说明                                            |
-|:-------------------------|:---------|:---------------------------|:---------------------|:------------------|:----------------------------------------------|
-| `console <command>`      | `0`      | ❌                          | ✅                    | ❌                 | 通过 Discord 模拟控制台执行任意指令。                       |
-| `console <at> <command>` | `0`      | ❌                          | ❌                    | ✅                 | 通过 Discord 模拟远程子服务器控制台执行任意指令。                 |
-| `execute <at> <command>` | `-1`     | ❌                          | ❌                    | ✅                 | 远程执行中枢，仅 Standalone 存在。负责将请求连同鉴权凭证委托给 Client。 |
-| `help`                   | `-1`     | ✅                          | ✅                    | ✅                 | 动态显示用户当前有权执行的可用命令。                            |
-| `info`                   | `-1`     | ✅                          | ✅                    | ✅                 | 查看状态。Client 只显自身数据，Server 聚合全局数据。             |
-| `link`                   | `0`      | ✅                          | ✅                    | ❌                 | Minecraft 端生成或刷新 6 位验证码。                      |
-| `link <code>`            | `0`      | ❌                          | ✅                    | ✅                 | Discord 端使用验证码完成最终绑定。                         |
-| `links`                  | `4`      | ❌                          | ✅                    | ✅                 | 管理员查询所有已绑定的账户关系数据。                            |
-| `log <file>`             | `4`      | ✅                          | ✅                    | ✅                 | 将指定的后台日志文件打包传输至 Discord，支持自动补全。               |
-| `reload`                 | `4`      | ✅                          | ✅                    | ✅                 | 重新加载 DMCC 配置。                                 |
-| `shutdown`               | `4`      | ❌                          | ❌                    | ✅                 | 仅用于安全关闭 Standalone 中央进程。                      |
-| `stats <type> <stat>`    | `-1`     | ✅                          | ✅                    | ❌                 | 查看计分板与统计数据。支持基于权限过滤的动态自动补全。                   |
-| `unlink`                 | `0`      | ✅                          | ✅                    | ✅                 | 解绑当前 MC 玩家 / 当前 Discord 用户的所有关联玩家。            |
-| `whitelist <player>`     | `0`      | ✅                          | ✅                    | ❌                 | DMCC 专用的低权限白名单命令代理。                           |
+| Command                  | Default OP Level | Mod (multi_server_client) | Mod (single_server) | Standalone | Description                                                                                                |
+|:-------------------------|:-----------------|:--------------------------|:--------------------|:-----------|:-----------------------------------------------------------------------------------------------------------|
+| `console <command>`      | `0`              | ❌                         | ✅                   | ❌          | Execute any command via Discord simulating the console.                                                    |
+| `console <at> <command>` | `0`              | ❌                         | ❌                   | ✅          | Execute any command via Discord simulating a remote sub-server console.                                    |
+| `execute <at> <command>` | `-1`             | ❌                         | ❌                   | ✅          | Remote execution hub, only exists in Standalone. Delegates the request along with auth credentials to the Client. |
+| `help`                   | `-1`             | ✅                         | ✅                   | ✅          | Dynamically display available commands that the user is authorized to execute.                             |
+| `info`                   | `-1`             | ✅                         | ✅                   | ✅          | View status. Client shows only its own data, Server aggregates global data.                                |
+| `link`                   | `0`              | ✅                         | ✅                   | ❌          | Minecraft side generates or refreshes a 6-digit verification code.                                         |
+| `link <code>`            | `0`              | ❌                         | ✅                   | ✅          | Discord side uses the verification code to complete binding.                                               |
+| `links`                  | `4`              | ❌                         | ✅                   | ✅          | Admin queries all linked account relationship data.                                                        |
+| `log <file>`             | `4`              | ✅                         | ✅                   | ✅          | Package and transfer the specified background log file to Discord, supports auto-completion.                |
+| `reload`                 | `4`              | ✅                         | ✅                   | ✅          | Reload the DMCC configuration.                                                                             |
+| `shutdown`               | `4`              | ❌                         | ❌                   | ✅          | Used only to safely shut down the Standalone central process.                                              |
+| `stats <type> <stat>`    | `-1`             | ✅                         | ✅                   | ❌          | View scoreboard and statistics. Supports dynamic auto-completion filtered by permission.                    |
+| `unlink`                 | `0`              | ✅                         | ✅                   | ✅          | Unlink the current MC player / all associated players of the current Discord user.                         |
+| `update`                 | `-1`             | ✅                         | ✅                   | ✅          | Check for DMCC updates.                                                                                    |
+| `whitelist <player>`     | `0`              | ✅                         | ✅                   | ❌          | DMCC-specific low-permission whitelist command proxy.                                                      |
 
-> v3 移除了 v2 提供的 `/stop` 快捷指令。若需在 Discord 端关闭 Minecraft 服务器，拥有 4 级权限的管理员请直接使用
-`/console stop` 模拟控制台发起安全停机。
+> v3 removes the `/stop` shortcut command provided in v2. If you need to shut down the Minecraft server from Discord, an administrator with level 4 permission should directly use `/console stop` to simulate a safe shutdown via the console.
