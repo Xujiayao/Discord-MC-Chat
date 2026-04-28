@@ -8,6 +8,7 @@ import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.server.ServerDMCC;
 import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
+import com.xujiayao.discord_mc_chat.server.linking.OpSyncManager;
 import com.xujiayao.discord_mc_chat.update.UpdateCheckManager;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import okhttp3.Cache;
@@ -174,6 +175,7 @@ public final class DMCC {
 		try (ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Shutdown"))) {
 			return executor.submit(() -> {
 				UpdateCheckManager.shutdown();
+				OpSyncManager.shutdown();
 
 				// Clear the network manager references first
 				NetworkManager.clear();

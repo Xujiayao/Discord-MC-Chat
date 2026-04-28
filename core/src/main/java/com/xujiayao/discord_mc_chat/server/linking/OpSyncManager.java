@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
@@ -35,8 +36,7 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  */
 public final class OpSyncManager {
 
-	private static final ExecutorService SYNC_EXECUTOR =
-			Executors.newSingleThreadExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-OpSync"));
+	private static ExecutorService syncExecutor;
 
 	private OpSyncManager() {
 	}
@@ -51,7 +51,31 @@ public final class OpSyncManager {
 	 * In standalone mode, sends OpSyncPackets to each connected client.
 	 */
 	public static void syncAll() {
-		SYNC_EXECUTOR.execute(OpSyncManager::doSyncAll);
+		try {
+			getOrCreateExecutor().execute(OpSyncManager::doSyncAll);
+		} catch (RejectedExecutionException ignored) {
+		}
+	}
+
+	/**
+	 * Stops the OP sync executor and releases its thread.
+	 */
+	public static void shutdown() {
+		synchronized (OpSyncManager.class) {
+			if (syncExecutor != null) {
+				ExecutorServiceUtils.shutdownAnExecutor(syncExecutor);
+				syncExecutor = null;
+			}
+		}
+	}
+
+	private static ExecutorService getOrCreateExecutor() {
+		synchronized (OpSyncManager.class) {
+			if (syncExecutor == null || syncExecutor.isShutdown()) {
+				syncExecutor = Executors.newSingleThreadExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-OpSync"));
+			}
+			return syncExecutor;
+		}
 	}
 
 	private static void doSyncAll() {
