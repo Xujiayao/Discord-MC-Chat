@@ -11,6 +11,12 @@ hero:
       text: Discord
       link: https://discord.gg/kbXkV6k2XU
     - theme: alt
+      text: Modrinth
+      link: https://modrinth.com/mod/discord-mc-chat
+    - theme: alt
+      text: CurseForge
+      link: https://www.curseforge.com/minecraft/mc-mods/discord-mc-chat
+    - theme: alt
       text: GitHub
       link: https://github.com/Xujiayao/Discord-MC-Chat
   image:
