@@ -1,0 +1,12 @@
+# macOS
+
+*.DS_Store
+
+# Node.js
+
+node_modules/
+
+# VitePress
+
+.vitepress/cache/
+.vitepress/dist/
