@@ -26,5 +26,5 @@ hero:
 features:
   - icon: 🥳
     title: Discord-MC-Chat (DMCC) v3 is now public!
-    details: "DMCC v3 is a complete rewrite with a new architecture and many new features. Like the v2 alphas, the v3 beta builds are fully functional and ready to use — though documentation isn't ready yet.<br><br>As part of testing, please try setting it up yourselves and see if the process feels intuitive. Report any issues, and feel free to ask for help in the Discord server. Your feedback will directly shape the final 3.0.0 release!"
+    details: "DMCC v3 is a complete rewrite with a new architecture and many new features. Like the v2 alphas, the v3 beta builds are fully functional and ready to use — though documentation is not ready yet.<br><br>As part of testing, please try setting it up yourselves and see if the process feels intuitive. Report any issues, and feel free to ask for help in the Discord server. Your feedback will directly shape the final 3.0.0 release!"
 ---
