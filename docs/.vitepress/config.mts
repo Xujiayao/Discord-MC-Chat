@@ -7,11 +7,11 @@ export default defineConfig({
 
     // prettier-ignore
     head: [
-        ['link', { rel: 'icon', type: 'image/svg+xml', href: '/icon.svg' }]
+        ['link', {rel: 'icon', type: 'image/svg+xml', href: '/icon.svg'}]
     ],
 
     themeConfig: {
-        logo: { src: '/icon.svg', width: 24, height: 24 },
+        logo: {src: '/icon.svg', width: 24, height: 24},
 
         // https://vitepress.dev/reference/default-theme-config
         nav: [
@@ -21,5 +21,17 @@ export default defineConfig({
         socialLinks: [
             {icon: 'github', link: 'https://github.com/Xujiayao/Discord-MC-Chat'}
         ]
+    },
+
+    locales: {
+        root: {
+            label: 'English',
+            lang: 'en'
+        },
+        zh: {
+            label: '中文',
+            lang: 'zh',
+            link: '/zh/'
+        }
     }
 })
