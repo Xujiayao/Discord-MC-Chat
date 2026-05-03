@@ -190,9 +190,9 @@ voice_channels_updating:
     at_least_one_server_online: "Players: {online_player_count}/{max_player_count}"
 
 mspt_monitoring:
-  first_exceeded: ":warning: **Server MSPT ({mspt}) is over the threshold ({threshold})! Next check in <t:{next_check_time}:R>."
-  still_exceeded: ":warning: **Server MSPT ({mspt}) is still over the threshold ({threshold})! Next check in <t:{next_check_time}:R>."
-  first_recovered: ":white_check_mark: **Server MSPT ({mspt}) is back below the threshold ({threshold})!"
+  first_exceeded: ":warning: **Server MSPT ({mspt}) is over the threshold ({threshold})! Next check in <t:{next_check_time}:R>.**"
+  still_exceeded: ":warning: **Server MSPT ({mspt}) is still over the threshold ({threshold})! Next check in <t:{next_check_time}:R>.**"
+  first_recovered: ":white_check_mark: **Server MSPT ({mspt}) is back below the threshold ({threshold})!**"
 
 console_forwarding:
   started:
