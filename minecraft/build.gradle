@@ -9,4 +9,6 @@ dependencies {
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     implementation project(":core")
+
+    compileOnly "maven.modrinth:vanish:${project.vanish_version}"
 }

@@ -7,6 +7,7 @@ import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.serialization.JsonOps;
+import com.xujiayao.discord_mc_chat.Constants;
 import com.xujiayao.discord_mc_chat.DMCC;
 import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
@@ -22,6 +23,7 @@ import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Info.Response
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Link.RequestPacket;
 import com.xujiayao.discord_mc_chat.network.packets.EventPackets.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
+import me.drex.vanish.api.VanishAPI;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.commands.CommandSourceStack;
@@ -829,13 +831,16 @@ public final class MinecraftEventHandler {
 		String serverName = "single_server".equals(ModeManager.getMode()) ? "Internal" : ConfigManager.getString("multi_server.server_name");
 		String minecraftVersion = EnvironmentUtils.getMinecraftVersion();
 
-		int onlinePlayers = server.getPlayerList().getPlayerCount();
-		int maxPlayers = server.getPlayerList().getMaxPlayers();
-
 		Map<String, Integer> playersAndLatencies = new HashMap<>();
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+			if (Constants.MOD_VANISH_INSTALLED.get() && VanishAPI.isVanished(player)) {
+				continue;
+			}
 			playersAndLatencies.put(player.getDisplayName().getString(), player.connection.latency());
 		}
+
+		int onlinePlayers = playersAndLatencies.size();
+		int maxPlayers = server.getPlayerList().getMaxPlayers();
 
 		int playersEverJoined = StatsCommand.countStatResultEntries("minecraft:custom", "minecraft:play_time");
 
