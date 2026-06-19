@@ -7,6 +7,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.JsonOps;
 import com.xujiayao.discord_mc_chat.multi_server.MultiServer;
 import net.dv8tion.jda.api.OnlineStatus;
@@ -30,7 +31,6 @@ import net.minecraft.server.players.NameAndId;
 import net.minecraft.server.players.UserWhiteList;
 import net.minecraft.server.players.UserWhiteListEntry;
 import net.minecraft.util.TimeUtil;
-import net.minecraft.util.Tuple;
 import okhttp3.CacheControl;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -447,10 +447,10 @@ public class Utils {
 		}
 
 		// Server TPS
-		message.append(Translations.translate("utils.utils.gicMessage.serverTps", String.format("%.2f", getTickInfo().getA())));
+		message.append(Translations.translate("utils.utils.gicMessage.serverTps", String.format("%.2f", getTickInfo().getFirst())));
 
 		// Server MSPT
-		message.append(Translations.translate("utils.utils.gicMessage.serverMspt", String.format("%.2f", getTickInfo().getB())));
+		message.append(Translations.translate("utils.utils.gicMessage.serverMspt", String.format("%.2f", getTickInfo().getSecond())));
 
 		// Server used memory
 		message.append(Translations.translate("utils.utils.gicMessage.serverUsedMemory", (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024, Runtime.getRuntime().totalMemory() / 1024 / 1024));
@@ -539,7 +539,7 @@ public class Utils {
 		MSPT_MONITOR_TIMER.schedule(new TimerTask() {
 			@Override
 			public void run() {
-				double mspt = getTickInfo().getB();
+				double mspt = getTickInfo().getSecond();
 
 				if (mspt > CONFIG.generic.msptLimit) {
 					String message = Translations.translateMessage("message.highMspt").replace("%mspt%", String.format("%.2f", mspt)).replace("%msptLimit%", Integer.toString(CONFIG.generic.msptLimit));
@@ -614,7 +614,7 @@ public class Utils {
 		}, 0, 21600000);
 	}
 
-	private static Tuple<Double, Double> getTickInfo() {
+	private static Pair<Double, Double> getTickInfo() {
 		ServerTickRateManager manager = SERVER.tickRateManager();
 
 		double mspt = ((double) SERVER.getAverageTickTimeNanos()) / TimeUtil.NANOSECONDS_PER_MILLISECOND;
@@ -624,7 +624,7 @@ public class Utils {
 			tps = 0;
 		}
 
-		return new Tuple<>(tps, mspt);
+		return new Pair<>(tps, mspt);
 	}
 
 	public static MutableComponent fromJson(String json) {
