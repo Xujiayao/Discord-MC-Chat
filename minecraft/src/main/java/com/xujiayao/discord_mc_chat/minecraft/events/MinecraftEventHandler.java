@@ -883,7 +883,7 @@ public final class MinecraftEventHandler {
 
 			// Apply color
 			if (seg.color != null && !seg.color.isEmpty()) {
-				TextColor textColor = parseTextColor(seg.color);
+				TextColor textColor = TextColor.parseColor(seg.color).result().orElse(null);
 				if (textColor != null) {
 					style = style.withColor(textColor);
 				}
@@ -983,7 +983,7 @@ public final class MinecraftEventHandler {
 		Style style = Style.EMPTY;
 
 		if (segment.color != null && !segment.color.isEmpty()) {
-			TextColor textColor = parseTextColor(segment.color);
+			TextColor textColor = TextColor.parseColor(segment.color).result().orElse(null);
 			if (textColor != null) {
 				style = style.withColor(textColor);
 			}
@@ -1045,29 +1045,6 @@ public final class MinecraftEventHandler {
 					.result()
 					.orElse(null);
 		} catch (Exception ignored) {
-			return null;
-		}
-	}
-
-	private static TextColor parseTextColor(String colorStr) {
-		if (colorStr.startsWith("#")) {
-			try {
-				return TextColor.parseColor(colorStr).result().orElse(null);
-			} catch (Exception e) {
-				return null;
-			}
-		}
-
-		// Try named color via ChatFormatting
-		ChatFormatting formatting = ChatFormatting.getByName(colorStr);
-		if (formatting != null && formatting.isColor()) {
-			return TextColor.fromLegacyFormat(formatting);
-		}
-
-		// Try parsing as hex anyway
-		try {
-			return TextColor.parseColor(colorStr).result().orElse(null);
-		} catch (Exception e) {
 			return null;
 		}
 	}
