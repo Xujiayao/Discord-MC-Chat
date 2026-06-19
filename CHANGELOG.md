@@ -2,9 +2,9 @@
 
 ## Discord-MC-Chat 2.7.1-compat.2 for Minecraft 26.2 - 2026/6/19
 
-> To use the new voice channel features, please grant your Discord bot the "Connect" permission in the "Voice Channel Permissions" section at your Discord server's "Roles" menu.
-> 
-> 如需使用语音频道相关新功能，请在 Discord 服务器设置的 “身份组” 菜单中，为机器人身份组赋予 “语音频道权限” 下的 “连接” 权限。
+To use the new voice channel features, please grant your Discord bot the "Connect" permission in the "Voice Channel Permissions" section at your Discord server's "Roles" menu.
+
+如需使用语音频道相关新功能，请在 Discord 服务器设置的 “身份组” 菜单中，为机器人身份组赋予 “语音频道权限” 下的 “连接” 权限。
 
 > [!NOTE]
 >
