@@ -31,7 +31,11 @@ subprojects {
     }
 
     processResources {
-        def propertiesToExpand = new HashMap<String, Object>(project.properties)
+        def propertiesToExpand = new HashMap<String, Object>()
+        ["mod_version", "jda_version", "slf4j_api_version", "jackson_version", "okhttp_version", "netty_version", "jemoji_version"].each {
+            propertiesToExpand.put(it, providers.gradleProperty(it).get())
+        }
+        propertiesToExpand.put("version", version.toString())
         filesMatching(["**/*.txt", "**/*.yml", "**/*.toml", "**/*.json"]) {
             expand(propertiesToExpand)
         }
