@@ -3,6 +3,10 @@ plugins {
     id "net.fabricmc.fabric-loom" version "${loom_version}" apply false
 }
 
+// The root project aggregates the final artifacts into its own build/ directory,
+// so it needs a base plugin to get a clean task that removes them.
+apply plugin: "base"
+
 allprojects {
     repositories {
         mavenCentral()
@@ -20,11 +24,6 @@ subprojects {
 
     java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
-    java {
-        sourceCompatibility = JavaVersion.VERSION_25
-        targetCompatibility = JavaVersion.VERSION_25
-    }
-
     tasks.withType(JavaCompile).configureEach {
         options.release = 25
         options.encoding = "UTF-8"
@@ -40,8 +39,4 @@ subprojects {
             expand(propertiesToExpand)
         }
     }
-}
-
-project.afterEvaluate {
-    delete file("build")
 }
