@@ -1,11 +1,8 @@
 package com.xujiayao.discord_mc_chat.utils;
 
-import tools.jackson.databind.JsonNode;
-
 import java.io.IOException;
 import java.io.InputStream;
-
-import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Environment utility class.
@@ -50,25 +47,23 @@ public final class EnvironmentUtils {
 	}
 
 	/**
-	 * Gets the DMCC version from the template "mode.yml" file in resources.
+	 * Gets the DMCC version from the {@code dmcc_version.txt} resource, whose {@code ${mod_version}}
+	 * placeholder is expanded at build time.
 	 *
 	 * @return The DMCC version as a string.
 	 */
 	public static String getDmccVersion() {
-		String filePath = "/config/mode.yml";
+		String resourcePath = "/dmcc_version.txt";
 
-		// Load the template from resources
-		try (InputStream templateStream = EnvironmentUtils.class.getResourceAsStream(filePath)) {
-			if (templateStream == null) {
-				throw new RuntimeException("File \"" + filePath + "\" not found");
+		try (InputStream versionStream = EnvironmentUtils.class.getResourceAsStream(resourcePath)) {
+			if (versionStream == null) {
+				throw new RuntimeException("File \"" + resourcePath + "\" not found");
 			}
-			JsonNode templateConfig = YAML_MAPPER.readTree(templateStream);
 
-			// Extract version field
-			String version = templateConfig.path("version").asString();
+			String version = new String(versionStream.readAllBytes(), StandardCharsets.UTF_8).trim();
 
 			if (version.isBlank()) {
-				throw new RuntimeException("Version field not found in template configuration");
+				throw new RuntimeException("DMCC version resource is empty");
 			}
 
 			return version;

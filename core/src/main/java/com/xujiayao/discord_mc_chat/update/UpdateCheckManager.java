@@ -3,7 +3,6 @@ package com.xujiayao.discord_mc_chat.update;
 import com.xujiayao.discord_mc_chat.Constants;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
-import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.message.TextSegment;
 import com.xujiayao.discord_mc_chat.network.packets.EventPackets.MinecraftRelayPacket;
@@ -46,7 +45,7 @@ public final class UpdateCheckManager {
 	 * Starts the automatic update checker.
 	 */
 	public static void start() {
-		if ("multi_server_client".equals(ModeManager.getMode()) || !ConfigManager.getBoolean("check_for_updates.enable")) {
+		if ("multi_server_client".equals(ConfigManager.getMode()) || !ConfigManager.getBoolean("check_for_updates.enable")) {
 			return;
 		}
 
@@ -153,7 +152,7 @@ public final class UpdateCheckManager {
 	}
 
 	private static String resolveCurrentMinecraftVersion() {
-		if ("standalone".equals(ModeManager.getMode())) {
+		if ("standalone".equals(ConfigManager.getMode())) {
 			JsonNode servers = ConfigManager.getConfigNode("multi_server.servers");
 			if (servers != null && servers.isArray() && !servers.isEmpty()) {
 				return servers.get(0).path("minecraft_version").asString("");
@@ -184,7 +183,7 @@ public final class UpdateCheckManager {
 		}
 
 		notifyDiscord(result.fullMessage());
-		notifyMinecraft(ModeManager.getMode(), result.fullMessage());
+		notifyMinecraft(ConfigManager.getMode(), result.fullMessage());
 	}
 
 	private static void notifyDiscord(String message) {

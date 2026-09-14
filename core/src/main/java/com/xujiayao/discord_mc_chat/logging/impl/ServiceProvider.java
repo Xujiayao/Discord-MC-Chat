@@ -14,6 +14,12 @@ import org.slf4j.spi.SLF4JServiceProvider;
 
 /**
  * slf4j-simple's implementation of {@link SLF4JServiceProvider}.
+ * <p>
+ * This provider only exists so that the standalone DMCC application can log without Minecraft present.
+ * Its service registration therefore lives in {@code core/src/main/shadow-resources} and is added to the
+ * shadow JAR only - never to {@code src/main/resources}. If it were on a Minecraft development classpath,
+ * SLF4J would select it over the loader's own provider and the game would fail to start with
+ * "Failed to initialize DMCC Logger" caused by a recursive class initialisation.
  *
  * @author Ceki Gülcü
  * @author Xujiayao

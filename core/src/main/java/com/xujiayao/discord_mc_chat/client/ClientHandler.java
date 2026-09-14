@@ -6,9 +6,7 @@ import com.xujiayao.discord_mc_chat.commands.CommandManager;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.commands.impl.UpdateCommand;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
-import com.xujiayao.discord_mc_chat.config.ModeManager;
-import com.xujiayao.discord_mc_chat.events.CoreEvents;
-import com.xujiayao.discord_mc_chat.events.EventManager;
+import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.message.TextSegment;
 import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.AuthResponsePacket;
@@ -35,6 +33,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
+import com.xujiayao.discord_mc_chat.platform.Platform;
 
 /**
  * Handles client-side network events and handshake protocol.
@@ -176,7 +175,7 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 				}
 			}
 			case CommandPackets.Console.RequestPacket p -> {
-				// Handle Minecraft command execution via CoreEvents with callback-based completion
+				// Handle Minecraft command execution via the platform host with callback-based completion
 				StringBuilder responseBuilder = new StringBuilder();
 
 				CommandSender captureSender = new CommandSender() {
@@ -196,7 +195,7 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 
 				CompletableFuture<Void> completionFuture = new CompletableFuture<>();
 
-				EventManager.post(new CoreEvents.MinecraftCommandExecutionEvent(captureSender, p.commandLine, completionFuture));
+				Platform.host().executeCommand(captureSender, p.commandLine, completionFuture);
 
 				// Use the completion future with a timeout to send the response reliably
 				completionFuture
@@ -209,53 +208,53 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 				ctx.writeAndFlush(new CommandPackets.Execute.AutoCompleteResponsePacket(suggestions));
 			}
 			case CommandPackets.Console.AutoCompleteRequestPacket p -> {
-				// Handle Minecraft command auto-complete via CoreEvents
+				// Handle Minecraft command auto-complete via the platform host
 				List<String> suggestions = new ArrayList<>();
-				EventManager.post(new CoreEvents.MinecraftCommandAutoCompleteEvent(p.input, p.opLevel, suggestions));
+				Platform.host().autoCompleteCommand(p.input, p.opLevel, suggestions);
 				ctx.writeAndFlush(new CommandPackets.Console.AutoCompleteResponsePacket(suggestions));
 			}
 			case CommandPackets.Link.ResponsePacket p -> // Handle link code response from server - notify the player
-					EventManager.post(new CoreEvents.LinkCodeResponseEvent(p.minecraftUuid, p.code, p.alreadyLinked, p.discordName != null ? p.discordName : ""));
+					Platform.host().sendLinkCode(p.minecraftUuid, p.code, p.alreadyLinked, p.discordName != null ? p.discordName : "");
 			case CommandPackets.Unlink.ResponsePacket p -> // Handle unlink response from server - notify the player
-					EventManager.post(new CoreEvents.UnlinkResponseEvent(p.minecraftUuid, p.success, p.discordName != null ? p.discordName : ""));
+					Platform.host().sendUnlinkResult(p.minecraftUuid, p.success, p.discordName != null ? p.discordName : "");
 			case CommandPackets.Link.OpSyncPacket p -> // Handle OP sync from server - apply OP levels to Minecraft players
-					EventManager.post(new CoreEvents.OpSyncEvent(p.opLevels));
+					Platform.host().applyOpLevels(p.opLevels);
 			case DiscordRelayPacket p -> {
 				// Handle Discord event forwarded from server - render in Minecraft
-				if ("multi_server_client".equals(ModeManager.getMode())) {
+				if ("multi_server_client".equals(ConfigManager.getMode())) {
 					logDiscordEventForConsole(p);
 				}
 				switch (p.type) {
-					case CHAT -> EventManager.post(new CoreEvents.DiscordChatMessageEvent(
+					case CHAT -> Platform.host().broadcastDiscordChat(
 							p.segments,
 							p.replySegments,
 							p.mentionNotificationText,
 							p.mentionNotificationStyle,
 							p.mentionedPlayerUuids,
 							p.mentionEveryone
-					));
-					case COMMAND -> EventManager.post(new CoreEvents.DiscordCommandEvent(p.segments));
-					case REACTION -> EventManager.post(new CoreEvents.DiscordReactionEvent(
+					);
+					case COMMAND -> Platform.host().broadcastDiscordCommand(p.segments);
+					case REACTION -> Platform.host().broadcastDiscordReaction(
 							p.segments,
 							p.replySegments
-					));
-					case EDIT -> EventManager.post(new CoreEvents.DiscordEditEvent(
+					);
+					case EDIT -> Platform.host().broadcastDiscordEdit(
 							p.segments,
 							p.replySegments,
 							p.editedMessageSegments
-					));
-					case DELETE -> EventManager.post(new CoreEvents.DiscordDeleteEvent(
+					);
+					case DELETE -> Platform.host().broadcastDiscordDelete(
 							p.segments,
 							p.replySegments
-					));
+					);
 				}
 			}
 			case MinecraftRelayPacket p -> {
-				if ("multi_server_client".equals(ModeManager.getMode())) {
+				if ("multi_server_client".equals(ConfigManager.getMode())) {
 					logMinecraftEventForConsole(p);
 				}
 
-				EventManager.post(new CoreEvents.MinecraftRelayMessageEvent(
+				Platform.host().broadcastMinecraftRelay(
 						p.segments,
 						p.componentJson,
 						p.componentPlaceholder,
@@ -263,7 +262,7 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 						p.mentionNotificationStyle,
 						p.mentionedPlayerUuids,
 						p.mentionEveryone
-				));
+				);
 			}
 			case DisconnectPacket p -> {
 				// If we receive a DisconnectPacket, it means the server explicitly rejected us.

@@ -7,6 +7,8 @@ import com.xujiayao.discord_mc_chat.utils.LogFileUtils;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import com.xujiayao.discord_mc_chat.platform.Platform;
+import com.xujiayao.discord_mc_chat.platform.StatsProvider;
 
 /**
  * Provides auto-complete suggestions for DMCC commands.
@@ -160,7 +162,7 @@ public final class CommandAutoCompleter {
 			return suggestions;
 		}
 
-		StatsCommand.StatsProvider provider = StatsCommand.getProvider();
+		StatsProvider provider = Platform.host().stats();
 		if (provider == null) {
 			return suggestions;
 		}

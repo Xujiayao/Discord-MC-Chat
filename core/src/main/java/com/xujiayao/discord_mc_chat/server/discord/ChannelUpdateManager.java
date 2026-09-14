@@ -2,7 +2,6 @@ package com.xujiayao.discord_mc_chat.server.discord;
 
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
-import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
@@ -71,7 +70,7 @@ public final class ChannelUpdateManager {
 	 * For single_server shutdown flow: push an offline status update and block until requests complete.
 	 */
 	public static void updateOfflineForSingleServerShutdownAndWait() {
-		if (!"single_server".equals(ModeManager.getMode()) || isAllUpdateDisabled()) {
+		if (!"single_server".equals(ConfigManager.getMode()) || isAllUpdateDisabled()) {
 			return;
 		}
 
@@ -88,7 +87,7 @@ public final class ChannelUpdateManager {
 		}
 
 		ChannelUpdateContext context = collectContext();
-		boolean dropWhenRateLimited = "single_server".equals(ModeManager.getMode()) && context.onlineServerCount() > 0;
+		boolean dropWhenRateLimited = "single_server".equals(ConfigManager.getMode()) && context.onlineServerCount() > 0;
 		updateTextChannelTopicsAsync(context, dropWhenRateLimited);
 		updateVoiceChannelNamesAsync(context, dropWhenRateLimited);
 	}
@@ -415,7 +414,7 @@ public final class ChannelUpdateManager {
 	}
 
 	private static String getModeKey() {
-		return "standalone".equals(ModeManager.getMode()) ? "standalone" : "single_server";
+		return "standalone".equals(ConfigManager.getMode()) ? "standalone" : "single_server";
 	}
 
 	static void shutdown() {

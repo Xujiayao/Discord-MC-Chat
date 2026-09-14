@@ -177,3 +177,168 @@
 - `.github/ISSUE_TEMPLATE/bug.yml` 的 "Only DMCC v2 versions are supported." 残留文案（未做）
 - `README.md` 英文翻译件与新 README_CN.md 的同步，留待发布新版本时处理
 
+> **状态更新**：以上三条已在工作 04 中全部完成。
+
+## 工作 04
+
+记录日期：2026/9/14（**重构第 1 轮：骨架、双加载器与模组兼容扩展点**；尚未定版）。
+
+### 更改（用户可见）
+
+- **同时支持 Fabric 与 NeoForge**：构建产出两个可安装的模组 JAR —— `Discord-MC-Chat-fabric-<版本>.jar` 与
+  `Discord-MC-Chat-neoforge-<版本>.jar`。核心逻辑只打包一份，两个加载器共用同一份游戏侧源码；
+  请按服务器使用的加载器选择对应 JAR，不要同时安装。
+- **Minecraft 支持收紧为仅 26.2**：`fabric.mod.json` 与 `neoforge.mods.toml` 都声明 26.2 专属依赖；
+  用于问题反馈的 Minecraft 版本下拉框也只保留 26.2。
+- **首启配置流程重做**：不再有 `mode.yml`。在 Minecraft 内首次启动会**直接生成完整的 `single_server` 版
+  `config.yml`**（独立 JAR 则生成 `standalone` 版），并在控制台打印文件绝对路径与三步"接下来做什么"的指引；
+  把 `mode` 改成 `multi_server_client` 后，DMCC 会明确告诉你该模板需要哪些键。
+  另外新增"环境与模式匹配"校验：`standalone` 不能在 Minecraft 内运行，反之亦然。
+- **配置模板头部注释修正**：`mode` 现在是用户可改的模式选择键，`version` 仍不可手改；三份模板的说明按此重写。
+- 顺手修：`docs/package.json` 补 `name`/`private`/`license`（消除 yarn 警告）；
+  `.github/ISSUE_TEMPLATE/bug.yml` 的 v2 残留文案改为"服务端与客户端必须同版本"。
+
+### 更改（架构，对用户不可见）
+
+- **模块重构**：`core`（平台无关）/ `minecraft-common`（共享游戏侧源码目录，不是 Gradle 项目）/
+  `fabric` / `neoforge`。两个加载器各自的 `build.gradle` 以 `srcDir` 共享 `minecraft-common`，
+  不引入 Architectury。
+- **删除事件总线三件套**（`EventManager`、`CoreEvents`、`MinecraftEvents`，约 400 行）：
+  Mixin 现在直接调用 `MinecraftEventHandler` 的 28 个静态钩子方法；core 侧 14 处事件投递改为
+  调用新的平台接口。同一模块内的自循环投递彻底消失。
+- **新增 `core/platform/`**：`PlatformHost`（core → 平台的 13 个动作）、`Platform`（注册点）、
+  `NoopPlatformHost`（独立模式下的空实现，core 无需判空）、`StatsProvider`（从 `StatsCommand` 内部移出）。
+  `DMCC.init(PlatformHost)` 接收平台实现；`StatsCommand` 不再持有静态 provider。
+- **新增模组兼容扩展点**：`ModIntegration` + `ModIntegrations`。Fabric 侧的 Vanish 兼容迁移为该接口的
+  **模板实现**（不再是全局 `Constants.MOD_VANISH_INSTALLED` 开关）；NeoForge 侧今日为空注册表，
+  未来加模组兼容 = 写一个类 + 一行注册，core 始终不知道是哪个模组。
+- **版本来源改由 `/dmcc_version.txt` 提供**（`mode.yml` 已删除，原先从它读版本）。
+- **构建体系**：根项目新增共用的 `registerLoaderJar` 任务（把加载器类与元数据合并进 core 的 shadow JAR，
+  并保留 standalone 的 `Main-Class`）；`gradle.properties` 新增 `neo_version=26.2.0.87`、
+  `moddev_version=2.0.147`、`junit_version=6.1.3`、`minecraft_version_range=[26.2]`；
+  NeoForge 模块从 `:core` 排除 netty 与 slf4j（Minecraft 严格锁定并自带这两个库，DMCC 的副本在最终
+  JAR 中是重定位的，因此不影响运行）。
+- **测试框架**：`core` 接入 JUnit 6（BOM + `junit-platform-launcher`），新增永久保留的 `SmokeTest`
+  （4 项）覆盖平台默认值、模式校验、环境默认模式与版本资源展开。
+- **文档**：`README_CN.md` 更新 §1（双加载器 + 仅 26.2）、新增 §3.4（平台适配层与模组兼容扩展点）、
+  重写 §8.1（首启流程与模式校验）、新增 §11（构建与部署、开发环境）；`.gitignore` 忽略运行期 `logs/`、`config/`。
+
+### 验证
+
+- `./gradlew :core:test`：本轮临时测试 5 项 + `SmokeTest` 4 项全部通过（临时测试已按约定在交付前删除）。
+  其中 `ConfigFirstRunTest` 覆盖了"首启生成 → 用户未填 token 被拒绝 → 填入 token 后通过校验"的完整链路。
+- `./gradlew clean build --warning-mode all`：**BUILD SUCCESSFUL**，无弃用警告；产出
+  `build/Discord-MC-Chat-fabric-3.0.0-beta.2.jar`（12.61 MB）与 `build/Discord-MC-Chat-neoforge-3.0.0-beta.2.jar`（12.60 MB）。
+- 产物内容核对：两份 JAR 均含共享的 `dmcc.mixins.json`、`MinecraftEventHandler`、`PlatformHost`、
+  `MinecraftPlatformHost`、`ModIntegrations`、三份配置模板与展开后的元数据
+  （`fabric.mod.json` 入口点指向 `...fabric.FabricDMCC`、`minecraft: 26.2`；
+  `neoforge.mods.toml` 含 `[[mixins]] config`、`[26.2.0.87,)`、`[26.2]`），
+  各自只含自己的入口点，且 standalone 的 `Main-Class` 清单项保留；已无 `config/mode.yml`。
+- 代码规模：15,082 → **15,400 行**（+318）。本轮买的是能力与解耦（第二个加载器、平台接口、
+  模组兼容扩展点），行数回收在后续轮次。
+- 文档依赖未被破坏：`yarn install --frozen-lockfile` 仍报告 Already up-to-date。
+
+### 待办（进入第 2 轮）
+
+- 第 2 轮：解析层统一、报文层换代（Jackson JSON + 分片）、命令层收敛、server/discord 与 minecraft-common 去重、死代码清理。
+- 本轮留下的小尾巴：`StatsCommand.countStatResultEntries` 与 `normalizeMinecraftNamespace` 仍是
+  平台层调用 core 命令类的两处静态工具（第 2 轮随 `StatsReader` 一起移出）；
+  `fabric.mod.json` 仍引用不存在的 `icon/icon.png`（沿用旧状，未新增 PNG）。
+
+## 工作 05
+
+记录日期：2026/9/14（**第 1.1 轮：修复 IDE 同步 + 改为单一通用 JAR**；尚未定版）。
+
+### 更改（用户可见）
+
+- **发布产物收敛为一个通用 JAR**：`Discord-MC-Chat-<版本>.jar` 一个文件同时承担三种用法 ——
+  放进 Fabric 的 `mods/`、放进 NeoForge 的 `mods/`、以及 `java -jar` 作为独立模式运行。
+  之所以可行：该文件同时带有两套加载器元数据（`fabric.mod.json` + `META-INF/neoforge.mods.toml`）与两个入口点，
+  而每个加载器只读自己的元数据、只加载自己的入口点；core 的 shadow 载荷与两个加载器共用的
+  `minecraft-common` 类在包内各只有一份（已核验 0 重复条目），`Main-Class` 清单项保留。
+- **产物命名按你的要求改为后缀式**：`Discord-MC-Chat-<版本>-fabric.jar` / `Discord-MC-Chat-<版本>-neoforge.jar`
+  作为**备用件**（内容分别是通用 JAR 的子集），仅在排查"某加载器是否加载了正确入口"时使用；
+  正常分发只需通用 JAR。两个备用件同样保留 `Main-Class`，因此也都能 `java -jar`。
+- `.github/ISSUE_TEMPLATE/bug.yml` 按你的要求保持你修改后的内容，本轮未再触碰。
+
+### 更改（开发体验）
+
+- **修复 IntelliJ IDEA / Gradle 同步失败**：ModDevGradle 的资产下载任务 `:neoforge:downloadAssets`
+  要求 Java 21，而项目工具链是 Java 25，机器上只有 25 时同步直接报
+  `Cannot find a Java installation ... matching {languageVersion=21}`。
+  已在 `settings.gradle` 加入官方推荐的 `org.gradle.toolchains.foojay-resolver-convention`（1.0.0，
+  写入 `foojay_version`），让 Gradle 按需自动下载缺失的 JDK。
+  注意：首次同步会一次性下载约 200 MB 的 Temurin JDK 21 到 Gradle 用户目录（不在仓库内）；
+  模组本身仍编译为 Java 25。
+- `README_CN.md` §11 重写：通用 JAR 的三种用法、两个备用件、以及工具链自动下载的说明。
+
+### 验证
+
+- `./gradlew clean build --warning-mode all` **BUILD SUCCESSFUL**，`SmokeTest` 4 项通过，无弃用警告；
+  产出 `Discord-MC-Chat-3.0.0-beta.2.jar`（12.61 MB）、`-fabric.jar`（12.61 MB）、`-neoforge.jar`（12.60 MB）。
+- 通用 JAR 结构逐项核验：6880 个条目、**0 个重复条目**；`fabric.mod.json`、`META-INF/neoforge.mods.toml`、
+  `dmcc.mixins.json`、`dmcc_version.txt`、两个入口点类、共享的 `MinecraftEventHandler`/`MinecraftPlatformHost`/
+  `ModIntegrations`/`PlatformHost`、三份配置模板、重定位后的 `dmcc_dep/...` 依赖全部存在；
+  已删除的 `config/mode.yml` 确认不再出现；三个产物的清单项均含 `Main-Class: ...StandaloneDMCC`。
+- **独立模式实测**：在空目录执行 `java -jar build/Discord-MC-Chat-3.0.0-beta.2.jar`，
+  成功启动到日志初始化、内部翻译加载与无头模式检测（输出被管道重定向，故按设计提示需从命令行启动并退出）。
+- **IDE 同步实测**：`./gradlew :neoforge:downloadAssets` 由失败变为 **BUILD SUCCESSFUL**；
+  日志确认 foojay 自动下载并启用了 Temurin JDK 21.0.12.1。
+
+### 观察（本轮未改，供你决定）
+
+- 三个产物的 `META-INF/MANIFEST.MF` 里都带有 shadow 生成的 `Class-Path` 长列表（列出未打包的依赖名）。
+  这是**改动前就存在**的行为，对加载器与 `java -jar` 均无害（缺失条目会被忽略），但属噪音，可在后续轮次清除。
+- 在 Windows 控制台直接 `java -jar` 时，中文日志会显示为乱码（Java 18+ 默认 UTF-8 输出到 GBK 代码页的控制台）；
+  日志文件内容本身是 UTF-8 正常的。若希望控制台也可读，需要在启动时处理控制台编码或提示用户 `chcp 65001`。
+
+## 工作 06
+
+记录日期：2026/9/14（**第 1.2 轮：修复 NeoForge 无法启动 + 首启指引换行**；尚未定版）。
+
+### 修复（用户可见）
+
+- **NeoForge 无法加载模组：根因是 Mixin 打在了合成 lambda 上。**
+  `MixinReloadableServerResources` 注入的是 `ReloadableServerResources.lambda$loadResources$3`，
+  而 **NeoForge 会 patch 这个类**，导致它的合成 lambda 形状与 Fabric 不同（Fabric：
+  `(ReloadableServerResources, Object, CallbackInfoReturnable)`；NeoForge：
+  `(ReloadableServerResources, List, CallbackInfo)`），于是 NeoForge 抛
+  `InvalidInjectionException` 并 FATAL 中止启动。这与打包方式无关——通用 JAR 与 `-neoforge` 备用件
+  都会失败，因为问题在 Mixin 本身。
+  **修法**：把该注入点从"合成 lambda"改为**真实方法** `MinecraftServer.reloadResources(Collection)`，
+  并在其返回的 `CompletableFuture` 完成后再刷新翻译（时机比原来更准）。同时删除
+  `MixinReloadableServerResources`，Mixin 总数 12 → 11。
+- **首启指引不再显示字面量 `\n`**：日志器为了防日志注入会把换行转义（这是刻意设计），因此多行 lang 值在控制台
+  会挤成一行 `\n`。现在 `first_run_guide` 拆成三条单行文案（生成路径 / 需要改什么 / 如何生效），逐行输出。
+- **开发运行（`runServer`）此前完全不可用**：DMCC 自带 SLF4J provider，其注册文件原位于
+  `src/main/resources/META-INF/services/`，因此在开发运行中它与加载器自己的 provider 同时出现在一个类路径上
+  并被 SLF4J 选中，导致 FML 初始化递归崩溃（`Failed to initialize DMCC Logger` → `Recursive update`）。
+  生产环境因加载器隔离而不受影响，所以此前只在 `runServer` 下暴露。
+  **修法**：把该注册文件移到 `core/src/main/shadow-resources/`，只由 shadowJar 打进产物 →
+  开发类路径干净、发布 JAR 里仍保留（Shadow 会把它重定位为 `dmcc_dep.org.slf4j.spi.SLF4JServiceProvider`，
+  standalone 的日志因此不受影响）。
+
+### 验证
+
+- **真实服务端实测（两个加载器都跑通）**：
+  - `./gradlew :neoforge:runServer`（NeoForge 26.2 专用服务端）→ 11 个 Mixin 全部应用成功，
+    无 `InvalidInjectionException`、无 provider 冲突，`Done (3.155s)!`。
+  - `./gradlew :fabric:runServer`（Fabric 26.2 服务端）→ 同样零 Mixin 错误，`Done (2.610s)!`。
+  - 两次运行都实测到首启指引的三行真实换行输出，并正确生成 `run/config/discord_mc_chat/config.yml`。
+  - 为定位问题，还逐一核对了 11 个 Mixin 的目标方法在 **NeoForge 补丁源码**中的签名（从本机
+    `neoformruntime` 缓存中的 `mergeWithSources` 产物读取）：其余 10 个目标要么未被 NeoForge patch
+    （`PlayerAdvancements`、`SayCommand`、`TellRawCommand`、`MsgCommand`、`EmoteCommands`、`GameModeCommand`），
+    要么打的是真实方法（`Commands.<init>`、`MinecraftServer.runServer/stopServer/onServerExit`、
+    `PlayerList.placeNewPlayer/remove`、`ServerPlayer.die`、`ServerGamePacketListenerImpl.*`）。
+- `./gradlew clean build --warning-mode all` **BUILD SUCCESSFUL**，`SmokeTest` 4 项通过；
+  三个产物（通用 + 两个备用件）与上一轮结构一致。
+- 产物核对：发布 JAR 内仍含重定位后的 SLF4J 注册文件与 `ServiceProvider.class`；
+  `core/build/resources/main` 内已无任何 `services` 条目（开发类路径干净）。
+
+### 观察（供后续轮次）
+
+- 仍有 4 个 Mixin 依赖"未被 patch 的类的合成 lambda"（`SayCommand`/`TellRawCommand`/`MsgCommand`/`EmoteCommands`
+  的 `lambda$register$*`）。今天它们安全（这些类不在 NeoForge 的 patch 面内），但只要 NeoForge 未来 patch 这些类，
+  就会出现同样的 `InvalidInjectionException`；届时的修法与本轮相同——改为注入真实方法（例如
+  `CommandSourceStack.sendSuccess` 或 `PlayerList.broadcastSystemMessage`）。
+

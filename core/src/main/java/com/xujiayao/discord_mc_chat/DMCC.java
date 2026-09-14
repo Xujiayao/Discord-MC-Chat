@@ -4,8 +4,10 @@ import com.xujiayao.discord_mc_chat.client.ClientDMCC;
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
-import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
+import com.xujiayao.discord_mc_chat.platform.NoopPlatformHost;
+import com.xujiayao.discord_mc_chat.platform.Platform;
+import com.xujiayao.discord_mc_chat.platform.PlatformHost;
 import com.xujiayao.discord_mc_chat.server.ServerDMCC;
 import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
 import com.xujiayao.discord_mc_chat.server.linking.OpSyncManager;
@@ -30,6 +32,7 @@ public final class DMCC {
 
 	private static ServerDMCC serverInstance;
 	private static ClientDMCC clientInstance;
+	private static PlatformHost platformHost = NoopPlatformHost.INSTANCE;
 
 	private DMCC() {
 	}
@@ -37,9 +40,14 @@ public final class DMCC {
 	/**
 	 * Initialize DMCC. Blocks until initialization is complete.
 	 *
+	 * @param platformHost The platform implementation, or {@code null} in the standalone environment.
 	 * @return true if initialization is successful, false otherwise
 	 */
-	public static boolean init() {
+	public static boolean init(PlatformHost platformHost) {
+		PlatformHost resolvedHost = platformHost == null ? NoopPlatformHost.INSTANCE : platformHost;
+		DMCC.platformHost = resolvedHost;
+		Platform.set(resolvedHost);
+
 		try (ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Init"))) {
 			return executor.submit(() -> {
 				// Load DMCC internal translation
@@ -82,14 +90,15 @@ public final class DMCC {
 				} else {
 					LOGGER.info(I18nManager.getDmccTranslation("main.init.info_standalone_env"));
 				}
+				LOGGER.info("DMCC platform: {}", resolvedHost.name());
 
 				// If configuration fails to load, exit the DMCC-Init thread gracefully
 				// In a Minecraft environment, we just return and let the server continue running
 				// User can run the reload command after fixing the issues
 				// In standalone mode, the process will exit, user can restart DMCC after fixing the issues
 
-				boolean configs = !ModeManager.load() // Determine operating mode
-						|| !ConfigManager.load() // Load configuration
+				// The operating mode is stored in config.yml, so loading the config also determines the mode
+				boolean configs = !ConfigManager.load() // Load configuration (and determine the operating mode)
 						|| !I18nManager.load(ConfigManager.getString("language", I18nManager.detectLanguage())); // Load all translations
 
 				// Initialize command system after internal translations and operating mode are loaded
@@ -105,7 +114,7 @@ public final class DMCC {
 				}
 
 				// From now on should separate ServerDMCC and ClientDMCC initialization based on mode
-				switch (ModeManager.getMode()) {
+				switch (ConfigManager.getMode()) {
 					case "single_server" -> {
 						// Generate ephemeral credentials for internal loopback connection
 						String internalServerName = "Internal";
@@ -196,10 +205,6 @@ public final class DMCC {
 
 				VerificationCodeManager.clear();
 
-				// Do NOT clear event handlers here. They are registered once during mod initialization
-				// and should persist across DMCC reloads.
-				// EventManager.clear();
-
 				// Shutdown OkHttpClient
 				try (Cache ignored = OK_HTTP_CLIENT.cache()) {
 					// OK_HTTP_CLIENT is static final. We should NOT shut down its dispatcher executor
@@ -227,6 +232,6 @@ public final class DMCC {
 	 * @return true if reload is successful, false otherwise
 	 */
 	public static boolean reload() {
-		return shutdownInternal(true) && init();
+		return shutdownInternal(true) && init(platformHost);
 	}
 }

@@ -1,4 +1,7 @@
 {
+  "name": "discord-mc-chat-docs",
+  "private": true,
+  "license": "MIT",
   "devDependencies": {
     "vitepress": "^2.0.0-alpha.20",
     "vue": "^3.5.42"

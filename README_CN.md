@@ -7,8 +7,9 @@ Discord-MC-Chat (DMCC) 是一个 Minecraft 模组，旨在为 Discord 和 Minecr
 本次 v3 重构的核心目标是实现一个**统一的、基于"服务端-客户端 (Server-Client)"的通信架构**
 。在此架构下，所有运行模式都将复用同一套核心逻辑，以达到最大程度的代码复用、架构一致性和未来的可扩展性。
 
-项目当前以 **Fabric 26.2** 为主要兼容目标（同时兼容 26.1.2）。但为了未来能够无缝支持 NeoForge
-等其他加载器，整体架构设计严格遵循平台无关原则，所有核心代码中**不得含有任何启动器专属的调用**，仅通过 Mixin 进行注入。
+项目当前只支持 **Minecraft 26.2**，并同时提供 **Fabric** 与 **NeoForge** 两个加载器的构建产物（两个 JAR，见第 11 节）。
+整体架构严格遵循平台无关原则：所有核心代码中**不得含有任何启动器专属的调用**，游戏侧仅通过 Mixin 注入，
+而 core 与游戏平台之间只通过一个显式的平台适配接口通信（见 3.4）。
 
 ## 2. 核心功能需求
 
@@ -162,6 +163,27 @@ DMCC 所有运行模式都基于一个统一的通信模型，该模型包含两
 - 命令回复逐行打印到控制台；若命令返回文件（例如 `log`），文件会被写入 `./config/discord_mc_chat/cache/log`。
 - 终端不支持 `log` 命令（会提示直接访问 `./logs` 目录），因为终端无法接收附件。
 - 启动参数 `--disable-ascii` 可关闭控制台 ANSI 颜色输出。
+
+### 3.4 平台适配层与模组兼容扩展点
+
+DMCC 的代码分为三层，任何新平台都只影响最外面一层：
+
+| 模块                 | 职责                                                             | 是否含游戏/加载器依赖              |
+|:-------------------|:---------------------------------------------------------------|:-------------------------|
+| `core`             | DMCC 主控、Server/Client、Netty 协议、命令、账户绑定、配置、i18n                | ❌ 完全没有（`net.minecraft` 仅以反射探测） |
+| `minecraft-common` | 12 个 Mixin、组件渲染、翻译拉取、Brigadier 命令树、平台适配实现                        | ✅ 只依赖原版类，**不依赖任何加载器 API** |
+| `fabric` / `neoforge` | 入口点、模组元数据、加载器专属的模组兼容实现                                          | ✅ 各自的加载器 API              |
+
+- **平台适配接口（`PlatformHost`）**：core 需要"在游戏里做事"时（执行命令、广播消息、下发 OP 等级、通知绑定结果……）
+  只调用这一个接口，平台实现再转交给 `MinecraftEventHandler`。历史上这里是一套泛型事件总线，现已完全移除。
+- **独立模式没有平台**：`standalone` 注册空实现（`NoopPlatformHost`），因此 core 代码无需到处判空。
+- **模组兼容扩展点（`ModIntegration`）**：为特定模组做的兼容（例如 Vanish）实现该接口并注册到 `ModIntegrations`。
+  注册发生在对应加载器模块内，因此 **core 永远不知道是哪个模组**。当前唯一实现是 Fabric 侧的 Vanish
+  （26.2 的 Vanish 只有 fabric/quilt 构建，NeoForge 侧注册表为空）。新增一个模组兼容 = 写一个类 + 一行注册。
+- **能力缺失时的行为**：平台不具备某项能力时（例如未来的服务端插件没有 Mixin、无法拦截 `/say`），
+  相关功能记一次日志后跳过，不影响其余功能。
+- **两个加载器共享同一份游戏侧源码**：因为 Minecraft 26.1 起官方已不再混淆代码、Fabric 也不再使用
+  intermediary，Fabric 与 NeoForge 运行时使用同一套官方名称，因此同一份 Mixin 源码可以直接被两个加载器编译。
 
 ## 4. 账户绑定系统 (Account Linking)
 
@@ -341,12 +363,17 @@ DMCC 在 Client 端提供独立的 `whitelist` 代理命令（默认所需权限
 
 DMCC 对配置文件的完整性与一致性做了强校验，力求在启动阶段就暴露误配置，而不是运行期才报错：
 
-- **模板版本校验**: `config.yml` / `mode.yml` / `custom_messages` 中的 `version` 必须与当前 DMCC 版本一致，否则提示前往文档升级配置。
+- **模式来自 config.yml 本身**: DMCC 不再有独立的 `mode.yml`。`config.yml` 中的 `mode` 键决定运行模式；
+  缺少该键时按环境取默认值（在 Minecraft 内 = `single_server`，独立 JAR = `standalone`）。
+- **首次运行直接生成完整配置**: `config.yml` 不存在时，DMCC 会**一次性**按当前环境的模板生成完整文件
+  （而不是先让用户去填一个 `mode.yml`），并在控制台打印文件的绝对路径与三步"接下来做什么"的指引。
+- **环境与模式匹配校验**: `standalone` 只能在独立 JAR 中运行，`single_server` / `multi_server_client`
+  只能在 Minecraft 内运行；不匹配时会给出明确原因，而不是静默异常。
+- **模板版本校验**: `config.yml` / `custom_messages` 中的 `version` 必须与当前 DMCC 版本一致，否则提示前往文档升级配置。
 - **键完整性校验**: 会逐项比对模板，报告**缺失的键**、**未识别的键**（多余键）与**类型不匹配**的键。
-- **未修改提醒**: 对必须由用户填写的关键项（`discord.bot.token`、`multi_server.server_name`、
+  因此把 `mode` 改成 `multi_server_client` 后，DMCC 会直接告诉你该模板需要哪些键。
+- **未修改提醒**: 对必须由用户填写的关键项（`discord.bot.token`、`multi_server.name`、
   `multi_server.connection.shared_secret`）以及仍未从模板改动的键给出提醒。
-- **模式一致性校验**: 若 `mode.yml`（或运行环境）推导出的模式与 `config.yml` 中记录的模式不一致，会给出明确错误并提示备份、删除旧配置以重新生成。
-- **首次运行生成**: 任意配置文件缺失时会自动从内置模板创建，并提示用户编辑后重载。
 - **语言自动检测**: 模板中的 `language: "to_be_auto_replaced"` 会在首次加载时被自动替换为检测到的语言代码。
 
 ### 8.2 语言与自定义消息
@@ -395,3 +422,40 @@ DMCC 对配置文件的完整性与一致性做了强校验，力求在启动阶
 - **无头环境检测**: 未检测到控制台时会提示 DMCC 正在无头模式下运行，并明确不支持双击 JAR 启动，给出命令行启动方式。
 - **优雅关停**: `shutdown.graceful_shutdown` 控制退出时的等待策略（默认等待任务收尾，最长 10 分钟；关闭该开关后最多等待 5 秒）。
 - **接口限流与容错**: 对 Discord 频道更新等高频接口采用静默丢弃策略避免刷屏；Discord 端信息查询与自动补全均有超时保护，超时后以"无响应"提示而非阻塞主流程。
+
+## 11. 构建与部署
+
+### 11.1 构建产物
+
+`./gradlew build` 会在根目录 `build/` 下产出**一个通用 JAR**：
+
+| 产物                          | 用途                                                       |
+|:----------------------------|:---------------------------------------------------------|
+| `Discord-MC-Chat-<版本>.jar`  | **唯一需要分发的文件**：Fabric、NeoForge 与独立模式三种用法都由它承担                 |
+
+同一个文件之所以三种用法通吃，是因为它**同时**带有两套加载器元数据与两个入口点，而每个加载器只会读自己的那一套：
+
+- 放进 Fabric 服务端的 `mods/` → Fabric 读取 `fabric.mod.json`，加载 `...fabric.FabricDMCC`；
+- 放进 NeoForge 服务端的 `mods/` → NeoForge 读取 `META-INF/neoforge.mods.toml`，加载 `...neoforge.DmccNeoForge`；
+- 用 `java -jar Discord-MC-Chat-<版本>.jar` 启动 → 走 `Main-Class`，作为独立模式（standalone）的中央中枢运行（详见 3.3）。
+
+核心逻辑（`core`）在包内只有一份，即以 `core` 的 shadow JAR 为基底，再把两个加载器的入口类与元数据合并进去；
+两个加载器共用的 `minecraft-common` 类与 `dmcc.mixins.json` 也只会保留一份。
+
+此外仍会产出两个**按加载器拆分**的备用 JAR（内容分别是通用 JAR 的子集），仅在排查
+"某个加载器是否加载了正确入口"时才会用到，正常分发不需要它们：
+
+| 备用产物                                  | 目标加载器    |
+|:--------------------------------------|:---------|
+| `Discord-MC-Chat-<版本>-fabric.jar`     | Fabric   |
+| `Discord-MC-Chat-<版本>-neoforge.jar`   | NeoForge |
+
+### 11.2 开发环境
+
+- `./gradlew :fabric:runServer` / `./gradlew :neoforge:runServer` 分别启动 Fabric 与 NeoForge 的
+  开发服务端，配置目录位于对应模块的 `run/` 下。
+- `./gradlew :core:test` 运行核心模块的单元测试（JUnit）。
+- 首次导入 IDE 或同步 Gradle 项目时，Gradle 会通过 `foojay-resolver-convention` 自动下载
+  ModDevGradle 资产下载器所需的 JDK 21（模组本身仍编译为 Java 25）；这是 IDE 同步能通过的前提。
+- 版本号统一由 `gradle.properties` 控制：`mod_version`、`minecraft_version`、`loader_version`、
+  `neo_version`、`moddev_version`、`junit_version` 等。

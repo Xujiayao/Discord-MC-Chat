@@ -5,7 +5,6 @@ import com.xujiayao.discord_mc_chat.commands.impl.ConsoleCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.ExecuteCommand;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
-import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.message.TextSegment;
 import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.AuthResponsePacket;
@@ -112,7 +111,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 						}
 						case SERVER_STOPPING -> {
 							handleMinecraftSystemMessage(p, clientName, "server.stopped", "server.stop", false, false);
-							if ("single_server".equals(ModeManager.getMode())) {
+							if ("single_server".equals(ConfigManager.getMode())) {
 								ChannelUpdateManager.updateOfflineForSingleServerShutdownAndWait();
 							}
 							ctx.close();
@@ -188,7 +187,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		} else {
 			switch (packet) {
 				case HandshakePacket p -> {
-					if ("single_server".equals(ModeManager.getMode())) {
+					if ("single_server".equals(ConfigManager.getMode())) {
 						if (!"Internal".equals(p.serverName)) {
 							String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.single_server_mode", p.serverName);
 							LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", p.serverName, reason));
@@ -436,7 +435,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	                                     String broadcastNode) {
 		boolean overwrite = ConfigManager.getBoolean("message_parsing.overwrite_minecraft_source_messages");
 		boolean sourceEchoEnabled = (overwrite && canOverwriteEchoToSource) || forceEchoToSource;
-		boolean supportMinecraftToMinecraftConfig = "standalone".equals(ModeManager.getMode());
+		boolean supportMinecraftToMinecraftConfig = "standalone".equals(ConfigManager.getMode());
 		boolean toOtherClients = supportMinecraftToMinecraftConfig && ConfigManager.getBoolean("broadcasts.minecraft_to_minecraft." + broadcastNode);
 
 		if (!toOtherClients && !sourceEchoEnabled) {
@@ -473,7 +472,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	                                            String componentText,
 	                                            boolean useSerializedComponent) {
 		boolean sourceEchoEnabled = ConfigManager.getBoolean("message_parsing.overwrite_minecraft_source_messages");
-		boolean supportMinecraftToMinecraftConfig = "standalone".equals(ModeManager.getMode());
+		boolean supportMinecraftToMinecraftConfig = "standalone".equals(ConfigManager.getMode());
 		boolean toOtherClients = supportMinecraftToMinecraftConfig && ConfigManager.getBoolean("broadcasts.minecraft_to_minecraft." + "source.tell_raw");
 
 		if (!toOtherClients && !sourceEchoEnabled) {
@@ -520,7 +519,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 			return false;
 		}
 
-		if ("standalone".equals(ModeManager.getMode())) {
+		if ("standalone".equals(ConfigManager.getMode())) {
 			JsonNode channelsNode = ConfigManager.getConfigNode("console_forwarding.channels");
 			if (!channelsNode.isArray()) {
 				return false;

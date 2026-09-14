@@ -70,7 +70,7 @@ body:
       label: Discord-MC-Chat Version
       description: |
         The version of Discord-MC-Chat you are using?
-        Only DMCC v2 versions are supported.
+        Only DMCC v2 and v3 versions are supported.
       multiple: false
       options:
         - "Latest Build (GitHub Actions)"

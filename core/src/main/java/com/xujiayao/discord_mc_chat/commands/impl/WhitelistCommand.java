@@ -3,11 +3,10 @@ package com.xujiayao.discord_mc_chat.commands.impl;
 import com.xujiayao.discord_mc_chat.commands.Command;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
-import com.xujiayao.discord_mc_chat.events.CoreEvents;
-import com.xujiayao.discord_mc_chat.events.EventManager;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import com.xujiayao.discord_mc_chat.platform.Platform;
 
 /**
  * Proxy command for managing the server whitelist via DMCC.
@@ -95,7 +94,7 @@ public final class WhitelistCommand implements Command {
 		// Delegate to Minecraft's native /whitelist add command with callback-based completion
 		CompletableFuture<Void> completionFuture = new CompletableFuture<>();
 
-		EventManager.post(new CoreEvents.MinecraftCommandExecutionEvent(elevatedSender, "whitelist add " + player, completionFuture));
+		Platform.host().executeCommand(elevatedSender, "whitelist add " + player, completionFuture);
 
 		// Wait for the command to complete so the response is available before this method returns.
 		// This is critical for remote execution (execute command) where the response is collected

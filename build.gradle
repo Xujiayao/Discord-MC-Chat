@@ -1,9 +1,10 @@
 plugins {
     id "com.gradleup.shadow" version "${shadow_version}" apply false
     id "net.fabricmc.fabric-loom" version "${loom_version}" apply false
+    id "net.neoforged.moddev" version "${moddev_version}" apply false
 }
 
-// The root project aggregates the final artifacts into its own build/ directory,
+// The root project aggregates the final, installable JARs into its own build/ directory,
 // so it needs a base plugin to get a clean task that removes them.
 apply plugin: "base"
 
@@ -13,6 +14,10 @@ allprojects {
         maven {
             name = "Modrinth"
             url = "https://api.modrinth.com/maven"
+        }
+        maven {
+            name = "NeoForged"
+            url = "https://maven.neoforged.net/releases"
         }
     }
 }
@@ -31,7 +36,11 @@ subprojects {
 
     processResources {
         def propertiesToExpand = new HashMap<String, Object>()
-        ["mod_version", "jda_version", "slf4j_api_version", "jackson_version", "okhttp_version", "netty_version", "jemoji_version"].each {
+        [
+                "mod_version", "jda_version", "slf4j_api_version", "jackson_version",
+                "okhttp_version", "netty_version", "jemoji_version",
+                "minecraft_version", "minecraft_version_range", "neo_version"
+        ].each {
             propertiesToExpand.put(it, providers.gradleProperty(it).get())
         }
         propertiesToExpand.put("version", version.toString())
@@ -39,4 +48,112 @@ subprojects {
             expand(propertiesToExpand)
         }
     }
+}
+
+/**
+ * Registers the task that produces a loader's final, installable mod JAR.
+ * <p>
+ * The core project's shadow JAR already contains every relocated dependency plus all
+ * platform-independent DMCC classes. Each loader contributes its own classes and mod metadata
+ * on top of it. The shadow JAR's manifest is preserved (it carries the standalone entry point);
+ * the loader JAR's manifest is dropped.
+ * <p>
+ * Minecraft 26.1+ ships unobfuscated and Fabric no longer uses intermediary names, so no
+ * remapping step is involved: the loader's plain {@code jar} output is already the final bytecode.
+ *
+ * @param loaderProject the fabric/neoforge subproject
+ * @param loaderName    loader name used in the artifact file name
+ */
+ext.registerLoaderJar = { Project loaderProject, String loaderName ->
+    def outputFile = new File(
+            rootProject.layout.buildDirectory.get().asFile,
+            "Discord-MC-Chat-${loaderProject.version}-${loaderName}.jar")
+    def shadowJarFile = project(":core").tasks.named("shadowJar").flatMap { it.archiveFile }
+    def loaderJarFile = loaderProject.tasks.named("jar").flatMap { it.archiveFile }
+    def tempDir = new File(loaderProject.layout.buildDirectory.get().asFile, "merged")
+
+    loaderProject.tasks.register("loaderJar") {
+        group = "build"
+        description = "Builds the final ${loaderName} mod JAR into the root build directory."
+        dependsOn ":core:shadowJar", loaderProject.tasks.named("jar")
+        inputs.files(shadowJarFile, loaderJarFile)
+        outputs.file(outputFile)
+
+        doLast {
+            tempDir.deleteDir()
+            tempDir.mkdirs()
+            loaderProject.copy {
+                from loaderProject.zipTree(loaderJarFile.get().asFile)
+                into tempDir
+                exclude "META-INF/MANIFEST.MF"
+            }
+            outputFile.parentFile.mkdirs()
+            java.nio.file.Files.copy(
+                    shadowJarFile.get().asFile.toPath(),
+                    outputFile.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+            loaderProject.ant.zip(update: "true", destfile: outputFile) {
+                fileset(dir: tempDir)
+            }
+        }
+    }
+
+    loaderProject.tasks.named("build") {
+        dependsOn loaderProject.tasks.named("loaderJar")
+    }
+}
+
+/**
+ * Builds the single universal mod JAR.
+ * <p>
+ * It carries everything the per-loader JARs carry: the core shadow payload, the shared
+ * {@code minecraft-common} classes and mixin configuration, and both the Fabric metadata
+ * ({@code fabric.mod.json}) and the NeoForge metadata ({@code META-INF/neoforge.mods.toml}).
+ * Each loader reads only its own metadata and loads only its own entry point, so the same file can be
+ * dropped into a Fabric or a NeoForge {@code mods} folder, and it still runs as the standalone
+ * application through {@code java -jar} because the core shadow JAR's manifest is preserved.
+ */
+tasks.register("universalJar") {
+    group = "build"
+    description = "Builds the single mod JAR that works on Fabric, on NeoForge and as a standalone application."
+
+    def outputFile = new File(rootProject.layout.buildDirectory.get().asFile, "Discord-MC-Chat-${mod_version}.jar")
+    def shadowJarFile = project(":core").tasks.named("shadowJar").flatMap { it.archiveFile }
+    def fabricJarFile = project(":fabric").tasks.named("jar").flatMap { it.archiveFile }
+    def neoforgeJarFile = project(":neoforge").tasks.named("jar").flatMap { it.archiveFile }
+    def tempDir = new File(rootProject.layout.buildDirectory.get().asFile, "universal")
+
+    dependsOn ":core:shadowJar", ":fabric:jar", ":neoforge:jar"
+    inputs.files(shadowJarFile, fabricJarFile, neoforgeJarFile)
+    outputs.file(outputFile)
+
+    doLast {
+        tempDir.deleteDir()
+        tempDir.mkdirs()
+
+        // The shared minecraft-common classes and dmcc.mixins.json are compiled into both loader JARs.
+        // Keep the Fabric copy and let the NeoForge JAR contribute only what it adds on top.
+        [[fabricJarFile.get().asFile, DuplicatesStrategy.INCLUDE],
+         [neoforgeJarFile.get().asFile, DuplicatesStrategy.EXCLUDE]].each { jarFile, strategy ->
+            copy {
+                from zipTree(jarFile)
+                into tempDir
+                exclude "META-INF/MANIFEST.MF"
+                duplicatesStrategy = strategy
+            }
+        }
+
+        outputFile.parentFile.mkdirs()
+        java.nio.file.Files.copy(
+                shadowJarFile.get().asFile.toPath(),
+                outputFile.toPath(),
+                java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+        ant.zip(update: "true", destfile: outputFile) {
+            fileset(dir: tempDir)
+        }
+    }
+}
+
+tasks.named("build") {
+    dependsOn tasks.named("universalJar")
 }

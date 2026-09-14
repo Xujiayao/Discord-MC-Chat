@@ -97,7 +97,7 @@ public final class I18nManager {
 		}
 
 		// For client-only mode, we only need DMCC translations for logs and basic messages.
-		if (!"multi_server_client".equals(ModeManager.getMode())) {
+		if (!"multi_server_client".equals(ConfigManager.getMode())) {
 			// For server-enabled modes, load the full I18n suite.
 			if (!loadCustomMessages()) {
 				return false;

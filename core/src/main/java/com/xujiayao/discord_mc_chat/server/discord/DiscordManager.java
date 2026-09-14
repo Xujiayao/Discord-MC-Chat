@@ -2,7 +2,6 @@ package com.xujiayao.discord_mc_chat.server.discord;
 
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
-import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.server.message.DiscordMessageParser;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
@@ -143,7 +142,7 @@ public final class DiscordManager {
 				commands.add(Commands.slash("reload", I18nManager.getDmccTranslation("commands.reload.description")));
 				commands.add(Commands.slash("update", I18nManager.getDmccTranslation("commands.update.description")));
 
-				if ("standalone".equals(ModeManager.getMode())) {
+				if ("standalone".equals(ConfigManager.getMode())) {
 					commands.add(Commands.slash("console", I18nManager.getDmccTranslation("commands.console.description"))
 							.addOption(OptionType.STRING, "at", I18nManager.getDmccTranslation("commands.console.args_desc.at"), true, true)
 							.addOption(OptionType.STRING, "command", I18nManager.getDmccTranslation("commands.console.args_desc.command"), true, true));
@@ -366,7 +365,7 @@ public final class DiscordManager {
 				return;
 			}
 
-			String mode = "standalone".equals(ModeManager.getMode()) ? "standalone" : "single_server";
+			String mode = "standalone".equals(ConfigManager.getMode()) ? "standalone" : "single_server";
 			boolean fakeUserStyle = ConfigManager.getBoolean("discord.webhook.enable_fake_user_style");
 
 			String contentTemplate = node.path("disabled_fake_user_style").path(mode).asString("<{display_name}> {message}");
@@ -388,7 +387,7 @@ public final class DiscordManager {
 				String avatarUrl = resolveWebhookAvatarUrl(clientName, placeholders);
 				sendWebhookMessage(channel, username, avatarUrl, content);
 			} else {
-				if ("standalone".equals(ModeManager.getMode())) {
+				if ("standalone".equals(ConfigManager.getMode())) {
 					String avatarUrl = getClientAvatarUrl(clientName);
 					sendWebhookMessage(channel, clientName, avatarUrl, content);
 				} else {
@@ -435,7 +434,7 @@ public final class DiscordManager {
 		}
 
 		try {
-			boolean standaloneMode = "standalone".equals(ModeManager.getMode());
+			boolean standaloneMode = "standalone".equals(ConfigManager.getMode());
 			for (String line : message.split("\\n")) {
 				String sanitized = sanitizeLineForLogging(line);
 				if (standaloneMode) {
@@ -535,7 +534,7 @@ public final class DiscordManager {
 		}
 
 		try {
-			if ("standalone".equals(ModeManager.getMode())) {
+			if ("standalone".equals(ConfigManager.getMode())) {
 				sendWebhookMessageSync(channel, clientName, getClientAvatarUrl(clientName), message);
 			} else {
 				sendBotMessageSync(channelIdentifier, message);
@@ -559,7 +558,7 @@ public final class DiscordManager {
 			return null;
 		}
 
-		if ("standalone".equals(ModeManager.getMode())) {
+		if ("standalone".equals(ConfigManager.getMode())) {
 			JsonNode channels = ConfigManager.getConfigNode("console_forwarding.channels");
 			if (!channels.isArray()) {
 				return null;
@@ -593,7 +592,7 @@ public final class DiscordManager {
 	}
 
 	private static String resolveConsoleChannel(String clientName) {
-		if ("standalone".equals(ModeManager.getMode())) {
+		if ("standalone".equals(ConfigManager.getMode())) {
 			JsonNode channels = ConfigManager.getConfigNode("console_forwarding.channels");
 			if (!channels.isArray()) {
 				return "";
@@ -620,7 +619,7 @@ public final class DiscordManager {
 			return "";
 		}
 
-		String mode = "standalone".equals(ModeManager.getMode()) ? "standalone" : "single_server";
+		String mode = "standalone".equals(ConfigManager.getMode()) ? "standalone" : "single_server";
 		String template = statusNode.path(mode).asString(statusNode.asString(""));
 		if (template.isBlank()) {
 			return "";
@@ -685,7 +684,7 @@ public final class DiscordManager {
 			return;
 		}
 		try {
-			if ("standalone".equals(ModeManager.getMode())) {
+			if ("standalone".equals(ConfigManager.getMode())) {
 				sendWebhookMessage(channel, clientName, getClientAvatarUrl(clientName), chunk);
 			} else {
 				sendBotMessage(channelIdentifier, chunk);
@@ -946,7 +945,7 @@ public final class DiscordManager {
 				message = message.replace("{" + entry.getKey() + "}", entry.getValue());
 			}
 
-			if ("standalone".equals(ModeManager.getMode())) {
+			if ("standalone".equals(ConfigManager.getMode())) {
 				String avatarUrl = getClientAvatarUrl(clientName);
 				sendWebhookMessage(channel, clientName, avatarUrl, message);
 
@@ -987,7 +986,7 @@ public final class DiscordManager {
 		try {
 			String logReadyMessage = DiscordMessageParser.formatDiscordTimestampsForPlainText(message);
 
-			if ("standalone".equals(ModeManager.getMode())) {
+			if ("standalone".equals(ConfigManager.getMode())) {
 				String avatarUrl = getClientAvatarUrl(clientName);
 				sendWebhookMessage(channel, clientName, avatarUrl, message);
 				for (String line : logReadyMessage.split("\\n")) {

@@ -3,6 +3,8 @@ package com.xujiayao.discord_mc_chat.commands.impl;
 import com.xujiayao.discord_mc_chat.commands.Command;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
+import com.xujiayao.discord_mc_chat.platform.Platform;
+import com.xujiayao.discord_mc_chat.platform.StatsProvider;
 import com.xujiayao.discord_mc_chat.utils.JsonUtils;
 
 import java.nio.file.Files;
@@ -21,8 +23,6 @@ import java.util.stream.Stream;
  */
 public final class StatsCommand implements Command {
 
-	private static StatsProvider provider;
-
 	/**
 	 * Creates a stats command instance.
 	 */
@@ -30,21 +30,12 @@ public final class StatsCommand implements Command {
 	}
 
 	/**
-	 * Gets the currently registered stats provider.
+	 * Gets the platform's stats provider.
 	 *
-	 * @return Current stats provider, or {@code null} when Minecraft is not ready.
+	 * @return Current stats provider, or {@code null} when the platform cannot supply statistics.
 	 */
-	public static StatsProvider getProvider() {
-		return provider;
-	}
-
-	/**
-	 * Registers the stats provider implementation.
-	 *
-	 * @param provider Stats provider implementation.
-	 */
-	public static void setProvider(StatsProvider provider) {
-		StatsCommand.provider = provider;
+	private static StatsProvider statsProvider() {
+		return Platform.host().stats();
 	}
 
 	/**
@@ -69,6 +60,7 @@ public final class StatsCommand implements Command {
 	 * @return Number of matching player entries.
 	 */
 	public static int countStatResultEntries(String type, String stat) {
+		StatsProvider provider = statsProvider();
 		if (provider == null) {
 			return 0;
 		}
@@ -148,6 +140,7 @@ public final class StatsCommand implements Command {
 
 	@Override
 	public void execute(CommandSender sender, String... args) {
+		StatsProvider provider = statsProvider();
 		if (provider == null) {
 			sender.reply(I18nManager.getDmccTranslation("commands.stats.server_not_ready"));
 			return;
@@ -225,45 +218,5 @@ public final class StatsCommand implements Command {
 		}
 
 		sender.reply(sb.toString());
-	}
-
-	/**
-	 * Abstraction for reading Minecraft statistics from runtime/storage.
-	 */
-	public interface StatsProvider {
-		/**
-		 * Flushes in-memory stats to disk before reading.
-		 */
-		void saveAll();
-
-		/**
-		 * Gets the stats directory path.
-		 *
-		 * @return Stats directory path.
-		 */
-		Path getStatsDirectory();
-
-		/**
-		 * Resolves a player name from UUID.
-		 *
-		 * @param uuid Player UUID.
-		 * @return Player name, or {@code null} if unknown.
-		 */
-		String getPlayerName(UUID uuid);
-
-		/**
-		 * Gets available stat categories/types.
-		 *
-		 * @return Available stat type identifiers.
-		 */
-		List<String> getStatTypes();
-
-		/**
-		 * Gets available stat names for a category/type.
-		 *
-		 * @param type Stat category/type.
-		 * @return Available stat names within the category.
-		 */
-		List<String> getStatNames(String type);
 	}
 }

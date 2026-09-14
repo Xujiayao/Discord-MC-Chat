@@ -3,7 +3,9 @@
 # By Xujiayao
 #
 # Config file for DMCC version & mode:
-# Do NOT change these values manually!
+# "version" must match the DMCC build and must NOT be changed manually.
+# "mode" selects the operating mode. This file is the multi_server_client template:
+# multi_server_client = this Minecraft server joins an existing standalone DMCC server.
 version: ${mod_version}
 mode: multi_server_client
 #

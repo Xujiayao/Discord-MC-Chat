@@ -15,7 +15,6 @@ import com.xujiayao.discord_mc_chat.commands.impl.UpdateCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.WhitelistCommand;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
-import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 
 import java.util.ArrayList;
@@ -55,7 +54,7 @@ public final class CommandManager {
 		register(new ReloadCommand());
 		register(new UpdateCommand());
 
-		switch (ModeManager.getMode()) {
+		switch (ConfigManager.getMode()) {
 			case "standalone" -> {
 				register(new ConsoleCommand());
 				register(new ExecuteCommand());

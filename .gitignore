@@ -34,3 +34,12 @@ hs_err_*.log
 replay_*.log
 *.hprof
 *.jfr
+
+# DMCC runtime output (standalone logs and per-module test runs)
+
+logs/
+config/
+
+# Development run directories (Loom / ModDevGradle)
+
+run/

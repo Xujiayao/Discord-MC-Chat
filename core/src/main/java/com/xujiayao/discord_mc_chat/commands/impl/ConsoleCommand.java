@@ -4,9 +4,6 @@ import com.xujiayao.discord_mc_chat.commands.Command;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
-import com.xujiayao.discord_mc_chat.config.ModeManager;
-import com.xujiayao.discord_mc_chat.events.CoreEvents;
-import com.xujiayao.discord_mc_chat.events.EventManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
@@ -22,6 +19,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import com.xujiayao.discord_mc_chat.platform.Platform;
 
 /**
  * Console command implementation.
@@ -67,7 +65,7 @@ public final class ConsoleCommand implements Command {
 
 	@Override
 	public CommandArgument[] args() {
-		if ("standalone".equals(ModeManager.getMode())) {
+		if ("standalone".equals(ConfigManager.getMode())) {
 			// standalone: /console <at> <command>
 			return new CommandArgument[]{
 					new CommandArgument() {
@@ -129,7 +127,7 @@ public final class ConsoleCommand implements Command {
 
 	@Override
 	public void execute(CommandSender sender, String... args) {
-		if ("standalone".equals(ModeManager.getMode())) {
+		if ("standalone".equals(ConfigManager.getMode())) {
 			executeStandalone(sender, args);
 		} else {
 			executeLocal(sender, args);
@@ -152,7 +150,7 @@ public final class ConsoleCommand implements Command {
 
 		CompletableFuture<Void> completionFuture = new CompletableFuture<>();
 
-		EventManager.post(new CoreEvents.MinecraftCommandExecutionEvent(sender, commandLine, completionFuture));
+		Platform.host().executeCommand(sender, commandLine, completionFuture);
 
 		// Wait for the command to complete with a timeout
 		try {

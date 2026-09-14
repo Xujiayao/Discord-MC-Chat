@@ -4,7 +4,6 @@ import com.xujiayao.discord_mc_chat.commands.CommandManager;
 import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
-import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.message.TextSegment;
 import com.xujiayao.discord_mc_chat.network.packets.EventPackets.DiscordRelayPacket;
@@ -36,6 +35,8 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
+import com.xujiayao.discord_mc_chat.platform.Platform;
+import com.xujiayao.discord_mc_chat.platform.StatsProvider;
 
 /**
  * Handles Discord JDA events.
@@ -242,7 +243,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 	}
 
 	private List<Command.Choice> getStatsTypeChoices(String currentValue) {
-		StatsCommand.StatsProvider provider = StatsCommand.getProvider();
+		StatsProvider provider = Platform.host().stats();
 		if (provider == null) return List.of();
 
 		String normalizedValue = normalizeMinecraftNamespace(currentValue);
@@ -255,7 +256,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 	}
 
 	private List<Command.Choice> getStatsStatChoices(String type, String currentValue) {
-		StatsCommand.StatsProvider provider = StatsCommand.getProvider();
+		StatsProvider provider = Platform.host().stats();
 		if (provider == null || type == null || type.isBlank()) return List.of();
 
 		String normalizedType = normalizeMinecraftNamespace(type);
@@ -378,7 +379,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 			return false;
 		}
 
-		if ("standalone".equals(ModeManager.getMode())) {
+		if ("standalone".equals(ConfigManager.getMode())) {
 			int opLevel = OpLevelResolver.resolveForServer(event.getMember(), event.getAuthor(), targetServer);
 			CommandManager.execute(new MessageCommandSender(event, opLevel), "console", targetServer, content);
 		} else {

@@ -3,7 +3,9 @@
 # By Xujiayao
 #
 # Config file for DMCC version & mode:
-# Do NOT change these values manually!
+# "version" must match the DMCC build and must NOT be changed manually.
+# "mode" selects the operating mode. This file is the standalone template:
+# standalone = this process is the central DMCC server that Minecraft servers connect to.
 version: ${mod_version}
 mode: standalone
 #
@@ -20,11 +22,11 @@ multi_server:
     shared_secret: "to_be_auto_replaced"
   servers: # This list acts as a whitelist. Only clients with a server name defined here are allowed to connect.
     - name: "SMP"
-      minecraft_version: "26.1.2"
+      minecraft_version: "26.2"
       avatar_url: ""
       color: "yellow"
     - name: "CMP"
-      minecraft_version: "26.1.2"
+      minecraft_version: "26.2"
       avatar_url: ""
       color: "green"
 

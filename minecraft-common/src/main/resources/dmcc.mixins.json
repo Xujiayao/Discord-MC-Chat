@@ -1,0 +1,24 @@
+{
+  "required": true,
+  "package": "com.xujiayao.discord_mc_chat.minecraft.mixins",
+  "compatibilityLevel": "JAVA_25",
+  "mixins": [
+    "MixinCommands",
+    "MixinEmoteCommands",
+    "MixinGameModeCommand",
+    "MixinMinecraftServer",
+    "MixinMsgCommand",
+    "MixinPlayerAdvancements",
+    "MixinPlayerList",
+    "MixinSayCommand",
+    "MixinServerGamePacketListenerImpl",
+    "MixinServerPlayer",
+    "MixinTellRawCommand"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}

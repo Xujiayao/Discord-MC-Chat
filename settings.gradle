@@ -4,10 +4,26 @@ pluginManagement {
             name = "Fabric"
             url = "https://maven.fabricmc.net/"
         }
+        maven {
+            name = "NeoForged"
+            url = "https://maven.neoforged.net/releases"
+        }
         mavenCentral()
         gradlePluginPortal()
     }
 }
 
+plugins {
+    // Lets Gradle download the JDKs that individual tasks ask for. ModDevGradle's asset downloader
+    // runs on Java 21 while the mod itself targets Java 25, so without this the IDE sync (which
+    // triggers that task) fails on machines that only have a modern JDK installed.
+    id "org.gradle.toolchains.foojay-resolver-convention" version "${foojay_version}"
+}
+
+// DMCC's platform-independent core.
 include(":core")
-include(":minecraft")
+
+// The Minecraft-side code shared by both loaders lives in ./minecraft-common and is compiled
+// into each loader module as a shared source directory (see the loader build scripts).
+include(":fabric")
+include(":neoforge")

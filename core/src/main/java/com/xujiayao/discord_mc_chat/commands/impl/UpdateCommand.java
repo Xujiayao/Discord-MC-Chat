@@ -4,7 +4,7 @@ import com.xujiayao.discord_mc_chat.commands.Command;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.commands.LocalCommandSender;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
-import com.xujiayao.discord_mc_chat.config.ModeManager;
+import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
 import com.xujiayao.discord_mc_chat.server.message.DiscordMessageParser;
@@ -69,7 +69,7 @@ public final class UpdateCommand implements Command {
 
 	@Override
 	public void execute(CommandSender sender, String... args) {
-		if ("multi_server_client".equals(ModeManager.getMode())) {
+		if ("multi_server_client".equals(ConfigManager.getMode())) {
 			if (NetworkManager.getClient() != null && NetworkManager.getClient().isConnected()) {
 				sender.reply(I18nManager.getDmccTranslation("commands.update.checking"));
 				String requestId = CryptUtils.generateRandomString(16);

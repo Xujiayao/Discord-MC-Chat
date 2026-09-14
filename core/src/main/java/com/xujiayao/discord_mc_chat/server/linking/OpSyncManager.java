@@ -2,9 +2,6 @@ package com.xujiayao.discord_mc_chat.server.linking;
 
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
-import com.xujiayao.discord_mc_chat.config.ModeManager;
-import com.xujiayao.discord_mc_chat.events.CoreEvents;
-import com.xujiayao.discord_mc_chat.events.EventManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Link.OpSyncPacket;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
@@ -21,6 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
+import com.xujiayao.discord_mc_chat.platform.Platform;
 
 /**
  * Manages the synchronization of OP levels from Discord mappings to Minecraft servers.
@@ -85,7 +83,7 @@ public final class OpSyncManager {
 
 		Map<String, List<LinkedAccountManager.LinkEntry>> allLinks = LinkedAccountManager.getAllLinks();
 
-		switch (ModeManager.getMode()) {
+		switch (ConfigManager.getMode()) {
 			case "single_server" -> {
 				// Compute OP levels for all linked accounts using flat mappings
 				Map<String, Integer> opLevels = new HashMap<>();
@@ -98,7 +96,7 @@ public final class OpSyncManager {
 						}
 					}
 				}
-				EventManager.post(new CoreEvents.OpSyncEvent(opLevels));
+				Platform.host().applyOpLevels(opLevels);
 			}
 			case "standalone" -> {
 				// For each connected client, compute per-server OP levels and send

@@ -6,7 +6,6 @@ import com.xujiayao.discord_mc_chat.commands.Command;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
-import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Info.ResponsePacket;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
@@ -180,7 +179,7 @@ public final class InfoCommand implements Command {
 				CompletableFuture.supplyAsync(() -> NetworkManager.requestInfoSnapshot(INFO_REQUEST_TIMEOUT_SECONDS));
 
 		CompletableFuture<DiscordStatusInfo> discordFuture = null;
-		if (!"multi_server_client".equals(ModeManager.getMode())) {
+		if (!"multi_server_client".equals(ConfigManager.getMode())) {
 			discordFuture = CompletableFuture.supplyAsync(DiscordManager::getStatusInfo);
 		}
 
@@ -208,7 +207,7 @@ public final class InfoCommand implements Command {
 
 		builder.append(I18nManager.getDmccTranslation("commands.info.common_part",
 				Constants.VERSION,
-				ModeManager.getMode(),
+				ConfigManager.getMode(),
 				uptime[0], uptime[1], uptime[2], uptime[3],
 				usedMemoryMiB, totalMemoryMiB));
 
@@ -224,7 +223,7 @@ public final class InfoCommand implements Command {
 
 		// Server/client part
 		builder.append("\n");
-		if (ModeManager.getMode().equals("standalone")) {
+		if (ConfigManager.getMode().equals("standalone")) {
 			builder.append(buildServerPart(infoSnapshot));
 		} else {
 			builder.append(buildClientPart(infoSnapshot, latencyOverride, clientConnected));

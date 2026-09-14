@@ -39,8 +39,9 @@ public final class StandaloneDMCC {
 		// Register shutdown hook for standalone mode
 		Runtime.getRuntime().addShutdownHook(SHUTDOWN_THREAD);
 
-		// Initialize DMCC, block until initialization is complete
-		if (DMCC.init()) {
+		// Initialize DMCC, block until initialization is complete.
+		// The standalone environment has no Minecraft platform, so core runs with the no-op host.
+		if (DMCC.init(null)) {
 			// Initialize terminal only if DMCC initialized successfully
 			TerminalManager.init();
 		} else {

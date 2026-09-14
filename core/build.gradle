@@ -26,6 +26,17 @@ dependencies {
     shadow api("io.netty:netty-handler:${netty_version}")
 
     shadow api("net.fellbaum:jemoji:${jemoji_version}")
+
+    testImplementation platform("org.junit:junit-bom:${junit_version}")
+    testImplementation "org.junit.jupiter:junit-jupiter"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+}
+
+tasks.named("test") {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
 }
 
 jar {
@@ -82,56 +93,16 @@ shadowJar {
     // Resources
     relocate "jemoji", "dmcc_dep.jemoji"
 
+    // DMCC's SLF4J service registration lives outside src/main/resources on purpose: it must only
+    // exist inside the shipped JAR (where the standalone application needs it to log). When it is on a
+    // Minecraft development classpath, SLF4J picks DMCC's provider over the loader's own and the game
+    // fails to start with "Failed to initialize DMCC Logger" / recursive class initialisation.
+    from("src/main/shadow-resources")
+
     from "../LICENSE"
 }
 
-//========== Merge JARs ==========
-
-def otherSubprojects = rootProject.subprojects.findAll { it.name != project.name }
-
-tasks.register("mergeJars") {
-    dependsOn ":minecraft:jar"
-    dependsOn shadowJar
-
-    def shadowJarFile = tasks.shadowJar.archiveFile.get().asFile
-    def tempDir = project.layout.buildDirectory.dir("merged_temp").get().asFile
-
-    doLast {
-        tempDir.mkdirs()
-        def addedFiles = [:]
-        otherSubprojects.each { subproj ->
-            def jarTask = subproj.tasks.named("jar").get()
-            def jarFile = jarTask.archiveFile.get().asFile
-            copy {
-                from zipTree(jarFile)
-                into tempDir
-                exclude "META-INF/MANIFEST.MF"
-                eachFile { fcd ->
-                    def relPath = fcd.relativePath.toString()
-                    if (addedFiles.containsKey(relPath)) {
-                        logger.warn("Warning: Duplicate file found: $relPath in ${subproj.name} and ${addedFiles[relPath]}")
-                    } else {
-                        addedFiles[relPath] = subproj.name
-                    }
-                }
-            }
-        }
-        // Add the decompressed content to the core jar
-        ant.zip(update: "true", destfile: shadowJarFile) {
-            fileset(dir: tempDir)
-        }
-    }
-}
-
+// The platform-independent payload is what the loader modules merge their classes into.
 build {
     dependsOn shadowJar
-    dependsOn tasks.named("mergeJars")
-
-    doLast {
-        copy {
-            from "build/libs"
-            into "../build"
-            exclude "*core*"
-        }
-    }
 }
