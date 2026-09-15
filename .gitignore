@@ -39,7 +39,3 @@ replay_*.log
 
 logs/
 config/
-
-# Development run directories (Loom / ModDevGradle)
-
-run/

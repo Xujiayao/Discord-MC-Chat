@@ -93,12 +93,6 @@ shadowJar {
     // Resources
     relocate "jemoji", "dmcc_dep.jemoji"
 
-    // DMCC's SLF4J service registration lives outside src/main/resources on purpose: it must only
-    // exist inside the shipped JAR (where the standalone application needs it to log). When it is on a
-    // Minecraft development classpath, SLF4J picks DMCC's provider over the loader's own and the game
-    // fails to start with "Failed to initialize DMCC Logger" / recursive class initialisation.
-    from("src/main/shadow-resources")
-
     from "../LICENSE"
 }
 

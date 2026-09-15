@@ -17,13 +17,6 @@ sourceSets {
 neoForge {
     version = project.neo_version
 
-    runs {
-        server {
-            server()
-            programArgument "--nogui"
-        }
-    }
-
     mods {
         "discord_mc_chat" {
             sourceSet sourceSets.main

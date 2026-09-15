@@ -183,6 +183,7 @@ main:
       usage: "请通过命令行启动 DMCC：\"java -jar Discord-MC-Chat-{}.jar\"。"
     info_minecraft_env: "正在 Minecraft 环境中初始化 DMCC..."
     info_standalone_env: "正在独立环境中初始化 DMCC..."
+    platform: "DMCC 正在 {} 平台上运行。"
     minecraft_reload_prompt: "请更正上述错误，然后运行 \"/dmcc reload\"。"
     standalone_reload_prompt: "请更正上述错误，然后重新加载 DMCC。"
     success: "DMCC 初始化成功！"

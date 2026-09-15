@@ -72,6 +72,10 @@ tasks.register("universalJar") {
     def fabricJarFile = project(":fabric").tasks.named("jar").flatMap { it.archiveFile }
     def neoforgeJarFile = project(":neoforge").tasks.named("jar").flatMap { it.archiveFile }
     def tempDir = new File(rootProject.layout.buildDirectory.get().asFile, "universal")
+    // Gradle materialises every zipTree() view under build/tmp/.cache/expanded, which would otherwise
+    // leave empty zip_<hash> directories behind. Sweep build/tmp too, so that the root build directory
+    // contains the universal JAR and nothing else.
+    def gradleTmpDir = new File(rootProject.layout.buildDirectory.get().asFile, "tmp")
 
     dependsOn ":core:shadowJar", ":fabric:jar", ":neoforge:jar"
     inputs.files(shadowJarFile, fabricJarFile, neoforgeJarFile)
@@ -104,6 +108,7 @@ tasks.register("universalJar") {
 
         // Leave the root build directory with nothing but the universal JAR itself.
         tempDir.deleteDir()
+        gradleTmpDir.deleteDir()
     }
 }
 

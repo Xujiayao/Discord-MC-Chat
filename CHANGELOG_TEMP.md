@@ -357,3 +357,58 @@
   standalone `Main-Class`，以及被 Shadow 正确重定位的 SLF4J 服务注册文件
   `META-INF/services/dmcc_dep.org.slf4j.spi.SLF4JServiceProvider`。
 
+## 工作 07
+
+记录日期：2026/9/15（**第 1.3 轮：日志多语言化 + 构建产物与开发环境净化**；尚未定版）。
+
+### 更改（用户可见）
+
+- **日志文案全部多语言**。DMCC 唯一一条英文单语日志 `DMCC platform: {}` 改为走内部翻译：
+  - `en_us`：`DMCC is running on platform {}`
+  - `zh_cn`：`DMCC 正在 {} 平台上运行`
+
+  至此 DMCC 自有的每一条日志都取自 `lang/<语言>.yml`。经全仓扫描（197 处日志调用），剩余的非 i18n 日志只有四类：
+  ① 启动横幅（ASCII 艺术字 + 品牌信息）、② 内部语言文件损坏时那两条兜底警告（此时翻译系统已经不可用）,
+  ③ 转发 Discord / 控制台原文的日志（如 `[子服名] 内容`）与 YAML 校验的 `  - 键名` 前缀，
+  ④ `Logger` 包装器自身。①②已按你的确认豁免翻译。
+- **根 `build/` 目录里只会有一个 JAR**：`universalJar` 收尾时除了删除自己的临时目录，还会删除 `build/tmp` ——
+  Gradle 为每次 `zipTree` 建立的 `build/tmp/.cache/expanded/zip_<哈希>` 空目录就产生在这里。
+- **不再提供开发服务端运行配置**：项目里已没有 `runServer` / `runClient` 任务，也不会再生成 `run/` 目录；
+  验证改动的方式改为"构建成功 + 用产物 JAR 在真实服务器上人工测试"。
+
+### 更改（开发环境，对用户不可见）
+
+- `neoforge/build.gradle` 删除 `runs { server { ... } }` 开发运行块。
+- `.gitignore` 删除 `run/` 条目（该目录只由开发运行产生）。
+- **SLF4J 服务注册文件移回标准位置**：`core/src/main/shadow-resources/META-INF/services/...` →
+  `core/src/main/resources/META-INF/services/org.slf4j.spi.SLF4JServiceProvider`，目录 `shadow-resources/`
+  与 `shadowJar` 里的 `from("src/main/shadow-resources")` 一并删除。
+  该目录当初纯粹是为"开发类路径上不要出现 DMCC 的 SLF4J provider"而设（runServer 专用），按你的要求清除。
+  **发布 JAR 的内容两种放法完全一致**（已核对：Shadow 仍把它重定位为
+  `META-INF/services/dmcc_dep.org.slf4j.spi.SLF4JServiceProvider`）。
+
+### 验证
+
+- `./gradlew clean build :core:test --warning-mode all`：**BUILD SUCCESSFUL**（26s，19 个任务），
+  `SmokeTest.versionIsResolvedFromTheBuildResource()` **PASSED**，全量日志零弃用 / 零警告。
+- 构建结束后根 `build/` 目录内容：**只有 `Discord-MC-Chat-3.0.0-beta.2.jar`**（`build/tmp` 已不再残留）。
+- 产物核对（6,879 条目、**0 重复条目**）：`fabric.mod.json`、`META-INF/neoforge.mods.toml`、`dmcc.mixins.json`、
+  `dmcc_version.txt`、`FabricDMCC.class`、`NeoForgeDMCC.class`、
+  `minecraft/events/MinecraftPlatformHost.class`、三份配置模板（`config_single_server.yml` /
+  `config_multi_server_client.yml` / `config_standalone.yml`）、`custom_messages/{en_us,zh_cn}.yml`、
+  `META-INF/THIRD-PARTY-LICENSES.txt` 全部在；`config/mode.yml` 确认不存在；
+  清单仍含 `Main-Class: com.xujiayao.discord_mc_chat.standalone.StandaloneDMCC`；
+  重定位后的 SLF4J 服务注册文件内容仍指向 `com.xujiayao.discord_mc_chat.logging.impl.ServiceProvider`。
+- 翻译完整性交叉校验：代码中出现的 **218 个 `getDmccTranslation` 键在 `en_us` 与 `zh_cn` 中均存在**；
+  两个语言文件的真实键集完全一致（脚本报出的 4 处"仅英文有"是频道看板模板块标量里的
+  `Version:` / `Mode:` / `Uptime:` 文案，不是键，属误报）。
+
+### 已知副作用（本轮引入，已知且可控）
+
+- `./gradlew :core:test` 现在会在 **`core/logs/` 生成一个空的 `DMCC_<时间戳>.log`**：
+  SLF4J 服务注册文件回到 `src/main/resources` 后，测试类路径上也有了 DMCC 的 provider，日志器按
+  `./logs` 相对工作目录建文件。该目录已被 `.gitignore` 忽略，交付前会删除；`./gradlew build` 不跑测试，不受影响。
+- **若你之后在 IDEA 同步或开发环境再遇到 `Failed to initialize DMCC Logger` / 类初始化递归**，
+  把该文件移回 `core/src/main/shadow-resources/META-INF/services/` 并在 `shadowJar` 里加回
+  `from("src/main/shadow-resources")` 即可，两处改动互不影响发布产物。
+

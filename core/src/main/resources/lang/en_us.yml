@@ -184,6 +184,7 @@ main:
       usage: "Please start DMCC from the command line \"java -jar Discord-MC-Chat-{}.jar\"."
     info_minecraft_env: "Initializing DMCC in a Minecraft environment..."
     info_standalone_env: "Initializing DMCC in a Standalone environment..."
+    platform: "DMCC is running on platform {}."
     minecraft_reload_prompt: "Please correct the errors mentioned above, then run \"/dmcc reload\"."
     standalone_reload_prompt: "Please correct the errors mentioned above, then reload DMCC."
     success: "DMCC initialized successfully!"

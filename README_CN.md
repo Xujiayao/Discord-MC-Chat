@@ -417,6 +417,11 @@ DMCC 对配置文件的完整性与一致性做了强校验，力求在启动阶
 
 - **DMCC 自有日志**: `standalone` 模式每次运行都会在 `logs/` 下新建 `DMCC_<时间戳>.log`，记录带时间戳、线程名与等级的日志；控制台输出按等级着色
   (INFO/WARN/ERROR)，可用 `--disable-ascii` 关闭。
+- **日志文案全部多语言**: DMCC 自己输出的每一条日志都取自 `lang/<语言>.yml`（`main`、`discord`、`server`、`client`、
+  `utils`、`linking`、`minecraft` 等命名空间），新增日志必须同时补齐 `en_us` 与 `zh_cn` 两个文件，
+  不允许在代码里写英文单语日志。唯二的例外是**启动横幅**（ASCII 艺术字 + 品牌信息）与
+  **内部语言文件自身损坏时的那两条兜底警告**——后者发生时翻译系统已不可用，因而只能硬编码。
+  记录 Discord/控制台原文的转发日志（如 `[子服名] 消息内容`）不属于 DMCC 文案，按原文照录。
 - **`/info` 指标**: 包含 DMCC 版本 / 运行模式 / 运行时长 / JVM 内存占用；Discord 连接状态 / 心跳延迟 / REST 延迟；以及每个子服的连接延迟、
   Minecraft 版本、在线玩家数（含逐玩家延迟，自动排除隐身玩家）、历史玩家总数、服务器 TPS 与 MSPT、运行时长、JVM 内存等。
 - **无头环境检测**: 未检测到控制台时会提示 DMCC 正在无头模式下运行，并明确不支持双击 JAR 启动，给出命令行启动方式。
@@ -445,10 +450,14 @@ DMCC 对配置文件的完整性与一致性做了强校验，力求在启动阶
 > 两个加载器各自的中间 JAR 位于 `fabric/build/libs/` 与 `neoforge/build/libs/`（不进入根 `build/`），
 > 仅在排查"某个加载器是否加载了正确入口"时才会用到，正常分发不需要它们。
 
+构建结束后根 `build/` 目录里**只有这一个 JAR**：Gradle 为 `zipTree` 建立的 `build/tmp/.cache` 临时目录
+会在 `universalJar` 收尾时一并清除；`./gradlew clean` 则会把根 `build/` 整体删除。
+
 ### 11.2 开发环境
 
-- `./gradlew :fabric:runServer` / `./gradlew :neoforge:runServer` 分别启动 Fabric 与 NeoForge 的
-  开发服务端，配置目录位于对应模块的 `run/` 下。
+- 本项目**只构建、不提供开发服务端运行配置**：没有 `runServer` / `runClient` 任务，也不再有 `run/` 目录。
+  验证改动的标准流程是 `./gradlew clean build`（必要时 `./gradlew :core:test`），
+  再到真实服务端上用产物 JAR 做人工测试。
 - `./gradlew :core:test` 运行核心模块的单元测试（JUnit）。
 - 首次导入 IDE 或同步 Gradle 项目时，Gradle 会通过 `foojay-resolver-convention` 自动下载
   ModDevGradle 资产下载器所需的 JDK 21（模组本身仍编译为 Java 25）；这是 IDE 同步能通过的前提。

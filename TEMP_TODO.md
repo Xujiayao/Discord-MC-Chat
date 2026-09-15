@@ -8,8 +8,11 @@
 
 ## 0. 当前状态一句话
 
-**第 1 轮（骨架 + 双加载器 + 模组兼容扩展点）已完成、已由用户测试通过并提交**（commit `0bd5d192 第一轮第一次提交`）。
-现在处于"第 2 轮开工前"的状态：working tree 干净，用户会在本轮 4 项小修改审阅通过后 commit，然后开始第 2 轮。
+**第 1 轮（骨架 + 双加载器 + 模组兼容扩展点）已完成、已由用户测试通过并提交**（commit `0bd5d192`）。
+随后又做了两次小改动且都已提交：`工作 05`（第 1.1 轮：修复 IDE 同步 + 单一通用 JAR）、
+`工作 06`（第 1.2 轮：修复 NeoForge 无法启动 + 首启指引换行）。
+**现在处于"第 1.3 轮已改完、等用户审阅 commit"的状态**：工作区里有 4 项小修改（见第 3 节末尾），
+用户 commit 后即开始第 2 轮。
 
 ---
 
@@ -32,10 +35,11 @@
   slf4j 2.0.19、Jackson(tools.jackson) 3.2.2、OkHttp 5.5.0、Netty 4.2.18.Final、jemoji 2.0.0、
   Vanish 1.6.15+26.2（仅 Fabric，compileOnly）。
 - **构建命令**（已放宽权限，**直接用用户家目录的 `~/.gradle`，不要再建临时 GRADLE_USER_HOME**）：
-  - `./gradlew clean build --warning-mode all`
+  - `./gradlew clean build --warning-mode all` —— **只验证"构建成功"**，这是唯一要跑的验证。
   - `./gradlew :core:test`
-  - `./gradlew :fabric:runServer` / `./gradlew :neoforge:runServer`（开发服务端）
-  - **每次交付前执行一次 `./gradlew --stop`**（保证系统里没有残留 daemon）。
+  - **不再执行 `runServer` / `runClient`**：用户明确说了以后不再跑开发服务端，相关设计已全部删除
+    （`neoforge` 的 `runs {}` 块、`.gitignore` 的 `run/`）。不要为"开发服务端能不能起来"做任何改动。
+  - **每次交付前的固定收尾**：`./gradlew clean`（让工作区在文件管理器里也干净）→ `./gradlew --stop`。
 
 ---
 
@@ -58,6 +62,15 @@
 9. **每轮必须**：更新 `CHANGELOG_TEMP.md`（追加 `## 工作 NN` 小节）+ 更新 `README_CN.md`
    （`README.md` 是翻译件，只在发布新版本时同步，平时不动）+ 给用户一份**人工测试清单**。
 10. 用户会**亲自审阅并 commit**；不要自行 commit。有疑问用问卷问，不要猜。
+11. **DMCC 自己的每一条日志都必须多语言**（`lang/en_us.yml` + `lang/zh_cn.yml` 同时补键），
+    不允许在代码里写英文单语日志。**仅两个例外**：启动横幅（ASCII 艺术字 + 品牌信息）、
+    以及"内部语言文件自身损坏"时那两条兜底警告（那时翻译系统已经不可用了）。
+    转发 Discord / 控制台原文的日志（`[子服名] 内容`、`LOGGER.info(line)` 之类）不算 DMCC 文案。
+    新增 lang 键后**必须两个文件都加**，`getDmccTranslation` 查不到键会直接把键名原样打出来。
+12. **不再为 `runServer` 做任何设计**：用户只验证 `./gradlew build` 成功，不再启动开发服务端。
+    项目里已经没有 `runs {}` 块、没有 `run/` 目录；不要为了"能在开发环境里跑起来"去调整文件布局。
+13. **交付前工作区必须干净**（用户会亲自看文件管理器，不只 `git status`）：
+    `./gradlew clean` 删掉所有 `build/`，临时文件、临时脚本、临时测试一律不留。
 
 ---
 
@@ -73,10 +86,23 @@
 - 用户修复（**保留，勿改**）：
   - `MixinReloadableServerResources` 已删除，其功能并入 `MixinMinecraftServer.reloadResources`
     （原因：NeoForge 会改写 `ReloadableServerResources` 的合成 lambda，导致 `InvalidInjectionException`）。
-  - SLF4J 服务注册文件改放 `core/src/main/shadow-resources/META-INF/services/`，**只在 shadowJar 里**
-    （若放进 `src/main/resources`，MC 开发环境里 SLF4J 会选中 DMCC 的 provider 导致游戏启动失败 / 类初始化递归）。
   - 通用 JAR（`universalJar` 任务）已在根 `build.gradle` 实现：以 `:core:shadowJar` 为基底，
     先并入 `:fabric:jar`（INCLUDE），再并入 `:neoforge:jar`（EXCLUDE 去重），保留 shadow 清单。
+
+### 第 1.3 轮（用户测试通过后的 4 项小改动，已改完、待用户 commit）
+
+1. **交付前工作区必须干净**：`./gradlew clean build` 验证 → `./gradlew clean` → `./gradlew --stop`。
+2. **根 `build/` 里只剩 JAR**：`universalJar` 收尾时除了删自己的临时目录，还会删掉 `build/tmp`
+   （Gradle 为 `zipTree` 建立的 `build/tmp/.cache/expanded/zip_<hash>` 空目录就出在这里）。
+3. **runServer 相关设计全部删除**：`neoforge/build.gradle` 的 `runs { server { ... } }` 块、
+   `.gitignore` 的 `run/` 条目；SLF4J 服务注册文件从非标准的 `core/src/main/shadow-resources/`
+   移回 `core/src/main/resources/META-INF/services/org.slf4j.spi.SLF4JServiceProvider`，
+   `shadow-resources/` 目录与 `shadowJar` 里的 `from("src/main/shadow-resources")` 一并删除。
+   ⚠️ **若 IDEA 同步或开发环境再出现 "Failed to initialize DMCC Logger" / 类初始化递归，就把这一处改回去**
+   （发布 JAR 的内容两种放法完全一致，只影响开发类路径）。
+4. **日志全部多语言**：`DMCC.java` 里唯一的英文单语日志 `DMCC platform: {}` 改为走 i18n 键
+   `main.init.platform`（en: `DMCC is running on platform {}`，zh: `DMCC 正在 {} 平台上运行`）。
+   启动横幅与"内部语言文件损坏"两条兜底警告按用户要求**保持硬编码**，不需要翻译。
 
 ---
 
@@ -116,7 +142,7 @@ broadcastMinecraftRelay(List<TextSegment>, String componentJson, String componen
   （平台层反向依赖 core 命令类的最后两处，第 2 轮随 `StatsReader` 移出）。
 - `DMCC.init(PlatformHost)` 接收平台实现并 `Platform.set(...)`；`reload()` 复用同一个 host。
 - 配置目录：`./config/discord_mc_chat/config.yml`；`custom_messages/<lang>.yml`；缓存 `./config/discord_mc_chat/cache/`。
-- 日志：独立模式写 `./logs/DMCC_<时间戳>.log`（`.gitignore` 已忽略 `logs/`、`config/`、`run/`）。
+- 日志：独立模式写 `./logs/DMCC_<时间戳>.log`（`.gitignore` 已忽略 `logs/`、`config/`）。
 
 ---
 
@@ -267,7 +293,7 @@ broadcastMinecraftRelay(List<TextSegment>, String componentJson, String componen
 
 - **日志 538 → ~200**：`LoggerImpl` 删掉"级别字符串 → `Map<String,Method>` 反射派发"，改 `enum Level`；
   `new SimpleDateFormat("HH:mm:ss")`（每行 1 次分配）改 `DateTimeFormatter` 常量；
-  保留极简 SLF4J Provider（standalone 必需，注意它在 `shadow-resources` 里）；
+  保留极简 SLF4J Provider（standalone 必需，注册文件在 `core/src/main/resources/META-INF/services/`）；
   trace/debug 要么实现要么从接口删除（现在 `isTraceEnabled`/`isDebugEnabled` 恒 false + 70 行注释代码）。
 - **配置 464 → ~380**：`ConfigManager` 改为"加载时解析成类型化快照 + volatile 发布"，
   去掉每次 `getConfigNode` 的 `path.split("\\.")` 逐级遍历与缺失即 warn（现在一条系统消息路径有 5–8 次读取）。
@@ -336,12 +362,15 @@ broadcastMinecraftRelay(List<TextSegment>, String componentJson, String componen
 
 ## 7. 交付协议（每轮固定动作）
 
-1. 先写测试（能固化旧行为的先固化）→ 重构 → `./gradlew :core:test` + `./gradlew clean build --warning-mode all`。
-2. 核对产物：根 `build/Discord-MC-Chat-<版本>.jar` 单个通用 JAR；含 `fabric.mod.json` +
-   `META-INF/neoforge.mods.toml` + `dmcc.mixins.json` + 两个入口点 + 三份配置模板 + standalone `Main-Class`。
-3. **删除本轮临时测试**（保留 `SmokeTest`）；清理临时文件（`.tmp-*`、测试产生的 `logs/`、`config/`）。
-4. 更新 `CHANGELOG_TEMP.md`（新增 `## 工作 NN`）与 `README_CN.md`。
-5. `./gradlew --stop`。
+1. 先写测试（能固化旧行为的先固化）→ 重构 → `./gradlew clean build :core:test --warning-mode all`。
+   **只验证"构建成功"**：不跑 `runServer`，也不要为了"开发环境能不能起"去改任何东西。
+2. 核对产物：根 `build/` 里**只有** `Discord-MC-Chat-<版本>.jar`（若又冒出 `build/tmp`，说明
+   `universalJar` 收尾的清理被破坏了）；JAR 内含 `fabric.mod.json` + `META-INF/neoforge.mods.toml` +
+   `dmcc.mixins.json` + 两个入口点 + 三份配置模板 + standalone `Main-Class`，且 0 重复条目。
+3. **删除本轮临时测试**（保留 `SmokeTest`）；清理临时文件（`.tmp-*`、`:core:test` 产生的 `core/logs/`）。
+4. 更新 `CHANGELOG_TEMP.md`（新增 `## 工作 NN`）与 `README_CN.md`；流程/红线有变时同步本文件。
+5. **工作区净化（用户明确要求）**：`./gradlew clean`（删掉所有 `build/`）→ `./gradlew --stop`。
+   用户会亲自看文件管理器，而不只是 `git status`。
 6. `git status` 复核（不留意外未跟踪文件）；向用户交付：
    - 改了什么（用户可见 / 架构）
    - 验证证据（构建 + 测试 + 产物核对 + 行数变化）

@@ -90,7 +90,7 @@ public final class DMCC {
 				} else {
 					LOGGER.info(I18nManager.getDmccTranslation("main.init.info_standalone_env"));
 				}
-				LOGGER.info("DMCC platform: {}", resolvedHost.name());
+				LOGGER.info(I18nManager.getDmccTranslation("main.init.platform", resolvedHost.name()));
 
 				// If configuration fails to load, exit the DMCC-Init thread gracefully
 				// In a Minecraft environment, we just return and let the server continue running
