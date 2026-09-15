@@ -7,6 +7,8 @@ import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.message.TextSegment;
 import com.xujiayao.discord_mc_chat.network.packets.EventPackets.DiscordRelayPacket;
+import com.xujiayao.discord_mc_chat.platform.Platform;
+import com.xujiayao.discord_mc_chat.platform.StatsProvider;
 import com.xujiayao.discord_mc_chat.server.message.DiscordMessageParser;
 import com.xujiayao.discord_mc_chat.utils.LogFileUtils;
 import net.dv8tion.jda.api.entities.Member;
@@ -35,8 +37,6 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
-import com.xujiayao.discord_mc_chat.platform.Platform;
-import com.xujiayao.discord_mc_chat.platform.StatsProvider;
 
 /**
  * Handles Discord JDA events.
@@ -207,8 +207,8 @@ final class DiscordEventHandler extends ListenerAdapter {
 	}
 
 	private List<Command.Choice> getCommandChoices(BiFunction<String, Integer, Map<String, List<String>>> autoCompleteProvider,
-	                                               String currentValue,
-	                                               CommandAutoCompleteInteractionEvent event) {
+												   String currentValue,
+												   CommandAutoCompleteInteractionEvent event) {
 		String target = event.getOption("at", OptionMapping::getAsString);
 		int opLevel;
 		if (target != null && !target.isBlank() && !"all_online_clients".equalsIgnoreCase(target)) {
@@ -573,7 +573,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 	}
 
 	private record CachedMessage(String authorName, String authorRoleColor, String contentRaw,
-	                             List<TextSegment> replySegments,
-	                             boolean systemMessage) {
+								 List<TextSegment> replySegments,
+								 boolean systemMessage) {
 	}
 }

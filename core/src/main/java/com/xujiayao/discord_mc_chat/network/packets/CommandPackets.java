@@ -407,9 +407,9 @@ public final class CommandPackets {
 			 * @param freeMemory              JVM free memory in bytes.
 			 */
 			public ResponsePacket(String serverName, long connectionLatencyMillis, String minecraftVersion,
-			                      int onlinePlayerCount, int maxPlayerCount,
-			                      Map<String, Integer> playersAndLatencies, int playersEverJoined, double tps, double mspt,
-			                      long uptimeSeconds, long totalMemory, long freeMemory) {
+								  int onlinePlayerCount, int maxPlayerCount,
+								  Map<String, Integer> playersAndLatencies, int playersEverJoined, double tps, double mspt,
+								  long uptimeSeconds, long totalMemory, long freeMemory) {
 				this.serverName = serverName;
 				this.connectionLatencyMillis = connectionLatencyMillis;
 				this.minecraftVersion = minecraftVersion;

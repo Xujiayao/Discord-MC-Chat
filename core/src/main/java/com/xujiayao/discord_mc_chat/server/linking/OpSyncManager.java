@@ -4,6 +4,7 @@ import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Link.OpSyncPacket;
+import com.xujiayao.discord_mc_chat.platform.Platform;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.discord.OpLevelResolver;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
@@ -18,7 +19,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
-import com.xujiayao.discord_mc_chat.platform.Platform;
 
 /**
  * Manages the synchronization of OP levels from Discord mappings to Minecraft servers.

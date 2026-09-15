@@ -25,12 +25,6 @@ public final class FabricDMCC implements DedicatedServerModInitializer {
 
 	private static final String PLATFORM_NAME = "fabric";
 
-	@Override
-	public void onInitializeServer() {
-		registerModIntegrations();
-		DMCC.init(new MinecraftPlatformHost(PLATFORM_NAME));
-	}
-
 	/**
 	 * Registers every Fabric-only mod integration whose target mod is currently loaded.
 	 * <p>
@@ -43,6 +37,12 @@ public final class FabricDMCC implements DedicatedServerModInitializer {
 		if (loader.isModLoaded("vanish") || loader.isModLoaded("melius-vanish")) {
 			ModIntegrations.register(new VanishIntegration());
 		}
+	}
+
+	@Override
+	public void onInitializeServer() {
+		registerModIntegrations();
+		DMCC.init(new MinecraftPlatformHost(PLATFORM_NAME));
 	}
 
 	/**

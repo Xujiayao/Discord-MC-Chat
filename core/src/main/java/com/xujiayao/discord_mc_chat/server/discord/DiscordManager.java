@@ -809,7 +809,7 @@ public final class DiscordManager {
 	}
 
 	private static void sendWebhookMessageWithFile(TextChannel channel, String username, String avatarUrl,
-	                                               String content, byte[] fileData, String fileName) {
+												   String content, byte[] fileData, String fileName) {
 		Webhook webhook = getOrCreateWebhook(channel);
 
 		List<Message.MentionType> allowedMentions = getAllowedMentions();
@@ -896,7 +896,7 @@ public final class DiscordManager {
 	 * @param fileName          The file name.
 	 */
 	public static void sendExecuteResultWithFileViaWebhook(String channelIdentifier, String clientName, String message,
-	                                                       byte[] fileData, String fileName) {
+														   byte[] fileData, String fileName) {
 		TextChannel channel = getTextChannel(channelIdentifier);
 		if (channel == null) return;
 

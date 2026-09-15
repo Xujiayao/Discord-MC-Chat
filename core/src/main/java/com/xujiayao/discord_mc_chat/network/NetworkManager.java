@@ -382,9 +382,9 @@ public final class NetworkManager {
 	}
 
 	private static Map<String, List<String>> requestAutoCompleteSnapshot(Map<String, List<String>> cache,
-	                                                                     Packet requestPacket,
-	                                                                     int timeoutSeconds,
-	                                                                     boolean executeRequest) {
+																		 Packet requestPacket,
+																		 int timeoutSeconds,
+																		 boolean executeRequest) {
 		cache.clear();
 
 		int expectedResponses = clientChannels.size();

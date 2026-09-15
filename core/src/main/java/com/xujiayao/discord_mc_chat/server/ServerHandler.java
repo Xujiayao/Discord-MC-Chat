@@ -305,8 +305,8 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	}
 
 	private void handleMinecraftUserMessage(MinecraftEventPacket packet,
-	                                        String sourceClientName,
-	                                        String channelNode) {
+											String sourceClientName,
+											String channelNode) {
 		String rawContent = packet.placeholders.getOrDefault("message", "");
 		String displayName = packet.placeholders.getOrDefault("display_name", packet.placeholders.getOrDefault("player_name", "Unknown"));
 		String roleColor = resolveDisplayRoleColor(packet.placeholders.getOrDefault("player_uuid", ""));
@@ -382,7 +382,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	}
 
 	private void handleMinecraftSystemMessage(MinecraftEventPacket packet, String sourceClientName, String channelNode,
-	                                          String lang, boolean canOverwriteEchoToSource, boolean forceEchoToSource) {
+											  String lang, boolean canOverwriteEchoToSource, boolean forceEchoToSource) {
 		String message;
 		if (packet.type == MinecraftEventPacket.MessageType.SOURCE_ME) {
 			String rawAction = packet.placeholders.getOrDefault("action", "");
@@ -425,14 +425,14 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	}
 
 	private void broadcastMinecraftRelay(MinecraftEventPacket packet,
-	                                     String sourceClientName,
-	                                     List<TextSegment> relaySegments,
-	                                     List<TextSegment> overwriteSegments,
-	                                     MinecraftMessageParser.ParsedMessage parsed,
-	                                     boolean canOverwriteEchoToSource,
-	                                     boolean forceEchoToSource,
-	                                     boolean parseMentionsForNotifications,
-	                                     String broadcastNode) {
+										 String sourceClientName,
+										 List<TextSegment> relaySegments,
+										 List<TextSegment> overwriteSegments,
+										 MinecraftMessageParser.ParsedMessage parsed,
+										 boolean canOverwriteEchoToSource,
+										 boolean forceEchoToSource,
+										 boolean parseMentionsForNotifications,
+										 String broadcastNode) {
 		boolean overwrite = ConfigManager.getBoolean("message_parsing.overwrite_minecraft_source_messages");
 		boolean sourceEchoEnabled = (overwrite && canOverwriteEchoToSource) || forceEchoToSource;
 		boolean supportMinecraftToMinecraftConfig = "standalone".equals(ConfigManager.getMode());
@@ -466,11 +466,11 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	}
 
 	private void broadcastMinecraftTellRawRelay(String sourceClientName,
-	                                            List<TextSegment> relaySegments,
-	                                            List<TextSegment> overwriteSegments,
-	                                            String componentJson,
-	                                            String componentText,
-	                                            boolean useSerializedComponent) {
+												List<TextSegment> relaySegments,
+												List<TextSegment> overwriteSegments,
+												String componentJson,
+												String componentText,
+												boolean useSerializedComponent) {
 		boolean sourceEchoEnabled = ConfigManager.getBoolean("message_parsing.overwrite_minecraft_source_messages");
 		boolean supportMinecraftToMinecraftConfig = "standalone".equals(ConfigManager.getMode());
 		boolean toOtherClients = supportMinecraftToMinecraftConfig && ConfigManager.getBoolean("broadcasts.minecraft_to_minecraft." + "source.tell_raw");

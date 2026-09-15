@@ -64,8 +64,8 @@ public final class NoopPlatformHost implements PlatformHost {
 
 	@Override
 	public void broadcastDiscordChat(List<TextSegment> segments, List<TextSegment> replySegments,
-	                                 String mentionText, String mentionStyle,
-	                                 List<String> mentionedUuids, boolean mentionEveryone) {
+									 String mentionText, String mentionStyle,
+									 List<String> mentionedUuids, boolean mentionEveryone) {
 		// No game attached, nothing to render.
 	}
 
@@ -81,7 +81,7 @@ public final class NoopPlatformHost implements PlatformHost {
 
 	@Override
 	public void broadcastDiscordEdit(List<TextSegment> segments, List<TextSegment> replySegments,
-	                                 List<TextSegment> editedMessageSegments) {
+									 List<TextSegment> editedMessageSegments) {
 		// No game attached, nothing to render.
 	}
 
@@ -92,9 +92,9 @@ public final class NoopPlatformHost implements PlatformHost {
 
 	@Override
 	public void broadcastMinecraftRelay(List<TextSegment> segments, String componentJson,
-	                                    String componentPlaceholder, String mentionText,
-	                                    String mentionStyle, List<String> mentionedUuids,
-	                                    boolean mentionEveryone) {
+										String componentPlaceholder, String mentionText,
+										String mentionStyle, List<String> mentionedUuids,
+										boolean mentionEveryone) {
 		// No game attached, nothing to render.
 	}
 }

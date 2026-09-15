@@ -5,8 +5,8 @@ import com.xujiayao.discord_mc_chat.commands.CommandAutoCompleter;
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.commands.impl.UpdateCommand;
-import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
+import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.message.TextSegment;
 import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.AuthResponsePacket;
@@ -20,6 +20,7 @@ import com.xujiayao.discord_mc_chat.network.packets.EventPackets.MinecraftRelayP
 import com.xujiayao.discord_mc_chat.network.packets.MiscPackets.KeepAlivePacket;
 import com.xujiayao.discord_mc_chat.network.packets.MiscPackets.LatencyPongPacket;
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
+import com.xujiayao.discord_mc_chat.platform.Platform;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import io.netty.channel.ChannelHandlerContext;
@@ -33,7 +34,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
-import com.xujiayao.discord_mc_chat.platform.Platform;
 
 /**
  * Handles client-side network events and handshake protocol.

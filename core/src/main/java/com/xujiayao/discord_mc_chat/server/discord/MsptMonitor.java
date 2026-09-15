@@ -180,9 +180,9 @@ public final class MsptMonitor {
 	}
 
 	private static void notifyMspt(String messageKey,
-	                               CommandPackets.Info.ResponsePacket packet,
-	                               double threshold,
-	                               long nextCheckEpochSeconds) {
+								   CommandPackets.Info.ResponsePacket packet,
+								   double threshold,
+								   long nextCheckEpochSeconds) {
 		JsonNode customMessages = I18nManager.getCustomMessages();
 		if (customMessages == null) {
 			return;

@@ -73,11 +73,11 @@ public final class MinecraftPlatformHost implements PlatformHost {
 
 	@Override
 	public void broadcastDiscordChat(List<TextSegment> segments,
-	                                 List<TextSegment> replySegments,
-	                                 String mentionText,
-	                                 String mentionStyle,
-	                                 List<String> mentionedUuids,
-	                                 boolean mentionEveryone) {
+									 List<TextSegment> replySegments,
+									 String mentionText,
+									 String mentionStyle,
+									 List<String> mentionedUuids,
+									 boolean mentionEveryone) {
 		MinecraftEventHandler.broadcastDiscordChat(segments, replySegments, mentionText, mentionStyle,
 				mentionedUuids, mentionEveryone);
 	}
@@ -94,8 +94,8 @@ public final class MinecraftPlatformHost implements PlatformHost {
 
 	@Override
 	public void broadcastDiscordEdit(List<TextSegment> segments,
-	                                 List<TextSegment> replySegments,
-	                                 List<TextSegment> editedMessageSegments) {
+									 List<TextSegment> replySegments,
+									 List<TextSegment> editedMessageSegments) {
 		MinecraftEventHandler.broadcastDiscordEdit(segments, replySegments, editedMessageSegments);
 	}
 
@@ -106,12 +106,12 @@ public final class MinecraftPlatformHost implements PlatformHost {
 
 	@Override
 	public void broadcastMinecraftRelay(List<TextSegment> segments,
-	                                    String componentJson,
-	                                    String componentPlaceholder,
-	                                    String mentionText,
-	                                    String mentionStyle,
-	                                    List<String> mentionedUuids,
-	                                    boolean mentionEveryone) {
+										String componentJson,
+										String componentPlaceholder,
+										String mentionText,
+										String mentionStyle,
+										List<String> mentionedUuids,
+										boolean mentionEveryone) {
 		MinecraftEventHandler.broadcastMinecraftRelay(segments, componentJson, componentPlaceholder, mentionText,
 				mentionStyle, mentionedUuids, mentionEveryone);
 	}

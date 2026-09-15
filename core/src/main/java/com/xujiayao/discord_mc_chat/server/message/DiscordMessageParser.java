@@ -555,9 +555,9 @@ public final class DiscordMessageParser {
 	}
 
 	private static List<TextSegment> parseRawContent(String raw, Message message,
-	                                                 boolean parseMentions, boolean parseCustomEmojis,
-	                                                 boolean parseUnicodeEmojis, boolean parseMarkdown,
-	                                                 boolean parseHyperlinks, boolean parseTimestamps) {
+													 boolean parseMentions, boolean parseCustomEmojis,
+													 boolean parseUnicodeEmojis, boolean parseMarkdown,
+													 boolean parseHyperlinks, boolean parseTimestamps) {
 		List<TextSegment> segments = new ArrayList<>();
 
 		// Mentions/timestamps are split after Markdown so nested formatting (e.g. **<@id>**) is preserved.
@@ -994,12 +994,12 @@ public final class DiscordMessageParser {
 	}
 
 	private static List<TextSegment> postProcessInlineSegments(List<TextSegment> segments,
-	                                                           Message message,
-	                                                           boolean parseMentions,
-	                                                           boolean parseTimestamps,
-	                                                           boolean parseCustomEmojis,
-	                                                           boolean parseUnicodeEmojis,
-	                                                           boolean parseHyperlinks) {
+															   Message message,
+															   boolean parseMentions,
+															   boolean parseTimestamps,
+															   boolean parseCustomEmojis,
+															   boolean parseUnicodeEmojis,
+															   boolean parseHyperlinks) {
 		if ((!parseMentions && !parseTimestamps && !parseCustomEmojis && !parseUnicodeEmojis && !parseHyperlinks) || segments.isEmpty()) {
 			return segments;
 		}

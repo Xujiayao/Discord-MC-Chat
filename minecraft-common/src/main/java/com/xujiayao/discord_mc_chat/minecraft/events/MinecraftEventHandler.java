@@ -663,8 +663,8 @@ public final class MinecraftEventHandler {
 	 * @param mentionEveryone Whether @everyone should be treated as a global mention in Minecraft.
 	 */
 	public static void broadcastDiscordChat(List<TextSegment> segments, List<TextSegment> replySegments,
-	                                        String mentionText, String mentionStyle,
-	                                        List<String> mentionedUuids, boolean mentionEveryone) {
+											String mentionText, String mentionStyle,
+											List<String> mentionedUuids, boolean mentionEveryone) {
 		if (serverInstance == null) return;
 
 		serverInstance.execute(() -> {
@@ -760,7 +760,7 @@ public final class MinecraftEventHandler {
 	 * @param editedMessageSegments The new (edited) message formatted as chat.
 	 */
 	public static void broadcastDiscordEdit(List<TextSegment> segments, List<TextSegment> replySegments,
-	                                        List<TextSegment> editedMessageSegments) {
+											List<TextSegment> editedMessageSegments) {
 		if (serverInstance == null) return;
 
 		serverInstance.execute(() -> {
@@ -827,9 +827,9 @@ public final class MinecraftEventHandler {
 	 * @param mentionEveryone      Whether @everyone should be treated as a global mention in Minecraft.
 	 */
 	public static void broadcastMinecraftRelay(List<TextSegment> segments, String componentJson,
-	                                           String componentPlaceholder, String mentionText,
-	                                           String mentionStyle, List<String> mentionedUuids,
-	                                           boolean mentionEveryone) {
+											   String componentPlaceholder, String mentionText,
+											   String mentionStyle, List<String> mentionedUuids,
+											   boolean mentionEveryone) {
 		if (serverInstance == null) return;
 
 		serverInstance.execute(() -> {
@@ -975,9 +975,9 @@ public final class MinecraftEventHandler {
 	}
 
 	private static boolean isSelfCandidate(String rawInput,
-	                                       CommandSourceStack source,
-	                                       List<String> nextResult,
-	                                       List<String> currentResult) {
+										   CommandSourceStack source,
+										   List<String> nextResult,
+										   List<String> currentResult) {
 		// Fast path: already present in computed suggestions.
 		if (nextResult.contains(rawInput) || currentResult.contains(rawInput)) {
 			return true;
@@ -1131,8 +1131,8 @@ public final class MinecraftEventHandler {
 	}
 
 	private static Component buildComponentFromSegmentsReplacingPlaceholder(List<TextSegment> segments,
-	                                                                        String placeholder,
-	                                                                        Component replacement) {
+																			String placeholder,
+																			Component replacement) {
 		if (segments == null || segments.isEmpty()) {
 			return replacement;
 		}

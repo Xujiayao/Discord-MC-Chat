@@ -91,19 +91,19 @@ public interface PlatformHost {
 	/**
 	 * Broadcasts a Discord chat message (with optional reply line and mention notification).
 	 *
-	 * @param segments         The main message segments.
-	 * @param replySegments    The reply line segments, or {@code null}.
-	 * @param mentionText      The mention notification text, or {@code null} when nobody was mentioned.
-	 * @param mentionStyle     The configured mention notification style.
-	 * @param mentionedUuids   UUIDs of specifically mentioned players.
-	 * @param mentionEveryone  Whether {@code @everyone}/{@code @here} was used.
+	 * @param segments        The main message segments.
+	 * @param replySegments   The reply line segments, or {@code null}.
+	 * @param mentionText     The mention notification text, or {@code null} when nobody was mentioned.
+	 * @param mentionStyle    The configured mention notification style.
+	 * @param mentionedUuids  UUIDs of specifically mentioned players.
+	 * @param mentionEveryone Whether {@code @everyone}/{@code @here} was used.
 	 */
 	void broadcastDiscordChat(List<TextSegment> segments,
-	                          List<TextSegment> replySegments,
-	                          String mentionText,
-	                          String mentionStyle,
-	                          List<String> mentionedUuids,
-	                          boolean mentionEveryone);
+							  List<TextSegment> replySegments,
+							  String mentionText,
+							  String mentionStyle,
+							  List<String> mentionedUuids,
+							  boolean mentionEveryone);
 
 	/**
 	 * Broadcasts a Discord slash command notification.
@@ -128,8 +128,8 @@ public interface PlatformHost {
 	 * @param editedMessageSegments The new message content segments, or {@code null}.
 	 */
 	void broadcastDiscordEdit(List<TextSegment> segments,
-	                          List<TextSegment> replySegments,
-	                          List<TextSegment> editedMessageSegments);
+							  List<TextSegment> replySegments,
+							  List<TextSegment> editedMessageSegments);
 
 	/**
 	 * Broadcasts a Discord message deletion notification.
@@ -142,19 +142,19 @@ public interface PlatformHost {
 	/**
 	 * Broadcasts a message relayed from another DMCC client.
 	 *
-	 * @param segments                The message segments.
-	 * @param componentJson           Serialized component JSON, or {@code null}.
-	 * @param componentPlaceholder    Placeholder inside {@code componentJson}, or {@code null}.
-	 * @param mentionText             The mention notification text, or {@code null}.
-	 * @param mentionStyle            The configured mention notification style.
-	 * @param mentionedUuids          UUIDs of specifically mentioned players.
-	 * @param mentionEveryone         Whether {@code @everyone}/{@code @here} was used.
+	 * @param segments             The message segments.
+	 * @param componentJson        Serialized component JSON, or {@code null}.
+	 * @param componentPlaceholder Placeholder inside {@code componentJson}, or {@code null}.
+	 * @param mentionText          The mention notification text, or {@code null}.
+	 * @param mentionStyle         The configured mention notification style.
+	 * @param mentionedUuids       UUIDs of specifically mentioned players.
+	 * @param mentionEveryone      Whether {@code @everyone}/{@code @here} was used.
 	 */
 	void broadcastMinecraftRelay(List<TextSegment> segments,
-	                             String componentJson,
-	                             String componentPlaceholder,
-	                             String mentionText,
-	                             String mentionStyle,
-	                             List<String> mentionedUuids,
-	                             boolean mentionEveryone);
+								 String componentJson,
+								 String componentPlaceholder,
+								 String mentionText,
+								 String mentionStyle,
+								 List<String> mentionedUuids,
+								 boolean mentionEveryone);
 }

@@ -2,13 +2,13 @@ package com.xujiayao.discord_mc_chat.commands;
 
 import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
+import com.xujiayao.discord_mc_chat.platform.Platform;
+import com.xujiayao.discord_mc_chat.platform.StatsProvider;
 import com.xujiayao.discord_mc_chat.utils.LogFileUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import com.xujiayao.discord_mc_chat.platform.Platform;
-import com.xujiayao.discord_mc_chat.platform.StatsProvider;
 
 /**
  * Provides auto-complete suggestions for DMCC commands.

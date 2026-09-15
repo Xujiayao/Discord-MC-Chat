@@ -31,23 +31,19 @@ import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
  */
 public final class ConfigManager {
 
-	private static final Path CONFIG_FILE_PATH = Paths.get("./config/discord_mc_chat/config.yml");
-
 	/**
 	 * Operating mode for a standalone DMCC process (no Minecraft attached).
 	 */
 	public static final String MODE_STANDALONE = "standalone";
-
 	/**
 	 * Operating mode where a Minecraft server also hosts the DMCC server.
 	 */
 	public static final String MODE_SINGLE_SERVER = "single_server";
-
 	/**
 	 * Operating mode where a Minecraft server joins an existing DMCC standalone server.
 	 */
 	public static final String MODE_MULTI_SERVER_CLIENT = "multi_server_client";
-
+	private static final Path CONFIG_FILE_PATH = Paths.get("./config/discord_mc_chat/config.yml");
 	private static JsonNode config;
 	private static String mode = "";
 
