@@ -34,8 +34,23 @@ dependencies {
 
 tasks.named("test") {
     useJUnitPlatform()
+
+    // DMCC's SLF4J provider is part of the mod JAR (see logging/impl/ServiceProvider), so tests run with
+    // DMCC's own logger. It writes ./logs relative to the working directory, so the tests are run from
+    // inside build/: their log output lands in build/test-run/logs (swept away by `clean`) and the
+    // project tree stays clean. Note for test authors: the working directory is NOT the project
+    // directory - read project files through the classpath or an absolute path.
+    def testRunDirectory = layout.buildDirectory.dir("test-run")
+    workingDirectory = testRunDirectory
+    doFirst {
+        // A process cannot be started in a directory that does not exist yet.
+        testRunDirectory.get().asFile.mkdirs()
+    }
+
     testLogging {
         events "passed", "skipped", "failed"
+        // DMCC's logger also prints to standard out; surface it so failing test runs can be read.
+        showStandardStreams = true
     }
 }
 

@@ -9,10 +9,12 @@
 ## 0. 当前状态一句话
 
 **第 1 轮（骨架 + 双加载器 + 模组兼容扩展点）已完成、已由用户测试通过并提交**（commit `0bd5d192`）。
-随后又做了两次小改动且都已提交：`工作 05`（第 1.1 轮：修复 IDE 同步 + 单一通用 JAR）、
-`工作 06`（第 1.2 轮：修复 NeoForge 无法启动 + 首启指引换行）。
-**现在处于"第 1.3 轮已改完、等用户审阅 commit"的状态**：工作区里有 4 项小修改（见第 3 节末尾），
-用户 commit 后即开始第 2 轮。
+随后的小改动均已提交：`工作 05`（第 1.1 轮：修复 IDE 同步 + 单一通用 JAR）、
+`工作 06`（第 1.2 轮：修复 NeoForge 无法启动 + 首启指引换行）、
+`工作 07`（第 1.3 轮：日志多语言 + 构建产物与开发环境净化，commit `49bf1082`；
+用户实测 **Fabric / NeoForge / Standalone 三种用法均正常**，其中包括把 SLF4J 服务注册文件移回标准目录这一步）。
+**当前状态**：第 1.3 轮的追加修复"`./gradlew build` 绝不生成 `logs/` 目录"已改完、待用户审阅 commit
+（只涉及 `core/build.gradle`、`LoggerImpl.java` 与两份文档）。用户 commit 后即开始第 2 轮。
 
 ---
 
@@ -71,6 +73,7 @@
     项目里已经没有 `runs {}` 块、没有 `run/` 目录；不要为了"能在开发环境里跑起来"去调整文件布局。
 13. **交付前工作区必须干净**（用户会亲自看文件管理器，不只 `git status`）：
     `./gradlew clean` 删掉所有 `build/`，临时文件、临时脚本、临时测试一律不留。
+    **`./gradlew build` 本身也不得留下 `logs/` 目录**（做法见第 3 节第 1.3 轮第 5 条）。
 
 ---
 
@@ -103,6 +106,19 @@
 4. **日志全部多语言**：`DMCC.java` 里唯一的英文单语日志 `DMCC platform: {}` 改为走 i18n 键
    `main.init.platform`（en: `DMCC is running on platform {}`，zh: `DMCC 正在 {} 平台上运行`）。
    启动横幅与"内部语言文件损坏"两条兜底警告按用户要求**保持硬编码**，不需要翻译。
+5. **构建绝不生成 `logs/` 目录（用户第二次反馈后追加修复）**。`./gradlew build` 会连带跑 `:core:test`，
+   而 SLF4J 服务注册文件回到 `src/main/resources` 后测试类路径上也有 DMCC 的 provider，
+   日志器会按"相对工作目录"建 `./logs`。做法：
+   - `core/build.gradle` 的 `test` 任务把**工作目录设为 `layout.buildDirectory.dir("test-run")`**
+     （并用 `doFirst { mkdirs() }` 保证目录先存在，否则测试 JVM 起不来），于是测试日志落在
+     `core/build/test-run/logs/DMCC_<时间戳>.log`，随 `clean` 一起消失，源码树保持干净；
+     同时 `testLogging.showStandardStreams = true`，DMCC 日志会直接显示在构建输出里。
+     **测试期间 DMCC 的日志器是真实生效的**（不是被静音），需要看日志时直接看 Gradle 输出或那个文件。
+   - `LoggerImpl` 的日志文件改为**首次真正写日志时才创建**（`fileWriter()` 惰性访问器），
+     构造函数不再 `Files.createDirectories("logs")`，因此"取得 logger 但什么都没记"也不会留下空 `logs/`。
+   - ⚠️ **写测试时必须记住：测试的工作目录是 `core/build/test-run`，不是项目目录。**
+     读工程文件请用 classpath 资源或绝对路径，不要用 `Path.of("src/...")` 之类的相对路径。
+     需要临时目录就用 `build/` 下的路径（这样 `clean` 能一并清理）。
 
 ---
 
@@ -143,6 +159,9 @@ broadcastMinecraftRelay(List<TextSegment>, String componentJson, String componen
 - `DMCC.init(PlatformHost)` 接收平台实现并 `Platform.set(...)`；`reload()` 复用同一个 host。
 - 配置目录：`./config/discord_mc_chat/config.yml`；`custom_messages/<lang>.yml`；缓存 `./config/discord_mc_chat/cache/`。
 - 日志：独立模式写 `./logs/DMCC_<时间戳>.log`（`.gitignore` 已忽略 `logs/`、`config/`）。
+  **该文件是惰性创建的**：`LoggerImpl` 只在真正写下第一条日志时才建 `logs/` 与文件；
+  测试的工作目录被设在 `core/build/test-run`，所以测试日志只会出现在 `core/build/test-run/logs/` 里。
+  `R3-1` 要重构 `LoggerImpl`（反射派发 → `enum`）时**不要破坏这两条性质**。
 
 ---
 
@@ -367,7 +386,9 @@ broadcastMinecraftRelay(List<TextSegment>, String componentJson, String componen
 2. 核对产物：根 `build/` 里**只有** `Discord-MC-Chat-<版本>.jar`（若又冒出 `build/tmp`，说明
    `universalJar` 收尾的清理被破坏了）；JAR 内含 `fabric.mod.json` + `META-INF/neoforge.mods.toml` +
    `dmcc.mixins.json` + 两个入口点 + 三份配置模板 + standalone `Main-Class`，且 0 重复条目。
-3. **删除本轮临时测试**（保留 `SmokeTest`）；清理临时文件（`.tmp-*`、`:core:test` 产生的 `core/logs/`）。
+   若根 `build/` 里出现了 `reports/problems/`，那是 Gradle 在报弃用或问题——**去修根因，不要删报告**。
+3. **删除本轮临时测试**（保留 `SmokeTest`）；清理临时文件（`.tmp-*`）。
+   正常情况下 `:core:test` 已不会产生 `core/logs/`（见红线 13），交付前仍顺手扫一遍 `logs` / `config` 目录作为保险。
 4. 更新 `CHANGELOG_TEMP.md`（新增 `## 工作 NN`）与 `README_CN.md`；流程/红线有变时同步本文件。
 5. **工作区净化（用户明确要求）**：`./gradlew clean`（删掉所有 `build/`）→ `./gradlew --stop`。
    用户会亲自看文件管理器，而不只是 `git status`。

@@ -25,7 +25,7 @@ import java.util.Map;
 public final class LoggerImpl implements Logger {
 
 	private static volatile PrintWriter fileWriter;
-	private static boolean fileWriterInitialized = false;
+	private static volatile boolean fileWriterInitialized = false;
 	private static volatile boolean consoleAnsiEnabled = true;
 
 	private final String name;
@@ -73,6 +73,20 @@ public final class LoggerImpl implements Logger {
 			}
 		} else {
 			minecraftLogger = null;
+		}
+	}
+
+	/**
+	 * Returns the log file writer, creating {@code logs/DMCC_<timestamp>.log} on first use.
+	 * <p>
+	 * The file is deliberately not created together with the logger: obtaining a logger - which the
+	 * SLF4J service loader, tooling and unit tests do without ever logging a message - must not leave an
+	 * empty {@code logs/} directory behind.
+	 *
+	 * @return The log file writer, or {@code null} if it could not be created
+	 */
+	private static PrintWriter fileWriter() {
+		if (!fileWriterInitialized) {
 			synchronized (LoggerImpl.class) {
 				if (!fileWriterInitialized) {
 					try {
@@ -88,6 +102,7 @@ public final class LoggerImpl implements Logger {
 				}
 			}
 		}
+		return fileWriter;
 	}
 
 	/**
@@ -137,10 +152,11 @@ public final class LoggerImpl implements Logger {
 			String thread = Thread.currentThread().getName();
 
 			// 1. Log to File (Plain Text, no colors)
-			if (fileWriter != null) {
-				fileWriter.println(StringUtils.format("[{}] [{}/{}]: {}", time, thread, level, msg));
+			PrintWriter writer = fileWriter();
+			if (writer != null) {
+				writer.println(StringUtils.format("[{}] [{}/{}]: {}", time, thread, level, msg));
 				if (t != null) {
-					t.printStackTrace(fileWriter);
+					t.printStackTrace(writer);
 				}
 			}
 

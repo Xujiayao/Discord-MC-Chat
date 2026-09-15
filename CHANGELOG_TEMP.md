@@ -389,8 +389,10 @@
 
 ### 验证
 
-- `./gradlew clean build :core:test --warning-mode all`：**BUILD SUCCESSFUL**（26s，19 个任务），
+- `./gradlew clean build --warning-mode all`：**BUILD SUCCESSFUL**（26s），
   `SmokeTest.versionIsResolvedFromTheBuildResource()` **PASSED**，全量日志零弃用 / 零警告。
+- **构建不再产生任何 `logs/` 目录**：`clean build` 之后全仓库（除 `node_modules`）扫描 `logs` 目录：**零命中**
+  （改法见下节）。
 - 构建结束后根 `build/` 目录内容：**只有 `Discord-MC-Chat-3.0.0-beta.2.jar`**（`build/tmp` 已不再残留）。
 - 产物核对（6,879 条目、**0 重复条目**）：`fabric.mod.json`、`META-INF/neoforge.mods.toml`、`dmcc.mixins.json`、
   `dmcc_version.txt`、`FabricDMCC.class`、`NeoForgeDMCC.class`、
@@ -398,17 +400,44 @@
   `config_multi_server_client.yml` / `config_standalone.yml`）、`custom_messages/{en_us,zh_cn}.yml`、
   `META-INF/THIRD-PARTY-LICENSES.txt` 全部在；`config/mode.yml` 确认不存在；
   清单仍含 `Main-Class: com.xujiayao.discord_mc_chat.standalone.StandaloneDMCC`；
-  重定位后的 SLF4J 服务注册文件内容仍指向 `com.xujiayao.discord_mc_chat.logging.impl.ServiceProvider`。
+  重定位后的 SLF4J 服务注册文件仍指向 `com.xujiayao.discord_mc_chat.logging.impl.ServiceProvider`。
+- **独立模式实测（产物 JAR，非开发运行）**：把 JAR 复制到空目录后 `java -jar` 启动，
+  `logs/DMCC_<时间戳>.log` 正常生成且内容为正确的 UTF-8 中文（"未检测到控制台…"三条 + 关闭成功），
+  证明简化后的日志器仍然正常落盘。
 - 翻译完整性交叉校验：代码中出现的 **218 个 `getDmccTranslation` 键在 `en_us` 与 `zh_cn` 中均存在**；
   两个语言文件的真实键集完全一致（脚本报出的 4 处"仅英文有"是频道看板模板块标量里的
   `Version:` / `Mode:` / `Uptime:` 文案，不是键，属误报）。
 
-### 已知副作用（本轮引入，已知且可控）
+### 修复：构建不再生成 `logs/` 目录（用户反馈后追加）
 
-- `./gradlew :core:test` 现在会在 **`core/logs/` 生成一个空的 `DMCC_<时间戳>.log`**：
-  SLF4J 服务注册文件回到 `src/main/resources` 后，测试类路径上也有了 DMCC 的 provider，日志器按
-  `./logs` 相对工作目录建文件。该目录已被 `.gitignore` 忽略，交付前会删除；`./gradlew build` 不跑测试，不受影响。
-- **若你之后在 IDEA 同步或开发环境再遇到 `Failed to initialize DMCC Logger` / 类初始化递归**，
-  把该文件移回 `core/src/main/shadow-resources/META-INF/services/` 并在 `shadowJar` 里加回
-  `from("src/main/shadow-resources")` 即可，两处改动互不影响发布产物。
+`./gradlew build` 会连带执行 `:core:test`，而 SLF4J 服务注册文件搬回 `src/main/resources` 后也出现在
+测试类路径上，于是测试 JVM 里"仅仅取得一个 logger"就会让 `LoggerImpl` 建出 `core/logs/DMCC_<时间戳>.log`
+（空文件）。改法是两处，都很小：
+
+1. **测试的工作目录改到 `build/` 里面**（`core/build.gradle`）：DMCC 的日志器按
+   `./logs`（相对工作目录）落盘，因此让测试从 `build/test-run/` 启动即可 —— 日志出现在
+   `core/build/test-run/logs/DMCC_<时间戳>.log`，随 `./gradlew clean` 一起被清掉，源码树保持干净。
+   同时打开 `testLogging.showStandardStreams`，DMCC 打到标准输出的日志会直接显示在
+   Gradle 的构建输出里（**测试期间 DMCC 的日志器是真实生效的**，不再被静音）。
+2. **日志文件改为"首次真正写日志时才创建"**（`LoggerImpl`）：原先在**构造 logger 时**就
+   `Files.createDirectories("logs")`，现在提取为 `fileWriter()` 惰性访问器，构造函数只记录环境。
+   这样"取得 logger 但一条都没记"（IDE 里单跑测试、工具扫描类路径等）不会留下空日志文件；
+   真正记日志时行为与以前完全一致。
+
+验证用的临时测试（1 项，交付前已删除）：断言测试的工作目录是 `build/test-run`，通过
+`Constants.LOGGER.info(...)`（走 SLF4J → `LoggerImpl`）真实写出日志，读取
+`build/test-run/logs/DMCC_*.log` 并确认内容含该消息，同时确认 `core/logs` 与仓库根 `logs` 都不存在。
+结果 PASSED，且该日志行在同一次构建输出里以
+`[15:41:39] [Test worker/INFO]: probe message into the log file` 的形式可见。
+删除临时测试后再跑 `./gradlew clean build :core:test --warning-mode all`：
+**BUILD SUCCESSFUL，全仓库零 `logs` 目录，根 `build/` 只有那个 JAR**。
+
+> 给后续轮次的提醒：测试的工作目录不再是项目目录，测试里读工程文件要用 classpath 资源或绝对路径。
+> 这条已写进 `core/build.gradle` 的注释与 `TEMP_TODO.md`。
+
+> 备用回滚点：若在 IDEA 同步或开发环境再次遇到 `Failed to initialize DMCC Logger` / 类初始化递归，
+> 把 `core/src/main/resources/META-INF/services/org.slf4j.spi.SLF4JServiceProvider` 移回
+> `core/src/main/shadow-resources/META-INF/services/`，并在 `shadowJar` 里加回
+> `from("src/main/shadow-resources")`。发布 JAR 的内容两种放法完全一致。
+
 
