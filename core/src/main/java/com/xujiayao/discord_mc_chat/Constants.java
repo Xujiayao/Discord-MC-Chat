@@ -8,6 +8,7 @@ import tools.jackson.dataformat.yaml.YAMLFactory;
 import tools.jackson.dataformat.yaml.YAMLMapper;
 import tools.jackson.dataformat.yaml.YAMLWriteFeature;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -47,8 +48,17 @@ public final class Constants {
 
 	/**
 	 * Shared OkHttp client instance.
+	 * <p>
+	 * Timeouts are set explicitly rather than relying on the library defaults, because every caller is on a
+	 * latency-sensitive path (player-name lookups during chat parsing, the update check behind
+	 * {@code /dmcc update}) and must not be able to stall a chat message or a Netty IO thread.
 	 */
-	public static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
+	public static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient.Builder()
+			.connectTimeout(10, TimeUnit.SECONDS)
+			.readTimeout(15, TimeUnit.SECONDS)
+			.writeTimeout(15, TimeUnit.SECONDS)
+			.callTimeout(20, TimeUnit.SECONDS)
+			.build();
 
 	/**
 	 * Whether Minecraft source messages should be overwritten by DMCC formatting.

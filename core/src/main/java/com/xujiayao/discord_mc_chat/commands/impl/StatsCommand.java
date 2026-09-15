@@ -23,11 +23,6 @@ import java.util.stream.Stream;
  */
 public final class StatsCommand implements Command {
 
-	/**
-	 * Creates a stats command instance.
-	 */
-	public StatsCommand() {
-	}
 
 	/**
 	 * Gets the platform's stats provider.
@@ -86,11 +81,13 @@ public final class StatsCommand implements Command {
 				String uuidStr = fileName.substring(0, fileName.length() - 5);
 				try {
 					UUID.fromString(uuidStr);
-					int value = JsonUtils.getStat(p, normalizeMinecraftNamespace(type), normalizeMinecraftNamespace(stat));
-					if (value > 0) {
-						count++;
-					}
-				} catch (Exception ignored) {
+				} catch (IllegalArgumentException ignored) {
+					// Not a player stats file; skip it.
+					continue;
+				}
+				int value = JsonUtils.getStat(p, normalizeMinecraftNamespace(type), normalizeMinecraftNamespace(stat));
+				if (value > 0) {
+					count++;
 				}
 			}
 		} catch (Exception ignored) {
@@ -108,28 +105,8 @@ public final class StatsCommand implements Command {
 	@Override
 	public CommandArgument[] args() {
 		return new CommandArgument[]{
-				new CommandArgument() {
-					@Override
-					public String name() {
-						return "type";
-					}
-
-					@Override
-					public String description() {
-						return I18nManager.getDmccTranslation("commands.stats.args_desc.type");
-					}
-				},
-				new CommandArgument() {
-					@Override
-					public String name() {
-						return "stat";
-					}
-
-					@Override
-					public String description() {
-						return I18nManager.getDmccTranslation("commands.stats.args_desc.stat");
-					}
-				}
+				new CommandArgument("type", I18nManager.getDmccTranslation("commands.stats.args_desc.type")),
+				new CommandArgument("stat", I18nManager.getDmccTranslation("commands.stats.args_desc.stat"))
 		};
 	}
 
@@ -176,7 +153,8 @@ public final class StatsCommand implements Command {
 								}
 								leaderboard.put(name, value);
 							}
-						} catch (Exception ignored) {
+						} catch (IllegalArgumentException ignored) {
+							// Not a player stats file; skip it.
 						}
 					});
 		} catch (Exception e) {

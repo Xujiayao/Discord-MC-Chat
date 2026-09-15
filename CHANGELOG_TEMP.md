@@ -440,4 +440,385 @@
 > `core/src/main/shadow-resources/META-INF/services/`，并在 `shadowJar` 里加回
 > `from("src/main/shadow-resources")`。发布 JAR 的内容两种放法完全一致。
 
+## 工作 08
 
+记录日期：2026/9/15（**第 2 轮：解析层统一 + 报文层换代 + 命令层收敛 + 去重与死代码清理**；尚未定版）。
+
+> 本轮**功能零删减**：只做结构统一、去重、换实现与删死代码。所有对外行为、配置项、命令、
+> 日志文案与渲染结果都保持不变（下文"已知的有意行为修正"一节逐条列出并说明了唯一几处刻意的修正）。
+
+### 一、解析层统一（R2-1）
+
+**改动前**：`DiscordMessageParser`(1592) + `MinecraftMessageParser`(781) + `MessageParserCommon`(289)
++ `TextSegment`(120) + `TextSegmentUtils`(80) = 2862 行，其中同一套"找 token → 切段 → 加样式"逻辑按
+token 类型各写一份（约 16 个 `splitSegmentsByXxx` 方法），7 个 `buildXxxSegments` 结构同形，
+两套 markdown 状态机各写一份。
+
+**改动后**（`core/.../server/message/`）：
+
+| 文件 | 行数 | 职责 |
+|:--|--:|:--|
+| `DiscordMessageParser` | 745 | Discord → MC 的解析入口与各事件模板渲染（**已彻底脱离 JDA**） |
+| `MinecraftMessageParser` | 452 | MC → Discord / MC → MC 的解析与提及目录 |
+| `MessageParserCommon` | 462 | 共享 token 正则表、通用切分器、时间戳、占位符、多语言提及通知 |
+| `MarkdownParser` | 337 | 统一的 markdown 扫描器（两种方言） |
+| `MessageTemplates` | 142 | `custom_messages` 模板渲染器 |
+| `MentionResolver` | 45 | 提及解析接口（**不含 JDA**） |
+| `MessageExtras` | 42 | 消息的非文本部分（附件/贴纸/嵌入/组件/投票） |
+| `TextSegment` | 163 | 富文本片段模型（吸收了原 `TextSegmentUtils`） |
+
+1. **通用 token 表**：`MessageParserCommon.TokenRule(pattern, styler)` + `splitByPattern(...)`
+   取代了 12 个 `splitSegmentsByXxx`；另有一个**单次左到右扫描**的 `splitByRules(...)`
+   用于"markdown 关闭"的路径，保证 `||<@1>||` 这类剧透提及整体优先于其中的普通提及，
+   且**已经渲染出来的文本不会被下一条规则再次匹配**。这一条是写测试时抓到的真实回归：
+   最初的实现把剧透提及先替换成 `[@everyone]`，随后普通 everyone 规则又匹配到其中的
+   `@everyone`，把结果切成了 `[` + `[@everyone]` + `]`。
+2. **markdown 扫描器共享、方言显式**：`MarkdownParser` 提供
+   `parseDiscordMarkup`（反斜杠转义**会被消费**、分隔符必须**成对闭合**）
+   与 `parseMinecraftMarkup`（反斜杠**原样保留**、已激活的分隔符**切换关闭**、样式可跨行延续）。
+   两者共享分隔符匹配、闭合查找、样式记账与片段产出，但**扫描主体刻意不合并**：
+   差异不是风格问题而是语义问题（已用差分测试证明强行合并会在两处产生不同输出）。
+   据此，"转义不对称"**不是 bug 而是刻意保留**——Discord 的 markdown 规范本来就定义 `\` 为转义，
+   而 MC 聊天文本没有转义语义，若统一消费 `\`，玩家输入的 `C:\new` 会变成 `C:new`。
+3. **模板渲染收敛**：`MessageTemplates.of(node).with(k, v).content(...).render()`
+   取代 11 个 `buildXxxSegments`。一个直接收益见下文"行为修正"。
+4. **解析器脱离 JDA**：`MentionResolver` + `MessageExtras` 把"取提及"和"取附件/嵌入/投票"
+   抽象成纯数据，JDA 只在新的 `server/discord/DiscordMessageAdapter` 里出现。
+   由此解析算法可以用纯字符串做单元测试（本轮 17 个解析测试就是这么跑的）。
+
+### 二、报文层换代（R2-2）
+
+**改动前**：`network/packets/` 5 个类文件共 30 个嵌套数据包类 + `network/serialization/`
+的 `JavaSerializerEncoder/Decoder`，载荷为 **Java 原生序列化**。
+
+**改动后**：`core/.../network/protocol/`：
+
+- `Packet`（接口，只有一个 `type()`）、`PacketType`（23 个取值）、
+  `Packets`（全部报文以 **record** 形式定义）、`PacketCodec`、
+  `JsonPacketEncoder` / `JsonPacketDecoder`、`CommandFileAssembler`。
+- 线格式是两字段 JSON 信封 `{"type":"…","payload":{…}}`，解码走**显式的
+  `PacketType → record` 映射表**（不是类名反射，对端无法诱导接收方实例化任意类）。
+- **Java 原生序列化已从协议中彻底移除**（`ObjectInputStream` / `ObjectOutputStream` 不再出现在
+  任何地方），关闭了认证前反序列化对端字节的 RCE 面。
+- **大文件分帧**：`/log` 返回的文件按 **256 KiB 原始字节 → base64** 切片，每片一个
+  `CommandFileChunk` 帧，接收端按**片序号**重组（与到达顺序无关，>64 MiB 直接拒绝），
+  因此**超过 1 MiB 的日志不再撑爆分帧上限、不再打断连接**。
+  （备注：最初把分片塞进同一个 `CommandResult` 里，等于没解决问题——一帧仍是 4 MiB；
+  写测试时发现并改成了真正的逐帧分片。）
+- **报文合并**：`Console`/`Execute` 的自动补全请求与响应（4 个类完全相同）合并为
+  `AutoCompleteRequest` / `AutoCompleteResult`（用 `RpcKind` 区分）；
+  两个方向的命令请求合并为 `CommandRequest`，命令/更新结果合并为 `CommandResult`。
+- **不可变**：所有报文都是 record，`InfoSnapshot` 提供 `withServerName/withMinecraftVersion/
+  withConnectionLatency` 三个拷贝方法取代原来的字段直改。
+
+### 三、命令层收敛（R2-3）
+
+- `Command.CommandArgument` 由接口改为 **record**，删掉 9 处匿名内部类（每个 12 行）。
+- 新增 `Command.usage(args...)`，`CommandManager`（2 处）与 `CommandAutoCompleter`（1 处）
+  重复的 usage 拼接收敛为一次调用。
+- 新增 `CommandTargets`：`/console` 与 `/execute` 的**目标校验与解析完全合并**
+  （两处逐字重复的 `isValidTarget` 与两段相同的 `all_online_clients` / 离线 / 非法目标分支）。
+- 删除 13 个只为了"显式"而存在的空构造器与随之失效的 import。
+
+### 四、server / discord 去重（R2-4）
+
+- `ServerHandler.channelRead0`（原 170 行、两个 30 分支 switch + 内联握手）拆分为
+  `handleHandshake` / `handleAuthResponse` / `handleMinecraftEvent` / `handleCommandResult` /
+  `handleCommandRequest` / `handleAutoCompleteResult` / `handleLinkRequest` / `handleUnlinkRequest`，
+  并把重复 5 次的"翻译原因 → 记日志 → 发 `Disconnect` → `close()`"提取为
+  `reject(ctx, peerName, key, args...)`。
+- `DiscordManager`：`sendBotMessage` 与 `sendBotMessageSync` 合并；standalone→webhook /
+  single_server→bot 的**同一套分派与日志前缀逻辑**（原来在 `sendMinecraftSystemMessage`、
+  `clientBroadcast`、`sendMsptMonitoringMessage`、`sendConsoleChunk` 里各写一遍）
+  提取为 `postServerMessage(...)`。
+- **每消息重编译正则改为按配置变更缓存**：`ServerHandler.isExcludedMinecraftCommand`
+  原先用 `Pattern.matches(...)` **对每条玩家命令重新编译**每个排除规则；
+  `DiscordManager.applySensitiveRedaction` 原先**对每一行控制台输出重新编译**每个脱敏规则。
+  现在两者都按"规则列表指纹"缓存已编译的 `Pattern`，配置 reload 后自动失效重建
+  （语法错误只在配置变化时告警一次，而不是每行一次）。
+- `broadcastMinecraftRelay` 与 `broadcastMinecraftTellRawRelay` 的两套
+  "是否转发给其它子服 / 是否回显给源"判定收敛为 `relayTargets(...)` + `RelayTargets`。
+- `ChannelUpdateManager`：删除 `buildOfflineContext()` 与 4 个一行转发包装
+  （`updateXxxAsync/Sync`），调用点直接用 3 参方法。
+- 新增多语言键 `server.network.invalid_excluded_command_regex`（en/zh 同步补齐）。
+
+### 五、minecraft-common 去重（R2-5）
+
+- `buildComponentFromSegments` 与 `buildComponentPart` 是**同一套样式管线的两份实现** →
+  只留一份（前者改为循环调用后者）；顺带让 `segment.text == null` 不再抛异常而是渲染为空串。
+- 删除 `copySegmentWithText`（与 `TextSegment.copyOf` 逐字相同）。
+- 3 处 `serverInstance.execute(() -> { try {…} catch (Exception ignored) {} })` 外壳提取为
+  `onServerThread(Consumer<MinecraftServer>)`。
+- 6 个广播方法里共 **12 处逐玩家发送循环**提取为 `broadcast(Component)`；
+  `broadcastDiscordChat` 与 `broadcastMinecraftRelay` 里逐字重复的提及通知块提取为
+  `notifyMentionedPlayers(...)`。
+- 两处逐字相同的 11 行 `new CommandSourceStack(...)` 提取为 `dmccSource(...)` + `DMCC_SOURCE_NAME`。
+- `RegistryOps.create(...)` 由**每消息重建**改为 `onServerStarted` 时建一次并缓存。
+- `MinecraftCommands`：两个嵌套 record 的 `reply()` 与 4 步权限探测提取为共享静态方法；
+  `getPlayerUuid()` / `getPlayerName()` 返回 null 的问题**修掉**（改为构造时捕获玩家身份）。
+- `MixinServerGamePacketListenerImpl` 两个注入方法体完全相同 → 提取 `postPlayerCommand(...)`。
+
+### 六、死代码清理（R2-6）
+
+- 删除 `network/packets/`（30 个类）与 `network/serialization/`（2 个类）整棵树。
+- 删除 `TextSegmentUtils`（4 个方法并入 `TextSegment`）。
+- `LoggerImpl` 删除 10 行被注释掉的 `// log("TRACE", …)` 死代码，并补注释说明
+  TRACE/DEBUG 为何是刻意的空实现。
+- `ExecutorServiceUtils.shutdownAnExecutor`：原来 `catch (Exception ignored)` 连
+  `InterruptedException` 一起吞掉且丢弃中断标志 → 改为只捕获 `InterruptedException`
+  并 `Thread.currentThread().interrupt()` 恢复中断状态。
+- `StatsCommand` 两处 `catch (Exception ignored)` 缩窄为 `catch (IllegalArgumentException)`
+  （那里唯一可能抛出的就是 `UUID.fromString`），并注明"不是玩家存档文件，跳过"。
+- `OpSyncManager` 的 `RejectedExecutionException` 空捕获补注释说明为何可以静默丢弃。
+- 保留但已确认**属于刻意行为**的空捕获（未改动）：`EnvironmentUtils` 的类存在性探测、
+  `NettyClient` 关停期等待、`JsonUtils.getStat` 读不到统计文件即返回 0、
+  `DiscordManager` 非法 URL 跳过 click 事件、`ChannelUpdateManager` 限流丢弃
+  （这里**刻意不用 `queue()`**：单参 `queue()` 会让 JDA 把每一次"预期内的限流丢弃"都打成错误日志）。
+
+### 已知的有意行为修正（共 4 处，其余为零变化）
+
+1. **`{server_color}` 占位符以前是失效的**：旧实现按"先替换 `{server}`、再替换 `{server_color}`"
+   的顺序做字符串替换，而 `{server}` 是 `{server_color}` 的前缀，于是
+   `color: "{server_color}"` 被替换成 `SMP_color`（非法颜色，最终回退默认色）。
+   新实现改为**单次扫描**替换，因此 **`[子服名]` 前缀现在真的会按配置上色**，
+   替换结果也不会被二次扫描。
+2. **Discord → MC 方向现在也支持 `{display_name}`**：`xxxxx_to_minecraft.user_message` /
+   `system_message` 是 D→MC 与 MC→MC 共用的模板，旧实现只在 MC→MC 方向替换 `{display_name}`。
+3. **同一片段里多个 `{message}` 现在会被依次插入**（旧实现只处理前两个分段，
+   第二个 `{message}` 之后的文本会被丢弃）。
+4. **无法解析的 `<t:…>` 时间戳在两个解析路径下表现一致**（都保留原 token 并标黄）；
+   旧实现里"markdown 关闭"路径会把它当普通文本。
+
+> 以上 4 处都是"旧实现自相矛盾/明显失效"的地方，且都不删减功能。如希望保持旧观感请告知。
+
+### 验证
+
+- **差分测试（临时，交付前已删除）**：把改动前的解析实现**逐字复制**成测试夹具
+  `LegacyDiscordParser`，与新区块做逐片段比对（文本 + 5 个样式位 + 颜色 + click + hover）：
+  - Discord markdown 扫描器：固定语料 50 例 + **随机 4000 例**全等；
+  - Minecraft markdown 扫描器：固定语料 41 例 + **随机 4000 例**全等；
+  - D→MC 整条内容管线（含 ANSI 代码块）：固定语料 × markdown 开/关 + **随机 2000 例 × 2** 全等；
+  - 截断（主行 6 行/200/400、CJK、回复 1 行/20~40）：**随机 3000 例 + CJK 200 例**全等。
+  这套差分测试在开发过程中**抓到 2 个真实回归**（Minecraft 方言在 `__` 不可消费时未回退到 `_`；
+  markdown 开启时剧透提及被二次匹配），均已修复。
+- **协议测试（临时，交付前已删除）**：全部 23 种报文逐一 JSON 往返（用
+  `encode(decode(encode(p))) == encode(p)` 做逐字节等价比对，可发现任何字段丢失/静默默认值）；
+  线格式确认是 JSON 且不含 Java 序列化魔数；未知字段容忍；畸形帧/未知类型/缺 payload
+  一律抛 `ProtocolException`；3 MiB + 12,345 字节随机文件切分后**每一帧都 < 1 MiB**，
+  打乱顺序喂给重组器后与原文件逐字节相等；缺片时返回 null 而不是半截数据；分片元数据校验。
+- 交付前完整协议命令 `./gradlew clean build :core:test --warning-mode all`：**BUILD SUCCESSFUL（24s）**，
+  无警告、无弃用提示。
+- 产物核对：根 `build/` **只有** `Discord-MC-Chat-3.0.0-beta.2.jar`（13,232,980 字节、6873 条目、**0 重复**），
+  内含两个加载器元数据、`dmcc.mixins.json`、`dmcc_version.txt`、两个入口点、
+  `MinecraftPlatformHost.class`、三份配置模板与两份 `custom_messages`，
+  `Main-Class` 仍为 `StandaloneDMCC`；旧的 `network/packets/Packet.class`、
+  `network/serialization/JavaSerializerDecoder.class` 与 `config/mode.yml` **确认不存在**。
+
+### 行数变化
+
+- **主源码（`*/src/main/**/*.java`）：2108 增 / 4218 删 = 净 −2110 行**。
+- 文档与资源：+18 行（README §9/§8.3 改写、lang 新增 1 键 ×2 语言）。
+- 工作区整体：净 −2094 行。
+
+> 与第 2 轮计划（目标 ≈ −4800）有差距，原因见下节"与计划的偏差"，均为主动选择而非遗漏。
+
+### 与计划的偏差（及理由）
+
+1. **R2-1 只拿到 −518（解析层），而非 −1800**。原因是新结构带完整 javadoc 的
+   `MarkdownParser` / `MessageTemplates` / `MentionResolver` / `MessageExtras` 共 566 行，
+   把去重收益吃掉了大半；而两套 markdown 扫描器经差分测试证明**不能**强行合并
+   （语义不同），因此保留了双实现。
+2. **R2-2 只拿到约 −530，而非 −950**。报文改为 record 后注释量上升；
+   `CommandFileChunk` + `CommandFileAssembler` + 打包器是**新增**的正确性代码
+   （真正的逐帧分片）。
+3. **R2-3 未做"13 个命令类按域合并为 4 个"**：逐条核对后，各命令的业务逻辑差异较大，
+   合并主要是**搬家**而不是**删代码**，还会让 `CommandManager` 的注册表变得间接；
+   本轮只做了证据充分的三处去重（`CommandArgument` record、`usage()`、`CommandTargets`）。
+4. **R2-4 未做 `DiscordManager` 的物理拆分**（JDA 生命周期 / 消息派发 / 控制台转发）：
+   控制台转发那一块与 `DiscordManager` 的私有状态（`jda`、webhook、头像解析、日志脱敏）
+   耦合较深，拆出去需要把一批私有方法提升为包级可见，收益（可读性）与风险（改动
+   `/log`、控制台转发这两条用户天天用的路径）不成正比。本轮改为**在类内部消重**
+   （见第四节），把拆分留到有实际需求时再做。
+5. **R2-5 的 `broadcastToPlayers(Component, List<String>)` 未新增**：核对后文件里没有
+   对应的调用点，加了就是新的死代码。
+6. **`ChannelUpdateManager` 的 `queue(_ -> {}, _ -> {})` 未改成单参 `queue()`**：
+   单参 `queue()` 会让 JDA 把每一次预期内的限流丢弃都打成错误日志，属行为变化，故保留双空回调。
+
+### 人工测试清单（请在真机上逐项确认）
+
+1. **解析与渲染（最重要）**：以下 12 条语料各发一次，核对 MC 端显示与 Discord 端显示：
+   ① `**粗体** *斜体* __下划线__ ~~删除线~~`；② `||剧透内容||` 与 `||<@某人>||`；
+   ③ ` ```ansi` 代码块（含 `\u001B[31m` 红色、`\u001B[1m` 粗体）；
+   ④ `<t:1700000000:R>` 等 9 种时间戳样式；⑤ `<@用户>`、`<@&角色>`、`<#频道>`、`@everyone`；
+   ⑥ `<:name:id>` 与 `:alias:` 表情；⑦ Markdown 链接与裸链接（点击能否打开、hover 是否有提示）；
+   ⑧ 图片/视频/文件附件 + 剧透附件；⑨ 嵌入消息；⑩ 投票；⑪ 超长消息（>6 行、>200 字符、含中文）；
+   ⑫ 回复一条多行消息（回复行应只有 1 行且以 `...` 结尾）。
+   **重点看 ⑪⑫ 的截断位置，以及中文消息是否走 400 字符档。**
+2. **`{server_color}` 修正**：把 `custom_messages/zh_cn.yml` 的
+   `xxxxx_to_minecraft.user_message` 第一段保持 `color: "{server_color}"`，
+   在 `standalone` 模式下确认 `[子服名]` **按子服颜色显示**（改前是白色）。
+3. **命令矩阵**：13 个命令 × OP 等级（−1 / 0 / 4）× 三种模式跑一遍，
+   重点确认 `/console`、`/execute` 的 `all_online_clients` 展开与错误提示（无在线子服/非法目标/子服离线）。
+4. **`/log` 取大文件**：让子服 `latest.log` **超过 1 MiB**，从 Discord 执行
+   `/execute at:<子服> command:/log latest.log`，确认**文件完整送达且连接不中断**
+   （改前会触发分帧超限并直接断开该子服连接）。
+5. **控制台转发与脱敏**：`console_forwarding.filter_regex` 配一条能命中的规则，
+   确认转发内容被替换为 `redacted`；故意写一条非法正则，确认只在配置变化时告警一次。
+6. **账户绑定全流程**：验证码 → `/link` → 角色颜色 → OP 同步（`/whitelist` 与
+   `sync_op_level_to_minecraft`），并确认 `/dmcc info` 的每个子服信息齐全。
+7. **两平台各跑一遍**：Fabric 与 NeoForge 分别加载该 JAR，确认能启动、能双向转发；
+   `standalone` 模式下确认 `java -jar` 仍能启动并生成日志。
+## 工作 09
+
+记录日期：2026/9/15（**第 3 轮：内部瘦身 + 并发/性能/正确性修正**；尚未定版）。
+
+> **本轮全部内容按定义"用户无感知"**：没有改动任何配置键、命令、消息文案、日志格式、渲染结果与
+> 界面数字。原本计划里的**用户可见部分（YAML 可读性改造 + 文档收尾）已经拆到第 4 轮**，
+> 见 `TEMP_TODO.md` 第 7 节——这样第 3 轮与第 4 轮可以分开核对。
+
+### 一、日志 / 配置 / 工具瘦身
+
+1. **`LoggerImpl` 去掉反射派发与每行格式化分配**
+   - `Map<String, Method>` + `log("INFO", …)` 字符串查表 → 私有 `enum Level`，每个常量缓存自己的
+     ANSI 颜色与两个反射 `Method`（`volatile`），调用点改为 `log(Level.INFO, …)`。
+   - `new SimpleDateFormat("HH:mm:ss")`（**每行一次对象分配 + 一次内部锁**）→ `DateTimeFormatter` 常量。
+   - `StringUtils.escape()` 先单次扫描，无特殊字符时直接返回原串（原来每行做 5 次 `replace`、
+     分配 5 个中间字符串）；`StringUtils.format()` 里 `str.matches(".*%\\d+\\$s.*")`
+     **每次调用都重新编译正则** → 改为预编译 `Pattern` + `find()`。
+   - 日志文本格式**逐字未变**（`[时间] [线程/级别]: 消息`，文件版无色、控制台版带 ANSI）。
+2. **`ConfigManager` 修正三个真实缺陷（全部校验能力原样保留）**
+   - `config` / `mode` 加 `volatile`：它们由 reload 线程写、被其它线程读，原来没有任何发布保证。
+   - `getConfigNode` 每次调用都 `path.split("\\.")` → 切分结果按路径缓存（一条系统消息路径要读 5–8 次）。
+   - **缺失路径告警由"每次读取都打"改为"每个配置版本每条路径打一次"**：像
+     `console_forwarding.channel` 这类在当前模式下合法缺失的可选键，原来会在每次握手/事件时刷 WARN。
+   - 新增 `getBoolean(path, default)` 重载，并修掉 `ExecutorServiceUtils` 在"配置尚未加载就关停"时
+     `ConfigManager.getBoolean(...)` 返回 `null` 拆箱 NPE 的问题。
+3. **`I18nManager` 线程安全**：`DMCC_TRANSLATIONS` 原为普通 `HashMap`，会在**客户端登录时的 Netty 线程**
+   被 `clear()` + 重填，而读取来自 MC / JDA / 日志线程 → 改为"构建新 map → `Map.copyOf` → 一次性
+   volatile 发布"，读者永远看不到半满的表；`language` / `customMessages` 加 `volatile`。
+   附带：翻译加载失败时**保留上一份可用快照**，而不是像原来那样清空成"到处显示键名"。
+4. **`MojangUtils` 加 TTL 与负缓存**：原来只缓存成功、失败完全不缓存 → Mojang 故障期间每条聊天消息都会
+   为每个未解析 UUID 重发一次阻塞 HTTP。现在离线 UUID 永久缓存、在线成功 24h、**失败 5 分钟**；
+   且失败时若之前成功解析过，**继续返回上次已知名字**而不是退化成裸 UUID（避免可见退化）。
+5. **`LogFileUtils.readLogFile` 收敛路径**：原来 `resolve(fileName).normalize()` 后直接读，
+   `/log ../../server.properties` 可穿越出 `./logs`；现在校验规范化后的路径仍在 `./logs` 内。
+6. **`JsonUtils`** 三个 `toStringMap` 重载收敛为一个实现。
+7. **`Constants.OK_HTTP_CLIENT`** 显式设置超时（连接 10s / 读 15s / 写 15s / 整次调用 20s），
+   原来完全依赖库默认值，而调用方都在延迟敏感路径上（聊天中的名字解析、`/dmcc update`）。
+
+### 二、并发与性能修正
+
+1. **`NetworkManager.requestInfoSnapshot` 改为按请求关联**（原来 `infoCache.clear()` 在加锁之前、
+   `expectedResponses` 取快照导致中途断连必然等满超时、**响应无请求关联**，四个调用线程
+   ——MSPT 每 10s、Presence 每 30s、频道看板每 10min、`/info`——会互相清缓存甚至消费上一轮的数据）。
+   现在：注册与广播都在 `infoLock` 内完成、**每个调用方拥有自己的 `LinkedHashMap`**、
+   等待集合每次唤醒重算（客户端断连会立即唤醒等待者）、按服务名"最新值优先"、返回结构不变。
+   协议报文形状未改（`Packets.InfoSnapshot` 没有可回显的时间戳字段，因此用内部请求 id 而不是时间戳回显；
+   用 `connectionLatencyMillis` 反推会受两端时钟偏差影响，反而会丢掉健康客户端的应答）。
+2. **`CommandManager`**：单线程执行器 → **虚拟线程**（`DMCC-Command-<n>`，仍固定 mod 类加载器）；
+   `COMMANDS` 改为 `volatile`，`initialize()` **构建新表后一次性替换**（消除 reload 期间"未知命令"窗口）；
+   新增**公平读写锁**：console/execute/info/help/log/stats/links/update 走读锁（完全并发），
+   reload/shutdown/link/unlink/whitelist 走写锁（保持原有的串行语义，避免与 reload 交叠）。
+   `execute`/`executeAndWait` 把 volatile 执行器读进局部变量，顺带消除"另一线程 shutdown 抢在 check 与
+   submit 之间"的潜在 NPE。
+3. **把阻塞工作移出 Netty IO 线程**
+   - `MinecraftMessageParser` 的提及目录改为**带 60 秒 TTL 的不可变缓存 + 单飞重建**：
+     原来每条消息都重建全量别名表，并对每个已绑定账户做**阻塞 JDA 调用**（`retrieveUser`/`retrieveMember`）。
+     新增 `invalidateMentionCache()`，并在 `OpSyncManager.syncAll()`（每次 link/unlink 成功后都会调用）
+     与 `LinkedAccountManager.load()`（含手工编辑 links.json 后 reload）处失效。
+   - `DiscordManager.getOrCreateWebhook` 每条 webhook 消息都做阻塞 `retrieveWebhooks().complete()`
+     → 按频道缓存句柄；遇到 `UNKNOWN_WEBHOOK` 时精确失效并**只重试一次**，其它错误不重试。
+   - `DiscordEventHandler.onCommandAutoCompleteInteraction` 原来阻塞单线程 JDA 事件池最长 5 秒
+     （Discord 补全截止是 3 秒，期间所有 Discord 事件停摆）→ 权限快路径留在事件线程，
+     候选计算移到 `DMCC-Autocomplete` 执行器。
+4. **`BotPresenceManager` 真防抖**（500ms 尾随防抖 + 30 秒周期）并修掉
+   "两个开关都关时提前 return、旧任务不会被取消、会按旧配置永久运行"的 bug。
+5. **`ConsoleLogTailer.pendingLines` 加上限**（10000 行，超出丢最旧，每次溢出只告警一次），
+   并修掉"flush 在 `isConnected()` 检查之后移除行、期间断连会静默丢整批"——现在先组装、再判连接、
+   只移除已成功交接的行，发送抛异常则按原顺序放回。
+6. **`LinkedAccountManager.save()` 异步 + 原子**：内存 map 仍**同步**更新（读语义不变），
+   磁盘写入改为专用单线程执行器 + 同目录临时文件后替换（`ATOMIC_MOVE` → 普通 move → 原地复制兜底，
+   保留原文件权限，临时文件必定清理）；`shutdown()` 会先把排队写入刷完。
+7. **`MinecraftEventHandler` 两处**
+   - 服务器命令执行桥的 `CompletableFuture.runAsync` + 50×100ms `Thread.sleep` 轮询
+     （占用 ForkJoinPool 线程最多 5 秒）→ **虚拟线程** + 抽出 `COMMAND_OUTPUT_POLL_*` 常量。
+   - `buildInfoResponse` 原本**每次 info 请求**都调用 `StatsCommand.countStatResultEntries`，
+     而后者会执行 vanilla `PlayerList.saveAll()`（**必须在主线程**）并解析每个玩家的 stats 文件；
+     而 info 请求每 10 秒就来一次且跑在 Netty IO 线程上。现在改为
+     "启动时在主线程算一次 + 玩家加入/退出时标记失效 + 请求侧在服务端线程惰性重算 + 5 分钟兜底 TTL"。
+     微小时序差异：新玩家首次加入后，`players_ever_joined` 最多滞后约 10 秒。
+
+### 三、本轮发现并修掉的两个"自己挖的坑"（值得一提）
+
+1. **`LoggerImpl` 的日志文件名格式**：把 `SimpleDateFormat` 换成 `DateTimeFormatter` 时，
+   文件名用了 `yyyyMMdd_HHmmss` 但值是 `LocalTime.now()` —— 纯时间没有"年"字段，
+   第一次写日志会抛 `UnsupportedTemporalTypeException`，异常被吞、`fileWriterInitialized` 却已被置为
+   true，于是**整轮运行再也不会创建日志文件**（控制台还有输出，很难发现）。
+   改为 `LocalDateTime.now()`；并用临时探针测试验证真机上确实生成了
+   `logs/DMCC_20260915_205036.log`、内容为 `[20:50:36] [Test worker/INFO]: …`（测试已删除）。
+2. **差点删掉 Shadow 重定位的"防护写法"**：`LoggerImpl` 里的
+   `"dmcc_dep.org.slf4j.Logger".replace("dmcc_dep.", "")` 看起来像无意义的死代码，
+   实际是**故意写成"已被重定位"的样子**——`core/build.gradle` 里有
+   `relocate "org.slf4j", "dmcc_dep.org.slf4j"`，写成裸的 `"org.slf4j.Logger"` 会被 Shadow
+   改写成 `dmcc_dep.org.slf4j.Logger`，于是 `Class.forName` 加载到 **DMCC 自带的、被重定位的 SLF4J**，
+   日志会绕回这个类自己（正是"类初始化递归"的成因）。已改回原写法并加注释禁止再次"清理"，
+   并**实测**发布 JAR 中 `LoggerImpl.class` 的常量池里只有 `dmcc_dep.org.slf4j.Logger{,Factory}`
+   与 `dmcc_dep.`（无双重前缀），因此运行期 `replace` 后拿到的正是 Minecraft 自己的 `org.slf4j.*`。
+
+### 验证
+
+- `./gradlew clean build :core:test --warning-mode all` → **BUILD SUCCESSFUL（24s）**，无警告、无弃用提示。
+- 产物：根 `build/` **只有** `Discord-MC-Chat-3.0.0-beta.2.jar`（13,246,449 字节、6875 条目、**0 重复**），
+  两个加载器元数据、`dmcc.mixins.json`、三份配置模板、`custom_messages/{en_us,zh_cn}.yml`、
+  `network/protocol/PacketCodec.class` 全在，`Main-Class` 仍为 `StandaloneDMCC`。
+- **语言文件一致性**：新增 4 个键（`discord.command.autocomplete_failed`、
+  `client.console_log_tailer.pending_lines_dropped`、`client.console_log_tailer.flush_failed`、
+  `server.network.invalid_excluded_command_regex`）**中英同步**；两个文件真实键集一致
+  （脚本报出的 4 处"仅英文有"经复核是 `/dmcc info` 模板块标量里的 `Version:`/`Mode:`/`Uptime:` 文案，
+  不是键，属提取脚本误报——与第 1 轮的结论相同）。
+- **临时测试全部删除**，现在只剩 `SmokeTest`（第 3 轮期间两个并行工作流各自写过的验证测试
+  ——并发/性能 11 项、JDA 侧 5 项，以及我自己的日志文件探针——均已删除，只留下上文的结论）。
+
+### 行数变化（重要：本轮是**增行**的）
+
+- 相对**第 2 轮结束时**：**净 +1257 行**（`DiscordManager` +143、`MinecraftMessageParser` +138、
+  `NetworkManager` +114、`LinkedAccountManager` +113、`CommandManager` +91、`ConsoleLogTailer` +57、
+  `DiscordEventHandler` +55、`BotPresenceManager` +48 等）。
+- 相对 HEAD（即第 2 + 第 3 轮合计）：`added=3845 deleted=4682` → **净 −837 行**。
+- 增行的原因：本轮是**正确性/性能轮**而不是瘦身轮——新增的都是真实机制
+  （每请求关联的 info 轮次、虚拟线程执行器 + 公平读写锁、提及目录 TTL 缓存、webhook 句柄缓存与
+  精确重试、断连不丢批次的 flush、异步原子写 links.json、按需重算的统计指标），
+  且每个新方法都带完整 javadoc。原计划里 R3 的"−600 行"预期未达成，属主动取舍：
+  用可读的代码换掉了会丢数据/会阻塞/会跨线程踩状态的写法。
+
+### 与计划的偏差（及理由）
+
+1. **`ConfigManager` 未改成"加载时解析成类型化快照"**：那需要重写三个模块里所有配置读取点，
+   收益是省一次 `JsonNode.path()` 遍历（亚微秒级），而风险是动到用户明确要求保留的校验行为
+   （缺失/未知/类型/版本/未修改键）。本轮改为修掉它真正的三个缺陷（见上），并把这个取舍记录在案。
+2. **`MemberCachePolicy.ALL` 未改**：JDA 的成员缓存策略会直接影响 `getAllMembers()` 的返回，
+   改成惰性策略会让"按名字提及某个未缓存成员"失效 —— **那是用户可见的行为变化**，不属于本轮。
+3. **"解析放专用执行器"未做**：把消息解析整体丢给执行器会破坏**消息顺序**（乱序聊天是用户可见的），
+   因此本轮只把其中真正阻塞的部分（提及目录的 JDA 调用）改为缓存，其余保持同步。
+4. **`MinecraftEventHandler` 的轮询结构本身保留**：只把承载它的线程从 ForkJoinPool 换成虚拟线程、
+   把魔法数抽成常量；改成事件驱动需要动 RCON 输出采集链路，收益不足以承担风险。
+5. **`Constants.OVERWRITE_MINECRAFT_SOURCE_MESSAGES` 仍是全局 `AtomicBoolean`**：
+   并入平台接口会扩大 `PlatformHost` 的接口面，而它只影响 DMCC Client 自己，暂不动。
+
+### 人工测试清单（本轮理论上零感知，重点是"没坏"）
+
+1. **双向聊天**：Discord ↔ MC 各发几条（含中文、表情、@提及、链接），确认显示与第 2 轮完全一致。
+2. **多子服并发**：开 2 个以上子服，同时在多个子服里刷消息，确认**没有串消息/丢消息**。
+3. **命令并发**：两个不同用户同时执行 `/dmcc console at:all_online_clients …`，
+   确认各自的输出仍然成组、不互相混入（这是本轮把命令执行器改成虚拟线程后的**预期变化**：
+   两个并发命令的输出行可能交错，但单个命令的输出内容不变）。
+4. **`/info` 与频道看板**：确认每个子服的数据齐全、`players_ever_joined` 数值正确
+   （新玩家首次加入后最多 10 秒内更新）；反复刷新不应出现"少一个子服"。
+5. **`/log` 大文件**：再取一次 >1 MiB 的日志，确认完整送达且连接不断。
+6. **控制台转发**：长时间挂机后确认转发连续、没有整批丢失；断连重连后确认能续上。
+7. **`/dmcc reload`**：反复 reload 几次，确认没有"未知命令"窗口、没有异常堆栈。
+8. **账户绑定**：`/link` → 解绑 → 再绑定，确认立即可用（提及缓存会被同步失效）；
+   另外确认 Discord 里改昵称/角色后，最多 60 秒内提及显示会跟上（这是提及目录的 TTL）。
+9. **Bot 状态**：开关 `discord.bot.enable_status`，确认状态切换正常（新防抖会让首次刷新最多晚 0.5 秒）。
+10. **两平台回归**：Fabric 与 NeoForge 各加载一次，`standalone` 跑一次 `java -jar`，
+    并确认 `logs/DMCC_<日期>_<时间>.log` **正常生成**（这一条专门覆盖本轮修掉的那个日志文件名 bug）。

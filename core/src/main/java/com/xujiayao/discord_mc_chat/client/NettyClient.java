@@ -1,10 +1,10 @@
 package com.xujiayao.discord_mc_chat.client;
 
 import com.xujiayao.discord_mc_chat.config.I18nManager;
-import com.xujiayao.discord_mc_chat.network.packets.MiscPackets.LatencyPingPacket;
-import com.xujiayao.discord_mc_chat.network.packets.Packet;
-import com.xujiayao.discord_mc_chat.network.serialization.JavaSerializerDecoder;
-import com.xujiayao.discord_mc_chat.network.serialization.JavaSerializerEncoder;
+import com.xujiayao.discord_mc_chat.network.protocol.Packets;
+import com.xujiayao.discord_mc_chat.network.protocol.Packet;
+import com.xujiayao.discord_mc_chat.network.protocol.JsonPacketDecoder;
+import com.xujiayao.discord_mc_chat.network.protocol.JsonPacketEncoder;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -101,8 +101,8 @@ final class NettyClient {
 						new IdleStateHandler(30, 15, 0),
 						new LengthFieldBasedFrameDecoder(1048576, 0, 4, 0, 4),
 						new LengthFieldPrepender(4),
-						new JavaSerializerDecoder(),
-						new JavaSerializerEncoder(),
+						new JsonPacketDecoder(),
+						new JsonPacketEncoder(),
 						new ClientHandler(NettyClient.this, initialLoginFuture)
 				);
 			}
@@ -133,7 +133,7 @@ final class NettyClient {
 		if (channel != null && channel.isActive()) {
 			channel.writeAndFlush(packet);
 		} else {
-			LOGGER.warn(I18nManager.getDmccTranslation("client.network.send_while_disconnected", packet.getClass().getSimpleName()));
+			LOGGER.warn(I18nManager.getDmccTranslation("client.network.send_while_disconnected", packet.type()));
 		}
 	}
 
@@ -193,7 +193,7 @@ final class NettyClient {
 		}
 
 		long sentAtMillis = System.currentTimeMillis();
-		channel.writeAndFlush(new LatencyPingPacket(sentAtMillis));
+		channel.writeAndFlush(new Packets.LatencyPing(sentAtMillis));
 
 		try {
 			return future.get(timeoutMillis, TimeUnit.MILLISECONDS);

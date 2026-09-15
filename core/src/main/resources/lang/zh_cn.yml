@@ -213,6 +213,7 @@ discord:
   command:
     reply_failed: "无法向 Discord 命令发送者发送回复消息。"
     reply_failed_detail: "对于 reload/shutdown 命令，这是预期的行为。"
+    autocomplete_failed: "计算 Discord 命令的自动补全选项失败。"
   message_parser:
     click_to_open_link: "点击打开链接"
     unknown_user: "未知用户"
@@ -245,6 +246,7 @@ server:
   network:
     listening: "DMCC 服务端正在监听端口 {}。"
     bind_failed: "无法绑定端口 {}。"
+    invalid_excluded_command_regex: "忽略无效的排除命令正则表达式：{}"
     reject: "拒绝与 DMCC 客户端 \"{}\" 连接。原因：{}"
     auth_success: "DMCC 客户端连接成功：\"{}\""
     client_disconnected_normal: "DMCC 客户端已断开连接：\"{}\""
@@ -272,6 +274,8 @@ client:
     unexpected_packet: "已忽略来自 DMCC 服务端的意外数据包：{}"
   console_log_tailer:
     poll_failed: "控制台日志转发轮询失败：{}"
+    pending_lines_dropped: "控制台日志转发已缓冲超过 {} 行，最旧的缓冲日志行正在被丢弃。"
+    flush_failed: "转发一批控制台日志失败，该批次将保持缓冲并在之后重试：{}"
 
 utils:
   config:

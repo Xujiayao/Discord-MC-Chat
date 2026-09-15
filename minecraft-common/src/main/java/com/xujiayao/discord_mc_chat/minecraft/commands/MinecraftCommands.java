@@ -137,76 +137,83 @@ public final class MinecraftCommands {
 		};
 	}
 
+	private static void sendReply(CommandSourceStack source, String message) {
+		// For each line in the message, send a separate chat message
+		for (String line : message.split("\n")) {
+			source.sendSuccess(() -> Component.literal(line), false);
+		}
+	}
+
+	private static int getPermissionLevel(CommandSourceStack source) {
+		// Probe from highest to lowest to determine the sender's actual permission level
+		if (LEVEL_OWNERS.check(source.permissions())) {
+			return 4;
+		}
+		if (LEVEL_ADMINS.check(source.permissions())) {
+			return 3;
+		}
+		if (LEVEL_GAMEMASTERS.check(source.permissions())) {
+			return 2;
+		}
+		if (LEVEL_MODERATORS.check(source.permissions())) {
+			return 1;
+		}
+		return 0;
+	}
+
+	private static String resolvePlayerUuid(CommandSourceStack source) {
+		if (source.getEntity() instanceof ServerPlayer player) {
+			return player.getStringUUID();
+		}
+		return null;
+	}
+
+	private static String resolvePlayerName(CommandSourceStack source) {
+		if (source.getEntity() instanceof ServerPlayer player) {
+			return player.getName().getString();
+		}
+		return null;
+	}
+
 	private record MinecraftCommandSender(CommandSourceStack source) implements LocalCommandSender {
 
 		@Override
 		public void reply(String message) {
-			// For each line in the message, send a separate chat message
-			for (String line : message.split("\n")) {
-				source.sendSuccess(() -> Component.literal(line), false);
-			}
+			sendReply(source, message);
 		}
 
 		@Override
 		public int getOpLevel() {
-			// Probe from highest to lowest to determine the sender's actual permission level
-			if (LEVEL_OWNERS.check(source.permissions())) {
-				return 4;
-			}
-			if (LEVEL_ADMINS.check(source.permissions())) {
-				return 3;
-			}
-			if (LEVEL_GAMEMASTERS.check(source.permissions())) {
-				return 2;
-			}
-			if (LEVEL_MODERATORS.check(source.permissions())) {
-				return 1;
-			}
-			return 0;
+			return getPermissionLevel(source);
 		}
 	}
 
-	private record MinecraftPlayerCommandSender(CommandSourceStack source)
+	private record MinecraftPlayerCommandSender(CommandSourceStack source, String playerUuid, String playerName)
 			implements LocalCommandSender, LinkCommand.PlayerContextProvider {
+
+		private MinecraftPlayerCommandSender(CommandSourceStack source) {
+			// Capture the player identity at construction time so it stays available afterwards
+			this(source, resolvePlayerUuid(source), resolvePlayerName(source));
+		}
 
 		@Override
 		public void reply(String message) {
-			for (String line : message.split("\n")) {
-				source.sendSuccess(() -> Component.literal(line), false);
-			}
+			sendReply(source, message);
 		}
 
 		@Override
 		public int getOpLevel() {
-			if (LEVEL_OWNERS.check(source.permissions())) {
-				return 4;
-			}
-			if (LEVEL_ADMINS.check(source.permissions())) {
-				return 3;
-			}
-			if (LEVEL_GAMEMASTERS.check(source.permissions())) {
-				return 2;
-			}
-			if (LEVEL_MODERATORS.check(source.permissions())) {
-				return 1;
-			}
-			return 0;
+			return getPermissionLevel(source);
 		}
 
 		@Override
 		public String getPlayerUuid() {
-			if (source.getEntity() instanceof ServerPlayer player) {
-				return player.getStringUUID();
-			}
-			return null;
+			return playerUuid;
 		}
 
 		@Override
 		public String getPlayerName() {
-			if (source.getEntity() instanceof ServerPlayer player) {
-				return player.getName().getString();
-			}
-			return null;
+			return playerName;
 		}
 	}
 }

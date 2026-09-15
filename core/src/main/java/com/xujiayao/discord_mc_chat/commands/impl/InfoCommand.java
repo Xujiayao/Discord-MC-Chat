@@ -7,7 +7,7 @@ import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
-import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Info.ResponsePacket;
+import com.xujiayao.discord_mc_chat.network.protocol.Packets;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager.DiscordStatusInfo;
 import tools.jackson.databind.JsonNode;
@@ -27,13 +27,8 @@ public final class InfoCommand implements Command {
 
 	private static final int INFO_REQUEST_TIMEOUT_SECONDS = 3;
 
-	/**
-	 * Creates an info command instance.
-	 */
-	public InfoCommand() {
-	}
 
-	private static String buildServerPart(Map<String, ResponsePacket> infoSnapshot) {
+	private static String buildServerPart(Map<String, Packets.InfoSnapshot> infoSnapshot) {
 		int onlineClients = infoSnapshot.size();
 		int totalClients = getConfiguredClientCount();
 		if (totalClients == 0) {
@@ -46,7 +41,7 @@ public final class InfoCommand implements Command {
 		} else {
 			StringBuilder clientsBuilder = new StringBuilder();
 			infoSnapshot.values().stream()
-					.sorted(Comparator.comparing(packet -> packet.serverName == null ? "" : packet.serverName, String.CASE_INSENSITIVE_ORDER))
+					.sorted(Comparator.comparing(packet -> packet.serverName() == null ? "" : packet.serverName(), String.CASE_INSENSITIVE_ORDER))
 					.forEach(packet -> {
 						clientsBuilder.append("  ");
 						clientsBuilder.append(buildServerClientInfo(packet));
@@ -57,35 +52,35 @@ public final class InfoCommand implements Command {
 		return I18nManager.getDmccTranslation("commands.info.server_part.base", onlineClients, totalClients, clientsInfo);
 	}
 
-	private static String buildServerClientInfo(ResponsePacket packet) {
+	private static String buildServerClientInfo(Packets.InfoSnapshot packet) {
 		String playersInfo = buildPlayersInfo(packet);
-		long[] uptime = splitSeconds(packet.uptimeSeconds);
-		long usedMemoryMiB = toMiB(packet.totalMemory - packet.freeMemory);
-		long totalMemoryMiB = toMiB(packet.totalMemory);
+		long[] uptime = splitSeconds(packet.uptimeSeconds());
+		long usedMemoryMiB = toMiB(packet.totalMemory() - packet.freeMemory());
+		long totalMemoryMiB = toMiB(packet.totalMemory());
 
 		return I18nManager.getDmccTranslation("commands.info.server_part.clients",
-				packet.serverName,
-				packet.connectionLatencyMillis,
-				packet.minecraftVersion,
-				packet.onlinePlayerCount,
-				packet.maxPlayerCount,
+				packet.serverName(),
+				packet.connectionLatencyMillis(),
+				packet.minecraftVersion(),
+				packet.onlinePlayerCount(),
+				packet.maxPlayerCount(),
 				playersInfo,
-				packet.playersEverJoined,
-				String.format("%.2f", packet.tps),
-				String.format("%.2f", packet.mspt),
+				packet.playersEverJoined(),
+				String.format("%.2f", packet.tps()),
+				String.format("%.2f", packet.mspt()),
 				uptime[0], uptime[1], uptime[2], uptime[3],
 				usedMemoryMiB, totalMemoryMiB);
 	}
 
-	private static String buildClientPart(Map<String, ResponsePacket> infoSnapshot, long latencyOverride, boolean clientConnected) {
-		ResponsePacket packet = getClientPacket(infoSnapshot);
+	private static String buildClientPart(Map<String, Packets.InfoSnapshot> infoSnapshot, long latencyOverride, boolean clientConnected) {
+		Packets.InfoSnapshot packet = getClientPacket(infoSnapshot);
 
 		String connectionStatus = "DISCONNECTED";
 		long connectionLatency = -1;
 
 		if (clientConnected) {
 			connectionStatus = "CONNECTED";
-			connectionLatency = latencyOverride >= 0 ? latencyOverride : packet.connectionLatencyMillis;
+			connectionLatency = latencyOverride >= 0 ? latencyOverride : packet.connectionLatencyMillis();
 			if (connectionLatency < 0) {
 				var client = NetworkManager.getClient();
 				connectionLatency = client == null ? -1 : client.getConnectionLatencyMillis();
@@ -97,22 +92,22 @@ public final class InfoCommand implements Command {
 		return I18nManager.getDmccTranslation("commands.info.client_part",
 				connectionStatus,
 				connectionLatency,
-				packet.minecraftVersion,
-				packet.onlinePlayerCount,
-				packet.maxPlayerCount,
+				packet.minecraftVersion(),
+				packet.onlinePlayerCount(),
+				packet.maxPlayerCount(),
 				playersInfo,
-				packet.playersEverJoined,
-				String.format("%.2f", packet.tps),
-				String.format("%.2f", packet.mspt));
+				packet.playersEverJoined(),
+				String.format("%.2f", packet.tps()),
+				String.format("%.2f", packet.mspt()));
 	}
 
-	private static String buildPlayersInfo(ResponsePacket packet) {
-		if (packet.playersAndLatencies == null || packet.playersAndLatencies.isEmpty()) {
+	private static String buildPlayersInfo(Packets.InfoSnapshot packet) {
+		if (packet.playersAndLatencies() == null || packet.playersAndLatencies().isEmpty()) {
 			return I18nManager.getDmccTranslation("commands.info.no_players");
 		}
 
 		StringBuilder playersBuilder = new StringBuilder();
-		packet.playersAndLatencies.forEach((name, latency) -> {
+		packet.playersAndLatencies().forEach((name, latency) -> {
 			if (!playersBuilder.isEmpty()) {
 				playersBuilder.append("\n");
 			}
@@ -122,9 +117,9 @@ public final class InfoCommand implements Command {
 		return playersBuilder.toString();
 	}
 
-	private static ResponsePacket getClientPacket(Map<String, ResponsePacket> infoSnapshot) {
+	private static Packets.InfoSnapshot getClientPacket(Map<String, Packets.InfoSnapshot> infoSnapshot) {
 		String serverName = NetworkManager.getClientServerName();
-		ResponsePacket packet = infoSnapshot.get(serverName);
+		Packets.InfoSnapshot packet = infoSnapshot.get(serverName);
 
 		if (packet == null && !infoSnapshot.isEmpty()) {
 			packet = infoSnapshot.values().iterator().next();
@@ -175,7 +170,7 @@ public final class InfoCommand implements Command {
 
 	@Override
 	public void execute(CommandSender sender, String... args) {
-		CompletableFuture<Map<String, ResponsePacket>> infoFuture =
+		CompletableFuture<Map<String, Packets.InfoSnapshot>> infoFuture =
 				CompletableFuture.supplyAsync(() -> NetworkManager.requestInfoSnapshot(INFO_REQUEST_TIMEOUT_SECONDS));
 
 		CompletableFuture<DiscordStatusInfo> discordFuture = null;
@@ -192,7 +187,7 @@ public final class InfoCommand implements Command {
 			latencyFuture = CompletableFuture.supplyAsync(() -> client.requestLatencySample(timeoutMillis));
 		}
 
-		Map<String, ResponsePacket> infoSnapshot = infoFuture.join();
+		Map<String, Packets.InfoSnapshot> infoSnapshot = infoFuture.join();
 		DiscordStatusInfo statusInfo = discordFuture == null ? null : discordFuture.join();
 		long latencyOverride = latencyFuture == null ? -1 : latencyFuture.join();
 

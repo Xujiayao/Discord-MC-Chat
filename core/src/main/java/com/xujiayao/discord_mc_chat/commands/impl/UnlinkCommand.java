@@ -5,7 +5,7 @@ import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
-import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Unlink.RequestPacket;
+import com.xujiayao.discord_mc_chat.network.protocol.Packets;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 
 /**
@@ -18,11 +18,6 @@ import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
  */
 public final class UnlinkCommand implements Command {
 
-	/**
-	 * Creates an unlink command instance.
-	 */
-	public UnlinkCommand() {
-	}
 
 	@Override
 	public String name() {
@@ -72,7 +67,7 @@ public final class UnlinkCommand implements Command {
 
 		switch (ConfigManager.getMode()) {
 			case "single_server", "multi_server_client" -> // Send request to server via network (same for both modes)
-					NetworkManager.sendPacketToServer(new RequestPacket(uuid, name));
+					NetworkManager.sendPacketToServer(new Packets.UnlinkRequest(uuid, name));
 			default -> sender.reply(I18nManager.getDmccTranslation("commands.unlink.not_available"));
 		}
 	}

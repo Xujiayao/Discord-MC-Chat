@@ -3,1271 +3,611 @@ package com.xujiayao.discord_mc_chat.server.message;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.message.TextSegment;
-import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
-import com.xujiayao.discord_mc_chat.utils.TextSegmentUtils;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
-import net.dv8tion.jda.api.entities.messages.MessagePoll;
-import net.dv8tion.jda.api.entities.sticker.StickerItem;
 import net.fellbaum.jemoji.EmojiManager;
 import tools.jackson.databind.JsonNode;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Parses Discord messages into pre-built {@link TextSegment} lists for Minecraft rendering.
+ * Parses Discord message content into pre-built {@link TextSegment} lists for Minecraft rendering.
  * <p>
- * All parsing decisions are driven by the {@code message_parsing.discord_to_minecraft.*} config
- * switches. The server builds the full rich-text representation so that DMCC clients can
- * directly convert the segments into Minecraft Components without accessing Discord APIs
- * or custom_messages.
+ * This class is deliberately free of JDA types: message contents arrive as plain strings plus a
+ * {@link MentionResolver} and {@link MessageExtras}. The JDA-facing adapter lives in
+ * {@code DiscordMessageAdapter}, which also makes the whole pipeline unit-testable with plain strings.
+ * <p>
+ * All parsing decisions are driven by the {@code message_parsing.discord_to_minecraft.*} config switches.
+ * The server builds the full rich-text representation so that DMCC clients can directly convert the
+ * segments into Minecraft Components without accessing Discord APIs or custom_messages.
  *
  * @author Xujiayao
  */
 public final class DiscordMessageParser {
 
-	// Discord Markdown patterns
-	private static final Pattern CODE_BLOCK_PATTERN = Pattern.compile("```(\\w*)\\n?([\\s\\S]*?)```");
+	/**
+	 * The pseudo server name and color used for everything coming from Discord.
+	 */
+	public static final String SERVER_NAME = "Discord";
+	public static final String SERVER_COLOR = "blue";
 
-	// Discord mention patterns in raw content
-	private static final Pattern USER_MENTION_PATTERN = Pattern.compile("<@!?(\\d+)>");
-	private static final Pattern ROLE_MENTION_PATTERN = Pattern.compile("<@&(\\d+)>");
-	private static final Pattern CHANNEL_MENTION_PATTERN = Pattern.compile("<#(\\d+)>");
-
-	// @everyone / @here pattern in raw content
-	private static final Pattern EVERYONE_HERE_PATTERN = Pattern.compile("@(everyone|here)");
-
-	// Discord timestamp pattern: <t:EPOCH> or <t:EPOCH:STYLE>
-	private static final Pattern DISCORD_TIMESTAMP_PATTERN = Pattern.compile("<t:(\\d+)(?::([tTdDfFRsS]))?>");
-
-	// Discord custom emoji patterns
-	private static final Pattern CUSTOM_EMOJI_PATTERN = Pattern.compile("<a?:(\\w+):\\d+>");
-	private static final Pattern DISCORD_ALIAS_EMOJI_PATTERN = Pattern.compile("(?<![A-Za-z0-9_]):[A-Za-z0-9_+\\-]+:(?![A-Za-z0-9_])");
-
-	// ANSI escape sequence pattern for ```ansi code blocks
-	private static final Pattern ANSI_ESCAPE_PATTERN = Pattern.compile("\\x1B\\[(\\d+(?:;\\d+)*)m");
-
-	// Matches spoiler-wrapped user mentions: ||<@123>|| / ||<@!123>||
-	private static final Pattern SPOILER_USER_MENTION_PATTERN = Pattern.compile("\\|\\|<@!?(\\d+)>\\|\\|");
-	// Matches spoiler-wrapped role mentions: ||<@&123>||
-	private static final Pattern SPOILER_ROLE_MENTION_PATTERN = Pattern.compile("\\|\\|<@&(\\d+)>\\|\\|");
-	// Matches spoiler-wrapped channel mentions: ||<#123>||
-	private static final Pattern SPOILER_CHANNEL_MENTION_PATTERN = Pattern.compile("\\|\\|<#(\\d+)>\\|\\|");
-	// Matches spoiler-wrapped @everyone/@here tokens: ||@everyone|| / ||@here||
-	private static final Pattern SPOILER_EVERYONE_HERE_PATTERN = Pattern.compile("\\|\\|@(everyone|here)\\|\\|");
-	private static final Pattern SPOILER_CONTENT_PATTERN = Pattern.compile("\\|\\|(.+?)\\|\\|");
-	private static final List<String> MARKDOWN_DELIMITERS = List.of("***", "~~", "||", "**", "__", "*", "_");
+	private static final Pattern CODE_BLOCK = Pattern.compile("```(\\w*)\\n?([\\s\\S]*?)```");
+	private static final Pattern ANSI_ESCAPE = Pattern.compile("\\x1B\\[(\\d+(?:;\\d+)*)m");
 
 	private static final int MAX_CONTENT_LINES = 6;
 	private static final int REPLY_TRUNCATE_LIMIT_WIDE = 20;
 	private static final int REPLY_TRUNCATE_LIMIT_NARROW = 40;
 	private static final int MAIN_TRUNCATE_LIMIT_WIDE = 200;
 	private static final int MAIN_TRUNCATE_LIMIT_NARROW = 400;
-	private static final String URL_COLOR = "#3366CC";
-	private static final String QUOTE_COLOR = "gray";
-	private static final String ATTACHMENT_LABEL_PREFIX = "<attachment type=[%s] name=[";
-	private static final String EMBED_LABEL_PREFIX = "<embed title=[";
-	private static final String LABEL_SUFFIX = "]>";
+
+	/** Embed descriptions longer than this are shortened before they are used as a fallback title. */
+	private static final int EMBED_DESCRIPTION_LIMIT = 50;
+	private static final int EMBED_DESCRIPTION_KEEP = 20;
 
 	private DiscordMessageParser() {
 	}
 
 	/**
+	 * The set of parsing switches for one message.
+	 *
+	 * @param mentions      Parse {@code <@id>} / {@code <@&id>} / {@code <#id>} mentions.
+	 * @param customEmojis  Parse Discord custom and alias emoji.
+	 * @param unicodeEmojis Parse Unicode emoji.
+	 * @param markdown      Parse Markdown emphasis, quotes, headings and code.
+	 * @param hyperlinks    Turn links into clickable segments.
+	 * @param attachments   Append attachment labels.
+	 * @param stickers      Append sticker labels.
+	 * @param embeds        Append embed labels.
+	 * @param components    Append the interactive-components indicator.
+	 * @param polls         Append the poll indicator.
+	 * @param timestamps    Render {@code <t:...>} timestamps.
+	 * @param ansiCodeBlocks Render {@code ```ansi} blocks with their colors.
+	 */
+	public record Flags(boolean mentions, boolean customEmojis, boolean unicodeEmojis, boolean markdown,
+						boolean hyperlinks, boolean attachments, boolean stickers, boolean embeds,
+						boolean components, boolean polls, boolean timestamps, boolean ansiCodeBlocks) {
+
+		private static final String PREFIX = "message_parsing.discord_to_minecraft.";
+
+		/**
+		 * @return The switches as configured for {@code discord_to_minecraft}.
+		 */
+		public static Flags fromConfig() {
+			return new Flags(
+					ConfigManager.getBoolean(PREFIX + "mentions"),
+					ConfigManager.getBoolean(PREFIX + "custom_emojis"),
+					ConfigManager.getBoolean(PREFIX + "unicode_emojis"),
+					ConfigManager.getBoolean(PREFIX + "markdown"),
+					ConfigManager.getBoolean(PREFIX + "hyperlinks"),
+					ConfigManager.getBoolean(PREFIX + "attachments"),
+					ConfigManager.getBoolean(PREFIX + "stickers"),
+					ConfigManager.getBoolean(PREFIX + "embeds"),
+					ConfigManager.getBoolean(PREFIX + "components"),
+					ConfigManager.getBoolean(PREFIX + "polls"),
+					ConfigManager.getBoolean(PREFIX + "timestamps"),
+					ConfigManager.getBoolean(PREFIX + "ansi_code_blocks")
+			);
+		}
+
+	}
+
+	/**
 	 * Builds the main message line segments for a Discord chat message.
 	 * <p>
-	 * The format follows the custom_messages {@code common.chat} pattern:
-	 * [server] &lt;effective_name&gt; {parsed message content}
-	 * <p>
-	 * For multi-line messages, uses YAML-style format:
-	 * [server] &lt;effective_name&gt; |
-	 * Line 1
-	 * Line 2
-	 * ...
+	 * The format follows the custom_messages {@code xxxxx_to_minecraft.user_message} pattern:
+	 * {@code [server] <effective_name> message}. Multi-line messages use the YAML-style form where the
+	 * header ends with {@code |} and the content follows on the next lines.
 	 *
-	 * @param message The Discord message.
+	 * @param effectiveName Display name of the author.
+	 * @param roleColor     Hex color of the author's highest role.
+	 * @param raw           Raw message content.
+	 * @param mentions      Mention resolver for this message; null disables mention parsing.
+	 * @param extras        Non-textual message parts.
+	 * @param flags         Parsing switches.
 	 * @return The list of text segments for the main message line.
 	 */
-	public static List<TextSegment> buildChatSegments(Message message) {
-		List<TextSegment> segments = new ArrayList<>();
-
-		Member member = message.getMember();
-		String effectiveName = member != null ? member.getEffectiveName() : message.getAuthor().getName();
-		String roleColor = getRoleColorHex(member);
-
-		String raw = message.getContentRaw();
+	public static List<TextSegment> buildChatSegments(String effectiveName, String roleColor, String raw,
+													  MentionResolver mentions, MessageExtras extras, Flags flags) {
 		String truncatedRaw = truncateMainRaw(raw);
-		boolean isMultiLine = truncatedRaw.contains("\n");
-
-		// Build segments from xxxxx_to_minecraft.user_message template
-		JsonNode chatNode = I18nManager.getCustomMessages().path("xxxxx_to_minecraft").path("user_message");
-		if (chatNode.isArray()) {
-			for (JsonNode segNode : chatNode) {
-				String text = segNode.path("text").asString("");
-				boolean bold = segNode.path("bold").asBoolean(false);
-				String color = segNode.path("color").asString("");
-
-				// Replace placeholders
-				text = replacePlaceholders(text, effectiveName, roleColor);
-				color = replacePlaceholders(color, effectiveName, roleColor);
-
-				if (text.contains("{message}")) {
-					// Split around {message} and inject parsed message content
-					String[] parts = text.split("\\{message}", -1);
-					if (!parts[0].isEmpty()) {
-						segments.add(new TextSegment(parts[0], bold, color));
-					}
-
-					if (isMultiLine) {
-						// YAML-style multi-line: append "|" then newline-separated content
-						segments.add(new TextSegment("|", bold, color));
-
-						// Parse already-truncated content
-						List<TextSegment> contentSegments = parseMessageContent(message, truncatedRaw);
-
-						// Apply default color inheritance
-						TextSegmentUtils.applyDefaultColor(contentSegments, color);
-
-						// Prepend newline to first content segment
-						if (!contentSegments.isEmpty()) {
-							contentSegments.getFirst().text = "\n" + contentSegments.getFirst().text;
-						}
-						segments.addAll(contentSegments);
-					} else {
-						List<TextSegment> contentSegments = parseMessageContent(message, truncatedRaw);
-
-						// Apply default color inheritance
-						TextSegmentUtils.applyDefaultColor(contentSegments, color);
-
-						segments.addAll(contentSegments);
-					}
-
-					if (parts.length > 1 && !parts[1].isEmpty()) {
-						segments.add(new TextSegment(parts[1], bold, color));
-					}
-				} else {
-					segments.add(new TextSegment(text, bold, color));
-				}
-			}
+		MessageTemplates.Builder builder = chatTemplate()
+				.with("server", SERVER_NAME)
+				.with("server_color", SERVER_COLOR)
+				.with("effective_name", effectiveName)
+				.with("display_name", effectiveName)
+				.with("role_color", roleColor)
+				.content(() -> parseContent(truncatedRaw, mentions, extras, flags));
+		if (truncatedRaw.contains("\n")) {
+			builder.yamlMultilineHeader();
 		}
-
-		return segments;
+		return builder.render();
 	}
 
 	/**
-	 * Builds the command notification segments for when a Discord user executes a slash command.
-	 * <p>
-	 * The format follows the custom_messages {@code discord_to_minecraft.command} pattern.
+	 * Builds the edited message content line shown after an edit notification.
 	 *
-	 * @param effectiveName The display name of the Discord user.
-	 * @param roleColor     The hex color of the user's highest role.
-	 * @param commandName   The name of the slash command executed.
-	 * @return The list of text segments.
+	 * @param effectiveName Display name of the author.
+	 * @param roleColor     Hex color of the author's highest role.
+	 * @param raw           Raw message content.
+	 * @param mentions      Mention resolver for this message; null disables mention parsing.
+	 * @param extras        Non-textual message parts.
+	 * @param flags         Parsing switches.
+	 * @return The list of text segments for the edited message content line.
 	 */
-	public static List<TextSegment> buildCommandSegments(String effectiveName, String roleColor, String commandName) {
-		List<TextSegment> segments = new ArrayList<>();
-
-		JsonNode commandNode = I18nManager.getCustomMessages().path("discord_to_minecraft").path("command");
-		if (commandNode.isArray()) {
-			for (JsonNode segNode : commandNode) {
-				String text = segNode.path("text").asString("");
-				boolean bold = segNode.path("bold").asBoolean(false);
-				String color = segNode.path("color").asString("");
-
-				text = text.replace("{effective_name}", effectiveName)
-						.replace("{role_color}", roleColor)
-						.replace("{command}", commandName);
-				color = color.replace("{role_color}", roleColor);
-
-				segments.add(new TextSegment(text, bold, color));
-			}
-		}
-
-		return segments;
+	public static List<TextSegment> buildEditedMessageSegments(String effectiveName, String roleColor, String raw,
+															   MentionResolver mentions, MessageExtras extras, Flags flags) {
+		String truncatedRaw = truncateMainRaw(raw);
+		return template("discord_to_minecraft", "edited_message")
+				.with("effective_name", effectiveName)
+				.with("role_color", roleColor)
+				.content(() -> parseContent(truncatedRaw, mentions, extras, flags))
+				.render();
 	}
 
 	/**
-	 * Builds the reply context line segments (the ┌──── line).
-	 * <p>
-	 * The format follows the custom_messages {@code discord_to_minecraft.response} pattern.
-	 * The referenced message content is parsed through the same pipeline as the main message,
-	 * but truncated to a single line (at first newline or at width-based character limit).
+	 * Builds the reply context line segments (the {@code ┌────} line).
 	 *
-	 * @param referencedMessage The message being replied to.
-	 * @return The list of text segments for the reply line, or null if no reply.
+	 * @param refName     Display name of the referenced message author.
+	 * @param refRoleColor Hex color of the referenced message author's highest role.
+	 * @param refRaw      Raw content of the referenced message; null means there is no reply.
+	 * @param mentions    Mention resolver for the referenced message; null disables mention parsing.
+	 * @param extras      Non-textual parts of the referenced message.
+	 * @param flags       Parsing switches.
+	 * @return The list of text segments for the reply line, or null when {@code refRaw} is null.
 	 */
-	public static List<TextSegment> buildReplySegments(Message referencedMessage) {
-		if (referencedMessage == null) {
-			return null;
-		}
-		Member refMember = referencedMessage.getMember();
-		String refName = refMember != null ? refMember.getEffectiveName() : referencedMessage.getAuthor().getName();
-		String refRoleColor = getRoleColorHex(refMember);
-		return buildReplySegments(refName, refRoleColor, referencedMessage, referencedMessage.getContentRaw());
-	}
-
-	/**
-	 * Builds reply context line segments from cached/reference fields.
-	 *
-	 * @param refName        referenced message author's display name
-	 * @param refRoleColor   referenced message author's role color
-	 * @param contextMessage message context for full parsing; may be null for cached/deleted messages
-	 * @param refRaw         raw referenced message content
-	 * @return reply line segments, or null when refRaw is null
-	 */
-	public static List<TextSegment> buildReplySegments(String refName, String refRoleColor, Message contextMessage, String refRaw) {
+	public static List<TextSegment> buildReplySegments(String refName, String refRoleColor, String refRaw,
+													   MentionResolver mentions, MessageExtras extras, Flags flags) {
 		if (refRaw == null) {
 			return null;
 		}
-		List<TextSegment> segments = new ArrayList<>();
 		String truncatedRaw = truncateReplyRaw(refRaw);
-		List<TextSegment> refContentSegments = contextMessage != null
-				? parseMessageContent(contextMessage, truncatedRaw)
-				: parseMessageContentWithoutMessage(truncatedRaw);
-		refContentSegments = enforceSingleLine(refContentSegments);
+		return template("discord_to_minecraft", "response")
+				.with("effective_name", refName)
+				.with("role_color", refRoleColor)
+				.content(() -> enforceSingleLine(parseContent(truncatedRaw, mentions, extras, flags)))
+				.render();
+	}
 
-		JsonNode responseNode = I18nManager.getCustomMessages().path("discord_to_minecraft").path("response");
-		if (responseNode.isArray()) {
-			for (JsonNode segNode : responseNode) {
-				String text = segNode.path("text").asString("");
-				boolean bold = segNode.path("bold").asBoolean(false);
-				String color = segNode.path("color").asString("");
+	/**
+	 * Builds reply context segments when the referenced message is no longer available, so neither its
+	 * mentions nor its attachments can be resolved.
+	 *
+	 * @param refName      Display name of the referenced message author.
+	 * @param refRoleColor Hex color of the referenced message author's highest role.
+	 * @param refRaw       Raw content of the referenced message.
+	 * @param flags        Parsing switches.
+	 * @return The list of text segments for the reply line.
+	 */
+	public static List<TextSegment> buildDetachedReplySegments(String refName, String refRoleColor, String refRaw,
+															   Flags flags) {
+		String truncatedRaw = truncateReplyRaw(refRaw);
+		return template("discord_to_minecraft", "response")
+				.with("effective_name", refName)
+				.with("role_color", refRoleColor)
+				.content(() -> enforceSingleLine(parseDetachedContent(truncatedRaw, flags)))
+				.render();
+	}
 
-				text = text.replace("{effective_name}", refName);
-				color = color.replace("{role_color}", refRoleColor);
-
-				if (text.contains("{message}")) {
-					String[] parts = text.split("\\{message}", -1);
-					if (!parts[0].isEmpty()) {
-						segments.add(new TextSegment(parts[0], bold, color));
-					}
-					TextSegmentUtils.applyDefaultColor(refContentSegments, color);
-					segments.addAll(refContentSegments);
-					if (parts.length > 1 && !parts[1].isEmpty()) {
-						segments.add(new TextSegment(parts[1], bold, color));
-					}
-				} else {
-					segments.add(new TextSegment(text, bold, color));
-				}
-			}
+	/**
+	 * Parses raw content without any message context: mentions and all non-textual parts are unavailable.
+	 *
+	 * @param raw   Raw content.
+	 * @param flags Parsing switches.
+	 * @return The parsed segments.
+	 */
+	public static List<TextSegment> parseDetachedContent(String raw, Flags flags) {
+		if (raw == null || raw.isEmpty()) {
+			return new ArrayList<>();
 		}
+		return parseRawContent(raw, null, flags);
+	}
 
-		return segments;
+	/**
+	 * Builds segments for a slash-command notification.
+	 *
+	 * @param effectiveName Display name of the Discord user.
+	 * @param roleColor     Hex color of the user's highest role.
+	 * @param commandName   Name of the slash command executed.
+	 * @return The list of text segments.
+	 */
+	public static List<TextSegment> buildCommandSegments(String effectiveName, String roleColor, String commandName) {
+		return template("discord_to_minecraft", "command")
+				.with("effective_name", effectiveName)
+				.with("role_color", roleColor)
+				.with("command", commandName)
+				.render();
 	}
 
 	/**
 	 * Builds segments for a reaction event.
-	 * <p>
-	 * Format follows the custom_messages {@code discord_to_minecraft.reaction} pattern.
 	 *
-	 * @param reactorName The display name of the user who reacted.
-	 * @param roleColor   The hex color of the reactor's highest role.
-	 * @param emojiText   The emoji display text (e.g. ":test:").
-	 * @return The list of text segments for the reaction notification.
+	 * @param reactorName Display name of the user who reacted.
+	 * @param roleColor   Hex color of the reactor's highest role.
+	 * @param emojiText   The emoji display text (e.g. {@code :test:}).
+	 * @return The list of text segments.
 	 */
 	public static List<TextSegment> buildReactionSegments(String reactorName, String roleColor, String emojiText) {
-		List<TextSegment> segments = new ArrayList<>();
-
-		JsonNode reactionNode = I18nManager.getCustomMessages().path("discord_to_minecraft").path("reaction");
-		if (reactionNode.isArray()) {
-			for (JsonNode segNode : reactionNode) {
-				String text = segNode.path("text").asString("");
-				boolean bold = segNode.path("bold").asBoolean(false);
-				String color = segNode.path("color").asString("");
-
-				text = text.replace("{effective_name}", reactorName)
-						.replace("{emoji}", emojiText);
-				color = color.replace("{role_color}", roleColor);
-
-				segments.add(new TextSegment(text, bold, color));
-			}
-		}
-
-		return segments;
+		return template("discord_to_minecraft", "reaction")
+				.with("effective_name", reactorName)
+				.with("role_color", roleColor)
+				.with("emoji", emojiText)
+				.render();
 	}
 
 	/**
 	 * Builds segments for a message edit notification line.
-	 * <p>
-	 * Format follows the custom_messages {@code discord_to_minecraft.edit} pattern.
 	 *
-	 * @param editorName The display name of the user who edited.
-	 * @param roleColor  The hex color of the editor's highest role.
-	 * @return The list of text segments for the edit notification.
+	 * @param editorName Display name of the user who edited.
+	 * @param roleColor  Hex color of the editor's highest role.
+	 * @return The list of text segments.
 	 */
 	public static List<TextSegment> buildEditNotificationSegments(String editorName, String roleColor) {
-		List<TextSegment> segments = new ArrayList<>();
-
-		JsonNode editNode = I18nManager.getCustomMessages().path("discord_to_minecraft").path("edit");
-		if (editNode.isArray()) {
-			for (JsonNode segNode : editNode) {
-				String text = segNode.path("text").asString("");
-				boolean bold = segNode.path("bold").asBoolean(false);
-				String color = segNode.path("color").asString("");
-
-				text = text.replace("{effective_name}", editorName);
-				color = color.replace("{role_color}", roleColor);
-
-				segments.add(new TextSegment(text, bold, color));
-			}
-		}
-
-		return segments;
-	}
-
-	/**
-	 * Builds segments for the edited message content line shown after edit notification.
-	 * <p>
-	 * Format follows the custom_messages {@code discord_to_minecraft.edited_message} pattern.
-	 * This is intentionally separated from {@code common.chat} so edit events can render a
-	 * "bottom bun" style complementary to {@code discord_to_minecraft.response}.
-	 *
-	 * @param message The edited Discord message.
-	 * @return The list of text segments for the edited message content line.
-	 */
-	public static List<TextSegment> buildEditedMessageSegments(Message message) {
-		List<TextSegment> segments = new ArrayList<>();
-		Member member = message.getMember();
-		String effectiveName = member != null ? member.getEffectiveName() : message.getAuthor().getName();
-		String roleColor = getRoleColorHex(member);
-		String truncatedRaw = truncateMainRaw(message.getContentRaw());
-		List<TextSegment> contentSegments = parseMessageContent(message, truncatedRaw);
-
-		JsonNode editedNode = I18nManager.getCustomMessages().path("discord_to_minecraft").path("edited_message");
-		if (editedNode.isArray()) {
-			for (JsonNode segNode : editedNode) {
-				String text = segNode.path("text").asString("");
-				boolean bold = segNode.path("bold").asBoolean(false);
-				String color = segNode.path("color").asString("");
-
-				text = text.replace("{effective_name}", effectiveName);
-				color = color.replace("{role_color}", roleColor);
-
-				if (text.contains("{message}")) {
-					String[] parts = text.split("\\{message}", -1);
-					if (!parts[0].isEmpty()) {
-						segments.add(new TextSegment(parts[0], bold, color));
-					}
-					TextSegmentUtils.applyDefaultColor(contentSegments, color);
-					segments.addAll(contentSegments);
-					if (parts.length > 1 && !parts[1].isEmpty()) {
-						segments.add(new TextSegment(parts[1], bold, color));
-					}
-				} else {
-					segments.add(new TextSegment(text, bold, color));
-				}
-			}
-		}
-
-		return segments;
+		return template("discord_to_minecraft", "edit")
+				.with("effective_name", editorName)
+				.with("role_color", roleColor)
+				.render();
 	}
 
 	/**
 	 * Builds segments for a message delete notification.
-	 * <p>
-	 * Format follows the custom_messages {@code discord_to_minecraft.delete} pattern.
 	 *
-	 * @param deleterName The display name of the user who deleted.
-	 * @param roleColor   The hex color of the deleter's highest role.
-	 * @return The list of text segments for the delete notification.
+	 * @param deleterName Display name of the user who deleted.
+	 * @param roleColor   Hex color of the deleter's highest role.
+	 * @return The list of text segments.
 	 */
 	public static List<TextSegment> buildDeleteSegments(String deleterName, String roleColor) {
+		return template("discord_to_minecraft", "delete")
+				.with("effective_name", deleterName)
+				.with("role_color", roleColor)
+				.render();
+	}
+
+	/**
+	 * Parses message content into styled segments, appending the labels for attachments, stickers, embeds,
+	 * interactive components and polls.
+	 *
+	 * @param raw      Raw content, possibly already truncated.
+	 * @param mentions Mention resolver; null disables mention parsing.
+	 * @param extras   Non-textual message parts.
+	 * @param flags    Parsing switches.
+	 * @return The parsed segments.
+	 */
+	public static List<TextSegment> parseContent(String raw, MentionResolver mentions, MessageExtras extras, Flags flags) {
 		List<TextSegment> segments = new ArrayList<>();
+		if (raw != null && !raw.isEmpty()) {
+			segments.addAll(parseRawContent(raw, mentions, flags));
+		}
 
-		JsonNode deleteNode = I18nManager.getCustomMessages().path("discord_to_minecraft").path("delete");
-		if (deleteNode.isArray()) {
-			for (JsonNode segNode : deleteNode) {
-				String text = segNode.path("text").asString("");
-				boolean bold = segNode.path("bold").asBoolean(false);
-				String color = segNode.path("color").asString("");
-
-				text = text.replace("{effective_name}", deleterName);
-				color = color.replace("{role_color}", roleColor);
-
-				segments.add(new TextSegment(text, bold, color));
+		if (flags.attachments()) {
+			for (MessageExtras.Attachment attachment : extras.attachments()) {
+				separate(segments);
+				segments.addAll(MessageParserCommon.attachment(
+						attachment.type(), attachment.fileName(), attachment.url(), attachment.spoiler()));
 			}
 		}
-
-		return segments;
-	}
-
-	/**
-	 * Gets the mention notification text from custom_messages.
-	 *
-	 * @param effectiveName The display name of the message author who mentioned someone.
-	 * @return The mention notification text.
-	 */
-	public static String getMentionNotificationText(String effectiveName) {
-		String template = I18nManager.getCustomMessages().path("xxxxx_to_minecraft").path("mentioned").asString();
-		return template.replace("{effective_name}", effectiveName);
-	}
-
-	/**
-	 * Checks whether the message contains @everyone or @here mentions.
-	 *
-	 * @param message The Discord message.
-	 * @return true if the message mentions everyone/here.
-	 */
-	public static boolean isMentionEveryone(Message message) {
-		return message.getMentions().mentionsEveryone();
-	}
-
-	/**
-	 * Collects the Minecraft player UUIDs that should be notified about mentions in this message.
-	 * <p>
-	 * Checks both user mentions (via account linking) and role mentions (via linked accounts
-	 * that have the mentioned role).
-	 *
-	 * @param message The Discord message.
-	 * @return A set of Minecraft player UUID strings to notify.
-	 */
-	public static Set<String> collectMentionedPlayerUuids(Message message) {
-		Set<String> uuids = new HashSet<>();
-
-		// Direct user mentions
-		for (User mentionedUser : message.getMentions().getUsers()) {
-			List<String> linkedUuids = LinkedAccountManager.getMinecraftUuidsByDiscordId(mentionedUser.getId());
-			uuids.addAll(linkedUuids);
-		}
-
-		// Role mentions
-		for (Role mentionedRole : message.getMentions().getRoles()) {
-			List<Member> membersWithRole = message.getGuild().getMembersWithRoles(mentionedRole);
-			for (Member m : membersWithRole) {
-				List<String> linkedUuids = LinkedAccountManager.getMinecraftUuidsByDiscordId(m.getUser().getId());
-				uuids.addAll(linkedUuids);
+		if (flags.stickers()) {
+			for (String sticker : extras.stickers()) {
+				separate(segments);
+				segments.add(new TextSegment("<sticker name=[" + sticker + "]>", false, "yellow"));
 			}
 		}
-
-		// @everyone / @here mentions are handled via the mentionEveryone flag
-		// which notifies ALL online players, not just linked ones
-
-		return uuids;
-	}
-
-	/**
-	 * Parses the content of a Discord message into a list of styled text segments,
-	 * using the provided raw content string instead of the message's own raw content.
-	 * <p>
-	 * This overload is used for reply truncation and multi-line limiting.
-	 *
-	 * @param message The Discord message (for resolving mentions, attachments, etc.).
-	 * @param raw     The raw content string to parse (may be truncated).
-	 * @return The list of text segments representing the parsed message body.
-	 */
-	public static List<TextSegment> parseMessageContent(Message message, String raw) {
-		List<TextSegment> segments = new ArrayList<>();
-
-		boolean parseMentions = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.mentions");
-		boolean parseCustomEmojis = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.custom_emojis");
-		boolean parseUnicodeEmojis = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.unicode_emojis");
-		boolean parseMarkdown = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.markdown");
-		boolean parseHyperlinks = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.hyperlinks");
-		boolean parseAttachments = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.attachments");
-		boolean parseStickers = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.stickers");
-		boolean parseEmbeds = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.embeds");
-		boolean parseComponents = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.components");
-		boolean parseTimestamps = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.timestamps");
-
-		// Process the raw text content
-		if (!raw.isEmpty()) {
-			segments.addAll(parseRawContent(raw, message, parseMentions, parseCustomEmojis,
-					parseUnicodeEmojis, parseMarkdown, parseHyperlinks, parseTimestamps));
-		}
-
-		// Append attachments
-		if (parseAttachments) {
-			for (Message.Attachment attachment : message.getAttachments()) {
-				if (!segments.isEmpty()) {
-					segments.add(new TextSegment(" "));
-				}
-				String type = "file";
-				if (attachment.isImage()) {
-					type = "image";
-				} else if (attachment.isVideo()) {
-					type = "video";
-				}
-				boolean spoilerAttachment = attachment.isSpoiler() || attachment.getFileName().startsWith("SPOILER_");
-				segments.addAll(buildAttachmentSegments(type, attachment.getFileName(), attachment.getUrl(), spoilerAttachment));
+		if (flags.embeds()) {
+			for (MessageExtras.Embed embed : extras.embeds()) {
+				separate(segments);
+				segments.addAll(MessageParserCommon.embed(embedTitle(embed), embed.url(),
+						isSpoilerWrappedUrl(raw, embed.url())));
 			}
 		}
-
-		// Append stickers
-		if (parseStickers) {
-			for (StickerItem sticker : message.getStickers()) {
-				if (!segments.isEmpty()) {
-					segments.add(new TextSegment(" "));
-				}
-				segments.add(new TextSegment("<sticker name=[" + sticker.getName() + "]>", false, "yellow"));
-			}
-		}
-
-		// Append embeds
-		if (parseEmbeds) {
-			for (MessageEmbed embed : message.getEmbeds()) {
-				if (!segments.isEmpty()) {
-					segments.add(new TextSegment(" "));
-				}
-				String title = embed.getTitle() != null ? embed.getTitle() : "";
-				if (title.isEmpty() && embed.getDescription() != null) {
-					title = embed.getDescription();
-					if (title.length() > 50) {
-						title = safeTruncate(title, 20) + "...";
-					}
-				}
-
-				boolean spoilerEmbed = isSpoilerWrappedUrl(raw, embed.getUrl());
-				segments.addAll(buildEmbedSegments(title, embed.getUrl(), spoilerEmbed));
-			}
-		}
-
-		// Append interactive components indicator
-		if (parseComponents && !message.getComponents().isEmpty()) {
-			if (!segments.isEmpty()) {
-				segments.add(new TextSegment(" "));
-			}
+		if (flags.components() && extras.hasComponents()) {
+			separate(segments);
 			segments.add(new TextSegment("<components>", false, "yellow"));
 		}
-
-		// Append poll indicator
-		if (ConfigManager.getBoolean("message_parsing.discord_to_minecraft.polls")) {
-			MessagePoll poll = message.getPoll();
-			if (poll != null) {
-				if (!segments.isEmpty()) {
-					segments.add(new TextSegment(" "));
-				}
-				String question = poll.getQuestion().getText();
-				segments.add(new TextSegment("<poll question=[" + question + "]>", false, "yellow"));
-			}
+		if (flags.polls() && extras.pollQuestion() != null) {
+			separate(segments);
+			segments.add(new TextSegment("<poll question=[" + extras.pollQuestion() + "]>", false, "yellow"));
 		}
-
 		return segments;
 	}
 
-	private static List<TextSegment> parseRawContent(String raw, Message message,
-													 boolean parseMentions, boolean parseCustomEmojis,
-													 boolean parseUnicodeEmojis, boolean parseMarkdown,
-													 boolean parseHyperlinks, boolean parseTimestamps) {
-		List<TextSegment> segments = new ArrayList<>();
-
-		// Mentions/timestamps are split after Markdown so nested formatting (e.g. **<@id>**) is preserved.
-		if (parseMarkdown) {
-			segments.addAll(parseMarkdownText(raw));
-			return postProcessInlineSegments(segments, message, parseMentions, parseTimestamps,
-					parseCustomEmojis, parseUnicodeEmojis, parseHyperlinks);
-		}
-
-		List<TokenSpan> tokens = new ArrayList<>();
-
-		if (parseMentions) {
-			collectSpoilerMentionTokens(raw, message, tokens);
-			collectUserMentionTokens(raw, message, tokens);
-			collectRoleMentionTokens(raw, message, tokens);
-			collectChannelMentionTokens(raw, message, tokens);
-			collectEveryoneHereTokens(raw, message, tokens);
-		}
-
-		// Collect timestamps if configured
-		if (parseTimestamps) {
-			collectTimestampTokens(raw, tokens);
-		}
-
-		// Hyperlinks and emoji are parsed after Markdown so nested wrappers don't leak as plain text.
-
-		// Sort tokens by start position
-		tokens.sort(Comparator.comparingInt(a -> a.start));
-
-		// Remove overlapping tokens (keep the first one)
-		tokens = removeOverlaps(tokens);
-
-		// Build segments from the raw text, inserting special tokens
-		int cursor = 0;
-		for (TokenSpan token : tokens) {
-			if (token.start > cursor) {
-				String plainText = raw.substring(cursor, token.start);
-				segments.add(new TextSegment(plainText));
-			}
-			segments.add(token.segment);
-			cursor = token.end;
-		}
-
-		// Remaining text after last token
-		if (cursor < raw.length()) {
-			String remaining = raw.substring(cursor);
-			segments.add(new TextSegment(remaining));
-		}
-
-		return postProcessInlineSegments(segments, message, false, false,
-				parseCustomEmojis, parseUnicodeEmojis, parseHyperlinks);
-	}
-
-	private static List<TextSegment> parseMessageContentWithoutMessage(String raw) {
-		boolean parseCustomEmojis = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.custom_emojis");
-		boolean parseUnicodeEmojis = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.unicode_emojis");
-		boolean parseMarkdown = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.markdown");
-		boolean parseHyperlinks = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.hyperlinks");
-		boolean parseTimestamps = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.timestamps");
-		return parseRawContent(raw, null, false, parseCustomEmojis, parseUnicodeEmojis, parseMarkdown, parseHyperlinks, parseTimestamps);
-	}
-
-	private static void collectUserMentionTokens(String raw, Message message, List<TokenSpan> tokens) {
-		Matcher matcher = USER_MENTION_PATTERN.matcher(raw);
-		while (matcher.find()) {
-			String userId = matcher.group(1);
-			String displayName = null;
-			String color = null;
-			for (User user : message.getMentions().getUsers()) {
-				if (user.getId().equals(userId)) {
-					Member member = message.getGuild().getMember(user);
-					displayName = member != null ? member.getEffectiveName() : user.getName();
-					color = getRoleColorHex(member);
-					break;
-				}
-			}
-			if (displayName == null) {
-				displayName = userId;
-			}
-			TextSegment seg = new TextSegment("[@" + displayName + "]", false, color != null ? color : "white");
-			tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
-		}
-	}
-
-	private static void collectRoleMentionTokens(String raw, Message message, List<TokenSpan> tokens) {
-		Matcher matcher = ROLE_MENTION_PATTERN.matcher(raw);
-		while (matcher.find()) {
-			String roleId = matcher.group(1);
-			String roleName = roleId;
-			String color = "white";
-			for (Role role : message.getMentions().getRoles()) {
-				if (role.getId().equals(roleId)) {
-					roleName = role.getName();
-					Color roleColor = role.getColors().getPrimary();
-					if (roleColor != null) {
-						color = String.format("#%06X", roleColor.getRGB() & 0xFFFFFF);
-					}
-					break;
-				}
-			}
-			TextSegment seg = new TextSegment("[@" + roleName + "]", false, color);
-			tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
-		}
-	}
-
-	private static void collectChannelMentionTokens(String raw, Message message, List<TokenSpan> tokens) {
-		Matcher matcher = CHANNEL_MENTION_PATTERN.matcher(raw);
-		while (matcher.find()) {
-			String channelId = matcher.group(1);
-			String channelName = channelId;
-			for (GuildChannel channel : message.getMentions().getChannels()) {
-				if (channel.getId().equals(channelId)) {
-					channelName = channel.getName();
-					break;
-				}
-			}
-			TextSegment seg = new TextSegment("[#" + channelName + "]", false, "yellow");
-			tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
-		}
-	}
-
-	private static void collectEveryoneHereTokens(String raw, Message message, List<TokenSpan> tokens) {
-		if (!message.getMentions().mentionsEveryone()) {
-			return;
-		}
-		Matcher matcher = EVERYONE_HERE_PATTERN.matcher(raw);
-		while (matcher.find()) {
-			String mention = matcher.group(1); // "everyone" or "here"
-			TextSegment seg = new TextSegment("[@" + mention + "]", false, "yellow");
-			tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
-		}
-	}
-
-	private static void collectSpoilerMentionTokens(String raw, Message message, List<TokenSpan> tokens) {
-		collectSpoilerUserMentionTokens(raw, message, tokens);
-		collectSpoilerRoleMentionTokens(raw, message, tokens);
-		collectSpoilerChannelMentionTokens(raw, message, tokens);
-		collectSpoilerEveryoneHereTokens(raw, message, tokens);
-	}
-
-	private static void collectSpoilerUserMentionTokens(String raw, Message message, List<TokenSpan> tokens) {
-		Matcher matcher = SPOILER_USER_MENTION_PATTERN.matcher(raw);
-		while (matcher.find()) {
-			String userId = matcher.group(1);
-			String displayName = null;
-			String color = null;
-			for (User user : message.getMentions().getUsers()) {
-				if (user.getId().equals(userId)) {
-					Member member = message.getGuild().getMember(user);
-					displayName = member != null ? member.getEffectiveName() : user.getName();
-					color = getRoleColorHex(member);
-					break;
-				}
-			}
-			if (displayName == null) {
-				displayName = userId;
-			}
-			TextSegment seg = new TextSegment("[@" + displayName + "]", false, colorOrDefault(color));
-			applySpoilerStyle(seg);
-			tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
-		}
-	}
-
-	private static void collectSpoilerRoleMentionTokens(String raw, Message message, List<TokenSpan> tokens) {
-		Matcher matcher = SPOILER_ROLE_MENTION_PATTERN.matcher(raw);
-		while (matcher.find()) {
-			String roleId = matcher.group(1);
-			String roleName = roleId;
-			String color = "white";
-			for (Role role : message.getMentions().getRoles()) {
-				if (role.getId().equals(roleId)) {
-					roleName = role.getName();
-					Color roleColor = role.getColors().getPrimary();
-					if (roleColor != null) {
-						color = String.format("#%06X", roleColor.getRGB() & 0xFFFFFF);
-					}
-					break;
-				}
-			}
-			TextSegment seg = new TextSegment("[@" + roleName + "]", false, color);
-			applySpoilerStyle(seg);
-			tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
-		}
-	}
-
-	private static void collectSpoilerChannelMentionTokens(String raw, Message message, List<TokenSpan> tokens) {
-		Matcher matcher = SPOILER_CHANNEL_MENTION_PATTERN.matcher(raw);
-		while (matcher.find()) {
-			String channelId = matcher.group(1);
-			String channelName = channelId;
-			for (GuildChannel channel : message.getMentions().getChannels()) {
-				if (channel.getId().equals(channelId)) {
-					channelName = channel.getName();
-					break;
-				}
-			}
-			TextSegment seg = new TextSegment("[#" + channelName + "]", false, "yellow");
-			applySpoilerStyle(seg);
-			tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
-		}
-	}
-
-	private static void collectSpoilerEveryoneHereTokens(String raw, Message message, List<TokenSpan> tokens) {
-		if (!message.getMentions().mentionsEveryone()) {
-			return;
-		}
-		Matcher matcher = SPOILER_EVERYONE_HERE_PATTERN.matcher(raw);
-		while (matcher.find()) {
-			String mention = matcher.group(1);
-			TextSegment seg = new TextSegment("[@" + mention + "]", false, "yellow");
-			applySpoilerStyle(seg);
-			tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
-		}
-	}
-
-	private static void collectTimestampTokens(String raw, List<TokenSpan> tokens) {
-		Matcher matcher = DISCORD_TIMESTAMP_PATTERN.matcher(raw);
-		while (matcher.find()) {
-			try {
-				long epoch = Long.parseLong(matcher.group(1));
-				String style = matcher.group(2);
-				String formatted = MessageParserCommon.formatDiscordTimestamp(epoch, style);
-				TextSegment seg = new TextSegment("[" + formatted + "]", false, "yellow");
-				tokens.add(new TokenSpan(matcher.start(), matcher.end(), seg));
-			} catch (Exception ignored) {
-				// If parsing fails, leave the raw token as-is
-			}
-		}
-	}
-
 	/**
-	 * Replaces Discord timestamp tokens (e.g. {@code <t:1234567890:R>}) with
-	 * localized, human-readable text used by the message parser.
+	 * Replaces Discord timestamp tokens (e.g. {@code <t:1234567890:R>}) with localized plain text.
 	 *
 	 * @param text Source text that may contain Discord timestamp tokens.
 	 * @return Text with Discord timestamp tokens replaced by human-readable values.
 	 */
 	public static String formatDiscordTimestampsForPlainText(String text) {
-		if (text == null || text.isEmpty()) {
-			return text;
-		}
-
-		Matcher matcher = DISCORD_TIMESTAMP_PATTERN.matcher(text);
-		StringBuilder out = new StringBuilder();
-		while (matcher.find()) {
-			String replacement = matcher.group();
-			try {
-				long epoch = Long.parseLong(matcher.group(1));
-				String style = matcher.group(2);
-				replacement = "[" + MessageParserCommon.formatDiscordTimestamp(epoch, style) + "]";
-			} catch (Exception ignored) {
-			}
-			matcher.appendReplacement(out, Matcher.quoteReplacement(replacement));
-		}
-		matcher.appendTail(out);
-		return out.toString();
+		return MessageParserCommon.formatTimestampsForPlainText(text);
 	}
 
-	private static List<TokenSpan> removeOverlaps(List<TokenSpan> tokens) {
-		List<TokenSpan> result = new ArrayList<>();
-		int lastEnd = -1;
-		for (TokenSpan token : tokens) {
-			if (token.start >= lastEnd) {
-				result.add(token);
-				lastEnd = token.end;
-			}
+	/**
+	 * Resolves the display title of an embed, falling back to a shortened description.
+	 */
+	private static String embedTitle(MessageExtras.Embed embed) {
+		String title = embed.title() != null ? embed.title() : "";
+		if (!title.isEmpty() || embed.description() == null) {
+			return title;
 		}
-		return result;
+		String description = embed.description();
+		if (description.length() > EMBED_DESCRIPTION_LIMIT) {
+			description = safeTruncate(description, EMBED_DESCRIPTION_KEEP) + "...";
+		}
+		return description;
 	}
 
-	private static List<TextSegment> parseMarkdownText(String text) {
+	private static void separate(List<TextSegment> segments) {
+		if (!segments.isEmpty()) {
+			segments.add(new TextSegment(" "));
+		}
+	}
+
+	/**
+	 * @return Whether the embed URL appears inside a {@code ||spoiler||} run in the raw content.
+	 */
+	private static boolean isSpoilerWrappedUrl(String raw, String url) {
+		if (raw == null || raw.isEmpty() || url == null || url.isEmpty()) {
+			return false;
+		}
+		Matcher spoilerMatcher = MessageParserCommon.SPOILER_CONTENT.matcher(raw);
+		while (spoilerMatcher.find()) {
+			String content = spoilerMatcher.group(1);
+			if (content != null && url.equals(content.replaceAll("[*_~`\\s]", ""))) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	// --- Raw content -----------------------------------------------------------------------------
+
+	private static List<TextSegment> parseRawContent(String raw, MentionResolver mentions, Flags flags) {
+		if (flags.markdown()) {
+			return postProcess(parseMarkdownText(raw, flags), mentions, flags);
+		}
+
+		// Without Markdown parsing the ||spoiler|| delimiters are never consumed by the scanner, so
+		// spoiler-wrapped mentions have to be matched as whole tokens. Mentions and timestamps are all
+		// resolved in one left-to-right pass; nothing that was already rendered is scanned again.
+		List<MessageParserCommon.TokenRule> rules = new ArrayList<>();
+		if (flags.mentions() && mentions != null) {
+			rules.add(new MessageParserCommon.TokenRule(MessageParserCommon.SPOILER_USER_MENTION,
+					(matcher, source) -> MessageParserCommon.spoiler(userMention(matcher.group(1), source, mentions))));
+			rules.add(new MessageParserCommon.TokenRule(MessageParserCommon.SPOILER_ROLE_MENTION,
+					(matcher, source) -> MessageParserCommon.spoiler(roleMention(matcher.group(1), source, mentions))));
+			rules.add(new MessageParserCommon.TokenRule(MessageParserCommon.SPOILER_CHANNEL_MENTION,
+					(matcher, source) -> MessageParserCommon.spoiler(channelMention(matcher.group(1), source, mentions))));
+			if (mentions.mentionsEveryone()) {
+				rules.add(new MessageParserCommon.TokenRule(MessageParserCommon.SPOILER_EVERYONE_HERE,
+						(matcher, source) -> MessageParserCommon.spoiler(everyoneMention(matcher.group(1), source))));
+			}
+			addMentionRules(rules, mentions);
+		}
+		if (flags.timestamps()) {
+			rules.add(new MessageParserCommon.TokenRule(MessageParserCommon.TIMESTAMP, MessageParserCommon::timestamp));
+		}
+
 		List<TextSegment> segments = new ArrayList<>();
-
-		List<MarkdownSpan> spans = new ArrayList<>();
-		collectCodeBlockSpans(text, spans);
-		spans.sort(Comparator.comparingInt(a -> a.start));
-		spans = removeMarkdownOverlaps(spans);
-
-		int cursor = 0;
-		for (MarkdownSpan span : spans) {
-			if (span.start > cursor) {
-				segments.addAll(parseMarkdownInlineWithHeading(text.substring(cursor, span.start), new MarkdownState()));
-			}
-			segments.addAll(span.codeBlockSegments);
-			cursor = span.end;
-		}
-
-		if (cursor < text.length()) {
-			segments.addAll(parseMarkdownInlineWithHeading(text.substring(cursor), new MarkdownState()));
-		}
-
-		return segments;
+		segments.add(new TextSegment(raw));
+		return applyInlinePasses(MessageParserCommon.splitByRules(segments, rules), flags);
 	}
 
-	private static List<TextSegment> parseMarkdownInlineWithHeading(String text, MarkdownState baseState) {
-		List<TextSegment> result = new ArrayList<>();
-		if (text.isEmpty()) {
-			return result;
-		}
-		int start = 0;
-		while (start < text.length()) {
-			int newline = text.indexOf('\n', start);
-			int lineEnd = newline >= 0 ? newline : text.length();
-			String line = text.substring(start, lineEnd);
-			MarkdownState lineState = baseState.copy();
-			if (MessageParserCommon.isMarkdownQuoteLine(line)) {
-				lineState.color = QUOTE_COLOR;
-			}
-			if (MessageParserCommon.isMarkdownHeadingLine(line)) {
-				lineState.bold = true;
-			}
-			result.addAll(parseNestedMarkdown(line, lineState));
-			if (newline < 0) {
-				break;
-			}
-			result.add(new TextSegment("\n"));
-			start = newline + 1;
-		}
-		return result;
-	}
-
-	private static List<TextSegment> parseNestedMarkdown(String text, MarkdownState state) {
-		List<TextSegment> segments = new ArrayList<>();
-		StringBuilder plain = new StringBuilder();
-		int i = 0;
-		while (i < text.length()) {
-			if (text.charAt(i) == '\\' && i + 1 < text.length()) {
-				plain.append(text.charAt(i + 1));
-				i += 2;
-				continue;
-			}
-			if (text.charAt(i) == '`') {
-				int close = findClosingDelimiter(text, i + 1, "`");
-				if (close > i) {
-					appendPlainSegment(segments, plain, state);
-					addStyledSegment(segments, "[" + text.substring(i + 1, close) + "]", state);
-					i = close + 1;
-					continue;
-				}
-			}
-
-			String delimiter = matchMarkdownDelimiter(text, i);
-			if (delimiter != null) {
-				int close = findClosingDelimiter(text, i + delimiter.length(), delimiter);
-				if (close > i) {
-					appendPlainSegment(segments, plain, state);
-					MarkdownState nestedState = applyDelimiterStyle(state, delimiter);
-					segments.addAll(parseNestedMarkdown(text.substring(i + delimiter.length(), close), nestedState));
-					i = close + delimiter.length();
-					continue;
-				}
-			}
-
-			plain.append(text.charAt(i));
-			i++;
-		}
-		appendPlainSegment(segments, plain, state);
-		return segments;
-	}
-
-	private static String matchMarkdownDelimiter(String text, int index) {
-		for (String delimiter : MARKDOWN_DELIMITERS) {
-			if (text.startsWith(delimiter, index)) {
-				if (MessageParserCommon.isUnderscoreDelimiter(delimiter)
-						&& MessageParserCommon.isInsideDiscordAliasEmoji(text, index, DISCORD_ALIAS_EMOJI_PATTERN)) {
-					continue;
-				}
-				return delimiter;
-			}
-		}
-		return null;
-	}
-
-	private static int findClosingDelimiter(String text, int start, String delimiter) {
-		for (int i = start; i <= text.length() - delimiter.length(); i++) {
-			if (text.charAt(i) == '\\') {
-				i++;
-				continue;
-			}
-			if (MessageParserCommon.isUnderscoreDelimiter(delimiter)
-					&& MessageParserCommon.isInsideDiscordAliasEmoji(text, i, DISCORD_ALIAS_EMOJI_PATTERN)) {
-				continue;
-			}
-			if (text.startsWith(delimiter, i)) {
-				return i;
-			}
-		}
-		return -1;
-	}
-
-	private static MarkdownState applyDelimiterStyle(MarkdownState base, String delimiter) {
-		MarkdownState state = base.copy();
-		switch (delimiter) {
-			case "***" -> {
-				state.bold = true;
-				state.italic = true;
-			}
-			case "**" -> state.bold = true;
-			case "*", "_" -> state.italic = true;
-			case "__" -> state.underlined = true;
-			case "~~" -> state.strikethrough = true;
-			case "||" -> state.obfuscated = true;
-			default -> {
-			}
-		}
-		return state;
-	}
-
-	private static void appendPlainSegment(List<TextSegment> segments, StringBuilder plain, MarkdownState state) {
-		if (plain.isEmpty()) {
-			return;
-		}
-		addStyledSegment(segments, plain.toString(), state);
-		plain.setLength(0);
-	}
-
-	private static void addStyledSegment(List<TextSegment> segments, String text, MarkdownState state) {
-		if (text.isEmpty()) {
-			return;
-		}
-		TextSegment segment = new TextSegment(text);
-		segment.bold = state.bold;
-		segment.italic = state.italic;
-		segment.underlined = state.underlined;
-		segment.strikethrough = state.strikethrough;
-		segment.obfuscated = state.obfuscated;
-		if (state.color != null) {
-			segment.color = state.color;
-		}
-		if (segment.obfuscated) {
-			segment.hoverText = text;
-		}
-		segments.add(segment);
-	}
-
-	private static List<TextSegment> postProcessInlineSegments(List<TextSegment> segments,
-															   Message message,
-															   boolean parseMentions,
-															   boolean parseTimestamps,
-															   boolean parseCustomEmojis,
-															   boolean parseUnicodeEmojis,
-															   boolean parseHyperlinks) {
-		if ((!parseMentions && !parseTimestamps && !parseCustomEmojis && !parseUnicodeEmojis && !parseHyperlinks) || segments.isEmpty()) {
+	/**
+	 * Applies the inline token passes to already-styled segments, in the order the historical
+	 * implementation used.
+	 */
+	private static List<TextSegment> postProcess(List<TextSegment> segments, MentionResolver mentions, Flags flags) {
+		if ((!flags.mentions() && !flags.timestamps() && !hasInlinePasses(flags)) || segments.isEmpty()) {
 			return segments;
 		}
 		List<TextSegment> out = new ArrayList<>();
 		for (TextSegment segment : segments) {
-			if (segment.text == null || segment.text.isEmpty() || segment.clickUrl != null) {
+			if (!MessageParserCommon.isSplittable(segment)) {
 				out.add(segment);
 				continue;
 			}
 			List<TextSegment> current = List.of(segment);
-			if (parseMentions && message != null) {
-				current = splitSegmentsByUserMention(current, message);
-				current = splitSegmentsByRoleMention(current, message);
-				current = splitSegmentsByChannelMention(current, message);
-				current = splitSegmentsByEveryoneHereMention(current, message);
+			if (flags.mentions() && mentions != null) {
+				current = splitMentions(current, mentions);
 			}
-			if (parseTimestamps) {
-				current = MessageParserCommon.splitSegmentsByTimestamp(current);
+			if (flags.timestamps()) {
+				current = MessageParserCommon.splitByPattern(current, MessageParserCommon.TIMESTAMP, MessageParserCommon::timestamp);
 			}
-			if (parseHyperlinks) {
-				current = MessageParserCommon.splitSegmentsByMarkdownLink(current);
-				current = MessageParserCommon.splitSegmentsByBareUrl(current);
-			}
-			if (parseCustomEmojis) {
-				current = splitSegmentsByCustomEmoji(current);
-				current = splitSegmentsByDiscordAliasEmoji(current);
-			}
-			if (parseUnicodeEmojis) {
-				current = MessageParserCommon.splitSegmentsByUnicodeEmoji(current);
-			}
-			for (TextSegment seg : current) {
-				if (seg.obfuscated && seg.clickUrl == null && (seg.hoverText == null || seg.hoverText.isEmpty())) {
-					seg.hoverText = seg.text;
-				}
-				out.add(seg);
-			}
+			out.addAll(withSpoilerHover(applyInlineRules(current, flags)));
 		}
 		return out;
 	}
 
-	private static List<TextSegment> splitSegmentsByUserMention(List<TextSegment> segments, Message message) {
-		List<TextSegment> out = new ArrayList<>();
-		for (TextSegment segment : segments) {
-			if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
-				out.add(segment);
-				continue;
-			}
-			Matcher matcher = USER_MENTION_PATTERN.matcher(segment.text);
-			int cursor = 0;
-			while (matcher.find()) {
-				if (matcher.start() > cursor) {
-					out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor, matcher.start())));
-				}
-				String userId = matcher.group(1);
-				String displayName = userId;
-				String color = "white";
-				for (User user : message.getMentions().getUsers()) {
-					if (user.getId().equals(userId)) {
-						Member member = message.getGuild().getMember(user);
-						displayName = member != null ? member.getEffectiveName() : user.getName();
-						color = colorOrDefault(getRoleColorHex(member));
-						break;
-					}
-				}
-				TextSegment mention = TextSegmentUtils.copySegment(segment, "[@" + displayName + "]");
-				mention.color = color;
-				out.add(mention);
-				cursor = matcher.end();
-			}
-			if (cursor == 0) {
-				out.add(segment);
-			} else if (cursor < segment.text.length()) {
-				out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor)));
-			}
-		}
-		return out;
-	}
-
-	private static List<TextSegment> splitSegmentsByRoleMention(List<TextSegment> segments, Message message) {
-		List<TextSegment> out = new ArrayList<>();
-		for (TextSegment segment : segments) {
-			if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
-				out.add(segment);
-				continue;
-			}
-			Matcher matcher = ROLE_MENTION_PATTERN.matcher(segment.text);
-			int cursor = 0;
-			while (matcher.find()) {
-				if (matcher.start() > cursor) {
-					out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor, matcher.start())));
-				}
-				String roleId = matcher.group(1);
-				String roleName = roleId;
-				String color = "white";
-				for (Role role : message.getMentions().getRoles()) {
-					if (role.getId().equals(roleId)) {
-						roleName = role.getName();
-						Color roleColor = role.getColors().getPrimary();
-						if (roleColor != null) {
-							color = String.format("#%06X", roleColor.getRGB() & 0xFFFFFF);
-						}
-						break;
-					}
-				}
-				TextSegment mention = TextSegmentUtils.copySegment(segment, "[@" + roleName + "]");
-				mention.color = color;
-				out.add(mention);
-				cursor = matcher.end();
-			}
-			if (cursor == 0) {
-				out.add(segment);
-			} else if (cursor < segment.text.length()) {
-				out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor)));
-			}
-		}
-		return out;
-	}
-
-	private static List<TextSegment> splitSegmentsByChannelMention(List<TextSegment> segments, Message message) {
-		List<TextSegment> out = new ArrayList<>();
-		for (TextSegment segment : segments) {
-			if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
-				out.add(segment);
-				continue;
-			}
-			Matcher matcher = CHANNEL_MENTION_PATTERN.matcher(segment.text);
-			int cursor = 0;
-			while (matcher.find()) {
-				if (matcher.start() > cursor) {
-					out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor, matcher.start())));
-				}
-				String channelId = matcher.group(1);
-				String channelName = channelId;
-				for (GuildChannel channel : message.getMentions().getChannels()) {
-					if (channel.getId().equals(channelId)) {
-						channelName = channel.getName();
-						break;
-					}
-				}
-				TextSegment mention = TextSegmentUtils.copySegment(segment, "[#" + channelName + "]");
-				mention.color = "yellow";
-				out.add(mention);
-				cursor = matcher.end();
-			}
-			if (cursor == 0) {
-				out.add(segment);
-			} else if (cursor < segment.text.length()) {
-				out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor)));
-			}
-		}
-		return out;
-	}
-
-	private static List<TextSegment> splitSegmentsByEveryoneHereMention(List<TextSegment> segments, Message message) {
-		if (!message.getMentions().mentionsEveryone()) {
+	/**
+	 * Applies links and emoji to segments whose mentions and timestamps are already rendered.
+	 */
+	private static List<TextSegment> applyInlinePasses(List<TextSegment> segments, Flags flags) {
+		if (!hasInlinePasses(flags) || segments.isEmpty()) {
 			return segments;
 		}
 		List<TextSegment> out = new ArrayList<>();
 		for (TextSegment segment : segments) {
-			if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
+			if (!MessageParserCommon.isSplittable(segment)) {
 				out.add(segment);
 				continue;
 			}
-			Matcher matcher = EVERYONE_HERE_PATTERN.matcher(segment.text);
-			int cursor = 0;
-			while (matcher.find()) {
-				if (matcher.start() > cursor) {
-					out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor, matcher.start())));
-				}
-				TextSegment mention = TextSegmentUtils.copySegment(segment, "[@" + matcher.group(1) + "]");
-				mention.color = "yellow";
-				out.add(mention);
-				cursor = matcher.end();
-			}
-			if (cursor == 0) {
-				out.add(segment);
-			} else if (cursor < segment.text.length()) {
-				out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor)));
-			}
+			out.addAll(withSpoilerHover(applyInlineRules(List.of(segment), flags)));
 		}
 		return out;
 	}
 
-	private static List<TextSegment> splitSegmentsByCustomEmoji(List<TextSegment> segments) {
-		List<TextSegment> out = new ArrayList<>();
+	private static boolean hasInlinePasses(Flags flags) {
+		return flags.customEmojis() || flags.unicodeEmojis() || flags.hyperlinks();
+	}
+
+	private static List<TextSegment> applyInlineRules(List<TextSegment> segments, Flags flags) {
+		List<TextSegment> current = segments;
+		if (flags.hyperlinks()) {
+			current = MessageParserCommon.splitByPattern(current, MessageParserCommon.MARKDOWN_LINK,
+					(matcher, source) -> MessageParserCommon.link(source, matcher.group(1), matcher.group(2)));
+			current = MessageParserCommon.splitByPattern(current, MessageParserCommon.BARE_URL,
+					(matcher, source) -> MessageParserCommon.link(source, matcher.group(1), matcher.group(1)));
+		}
+		if (flags.customEmojis()) {
+			current = MessageParserCommon.splitByPattern(current, MessageParserCommon.CUSTOM_EMOJI, DiscordMessageParser::customEmoji);
+			current = MessageParserCommon.splitByPattern(current, MessageParserCommon.ALIAS_EMOJI,
+					(matcher, source) -> emojiByAlias(matcher.group(1), source));
+		}
+		if (flags.unicodeEmojis()) {
+			current = MessageParserCommon.splitByPattern(current, MessageParserCommon.UNICODE_EMOJI, MessageParserCommon::unicodeEmoji);
+		}
+		return current;
+	}
+
+	/**
+	 * Obfuscated text is unreadable in game, so obfuscated segments that are not links keep their plain
+	 * text as hover preview.
+	 */
+	private static List<TextSegment> withSpoilerHover(List<TextSegment> segments) {
 		for (TextSegment segment : segments) {
-			if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
-				out.add(segment);
-				continue;
-			}
-			Matcher matcher = CUSTOM_EMOJI_PATTERN.matcher(segment.text);
-			int cursor = 0;
-			while (matcher.find()) {
-				if (matcher.start() > cursor) {
-					out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor, matcher.start())));
-				}
-				TextSegment emojiSegment = TextSegmentUtils.copySegment(segment, ":" + matcher.group(1) + ":");
-				emojiSegment.color = "yellow";
-				out.add(emojiSegment);
-				cursor = matcher.end();
-			}
-			if (cursor == 0) {
-				out.add(segment);
-			} else if (cursor < segment.text.length()) {
-				out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor)));
+			if (segment.obfuscated && segment.clickUrl == null
+					&& (segment.hoverText == null || segment.hoverText.isEmpty())) {
+				segment.hoverText = segment.text;
 			}
 		}
-		return out;
+		return segments;
 	}
 
-	private static List<TextSegment> splitSegmentsByDiscordAliasEmoji(List<TextSegment> segments) {
-		List<TextSegment> out = new ArrayList<>();
-		for (TextSegment segment : segments) {
-			if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
-				out.add(segment);
+	/**
+	 * Appends the plain mention rules to a token table.
+	 */
+	private static void addMentionRules(List<MessageParserCommon.TokenRule> rules, MentionResolver mentions) {
+		rules.add(new MessageParserCommon.TokenRule(MessageParserCommon.USER_MENTION,
+				(matcher, source) -> userMention(matcher.group(1), source, mentions)));
+		rules.add(new MessageParserCommon.TokenRule(MessageParserCommon.ROLE_MENTION,
+				(matcher, source) -> roleMention(matcher.group(1), source, mentions)));
+		rules.add(new MessageParserCommon.TokenRule(MessageParserCommon.CHANNEL_MENTION,
+				(matcher, source) -> channelMention(matcher.group(1), source, mentions)));
+		if (mentions.mentionsEveryone()) {
+			rules.add(new MessageParserCommon.TokenRule(MessageParserCommon.EVERYONE_HERE,
+					(matcher, source) -> everyoneMention(matcher.group(1), source)));
+		}
+	}
+
+	/**
+	 * Runs the user, role, channel and everyone mention passes.
+	 */
+	private static List<TextSegment> splitMentions(List<TextSegment> segments, MentionResolver mentions) {
+		List<TextSegment> current = MessageParserCommon.splitByPattern(segments, MessageParserCommon.USER_MENTION,
+				(matcher, source) -> userMention(matcher.group(1), source, mentions));
+		current = MessageParserCommon.splitByPattern(current, MessageParserCommon.ROLE_MENTION,
+				(matcher, source) -> roleMention(matcher.group(1), source, mentions));
+		current = MessageParserCommon.splitByPattern(current, MessageParserCommon.CHANNEL_MENTION,
+				(matcher, source) -> channelMention(matcher.group(1), source, mentions));
+		if (mentions.mentionsEveryone()) {
+			current = MessageParserCommon.splitByPattern(current, MessageParserCommon.EVERYONE_HERE,
+					(matcher, source) -> everyoneMention(matcher.group(1), source));
+		}
+		return current;
+	}
+
+	private static TextSegment userMention(String id, TextSegment source, MentionResolver mentions) {
+		MentionResolver.Mention mention = mentions.user(id);
+		TextSegment segment = TextSegment.copyOf(source, "[@" + (mention != null ? mention.name() : id) + "]");
+		segment.color = mention != null && mention.color() != null ? mention.color() : "white";
+		return segment;
+	}
+
+	private static TextSegment roleMention(String id, TextSegment source, MentionResolver mentions) {
+		MentionResolver.Mention mention = mentions.role(id);
+		TextSegment segment = TextSegment.copyOf(source, "[@" + (mention != null ? mention.name() : id) + "]");
+		segment.color = mention != null && mention.color() != null ? mention.color() : "white";
+		return segment;
+	}
+
+	private static TextSegment channelMention(String id, TextSegment source, MentionResolver mentions) {
+		String name = mentions.channel(id);
+		TextSegment segment = TextSegment.copyOf(source, "[#" + (name != null ? name : id) + "]");
+		segment.color = "yellow";
+		return segment;
+	}
+
+	private static TextSegment everyoneMention(String keyword, TextSegment source) {
+		TextSegment segment = TextSegment.copyOf(source, "[@" + keyword + "]");
+		segment.color = "yellow";
+		return segment;
+	}
+
+	/**
+	 * @return The {@code :alias:} token styled as an emoji, or null when the alias is not a known emoji.
+	 */
+	private static TextSegment emojiByAlias(String alias, TextSegment source) {
+		if (EmojiManager.getByDiscordAlias(":" + alias + ":").isEmpty()) {
+			return null;
+		}
+		TextSegment segment = TextSegment.copyOf(source, ":" + alias + ":");
+		segment.color = "yellow";
+		return segment;
+	}
+
+	/**
+	 * @return The {@code <:name:id>} token rewritten as the {@code :name:} alias form.
+	 */
+	private static TextSegment customEmoji(Matcher matcher, TextSegment source) {
+		TextSegment segment = TextSegment.copyOf(source, ":" + matcher.group(1) + ":");
+		segment.color = "yellow";
+		return segment;
+	}
+
+	// --- Markdown --------------------------------------------------------------------------------
+
+	private static List<TextSegment> parseMarkdownText(String text, Flags flags) {
+		List<TextSegment> segments = new ArrayList<>();
+		List<CodeBlockSpan> spans = new ArrayList<>();
+		collectCodeBlockSpans(text, spans, flags);
+		spans.sort(Comparator.comparingInt(CodeBlockSpan::start));
+
+		int cursor = 0;
+		int lastEnd = -1;
+		for (CodeBlockSpan span : spans) {
+			if (span.start() < lastEnd) {
 				continue;
 			}
-			Matcher matcher = DISCORD_ALIAS_EMOJI_PATTERN.matcher(segment.text);
-			int cursor = 0;
-			boolean matched = false;
-			while (matcher.find()) {
-				String alias = matcher.group();
-				if (EmojiManager.getByDiscordAlias(alias).isEmpty()) {
-					continue;
-				}
-				if (matcher.start() > cursor) {
-					out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor, matcher.start())));
-				}
-				TextSegment emojiSegment = TextSegmentUtils.copySegment(segment, alias);
-				emojiSegment.color = "yellow";
-				out.add(emojiSegment);
-				cursor = matcher.end();
-				matched = true;
+			lastEnd = span.end();
+			if (span.start() > cursor) {
+				segments.addAll(MarkdownParser.parseDiscordMarkup(text.substring(cursor, span.start())));
 			}
-			if (!matched) {
-				out.add(segment);
-			} else if (cursor < segment.text.length()) {
-				out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor)));
-			}
+			segments.addAll(span.segments());
+			cursor = span.end();
 		}
-		return out;
+		if (cursor < text.length()) {
+			segments.addAll(MarkdownParser.parseDiscordMarkup(text.substring(cursor)));
+		}
+		return segments;
 	}
 
-	private static void collectCodeBlockSpans(String text, List<MarkdownSpan> spans) {
-		Matcher matcher = CODE_BLOCK_PATTERN.matcher(text);
+	private static void collectCodeBlockSpans(String text, List<CodeBlockSpan> spans, Flags flags) {
+		Matcher matcher = CODE_BLOCK.matcher(text);
 		while (matcher.find()) {
 			String language = matcher.group(1);
 			String content = matcher.group(2).stripTrailing();
-			List<TextSegment> codeSegments;
-
-			if ("ansi".equalsIgnoreCase(language) && ConfigManager.getBoolean("message_parsing.discord_to_minecraft.ansi_code_blocks")) {
-				codeSegments = parseAnsiContent(content);
-			} else {
-				codeSegments = new ArrayList<>();
-				codeSegments.add(new TextSegment("<code lang=[" + language + "]>", false, "yellow"));
-				for (String line : content.split("\n", 0)) {
-					codeSegments.add(new TextSegment("\n  " + line));
-				}
-				codeSegments.add(new TextSegment("\n</code>", false, "yellow"));
-			}
-
-			spans.add(new MarkdownSpan(matcher.start(), matcher.end(), content, codeSegments));
+			List<TextSegment> codeSegments = "ansi".equalsIgnoreCase(language) && flags.ansiCodeBlocks()
+					? parseAnsiContent(content)
+					: fencedCodeBlock(language, content);
+			spans.add(new CodeBlockSpan(matcher.start(), matcher.end(), codeSegments));
 		}
 	}
 
+	private static List<TextSegment> fencedCodeBlock(String language, String content) {
+		List<TextSegment> segments = new ArrayList<>();
+		segments.add(new TextSegment("<code lang=[" + language + "]>", false, "yellow"));
+		for (String line : content.split("\n", 0)) {
+			segments.add(new TextSegment("\n  " + line));
+		}
+		segments.add(new TextSegment("\n</code>", false, "yellow"));
+		return segments;
+	}
+
+	/**
+	 * Renders a {@code ```ansi} block by translating SGR escape sequences into segment styles.
+	 */
 	private static List<TextSegment> parseAnsiContent(String content) {
 		List<TextSegment> segments = new ArrayList<>();
-		Matcher matcher = ANSI_ESCAPE_PATTERN.matcher(content);
+		Matcher matcher = ANSI_ESCAPE.matcher(content);
 
 		boolean bold = false;
 		boolean underline = false;
@@ -1278,25 +618,11 @@ public final class DiscordMessageParser {
 		int cursor = 0;
 		while (matcher.find()) {
 			if (matcher.start() > cursor) {
-				String text = content.substring(cursor, matcher.start());
-				if (!text.isEmpty()) {
-					TextSegment seg = new TextSegment(text);
-					seg.bold = bold;
-					seg.underlined = underline;
-					seg.strikethrough = strikethrough;
-					seg.italic = italic;
-					if (color != null) {
-						seg.color = color;
-					}
-					segments.add(seg);
-				}
+				segments.add(ansiSegment(content.substring(cursor, matcher.start()), bold, italic, underline, strikethrough, color));
 			}
-
-			String[] codes = matcher.group(1).split(";");
-			for (String codeStr : codes) {
+			for (String codeText : matcher.group(1).split(";")) {
 				try {
-					int code = Integer.parseInt(codeStr);
-					switch (code) {
+					switch (Integer.parseInt(codeText)) {
 						case 0 -> {
 							bold = false;
 							underline = false;
@@ -1316,136 +642,71 @@ public final class DiscordMessageParser {
 						case 35 -> color = "purple";
 						case 36 -> color = "aqua";
 						case 37 -> color = "white";
+						default -> {
+						}
 					}
 				} catch (NumberFormatException ignored) {
+					// Unknown SGR parameter: ignore the code and keep the current style.
 				}
 			}
-
 			cursor = matcher.end();
 		}
 
 		if (cursor < content.length()) {
-			String text = content.substring(cursor);
-			if (!text.isEmpty()) {
-				TextSegment seg = new TextSegment(text);
-				seg.bold = bold;
-				seg.underlined = underline;
-				seg.strikethrough = strikethrough;
-				seg.italic = italic;
-				if (color != null) {
-					seg.color = color;
-				}
-				segments.add(seg);
-			}
+			segments.add(ansiSegment(content.substring(cursor), bold, italic, underline, strikethrough, color));
 		}
-
 		if (segments.isEmpty()) {
 			segments.add(new TextSegment(content));
 		}
-
 		return segments;
 	}
 
-	private static List<MarkdownSpan> removeMarkdownOverlaps(List<MarkdownSpan> spans) {
-		List<MarkdownSpan> result = new ArrayList<>();
-		int lastEnd = -1;
-		for (MarkdownSpan span : spans) {
-			if (span.start >= lastEnd) {
-				result.add(span);
-				lastEnd = span.end;
-			}
-		}
-		return result;
+	private static TextSegment ansiSegment(String text, boolean bold, boolean italic, boolean underline,
+										   boolean strikethrough, String color) {
+		TextSegment segment = new TextSegment(text);
+		segment.bold = bold;
+		segment.italic = italic;
+		segment.underlined = underline;
+		segment.strikethrough = strikethrough;
+		segment.color = color;
+		return segment;
 	}
 
-	private static boolean isSpoilerWrappedUrl(String raw, String url) {
-		if (raw == null || raw.isEmpty() || url == null || url.isEmpty()) {
-			return false;
-		}
-		Matcher spoilerMatcher = SPOILER_CONTENT_PATTERN.matcher(raw);
-		while (spoilerMatcher.find()) {
-			String content = spoilerMatcher.group(1);
-			if (content == null) {
-				continue;
-			}
-			String normalized = content.replaceAll("[*_~`\\s]", "");
-			if (url.equals(normalized)) {
-				return true;
-			}
-		}
-		return false;
-	}
+	// --- Truncation ------------------------------------------------------------------------------
 
-	private static List<TextSegment> buildAttachmentSegments(String type, String fileName, String url, boolean spoiler) {
-		List<TextSegment> segments = new ArrayList<>();
-		TextSegment prefix = new TextSegment(String.format(ATTACHMENT_LABEL_PREFIX, type), false, URL_COLOR);
-		TextSegment fileNameSegment = new TextSegment(fileName, false, URL_COLOR);
-		TextSegment suffix = new TextSegment(LABEL_SUFFIX, false, URL_COLOR);
-
-		applyLinkStyle(prefix, url);
-		applyLinkStyle(fileNameSegment, url);
-		applyLinkStyle(suffix, url);
-
-		if (spoiler) {
-			fileNameSegment.obfuscated = true;
-			fileNameSegment.hoverText = fileName;
-		}
-
-		segments.add(prefix);
-		segments.add(fileNameSegment);
-		segments.add(suffix);
-		return segments;
-	}
-
-	private static List<TextSegment> buildEmbedSegments(String title, String url, boolean spoiler) {
-		List<TextSegment> segments = new ArrayList<>();
-		String color = url == null ? "yellow" : URL_COLOR;
-		TextSegment prefix = new TextSegment(EMBED_LABEL_PREFIX, false, color);
-		TextSegment titleSegment = new TextSegment(title, false, color);
-		TextSegment suffix = new TextSegment(LABEL_SUFFIX, false, color);
-
-		if (url != null) {
-			applyLinkStyle(prefix, url);
-			applyLinkStyle(titleSegment, url);
-			applyLinkStyle(suffix, url);
-		}
-
-		if (spoiler) {
-			titleSegment.obfuscated = true;
-			titleSegment.hoverText = title;
-		}
-
-		segments.add(prefix);
-		segments.add(titleSegment);
-		segments.add(suffix);
-		return segments;
-	}
-
-	private static void applyLinkStyle(TextSegment segment, String url) {
-		segment.underlined = true;
-		segment.clickUrl = url;
-		if (segment.hoverText == null) {
-			segment.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
-		}
-	}
-
-	private static void applySpoilerStyle(TextSegment segment) {
-		segment.obfuscated = true;
-		// Obfuscated Minecraft text is unreadable in chat, so we keep original plain text as hover preview.
-		segment.hoverText = segment.text;
-	}
-
-	private static String colorOrDefault(String color) {
-		return color != null ? color : "white";
-	}
-
-	private static String truncateMainRaw(String raw) {
+	/**
+	 * Applies the main-message limits: at most {@value #MAX_CONTENT_LINES} lines, then a character limit
+	 * that depends on whether the text contains full-width characters.
+	 *
+	 * @param raw Raw content.
+	 * @return The truncated content.
+	 */
+	static String truncateMainRaw(String raw) {
 		String lineLimited = applyMainLineLimit(raw);
 		int maxLength = containsFullWidthCharacter(raw) ? MAIN_TRUNCATE_LIMIT_WIDE : MAIN_TRUNCATE_LIMIT_NARROW;
 		if (lineLimited.length() <= maxLength) {
 			return lineLimited;
 		}
 		return safeTruncate(lineLimited, maxLength) + "...";
+	}
+
+	/**
+	 * Applies the reply limits: a single line, truncated at a width-dependent character count.
+	 *
+	 * @param raw Raw content of the referenced message.
+	 * @return The truncated content.
+	 */
+	static String truncateReplyRaw(String raw) {
+		int replyLimit = containsFullWidthCharacter(raw) ? REPLY_TRUNCATE_LIMIT_WIDE : REPLY_TRUNCATE_LIMIT_NARROW;
+		int newlineIndex = raw.indexOf('\n');
+		int cutoff = newlineIndex >= 0 ? Math.min(newlineIndex, replyLimit) : replyLimit;
+		if (cutoff == 0) {
+			return "...";
+		}
+		if (raw.length() <= cutoff) {
+			return raw;
+		}
+		return safeTruncate(raw, cutoff) + "...";
 	}
 
 	private static String applyMainLineLimit(String raw) {
@@ -1464,41 +725,30 @@ public final class DiscordMessageParser {
 		return sb.toString();
 	}
 
-	private static String truncateReplyRaw(String raw) {
-		int replyLimit = containsFullWidthCharacter(raw) ? REPLY_TRUNCATE_LIMIT_WIDE : REPLY_TRUNCATE_LIMIT_NARROW;
-		int newlineIndex = raw.indexOf('\n');
-		int cutoff = newlineIndex >= 0 ? Math.min(newlineIndex, replyLimit) : replyLimit;
-		if (cutoff == 0) {
-			return "...";
-		}
-		if (raw.length() <= cutoff) {
-			return raw;
-		}
-		return safeTruncate(raw, cutoff) + "...";
-	}
-
-	private static List<TextSegment> enforceSingleLine(List<TextSegment> segments) {
+	/**
+	 * Cuts everything from the first line break onwards and appends an ellipsis marker.
+	 */
+	static List<TextSegment> enforceSingleLine(List<TextSegment> segments) {
 		List<TextSegment> result = new ArrayList<>();
-		boolean cut = false;
 		for (TextSegment segment : segments) {
-			if (cut) {
-				break;
-			}
 			String text = segment.text == null ? "" : segment.text;
 			int newline = text.indexOf('\n');
 			if (newline < 0) {
-				result.add(TextSegmentUtils.copySegment(segment, text));
+				result.add(TextSegment.copyOf(segment, text));
 				continue;
 			}
 			if (newline > 0) {
-				result.add(TextSegmentUtils.copySegment(segment, text.substring(0, newline)));
+				result.add(TextSegment.copyOf(segment, text.substring(0, newline)));
 			}
-			TextSegmentUtils.appendEllipsis(result);
-			cut = true;
+			TextSegment.appendEllipsis(result);
+			return result;
 		}
 		return result;
 	}
 
+	/**
+	 * @return Whether the text contains CJK characters, which are twice as wide in the Minecraft font.
+	 */
 	private static boolean containsFullWidthCharacter(String text) {
 		for (int i = 0; i < text.length(); ) {
 			int codePoint = text.codePointAt(i);
@@ -1519,41 +769,6 @@ public final class DiscordMessageParser {
 		return false;
 	}
 
-	private static String replacePlaceholders(String text, String effectiveName, String roleColor) {
-		String serverName = getServerName();
-		String serverColor = getServerColor();
-
-		return text.replace("{server}", serverName)
-				.replace("{server_color}", serverColor)
-				.replace("{effective_name}", effectiveName)
-				.replace("{role_color}", roleColor);
-	}
-
-	/**
-	 * Gets the hex color string for a member's highest colored role.
-	 *
-	 * @param member The Discord member (may be null).
-	 * @return The hex color string (e.g. "#FF0000"), or "white" if no role color.
-	 */
-	public static String getRoleColorHex(Member member) {
-		if (member == null) {
-			return "white";
-		}
-		Color color = member.getColors().getPrimary();
-		if (color == null) {
-			return "white";
-		}
-		return String.format("#%06X", color.getRGB() & 0xFFFFFF);
-	}
-
-	private static String getServerName() {
-		return "Discord";
-	}
-
-	private static String getServerColor() {
-		return "blue";
-	}
-
 	private static String safeTruncate(String text, int maxLen) {
 		if (text.length() <= maxLen) {
 			return text;
@@ -1564,29 +779,17 @@ public final class DiscordMessageParser {
 		return text.substring(0, maxLen);
 	}
 
-	private record TokenSpan(int start, int end, TextSegment segment) {
+	// --- Templates -------------------------------------------------------------------------------
+
+	private static MessageTemplates.Builder chatTemplate() {
+		return template("xxxxx_to_minecraft", "user_message");
 	}
 
-	private record MarkdownSpan(int start, int end, String innerText, List<TextSegment> codeBlockSegments) {
+	private static MessageTemplates.Builder template(String section, String key) {
+		JsonNode node = I18nManager.getCustomMessages().path(section).path(key);
+		return MessageTemplates.of(node);
 	}
 
-	private static class MarkdownState {
-		boolean bold;
-		boolean italic;
-		boolean underlined;
-		boolean strikethrough;
-		boolean obfuscated;
-		String color;
-
-		MarkdownState copy() {
-			MarkdownState copy = new MarkdownState();
-			copy.bold = bold;
-			copy.italic = italic;
-			copy.underlined = underlined;
-			copy.strikethrough = strikethrough;
-			copy.obfuscated = obfuscated;
-			copy.color = color;
-			return copy;
-		}
+	private record CodeBlockSpan(int start, int end, List<TextSegment> segments) {
 	}
 }

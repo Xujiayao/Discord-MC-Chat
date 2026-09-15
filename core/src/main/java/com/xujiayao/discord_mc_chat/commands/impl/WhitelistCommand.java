@@ -29,11 +29,6 @@ public final class WhitelistCommand implements Command {
 
 	private static final int WHITELIST_COMMAND_TIMEOUT_SECONDS = 10;
 
-	/**
-	 * Creates a whitelist command instance.
-	 */
-	public WhitelistCommand() {
-	}
 
 	@Override
 	public String name() {
@@ -43,17 +38,7 @@ public final class WhitelistCommand implements Command {
 	@Override
 	public CommandArgument[] args() {
 		return new CommandArgument[]{
-				new CommandArgument() {
-					@Override
-					public String name() {
-						return "player";
-					}
-
-					@Override
-					public String description() {
-						return I18nManager.getDmccTranslation("commands.whitelist.args_desc.player");
-					}
-				}
+				new CommandArgument("player", I18nManager.getDmccTranslation("commands.whitelist.args_desc.player"))
 		};
 	}
 

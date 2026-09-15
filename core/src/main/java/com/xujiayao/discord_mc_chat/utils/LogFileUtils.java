@@ -57,14 +57,22 @@ public final class LogFileUtils {
 
 	/**
 	 * Reads a log file, decompressing .gz files if necessary.
+	 * <p>
+	 * The requested name is confined to the log directory: a relative name that would escape it (for
+	 * example {@code ../../server.properties}) is rejected instead of being read.
 	 *
 	 * @param fileName The file name to read
-	 * @return The file content as bytes, or null if the file does not exist
+	 * @return The file content as bytes, or null if the file does not exist or is outside the log directory
 	 */
 	public static byte[] readLogFile(String fileName) {
-		Path filePath = Paths.get(LOGS_DIR).resolve(fileName).normalize();
+		if (fileName == null || fileName.isBlank()) {
+			return null;
+		}
 
-		if (!Files.exists(filePath) || !Files.isRegularFile(filePath)) {
+		Path logsDirectory = Paths.get(LOGS_DIR).toAbsolutePath().normalize();
+		Path filePath = logsDirectory.resolve(fileName).normalize();
+
+		if (!filePath.startsWith(logsDirectory) || !Files.isRegularFile(filePath)) {
 			return null;
 		}
 

@@ -12,11 +12,6 @@ import com.xujiayao.discord_mc_chat.config.I18nManager;
  */
 public final class ReloadCommand implements Command {
 
-	/**
-	 * Creates a reload command instance.
-	 */
-	public ReloadCommand() {
-	}
 
 	@Override
 	public String name() {

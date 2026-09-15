@@ -1,5 +1,6 @@
 package com.xujiayao.discord_mc_chat.minecraft.events;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.ParseResults;
@@ -19,9 +20,7 @@ import com.xujiayao.discord_mc_chat.minecraft.mod.ModIntegrations;
 import com.xujiayao.discord_mc_chat.minecraft.translations.TranslationManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.message.TextSegment;
-import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Info.ResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Link.RequestPacket;
-import com.xujiayao.discord_mc_chat.network.packets.EventPackets.MinecraftEventPacket;
+import com.xujiayao.discord_mc_chat.network.protocol.Packets;
 import com.xujiayao.discord_mc_chat.platform.StatsProvider;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import net.minecraft.ChatFormatting;
@@ -68,6 +67,7 @@ import net.minecraft.world.phys.Vec3;
 import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -79,6 +79,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 /**
  * Handles the Minecraft events reported by the platform mixins and implements the
@@ -92,8 +94,38 @@ import java.util.concurrent.TimeUnit;
 public final class MinecraftEventHandler {
 
 	private static final String DEFAULT_MENTION_STYLE = "title";
+	private static final String DMCC_SOURCE_NAME = "DMCC";
+
+	/**
+	 * Interval between two polls for asynchronous command output.
+	 */
+	private static final int COMMAND_OUTPUT_POLL_INTERVAL_MILLIS = 100;
+
+	/**
+	 * Number of polls before giving up on asynchronous command output (about 5 seconds in total).
+	 */
+	private static final int COMMAND_OUTPUT_POLL_MAX_ATTEMPTS = 50;
+
+	/**
+	 * Safety-net refresh interval for the "players ever joined" metric.
+	 */
+	private static final long PLAYERS_EVER_JOINED_TTL_MILLIS = Duration.ofMinutes(5).toMillis();
+
+	/**
+	 * Set whenever a player joins or quits, so the next info request refreshes the metric.
+	 */
+	private static final AtomicBoolean PLAYERS_EVER_JOINED_STALE = new AtomicBoolean(true);
+
+	/**
+	 * Guards against queueing more than one refresh at a time.
+	 */
+	private static final AtomicBoolean PLAYERS_EVER_JOINED_REFRESHING = new AtomicBoolean();
+
+	private static volatile int playersEverJoinedCache;
+	private static volatile long playersEverJoinedRefreshedAt;
 	private static MinecraftServer serverInstance;
 	private static StatsProvider statsProviderInstance;
+	private static volatile RegistryOps<JsonElement> registryOpsInstance;
 
 	private MinecraftEventHandler() {
 	}
@@ -106,8 +138,20 @@ public final class MinecraftEventHandler {
 	public static void onServerStarted(MinecraftServer server) {
 		serverInstance = server;
 
+		// Build the registry ops once so that component (de)serialization does not rebuild them per call
+		registryOpsInstance = RegistryOps.create(JsonOps.INSTANCE, server.registryAccess());
+
+		// Seed the "players ever joined" metric while we are already on the server thread, so the first info
+		// request reports the real value instead of a placeholder. A failure here is not fatal: the metric is
+		// best-effort and gets recomputed on the next join or quit.
+		try {
+			refreshPlayersEverJoined();
+		} catch (Exception ignored) {
+			playersEverJoinedRefreshedAt = System.currentTimeMillis();
+		}
+
 		Map<String, String> placeholders = Map.of();
-		NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SERVER_STARTED, placeholders));
+		NetworkManager.sendPacketToServer(new Packets.MinecraftEvent(Packets.MinecraftEventType.SERVER_STARTED, placeholders));
 
 		// Initialize translation manager with the started server instance after announcing server started event
 		TranslationManager.setServer(server);
@@ -122,7 +166,7 @@ public final class MinecraftEventHandler {
 	 */
 	public static void onServerStopping() {
 		Map<String, String> placeholders = Map.of();
-		NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SERVER_STOPPING, placeholders));
+		NetworkManager.sendPacketToServer(new Packets.MinecraftEvent(Packets.MinecraftEventType.SERVER_STOPPING, placeholders));
 	}
 
 	/**
@@ -144,12 +188,13 @@ public final class MinecraftEventHandler {
 				"player_name", player.getName().getString(),
 				"display_name", player.getDisplayName().getString()
 		);
-		NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_JOIN, placeholders));
+		PLAYERS_EVER_JOINED_STALE.set(true);
+		NetworkManager.sendPacketToServer(new Packets.MinecraftEvent(Packets.MinecraftEventType.PLAYER_JOIN, placeholders));
 
 		// Account linking: check if this player is linked (via network packet)
 		String playerUuid = player.getStringUUID();
 		String playerName = player.getName().getString();
-		NetworkManager.sendPacketToServer(new RequestPacket(playerUuid, playerName, true));
+		NetworkManager.sendPacketToServer(new Packets.LinkRequest(playerUuid, playerName, true));
 	}
 
 	/**
@@ -162,7 +207,8 @@ public final class MinecraftEventHandler {
 				"player_name", player.getName().getString(),
 				"display_name", player.getDisplayName().getString()
 		);
-		NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_QUIT, placeholders));
+		PLAYERS_EVER_JOINED_STALE.set(true);
+		NetworkManager.sendPacketToServer(new Packets.MinecraftEvent(Packets.MinecraftEventType.PLAYER_QUIT, placeholders));
 	}
 
 	/**
@@ -176,7 +222,7 @@ public final class MinecraftEventHandler {
 				"display_name", player.getDisplayName().getString(),
 				"death_message", TranslationManager.get(player.getCombatTracker().getDeathMessage())
 		);
-		NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_DIE, placeholders));
+		NetworkManager.sendPacketToServer(new Packets.MinecraftEvent(Packets.MinecraftEventType.PLAYER_DIE, placeholders));
 	}
 
 	/**
@@ -206,7 +252,7 @@ public final class MinecraftEventHandler {
 					"description", TranslationManager.get(displayInfo.getDescription())
 			);
 
-			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_ADVANCEMENT, placeholders));
+			NetworkManager.sendPacketToServer(new Packets.MinecraftEvent(Packets.MinecraftEventType.PLAYER_ADVANCEMENT, placeholders));
 		}
 	}
 
@@ -222,7 +268,7 @@ public final class MinecraftEventHandler {
 				"display_name", player.getDisplayName().getString(),
 				"mode", TranslationManager.get(type.getLongDisplayName())
 		);
-		NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_CHANGE_GAME_MODE, placeholders));
+		NetworkManager.sendPacketToServer(new Packets.MinecraftEvent(Packets.MinecraftEventType.PLAYER_CHANGE_GAME_MODE, placeholders));
 	}
 
 	/**
@@ -238,7 +284,7 @@ public final class MinecraftEventHandler {
 				"display_name", player.getDisplayName().getString(),
 				"message", TranslationManager.get(message.decoratedContent())
 		);
-		NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_CHAT, placeholders));
+		NetworkManager.sendPacketToServer(new Packets.MinecraftEvent(Packets.MinecraftEventType.PLAYER_CHAT, placeholders));
 	}
 
 	/**
@@ -254,7 +300,7 @@ public final class MinecraftEventHandler {
 				"display_name", player.getDisplayName().getString(),
 				"command", "/" + command
 		);
-		NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_COMMAND, placeholders));
+		NetworkManager.sendPacketToServer(new Packets.MinecraftEvent(Packets.MinecraftEventType.PLAYER_COMMAND, placeholders));
 	}
 
 	/**
@@ -270,7 +316,7 @@ public final class MinecraftEventHandler {
 				"display_name", context.getSource().getDisplayName().getString(),
 				"message", TranslationManager.get(message.decoratedContent())
 		);
-		NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_SAY, placeholders));
+		NetworkManager.sendPacketToServer(new Packets.MinecraftEvent(Packets.MinecraftEventType.SOURCE_SAY, placeholders));
 	}
 
 	/**
@@ -287,7 +333,7 @@ public final class MinecraftEventHandler {
 				"message", TranslationManager.get(component),
 				"component_json", serializeComponent(component)
 		);
-		NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_TELL_RAW, placeholders));
+		NetworkManager.sendPacketToServer(new Packets.MinecraftEvent(Packets.MinecraftEventType.SOURCE_TELL_RAW, placeholders));
 	}
 
 	/**
@@ -303,7 +349,7 @@ public final class MinecraftEventHandler {
 				"display_name", context.getSource().getDisplayName().getString(),
 				"message", TranslationManager.get(message.decoratedContent())
 		);
-		NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_MSG, placeholders));
+		NetworkManager.sendPacketToServer(new Packets.MinecraftEvent(Packets.MinecraftEventType.SOURCE_MSG, placeholders));
 	}
 
 	/**
@@ -318,7 +364,7 @@ public final class MinecraftEventHandler {
 				"display_name", context.getSource().getDisplayName().getString(),
 				"action", TranslationManager.get(message.decoratedContent())
 		);
-		NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_ME, placeholders));
+		NetworkManager.sendPacketToServer(new Packets.MinecraftEvent(Packets.MinecraftEventType.SOURCE_ME, placeholders));
 	}
 
 	/**
@@ -361,17 +407,7 @@ public final class MinecraftEventHandler {
 		// Construct a virtual CommandSourceStack with the sender's OP level
 		// and a custom CommandSource that bridges output back to the DMCC sender
 		DmccRconConsoleSource rconConsoleSource = new DmccRconConsoleSource(serverInstance);
-		CommandSourceStack source = new CommandSourceStack(
-				rconConsoleSource,
-				Vec3.atLowerCornerOf(serverInstance.getRespawnData().pos()),
-				Vec2.ZERO,
-				serverInstance.findRespawnDimension(),
-				LevelBasedPermissionSet.forLevel(PermissionLevel.byId(mcOp)),
-				"DMCC",
-				Component.literal("DMCC"),
-				serverInstance,
-				null
-		);
+		CommandSourceStack source = dmccSource(rconConsoleSource, mcOp);
 
 		// Must be dispatched to the main server thread to avoid concurrent modification.
 		// The completion future is completed after the command has been executed on the server thread,
@@ -387,28 +423,10 @@ public final class MinecraftEventHandler {
 					completion.complete(null);
 				} else {
 					// For commands that execute asynchronously or produce output after a delay
-					// (e.g. due to network calls, database access, or scheduled tasks)
-					CompletableFuture.runAsync(() -> {
-						// Wait for up to 5 seconds for command output to be produced, checking every 100ms,
-						// and wait an extra 100ms after the first non-empty response.
-						for (int i = 0; i < 50; i++) {
-							if (!rconConsoleSource.getCommandResponse().isEmpty()) {
-								// Extra 100ms wait to allow for any additional output to be produced
-								try {
-									Thread.sleep(100);
-								} catch (InterruptedException ie) {
-									Thread.currentThread().interrupt();
-									break;
-								}
-								break;
-							}
-							try {
-								Thread.sleep(100);
-							} catch (InterruptedException ie) {
-								Thread.currentThread().interrupt();
-								break;
-							}
-						}
+					// (e.g. due to network calls, database access, or scheduled tasks) the wait runs on a
+					// virtual thread: polling used to occupy a ForkJoinPool worker for up to 5 seconds.
+					Thread.ofVirtual().name("DMCC-CommandOutput").start(() -> {
+						awaitCommandOutput(rconConsoleSource);
 
 						// Send any collected command output back to the sender
 						sender.reply(rconConsoleSource.getCommandResponse());
@@ -431,17 +449,7 @@ public final class MinecraftEventHandler {
 
 		int mcOp = Math.max(0, opLevel);
 
-		CommandSourceStack source = new CommandSourceStack(
-				new DmccRconConsoleSource(serverInstance),
-				Vec3.atLowerCornerOf(serverInstance.getRespawnData().pos()),
-				Vec2.ZERO,
-				serverInstance.findRespawnDimension(),
-				LevelBasedPermissionSet.forLevel(PermissionLevel.byId(mcOp)),
-				"DMCC",
-				Component.literal("DMCC"),
-				serverInstance,
-				null
-		);
+		CommandSourceStack source = dmccSource(mcOp);
 
 		String rawInput = input == null ? "" : input;
 
@@ -481,6 +489,38 @@ public final class MinecraftEventHandler {
 		}
 	}
 
+	/**
+	 * Builds the virtual command source used to execute a DMCC command on the server.
+	 *
+	 * @param consoleSource The console source collecting the command output.
+	 * @param opLevel       The OP level to grant the source.
+	 * @return The constructed command source.
+	 */
+	private static CommandSourceStack dmccSource(DmccRconConsoleSource consoleSource, int opLevel) {
+		MinecraftServer server = serverInstance;
+		return new CommandSourceStack(
+				consoleSource,
+				Vec3.atLowerCornerOf(server.getRespawnData().pos()),
+				Vec2.ZERO,
+				server.findRespawnDimension(),
+				LevelBasedPermissionSet.forLevel(PermissionLevel.byId(opLevel)),
+				DMCC_SOURCE_NAME,
+				Component.literal(DMCC_SOURCE_NAME),
+				server,
+				null
+		);
+	}
+
+	/**
+	 * Builds the virtual command source used to auto-complete a DMCC command on the server.
+	 *
+	 * @param opLevel The OP level to grant the source.
+	 * @return The constructed command source.
+	 */
+	private static CommandSourceStack dmccSource(int opLevel) {
+		return dmccSource(new DmccRconConsoleSource(serverInstance), opLevel);
+	}
+
 	// ===== Account Linking Feedback =====
 
 	/**
@@ -503,9 +543,9 @@ public final class MinecraftEventHandler {
 		}
 
 		// Find the player and notify them
-		serverInstance.execute(() -> {
+		onServerThread(server -> {
 			try {
-				ServerPlayer player = serverInstance.getPlayerList().getPlayer(uuid);
+				ServerPlayer player = server.getPlayerList().getPlayer(uuid);
 				if (player != null) {
 					if (alreadyLinked) {
 						player.sendSystemMessage(buildAlreadyLinkedMessage(discordName));
@@ -536,9 +576,9 @@ public final class MinecraftEventHandler {
 			return;
 		}
 
-		serverInstance.execute(() -> {
+		onServerThread(server -> {
 			try {
-				ServerPlayer player = serverInstance.getPlayerList().getPlayer(uuid);
+				ServerPlayer player = server.getPlayerList().getPlayer(uuid);
 				if (player != null) {
 					if (success) {
 						player.sendSystemMessage(Component.literal(
@@ -561,11 +601,9 @@ public final class MinecraftEventHandler {
 	 * @param opLevels Map of Minecraft UUID to the desired OP level (0-4).
 	 */
 	public static void applyOpLevels(Map<String, Integer> opLevels) {
-		if (serverInstance == null) return;
-
-		serverInstance.execute(() -> {
+		onServerThread(server -> {
 			try {
-				PlayerList playerList = serverInstance.getPlayerList();
+				PlayerList playerList = server.getPlayerList();
 				ServerOpList opList = playerList.getOps();
 
 				// Build a map of current OP levels: UUID -> level
@@ -619,7 +657,7 @@ public final class MinecraftEventHandler {
 				for (Map.Entry<UUID, Integer> e : desiredOpLevels.entrySet()) {
 					UUID uuid = e.getKey();
 					int level = e.getValue();
-					Optional<NameAndId> nameAndIdOpt = serverInstance.services().nameToIdCache().get(uuid);
+					Optional<NameAndId> nameAndIdOpt = server.services().nameToIdCache().get(uuid);
 					if (nameAndIdOpt.isEmpty()) {
 						// Profile not in cache; skip this entry
 						continue;
@@ -672,40 +710,17 @@ public final class MinecraftEventHandler {
 
 			// Build and broadcast the reply line first (if present)
 			if (replySegments != null && !replySegments.isEmpty()) {
-				Component replyComponent = buildComponentFromSegments(replySegments);
-				for (ServerPlayer player : playerList.getPlayers()) {
-					player.sendSystemMessage(replyComponent);
-				}
+				broadcast(buildComponentFromSegments(replySegments));
 			}
 
 			// Build and broadcast the main message line
-			Component mainComponent = buildComponentFromSegments(segments);
-			for (ServerPlayer player : playerList.getPlayers()) {
-				player.sendSystemMessage(mainComponent);
-			}
+			broadcast(buildComponentFromSegments(segments));
 
 			// Send mention notifications
 			if (mentionText != null) {
 				Component notificationComponent = Component.literal(mentionText)
 						.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD);
-
-				if (mentionEveryone) {
-					// @everyone/@here: notify ALL online players
-					for (ServerPlayer player : playerList.getPlayers()) {
-						sendMentionNotification(player, notificationComponent, mentionStyle);
-					}
-				} else if (mentionedUuids != null && !mentionedUuids.isEmpty()) {
-					// Direct/role mentions: notify specific players
-					for (String uuidStr : mentionedUuids) {
-						try {
-							ServerPlayer player = playerList.getPlayer(UUID.fromString(uuidStr));
-							if (player != null) {
-								sendMentionNotification(player, notificationComponent, mentionStyle);
-							}
-						} catch (Exception ignored) {
-						}
-					}
-				}
+				notifyMentionedPlayers(playerList, notificationComponent, mentionStyle, mentionedUuids, mentionEveryone);
 			}
 		});
 	}
@@ -718,12 +733,7 @@ public final class MinecraftEventHandler {
 	public static void broadcastDiscordCommand(List<TextSegment> segments) {
 		if (serverInstance == null) return;
 
-		serverInstance.execute(() -> {
-			Component component = buildComponentFromSegments(segments);
-			for (ServerPlayer player : serverInstance.getPlayerList().getPlayers()) {
-				player.sendSystemMessage(component);
-			}
-		});
+		serverInstance.execute(() -> broadcast(buildComponentFromSegments(segments)));
 	}
 
 	/**
@@ -736,19 +746,11 @@ public final class MinecraftEventHandler {
 		if (serverInstance == null) return;
 
 		serverInstance.execute(() -> {
-			PlayerList playerList = serverInstance.getPlayerList();
-
 			if (replySegments != null && !replySegments.isEmpty()) {
-				Component replyComponent = buildComponentFromSegments(replySegments);
-				for (ServerPlayer player : playerList.getPlayers()) {
-					player.sendSystemMessage(replyComponent);
-				}
+				broadcast(buildComponentFromSegments(replySegments));
 			}
 
-			Component component = buildComponentFromSegments(segments);
-			for (ServerPlayer player : playerList.getPlayers()) {
-				player.sendSystemMessage(component);
-			}
+			broadcast(buildComponentFromSegments(segments));
 		});
 	}
 
@@ -764,27 +766,16 @@ public final class MinecraftEventHandler {
 		if (serverInstance == null) return;
 
 		serverInstance.execute(() -> {
-			PlayerList playerList = serverInstance.getPlayerList();
-
 			if (replySegments != null && !replySegments.isEmpty()) {
-				Component replyComponent = buildComponentFromSegments(replySegments);
-				for (ServerPlayer player : playerList.getPlayers()) {
-					player.sendSystemMessage(replyComponent);
-				}
+				broadcast(buildComponentFromSegments(replySegments));
 			}
 
 			// Send edit notification
-			Component notificationComponent = buildComponentFromSegments(segments);
-			for (ServerPlayer player : playerList.getPlayers()) {
-				player.sendSystemMessage(notificationComponent);
-			}
+			broadcast(buildComponentFromSegments(segments));
 
 			// Send edited message content
 			if (editedMessageSegments != null && !editedMessageSegments.isEmpty()) {
-				Component editedComponent = buildComponentFromSegments(editedMessageSegments);
-				for (ServerPlayer player : playerList.getPlayers()) {
-					player.sendSystemMessage(editedComponent);
-				}
+				broadcast(buildComponentFromSegments(editedMessageSegments));
 			}
 		});
 	}
@@ -799,19 +790,11 @@ public final class MinecraftEventHandler {
 		if (serverInstance == null) return;
 
 		serverInstance.execute(() -> {
-			PlayerList playerList = serverInstance.getPlayerList();
-
 			if (replySegments != null && !replySegments.isEmpty()) {
-				Component replyComponent = buildComponentFromSegments(replySegments);
-				for (ServerPlayer player : playerList.getPlayers()) {
-					player.sendSystemMessage(replyComponent);
-				}
+				broadcast(buildComponentFromSegments(replySegments));
 			}
 
-			Component component = buildComponentFromSegments(segments);
-			for (ServerPlayer player : playerList.getPlayers()) {
-				player.sendSystemMessage(component);
-			}
+			broadcast(buildComponentFromSegments(segments));
 		});
 	}
 
@@ -845,28 +828,12 @@ public final class MinecraftEventHandler {
 				component = buildComponentFromSegments(segments);
 			}
 
-			for (ServerPlayer player : playerList.getPlayers()) {
-				player.sendSystemMessage(component);
-			}
+			broadcast(component);
 
 			if (mentionText != null) {
 				Component notificationComponent = Component.literal(mentionText)
 						.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD);
-				if (mentionEveryone) {
-					for (ServerPlayer player : playerList.getPlayers()) {
-						sendMentionNotification(player, notificationComponent, mentionStyle);
-					}
-				} else if (mentionedUuids != null && !mentionedUuids.isEmpty()) {
-					for (String uuidStr : mentionedUuids) {
-						try {
-							ServerPlayer player = playerList.getPlayer(UUID.fromString(uuidStr));
-							if (player != null) {
-								sendMentionNotification(player, notificationComponent, mentionStyle);
-							}
-						} catch (Exception ignored) {
-						}
-					}
-				}
+				notifyMentionedPlayers(playerList, notificationComponent, mentionStyle, mentionedUuids, mentionEveryone);
 			}
 		});
 	}
@@ -1030,7 +997,7 @@ public final class MinecraftEventHandler {
 				.withColor(ChatFormatting.GREEN));
 	}
 
-	private static ResponsePacket buildInfoResponse(MinecraftServer server) {
+	private static Packets.InfoSnapshot buildInfoResponse(MinecraftServer server) {
 		String serverName = "single_server".equals(ConfigManager.getMode()) ? "Internal" : ConfigManager.getString("multi_server.server_name");
 		String minecraftVersion = EnvironmentUtils.getMinecraftVersion();
 
@@ -1045,7 +1012,7 @@ public final class MinecraftEventHandler {
 		int onlinePlayers = playersAndLatencies.size();
 		int maxPlayers = server.getPlayerList().getMaxPlayers();
 
-		int playersEverJoined = StatsCommand.countStatResultEntries("minecraft:custom", "minecraft:play_time");
+		int playersEverJoined = playersEverJoined();
 
 		double mspt = ((double) server.getAverageTickTimeNanos()) / TimeUtil.NANOSECONDS_PER_MILLISECOND;
 		ServerTickRateManager manager = server.tickRateManager();
@@ -1057,7 +1024,7 @@ public final class MinecraftEventHandler {
 		long uptimeSeconds = TimeUnit.MILLISECONDS.toSeconds(ManagementFactory.getRuntimeMXBean().getUptime());
 
 		Runtime runtime = Runtime.getRuntime();
-		return new ResponsePacket(
+		return new Packets.InfoSnapshot(
 				serverName,
 				-1,
 				minecraftVersion,
@@ -1081,50 +1048,7 @@ public final class MinecraftEventHandler {
 		MutableComponent root = Component.empty();
 
 		for (TextSegment seg : segments) {
-			MutableComponent part = Component.literal(seg.text);
-			Style style = Style.EMPTY;
-
-			// Apply color
-			if (seg.color != null && !seg.color.isEmpty()) {
-				TextColor textColor = TextColor.parseColor(seg.color).result().orElse(null);
-				if (textColor != null) {
-					style = style.withColor(textColor);
-				}
-			}
-
-			// Apply formatting
-			if (seg.bold) {
-				style = style.withBold(true);
-			}
-			if (seg.italic) {
-				style = style.withItalic(true);
-			}
-			if (seg.underlined) {
-				style = style.withUnderlined(true);
-			}
-			if (seg.strikethrough) {
-				style = style.withStrikethrough(true);
-			}
-			if (seg.obfuscated) {
-				style = style.withObfuscated(true);
-			}
-
-			// Apply click event (open URL)
-			if (seg.clickUrl != null && !seg.clickUrl.isEmpty()) {
-				try {
-					style = style.withClickEvent(new ClickEvent.OpenUrl(URI.create(seg.clickUrl)));
-				} catch (Exception ignored) {
-					// Invalid URL, skip click event
-				}
-			}
-
-			// Apply hover text
-			if (seg.hoverText != null && !seg.hoverText.isEmpty()) {
-				style = style.withHoverEvent(new HoverEvent.ShowText(Component.literal(seg.hoverText)));
-			}
-
-			part.withStyle(style);
-			root.append(part);
+			root.append(buildComponentPart(seg));
 		}
 
 		return root;
@@ -1150,14 +1074,14 @@ public final class MinecraftEventHandler {
 				if (placeholderStart < 0) {
 					String tail = segment.text.substring(cursor);
 					if (!tail.isEmpty()) {
-						root.append(buildComponentPart(copySegmentWithText(segment, tail)));
+						root.append(buildComponentPart(TextSegment.copyOf(segment, tail)));
 					}
 					break;
 				}
 
 				if (placeholderStart > cursor) {
 					String leading = segment.text.substring(cursor, placeholderStart);
-					root.append(buildComponentPart(copySegmentWithText(segment, leading)));
+					root.append(buildComponentPart(TextSegment.copyOf(segment, leading)));
 				}
 
 				root.append(replacement.copy());
@@ -1168,23 +1092,11 @@ public final class MinecraftEventHandler {
 		return root;
 	}
 
-	private static TextSegment copySegmentWithText(TextSegment source, String text) {
-		TextSegment copy = new TextSegment(text);
-		copy.color = source.color;
-		copy.bold = source.bold;
-		copy.italic = source.italic;
-		copy.underlined = source.underlined;
-		copy.strikethrough = source.strikethrough;
-		copy.obfuscated = source.obfuscated;
-		copy.clickUrl = source.clickUrl;
-		copy.hoverText = source.hoverText;
-		return copy;
-	}
-
 	private static MutableComponent buildComponentPart(TextSegment segment) {
 		MutableComponent part = Component.literal(segment.text == null ? "" : segment.text);
 		Style style = Style.EMPTY;
 
+		// Apply color
 		if (segment.color != null && !segment.color.isEmpty()) {
 			TextColor textColor = TextColor.parseColor(segment.color).result().orElse(null);
 			if (textColor != null) {
@@ -1192,6 +1104,7 @@ public final class MinecraftEventHandler {
 			}
 		}
 
+		// Apply formatting
 		if (segment.bold) {
 			style = style.withBold(true);
 		}
@@ -1208,13 +1121,16 @@ public final class MinecraftEventHandler {
 			style = style.withObfuscated(true);
 		}
 
+		// Apply click event (open URL)
 		if (segment.clickUrl != null && !segment.clickUrl.isEmpty()) {
 			try {
 				style = style.withClickEvent(new ClickEvent.OpenUrl(URI.create(segment.clickUrl)));
 			} catch (Exception ignored) {
+				// Invalid URL, skip click event
 			}
 		}
 
+		// Apply hover text
 		if (segment.hoverText != null && !segment.hoverText.isEmpty()) {
 			style = style.withHoverEvent(new HoverEvent.ShowText(Component.literal(segment.hoverText)));
 		}
@@ -1227,9 +1143,13 @@ public final class MinecraftEventHandler {
 		if (component == null || serverInstance == null) {
 			return "";
 		}
+		RegistryOps<JsonElement> ops = registryOpsInstance;
+		if (ops == null) {
+			return "";
+		}
 		try {
 			return ComponentSerialization.CODEC
-					.encodeStart(RegistryOps.create(JsonOps.INSTANCE, serverInstance.registryAccess()), component)
+					.encodeStart(ops, component)
 					.result()
 					.map(Object::toString)
 					.orElse("");
@@ -1242,13 +1162,141 @@ public final class MinecraftEventHandler {
 		if (json == null || json.isBlank() || serverInstance == null) {
 			return null;
 		}
+		RegistryOps<JsonElement> ops = registryOpsInstance;
+		if (ops == null) {
+			return null;
+		}
 		try {
 			return ComponentSerialization.CODEC
-					.parse(RegistryOps.create(JsonOps.INSTANCE, serverInstance.registryAccess()), JsonParser.parseString(json))
+					.parse(ops, JsonParser.parseString(json))
 					.result()
 					.orElse(null);
 		} catch (Exception ignored) {
 			return null;
+		}
+	}
+
+	/**
+	 * Runs work on the server thread when a server is available.
+	 *
+	 * @param action Work to run on the server thread.
+	 */
+	/**
+	 * Recomputes the "players ever joined" metric on the server thread.
+	 * <p>
+	 * The underlying stats scan calls {@code PlayerList.saveAll()}, which must run on the server thread, and
+	 * it parses every player's stats file. Info requests arrive every 10 seconds from the MSPT monitor, so
+	 * the value is cached and only recomputed when a player joins or quits (or after the safety-net TTL).
+	 */
+	private static void refreshPlayersEverJoined() {
+		playersEverJoinedCache = StatsCommand.countStatResultEntries("minecraft:custom", "minecraft:play_time");
+		playersEverJoinedRefreshedAt = System.currentTimeMillis();
+		PLAYERS_EVER_JOINED_STALE.set(false);
+	}
+
+	/**
+	 * @return The cached "players ever joined" count, queueing a server-thread refresh when it is stale.
+	 */
+	private static int playersEverJoined() {
+		boolean expired = System.currentTimeMillis() - playersEverJoinedRefreshedAt > PLAYERS_EVER_JOINED_TTL_MILLIS;
+		if ((PLAYERS_EVER_JOINED_STALE.get() || expired) && PLAYERS_EVER_JOINED_REFRESHING.compareAndSet(false, true)) {
+			onServerThread(_ -> {
+				try {
+					refreshPlayersEverJoined();
+				} finally {
+					PLAYERS_EVER_JOINED_REFRESHING.set(false);
+				}
+			});
+		}
+		return playersEverJoinedCache;
+	}
+
+	/**
+	 * Waits until asynchronous command output shows up, or until the poll budget runs out.
+	 * <p>
+	 * The first non-empty response triggers one extra interval, so output that is produced in several
+	 * chunks is collected as well.
+	 *
+	 * @param source The console source collecting the command output.
+	 */
+	private static void awaitCommandOutput(DmccRconConsoleSource source) {
+		for (int attempt = 0; attempt < COMMAND_OUTPUT_POLL_MAX_ATTEMPTS; attempt++) {
+			if (!source.getCommandResponse().isEmpty()) {
+				sleepCommandOutputInterval();
+				return;
+			}
+			if (!sleepCommandOutputInterval()) {
+				return;
+			}
+		}
+	}
+
+	/**
+	 * @return false when the wait was interrupted, in which case the caller reports whatever output exists.
+	 */
+	private static boolean sleepCommandOutputInterval() {
+		try {
+			Thread.sleep(COMMAND_OUTPUT_POLL_INTERVAL_MILLIS);
+			return true;
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			return false;
+		}
+	}
+
+	private static void onServerThread(Consumer<MinecraftServer> action) {
+		MinecraftServer server = serverInstance;
+		if (server == null) {
+			return;
+		}
+
+		server.execute(() -> {
+			try {
+				action.accept(server);
+			} catch (Exception ignored) {
+			}
+		});
+	}
+
+	/**
+	 * Sends a component to every online player.
+	 *
+	 * @param component The component to send.
+	 */
+	private static void broadcast(Component component) {
+		for (ServerPlayer player : serverInstance.getPlayerList().getPlayers()) {
+			player.sendSystemMessage(component);
+		}
+	}
+
+	/**
+	 * Sends mention notifications to the players that should receive them.
+	 *
+	 * @param playerList      The server player list to notify.
+	 * @param notification    The notification component to display.
+	 * @param mentionStyle    The notification style: "action_bar", "title", or "chat".
+	 * @param mentionedUuids  UUIDs of the players to notify for direct/role mentions.
+	 * @param mentionEveryone Whether @everyone should notify every online player.
+	 */
+	private static void notifyMentionedPlayers(PlayerList playerList, Component notification,
+											   String mentionStyle, List<String> mentionedUuids,
+											   boolean mentionEveryone) {
+		if (mentionEveryone) {
+			// @everyone/@here: notify ALL online players
+			for (ServerPlayer player : playerList.getPlayers()) {
+				sendMentionNotification(player, notification, mentionStyle);
+			}
+		} else if (mentionedUuids != null && !mentionedUuids.isEmpty()) {
+			// Direct/role mentions: notify specific players
+			for (String uuidStr : mentionedUuids) {
+				try {
+					ServerPlayer player = playerList.getPlayer(UUID.fromString(uuidStr));
+					if (player != null) {
+						sendMentionNotification(player, notification, mentionStyle);
+					}
+				} catch (Exception ignored) {
+				}
+			}
 		}
 	}
 

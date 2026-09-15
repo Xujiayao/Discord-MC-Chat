@@ -3,10 +3,11 @@ package com.xujiayao.discord_mc_chat.server.linking;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
-import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Link.OpSyncPacket;
+import com.xujiayao.discord_mc_chat.network.protocol.Packets;
 import com.xujiayao.discord_mc_chat.platform.Platform;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.discord.OpLevelResolver;
+import com.xujiayao.discord_mc_chat.server.message.MinecraftMessageParser;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
@@ -47,11 +48,20 @@ public final class OpSyncManager {
 	 * <p>
 	 * In single_server mode, posts a CoreEvent to the local Minecraft server.
 	 * In standalone mode, sends OpSyncPackets to each connected client.
+	 * <p>
+	 * The linked accounts are the input of this sync, and the linked player names are part of the mention
+	 * directory cached by {@link MinecraftMessageParser}, so the directory is invalidated here - before the
+	 * work is queued, so it also happens when the sync itself is disabled by configuration. A link or unlink
+	 * therefore cannot leave stale aliases behind for the mention cache TTL.
 	 */
 	public static void syncAll() {
+		MinecraftMessageParser.invalidateMentionCache();
+
 		try {
 			getOrCreateExecutor().execute(OpSyncManager::doSyncAll);
 		} catch (RejectedExecutionException ignored) {
+			// The executor is already shutting down, so DMCC is on its way out and there is nothing left to
+			// synchronize. Silently dropping the request is intentional.
 		}
 	}
 
@@ -112,7 +122,7 @@ public final class OpSyncManager {
 							}
 						}
 					}
-					NetworkManager.sendPacketToClient(new OpSyncPacket(opLevels), clientName);
+					NetworkManager.sendPacketToClient(new Packets.OpSync(opLevels), clientName);
 				}
 			}
 		}

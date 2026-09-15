@@ -402,9 +402,24 @@ DMCC 对配置文件的完整性与一致性做了强校验，力求在启动阶
 | `{mspt}` / `{threshold}` / `{next_check_time}`                                                                                   | MSPT 告警                 |
 | `{player_name}`（用于 `discord.webhook.avatar_url`）                                                                                 | Webhook 头像模板            |
 
+> **占位符替换规则（第 2 轮统一后的行为）**：替换在**单次扫描**中完成，因此
+> `{server}` 不会把 `{server_color}` 的前半截吃掉（旧实现会，导致 `color: "{server_color}"` 失效），
+> 替换结果也不会被再次扫描。`xxxxx_to_minecraft.user_message` / `system_message` 这一组模板被
+> Discord → MC 与 MC → MC 两个方向共用，因此 `{server}`、`{server_color}`、`{effective_name}`、
+> `{display_name}`、`{role_color}` 在**两个方向都可用**（Discord 方向固定为 `Discord` / `blue`）。
+> 同一个片段里出现多个 `{message}` 时，内容会被依次插入每一处。
+
 ## 9. 网络与安全
 
-- **传输层**: Netty TCP，4 字节长度前缀分帧，单帧上限 1 MiB；载荷使用 Java 原生序列化。**当前未启用 TLS**，请勿将端口直接暴露到公网。
+- **传输层**: Netty TCP，4 字节长度前缀分帧，单帧上限 1 MiB。
+- **载荷格式**: **JSON（Jackson）**。每帧是一个两字段信封：`{"type":"<包名>","payload":{…}}`。
+  解码走**显式的包名 → record 映射表**，对端无法让接收方实例化任意类；未知字段被忽略（字段改名只会退化为默认值，
+  而不是整帧解析失败），畸形帧抛 `ProtocolException` 并干净断开，不会打到事件循环。
+  **协议中不存在任何 Java 原生序列化**（`ObjectInputStream` 已彻底移除），因此不存在反序列化 gadget 链攻击面；
+  同时因为 Server 与 Client 强制同版本，协议不需要任何兼容层。
+- **大文件传输**: `/log` 等命令返回的文件按 **256 KiB 分片、base64 编码后逐帧发送**，
+  接收端按片序号重组（与到达顺序无关，且有 64 MiB 上限保护）。
+  这样**超过 1 MiB 的日志文件不再撑爆分帧上限、不会打断连接**。
 - **身份认证**: Server 下发 16 字符随机质询（`SecureRandom`），Client 返回 `SHA-256(质询 + 共享密钥)`，Server 比对通过后才接受连接。
   共享密钥在 `single_server` 模式下由进程内随机生成（回环地址 + 临时端口），在其它模式下来自配置。
 - **准入校验**: 除密钥外，还会校验客户端名称是否在子服白名单内、是否已有同名连接在线、DMCC 版本是否匹配、以及 Minecraft 版本是否匹配；任一不符即断开并给出明确原因。
@@ -412,6 +427,7 @@ DMCC 对配置文件的完整性与一致性做了强校验，力求在启动阶
 - **心跳与超时**: Server 30 秒读空闲即断开该连接；Client 15 秒写空闲发送 KeepAlive 保活。
 - **断线重连**: Client 采用指数退避重连（2 秒起步，上限 512 秒），TCP 建连成功后重置；若收到 Server 的主动断开包（如密钥错误、重名）则停止重连。
 - **延迟统计**: 连接延迟由 TCP 建连耗时与 `LatencyPing` 往返共同给出，用于 `/info` 展示与控制台日志。
+- **明文传输**: **当前未启用 TLS**，请勿将端口直接暴露到公网。
 
 ## 10. 日志与运维
 

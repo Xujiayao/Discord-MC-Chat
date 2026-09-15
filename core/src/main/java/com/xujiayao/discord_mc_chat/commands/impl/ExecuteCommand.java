@@ -1,18 +1,16 @@
 package com.xujiayao.discord_mc_chat.commands.impl;
 
 import com.xujiayao.discord_mc_chat.commands.Command;
+import com.xujiayao.discord_mc_chat.commands.CommandTargets;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
-import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
-import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
+import com.xujiayao.discord_mc_chat.network.protocol.Packets;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.discord.JdaCommandSender;
 import com.xujiayao.discord_mc_chat.server.discord.OpLevelResolver;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
-import tools.jackson.databind.JsonNode;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -29,25 +27,31 @@ import java.util.concurrent.TimeUnit;
 public final class ExecuteCommand implements Command {
 
 	private static final int EXECUTE_TIMEOUT_SECONDS = 30;
-	private static final Map<String, CompletableFuture<CommandPackets.Execute.ResponsePacket>> pendingRequests = new ConcurrentHashMap<>();
+	private static final Map<String, CompletableFuture<CommandOutput>> pendingRequests = new ConcurrentHashMap<>();
 
-	/**
-	 * Creates an execute command instance.
-	 */
-	public ExecuteCommand() {
-	}
 
 	/**
 	 * Completes a pending execute request with the given response.
 	 *
 	 * @param requestId The request ID
 	 * @param response  The response packet
+	 * @param fileData  The reassembled file payload, or null when the command returned none
 	 */
-	public static void completeRequest(String requestId, CommandPackets.Execute.ResponsePacket response) {
-		CompletableFuture<CommandPackets.Execute.ResponsePacket> future = pendingRequests.remove(requestId);
+	public static void completeRequest(String requestId, Packets.CommandResult response, byte[] fileData) {
+		CompletableFuture<CommandOutput> future = pendingRequests.remove(requestId);
 		if (future != null && !future.isDone()) {
-			future.complete(response);
+			future.complete(new CommandOutput(response.response(), fileData, response.fileName()));
 		}
+	}
+
+	/**
+	 * The result of one remote command, with the file payload already reassembled.
+	 *
+	 * @param text     Command output.
+	 * @param fileData File bytes, or null when the command returned no file.
+	 * @param fileName File name, or null when the command returned no file.
+	 */
+	public record CommandOutput(String text, byte[] fileData, String fileName) {
 	}
 
 	@Override
@@ -58,28 +62,8 @@ public final class ExecuteCommand implements Command {
 	@Override
 	public CommandArgument[] args() {
 		return new CommandArgument[]{
-				new CommandArgument() {
-					@Override
-					public String name() {
-						return "at";
-					}
-
-					@Override
-					public String description() {
-						return I18nManager.getDmccTranslation("commands.execute.args_desc.at");
-					}
-				},
-				new CommandArgument() {
-					@Override
-					public String name() {
-						return "command";
-					}
-
-					@Override
-					public String description() {
-						return I18nManager.getDmccTranslation("commands.execute.args_desc.command");
-					}
-				}
+				new CommandArgument("at", I18nManager.getDmccTranslation("commands.execute.args_desc.at")),
+				new CommandArgument("command", I18nManager.getDmccTranslation("commands.execute.args_desc.command"))
 		};
 	}
 
@@ -112,28 +96,12 @@ public final class ExecuteCommand implements Command {
 				? command.substring(command.indexOf(' ') + 1).split("\\s+")
 				: new String[0];
 
-		List<String> targets = new ArrayList<>();
-		List<String> allConnected = NetworkManager.getConnectedClientNames();
-		String targetName;
-		if ("all_online_clients".equalsIgnoreCase(target)) {
-			if (allConnected.isEmpty()) {
-				sender.reply(I18nManager.getDmccTranslation("commands.execute.no_online_clients"));
-				return;
-			}
-			targets.addAll(allConnected);
-			targetName = I18nManager.getDmccTranslation("commands.execute.all_online_clients");
-		} else {
-			if (!isValidTarget(target)) {
-				sender.reply(I18nManager.getDmccTranslation("commands.execute.invalid_target", target, allConnected));
-				return;
-			}
-			if (!allConnected.contains(target)) {
-				sender.reply(I18nManager.getDmccTranslation("commands.execute.client_offline", target));
-				return;
-			}
-			targets.add(target);
-			targetName = target;
+		CommandTargets.Target resolved = CommandTargets.resolve(sender, target, "commands.execute");
+		if (resolved == null) {
+			return;
 		}
+		List<String> targets = resolved.servers();
+		String targetName = resolved.displayName();
 
 		// Inform the sender that execution is in progress
 		sender.reply(I18nManager.getDmccTranslation("commands.execute.executing", command, targetName));
@@ -159,29 +127,30 @@ public final class ExecuteCommand implements Command {
 			}
 
 			String requestId = CryptUtils.generateRandomString(16);
-			CompletableFuture<CommandPackets.Execute.ResponsePacket> future = new CompletableFuture<>();
+			CompletableFuture<CommandOutput> future = new CompletableFuture<>();
 			pendingRequests.put(requestId, future);
 
 			// Append sender's per-server OP level credential to the packet for client-side edge authorization
-			NetworkManager.sendPacketToClient(new CommandPackets.Execute.RequestPacket(requestId, opLevel, commandName, commandArgs), serverName);
+			NetworkManager.sendPacketToClient(new Packets.CommandRequest(Packets.RpcKind.EXECUTE, requestId, opLevel, commandName, commandArgs), serverName);
 
 			try {
-				CommandPackets.Execute.ResponsePacket response = future.get(EXECUTE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+				CommandOutput response = future.get(EXECUTE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+				boolean hasFile = response.fileData() != null && response.fileName() != null;
 
 				if (sender instanceof JdaCommandSender) {
 					// Discord: send result via webhook with server name
-					if (response.fileData != null && response.fileName != null) {
+					if (hasFile) {
 						DiscordManager.sendExecuteResultWithFileViaWebhook(discordChannelId, serverName,
-								response.response, response.fileData, response.fileName);
+								response.text(), response.fileData(), response.fileName());
 					} else {
-						DiscordManager.sendExecuteResultViaWebhook(discordChannelId, serverName, response.response);
+						DiscordManager.sendExecuteResultViaWebhook(discordChannelId, serverName, response.text());
 					}
 				} else {
 					// Terminal: send result directly
-					if (response.fileData != null && response.fileName != null) {
-						sender.replyWithFile(I18nManager.getDmccTranslation("commands.remote_result_prefix", serverName, response.response), response.fileData, response.fileName);
+					if (hasFile) {
+						sender.replyWithFile(I18nManager.getDmccTranslation("commands.remote_result_prefix", serverName, response.text()), response.fileData(), response.fileName());
 					} else {
-						String[] lines = response.response.split("\n");
+						String[] lines = response.text().split("\n");
 						for (String line : lines) {
 							sender.reply(I18nManager.getDmccTranslation("commands.remote_result_prefix", serverName, line));
 						}
@@ -200,15 +169,4 @@ public final class ExecuteCommand implements Command {
 		}
 	}
 
-	private boolean isValidTarget(String target) {
-		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
-		if (serversNode.isArray()) {
-			for (JsonNode node : serversNode) {
-				if (target.equals(node.path("name").asString())) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
 }

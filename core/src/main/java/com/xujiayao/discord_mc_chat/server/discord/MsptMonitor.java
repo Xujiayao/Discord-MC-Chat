@@ -3,7 +3,7 @@ package com.xujiayao.discord_mc_chat.server.discord;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
-import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
+import com.xujiayao.discord_mc_chat.network.protocol.Packets;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import tools.jackson.databind.JsonNode;
 
@@ -83,14 +83,14 @@ public final class MsptMonitor {
 		double threshold = ConfigManager.getDouble("mspt_monitoring.threshold", 50.0);
 		int baseIntervalSeconds = getBaseIntervalSeconds();
 
-		Map<String, CommandPackets.Info.ResponsePacket> infoMap = NetworkManager.requestInfoSnapshot(INFO_REQUEST_TIMEOUT_SECONDS);
+		Map<String, Packets.InfoSnapshot> infoMap = NetworkManager.requestInfoSnapshot(INFO_REQUEST_TIMEOUT_SECONDS);
 		if (infoMap.isEmpty()) {
 			return baseIntervalSeconds;
 		}
 
 		Set<String> graceServers = new HashSet<>();
-		Map<String, CommandPackets.Info.ResponsePacket> eligibleInfoMap = new LinkedHashMap<>();
-		for (Map.Entry<String, CommandPackets.Info.ResponsePacket> entry : infoMap.entrySet()) {
+		Map<String, Packets.InfoSnapshot> eligibleInfoMap = new LinkedHashMap<>();
+		for (Map.Entry<String, Packets.InfoSnapshot> entry : infoMap.entrySet()) {
 			if (NetworkManager.getClientConnectionAgeSeconds(entry.getKey()) < INITIAL_CHECK_DELAY_SECONDS) {
 				graceServers.add(entry.getKey());
 				continue;
@@ -100,9 +100,9 @@ public final class MsptMonitor {
 		}
 
 		Set<String> exceededNow = new HashSet<>();
-		for (Map.Entry<String, CommandPackets.Info.ResponsePacket> entry : eligibleInfoMap.entrySet()) {
-			CommandPackets.Info.ResponsePacket packet = entry.getValue();
-			if (packet != null && packet.mspt > threshold) {
+		for (Map.Entry<String, Packets.InfoSnapshot> entry : eligibleInfoMap.entrySet()) {
+			Packets.InfoSnapshot packet = entry.getValue();
+			if (packet != null && packet.mspt() > threshold) {
 				exceededNow.add(entry.getKey());
 			}
 		}
@@ -122,7 +122,7 @@ public final class MsptMonitor {
 				long nextCheckEpochSeconds = Instant.now().plusSeconds(nextDelay).getEpochSecond();
 
 				for (String server : exceededNow) {
-					CommandPackets.Info.ResponsePacket packet = infoMap.get(server);
+					Packets.InfoSnapshot packet = infoMap.get(server);
 					if (packet != null) {
 						notifyMspt("first_exceeded", packet, threshold, nextCheckEpochSeconds);
 					}
@@ -138,7 +138,7 @@ public final class MsptMonitor {
 			Set<String> recovered = new HashSet<>(roundExceededServers);
 			recovered.removeAll(exceededNow);
 			for (String server : recovered) {
-				CommandPackets.Info.ResponsePacket packet = infoMap.get(server);
+				Packets.InfoSnapshot packet = infoMap.get(server);
 				if (packet != null) {
 					notifyMspt("first_recovered", packet, threshold, -1);
 				}
@@ -156,7 +156,7 @@ public final class MsptMonitor {
 			Set<String> stillExceeded = new HashSet<>(exceededNow);
 			stillExceeded.retainAll(roundExceededServers);
 			for (String server : stillExceeded) {
-				CommandPackets.Info.ResponsePacket packet = infoMap.get(server);
+				Packets.InfoSnapshot packet = infoMap.get(server);
 				if (packet != null) {
 					notifyMspt("still_exceeded", packet, threshold, nextCheckEpochSeconds);
 				}
@@ -165,7 +165,7 @@ public final class MsptMonitor {
 			Set<String> newlyExceeded = new HashSet<>(exceededNow);
 			newlyExceeded.removeAll(roundExceededServers);
 			for (String server : newlyExceeded) {
-				CommandPackets.Info.ResponsePacket packet = infoMap.get(server);
+				Packets.InfoSnapshot packet = infoMap.get(server);
 				if (packet != null) {
 					notifyMspt("first_exceeded", packet, threshold, nextCheckEpochSeconds);
 				}
@@ -180,7 +180,7 @@ public final class MsptMonitor {
 	}
 
 	private static void notifyMspt(String messageKey,
-								   CommandPackets.Info.ResponsePacket packet,
+								   Packets.InfoSnapshot packet,
 								   double threshold,
 								   long nextCheckEpochSeconds) {
 		JsonNode customMessages = I18nManager.getCustomMessages();
@@ -194,11 +194,11 @@ public final class MsptMonitor {
 		}
 
 		String message = template
-				.replace("{mspt}", String.format("%.2f", packet.mspt))
+				.replace("{mspt}", String.format("%.2f", packet.mspt()))
 				.replace("{threshold}", String.format("%.2f", threshold))
 				.replace("{next_check_time}", String.valueOf(nextCheckEpochSeconds));
 
-		DiscordManager.sendMsptMonitoringMessage(packet.serverName, message);
+		DiscordManager.sendMsptMonitoringMessage(packet.serverName(), message);
 	}
 
 	private static int getBaseIntervalSeconds() {

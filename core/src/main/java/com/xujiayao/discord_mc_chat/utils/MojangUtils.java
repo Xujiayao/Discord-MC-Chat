@@ -2,6 +2,7 @@ package com.xujiayao.discord_mc_chat.utils;
 
 import tools.jackson.databind.JsonNode;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,16 +14,43 @@ import static com.xujiayao.discord_mc_chat.Constants.JSON_MAPPER;
  * <p>
  * Supports both online (Mojang API) and offline UUID formats.
  * Provides fallback to raw UUID display when resolution fails.
- * Results are cached in memory to avoid repeated network calls.
+ * Results - including failures - are cached in memory to avoid repeated network calls.
  *
  * @author Xujiayao
  */
 public final class MojangUtils {
 
 	private static final String PROFILE_URL = "https://sessionserver.mojang.com/session/minecraft/profile/";
-	private static final Map<String, String> NAME_CACHE = new ConcurrentHashMap<>();
+
+	/**
+	 * How long a successful Mojang lookup is trusted. Player names change rarely.
+	 */
+	private static final long SUCCESS_TTL_MILLIS = Duration.ofHours(24).toMillis();
+
+	/**
+	 * How long a failed lookup is remembered.
+	 * <p>
+	 * Without negative caching a Mojang outage made every single chat message retry the HTTP call for every
+	 * unresolved UUID; this short window keeps the failure cost bounded while still recovering quickly.
+	 */
+	private static final long FAILURE_TTL_MILLIS = Duration.ofMinutes(5).toMillis();
+
+	private static final Map<String, Entry> NAME_CACHE = new ConcurrentHashMap<>();
 
 	private MojangUtils() {
+	}
+
+	/**
+	 * A cached resolution result.
+	 *
+	 * @param name       The value to return.
+	 * @param expiresAt  Epoch millis after which the entry must be resolved again.
+	 */
+	private record Entry(String name, long expiresAt) {
+
+		private boolean expired() {
+			return System.currentTimeMillis() >= expiresAt;
+		}
 	}
 
 	/**
@@ -38,9 +66,9 @@ public final class MojangUtils {
 	 * @return The resolved player name, or the fallback/"N/A"/UUID string if resolution fails.
 	 */
 	public static String resolvePlayerName(String uuidString, String offlineFallbackName) {
-		String cached = NAME_CACHE.get(uuidString);
-		if (cached != null) {
-			return cached;
+		Entry cached = NAME_CACHE.get(uuidString);
+		if (cached != null && !cached.expired()) {
+			return cached.name();
 		}
 
 		try {
@@ -49,9 +77,10 @@ public final class MojangUtils {
 			// Check if this is an offline-mode UUID (version 3)
 			if (uuid.version() == 3) {
 				// Offline UUIDs are generated from "OfflinePlayer:" + name
-				// We cannot reverse this, so use the fallback name or "N/A"
+				// We cannot reverse this, so use the fallback name or "N/A".
+				// This mapping can never change, so it is cached without expiry.
 				String name = (offlineFallbackName != null) ? offlineFallbackName : "N/A";
-				NAME_CACHE.put(uuidString, name);
+				NAME_CACHE.put(uuidString, new Entry(name, Long.MAX_VALUE));
 				return name;
 			}
 
@@ -62,12 +91,23 @@ public final class MojangUtils {
 
 			String name = profile.path("name").asString(null);
 			if (name != null && !name.isEmpty()) {
-				NAME_CACHE.put(uuidString, name);
+				NAME_CACHE.put(uuidString, new Entry(name, System.currentTimeMillis() + SUCCESS_TTL_MILLIS));
 				return name;
 			}
 		} catch (Exception ignored) {
+			// Fall through to the fallback below; the failure is cached so an outage does not turn into one
+			// HTTP request per chat message.
 		}
 
+		long retryAt = System.currentTimeMillis() + FAILURE_TTL_MILLIS;
+		if (cached != null) {
+			// This UUID resolved before, so keep serving the last known name rather than regressing to the
+			// raw UUID just because Mojang was briefly unreachable.
+			NAME_CACHE.put(uuidString, new Entry(cached.name(), retryAt));
+			return cached.name();
+		}
+
+		NAME_CACHE.put(uuidString, new Entry(uuidString, retryAt));
 		return uuidString;
 	}
 

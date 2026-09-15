@@ -9,6 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -37,20 +38,25 @@ final class MixinServerGamePacketListenerImpl {
 
 	@Inject(method = "performUnsignedChatCommand", at = @At("HEAD"))
 	private void performUnsignedChatCommand(String command, CallbackInfo ci) {
-		// PlayerCommand Event
-		MinecraftEventHandler.onPlayerCommand(
-				command,
-				player
-		);
-
-		// No need to cancel, because vanilla Minecraft does not broadcast commands
+		postPlayerCommand(player, command);
 	}
 
 	@Inject(method = "performSignedChatCommand", at = @At("HEAD"))
 	private void performSignedChatCommand(ServerboundChatCommandSignedPacket packet, LastSeenMessages lastSeenMessages, CallbackInfo ci) {
+		postPlayerCommand(player, packet.command());
+	}
+
+	/**
+	 * Reports an executed player command to the DMCC PlayerCommand event.
+	 *
+	 * @param player  The player executing the command.
+	 * @param command The raw command string.
+	 */
+	@Unique
+	private static void postPlayerCommand(ServerPlayer player, String command) {
 		// PlayerCommand Event
 		MinecraftEventHandler.onPlayerCommand(
-				packet.command(),
+				command,
 				player
 		);
 

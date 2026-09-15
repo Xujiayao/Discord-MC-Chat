@@ -14,7 +14,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
 
@@ -26,10 +25,16 @@ import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
  */
 public final class I18nManager {
 
-	private static final Map<String, String> DMCC_TRANSLATIONS = new HashMap<>();
+	/**
+	 * Flattened {@code lang/<language>.yml} entries.
+	 * <p>
+	 * Published as one immutable snapshot so that a reload (which happens on the Netty thread when a DMCC
+	 * client logs in) can never expose a half-filled map to the Minecraft, JDA or logging threads reading it.
+	 */
+	private static volatile Map<String, String> dmccTranslations = Map.of();
 	private static final Path CUSTOM_MESSAGES_DIR = Paths.get("./config/discord_mc_chat/custom_messages");
-	private static String language = detectLanguage();
-	private static JsonNode customMessages;
+	private static volatile String language = detectLanguage();
+	private static volatile JsonNode customMessages;
 
 	private I18nManager() {
 	}
@@ -65,7 +70,7 @@ public final class I18nManager {
 	 * @return true if DMCC translations were loaded successfully, false otherwise.
 	 */
 	public static boolean loadInternalTranslationsOnly() {
-		if (DMCC_TRANSLATIONS.isEmpty()) {
+		if (dmccTranslations.isEmpty()) {
 			// Check if required resource files exist for the selected language
 			if (!checkLanguageResources()) {
 				return false;
@@ -126,17 +131,18 @@ public final class I18nManager {
 	}
 
 	private static boolean loadDmccTranslations() {
-		DMCC_TRANSLATIONS.clear();
 		String resourcePath = "/lang/" + language + ".yml";
+		Map<String, String> loaded = new HashMap<>();
 
 		try (InputStream inputStream = I18nManager.class.getResourceAsStream(resourcePath)) {
 			JsonNode rootNode = YAML_MAPPER.readTree(inputStream);
-			flattenJsonToMap(rootNode, "", DMCC_TRANSLATIONS);
+			flattenJsonToMap(rootNode, "", loaded);
 		} catch (IOException e) {
 			LOGGER.error(I18nManager.getDmccTranslation("utils.i18n.load_failed", resourcePath), e);
 			return false;
 		}
 
+		dmccTranslations = Map.copyOf(loaded);
 		return true;
 	}
 
@@ -195,7 +201,7 @@ public final class I18nManager {
 	 * @return The formatted translation string, or the key if not found.
 	 */
 	public static String getDmccTranslation(String key, Object... args) {
-		String translation = DMCC_TRANSLATIONS.getOrDefault(key, key);
+		String translation = dmccTranslations.getOrDefault(key, key);
 		return StringUtils.format(translation, args);
 	}
 

@@ -1,18 +1,29 @@
 package com.xujiayao.discord_mc_chat.server.linking;
 
 import com.xujiayao.discord_mc_chat.config.I18nManager;
+import com.xujiayao.discord_mc_chat.server.message.MinecraftMessageParser;
+import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import tools.jackson.core.type.TypeReference;
 
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 
 import static com.xujiayao.discord_mc_chat.Constants.JSON_MAPPER;
@@ -38,6 +49,10 @@ public final class LinkedAccountManager {
 
 	// Discord name resolver, set by the server module to avoid circular dependencies
 	private static Function<String, String> discordNameResolver;
+
+	// File writes are serialized on this dedicated thread: save() is called from the single-threaded command
+	// executor and from the Netty I/O thread, and neither may block on rewriting the whole file.
+	private static ExecutorService saveExecutor;
 
 	private LinkedAccountManager() {
 	}
@@ -75,6 +90,10 @@ public final class LinkedAccountManager {
 		try {
 			Files.createDirectories(LINKS_FILE.getParent());
 
+			// The mention alias table is derived from the linked accounts, so drop the cached copy on every
+			// (re)load - this also covers a links.json edited by hand while DMCC is running.
+			MinecraftMessageParser.invalidateMentionCache();
+
 			if (!Files.exists(LINKS_FILE) || Files.size(LINKS_FILE) == 0) {
 				LINKED_ACCOUNTS.clear();
 				UUID_TO_DISCORD.clear();
@@ -110,14 +129,115 @@ public final class LinkedAccountManager {
 
 	/**
 	 * Saves the current linked accounts state to the JSON file.
+	 * <p>
+	 * The snapshot is taken synchronously, so the file always ends up containing the state the caller just
+	 * produced, but it is written on a dedicated single-thread executor: the callers (the command executor
+	 * and the Netty I/O thread) must not block on rewriting the whole file. The write goes to a temporary
+	 * file in the same directory which is then moved into place, so an interrupted write can never leave a
+	 * truncated {@code links.json} behind.
 	 */
 	public static synchronized void save() {
+		Map<String, List<LinkEntry>> snapshot = new LinkedHashMap<>();
+		LINKED_ACCOUNTS.forEach((discordId, entries) -> snapshot.put(discordId, List.copyOf(entries)));
+
+		saveExecutor().execute(() -> writeToDisk(snapshot));
+	}
+
+	/**
+	 * @return The executor the file writes are serialized on, recreated when it was shut down by a reload.
+	 */
+	private static synchronized ExecutorService saveExecutor() {
+		if (saveExecutor == null || saveExecutor.isShutdown()) {
+			saveExecutor = Executors.newSingleThreadExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-LinkSave"));
+		}
+		return saveExecutor;
+	}
+
+	/**
+	 * Writes one state snapshot to {@link #LINKS_FILE}, replacing the file in a single move.
+	 *
+	 * @param snapshot The linked accounts state to persist.
+	 */
+	private static void writeToDisk(Map<String, List<LinkEntry>> snapshot) {
+		Path tempFile = null;
 		try {
 			Files.createDirectories(LINKS_FILE.getParent());
-			JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValue(LINKS_FILE.toFile(), LINKED_ACCOUNTS);
+			tempFile = Files.createTempFile(LINKS_FILE.getParent(), "links", ".tmp");
+			JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValue(tempFile.toFile(), snapshot);
+			restoreFilePermissions(tempFile);
+			replaceLinksFile(tempFile);
+			// The temporary file is deliberately not cleared here: a successful move removed it, and the copy
+			// fallback still has to have it removed below.
 			LOGGER.info(I18nManager.getDmccTranslation("linking.manager.saved"));
 		} catch (IOException e) {
 			LOGGER.error(I18nManager.getDmccTranslation("linking.manager.save_failed"), e);
+		} finally {
+			deleteQuietly(tempFile);
+		}
+	}
+
+	/**
+	 * Replaces {@link #LINKS_FILE} with a completely written temporary file.
+	 * <p>
+	 * The move is tried atomically first, so an interrupted replacement can never leave a truncated file
+	 * behind. Windows refuses to replace a file that another process (or a concurrent read) currently has
+	 * open, so a plain move and finally an in-place copy are kept as fallbacks: the previous implementation
+	 * always wrote in place, and a link must not be lost just because something else is reading the file.
+	 * The caller removes the temporary file when it is still there afterwards.
+	 *
+	 * @param tempFile The completely written temporary file.
+	 * @throws IOException When none of the replacements was possible.
+	 */
+	private static void replaceLinksFile(Path tempFile) throws IOException {
+		try {
+			Files.move(tempFile, LINKS_FILE, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+			return;
+		} catch (AtomicMoveNotSupportedException | AccessDeniedException e) {
+			// Fall through to the non-atomic replacements below.
+		}
+
+		try {
+			Files.move(tempFile, LINKS_FILE, StandardCopyOption.REPLACE_EXISTING);
+			return;
+		} catch (IOException e) {
+			// Fall through to the in-place copy below.
+		}
+
+		Files.copy(tempFile, LINKS_FILE, StandardCopyOption.REPLACE_EXISTING);
+	}
+
+	/**
+	 * Gives the temporary file the permissions the file it replaces had.
+	 * <p>
+	 * {@link Files#createTempFile} creates owner-only files, while a directly written {@code links.json} used
+	 * the process umask, so the permissions are copied over before the file becomes visible.
+	 *
+	 * @param tempFile The temporary file that is about to replace {@link #LINKS_FILE}.
+	 */
+	private static void restoreFilePermissions(Path tempFile) {
+		try {
+			Set<PosixFilePermission> permissions = Files.exists(LINKS_FILE)
+					? Files.getPosixFilePermissions(LINKS_FILE)
+					: PosixFilePermissions.fromString("rw-r--r--");
+			Files.setPosixFilePermissions(tempFile, permissions);
+		} catch (IOException | UnsupportedOperationException ignored) {
+			// File systems without POSIX permissions (e.g. Windows) have nothing to restore.
+		}
+	}
+
+	/**
+	 * Deletes a leftover temporary file, ignoring failures.
+	 *
+	 * @param file The file to delete, or {@code null}.
+	 */
+	private static void deleteQuietly(Path file) {
+		if (file == null) {
+			return;
+		}
+		try {
+			Files.deleteIfExists(file);
+		} catch (IOException ignored) {
+			// A leftover temporary file is harmless and removed by the next successful write.
 		}
 	}
 
@@ -128,9 +248,17 @@ public final class LinkedAccountManager {
 	 * {@code links.json} while DMCC is running and reload to apply their changes.
 	 * Any in-memory changes that were not yet persisted via {@link #save()} will be lost.
 	 * In practice, all mutations (link/unlink) call {@link #save()} immediately,
-	 * so no data is lost under normal operation.
+	 * so no data is lost under normal operation. Writes that {@link #save()} already handed to its executor
+	 * are completed before the in-memory state is dropped.
 	 */
 	public static void shutdown() {
+		synchronized (LinkedAccountManager.class) {
+			if (saveExecutor != null) {
+				ExecutorServiceUtils.shutdownAnExecutor(saveExecutor);
+				saveExecutor = null;
+			}
+		}
+
 		LINKED_ACCOUNTS.clear();
 		UUID_TO_DISCORD.clear();
 		discordNameResolver = null;

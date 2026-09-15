@@ -3,7 +3,7 @@ package com.xujiayao.discord_mc_chat.server.discord;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
-import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
+import com.xujiayao.discord_mc_chat.network.protocol.Packets;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -75,7 +75,7 @@ public final class ChannelUpdateManager {
 		}
 
 		try {
-			doUpdateChannelsSync(buildOfflineContext());
+			doUpdateChannelsSync(emptyContext(Instant.now().getEpochSecond()));
 		} catch (Exception e) {
 			LOGGER.warn(I18nManager.getDmccTranslation("discord.manager.channel_update_failed", e.getMessage()));
 		}
@@ -88,8 +88,8 @@ public final class ChannelUpdateManager {
 
 		ChannelUpdateContext context = collectContext();
 		boolean dropWhenRateLimited = "single_server".equals(ConfigManager.getMode()) && context.onlineServerCount() > 0;
-		updateTextChannelTopicsAsync(context, dropWhenRateLimited);
-		updateVoiceChannelNamesAsync(context, dropWhenRateLimited);
+		updateTextChannelTopics(context, dropWhenRateLimited, false);
+		updateVoiceChannelNames(context, dropWhenRateLimited, false);
 	}
 
 	private static void doUpdateChannelsSync(ChannelUpdateContext context) {
@@ -97,36 +97,32 @@ public final class ChannelUpdateManager {
 			return;
 		}
 
-		updateTextChannelTopicsSync(context);
-		updateVoiceChannelNamesSync(context);
+		updateTextChannelTopics(context, false, true);
+		updateVoiceChannelNames(context, false, true);
 	}
 
-	private static ChannelUpdateContext buildOfflineContext() {
-		long nowEpochSeconds = Instant.now().getEpochSecond();
-		return emptyContext(nowEpochSeconds);
-	}
 
 	private static ChannelUpdateContext collectContext() {
 		long nowEpochSeconds = Instant.now().getEpochSecond();
 
-		List<CommandPackets.Info.ResponsePacket> onlinePackets = NetworkManager.requestInfoSnapshot(INFO_REQUEST_TIMEOUT_SECONDS)
+		List<Packets.InfoSnapshot> onlinePackets = NetworkManager.requestInfoSnapshot(INFO_REQUEST_TIMEOUT_SECONDS)
 				.values()
 				.stream()
-				.filter(packet -> packet != null && packet.maxPlayerCount > 0)
+				.filter(packet -> packet != null && packet.maxPlayerCount() > 0)
 				.toList();
 
 		if (onlinePackets.isEmpty()) {
 			return emptyContext(nowEpochSeconds);
 		}
 
-		int onlinePlayerCount = onlinePackets.stream().mapToInt(packet -> packet.onlinePlayerCount).sum();
-		int maxPlayerCount = onlinePackets.stream().mapToInt(packet -> packet.maxPlayerCount).sum();
-		int playersEverJoined = onlinePackets.stream().mapToInt(packet -> packet.playersEverJoined).sum();
+		int onlinePlayerCount = onlinePackets.stream().mapToInt(packet -> packet.onlinePlayerCount()).sum();
+		int maxPlayerCount = onlinePackets.stream().mapToInt(packet -> packet.maxPlayerCount()).sum();
+		int playersEverJoined = onlinePackets.stream().mapToInt(packet -> packet.playersEverJoined()).sum();
 		int onlineServerCount = onlinePackets.size();
-		long maxUptimeSeconds = onlinePackets.stream().mapToLong(packet -> Math.max(0L, packet.uptimeSeconds)).max().orElse(0L);
+		long maxUptimeSeconds = onlinePackets.stream().mapToLong(packet -> Math.max(0L, packet.uptimeSeconds())).max().orElse(0L);
 		long serverStartedTime = Math.max(0L, nowEpochSeconds - maxUptimeSeconds);
 		String onlineServerList = onlinePackets.stream()
-				.map(packet -> packet.serverName == null ? "unknown" : packet.serverName)
+				.map(packet -> packet.serverName() == null ? "unknown" : packet.serverName())
 				.sorted(String.CASE_INSENSITIVE_ORDER)
 				.reduce((left, right) -> left + ", " + right)
 				.orElse("");
@@ -142,13 +138,7 @@ public final class ChannelUpdateManager {
 		);
 	}
 
-	private static void updateTextChannelTopicsAsync(ChannelUpdateContext context, boolean dropWhenRateLimited) {
-		updateTextChannelTopics(context, dropWhenRateLimited, false);
-	}
 
-	private static void updateTextChannelTopicsSync(ChannelUpdateContext context) {
-		updateTextChannelTopics(context, false, true);
-	}
 
 	private static void updateTextChannelTopics(ChannelUpdateContext context, boolean dropWhenRateLimited, boolean synchronous) {
 		if (!ConfigManager.getBoolean("channel_updating.channel_topic_updating.enable")) {
@@ -182,13 +172,7 @@ public final class ChannelUpdateManager {
 		}
 	}
 
-	private static void updateVoiceChannelNamesAsync(ChannelUpdateContext context, boolean dropWhenRateLimited) {
-		updateVoiceChannelNames(context, dropWhenRateLimited, false);
-	}
 
-	private static void updateVoiceChannelNamesSync(ChannelUpdateContext context) {
-		updateVoiceChannelNames(context, false, true);
-	}
 
 	private static void updateVoiceChannelNames(ChannelUpdateContext context, boolean dropWhenRateLimited, boolean synchronous) {
 		if (!ConfigManager.getBoolean("channel_updating.voice_channel_updating.enable")) {

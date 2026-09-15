@@ -214,6 +214,7 @@ discord:
   command:
     reply_failed: "Failed to send reply message to Discord command sender."
     reply_failed_detail: "This is expected behavior for reload/shutdown commands."
+    autocomplete_failed: "Failed to compute the autocomplete choices for a Discord command."
   message_parser:
     click_to_open_link: "Click to open link"
     unknown_user: "Unknown User"
@@ -246,6 +247,7 @@ server:
   network:
     listening: "DMCC Server is now listening on port {}."
     bind_failed: "Failed to bind to port {}."
+    invalid_excluded_command_regex: "Ignoring invalid excluded-command regex: {}"
     reject: "Rejected DMCC Client \"{}\" connection. Reason: {}"
     auth_success: "DMCC Client authenticated: \"{}\""
     client_disconnected_normal: "DMCC Client has disconnected: \"{}\""
@@ -273,6 +275,8 @@ client:
     unexpected_packet: "Ignored unexpected packet from DMCC Server: {}"
   console_log_tailer:
     poll_failed: "Console log tailer polling failed: {}"
+    pending_lines_dropped: "Console log forwarding is buffering more than {} lines; the oldest buffered lines are being dropped."
+    flush_failed: "Failed to forward a console log batch; it stays buffered and is retried later: {}"
 
 utils:
   config:

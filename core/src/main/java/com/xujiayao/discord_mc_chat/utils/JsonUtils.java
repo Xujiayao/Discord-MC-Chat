@@ -28,7 +28,10 @@ public final class JsonUtils {
 	}
 
 	/**
-	 * Converts a JSON String to a Map of String to String.
+	 * Converts JSON to a Map of String to String.
+	 * <p>
+	 * Comments are stripped and tabs are normalized before parsing, so resources that carry {@code //} or
+	 * {@code /* *}{@code /} comments (BlazeAndCaves style) and legacy translation resources both load.
 	 *
 	 * @param json The JSON String to convert
 	 * @return The converted Map
@@ -46,8 +49,7 @@ public final class JsonUtils {
 	 * @throws IOException If reading or parsing fails
 	 */
 	public static Map<String, String> toStringMap(Reader reader) throws IOException {
-		return YAML_MAPPER.readValue(normalize(readAll(reader)), new TypeReference<>() {
-		});
+		return toStringMap(readAll(reader));
 	}
 
 	/**
@@ -55,11 +57,10 @@ public final class JsonUtils {
 	 *
 	 * @param inputStream The InputStream to parse from
 	 * @return The parsed Map
-	 * @throws IOException If parsing fails
+	 * @throws IOException If reading or parsing fails
 	 */
 	public static Map<String, String> toStringMap(InputStream inputStream) throws IOException {
-		return YAML_MAPPER.readValue(normalize(new String(inputStream.readAllBytes(), StandardCharsets.UTF_8)), new TypeReference<>() {
-		});
+		return toStringMap(new String(inputStream.readAllBytes(), StandardCharsets.UTF_8));
 	}
 
 	private static String readAll(Reader reader) throws IOException {

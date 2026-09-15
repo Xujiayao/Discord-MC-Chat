@@ -1,11 +1,18 @@
 package com.xujiayao.discord_mc_chat.utils;
 
+import java.util.regex.Pattern;
+
 /**
  * String utility class.
  *
  * @author Xujiayao
  */
 public final class StringUtils {
+
+	/**
+	 * Indexed printf-style placeholder, e.g. {@code %1$s}.
+	 */
+	private static final Pattern INDEXED_PRINTF_PLACEHOLDER = Pattern.compile("%\\d+\\$s");
 
 	private StringUtils() {
 	}
@@ -17,6 +24,19 @@ public final class StringUtils {
 	 * @return Escaped string
 	 */
 	public static String escape(String s) {
+		// Every log line goes through here, so scan once and only build a new string when needed.
+		boolean needsEscaping = false;
+		for (int i = 0; i < s.length(); i++) {
+			char c = s.charAt(i);
+			if (c == '\t' || c == '\b' || c == '\n' || c == '\r' || c == '\f') {
+				needsEscaping = true;
+				break;
+			}
+		}
+		if (!needsEscaping) {
+			return s;
+		}
+
 		return s.replace("\t", "\\t")
 				.replace("\b", "\\b")
 				.replace("\n", "\\n")
@@ -77,7 +97,7 @@ public final class StringUtils {
 		}
 
 		// Check if the string uses Minecraft-style placeholders (%s or %n$s)
-		if (str.contains("%s") || str.matches(".*%\\d+\\$s.*")) {
+		if (str.contains("%s") || INDEXED_PRINTF_PLACEHOLDER.matcher(str).find()) {
 			// Use String.format for standard printf-style formatting
 			return String.format(str, args);
 		}

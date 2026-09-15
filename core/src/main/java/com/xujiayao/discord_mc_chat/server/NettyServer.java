@@ -1,8 +1,8 @@
 package com.xujiayao.discord_mc_chat.server;
 
 import com.xujiayao.discord_mc_chat.config.I18nManager;
-import com.xujiayao.discord_mc_chat.network.serialization.JavaSerializerDecoder;
-import com.xujiayao.discord_mc_chat.network.serialization.JavaSerializerEncoder;
+import com.xujiayao.discord_mc_chat.network.protocol.JsonPacketDecoder;
+import com.xujiayao.discord_mc_chat.network.protocol.JsonPacketEncoder;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -64,8 +64,8 @@ final class NettyServer {
 									new IdleStateHandler(30, 0, 0),
 									new LengthFieldBasedFrameDecoder(1048576, 0, 4, 0, 4),
 									new LengthFieldPrepender(4),
-									new JavaSerializerDecoder(),
-									new JavaSerializerEncoder(),
+									new JsonPacketDecoder(),
+									new JsonPacketEncoder(),
 									new ServerHandler(NettyServer.this)
 							);
 						}

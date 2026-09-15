@@ -101,21 +101,25 @@ public interface Command {
 	void execute(CommandSender sender, String... args);
 
 	/**
-	 * Describes a single command argument displayed in help and usage text.
+	 * Builds the {@code name <arg> <arg>} usage string shown in help, auto-complete and argument errors.
+	 *
+	 * @param args The arguments to render.
+	 * @return The usage string without a leading slash.
 	 */
-	interface CommandArgument {
-		/**
-		 * Gets the name of the argument.
-		 *
-		 * @return The argument name.
-		 */
-		String name();
+	default String usage(CommandArgument... args) {
+		StringBuilder usage = new StringBuilder(name());
+		for (CommandArgument arg : args) {
+			usage.append(" <").append(arg.name()).append(">");
+		}
+		return usage.toString();
+	}
 
-		/**
-		 * Gets the description of the argument.
-		 *
-		 * @return The argument description.
-		 */
-		String description();
+	/**
+	 * Describes a single command argument displayed in help and usage text.
+	 *
+	 * @param name        The argument name.
+	 * @param description The argument description.
+	 */
+	record CommandArgument(String name, String description) {
 	}
 }

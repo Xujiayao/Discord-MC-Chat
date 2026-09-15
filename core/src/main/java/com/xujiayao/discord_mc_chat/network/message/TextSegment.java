@@ -1,9 +1,6 @@
 package com.xujiayao.discord_mc_chat.network.message;
 
-import com.xujiayao.discord_mc_chat.network.packets.EventPackets.DiscordRelayPacket;
-
-import java.io.Serial;
-import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,15 +11,12 @@ import java.util.List;
  * rendered as a Minecraft Component on the client side without needing access to
  * Discord APIs or custom_messages.
  * <p>
- * This class is intentionally kept as a simple serializable POJO so that it can be
- * transmitted over the Netty channel inside {@link DiscordRelayPacket}.
+ * This class is intentionally kept as a plain mutable data holder: the parsers build segments field by
+ * field, and the network codec serializes the public fields as JSON.
  *
  * @author Xujiayao
  */
-public final class TextSegment implements Serializable {
-
-	@Serial
-	private static final long serialVersionUID = 1L;
+public final class TextSegment {
 
 	/**
 	 * The display text of this segment.
@@ -75,6 +69,12 @@ public final class TextSegment implements Serializable {
 	public String hoverText;
 
 	/**
+	 * Creates an empty segment for the JSON codec, which fills the public fields afterwards.
+	 */
+	public TextSegment() {
+	}
+
+	/**
 	 * Creates a plain text segment with no styling.
 	 *
 	 * @param text The display text.
@@ -94,6 +94,69 @@ public final class TextSegment implements Serializable {
 		this.text = text;
 		this.bold = bold;
 		this.color = color;
+	}
+
+	/**
+	 * Copies styling/click/hover metadata from a source segment with a new text value.
+	 *
+	 * @param source Source segment.
+	 * @param text   Text for copied segment.
+	 * @return Copied segment.
+	 */
+	public static TextSegment copyOf(TextSegment source, String text) {
+		TextSegment copy = new TextSegment(text, source.bold, source.color);
+		copy.italic = source.italic;
+		copy.underlined = source.underlined;
+		copy.strikethrough = source.strikethrough;
+		copy.obfuscated = source.obfuscated;
+		copy.clickUrl = source.clickUrl;
+		copy.hoverText = source.hoverText;
+		return copy;
+	}
+
+	/**
+	 * Deep-copies a list of segments.
+	 *
+	 * @param segments Source segments.
+	 * @return Copied segment list.
+	 */
+	public static List<TextSegment> copyOfAll(List<TextSegment> segments) {
+		List<TextSegment> copy = new ArrayList<>();
+		for (TextSegment segment : segments) {
+			copy.add(copyOf(segment, segment.text));
+		}
+		return copy;
+	}
+
+	/**
+	 * Applies a fallback color to segments without explicit color.
+	 *
+	 * @param segments     Target segments.
+	 * @param defaultColor Fallback color.
+	 */
+	public static void applyDefaultColor(List<TextSegment> segments, String defaultColor) {
+		if (defaultColor == null || defaultColor.isEmpty()) {
+			return;
+		}
+		for (TextSegment segment : segments) {
+			if (segment.color == null || segment.color.isEmpty()) {
+				segment.color = defaultColor;
+			}
+		}
+	}
+
+	/**
+	 * Appends ellipsis to the tail segment, or inserts one when list is empty.
+	 *
+	 * @param segments Target segment list.
+	 */
+	public static void appendEllipsis(List<TextSegment> segments) {
+		if (segments.isEmpty()) {
+			segments.add(new TextSegment("..."));
+			return;
+		}
+		TextSegment tail = segments.getLast();
+		segments.set(segments.size() - 1, copyOf(tail, tail.text + "..."));
 	}
 
 	/**

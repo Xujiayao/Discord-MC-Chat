@@ -43,14 +43,18 @@ public final class ExecutorServiceUtils {
 	public static void shutdownAnExecutor(ExecutorService executor) {
 		executor.shutdown();
 		try {
-			if (ConfigManager.getBoolean("shutdown.graceful_shutdown")) {
+			// Defaulted lookup: this runs during shutdown, when the config may already be unavailable.
+			if (ConfigManager.getBoolean("shutdown.graceful_shutdown", true)) {
 				// Allow up to 10 minutes for ongoing requests to complete
-				boolean ignored = executor.awaitTermination(10, TimeUnit.MINUTES);
+				executor.awaitTermination(10, TimeUnit.MINUTES);
 			} else {
 				// Allow up to 5 seconds for ongoing requests to complete
-				boolean ignored = executor.awaitTermination(5, TimeUnit.SECONDS);
+				executor.awaitTermination(5, TimeUnit.SECONDS);
 			}
-		} catch (Exception ignored) {
+		} catch (InterruptedException e) {
+			// Shutdown was interrupted: fall through to the forced shutdown below, but keep the interrupt
+			// status so the caller can see that it was asked to stop.
+			Thread.currentThread().interrupt();
 		}
 		executor.shutdownNow();
 	}

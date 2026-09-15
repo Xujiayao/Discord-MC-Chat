@@ -6,10 +6,12 @@ import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.message.TextSegment;
-import com.xujiayao.discord_mc_chat.network.packets.EventPackets.DiscordRelayPacket;
+import com.xujiayao.discord_mc_chat.network.protocol.Packets;
 import com.xujiayao.discord_mc_chat.platform.Platform;
 import com.xujiayao.discord_mc_chat.platform.StatsProvider;
 import com.xujiayao.discord_mc_chat.server.message.DiscordMessageParser;
+import com.xujiayao.discord_mc_chat.server.message.MessageParserCommon;
+import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import com.xujiayao.discord_mc_chat.utils.LogFileUtils;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -33,6 +35,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
@@ -49,15 +54,20 @@ final class DiscordEventHandler extends ListenerAdapter {
 	private static final ConcurrentHashMap<String, CachedMessage> messageCache = new ConcurrentHashMap<>();
 	private static final int MAX_CACHE_SIZE = 200;
 
-	private static void logDiscordEventForConsole(DiscordRelayPacket packet) {
-		if (packet.replySegments != null && !packet.replySegments.isEmpty()) {
-			LOGGER.info(TextSegment.toPlainText(packet.replySegments));
+	// Dedicated executor for autocomplete choice computation: the request paths underneath it block while
+	// waiting for DMCC clients, so they must never run on the single-threaded JDA event pool, where they
+	// would stall every other Discord event for as long as the wait lasts.
+	private static volatile ExecutorService autocompleteExecutor;
+
+	private static void logDiscordEventForConsole(Packets.DiscordRelay packet) {
+		if (packet.replySegments() != null && !packet.replySegments().isEmpty()) {
+			LOGGER.info(TextSegment.toPlainText(packet.replySegments()));
 		}
-		if (packet.segments != null && !packet.segments.isEmpty()) {
-			LOGGER.info(TextSegment.toPlainText(packet.segments));
+		if (packet.segments() != null && !packet.segments().isEmpty()) {
+			LOGGER.info(TextSegment.toPlainText(packet.segments()));
 		}
-		if (packet.type == DiscordRelayPacket.EventType.EDIT && packet.editedMessageSegments != null && !packet.editedMessageSegments.isEmpty()) {
-			LOGGER.info(TextSegment.toPlainText(packet.editedMessageSegments));
+		if (packet.eventType() == Packets.DiscordEventType.EDIT && packet.editedMessageSegments() != null && !packet.editedMessageSegments().isEmpty()) {
+			LOGGER.info(TextSegment.toPlainText(packet.editedMessageSegments()));
 		}
 	}
 
@@ -120,7 +130,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 		if (commandBroadcastEnabled) {
 			Member member = event.getMember();
 			String effectiveName = member != null ? member.getEffectiveName() : event.getUser().getName();
-			String roleColor = DiscordMessageParser.getRoleColorHex(member);
+			String roleColor = DiscordMessageAdapter.roleColorHex(member);
 
 			StringBuilder fullCommand = new StringBuilder("/").append(name);
 			for (OptionMapping option : event.getOptions()) {
@@ -128,7 +138,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 			}
 
 			List<TextSegment> segments = DiscordMessageParser.buildCommandSegments(effectiveName, roleColor, fullCommand.toString());
-			DiscordRelayPacket packet = new DiscordRelayPacket(DiscordRelayPacket.EventType.COMMAND, segments);
+			Packets.DiscordRelay packet = new Packets.DiscordRelay(Packets.DiscordEventType.COMMAND, segments);
 			logDiscordEventForConsole(packet);
 			NetworkManager.broadcastToClients(packet);
 		}
@@ -146,43 +156,93 @@ final class DiscordEventHandler extends ListenerAdapter {
 			return;
 		}
 
+		// Computing the choices can block for up to AUTOCOMPLETE_TIMEOUT_SECONDS while waiting for DMCC
+		// clients, so it runs on a dedicated executor and the reply is queued from there.
+		try {
+			autocompleteExecutor().execute(() -> event.replyChoices(computeChoices(event, commandName, focusedOption, currentValue)).queue());
+		} catch (RejectedExecutionException ignored) {
+			// The executor is shutting down: answer with the same empty list used when the deadline is exceeded.
+			event.replyChoices(List.of()).queue();
+		}
+	}
+
+	/**
+	 * Computes the autocomplete choices for one interaction.
+	 * <p>
+	 * Runs on the autocomplete executor, never on the JDA event thread.
+	 *
+	 * @param event         The interaction the choices are computed for.
+	 * @param commandName   Name of the command being completed.
+	 * @param focusedOption Name of the option the user is currently typing.
+	 * @param currentValue  The value typed into the focused option so far.
+	 * @return The choices to reply with, or an empty list when the choices cannot be computed.
+	 */
+	private List<Command.Choice> computeChoices(CommandAutoCompleteInteractionEvent event, String commandName,
+												String focusedOption, String currentValue) {
 		List<Command.Choice> choices = new ArrayList<>();
 
-		switch (commandName) {
-			case "execute" -> {
-				if ("at".equals(focusedOption)) {
-					choices = getTargetAtChoices(currentValue);
-				} else if ("command".equals(focusedOption)) {
-					choices = getCommandChoices(
-							(input, level) -> NetworkManager.requestExecuteAutoCompleteSnapshot(input, level, AUTOCOMPLETE_TIMEOUT_SECONDS),
-							currentValue, event);
+		try {
+			switch (commandName) {
+				case "execute" -> {
+					if ("at".equals(focusedOption)) {
+						choices = getTargetAtChoices(currentValue);
+					} else if ("command".equals(focusedOption)) {
+						choices = getCommandChoices(
+								(input, level) -> NetworkManager.requestExecuteAutoCompleteSnapshot(input, level, AUTOCOMPLETE_TIMEOUT_SECONDS),
+								currentValue, event);
+					}
+				}
+				case "console" -> {
+					if ("at".equals(focusedOption)) {
+						choices = getTargetAtChoices(currentValue);
+					} else if ("command".equals(focusedOption)) {
+						choices = getCommandChoices(
+								(input, level) -> NetworkManager.requestConsoleAutoCompleteSnapshot(input, level, AUTOCOMPLETE_TIMEOUT_SECONDS),
+								currentValue, event);
+					}
+				}
+				case "log" -> {
+					if ("file".equals(focusedOption)) {
+						choices = getLogFileChoices(currentValue);
+					}
+				}
+				case "stats" -> {
+					if ("type".equals(focusedOption)) {
+						choices = getStatsTypeChoices(currentValue);
+					} else if ("stat".equals(focusedOption)) {
+						String type = event.getOption("type", OptionMapping::getAsString);
+						choices = getStatsStatChoices(type, currentValue);
+					}
 				}
 			}
-			case "console" -> {
-				if ("at".equals(focusedOption)) {
-					choices = getTargetAtChoices(currentValue);
-				} else if ("command".equals(focusedOption)) {
-					choices = getCommandChoices(
-							(input, level) -> NetworkManager.requestConsoleAutoCompleteSnapshot(input, level, AUTOCOMPLETE_TIMEOUT_SECONDS),
-							currentValue, event);
-				}
-			}
-			case "log" -> {
-				if ("file".equals(focusedOption)) {
-					choices = getLogFileChoices(currentValue);
-				}
-			}
-			case "stats" -> {
-				if ("type".equals(focusedOption)) {
-					choices = getStatsTypeChoices(currentValue);
-				} else if ("stat".equals(focusedOption)) {
-					String type = event.getOption("type", OptionMapping::getAsString);
-					choices = getStatsStatChoices(type, currentValue);
-				}
-			}
+		} catch (Exception e) {
+			// Nothing on the JDA event thread reports failures for this work any more, so report it here and
+			// answer with the same empty list used when the deadline is exceeded.
+			LOGGER.error(I18nManager.getDmccTranslation("discord.command.autocomplete_failed"), e);
+			return List.of();
 		}
 
-		event.replyChoices(choices).queue();
+		return choices;
+	}
+
+	/**
+	 * @return The executor used to compute autocomplete choices, recreated when it was shut down by a reload.
+	 */
+	private static synchronized ExecutorService autocompleteExecutor() {
+		if (autocompleteExecutor == null || autocompleteExecutor.isShutdown()) {
+			autocompleteExecutor = Executors.newCachedThreadPool(ExecutorServiceUtils.newThreadFactory("DMCC-Autocomplete"));
+		}
+		return autocompleteExecutor;
+	}
+
+	/**
+	 * Shuts down the autocomplete executor. Called by {@link DiscordManager} while shutting the bot down.
+	 */
+	static synchronized void shutdown() {
+		if (autocompleteExecutor != null) {
+			ExecutorServiceUtils.shutdownAnExecutor(autocompleteExecutor);
+			autocompleteExecutor = null;
+		}
 	}
 
 	private List<Command.Choice> getTargetAtChoices(String currentValue) {
@@ -311,14 +371,14 @@ final class DiscordEventHandler extends ListenerAdapter {
 		}
 
 		// Build the main message line segments using DiscordMessageParser
-		List<TextSegment> mainSegments = DiscordMessageParser.buildChatSegments(message);
+		List<TextSegment> mainSegments = DiscordMessageAdapter.chatSegments(message);
 
 		// Build reply segments if this is a reply to another message
-		List<TextSegment> replySegments = DiscordMessageParser.buildReplySegments(message.getReferencedMessage());
+		List<TextSegment> replySegments = DiscordMessageAdapter.replySegments(message.getReferencedMessage());
 		if (replySegments == null && message.getMessageReference() != null) {
 			CachedMessage cachedRef = messageCache.get(message.getMessageReference().getMessageId());
 			if (cachedRef != null) {
-				replySegments = DiscordMessageParser.buildReplySegments(
+				replySegments = DiscordMessageAdapter.replySegments(
 						cachedRef.authorName(),
 						cachedRef.authorRoleColor(),
 						null,
@@ -336,25 +396,22 @@ final class DiscordEventHandler extends ListenerAdapter {
 		List<String> mentionedPlayerUuids = null;
 
 		boolean mentionNotificationsEnabled = ConfigManager.getBoolean("account_linking.mention_notifications.enable");
-		boolean isMentionEveryone = DiscordMessageParser.isMentionEveryone(message);
+		boolean isMentionEveryone = DiscordMessageAdapter.isMentionEveryone(message);
 		if (mentionNotificationsEnabled) {
-			Set<String> uuids = DiscordMessageParser.collectMentionedPlayerUuids(message);
+			Set<String> uuids = DiscordMessageAdapter.collectMentionedPlayerUuids(message);
 			if (isMentionEveryone || !uuids.isEmpty()) {
 				Member member = message.getMember();
 				String effectiveName = member != null ? member.getEffectiveName() : message.getAuthor().getName();
-				mentionNotificationText = DiscordMessageParser.getMentionNotificationText(effectiveName);
+				mentionNotificationText = MessageParserCommon.mentionNotification(effectiveName);
 				mentionNotificationStyle = ConfigManager.getString("account_linking.mention_notifications.style", "title");
 				mentionedPlayerUuids = new ArrayList<>(uuids);
 			}
 		}
 
 		// Build and send the DiscordEventPacket to all connected clients
-		DiscordRelayPacket packet = new DiscordRelayPacket(DiscordRelayPacket.EventType.CHAT, mainSegments);
-		packet.replySegments = replySegments;
-		packet.mentionNotificationText = mentionNotificationText;
-		packet.mentionNotificationStyle = mentionNotificationStyle;
-		packet.mentionedPlayerUuids = mentionedPlayerUuids;
-		packet.mentionEveryone = isMentionEveryone;
+		Packets.DiscordRelay packet = new Packets.DiscordRelay(Packets.DiscordEventType.CHAT, mainSegments,
+				replySegments, null, mentionNotificationText, mentionNotificationStyle,
+				mentionedPlayerUuids, isMentionEveryone);
 
 		logDiscordEventForConsole(packet);
 		NetworkManager.broadcastToClients(packet);
@@ -413,7 +470,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 		}
 
 		String reactorName = member.getEffectiveName();
-		String roleColor = DiscordMessageParser.getRoleColorHex(member);
+		String roleColor = DiscordMessageAdapter.roleColorHex(member);
 
 		EmojiUnion emoji = event.getEmoji();
 		String emojiText = switch (emoji.getType()) {
@@ -423,13 +480,13 @@ final class DiscordEventHandler extends ListenerAdapter {
 
 		event.retrieveMessage().queue(targetMessage -> {
 			List<TextSegment> segments = DiscordMessageParser.buildReactionSegments(reactorName, roleColor, emojiText);
-			DiscordRelayPacket packet = new DiscordRelayPacket(DiscordRelayPacket.EventType.REACTION, segments);
-			packet.replySegments = DiscordMessageParser.buildReplySegments(targetMessage);
+			Packets.DiscordRelay packet = new Packets.DiscordRelay(Packets.DiscordEventType.REACTION, segments,
+					DiscordMessageAdapter.replySegments(targetMessage), null, null, null, null, false);
 			logDiscordEventForConsole(packet);
 			NetworkManager.broadcastToClients(packet);
 		}, _ -> {
 			List<TextSegment> segments = DiscordMessageParser.buildReactionSegments(reactorName, roleColor, emojiText);
-			DiscordRelayPacket packet = new DiscordRelayPacket(DiscordRelayPacket.EventType.REACTION, segments);
+			Packets.DiscordRelay packet = new Packets.DiscordRelay(Packets.DiscordEventType.REACTION, segments);
 			logDiscordEventForConsole(packet);
 			NetworkManager.broadcastToClients(packet);
 		});
@@ -464,7 +521,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 
 		Member member = message.getMember();
 		String editorName = member != null ? member.getEffectiveName() : message.getAuthor().getName();
-		String roleColor = DiscordMessageParser.getRoleColorHex(member);
+		String roleColor = DiscordMessageAdapter.roleColorHex(member);
 
 		CachedMessage cached = messageCache.get(message.getId());
 		if (cached != null && Objects.equals(cached.contentRaw(), message.getContentRaw())) {
@@ -475,7 +532,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 		if (cached != null && cached.contentRaw() != null) {
 			replySegments = cached.replySegments();
 			if (replySegments == null || replySegments.isEmpty()) {
-				replySegments = DiscordMessageParser.buildReplySegments(
+				replySegments = DiscordMessageAdapter.replySegments(
 						cached.authorName(),
 						cached.authorRoleColor(),
 						null,
@@ -488,11 +545,10 @@ final class DiscordEventHandler extends ListenerAdapter {
 		List<TextSegment> notificationSegments = DiscordMessageParser.buildEditNotificationSegments(editorName, roleColor);
 
 		// Build new message content segments
-		List<TextSegment> editedMessageSegments = DiscordMessageParser.buildEditedMessageSegments(message);
+		List<TextSegment> editedMessageSegments = DiscordMessageAdapter.editedMessageSegments(message);
 
-		DiscordRelayPacket packet = new DiscordRelayPacket(DiscordRelayPacket.EventType.EDIT, notificationSegments);
-		packet.replySegments = replySegments;
-		packet.editedMessageSegments = editedMessageSegments;
+		Packets.DiscordRelay packet = new Packets.DiscordRelay(Packets.DiscordEventType.EDIT, notificationSegments,
+				replySegments, editedMessageSegments, null, null, null, false);
 		logDiscordEventForConsole(packet);
 		NetworkManager.broadcastToClients(packet);
 
@@ -524,23 +580,24 @@ final class DiscordEventHandler extends ListenerAdapter {
 		if (cached == null) {
 			// No cached info - send a generic delete notification
 			List<TextSegment> segments = DiscordMessageParser.buildDeleteSegments(I18nManager.getDmccTranslation("discord.message_parser.unknown_user"), "white");
-			DiscordRelayPacket packet = new DiscordRelayPacket(DiscordRelayPacket.EventType.DELETE, segments);
+			Packets.DiscordRelay packet = new Packets.DiscordRelay(Packets.DiscordEventType.DELETE, segments);
 			logDiscordEventForConsole(packet);
 			NetworkManager.broadcastToClients(packet);
 			return;
 		}
 
 		List<TextSegment> segments = DiscordMessageParser.buildDeleteSegments(cached.authorName(), cached.authorRoleColor());
-		DiscordRelayPacket packet = new DiscordRelayPacket(DiscordRelayPacket.EventType.DELETE, segments);
-		packet.replySegments = DiscordMessageParser.buildReplySegments(
+		List<TextSegment> replySegments = DiscordMessageAdapter.replySegments(
 				cached.authorName(),
 				cached.authorRoleColor(),
 				null,
 				cached.contentRaw()
 		);
 		if (cached.replySegments() != null && !cached.replySegments().isEmpty()) {
-			packet.replySegments = cached.replySegments();
+			replySegments = cached.replySegments();
 		}
+		Packets.DiscordRelay packet = new Packets.DiscordRelay(Packets.DiscordEventType.DELETE, segments,
+				replySegments, null, null, null, null, false);
 		logDiscordEventForConsole(packet);
 		NetworkManager.broadcastToClients(packet);
 	}
@@ -567,8 +624,8 @@ final class DiscordEventHandler extends ListenerAdapter {
 
 		Member member = message.getMember();
 		String name = member != null ? member.getEffectiveName() : message.getAuthor().getName();
-		String roleColor = DiscordMessageParser.getRoleColorHex(member);
-		List<TextSegment> replySegments = DiscordMessageParser.buildReplySegments(message);
+		String roleColor = DiscordMessageAdapter.roleColorHex(member);
+		List<TextSegment> replySegments = DiscordMessageAdapter.replySegments(message);
 		messageCache.put(message.getId(), new CachedMessage(name, roleColor, message.getContentRaw(), replySegments, message.getType().isSystem()));
 	}
 

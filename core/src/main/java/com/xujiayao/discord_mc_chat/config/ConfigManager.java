@@ -11,6 +11,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import static com.xujiayao.discord_mc_chat.Constants.IS_MINECRAFT_ENV;
@@ -44,8 +47,20 @@ public final class ConfigManager {
 	 */
 	public static final String MODE_MULTI_SERVER_CLIENT = "multi_server_client";
 	private static final Path CONFIG_FILE_PATH = Paths.get("./config/discord_mc_chat/config.yml");
-	private static JsonNode config;
-	private static String mode = "";
+
+	/**
+	 * Dotted config paths split into segments, so a lookup never re-splits the same path.
+	 */
+	private static final Map<String, String[]> PATH_SEGMENTS = new ConcurrentHashMap<>();
+
+	/**
+	 * Paths already reported as missing. A missing optional key is read on every event, so warning once per
+	 * path per config revision keeps the diagnostic without flooding the log.
+	 */
+	private static final Set<String> WARNED_MISSING_PATHS = ConcurrentHashMap.newKeySet();
+
+	private static volatile JsonNode config;
+	private static volatile String mode = "";
 
 	private ConfigManager() {
 	}
@@ -57,6 +72,9 @@ public final class ConfigManager {
 	 */
 	public static boolean load() {
 		String defaultMode = getDefaultMode();
+
+		// Forget which paths were missing last time, so a config revision is reported on its own merits.
+		WARNED_MISSING_PATHS.clear();
 
 		try {
 			// Create directories if they do not exist
@@ -214,24 +232,33 @@ public final class ConfigManager {
 	 * @return The JsonNode at the specified path
 	 */
 	public static JsonNode getConfigNode(String path) {
-		if (config == null) {
+		JsonNode node = config;
+		if (node == null) {
 			// This can happen if config is not loaded yet.
 			// Returning a missing node is safer than a NullPointerException.
 			return YAML_MAPPER.missingNode();
 		}
 
-		String[] parts = path.split("\\.");
-		JsonNode node = config;
-
-		for (String part : parts) {
+		for (String part : PATH_SEGMENTS.computeIfAbsent(path, key -> key.split("\\."))) {
 			if (node == null || node.isMissingNode() || node.isNull()) {
-				LOGGER.warn(I18nManager.getDmccTranslation("utils.config.config.path_not_found", path));
+				warnMissingPath(path);
 				return node;
 			}
 			node = node.path(part);
 		}
 
 		return node;
+	}
+
+	/**
+	 * Reports a path that does not exist in the loaded config, at most once per config revision.
+	 *
+	 * @param path The dotted config path that was not found.
+	 */
+	private static void warnMissingPath(String path) {
+		if (WARNED_MISSING_PATHS.add(path)) {
+			LOGGER.warn(I18nManager.getDmccTranslation("utils.config.config.path_not_found", path));
+		}
 	}
 
 	/**
@@ -316,5 +343,20 @@ public final class ConfigManager {
 	 */
 	public static Boolean getBoolean(String path) {
 		return getValue(path, JsonNode::asBoolean);
+	}
+
+	/**
+	 * Gets a configuration value as a boolean, with a default value if not found.
+	 * <p>
+	 * Use this instead of {@link #getBoolean(String)} wherever the key may legitimately be absent, so that
+	 * the returned {@code null} cannot turn into a {@link NullPointerException} at the unboxing site.
+	 *
+	 * @param path         The path to the configuration value
+	 * @param defaultValue The value to return if the path is not found
+	 * @return The boolean value at the specified path
+	 */
+	public static boolean getBoolean(String path, boolean defaultValue) {
+		Boolean value = getValue(path, JsonNode::asBoolean);
+		return value == null ? defaultValue : value;
 	}
 }

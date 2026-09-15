@@ -15,11 +15,6 @@ import com.xujiayao.discord_mc_chat.utils.LogFileUtils;
  */
 public final class LogCommand implements Command {
 
-	/**
-	 * Creates a log command instance.
-	 */
-	public LogCommand() {
-	}
 
 	@Override
 	public String name() {
@@ -29,17 +24,7 @@ public final class LogCommand implements Command {
 	@Override
 	public CommandArgument[] args() {
 		return new CommandArgument[]{
-				new CommandArgument() {
-					@Override
-					public String name() {
-						return "file";
-					}
-
-					@Override
-					public String description() {
-						return I18nManager.getDmccTranslation("commands.log.args_desc.file");
-					}
-				}
+				new CommandArgument("file", I18nManager.getDmccTranslation("commands.log.args_desc.file"))
 		};
 	}
 

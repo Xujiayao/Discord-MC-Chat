@@ -1,18 +1,22 @@
 package com.xujiayao.discord_mc_chat.network;
 
 import com.xujiayao.discord_mc_chat.client.ClientDMCC;
-import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
-import com.xujiayao.discord_mc_chat.network.packets.Packet;
+import com.xujiayao.discord_mc_chat.network.protocol.Packet;
+import com.xujiayao.discord_mc_chat.network.protocol.Packets;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import io.netty.channel.Channel;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -29,8 +33,12 @@ public final class NetworkManager {
 	private static final Map<Channel, String> clientChannels = new ConcurrentHashMap<>();
 	private static final Map<String, Long> clientConnectedAt = new ConcurrentHashMap<>();
 
-	private static final Map<String, CommandPackets.Info.ResponsePacket> infoCache = new ConcurrentHashMap<>();
-	private static final AtomicReference<Supplier<CommandPackets.Info.ResponsePacket>> infoSupplier = new AtomicReference<>();
+	// Server-side: Info requests that are currently waiting for responses, keyed by an internally generated
+	// request id. The id never leaves this class; it only gives every concurrent caller its own state.
+	// All access is guarded by infoLock.
+	private static final Map<Long, InfoRound> pendingInfoRounds = new LinkedHashMap<>();
+	private static final AtomicLong nextInfoRequestId = new AtomicLong();
+	private static final AtomicReference<Supplier<Packets.InfoSnapshot>> infoSupplier = new AtomicReference<>();
 	private static final Object infoLock = new Object();
 
 	// DMCC command auto-complete cache
@@ -58,7 +66,7 @@ public final class NetworkManager {
 	 *
 	 * @param supplier The supplier to register
 	 */
-	public static void registerInfoSupplier(Supplier<CommandPackets.Info.ResponsePacket> supplier) {
+	public static void registerInfoSupplier(Supplier<Packets.InfoSnapshot> supplier) {
 		infoSupplier.set(supplier);
 	}
 
@@ -69,9 +77,14 @@ public final class NetworkManager {
 		clientInstance.set(null);
 		clientChannels.clear();
 		clientConnectedAt.clear();
-		infoCache.clear();
 		executeAutoCompleteCache.clear();
 		consoleAutoCompleteCache.clear();
+		synchronized (infoLock) {
+			// Dropping the in-flight rounds also unblocks their callers: no client is left to answer, so
+			// every waiting round is complete and returns the responses it already collected.
+			pendingInfoRounds.clear();
+			infoLock.notifyAll();
+		}
 	}
 
 	/**
@@ -145,6 +158,12 @@ public final class NetworkManager {
 		if (name != null) {
 			clientConnectedAt.remove(name);
 		}
+
+		synchronized (infoLock) {
+			// A client that just disconnected can no longer answer an in-flight info request, so wake the
+			// waiting rounds: they recompute their awaited set and stop waiting for it.
+			infoLock.notifyAll();
+		}
 	}
 
 	/**
@@ -197,79 +216,117 @@ public final class NetworkManager {
 	// ===== Info Methods =====
 
 	/**
-	 * Stores a received ResponsePacket into cache.
+	 * Publishes a received InfoSnapshot to every info request that is currently waiting for responses.
+	 * <p>
+	 * Responses are broadcast to the in-flight rounds instead of being parked in one shared cache, so each
+	 * caller keeps its own result map and no caller can clear, overwrite or consume another caller's data.
 	 *
 	 * @param clientName The client name
 	 * @param packet     The packet to cache
 	 */
-	public static void cacheInfoResponse(String clientName, CommandPackets.Info.ResponsePacket packet) {
+	public static void cacheInfoResponse(String clientName, Packets.InfoSnapshot packet) {
 		if (packet == null) {
 			return;
 		}
 
 		String name = clientName;
 		if (name == null || name.isBlank()) {
-			name = packet.serverName;
+			name = packet.serverName();
 		}
 		if (name == null || name.isBlank()) {
 			name = "unknown";
 		}
 
-		if (packet.serverName == null || packet.serverName.isBlank()) {
-			packet.serverName = name;
-		}
-
-		infoCache.put(name, packet);
+		Packets.InfoSnapshot stored = packet.serverName() == null || packet.serverName().isBlank()
+				? packet.withServerName(name)
+				: packet;
 
 		synchronized (infoLock) {
+			for (InfoRound round : pendingInfoRounds.values()) {
+				round.accept(name, stored);
+			}
 			infoLock.notifyAll();
 		}
 	}
 
 	/**
-	 * Sends InfoRequest packets, blocks the current thread, then returns a snapshot of cached responses.
+	 * Sends InfoRequest packets, blocks the current thread, then returns a snapshot of the responses that
+	 * belong to this call.
+	 * <p>
+	 * <b>Correlation:</b> {@link Packets.InfoSnapshot} carries no echo of the {@code sentAtMillis} that
+	 * {@link Packets.InfoRequest} was sent with (the client only uses it locally to compute
+	 * {@code connectionLatencyMillis}), so a response cannot be matched to the request that produced it on
+	 * the wire, and changing that would mean changing the packet shape. This method therefore correlates
+	 * round-scoped: every call registers its own {@link InfoRound} under an internally generated request id
+	 * before the request is broadcast, and unregisters it when it returns. A response is recorded by every
+	 * round that is in flight when it arrives, with the latest value winning per server name, so a response
+	 * left over from an older round is replaced by the actual answer to this one as soon as it arrives.
+	 * <p>
+	 * A round only waits for clients that it broadcast to and that are still connected: the awaited set is
+	 * recomputed on every wake-up, so a client that disconnects (or one that connects afterwards) can no
+	 * longer make the caller block until the timeout. The request timestamp is still generated fresh per
+	 * call, so the client-side latency measurement is unchanged.
 	 *
 	 * @param timeoutSeconds The waiting time in seconds
 	 * @return A snapshot of cached ResponsePacket items
 	 */
-	public static Map<String, CommandPackets.Info.ResponsePacket> requestInfoSnapshot(int timeoutSeconds) {
-		infoCache.clear();
+	public static Map<String, Packets.InfoSnapshot> requestInfoSnapshot(int timeoutSeconds) {
+		long requestId = nextInfoRequestId.incrementAndGet();
+		InfoRound round = new InfoRound();
 
-		int expectedResponses = clientChannels.size();
-
-		if (expectedResponses > 0) {
-			broadcastToClients(new CommandPackets.Info.RequestPacket(System.currentTimeMillis()));
+		synchronized (infoLock) {
+			// Publish the round before the request goes out, so a response racing back to us is never missed.
+			round.awaitedClientNames.addAll(clientChannels.values());
+			pendingInfoRounds.put(requestId, round);
 		}
 
-		boolean includeLocalPacket = expectedResponses == 0 && clientInstance.get() != null;
-		if (includeLocalPacket) {
-			CommandPackets.Info.ResponsePacket localPacket = createResponsePacket();
-			cacheInfoResponse(localPacket.serverName, localPacket);
-			expectedResponses += 1;
-		}
+		try {
+			if (!round.awaitedClientNames.isEmpty()) {
+				broadcastToClients(new Packets.InfoRequest(System.currentTimeMillis()));
+			} else if (clientInstance.get() != null) {
+				// Standalone/single-server fallback: answer locally from the registered supplier.
+				Packets.InfoSnapshot localPacket = createResponsePacket();
+				cacheInfoResponse(localPacket.serverName(), localPacket);
+			}
 
-		long deadlineMillis = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(timeoutSeconds);
-
-		if (expectedResponses > 0) {
+			waitForInfoRound(round, timeoutSeconds);
+		} finally {
 			synchronized (infoLock) {
-				while (infoCache.size() < expectedResponses) {
-					long remaining = deadlineMillis - System.currentTimeMillis();
-					if (remaining <= 0) {
-						break;
-					}
-					try {
-						infoLock.wait(remaining);
-					} catch (InterruptedException e) {
-						Thread.currentThread().interrupt();
-						break;
-					}
-				}
+				pendingInfoRounds.remove(requestId);
 			}
 		}
 
-		Map<String, CommandPackets.Info.ResponsePacket> snapshot = new LinkedHashMap<>(infoCache);
-		infoCache.clear();
-		return snapshot;
+		return round.snapshot();
+	}
+
+	/**
+	 * Blocks the current thread until every client this round is waiting for has answered, or until the
+	 * timeout expires.
+	 * <p>
+	 * Client connections are re-checked on each wake-up, so a disconnected client does not hold the caller
+	 * for the remaining timeout. The completion check and the response bookkeeping share {@link #infoLock},
+	 * which is also the monitor waited on here, so no response can slip in between the check and the wait.
+	 *
+	 * @param round          The round to wait for
+	 * @param timeoutSeconds The waiting time in seconds
+	 */
+	private static void waitForInfoRound(InfoRound round, int timeoutSeconds) {
+		long deadlineMillis = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(timeoutSeconds);
+
+		synchronized (infoLock) {
+			while (!round.isComplete()) {
+				long remaining = deadlineMillis - System.currentTimeMillis();
+				if (remaining <= 0) {
+					break;
+				}
+				try {
+					infoLock.wait(remaining);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					break;
+				}
+			}
+		}
 	}
 
 	/**
@@ -277,9 +334,9 @@ public final class NetworkManager {
 	 *
 	 * @return The ResponsePacket instance
 	 */
-	public static CommandPackets.Info.ResponsePacket createResponsePacket() {
-		Supplier<CommandPackets.Info.ResponsePacket> supplier = infoSupplier.get();
-		CommandPackets.Info.ResponsePacket packet = supplier != null ? supplier.get() : null;
+	public static Packets.InfoSnapshot createResponsePacket() {
+		Supplier<Packets.InfoSnapshot> supplier = infoSupplier.get();
+		Packets.InfoSnapshot packet = supplier != null ? supplier.get() : null;
 
 		if (packet == null) {
 			Runtime runtime = Runtime.getRuntime();
@@ -288,7 +345,7 @@ public final class NetworkManager {
 					? EnvironmentUtils.getMinecraftVersion()
 					: "unknown";
 
-			packet = new CommandPackets.Info.ResponsePacket(
+			packet = new Packets.InfoSnapshot(
 					serverName,
 					-1,
 					minecraftVersion,
@@ -304,17 +361,73 @@ public final class NetworkManager {
 			);
 		}
 
-		if (packet.serverName == null || packet.serverName.isBlank()) {
-			packet.serverName = getClientServerName();
+		if (packet.serverName() == null || packet.serverName().isBlank()) {
+			packet = packet.withServerName(getClientServerName());
 		}
 
-		if (packet.minecraftVersion == null || packet.minecraftVersion.isBlank()) {
-			packet.minecraftVersion = EnvironmentUtils.isMinecraftEnvironment()
+		if (packet.minecraftVersion() == null || packet.minecraftVersion().isBlank()) {
+			packet = packet.withMinecraftVersion(EnvironmentUtils.isMinecraftEnvironment()
 					? EnvironmentUtils.getMinecraftVersion()
-					: "unknown";
+					: "unknown");
 		}
 
 		return packet;
+	}
+
+	/**
+	 * Correlation state of one {@link #requestInfoSnapshot(int)} call.
+	 * <p>
+	 * All access happens while holding {@link #infoLock}, which is what lets the collections below stay plain
+	 * (non-concurrent) collections: a caller either owns the lock, or it is inside {@link #waitForInfoRound}
+	 * where the monitor is released only while waiting for a response to be published.
+	 */
+	private static final class InfoRound {
+		/**
+		 * Client names this round broadcast its request to. A name that is no longer connected is skipped by
+		 * {@link #isComplete()}, so it cannot keep the caller waiting for a response that will never come.
+		 */
+		private final Set<String> awaitedClientNames = new LinkedHashSet<>();
+
+		/**
+		 * Latest response per server name, in arrival order.
+		 */
+		private final Map<String, Packets.InfoSnapshot> responses = new LinkedHashMap<>();
+
+		/**
+		 * Client names that answered at least once, so repeat answers do not extend the wait.
+		 */
+		private final Set<String> answeredClientNames = new HashSet<>();
+
+		/**
+		 * Records one response. The latest value wins, so a response left over from an older round is
+		 * replaced by the answer to this round as soon as it arrives.
+		 *
+		 * @param clientName The server name the response is attributed to
+		 * @param packet     The received snapshot
+		 */
+		private void accept(String clientName, Packets.InfoSnapshot packet) {
+			responses.put(clientName, packet);
+			answeredClientNames.add(clientName);
+		}
+
+		/**
+		 * @return true when every client this round is still waiting for is either answered or disconnected.
+		 */
+		private boolean isComplete() {
+			for (String clientName : awaitedClientNames) {
+				if (!answeredClientNames.contains(clientName) && clientChannels.containsValue(clientName)) {
+					return false;
+				}
+			}
+			return true;
+		}
+
+		/**
+		 * @return The collected responses, in the same shape the shared cache used to be returned in.
+		 */
+		private Map<String, Packets.InfoSnapshot> snapshot() {
+			return new LinkedHashMap<>(responses);
+		}
 	}
 
 	// ===== DMCC Command Auto-Complete Methods =====
@@ -343,7 +456,7 @@ public final class NetworkManager {
 	public static Map<String, List<String>> requestExecuteAutoCompleteSnapshot(String input, int opLevel, int timeoutSeconds) {
 		return requestAutoCompleteSnapshot(
 				executeAutoCompleteCache,
-				new CommandPackets.Execute.AutoCompleteRequestPacket(input, opLevel),
+				new Packets.AutoCompleteRequest(Packets.RpcKind.EXECUTE, input, opLevel),
 				timeoutSeconds,
 				true
 		);
@@ -375,7 +488,7 @@ public final class NetworkManager {
 	public static Map<String, List<String>> requestConsoleAutoCompleteSnapshot(String input, int opLevel, int timeoutSeconds) {
 		return requestAutoCompleteSnapshot(
 				consoleAutoCompleteCache,
-				new CommandPackets.Console.AutoCompleteRequestPacket(input, opLevel),
+				new Packets.AutoCompleteRequest(Packets.RpcKind.CONSOLE, input, opLevel),
 				timeoutSeconds,
 				false
 		);

@@ -5,7 +5,7 @@ import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.message.TextSegment;
-import com.xujiayao.discord_mc_chat.network.packets.EventPackets.MinecraftRelayPacket;
+import com.xujiayao.discord_mc_chat.network.protocol.Packets;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.message.DiscordMessageParser;
 import com.xujiayao.discord_mc_chat.server.message.MinecraftMessageParser;
@@ -204,7 +204,7 @@ public final class UpdateCheckManager {
 			return;
 		}
 
-		MinecraftRelayPacket packet = new MinecraftRelayPacket(segments);
+		Packets.MinecraftRelay packet = new Packets.MinecraftRelay(segments);
 		if ("single_server".equals(mode)) {
 			NetworkManager.sendPacketToClient(packet, "Internal");
 		} else if ("standalone".equals(mode)) {

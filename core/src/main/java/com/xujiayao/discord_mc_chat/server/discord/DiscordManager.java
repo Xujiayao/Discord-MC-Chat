@@ -16,11 +16,13 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
@@ -64,7 +66,16 @@ public final class DiscordManager {
 	private static final Map<String, String> DISCORD_NAME_CACHE = new ConcurrentHashMap<>();
 	private static final Set<String> CONSOLE_FORWARDING_DISABLED_CLIENTS = ConcurrentHashMap.newKeySet();
 	private static final Pattern EMOJI_ALIAS_PATTERN = Pattern.compile("(:[^:]+:)");
+
+	// Resolved "DMCC Webhook" handle per channel ID. Resolving one requires a blocking REST call, so it is
+	// done once per channel instead of once per webhook message; stale handles are dropped on send failure.
+	private static final Map<String, Webhook> WEBHOOK_CACHE = new ConcurrentHashMap<>();
+
 	private static JDA jda;
+
+	// Compiled console redaction patterns, rebuilt only when console_forwarding.filter_regex changes.
+	private static volatile List<Pattern> consoleRedactionPatterns = List.of();
+	private static volatile String consoleRedactionFingerprint = null;
 
 	private DiscordManager() {
 	}
@@ -434,24 +445,39 @@ public final class DiscordManager {
 		}
 
 		try {
-			boolean standaloneMode = "standalone".equals(ConfigManager.getMode());
-			for (String line : message.split("\\n")) {
-				String sanitized = sanitizeLineForLogging(line);
-				if (standaloneMode) {
-					LOGGER.info(StringUtils.format("[{}] {}"), clientName, sanitized);
-				} else {
-					LOGGER.info(sanitized);
-				}
-			}
-
-			if (standaloneMode) {
-				String avatarUrl = getClientAvatarUrl(clientName);
-				sendWebhookMessage(channel, clientName, avatarUrl, message);
-			} else {
-				sendBotMessage(channelIdentifier, message);
-			}
+			postServerMessage(channel, channelIdentifier, clientName, message, message);
 		} catch (Exception e) {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
+		}
+	}
+
+	/**
+	 * Posts one formatted message to a channel and mirrors it into the DMCC log.
+	 * <p>
+	 * In standalone mode the message is sent through the source client's webhook identity and every log line
+	 * is prefixed with that client name; otherwise the bot posts it directly.
+	 *
+	 * @param channel           Resolved target channel.
+	 * @param channelIdentifier Configured channel identifier, used when the bot posts directly.
+	 * @param clientName        DMCC client/server name used as the webhook identity in standalone mode.
+	 * @param message           Message content to post.
+	 * @param logMessage        Plain-text variant used for the log lines.
+	 */
+	private static void postServerMessage(TextChannel channel, String channelIdentifier, String clientName,
+										  String message, String logMessage) {
+		boolean standaloneMode = "standalone".equals(ConfigManager.getMode());
+		if (standaloneMode) {
+			sendWebhookMessage(channel, clientName, getClientAvatarUrl(clientName), message);
+		} else {
+			sendBotMessage(channelIdentifier, message);
+		}
+		for (String line : logMessage.split("\\n")) {
+			String sanitized = sanitizeLineForLogging(line);
+			if (standaloneMode) {
+				LOGGER.info(StringUtils.format("[{}] {}"), clientName, sanitized);
+			} else {
+				LOGGER.info(sanitized);
+			}
 		}
 	}
 
@@ -635,29 +661,51 @@ public final class DiscordManager {
 		return configuredChannel.equals(channelId) || configuredChannel.equalsIgnoreCase(channelName);
 	}
 
+	/**
+	 * Applies the configured console redaction patterns.
+	 * <p>
+	 * Patterns are compiled once per configuration revision instead of once per log line, which is what the
+	 * console forwarding hot path used to do.
+	 */
 	private static String applySensitiveRedaction(String message) {
 		String output = message;
+		for (Pattern pattern : consoleRedactionPatterns()) {
+			output = pattern.matcher(output).replaceAll("redacted");
+		}
+		return output;
+	}
+
+	/**
+	 * @return The compiled {@code console_forwarding.filter_regex} patterns, recompiled only when the
+	 * configured list actually changes.
+	 */
+	private static List<Pattern> consoleRedactionPatterns() {
+		List<String> sources = new ArrayList<>();
 		JsonNode regexList = ConfigManager.getConfigNode("console_forwarding.filter_regex");
-		if (!regexList.isArray()) {
-			return output;
+		if (regexList.isArray()) {
+			for (JsonNode node : regexList) {
+				if (node != null && node.isString() && !node.asString("").isBlank()) {
+					sources.add(node.asString(""));
+				}
+			}
 		}
 
-		for (JsonNode node : regexList) {
-			if (node == null || !node.isString()) {
-				continue;
-			}
-			String regex = node.asString("");
-			if (regex.isBlank()) {
-				continue;
-			}
+		String fingerprint = String.join("\u0000", sources);
+		if (fingerprint.equals(consoleRedactionFingerprint)) {
+			return consoleRedactionPatterns;
+		}
+
+		List<Pattern> compiled = new ArrayList<>();
+		for (String regex : sources) {
 			try {
-				output = Pattern.compile(regex).matcher(output).replaceAll("redacted");
+				compiled.add(Pattern.compile(regex));
 			} catch (PatternSyntaxException e) {
 				LOGGER.warn(I18nManager.getDmccTranslation("discord.manager.invalid_console_filter_regex", regex));
 			}
 		}
-
-		return output;
+		consoleRedactionPatterns = List.copyOf(compiled);
+		consoleRedactionFingerprint = fingerprint;
+		return consoleRedactionPatterns;
 	}
 
 	private static List<String> formatConsoleLinePartsForDiscord(String rawLine) {
@@ -693,7 +741,6 @@ public final class DiscordManager {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
 		}
 	}
-
 	private static String replacePlaceholders(String template, Map<String, String> placeholders) {
 		String out = template;
 		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
@@ -751,12 +798,7 @@ public final class DiscordManager {
 	 * @param content           Message content.
 	 */
 	public static void sendBotMessage(String channelIdentifier, String content) {
-		TextChannel channel = getTextChannel(channelIdentifier);
-		if (channel != null) {
-			channel.sendMessage(content)
-					.setAllowedMentions(getAllowedMentions())
-					.queue();
-		}
+		sendBotMessage(channelIdentifier, null, content);
 	}
 
 	/**
@@ -768,7 +810,7 @@ public final class DiscordManager {
 	 */
 	public static void sendBotMessage(String channelIdentifier, String fallbackChannelIdentifier, String content) {
 		TextChannel channel = getTextChannel(channelIdentifier);
-		if (channel == null) {
+		if (channel == null && fallbackChannelIdentifier != null) {
 			channel = getTextChannel(fallbackChannelIdentifier);
 		}
 		if (channel != null) {
@@ -787,29 +829,116 @@ public final class DiscordManager {
 		}
 	}
 
+	/**
+	 * Sends one message through the channel webhook without blocking the caller.
+	 *
+	 * @param channel   Target channel.
+	 * @param username  Webhook display name.
+	 * @param avatarUrl Webhook avatar URL.
+	 * @param content   Message content.
+	 */
 	private static void sendWebhookMessage(TextChannel channel, String username, String avatarUrl, String content) {
-		// Find or create webhook
+		sendWebhookMessage(channel, username, avatarUrl, content, true);
+	}
+
+	/**
+	 * Sends one message through the channel webhook without blocking the caller.
+	 *
+	 * @param channel    Target channel.
+	 * @param username   Webhook display name.
+	 * @param avatarUrl  Webhook avatar URL.
+	 * @param content    Message content.
+	 * @param allowRetry true when the send may still invalidate the cached webhook and retry once.
+	 */
+	private static void sendWebhookMessage(TextChannel channel, String username, String avatarUrl, String content,
+										   boolean allowRetry) {
 		Webhook webhook = getOrCreateWebhook(channel);
 
 		webhook.sendMessage(content)
 				.setUsername(username)
 				.setAvatarUrl(avatarUrl)
 				.setAllowedMentions(getAllowedMentions())
-				.queue();
+				.queue(null, error -> {
+					// The cached handle may have been deleted on Discord's side: drop it and retry exactly once
+					// with a freshly resolved webhook instead of losing the message.
+					if (allowRetry && isUnknownWebhookError(error)) {
+						invalidateWebhook(channel.getId(), webhook);
+						sendWebhookMessage(channel, username, avatarUrl, content, false);
+						return;
+					}
+					LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", error.getLocalizedMessage()), error);
+				});
 	}
 
+	/**
+	 * Sends one message through the channel webhook, blocking until the request completes.
+	 *
+	 * @param channel   Target channel.
+	 * @param username  Webhook display name.
+	 * @param avatarUrl Webhook avatar URL.
+	 * @param content   Message content.
+	 */
 	private static void sendWebhookMessageSync(TextChannel channel, String username, String avatarUrl, String content) {
-		Webhook webhook = getOrCreateWebhook(channel);
-
-		webhook.sendMessage(content)
-				.setUsername(username)
-				.setAvatarUrl(avatarUrl)
-				.setAllowedMentions(getAllowedMentions())
-				.complete();
+		sendWebhookMessageSync(channel, username, avatarUrl, content, true);
 	}
 
+	/**
+	 * Sends one message through the channel webhook, blocking until the request completes.
+	 *
+	 * @param channel    Target channel.
+	 * @param username   Webhook display name.
+	 * @param avatarUrl  Webhook avatar URL.
+	 * @param content    Message content.
+	 * @param allowRetry true when the send may still invalidate the cached webhook and retry once.
+	 */
+	private static void sendWebhookMessageSync(TextChannel channel, String username, String avatarUrl, String content,
+											   boolean allowRetry) {
+		Webhook webhook = getOrCreateWebhook(channel);
+
+		try {
+			webhook.sendMessage(content)
+					.setUsername(username)
+					.setAvatarUrl(avatarUrl)
+					.setAllowedMentions(getAllowedMentions())
+					.complete();
+		} catch (RuntimeException e) {
+			if (allowRetry && isUnknownWebhookError(e)) {
+				invalidateWebhook(channel.getId(), webhook);
+				sendWebhookMessageSync(channel, username, avatarUrl, content, false);
+				return;
+			}
+			throw e;
+		}
+	}
+
+	/**
+	 * Sends one message with a file attachment through the channel webhook without blocking the caller.
+	 *
+	 * @param channel   Target channel.
+	 * @param username  Webhook display name.
+	 * @param avatarUrl Webhook avatar URL.
+	 * @param content   Message content.
+	 * @param fileData  Attachment payload.
+	 * @param fileName  Attachment file name.
+	 */
 	private static void sendWebhookMessageWithFile(TextChannel channel, String username, String avatarUrl,
 												   String content, byte[] fileData, String fileName) {
+		sendWebhookMessageWithFile(channel, username, avatarUrl, content, fileData, fileName, true);
+	}
+
+	/**
+	 * Sends one message with a file attachment through the channel webhook without blocking the caller.
+	 *
+	 * @param channel    Target channel.
+	 * @param username   Webhook display name.
+	 * @param avatarUrl  Webhook avatar URL.
+	 * @param content    Message content.
+	 * @param fileData   Attachment payload.
+	 * @param fileName   Attachment file name.
+	 * @param allowRetry true when the send may still invalidate the cached webhook and retry once.
+	 */
+	private static void sendWebhookMessageWithFile(TextChannel channel, String username, String avatarUrl,
+												   String content, byte[] fileData, String fileName, boolean allowRetry) {
 		Webhook webhook = getOrCreateWebhook(channel);
 
 		List<Message.MentionType> allowedMentions = getAllowedMentions();
@@ -819,16 +948,71 @@ public final class DiscordManager {
 				.setAvatarUrl(avatarUrl)
 				.setAllowedMentions(allowedMentions)
 				.addFiles(FileUpload.fromData(fileData, fileName))
-				.queue();
+				.queue(null, error -> {
+					// The cached handle may have been deleted on Discord's side: drop it and retry exactly once
+					// with a freshly resolved webhook instead of losing the message.
+					if (allowRetry && isUnknownWebhookError(error)) {
+						invalidateWebhook(channel.getId(), webhook);
+						sendWebhookMessageWithFile(channel, username, avatarUrl, content, fileData, fileName, false);
+						return;
+					}
+					LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", error.getLocalizedMessage()), error);
+				});
 	}
 
+	/**
+	 * Resolves the {@code "DMCC Webhook"} of a channel, creating it when the channel has none yet.
+	 * <p>
+	 * The resolved handle is cached per channel ID because the lookup itself is a blocking REST call that
+	 * used to run before every single webhook message.
+	 *
+	 * @param channel Target channel.
+	 * @return The cached or newly resolved webhook handle.
+	 */
 	private static Webhook getOrCreateWebhook(TextChannel channel) {
-		return channel.retrieveWebhooks().complete()
+		Webhook cached = WEBHOOK_CACHE.get(channel.getId());
+		if (cached != null) {
+			return cached;
+		}
+
+		Webhook resolved = channel.retrieveWebhooks().complete()
 				.stream()
 				.filter(i -> "DMCC Webhook".equals(i.getName()))
 				.filter(i -> i.getOwnerAsUser() == jda.getSelfUser())
 				.findFirst()
 				.orElseGet(() -> channel.createWebhook("DMCC Webhook").complete()); // Must use orElseGet to avoid unnecessary creation
+
+		Webhook existing = WEBHOOK_CACHE.putIfAbsent(channel.getId(), resolved);
+		return existing != null ? existing : resolved;
+	}
+
+	/**
+	 * Drops a cached webhook handle so the next send resolves a fresh one.
+	 *
+	 * @param channelId Channel ID the handle was cached for.
+	 * @param webhook   The handle that turned out to be unusable.
+	 */
+	private static void invalidateWebhook(String channelId, Webhook webhook) {
+		// Only drop the entry when it still is the handle that just failed, so a concurrently refreshed
+		// handle is never thrown away.
+		WEBHOOK_CACHE.remove(channelId, webhook);
+	}
+
+	/**
+	 * Checks whether a JDA failure means the addressed webhook no longer exists.
+	 *
+	 * @param error The failure reported by JDA, possibly wrapped in additional causes.
+	 * @return true when Discord answered with {@code Unknown Webhook}.
+	 */
+	private static boolean isUnknownWebhookError(Throwable error) {
+		Throwable current = error;
+		while (current != null) {
+			if (current instanceof ErrorResponseException responseException) {
+				return responseException.getErrorResponse() == ErrorResponse.UNKNOWN_WEBHOOK;
+			}
+			current = current.getCause();
+		}
+		return false;
 	}
 
 	private static List<Message.MentionType> getAllowedMentions() {
@@ -946,13 +1130,7 @@ public final class DiscordManager {
 			}
 
 			if ("standalone".equals(ConfigManager.getMode())) {
-				String avatarUrl = getClientAvatarUrl(clientName);
-				sendWebhookMessage(channel, clientName, avatarUrl, message);
-
-				for (String line : message.split("\n")) {
-					// Escape underscores in :emoji: to prevent being treated as Markdown formatting
-					LOGGER.info(StringUtils.format("[{}] {}"), clientName, sanitizeLineForLogging(line));
-				}
+				postServerMessage(channel, channelIdentifier, clientName, message, message);
 			} else {
 				sendBotMessage(channelIdentifier, message);
 			}
@@ -985,19 +1163,7 @@ public final class DiscordManager {
 
 		try {
 			String logReadyMessage = DiscordMessageParser.formatDiscordTimestampsForPlainText(message);
-
-			if ("standalone".equals(ConfigManager.getMode())) {
-				String avatarUrl = getClientAvatarUrl(clientName);
-				sendWebhookMessage(channel, clientName, avatarUrl, message);
-				for (String line : logReadyMessage.split("\\n")) {
-					LOGGER.info(StringUtils.format("[{}] {}"), clientName, sanitizeLineForLogging(line));
-				}
-			} else {
-				sendBotMessage(channelIdentifier, message);
-				for (String line : logReadyMessage.split("\\n")) {
-					LOGGER.info(sanitizeLineForLogging(line));
-				}
-			}
+			postServerMessage(channel, channelIdentifier, clientName, message, logReadyMessage);
 		} catch (Exception e) {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
 		}
@@ -1057,6 +1223,10 @@ public final class DiscordManager {
 	public static void shutdown() {
 		BotPresenceManager.shutdown();
 		ChannelUpdateManager.shutdown();
+		DiscordEventHandler.shutdown();
+
+		// The cached webhook handles belong to the JDA instance that is going away.
+		WEBHOOK_CACHE.clear();
 
 		if (jda != null) {
 			jda.shutdown();

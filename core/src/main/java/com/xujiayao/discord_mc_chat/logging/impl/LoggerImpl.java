@@ -12,10 +12,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 /**
  * DMCC Logger implementation.
@@ -23,6 +23,16 @@ import java.util.Map;
  * @author Xujiayao
  */
 public final class LoggerImpl implements Logger {
+
+	/**
+	 * Timestamp format of every console and file log line.
+	 */
+	private static final DateTimeFormatter LOG_TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+	/**
+	 * Timestamp format of the log file name.
+	 */
+	private static final DateTimeFormatter FILE_TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
 
 	private static volatile PrintWriter fileWriter;
 	private static volatile boolean fileWriterInitialized = false;
@@ -32,8 +42,40 @@ public final class LoggerImpl implements Logger {
 
 	private final Object minecraftLogger;
 
-	private final Map<String, Method> logMethods = new HashMap<>();
-	private final Map<String, Method> logThrowMethods = new HashMap<>();
+	/**
+	 * The log levels DMCC emits.
+	 * <p>
+	 * Each constant caches its own ANSI colour and - in a Minecraft environment - the two reflective
+	 * {@code slf4j.Logger} methods it needs, so a log call is a single field read instead of a
+	 * {@code Map<String, Method>} lookup by level name.
+	 */
+	private enum Level {
+		TRACE("\u001B[0m"),
+		DEBUG("\u001B[0m"),
+		INFO("\u001B[32m"),
+		WARN("\u001B[33m"),
+		ERROR("\u001B[31m");
+
+		private final String ansiColor;
+		private volatile Method plain;
+		private volatile Method withThrowable;
+
+		Level(String ansiColor) {
+			this.ansiColor = ansiColor;
+		}
+
+		/**
+		 * Resolves and caches this level's methods on the given SLF4J logger class.
+		 *
+		 * @param loggerClass The class obtained through reflection.
+		 * @throws NoSuchMethodException If the class does not expose the expected overloads.
+		 */
+		private void bind(Class<?> loggerClass) throws NoSuchMethodException {
+			String method = name().toLowerCase(Locale.ROOT);
+			this.plain = loggerClass.getMethod(method, String.class);
+			this.withThrowable = loggerClass.getMethod(method, String.class, Throwable.class);
+		}
+	}
 
 	/**
 	 * Create a new Logger instance.
@@ -46,33 +88,29 @@ public final class LoggerImpl implements Logger {
 	public LoggerImpl(String name) {
 		this.name = name;
 
-		if (EnvironmentUtils.isMinecraftEnvironment()) {
-			try {
-				String loggerClassName = "dmcc_dep.org.slf4j.Logger";
-				String loggerFactoryClassName = "dmcc_dep.org.slf4j.LoggerFactory";
+		if (!EnvironmentUtils.isMinecraftEnvironment()) {
+			this.minecraftLogger = null;
+			return;
+		}
 
-				Class<?> loggerClass = Class.forName(loggerClassName.replace("dmcc_dep.", ""));
+		try {
+			// Shadow relocates DMCC's own classes - and the string constants that look like class names -
+			// under "dmcc_dep.". The literals below are therefore written pre-relocated and stripped again
+			// at runtime, so that Class.forName resolves MINECRAFT's own SLF4J instead of DMCC's bundled,
+			// relocated copy. Loading the bundled copy here would route every message back into this class.
+			// Do NOT "simplify" these two lines into plain Class.forName("org.slf4j.Logger") calls.
+			String loggerClassName = "dmcc_dep.org.slf4j.Logger".replace("dmcc_dep.", "");
+			String loggerFactoryClassName = "dmcc_dep.org.slf4j.LoggerFactory".replace("dmcc_dep.", "");
 
-				Class<?> loggerFactoryClass = Class.forName(loggerFactoryClassName.replace("dmcc_dep.", ""));
-				this.minecraftLogger = loggerFactoryClass.getMethod("getLogger", String.class).invoke(null, "discord_mc_chat");
-
-				logMethods.put("TRACE", loggerClass.getMethod("trace", String.class));
-				logMethods.put("DEBUG", loggerClass.getMethod("debug", String.class));
-				logMethods.put("INFO", loggerClass.getMethod("info", String.class));
-				logMethods.put("WARN", loggerClass.getMethod("warn", String.class));
-				logMethods.put("ERROR", loggerClass.getMethod("error", String.class));
-
-				logThrowMethods.put("TRACE", loggerClass.getMethod("trace", String.class, Throwable.class));
-				logThrowMethods.put("DEBUG", loggerClass.getMethod("debug", String.class, Throwable.class));
-				logThrowMethods.put("INFO", loggerClass.getMethod("info", String.class, Throwable.class));
-				logThrowMethods.put("WARN", loggerClass.getMethod("warn", String.class, Throwable.class));
-				logThrowMethods.put("ERROR", loggerClass.getMethod("error", String.class, Throwable.class));
-			} catch (ClassNotFoundException | InvocationTargetException | IllegalAccessException |
-					 NoSuchMethodException e) {
-				throw new RuntimeException("Failed to initialize DMCC Logger", e);
+			Class<?> loggerClass = Class.forName(loggerClassName);
+			Class<?> loggerFactoryClass = Class.forName(loggerFactoryClassName);
+			this.minecraftLogger = loggerFactoryClass.getMethod("getLogger", String.class).invoke(null, "discord_mc_chat");
+			for (Level level : Level.values()) {
+				level.bind(loggerClass);
 			}
-		} else {
-			minecraftLogger = null;
+		} catch (ClassNotFoundException | InvocationTargetException | IllegalAccessException |
+				 NoSuchMethodException e) {
+			throw new RuntimeException("Failed to initialize DMCC Logger", e);
 		}
 	}
 
@@ -91,7 +129,7 @@ public final class LoggerImpl implements Logger {
 				if (!fileWriterInitialized) {
 					try {
 						Files.createDirectories(Paths.get("logs"));
-						String fileName = "logs/DMCC_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".log";
+						String fileName = "logs/DMCC_" + LocalDateTime.now().format(FILE_TIMESTAMP_FORMAT) + ".log";
 						fileWriter = new PrintWriter(new FileWriter(fileName, true), true);
 					} catch (IOException e) {
 						System.err.println("Failed to create log file: " + e.getMessage());
@@ -132,29 +170,28 @@ public final class LoggerImpl implements Logger {
 
 	// Helper methods
 
-	private void log(String level, String msg, Throwable t) {
+	private void log(Level level, String msg, Throwable t) {
 		msg = StringUtils.escape(msg);
 
 		if (EnvironmentUtils.isMinecraftEnvironment()) {
 			try {
+				Method method = t == null ? level.plain : level.withThrowable;
 				if (t == null) {
-					Method m = logMethods.get(level);
-					m.invoke(minecraftLogger, msg);
+					method.invoke(minecraftLogger, msg);
 				} else {
-					Method m = logThrowMethods.get(level);
-					m.invoke(minecraftLogger, msg, t);
+					method.invoke(minecraftLogger, msg, t);
 				}
 			} catch (InvocationTargetException | IllegalAccessException e) {
 				throw new RuntimeException("Failed to log message: " + msg, e);
 			}
 		} else {
-			String time = new SimpleDateFormat("HH:mm:ss").format(System.currentTimeMillis());
+			String time = LocalTime.now().format(LOG_TIME_FORMAT);
 			String thread = Thread.currentThread().getName();
 
 			// 1. Log to File (Plain Text, no colors)
 			PrintWriter writer = fileWriter();
 			if (writer != null) {
-				writer.println(StringUtils.format("[{}] [{}/{}]: {}", time, thread, level, msg));
+				writer.println(StringUtils.format("[{}] [{}/{}]: {}", time, thread, level.name(), msg));
 				if (t != null) {
 					t.printStackTrace(writer);
 				}
@@ -163,15 +200,9 @@ public final class LoggerImpl implements Logger {
 			// 2. Log to Console (ANSI colors are optional)
 			String consoleLine;
 			if (consoleAnsiEnabled) {
-				String color = switch (level) {
-					case "INFO" -> "\u001B[32m";
-					case "WARN" -> "\u001B[33m";
-					case "ERROR" -> "\u001B[31m";
-					default -> "\u001B[0m";
-				};
-				consoleLine = StringUtils.format("[{}] [{}/{}{}\u001B[0m]: {}", time, thread, color, level, msg);
+				consoleLine = StringUtils.format("[{}] [{}/{}{}\u001B[0m]: {}", time, thread, level.ansiColor, level.name(), msg);
 			} else {
-				consoleLine = StringUtils.format("[{}] [{}/{}]: {}", time, thread, level, msg);
+				consoleLine = StringUtils.format("[{}] [{}/{}]: {}", time, thread, level.name(), msg);
 			}
 
 			System.out.println(consoleLine);
@@ -182,7 +213,7 @@ public final class LoggerImpl implements Logger {
 		}
 	}
 
-	private void log(String level, String msg) {
+	private void log(Level level, String msg) {
 		log(level, msg, null);
 	}
 
@@ -238,31 +269,27 @@ public final class LoggerImpl implements Logger {
 		return true;
 	}
 
-	// TRACE (no-operation)
+	// TRACE and DEBUG are intentionally no-ops: DMCC never emits them, and skipping the call keeps
+	// argument formatting off the hot path. isTraceEnabled/isDebugEnabled report false so callers skip them.
 
 	@Override
 	public void trace(String msg) {
-		// log("TRACE", msg);
 	}
 
 	@Override
 	public void trace(String format, Object arg) {
-		// log("TRACE", StringUtils.format(format, arg));
 	}
 
 	@Override
 	public void trace(String format, Object arg1, Object arg2) {
-		// log("TRACE", StringUtils.format(format, arg1, arg2));
 	}
 
 	@Override
 	public void trace(String format, Object... arguments) {
-		// log("TRACE", StringUtils.format(format, arguments));
 	}
 
 	@Override
 	public void trace(String msg, Throwable t) {
-		// log("TRACE", msg, t);
 	}
 
 	@Override
@@ -290,31 +317,24 @@ public final class LoggerImpl implements Logger {
 		trace(msg, t);
 	}
 
-	// DEBUG (no-operation)
-
 	@Override
 	public void debug(String msg) {
-		// log("DEBUG", msg);
 	}
 
 	@Override
 	public void debug(String format, Object arg) {
-		// log("DEBUG", StringUtils.format(format, arg));
 	}
 
 	@Override
 	public void debug(String format, Object arg1, Object arg2) {
-		// log("DEBUG", StringUtils.format(format, arg1, arg2));
 	}
 
 	@Override
 	public void debug(String format, Object... arguments) {
-		// log("DEBUG", StringUtils.format(format, arguments));
 	}
 
 	@Override
 	public void debug(String msg, Throwable t) {
-		// log("DEBUG", msg, t);
 	}
 
 	@Override
@@ -345,27 +365,27 @@ public final class LoggerImpl implements Logger {
 	// INFO
 	@Override
 	public void info(String msg) {
-		log("INFO", msg);
+		log(Level.INFO, msg);
 	}
 
 	@Override
 	public void info(String format, Object arg) {
-		log("INFO", StringUtils.format(format, arg));
+		log(Level.INFO, StringUtils.format(format, arg));
 	}
 
 	@Override
 	public void info(String format, Object arg1, Object arg2) {
-		log("INFO", StringUtils.format(format, arg1, arg2));
+		log(Level.INFO, StringUtils.format(format, arg1, arg2));
 	}
 
 	@Override
 	public void info(String format, Object... arguments) {
-		log("INFO", StringUtils.format(format, arguments));
+		log(Level.INFO, StringUtils.format(format, arguments));
 	}
 
 	@Override
 	public void info(String msg, Throwable t) {
-		log("INFO", msg, t);
+		log(Level.INFO, msg, t);
 	}
 
 	@Override
@@ -396,27 +416,27 @@ public final class LoggerImpl implements Logger {
 	// WARN
 	@Override
 	public void warn(String msg) {
-		log("WARN", msg);
+		log(Level.WARN, msg);
 	}
 
 	@Override
 	public void warn(String format, Object arg) {
-		log("WARN", StringUtils.format(format, arg));
+		log(Level.WARN, StringUtils.format(format, arg));
 	}
 
 	@Override
 	public void warn(String format, Object arg1, Object arg2) {
-		log("WARN", StringUtils.format(format, arg1, arg2));
+		log(Level.WARN, StringUtils.format(format, arg1, arg2));
 	}
 
 	@Override
 	public void warn(String format, Object... arguments) {
-		log("WARN", StringUtils.format(format, arguments));
+		log(Level.WARN, StringUtils.format(format, arguments));
 	}
 
 	@Override
 	public void warn(String msg, Throwable t) {
-		log("WARN", msg, t);
+		log(Level.WARN, msg, t);
 	}
 
 	@Override
@@ -447,27 +467,27 @@ public final class LoggerImpl implements Logger {
 	// ERROR
 	@Override
 	public void error(String msg) {
-		log("ERROR", msg);
+		log(Level.ERROR, msg);
 	}
 
 	@Override
 	public void error(String format, Object arg) {
-		log("ERROR", StringUtils.format(format, arg));
+		log(Level.ERROR, StringUtils.format(format, arg));
 	}
 
 	@Override
 	public void error(String format, Object arg1, Object arg2) {
-		log("ERROR", StringUtils.format(format, arg1, arg2));
+		log(Level.ERROR, StringUtils.format(format, arg1, arg2));
 	}
 
 	@Override
 	public void error(String format, Object... arguments) {
-		log("ERROR", StringUtils.format(format, arguments));
+		log(Level.ERROR, StringUtils.format(format, arguments));
 	}
 
 	@Override
 	public void error(String msg, Throwable t) {
-		log("ERROR", msg, t);
+		log(Level.ERROR, msg, t);
 	}
 
 	@Override

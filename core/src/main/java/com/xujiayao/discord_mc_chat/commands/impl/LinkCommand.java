@@ -5,7 +5,7 @@ import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
-import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Link.RequestPacket;
+import com.xujiayao.discord_mc_chat.network.protocol.Packets;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
 
@@ -22,11 +22,6 @@ import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
  */
 public final class LinkCommand implements Command {
 
-	/**
-	 * Creates a link command instance.
-	 */
-	public LinkCommand() {
-	}
 
 	@Override
 	public String name() {
@@ -43,17 +38,7 @@ public final class LinkCommand implements Command {
 		// In Discord context, show the <code> argument
 		if (sender instanceof DiscordUserContextProvider) {
 			return new CommandArgument[]{
-					new CommandArgument() {
-						@Override
-						public String name() {
-							return "code";
-						}
-
-						@Override
-						public String description() {
-							return I18nManager.getDmccTranslation("commands.link.args_desc.code");
-						}
-					}
+					new CommandArgument("code", I18nManager.getDmccTranslation("commands.link.args_desc.code"))
 			};
 		}
 		// In Minecraft context, show no arguments
@@ -110,7 +95,7 @@ public final class LinkCommand implements Command {
 
 		switch (ConfigManager.getMode()) {
 			case "single_server", "multi_server_client" -> // Send request to server via network (same for both modes)
-					NetworkManager.sendPacketToServer(new RequestPacket(uuid, name, false));
+					NetworkManager.sendPacketToServer(new Packets.LinkRequest(uuid, name, false));
 			default -> sender.reply(I18nManager.getDmccTranslation("commands.link.not_available"));
 		}
 	}

@@ -9,17 +9,8 @@ import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.message.TextSegment;
-import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.AuthResponsePacket;
-import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.ChallengePacket;
-import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.DisconnectPacket;
-import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.HandshakePacket;
-import com.xujiayao.discord_mc_chat.network.packets.AuthPackets.LoginSuccessPacket;
-import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
-import com.xujiayao.discord_mc_chat.network.packets.EventPackets.DiscordRelayPacket;
-import com.xujiayao.discord_mc_chat.network.packets.EventPackets.MinecraftRelayPacket;
-import com.xujiayao.discord_mc_chat.network.packets.MiscPackets.KeepAlivePacket;
-import com.xujiayao.discord_mc_chat.network.packets.MiscPackets.LatencyPongPacket;
-import com.xujiayao.discord_mc_chat.network.packets.Packet;
+import com.xujiayao.discord_mc_chat.network.protocol.Packet;
+import com.xujiayao.discord_mc_chat.network.protocol.Packets;
 import com.xujiayao.discord_mc_chat.platform.Platform;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
@@ -53,35 +44,35 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 		this.initialLoginFuture = initialLoginFuture;
 	}
 
-	private static void logDiscordEventForConsole(DiscordRelayPacket p) {
-		if (p.replySegments != null && !p.replySegments.isEmpty()) {
-			LOGGER.info(TextSegment.toPlainText(p.replySegments));
+	private static void logDiscordEventForConsole(Packets.DiscordRelay p) {
+		if (p.replySegments() != null && !p.replySegments().isEmpty()) {
+			LOGGER.info(TextSegment.toPlainText(p.replySegments()));
 		}
-		if (p.segments != null && !p.segments.isEmpty()) {
-			LOGGER.info(TextSegment.toPlainText(p.segments));
+		if (p.segments() != null && !p.segments().isEmpty()) {
+			LOGGER.info(TextSegment.toPlainText(p.segments()));
 		}
-		if (p.type == DiscordRelayPacket.EventType.EDIT && p.editedMessageSegments != null && !p.editedMessageSegments.isEmpty()) {
-			LOGGER.info(TextSegment.toPlainText(p.editedMessageSegments));
+		if (p.eventType() == Packets.DiscordEventType.EDIT && p.editedMessageSegments() != null && !p.editedMessageSegments().isEmpty()) {
+			LOGGER.info(TextSegment.toPlainText(p.editedMessageSegments()));
 		}
 	}
 
-	private static void logMinecraftEventForConsole(MinecraftRelayPacket p) {
-		if (p.segments != null && !p.segments.isEmpty()) {
-			String plain = TextSegment.toPlainText(p.segments);
-			if (p.componentPlaceholder != null && !p.componentPlaceholder.isBlank() && plain.contains(p.componentPlaceholder)) {
-				String replacement = p.componentText != null ? p.componentText : "";
-				LOGGER.info(plain.replace(p.componentPlaceholder, replacement));
+	private static void logMinecraftEventForConsole(Packets.MinecraftRelay p) {
+		if (p.segments() != null && !p.segments().isEmpty()) {
+			String plain = TextSegment.toPlainText(p.segments());
+			if (p.componentPlaceholder() != null && !p.componentPlaceholder().isBlank() && plain.contains(p.componentPlaceholder())) {
+				String replacement = p.componentText() != null ? p.componentText() : "";
+				LOGGER.info(plain.replace(p.componentPlaceholder(), replacement));
 			} else {
 				LOGGER.info(plain);
 			}
-		} else if (p.componentJson != null && !p.componentJson.isBlank()) {
-			LOGGER.warn(p.componentJson);
+		} else if (p.componentJson() != null && !p.componentJson().isBlank()) {
+			LOGGER.warn(p.componentJson());
 		}
 	}
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) {
-		ctx.writeAndFlush(new HandshakePacket(client.getServerName(), Constants.VERSION, EnvironmentUtils.getMinecraftVersion()));
+		ctx.writeAndFlush(new Packets.Handshake(client.getServerName(), Constants.VERSION, EnvironmentUtils.getMinecraftVersion()));
 	}
 
 	@Override
@@ -105,172 +96,92 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, Packet packet) {
 		switch (packet) {
-			case ChallengePacket p -> {
-				String hash = CryptUtils.sha256(p.salt + client.getSharedSecret());
-				ctx.writeAndFlush(new AuthResponsePacket(hash));
-			}
-			case LoginSuccessPacket p -> {
-				I18nManager.load(p.language);
-				Constants.OVERWRITE_MINECRAFT_SOURCE_MESSAGES.set(p.overwriteMinecraftSourceMessages);
-				ConsoleLogTailer.updateEnabled(p.consoleForwardingEnabled);
+			case Packets.Challenge p -> ctx.writeAndFlush(new Packets.AuthResponse(
+					CryptUtils.sha256(p.salt() + client.getSharedSecret())));
+			case Packets.LoginSuccess p -> {
+				I18nManager.load(p.language());
+				Constants.OVERWRITE_MINECRAFT_SOURCE_MESSAGES.set(p.overwriteMinecraftSourceMessages());
+				ConsoleLogTailer.updateEnabled(p.consoleForwardingEnabled());
 				LOGGER.info(I18nManager.getDmccTranslation("client.network.connected"));
 
 				if (!initialLoginFuture.isDone()) {
 					initialLoginFuture.complete(true);
 				}
 			}
-			case CommandPackets.Info.RequestPacket p -> {
-				CommandPackets.Info.ResponsePacket response = NetworkManager.createResponsePacket();
-				response.connectionLatencyMillis = Math.max(0, System.currentTimeMillis() - p.sentAtMillis);
-				ctx.writeAndFlush(response);
-			}
-			case LatencyPongPacket p -> {
-				long latency = Math.max(0, System.currentTimeMillis() - p.sentAtMillis);
-				client.updateConnectionLatency(latency);
-			}
-			case CommandPackets.Execute.RequestPacket p -> {
-				// Handle DMCC command execution with OP level credential for edge authorization
-				StringBuilder responseBuilder = new StringBuilder();
-				byte[][] fileDataHolder = new byte[1][];
-				String[] fileNameHolder = new String[1];
-
-				CommandSender captureSender = new CommandSender() {
-					@Override
-					public void reply(String message) {
-						if (!responseBuilder.isEmpty()) {
-							responseBuilder.append("\n");
-						}
-						responseBuilder.append(message);
-					}
-
-					@Override
-					public void replyWithFile(String message, byte[] fileData, String fileName) {
-						reply(message);
-						fileDataHolder[0] = fileData;
-						fileNameHolder[0] = fileName;
-					}
-
-					@Override
-					public int getOpLevel() {
-						return p.opLevel;
-					}
-				};
-
-				try {
-					CommandManager.executeAndWait(captureSender, p.command, p.args)
-							.whenComplete((_, ex) -> {
-								CommandPackets.Execute.ResponsePacket response;
-								if (ex != null) {
-									response = new CommandPackets.Execute.ResponsePacket(p.requestId, I18nManager.getDmccTranslation("commands.execution_failed", ex.getMessage()));
-								} else if (fileDataHolder[0] != null) {
-									String prefixedFileName = client.getServerName() + "_" + fileNameHolder[0];
-									response = new CommandPackets.Execute.ResponsePacket(p.requestId, responseBuilder.toString(), fileDataHolder[0], prefixedFileName);
-								} else {
-									response = new CommandPackets.Execute.ResponsePacket(p.requestId, responseBuilder.toString());
-								}
-								ctx.writeAndFlush(response);
-							});
-				} catch (Exception e) {
-					ctx.writeAndFlush(new CommandPackets.Execute.ResponsePacket(p.requestId, I18nManager.getDmccTranslation("commands.execution_failed", e.getMessage())));
+			case Packets.InfoRequest p -> ctx.writeAndFlush(
+					NetworkManager.createResponsePacket()
+							.withConnectionLatency(Math.max(0, System.currentTimeMillis() - p.sentAtMillis())));
+			case Packets.LatencyPong p -> client.updateConnectionLatency(
+					Math.max(0, System.currentTimeMillis() - p.sentAtMillis()));
+			case Packets.CommandRequest p -> handleCommandRequest(ctx, p);
+			case Packets.AutoCompleteRequest p -> handleAutoCompleteRequest(ctx, p);
+			case Packets.CommandResult p -> {
+				if (p.kind() == Packets.RpcKind.UPDATE_CHECK) {
+					UpdateCommand.completeRequest(p.requestId(), p);
+				} else {
+					LOGGER.warn(I18nManager.getDmccTranslation("client.network.unexpected_packet", p.type().name()));
 				}
 			}
-			case CommandPackets.Console.RequestPacket p -> {
-				// Handle Minecraft command execution via the platform host with callback-based completion
-				StringBuilder responseBuilder = new StringBuilder();
-
-				CommandSender captureSender = new CommandSender() {
-					@Override
-					public void reply(String message) {
-						if (!responseBuilder.isEmpty()) {
-							responseBuilder.append("\n");
-						}
-						responseBuilder.append(message);
-					}
-
-					@Override
-					public int getOpLevel() {
-						return p.opLevel;
-					}
-				};
-
-				CompletableFuture<Void> completionFuture = new CompletableFuture<>();
-
-				Platform.host().executeCommand(captureSender, p.commandLine, completionFuture);
-
-				// Use the completion future with a timeout to send the response reliably
-				completionFuture
-						.orTimeout(CONSOLE_COMMAND_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-						.whenComplete((_, _) -> ctx.writeAndFlush(new CommandPackets.Console.ResponsePacket(p.requestId, responseBuilder.toString())));
-			}
-			case CommandPackets.Execute.AutoCompleteRequestPacket p -> {
-				// Handle DMCC command auto-complete with OP level filtering
-				List<String> suggestions = CommandAutoCompleter.getSuggestions(p.input, p.opLevel);
-				ctx.writeAndFlush(new CommandPackets.Execute.AutoCompleteResponsePacket(suggestions));
-			}
-			case CommandPackets.Console.AutoCompleteRequestPacket p -> {
-				// Handle Minecraft command auto-complete via the platform host
-				List<String> suggestions = new ArrayList<>();
-				Platform.host().autoCompleteCommand(p.input, p.opLevel, suggestions);
-				ctx.writeAndFlush(new CommandPackets.Console.AutoCompleteResponsePacket(suggestions));
-			}
-			case CommandPackets.Link.ResponsePacket p -> // Handle link code response from server - notify the player
-					Platform.host().sendLinkCode(p.minecraftUuid, p.code, p.alreadyLinked, p.discordName != null ? p.discordName : "");
-			case CommandPackets.Unlink.ResponsePacket p -> // Handle unlink response from server - notify the player
-					Platform.host().sendUnlinkResult(p.minecraftUuid, p.success, p.discordName != null ? p.discordName : "");
-			case CommandPackets.Link.OpSyncPacket p -> // Handle OP sync from server - apply OP levels to Minecraft players
-					Platform.host().applyOpLevels(p.opLevels);
-			case DiscordRelayPacket p -> {
+			// Handle link code response from server - notify the player
+			case Packets.LinkResult p -> Platform.host().sendLinkCode(p.minecraftUuid(), p.code(), p.alreadyLinked(),
+					p.discordName() != null ? p.discordName() : "");
+			// Handle unlink response from server - notify the player
+			case Packets.UnlinkResult p -> Platform.host().sendUnlinkResult(p.minecraftUuid(), p.success(),
+					p.discordName() != null ? p.discordName() : "");
+			// Handle OP sync from server - apply OP levels to Minecraft players
+			case Packets.OpSync p -> Platform.host().applyOpLevels(p.opLevels());
+			case Packets.DiscordRelay p -> {
 				// Handle Discord event forwarded from server - render in Minecraft
 				if ("multi_server_client".equals(ConfigManager.getMode())) {
 					logDiscordEventForConsole(p);
 				}
-				switch (p.type) {
+				switch (p.eventType()) {
 					case CHAT -> Platform.host().broadcastDiscordChat(
-							p.segments,
-							p.replySegments,
-							p.mentionNotificationText,
-							p.mentionNotificationStyle,
-							p.mentionedPlayerUuids,
-							p.mentionEveryone
+							p.segments(),
+							p.replySegments(),
+							p.mentionNotificationText(),
+							p.mentionNotificationStyle(),
+							p.mentionedPlayerUuids(),
+							p.mentionEveryone()
 					);
-					case COMMAND -> Platform.host().broadcastDiscordCommand(p.segments);
+					case COMMAND -> Platform.host().broadcastDiscordCommand(p.segments());
 					case REACTION -> Platform.host().broadcastDiscordReaction(
-							p.segments,
-							p.replySegments
+							p.segments(),
+							p.replySegments()
 					);
 					case EDIT -> Platform.host().broadcastDiscordEdit(
-							p.segments,
-							p.replySegments,
-							p.editedMessageSegments
+							p.segments(),
+							p.replySegments(),
+							p.editedMessageSegments()
 					);
 					case DELETE -> Platform.host().broadcastDiscordDelete(
-							p.segments,
-							p.replySegments
+							p.segments(),
+							p.replySegments()
 					);
 				}
 			}
-			case MinecraftRelayPacket p -> {
+			case Packets.MinecraftRelay p -> {
 				if ("multi_server_client".equals(ConfigManager.getMode())) {
 					logMinecraftEventForConsole(p);
 				}
 
 				Platform.host().broadcastMinecraftRelay(
-						p.segments,
-						p.componentJson,
-						p.componentPlaceholder,
-						p.mentionNotificationText,
-						p.mentionNotificationStyle,
-						p.mentionedPlayerUuids,
-						p.mentionEveryone
+						p.segments(),
+						p.componentJson(),
+						p.componentPlaceholder(),
+						p.mentionNotificationText(),
+						p.mentionNotificationStyle(),
+						p.mentionedPlayerUuids(),
+						p.mentionEveryone()
 				);
 			}
-			case DisconnectPacket p -> {
-				// If we receive a DisconnectPacket, it means the server explicitly rejected us.
+			case Packets.Disconnect p -> {
+				// If we receive a Disconnect packet, it means the server explicitly rejected us.
 				// In most cases (whitelist, auth fail, version mismatch), retrying immediately won't help.
 				// So we disable reconnection.
 				allowReconnect = false;
 
-				String reason = I18nManager.getDmccTranslation(p.key, p.args);
+				String reason = I18nManager.getDmccTranslation(p.key(), (Object[]) p.args());
 				LOGGER.error(I18nManager.getDmccTranslation("client.network.disconnected_reason", reason));
 
 				if (!initialLoginFuture.isDone()) {
@@ -278,17 +189,126 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 				}
 				ctx.close();
 			}
-			case CommandPackets.Update.ResponsePacket p -> UpdateCommand.completeRequest(p.requestId, p);
 			case null, default ->
-					LOGGER.warn(I18nManager.getDmccTranslation("client.network.unexpected_packet", packet == null ? "null" : packet.getClass().getSimpleName()));
+					LOGGER.warn(I18nManager.getDmccTranslation("client.network.unexpected_packet", packet == null ? "null" : packet.type().name()));
 		}
+	}
+
+	/**
+	 * Runs a command requested by the DMCC Server and reports the captured output back.
+	 */
+	private void handleCommandRequest(ChannelHandlerContext ctx, Packets.CommandRequest request) {
+		switch (request.kind()) {
+			case EXECUTE -> handleDmccCommand(ctx, request);
+			case CONSOLE -> handleMinecraftCommand(ctx, request);
+			case UPDATE_CHECK -> LOGGER.warn(I18nManager.getDmccTranslation("client.network.unexpected_packet", request.type().name()));
+		}
+	}
+
+	private void handleDmccCommand(ChannelHandlerContext ctx, Packets.CommandRequest request) {
+		StringBuilder responseBuilder = new StringBuilder();
+		byte[][] fileDataHolder = new byte[1][];
+		String[] fileNameHolder = new String[1];
+
+		CommandSender captureSender = new CommandSender() {
+			@Override
+			public void reply(String message) {
+				if (!responseBuilder.isEmpty()) {
+					responseBuilder.append("\n");
+				}
+				responseBuilder.append(message);
+			}
+
+			@Override
+			public void replyWithFile(String message, byte[] fileData, String fileName) {
+				reply(message);
+				fileDataHolder[0] = fileData;
+				fileNameHolder[0] = fileName;
+			}
+
+			@Override
+			public int getOpLevel() {
+				return request.opLevel();
+			}
+		};
+
+		try {
+			CommandManager.executeAndWait(captureSender, request.input(), request.args())
+					.whenComplete((_, ex) -> sendDmccResult(ctx, request, responseBuilder, fileDataHolder, fileNameHolder, ex));
+		} catch (Exception e) {
+			ctx.writeAndFlush(Packets.CommandResult.text(Packets.RpcKind.EXECUTE, request.requestId(),
+					I18nManager.getDmccTranslation("commands.execution_failed", e.getMessage())));
+		}
+	}
+
+	/**
+	 * Sends the captured command output back, streaming any file payload as separate chunk frames first.
+	 */
+	private void sendDmccResult(ChannelHandlerContext ctx, Packets.CommandRequest request, StringBuilder responseBuilder,
+								byte[][] fileDataHolder, String[] fileNameHolder, Throwable ex) {
+		if (ex != null) {
+			ctx.writeAndFlush(Packets.CommandResult.text(Packets.RpcKind.EXECUTE, request.requestId(),
+					I18nManager.getDmccTranslation("commands.execution_failed", ex.getMessage())));
+			return;
+		}
+		if (fileDataHolder[0] == null) {
+			ctx.writeAndFlush(Packets.CommandResult.text(Packets.RpcKind.EXECUTE, request.requestId(), responseBuilder.toString()));
+			return;
+		}
+
+		String fileName = client.getServerName() + "_" + fileNameHolder[0];
+		for (Packets.CommandFileChunk chunk : Packets.CommandFileChunk.split(request.requestId(), fileName, fileDataHolder[0])) {
+			ctx.writeAndFlush(chunk);
+		}
+		ctx.writeAndFlush(new Packets.CommandResult(Packets.RpcKind.EXECUTE, request.requestId(),
+				responseBuilder.toString(), fileName));
+	}
+
+	private void handleMinecraftCommand(ChannelHandlerContext ctx, Packets.CommandRequest request) {
+		StringBuilder responseBuilder = new StringBuilder();
+
+		CommandSender captureSender = new CommandSender() {
+			@Override
+			public void reply(String message) {
+				if (!responseBuilder.isEmpty()) {
+					responseBuilder.append("\n");
+				}
+				responseBuilder.append(message);
+			}
+
+			@Override
+			public int getOpLevel() {
+				return request.opLevel();
+			}
+		};
+
+		CompletableFuture<Void> completionFuture = new CompletableFuture<>();
+		Platform.host().executeCommand(captureSender, request.input(), completionFuture);
+
+		// Use the completion future with a timeout to send the response reliably
+		completionFuture
+				.orTimeout(CONSOLE_COMMAND_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+				.whenComplete((_, _) -> ctx.writeAndFlush(Packets.CommandResult.text(
+						Packets.RpcKind.CONSOLE, request.requestId(), responseBuilder.toString())));
+	}
+
+	private void handleAutoCompleteRequest(ChannelHandlerContext ctx, Packets.AutoCompleteRequest request) {
+		List<String> suggestions = new ArrayList<>();
+		if (request.kind() == Packets.RpcKind.CONSOLE) {
+			// Handle Minecraft command auto-complete via the platform host
+			Platform.host().autoCompleteCommand(request.input(), request.opLevel(), suggestions);
+		} else {
+			// Handle DMCC command auto-complete with OP level filtering
+			suggestions = CommandAutoCompleter.getSuggestions(request.input(), request.opLevel());
+		}
+		ctx.writeAndFlush(new Packets.AutoCompleteResult(request.kind(), suggestions));
 	}
 
 	@Override
 	public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
 		if (evt instanceof IdleStateEvent e) {
 			if (e.state() == IdleState.WRITER_IDLE) {
-				ctx.writeAndFlush(new KeepAlivePacket());
+				ctx.writeAndFlush(new Packets.KeepAlive());
 			}
 		} else {
 			super.userEventTriggered(ctx, evt);

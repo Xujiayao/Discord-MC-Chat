@@ -300,14 +300,7 @@ public final class CommandAutoCompleter {
 		}
 		int requiredOp = ConfigManager.getInt("command_permission_levels." + cmd.name(), 4);
 		if (opLevel >= requiredOp) {
-			StringBuilder builder = new StringBuilder();
-
-			builder.append(cmd.name());
-			for (Command.CommandArgument arg : cmd.args()) {
-				builder.append(" <").append(arg.name()).append(">");
-			}
-
-			suggestions.add(builder.toString());
+			suggestions.add(cmd.usage(cmd.args()));
 		}
 	}
 }

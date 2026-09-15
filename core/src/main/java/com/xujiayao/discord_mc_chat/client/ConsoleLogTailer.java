@@ -2,7 +2,7 @@ package com.xujiayao.discord_mc_chat.client;
 
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
-import com.xujiayao.discord_mc_chat.network.packets.EventPackets.ConsoleLogBatchPacket;
+import com.xujiayao.discord_mc_chat.network.protocol.Packets;
 
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
@@ -27,6 +27,8 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  *   <li>The listener stays alive across network reconnects.</li>
  *   <li>New lines are buffered while disconnected and flushed after reconnect.</li>
  *   <li>On first enable, history is replayed from the start of latest.log.</li>
+ *   <li>The buffer is bounded: while a long disconnect keeps filling it, the oldest lines are dropped so a
+ *       stuck client cannot grow the buffer without limit.</li>
  * </ul>
  *
  * @author Xujiayao
@@ -36,6 +38,11 @@ final class ConsoleLogTailer {
 	private static final long POLL_INTERVAL_MS = 1000;
 	private static final int MAX_LINES_PER_BATCH = 80;
 	private static final int MAX_CHARS_PER_BATCH = 6000;
+
+	// Upper bound of the reconnect buffer. Reaching it means the client has been disconnected long enough
+	// for the oldest lines to be worthless anyway, so they are dropped instead of growing the buffer forever.
+	private static final int MAX_PENDING_LINES = 10_000;
+
 	private static final Path LATEST_LOG_PATH = Path.of("logs", "latest.log");
 
 	private static final AtomicBoolean ENABLED = new AtomicBoolean(false);
@@ -43,6 +50,10 @@ final class ConsoleLogTailer {
 	private static ScheduledExecutorService executor;
 	private static Object currentFileKey;
 	private static long pointer;
+
+	// True once the current overflow episode has been reported, so a long disconnect logs the dropped lines
+	// only once instead of once per line or once per poll.
+	private static boolean pendingOverflowNotified;
 
 	private ConsoleLogTailer() {
 	}
@@ -60,6 +71,7 @@ final class ConsoleLogTailer {
 		ENABLED.set(false);
 		resetFileTracking(true);
 		pendingLines.clear();
+		pendingOverflowNotified = false;
 		if (executor != null) {
 			executor.shutdownNow();
 			executor = null;
@@ -117,11 +129,31 @@ final class ConsoleLogTailer {
 			while ((line = localReader.readLine()) != null) {
 				String utf8 = new String(line.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
 				if (!utf8.isBlank()) {
-					pendingLines.addLast(normalizeLine(utf8));
+					appendPendingLine(normalizeLine(utf8));
 				}
 			}
 			pointer = localReader.getFilePointer();
 		}
+	}
+
+	/**
+	 * Appends one line to the reconnect buffer, keeping that buffer bounded.
+	 * <p>
+	 * Once {@value #MAX_PENDING_LINES} lines are buffered, the oldest one is dropped for every new line:
+	 * after a long disconnect the newest lines are the interesting ones. The drop is reported once per
+	 * overflow episode through {@code client.console_log_tailer.pending_lines_dropped}.
+	 *
+	 * @param line The normalized console line to buffer.
+	 */
+	private static void appendPendingLine(String line) {
+		if (pendingLines.size() >= MAX_PENDING_LINES) {
+			pendingLines.removeFirst();
+			if (!pendingOverflowNotified) {
+				pendingOverflowNotified = true;
+				LOGGER.warn(I18nManager.getDmccTranslation("client.console_log_tailer.pending_lines_dropped", MAX_PENDING_LINES));
+			}
+		}
+		pendingLines.addLast(line);
 	}
 
 	private static void flushPendingBatchesIfConnected() {
@@ -129,22 +161,56 @@ final class ConsoleLogTailer {
 			return;
 		}
 
-		while (!pendingLines.isEmpty() && isClientConnected()) {
-			List<String> batch = new ArrayList<>();
-			int chars = 0;
-			while (!pendingLines.isEmpty()) {
-				String line = pendingLines.peekFirst();
-				int nextChars = chars + line.length() + 1;
-				if (!batch.isEmpty() && (batch.size() >= MAX_LINES_PER_BATCH || nextChars > MAX_CHARS_PER_BATCH)) {
-					break;
-				}
-				batch.add(pendingLines.removeFirst());
-				chars = nextChars;
+		while (!pendingLines.isEmpty()) {
+			List<String> batch = collectNextBatch();
+			if (batch.isEmpty()) {
+				return;
 			}
-			if (!batch.isEmpty()) {
-				NetworkManager.sendPacketToServer(new ConsoleLogBatchPacket(List.copyOf(batch)));
+
+			// Re-check right before handing the batch over: nothing has been removed from the buffer yet, so a
+			// connection that dropped while the batch was assembled simply leaves the lines buffered.
+			if (!isClientConnected()) {
+				return;
+			}
+
+			for (int i = 0; i < batch.size(); i++) {
+				pendingLines.removeFirst();
+			}
+
+			try {
+				NetworkManager.sendPacketToServer(new Packets.ConsoleLogBatch(List.copyOf(batch)));
+			} catch (Exception e) {
+				// The batch never reached the wire: put it back in the original order so the next poll retries
+				// it instead of silently dropping the whole batch.
+				for (int i = batch.size() - 1; i >= 0; i--) {
+					pendingLines.addFirst(batch.get(i));
+				}
+				LOGGER.warn(I18nManager.getDmccTranslation("client.console_log_tailer.flush_failed", e.getMessage()));
+				return;
 			}
 		}
+
+		// The backlog is drained, so the next overflow reports itself again.
+		pendingOverflowNotified = false;
+	}
+
+	/**
+	 * Collects the next batch from the head of the buffer without removing anything.
+	 *
+	 * @return The lines to send next, in buffer order.
+	 */
+	private static List<String> collectNextBatch() {
+		List<String> batch = new ArrayList<>();
+		int chars = 0;
+		for (String line : pendingLines) {
+			int nextChars = chars + line.length() + 1;
+			if (!batch.isEmpty() && (batch.size() >= MAX_LINES_PER_BATCH || nextChars > MAX_CHARS_PER_BATCH)) {
+				break;
+			}
+			batch.add(line);
+			chars = nextChars;
+		}
+		return batch;
 	}
 
 	private static String normalizeLine(String line) {
