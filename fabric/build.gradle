@@ -24,5 +24,3 @@ dependencies {
     // Vanish only publishes Fabric/Quilt builds for 26.2, so this integration is Fabric-only.
     compileOnly "maven.modrinth:vanish:${project.vanish_version}"
 }
-
-rootProject.ext.registerLoaderJar(project, "fabric")

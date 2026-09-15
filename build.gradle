@@ -51,67 +51,17 @@ subprojects {
 }
 
 /**
- * Registers the task that produces a loader's final, installable mod JAR.
- * <p>
- * The core project's shadow JAR already contains every relocated dependency plus all
- * platform-independent DMCC classes. Each loader contributes its own classes and mod metadata
- * on top of it. The shadow JAR's manifest is preserved (it carries the standalone entry point);
- * the loader JAR's manifest is dropped.
- * <p>
- * Minecraft 26.1+ ships unobfuscated and Fabric no longer uses intermediary names, so no
- * remapping step is involved: the loader's plain {@code jar} output is already the final bytecode.
- *
- * @param loaderProject the fabric/neoforge subproject
- * @param loaderName    loader name used in the artifact file name
- */
-ext.registerLoaderJar = { Project loaderProject, String loaderName ->
-    def outputFile = new File(
-            rootProject.layout.buildDirectory.get().asFile,
-            "Discord-MC-Chat-${loaderProject.version}-${loaderName}.jar")
-    def shadowJarFile = project(":core").tasks.named("shadowJar").flatMap { it.archiveFile }
-    def loaderJarFile = loaderProject.tasks.named("jar").flatMap { it.archiveFile }
-    def tempDir = new File(loaderProject.layout.buildDirectory.get().asFile, "merged")
-
-    loaderProject.tasks.register("loaderJar") {
-        group = "build"
-        description = "Builds the final ${loaderName} mod JAR into the root build directory."
-        dependsOn ":core:shadowJar", loaderProject.tasks.named("jar")
-        inputs.files(shadowJarFile, loaderJarFile)
-        outputs.file(outputFile)
-
-        doLast {
-            tempDir.deleteDir()
-            tempDir.mkdirs()
-            loaderProject.copy {
-                from loaderProject.zipTree(loaderJarFile.get().asFile)
-                into tempDir
-                exclude "META-INF/MANIFEST.MF"
-            }
-            outputFile.parentFile.mkdirs()
-            java.nio.file.Files.copy(
-                    shadowJarFile.get().asFile.toPath(),
-                    outputFile.toPath(),
-                    java.nio.file.StandardCopyOption.REPLACE_EXISTING)
-            loaderProject.ant.zip(update: "true", destfile: outputFile) {
-                fileset(dir: tempDir)
-            }
-        }
-    }
-
-    loaderProject.tasks.named("build") {
-        dependsOn loaderProject.tasks.named("loaderJar")
-    }
-}
-
-/**
  * Builds the single universal mod JAR.
  * <p>
- * It carries everything the per-loader JARs carry: the core shadow payload, the shared
- * {@code minecraft-common} classes and mixin configuration, and both the Fabric metadata
- * ({@code fabric.mod.json}) and the NeoForge metadata ({@code META-INF/neoforge.mods.toml}).
- * Each loader reads only its own metadata and loads only its own entry point, so the same file can be
- * dropped into a Fabric or a NeoForge {@code mods} folder, and it still runs as the standalone
- * application through {@code java -jar} because the core shadow JAR's manifest is preserved.
+ * It carries everything: the core shadow payload, the shared {@code minecraft-common} classes and mixin
+ * configuration, and both the Fabric metadata ({@code fabric.mod.json}) and the NeoForge metadata
+ * ({@code META-INF/neoforge.mods.toml}). Each loader reads only its own metadata and loads only its own
+ * entry point, so the same file can be dropped into a Fabric or a NeoForge {@code mods} folder, and it
+ * still runs as the standalone application through {@code java -jar} because the core shadow JAR's
+ * manifest is preserved.
+ * <p>
+ * The per-loader JARs produced by the {@code :fabric} and {@code :neoforge} modules are only inputs to
+ * this task; the root {@code build/} directory deliberately contains this one file and nothing else.
  */
 tasks.register("universalJar") {
     group = "build"
@@ -151,6 +101,9 @@ tasks.register("universalJar") {
         ant.zip(update: "true", destfile: outputFile) {
             fileset(dir: tempDir)
         }
+
+        // Leave the root build directory with nothing but the universal JAR itself.
+        tempDir.deleteDir()
     }
 }
 

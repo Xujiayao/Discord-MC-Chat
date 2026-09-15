@@ -436,19 +436,14 @@ DMCC 对配置文件的完整性与一致性做了强校验，力求在启动阶
 同一个文件之所以三种用法通吃，是因为它**同时**带有两套加载器元数据与两个入口点，而每个加载器只会读自己的那一套：
 
 - 放进 Fabric 服务端的 `mods/` → Fabric 读取 `fabric.mod.json`，加载 `...fabric.FabricDMCC`；
-- 放进 NeoForge 服务端的 `mods/` → NeoForge 读取 `META-INF/neoforge.mods.toml`，加载 `...neoforge.DmccNeoForge`；
+- 放进 NeoForge 服务端的 `mods/` → NeoForge 读取 `META-INF/neoforge.mods.toml`，加载 `...neoforge.NeoForgeDMCC`；
 - 用 `java -jar Discord-MC-Chat-<版本>.jar` 启动 → 走 `Main-Class`，作为独立模式（standalone）的中央中枢运行（详见 3.3）。
 
 核心逻辑（`core`）在包内只有一份，即以 `core` 的 shadow JAR 为基底，再把两个加载器的入口类与元数据合并进去；
 两个加载器共用的 `minecraft-common` 类与 `dmcc.mixins.json` 也只会保留一份。
 
-此外仍会产出两个**按加载器拆分**的备用 JAR（内容分别是通用 JAR 的子集），仅在排查
-"某个加载器是否加载了正确入口"时才会用到，正常分发不需要它们：
-
-| 备用产物                                  | 目标加载器    |
-|:--------------------------------------|:---------|
-| `Discord-MC-Chat-<版本>-fabric.jar`     | Fabric   |
-| `Discord-MC-Chat-<版本>-neoforge.jar`   | NeoForge |
+> 两个加载器各自的中间 JAR 位于 `fabric/build/libs/` 与 `neoforge/build/libs/`（不进入根 `build/`），
+> 仅在排查"某个加载器是否加载了正确入口"时才会用到，正常分发不需要它们。
 
 ### 11.2 开发环境
 

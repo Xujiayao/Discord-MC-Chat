@@ -16,8 +16,8 @@ import net.neoforged.fml.common.Mod;
  *
  * @author Xujiayao
  */
-@Mod(value = DmccNeoForge.MOD_ID, dist = Dist.DEDICATED_SERVER)
-public final class DmccNeoForge {
+@Mod(value = NeoForgeDMCC.MOD_ID, dist = Dist.DEDICATED_SERVER)
+public final class NeoForgeDMCC {
 
 	/**
 	 * The mod id, which has to match the entry in {@code META-INF/neoforge.mods.toml}.
@@ -32,7 +32,7 @@ public final class DmccNeoForge {
 	 * @param modEventBus  The mod event bus, injected by FML.
 	 * @param modContainer This mod's container, injected by FML.
 	 */
-	public DmccNeoForge(IEventBus modEventBus, ModContainer modContainer) {
+	public NeoForgeDMCC(IEventBus modEventBus, ModContainer modContainer) {
 		// No NeoForge mod integrations exist yet. Future ones are registered here, exactly like
 		// FabricDMCC registers its own, and implement ModIntegration in this module.
 		DMCC.init(new MinecraftPlatformHost(PLATFORM_NAME));

@@ -342,3 +342,18 @@
   就会出现同样的 `InvalidInjectionException`；届时的修法与本轮相同——改为注入真实方法（例如
   `CommandSourceStack.sendSuccess` 或 `PlayerList.broadcastSystemMessage`）。
 
+### 第 1 轮补充（用户测试通过后的小改动）
+
+- `DmccNeoForge` 改名为 **`NeoForgeDMCC`**，与 `FabricDMCC` 命名对齐（`README_CN.md` §11.1 同步）。
+- `SmokeTest` 精简为只保留"版本资源可解析"一项（该命名仍然准确：它证明测试来源集可运行，
+  且构建期资源展开真的到达了运行期类路径），其余测试删除。
+- **通用 JAR 成为唯一产物**：移除按加载器拆分并写入根 `build/` 的 `loaderJar` 任务；
+  两个加载器的中间 JAR 仍留在 `fabric/build/libs/` 与 `neoforge/build/libs/`，仅作为 `universalJar` 的输入；
+  `universalJar` 结束时删除临时目录，使根 `build/` 只剩那一个 JAR。
+- 构建改用用户家目录的 `~/.gradle`（不再创建临时 GRADLE_USER_HOME），每轮交付前执行 `./gradlew --stop`。
+- 验证：`./gradlew clean build --warning-mode all` **BUILD SUCCESSFUL**（1m16s，热缓存）；通用 JAR 12.61 MB，
+  内含 `fabric.mod.json`、`META-INF/neoforge.mods.toml`、`dmcc.mixins.json`、`FabricDMCC.class`、
+  `NeoForgeDMCC.class`（已无残留 `DmccNeoForge.class`）、`MinecraftPlatformHost.class`、三份配置模板、
+  standalone `Main-Class`，以及被 Shadow 正确重定位的 SLF4J 服务注册文件
+  `META-INF/services/dmcc_dep.org.slf4j.spi.SLF4JServiceProvider`。
+
