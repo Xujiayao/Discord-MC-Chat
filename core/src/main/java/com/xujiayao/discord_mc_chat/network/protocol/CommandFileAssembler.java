@@ -2,6 +2,7 @@ package com.xujiayao.discord_mc_chat.network.protocol;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -57,14 +58,10 @@ public final class CommandFileAssembler {
 	/**
 	 * Buffered chunks of one request.
 	 */
-	private static final class Slot {
-
-		private final byte[][] chunks;
-		private final String fileName;
+	private record Slot(byte[][] chunks, String fileName) {
 
 		private Slot(int total, String fileName) {
-			this.chunks = new byte[total][];
-			this.fileName = fileName;
+			this(new byte[total][], fileName);
 		}
 
 		private void put(Packets.CommandFileChunk chunk) {
@@ -72,7 +69,7 @@ public final class CommandFileAssembler {
 				return;
 			}
 			try {
-				chunks[chunk.index()] = java.util.Base64.getDecoder().decode(chunk.data());
+				chunks[chunk.index()] = Base64.getDecoder().decode(chunk.data());
 			} catch (IllegalArgumentException ignored) {
 				// Corrupt chunk: leave the slot empty so the file is reported as unavailable.
 			}

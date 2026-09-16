@@ -301,14 +301,14 @@ final class MarkdownParser {
 	private static void applyStyle(State state, String delimiter, boolean toggle) {
 		switch (delimiter) {
 			case "***" -> {
-				state.bold = toggle ? !state.bold : true;
-				state.italic = toggle ? !state.italic : true;
+				state.bold = !toggle || !state.bold;
+				state.italic = !toggle || !state.italic;
 			}
-			case "**" -> state.bold = toggle ? !state.bold : true;
-			case "*", "_" -> state.italic = toggle ? !state.italic : true;
-			case "__" -> state.underlined = toggle ? !state.underlined : true;
-			case "~~" -> state.strikethrough = toggle ? !state.strikethrough : true;
-			case "||" -> state.obfuscated = toggle ? !state.obfuscated : true;
+			case "**" -> state.bold = !toggle || !state.bold;
+			case "*", "_" -> state.italic = !toggle || !state.italic;
+			case "__" -> state.underlined = !toggle || !state.underlined;
+			case "~~" -> state.strikethrough = !toggle || !state.strikethrough;
+			case "||" -> state.obfuscated = !toggle || !state.obfuscated;
 			default -> {
 			}
 		}
