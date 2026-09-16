@@ -26,6 +26,7 @@ import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
  */
 public final class I18nManager {
 
+	private static final Path CUSTOM_MESSAGES_DIR = Paths.get("./config/discord_mc_chat/custom_messages");
 	/**
 	 * Flattened {@code lang/<language>.yml} entries.
 	 * <p>
@@ -33,7 +34,6 @@ public final class I18nManager {
 	 * client logs in) can never expose a half-filled map to the Minecraft, JDA or logging threads reading it.
 	 */
 	private static volatile Map<String, String> dmccTranslations = Map.of();
-	private static final Path CUSTOM_MESSAGES_DIR = Paths.get("./config/discord_mc_chat/custom_messages");
 	private static volatile String language = detectLanguage();
 	private static volatile JsonNode customMessages;
 

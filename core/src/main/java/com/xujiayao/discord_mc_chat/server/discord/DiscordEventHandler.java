@@ -71,6 +71,23 @@ final class DiscordEventHandler extends ListenerAdapter {
 		}
 	}
 
+	private static synchronized ExecutorService autocompleteExecutor() {
+		if (autocompleteExecutor == null || autocompleteExecutor.isShutdown()) {
+			autocompleteExecutor = Executors.newCachedThreadPool(ExecutorServiceUtils.newThreadFactory("DMCC-Autocomplete"));
+		}
+		return autocompleteExecutor;
+	}
+
+	/**
+	 * Shuts down the autocomplete executor. Called by {@link DiscordManager} while shutting the bot down.
+	 */
+	static synchronized void shutdown() {
+		if (autocompleteExecutor != null) {
+			ExecutorServiceUtils.shutdownAnExecutor(autocompleteExecutor);
+			autocompleteExecutor = null;
+		}
+	}
+
 	@Override
 	public void onReady(@NotNull ReadyEvent event) {
 		BotPresenceManager.update();
@@ -219,23 +236,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 		}
 
 		return choices;
-	}
-
-	private static synchronized ExecutorService autocompleteExecutor() {
-		if (autocompleteExecutor == null || autocompleteExecutor.isShutdown()) {
-			autocompleteExecutor = Executors.newCachedThreadPool(ExecutorServiceUtils.newThreadFactory("DMCC-Autocomplete"));
-		}
-		return autocompleteExecutor;
-	}
-
-	/**
-	 * Shuts down the autocomplete executor. Called by {@link DiscordManager} while shutting the bot down.
-	 */
-	static synchronized void shutdown() {
-		if (autocompleteExecutor != null) {
-			ExecutorServiceUtils.shutdownAnExecutor(autocompleteExecutor);
-			autocompleteExecutor = null;
-		}
 	}
 
 	private List<Command.Choice> getTargetAtChoices(String currentValue) {

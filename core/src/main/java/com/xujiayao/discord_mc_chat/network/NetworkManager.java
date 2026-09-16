@@ -287,31 +287,6 @@ public final class NetworkManager {
 		return packet;
 	}
 
-	/**
-	 * Correlation state of one {@link #requestInfoSnapshot(int)} call. All access happens while holding
-	 * {@link #infoLock}.
-	 */
-	private static final class InfoRound {
-		/**
-		 * Client names this round broadcast its request to. A name that is no longer connected is skipped by
-		 * {@link #isComplete()}, so it cannot keep the caller waiting for a response that will never come.
-		 */
-		private final Set<String> awaitedClientNames = new LinkedHashSet<>();
-
-		/**
-		 * Latest response per server name, in arrival order.
-		 */
-		private final Map<String, Packets.InfoSnapshot> responses = new LinkedHashMap<>();
-
-		private boolean isComplete() {
-			for (String clientName : awaitedClientNames) {
-				if (!responses.containsKey(clientName) && clientChannels.containsValue(clientName)) {
-					return false;
-				}
-			}
-			return true;
-		}
-	}
 
 	// ===== DMCC Command Auto-Complete Methods =====
 
@@ -393,5 +368,31 @@ public final class NetworkManager {
 			return "unknown";
 		}
 		return client.getServerName();
+	}
+
+	/**
+	 * Correlation state of one {@link #requestInfoSnapshot(int)} call. All access happens while holding
+	 * {@link #infoLock}.
+	 */
+	private static final class InfoRound {
+		/**
+		 * Client names this round broadcast its request to. A name that is no longer connected is skipped by
+		 * {@link #isComplete()}, so it cannot keep the caller waiting for a response that will never come.
+		 */
+		private final Set<String> awaitedClientNames = new LinkedHashSet<>();
+
+		/**
+		 * Latest response per server name, in arrival order.
+		 */
+		private final Map<String, Packets.InfoSnapshot> responses = new LinkedHashMap<>();
+
+		private boolean isComplete() {
+			for (String clientName : awaitedClientNames) {
+				if (!responses.containsKey(clientName) && clientChannels.containsValue(clientName)) {
+					return false;
+				}
+			}
+			return true;
+		}
 	}
 }

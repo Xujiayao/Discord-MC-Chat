@@ -52,50 +52,6 @@ public final class DiscordMessageParser {
 	}
 
 	/**
-	 * The set of parsing switches for one message.
-	 *
-	 * @param mentions       Parse {@code <@id>} / {@code <@&id>} / {@code <#id>} mentions.
-	 * @param customEmojis   Parse Discord custom and alias emoji.
-	 * @param unicodeEmojis  Parse Unicode emoji.
-	 * @param markdown       Parse Markdown emphasis, quotes, headings and code.
-	 * @param hyperlinks     Turn links into clickable segments.
-	 * @param attachments    Append attachment labels.
-	 * @param stickers       Append sticker labels.
-	 * @param embeds         Append embed labels.
-	 * @param components     Append the interactive-components indicator.
-	 * @param polls          Append the poll indicator.
-	 * @param timestamps     Render {@code <t:...>} timestamps.
-	 * @param ansiCodeBlocks Render {@code ```ansi} blocks with their colors.
-	 */
-	public record Flags(boolean mentions, boolean customEmojis, boolean unicodeEmojis, boolean markdown,
-						boolean hyperlinks, boolean attachments, boolean stickers, boolean embeds,
-						boolean components, boolean polls, boolean timestamps, boolean ansiCodeBlocks) {
-
-		private static final String PREFIX = "message_parsing.discord_to_minecraft.";
-
-		/**
-		 * @return The switches as configured for {@code discord_to_minecraft}.
-		 */
-		public static Flags fromConfig() {
-			return new Flags(
-					ConfigManager.getBoolean(PREFIX + "mentions"),
-					ConfigManager.getBoolean(PREFIX + "custom_emojis"),
-					ConfigManager.getBoolean(PREFIX + "unicode_emojis"),
-					ConfigManager.getBoolean(PREFIX + "markdown"),
-					ConfigManager.getBoolean(PREFIX + "hyperlinks"),
-					ConfigManager.getBoolean(PREFIX + "attachments"),
-					ConfigManager.getBoolean(PREFIX + "stickers"),
-					ConfigManager.getBoolean(PREFIX + "embeds"),
-					ConfigManager.getBoolean(PREFIX + "components"),
-					ConfigManager.getBoolean(PREFIX + "polls"),
-					ConfigManager.getBoolean(PREFIX + "timestamps"),
-					ConfigManager.getBoolean(PREFIX + "ansi_code_blocks")
-			);
-		}
-
-	}
-
-	/**
 	 * Builds the main message line segments for a Discord chat message.
 	 * <p>
 	 * The format follows the custom_messages {@code xxxxx_to_minecraft.user_message} pattern:
@@ -769,6 +725,50 @@ public final class DiscordMessageParser {
 	private static MessageTemplates.Builder template(String section, String key) {
 		JsonNode node = I18nManager.getCustomMessages().path(section).path(key);
 		return MessageTemplates.of(node);
+	}
+
+	/**
+	 * The set of parsing switches for one message.
+	 *
+	 * @param mentions       Parse {@code <@id>} / {@code <@&id>} / {@code <#id>} mentions.
+	 * @param customEmojis   Parse Discord custom and alias emoji.
+	 * @param unicodeEmojis  Parse Unicode emoji.
+	 * @param markdown       Parse Markdown emphasis, quotes, headings and code.
+	 * @param hyperlinks     Turn links into clickable segments.
+	 * @param attachments    Append attachment labels.
+	 * @param stickers       Append sticker labels.
+	 * @param embeds         Append embed labels.
+	 * @param components     Append the interactive-components indicator.
+	 * @param polls          Append the poll indicator.
+	 * @param timestamps     Render {@code <t:...>} timestamps.
+	 * @param ansiCodeBlocks Render {@code ```ansi} blocks with their colors.
+	 */
+	public record Flags(boolean mentions, boolean customEmojis, boolean unicodeEmojis, boolean markdown,
+						boolean hyperlinks, boolean attachments, boolean stickers, boolean embeds,
+						boolean components, boolean polls, boolean timestamps, boolean ansiCodeBlocks) {
+
+		private static final String PREFIX = "message_parsing.discord_to_minecraft.";
+
+		/**
+		 * @return The switches as configured for {@code discord_to_minecraft}.
+		 */
+		public static Flags fromConfig() {
+			return new Flags(
+					ConfigManager.getBoolean(PREFIX + "mentions"),
+					ConfigManager.getBoolean(PREFIX + "custom_emojis"),
+					ConfigManager.getBoolean(PREFIX + "unicode_emojis"),
+					ConfigManager.getBoolean(PREFIX + "markdown"),
+					ConfigManager.getBoolean(PREFIX + "hyperlinks"),
+					ConfigManager.getBoolean(PREFIX + "attachments"),
+					ConfigManager.getBoolean(PREFIX + "stickers"),
+					ConfigManager.getBoolean(PREFIX + "embeds"),
+					ConfigManager.getBoolean(PREFIX + "components"),
+					ConfigManager.getBoolean(PREFIX + "polls"),
+					ConfigManager.getBoolean(PREFIX + "timestamps"),
+					ConfigManager.getBoolean(PREFIX + "ansi_code_blocks")
+			);
+		}
+
 	}
 
 	private record CodeBlockSpan(int start, int end, List<TextSegment> segments) {

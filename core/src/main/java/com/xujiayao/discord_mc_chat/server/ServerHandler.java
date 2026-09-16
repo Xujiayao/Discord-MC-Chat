@@ -59,6 +59,101 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		this.server = server;
 	}
 
+	private static String[] toStringArray(Object[] args) {
+		String[] out = new String[args.length];
+		for (int i = 0; i < args.length; i++) {
+			out[i] = String.valueOf(args[i]);
+		}
+		return out;
+	}
+
+	/**
+	 * @return Whether the command matches one of the configured {@code broadcasts.excluded_commands} patterns.
+	 */
+	private static boolean isExcludedMinecraftCommand(String command) {
+		if (command == null || command.isBlank()) {
+			return false;
+		}
+		for (Pattern pattern : excludedCommandPatterns()) {
+			if (pattern.matcher(command).matches()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * @return The compiled {@code broadcasts.excluded_commands} patterns, recompiled only when the configured
+	 * list actually changes. The patterns used to be recompiled for every single chat command.
+	 */
+	private static List<Pattern> excludedCommandPatterns() {
+		List<String> sources = new ArrayList<>();
+		JsonNode excludedCommands = ConfigManager.getConfigNode("broadcasts.excluded_commands");
+		if (excludedCommands.isArray()) {
+			for (JsonNode node : excludedCommands) {
+				if (node != null && node.isString() && !node.asString("").isBlank()) {
+					sources.add(node.asString(""));
+				}
+			}
+		}
+
+		String fingerprint = String.join("\u0000", sources);
+		if (fingerprint.equals(excludedCommandFingerprint)) {
+			return excludedCommandPatterns;
+		}
+
+		List<Pattern> compiled = new ArrayList<>();
+		for (String source : sources) {
+			try {
+				compiled.add(Pattern.compile(source));
+			} catch (Exception e) {
+				LOGGER.warn(I18nManager.getDmccTranslation("server.network.invalid_excluded_command_regex", source));
+			}
+		}
+		excludedCommandPatterns = List.copyOf(compiled);
+		excludedCommandFingerprint = fingerprint;
+		return excludedCommandPatterns;
+	}
+
+	/**
+	 * Resolves the relay destinations of one Minecraft event.
+	 * <p>
+	 * Cross-client relay only exists in standalone mode, and the source echo additionally depends on
+	 * {@code overwrite_minecraft_source_messages} unless the event forces it.
+	 *
+	 * @param broadcastNode            Config node under {@code broadcasts.minecraft_to_minecraft}.
+	 * @param canOverwriteEchoToSource Whether the overwrite switch is allowed to trigger the source echo.
+	 * @param forceEchoToSource        Whether the source echo happens regardless of the overwrite switch.
+	 */
+	private static RelayTargets relayTargets(String broadcastNode, boolean canOverwriteEchoToSource,
+											 boolean forceEchoToSource) {
+		boolean overwrite = ConfigManager.getBoolean("message_parsing.overwrite_minecraft_source_messages");
+		boolean echoToSource = (overwrite && canOverwriteEchoToSource) || forceEchoToSource;
+		boolean toOtherClients = "standalone".equals(ConfigManager.getMode())
+				&& ConfigManager.getBoolean("broadcasts.minecraft_to_minecraft." + broadcastNode);
+		return new RelayTargets(toOtherClients, echoToSource);
+	}
+
+	/**
+	 * Builds a relay packet carrying the optional mention notification payload.
+	 */
+	private static Packets.MinecraftRelay relay(List<TextSegment> segments, String mentionText, String mentionStyle,
+												List<String> mentionedUuids, boolean mentionEveryone) {
+		return new Packets.MinecraftRelay(segments, null, null, null, mentionText, mentionStyle, mentionedUuids, mentionEveryone);
+	}
+
+	/**
+	 * Builds a relay packet carrying the serialized tellraw component when one is available.
+	 */
+	private static Packets.MinecraftRelay tellRawRelay(List<TextSegment> segments, String componentJson,
+													   String componentText, boolean useSerializedComponent) {
+		if (!useSerializedComponent) {
+			return new Packets.MinecraftRelay(segments);
+		}
+		return new Packets.MinecraftRelay(segments, componentJson, TELLRAW_COMPONENT_PLACEHOLDER, componentText,
+				null, null, null, false);
+	}
+
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) {
 		// Wait for handshake
@@ -179,13 +274,6 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		ctx.close();
 	}
 
-	private static String[] toStringArray(Object[] args) {
-		String[] out = new String[args.length];
-		for (int i = 0; i < args.length; i++) {
-			out[i] = String.valueOf(args[i]);
-		}
-		return out;
-	}
 
 	// --- Authenticated traffic -------------------------------------------------------------------
 
@@ -376,54 +464,6 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		broadcastMinecraftTellRawRelay(sourceClientName, relaySegments, overwriteSegments, componentJson, translatedMessage, useSerializedComponent);
 	}
 
-	/**
-	 * @return Whether the command matches one of the configured {@code broadcasts.excluded_commands} patterns.
-	 */
-	private static boolean isExcludedMinecraftCommand(String command) {
-		if (command == null || command.isBlank()) {
-			return false;
-		}
-		for (Pattern pattern : excludedCommandPatterns()) {
-			if (pattern.matcher(command).matches()) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * @return The compiled {@code broadcasts.excluded_commands} patterns, recompiled only when the configured
-	 * list actually changes. The patterns used to be recompiled for every single chat command.
-	 */
-	private static List<Pattern> excludedCommandPatterns() {
-		List<String> sources = new ArrayList<>();
-		JsonNode excludedCommands = ConfigManager.getConfigNode("broadcasts.excluded_commands");
-		if (excludedCommands.isArray()) {
-			for (JsonNode node : excludedCommands) {
-				if (node != null && node.isString() && !node.asString("").isBlank()) {
-					sources.add(node.asString(""));
-				}
-			}
-		}
-
-		String fingerprint = String.join("\u0000", sources);
-		if (fingerprint.equals(excludedCommandFingerprint)) {
-			return excludedCommandPatterns;
-		}
-
-		List<Pattern> compiled = new ArrayList<>();
-		for (String source : sources) {
-			try {
-				compiled.add(Pattern.compile(source));
-			} catch (Exception e) {
-				LOGGER.warn(I18nManager.getDmccTranslation("server.network.invalid_excluded_command_regex", source));
-			}
-		}
-		excludedCommandPatterns = List.copyOf(compiled);
-		excludedCommandFingerprint = fingerprint;
-		return excludedCommandPatterns;
-	}
-
 	private void handleMinecraftSystemMessage(Packets.MinecraftEvent packet, String sourceClientName, String channelNode,
 											  String lang, boolean canOverwriteEchoToSource, boolean forceEchoToSource) {
 		String message;
@@ -504,46 +544,6 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		}
 	}
 
-	/**
-	 * Where a relayed Minecraft message has to go.
-	 *
-	 * @param toOtherClients Whether the other connected clients should receive it.
-	 * @param echoToSource   Whether the originating client should receive the DMCC-rendered echo.
-	 */
-	private record RelayTargets(boolean toOtherClients, boolean echoToSource) {
-
-		private boolean none() {
-			return !toOtherClients && !echoToSource;
-		}
-	}
-
-	/**
-	 * Resolves the relay destinations of one Minecraft event.
-	 * <p>
-	 * Cross-client relay only exists in standalone mode, and the source echo additionally depends on
-	 * {@code overwrite_minecraft_source_messages} unless the event forces it.
-	 *
-	 * @param broadcastNode            Config node under {@code broadcasts.minecraft_to_minecraft}.
-	 * @param canOverwriteEchoToSource Whether the overwrite switch is allowed to trigger the source echo.
-	 * @param forceEchoToSource        Whether the source echo happens regardless of the overwrite switch.
-	 */
-	private static RelayTargets relayTargets(String broadcastNode, boolean canOverwriteEchoToSource,
-											 boolean forceEchoToSource) {
-		boolean overwrite = ConfigManager.getBoolean("message_parsing.overwrite_minecraft_source_messages");
-		boolean echoToSource = (overwrite && canOverwriteEchoToSource) || forceEchoToSource;
-		boolean toOtherClients = "standalone".equals(ConfigManager.getMode())
-				&& ConfigManager.getBoolean("broadcasts.minecraft_to_minecraft." + broadcastNode);
-		return new RelayTargets(toOtherClients, echoToSource);
-	}
-
-	/**
-	 * Builds a relay packet carrying the optional mention notification payload.
-	 */
-	private static Packets.MinecraftRelay relay(List<TextSegment> segments, String mentionText, String mentionStyle,
-												List<String> mentionedUuids, boolean mentionEveryone) {
-		return new Packets.MinecraftRelay(segments, null, null, null, mentionText, mentionStyle, mentionedUuids, mentionEveryone);
-	}
-
 	private void broadcastMinecraftTellRawRelay(String sourceClientName,
 												List<TextSegment> relaySegments,
 												List<TextSegment> overwriteSegments,
@@ -563,18 +563,6 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		if (targets.echoToSource()) {
 			NetworkManager.sendPacketToClient(tellRawRelay(overwriteSegments, componentJson, componentText, useSerializedComponent), sourceClientName);
 		}
-	}
-
-	/**
-	 * Builds a relay packet carrying the serialized tellraw component when one is available.
-	 */
-	private static Packets.MinecraftRelay tellRawRelay(List<TextSegment> segments, String componentJson,
-													   String componentText, boolean useSerializedComponent) {
-		if (!useSerializedComponent) {
-			return new Packets.MinecraftRelay(segments);
-		}
-		return new Packets.MinecraftRelay(segments, componentJson, TELLRAW_COMPONENT_PLACEHOLDER, componentText,
-				null, null, null, false);
 	}
 
 	private String resolveDisplayRoleColor(String playerUuid) {
@@ -610,5 +598,18 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		}
 
 		return !ConfigManager.getString("console_forwarding.channel", "").isBlank();
+	}
+
+	/**
+	 * Where a relayed Minecraft message has to go.
+	 *
+	 * @param toOtherClients Whether the other connected clients should receive it.
+	 * @param echoToSource   Whether the originating client should receive the DMCC-rendered echo.
+	 */
+	private record RelayTargets(boolean toOtherClients, boolean echoToSource) {
+
+		private boolean none() {
+			return !toOtherClients && !echoToSource;
+		}
 	}
 }

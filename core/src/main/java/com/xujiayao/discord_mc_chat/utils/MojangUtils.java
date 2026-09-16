@@ -41,19 +41,6 @@ public final class MojangUtils {
 	}
 
 	/**
-	 * A cached resolution result.
-	 *
-	 * @param name      The value to return.
-	 * @param expiresAt Epoch millis after which the entry must be resolved again.
-	 */
-	private record Entry(String name, long expiresAt) {
-
-		private boolean expired() {
-			return System.currentTimeMillis() >= expiresAt;
-		}
-	}
-
-	/**
 	 * Resolves a Minecraft player name from a UUID string, with an optional fallback name
 	 * for offline-mode UUIDs.
 	 * <p>
@@ -109,6 +96,19 @@ public final class MojangUtils {
 
 		NAME_CACHE.put(uuidString, new Entry(uuidString, retryAt));
 		return uuidString;
+	}
+
+	/**
+	 * A cached resolution result.
+	 *
+	 * @param name      The value to return.
+	 * @param expiresAt Epoch millis after which the entry must be resolved again.
+	 */
+	private record Entry(String name, long expiresAt) {
+
+		private boolean expired() {
+			return System.currentTimeMillis() >= expiresAt;
+		}
 	}
 
 }

@@ -27,15 +27,6 @@ public final class CommandTargets {
 	}
 
 	/**
-	 * The resolved target set.
-	 *
-	 * @param servers     Client names to send to, never empty.
-	 * @param displayName Human readable target description used in progress messages.
-	 */
-	public record Target(List<String> servers, String displayName) {
-	}
-
-	/**
 	 * @param serverName Candidate client name.
 	 * @return Whether the name is configured under {@code multi_server.servers}.
 	 */
@@ -88,5 +79,14 @@ public final class CommandTargets {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * The resolved target set.
+	 *
+	 * @param servers     Client names to send to, never empty.
+	 * @param displayName Human readable target description used in progress messages.
+	 */
+	public record Target(List<String> servers, String displayName) {
 	}
 }

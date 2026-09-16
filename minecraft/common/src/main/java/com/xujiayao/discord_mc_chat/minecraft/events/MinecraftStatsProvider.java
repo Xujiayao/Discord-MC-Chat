@@ -44,6 +44,39 @@ public final class MinecraftStatsProvider implements StatsProvider {
 		this.server = server;
 	}
 
+	private static boolean hasPlayTime(Path file) {
+		String fileName = file.getFileName().toString();
+		if (!fileName.endsWith(".json")) {
+			return false;
+		}
+		try {
+			UUID.fromString(fileName.substring(0, fileName.length() - 5));
+		} catch (IllegalArgumentException ignored) {
+			// Not a player stats file.
+			return false;
+		}
+
+		try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
+			JsonNode typeNode = JSON_MAPPER.readTree(reader).path("stats").path(PLAY_TIME_TYPE);
+			return !typeNode.isMissingNode() && typeNode.path(PLAY_TIME_STAT).asInt() > 0;
+		} catch (Exception ignored) {
+			return false;
+		}
+	}
+
+	/**
+	 * Adds the default Minecraft namespace when the identifier has no colon.
+	 *
+	 * @param value Identifier value entered by the user.
+	 * @return The canonical namespaced identifier, unchanged when empty, null or already namespaced.
+	 */
+	private static String normalizeMinecraftNamespace(String value) {
+		if (value == null || value.isBlank() || value.contains(":")) {
+			return value;
+		}
+		return "minecraft:" + value;
+	}
+
 	@Override
 	public void saveAll() {
 		server.getPlayerList().saveAll();
@@ -105,38 +138,5 @@ public final class MinecraftStatsProvider implements StatsProvider {
 			return 0;
 		}
 		return count;
-	}
-
-	private static boolean hasPlayTime(Path file) {
-		String fileName = file.getFileName().toString();
-		if (!fileName.endsWith(".json")) {
-			return false;
-		}
-		try {
-			UUID.fromString(fileName.substring(0, fileName.length() - 5));
-		} catch (IllegalArgumentException ignored) {
-			// Not a player stats file.
-			return false;
-		}
-
-		try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
-			JsonNode typeNode = JSON_MAPPER.readTree(reader).path("stats").path(PLAY_TIME_TYPE);
-			return !typeNode.isMissingNode() && typeNode.path(PLAY_TIME_STAT).asInt() > 0;
-		} catch (Exception ignored) {
-			return false;
-		}
-	}
-
-	/**
-	 * Adds the default Minecraft namespace when the identifier has no colon.
-	 *
-	 * @param value Identifier value entered by the user.
-	 * @return The canonical namespaced identifier, unchanged when empty, null or already namespaced.
-	 */
-	private static String normalizeMinecraftNamespace(String value) {
-		if (value == null || value.isBlank() || value.contains(":")) {
-			return value;
-		}
-		return "minecraft:" + value;
 	}
 }

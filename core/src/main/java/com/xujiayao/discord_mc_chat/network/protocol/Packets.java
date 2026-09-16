@@ -24,6 +24,54 @@ public final class Packets {
 	// --- Authentication --------------------------------------------------------------------------
 
 	/**
+	 * The remote execution flows that share the request/result shape.
+	 */
+	public enum RpcKind {
+		/**
+		 * Run a Minecraft command on a connected client.
+		 */
+		CONSOLE,
+		/**
+		 * Run a DMCC command on a connected client.
+		 */
+		EXECUTE,
+		/**
+		 * Ask the DMCC Server to run an update check.
+		 */
+		UPDATE_CHECK
+	}
+
+	/**
+	 * Discord events relayed to Minecraft.
+	 */
+	public enum DiscordEventType {
+		CHAT,
+		COMMAND,
+		REACTION,
+		EDIT,
+		DELETE
+	}
+
+	/**
+	 * Minecraft event kinds that Discord broadcast templates can render.
+	 */
+	public enum MinecraftEventType {
+		SERVER_STARTED,
+		SERVER_STOPPING,
+		PLAYER_JOIN,
+		PLAYER_QUIT,
+		PLAYER_CHAT,
+		PLAYER_COMMAND,
+		PLAYER_DIE,
+		PLAYER_ADVANCEMENT,
+		PLAYER_CHANGE_GAME_MODE,
+		SOURCE_SAY,
+		SOURCE_TELL_RAW,
+		SOURCE_MSG,
+		SOURCE_ME
+	}
+
+	/**
 	 * Sent by a client to initiate the connection.
 	 *
 	 * @param serverName       DMCC client/server name.
@@ -128,24 +176,6 @@ public final class Packets {
 	// --- Remote command execution ----------------------------------------------------------------
 
 	/**
-	 * The remote execution flows that share the request/result shape.
-	 */
-	public enum RpcKind {
-		/**
-		 * Run a Minecraft command on a connected client.
-		 */
-		CONSOLE,
-		/**
-		 * Run a DMCC command on a connected client.
-		 */
-		EXECUTE,
-		/**
-		 * Ask the DMCC Server to run an update check.
-		 */
-		UPDATE_CHECK
-	}
-
-	/**
 	 * A remote execution request.
 	 *
 	 * @param kind      Which flow this request belongs to.
@@ -176,16 +206,16 @@ public final class Packets {
 	 */
 	public record CommandResult(RpcKind kind, String requestId, String response, String fileName) implements Packet {
 
-		@Override
-		public PacketType type() {
-			return PacketType.COMMAND_RESULT;
-		}
-
 		/**
 		 * Builds a result without a file payload.
 		 */
 		public static CommandResult text(RpcKind kind, String requestId, String response) {
 			return new CommandResult(kind, requestId, response, null);
+		}
+
+		@Override
+		public PacketType type() {
+			return PacketType.COMMAND_RESULT;
 		}
 
 		public boolean hasFile() {
@@ -210,11 +240,6 @@ public final class Packets {
 		 */
 		public static final int CHUNK_BYTES = 256 * 1024;
 
-		@Override
-		public PacketType type() {
-			return PacketType.COMMAND_FILE_CHUNK;
-		}
-
 		/**
 		 * Splits a file payload into frames.
 		 *
@@ -237,6 +262,11 @@ public final class Packets {
 						encoder.encodeToString(Arrays.copyOfRange(data, offset, offset + length))));
 			}
 			return chunks;
+		}
+
+		@Override
+		public PacketType type() {
+			return PacketType.COMMAND_FILE_CHUNK;
 		}
 	}
 
@@ -372,17 +402,6 @@ public final class Packets {
 	// --- Events ----------------------------------------------------------------------------------
 
 	/**
-	 * Discord events relayed to Minecraft.
-	 */
-	public enum DiscordEventType {
-		CHAT,
-		COMMAND,
-		REACTION,
-		EDIT,
-		DELETE
-	}
-
-	/**
 	 * Relays a parsed Discord event to the Minecraft side. {@code editedMessageSegments} is only set for\n	 * {@code EDIT}, and the mention fields are only set when somebody was actually mentioned.\n
 	 */
 	public record DiscordRelay(DiscordEventType eventType, List<TextSegment> segments, List<TextSegment> replySegments,
@@ -390,16 +409,16 @@ public final class Packets {
 							   String mentionNotificationStyle, List<String> mentionedPlayerUuids,
 							   boolean mentionEveryone) implements Packet {
 
-		@Override
-		public PacketType type() {
-			return PacketType.DISCORD_RELAY;
-		}
-
 		/**
 		 * Convenience constructor for events without reply, edit or mention data.\n
 		 */
 		public DiscordRelay(DiscordEventType eventType, List<TextSegment> segments) {
 			this(eventType, segments, null, null, null, null, null, false);
+		}
+
+		@Override
+		public PacketType type() {
+			return PacketType.DISCORD_RELAY;
 		}
 	}
 
@@ -410,36 +429,17 @@ public final class Packets {
 								 String componentText, String mentionNotificationText, String mentionNotificationStyle,
 								 List<String> mentionedPlayerUuids, boolean mentionEveryone) implements Packet {
 
-		@Override
-		public PacketType type() {
-			return PacketType.MINECRAFT_RELAY;
-		}
-
 		/**
 		 * Convenience constructor for relays without component or mention data.\n
 		 */
 		public MinecraftRelay(List<TextSegment> segments) {
 			this(segments, null, null, null, null, null, null, false);
 		}
-	}
 
-	/**
-	 * Minecraft event kinds that Discord broadcast templates can render.
-	 */
-	public enum MinecraftEventType {
-		SERVER_STARTED,
-		SERVER_STOPPING,
-		PLAYER_JOIN,
-		PLAYER_QUIT,
-		PLAYER_CHAT,
-		PLAYER_COMMAND,
-		PLAYER_DIE,
-		PLAYER_ADVANCEMENT,
-		PLAYER_CHANGE_GAME_MODE,
-		SOURCE_SAY,
-		SOURCE_TELL_RAW,
-		SOURCE_MSG,
-		SOURCE_ME
+		@Override
+		public PacketType type() {
+			return PacketType.MINECRAFT_RELAY;
+		}
 	}
 
 	/**

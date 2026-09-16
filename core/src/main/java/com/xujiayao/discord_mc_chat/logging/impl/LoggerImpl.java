@@ -43,41 +43,6 @@ public final class LoggerImpl implements Logger {
 	private final Object minecraftLogger;
 
 	/**
-	 * The log levels DMCC emits.
-	 * <p>
-	 * Each constant caches its own ANSI colour and - in a Minecraft environment - the two reflective
-	 * {@code slf4j.Logger} methods it needs, so a log call is a single field read instead of a
-	 * {@code Map<String, Method>} lookup by level name.
-	 */
-	private enum Level {
-		TRACE("\u001B[0m"),
-		DEBUG("\u001B[0m"),
-		INFO("\u001B[32m"),
-		WARN("\u001B[33m"),
-		ERROR("\u001B[31m");
-
-		private final String ansiColor;
-		private volatile Method plain;
-		private volatile Method withThrowable;
-
-		Level(String ansiColor) {
-			this.ansiColor = ansiColor;
-		}
-
-		/**
-		 * Resolves and caches this level's methods on the given SLF4J logger class.
-		 *
-		 * @param loggerClass The class obtained through reflection.
-		 * @throws NoSuchMethodException If the class does not expose the expected overloads.
-		 */
-		private void bind(Class<?> loggerClass) throws NoSuchMethodException {
-			String method = name().toLowerCase(Locale.ROOT);
-			this.plain = loggerClass.getMethod(method, String.class);
-			this.withThrowable = loggerClass.getMethod(method, String.class, Throwable.class);
-		}
-	}
-
-	/**
 	 * Create a new Logger instance.
 	 * <p>
 	 * If running in a Minecraft environment, initializes the Minecraft logger via reflection.
@@ -509,5 +474,40 @@ public final class LoggerImpl implements Logger {
 	@Override
 	public void error(Marker marker, String msg, Throwable t) {
 		error(msg, t);
+	}
+
+	/**
+	 * The log levels DMCC emits.
+	 * <p>
+	 * Each constant caches its own ANSI colour and - in a Minecraft environment - the two reflective
+	 * {@code slf4j.Logger} methods it needs, so a log call is a single field read instead of a
+	 * {@code Map<String, Method>} lookup by level name.
+	 */
+	private enum Level {
+		TRACE("\u001B[0m"),
+		DEBUG("\u001B[0m"),
+		INFO("\u001B[32m"),
+		WARN("\u001B[33m"),
+		ERROR("\u001B[31m");
+
+		private final String ansiColor;
+		private volatile Method plain;
+		private volatile Method withThrowable;
+
+		Level(String ansiColor) {
+			this.ansiColor = ansiColor;
+		}
+
+		/**
+		 * Resolves and caches this level's methods on the given SLF4J logger class.
+		 *
+		 * @param loggerClass The class obtained through reflection.
+		 * @throws NoSuchMethodException If the class does not expose the expected overloads.
+		 */
+		private void bind(Class<?> loggerClass) throws NoSuchMethodException {
+			String method = name().toLowerCase(Locale.ROOT);
+			this.plain = loggerClass.getMethod(method, String.class);
+			this.withThrowable = loggerClass.getMethod(method, String.class, Throwable.class);
+		}
 	}
 }

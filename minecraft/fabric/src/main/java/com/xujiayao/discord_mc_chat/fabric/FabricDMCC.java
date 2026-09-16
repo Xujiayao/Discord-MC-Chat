@@ -18,12 +18,6 @@ import net.fabricmc.loader.api.FabricLoader;
  */
 public final class FabricDMCC implements DedicatedServerModInitializer {
 
-	@Override
-	public void onInitializeServer() {
-		registerVanish();
-		DMCC.init(new MinecraftPlatformHost("fabric"));
-	}
-
 	/**
 	 * Keeps vanished players out of DMCC's public player lists and counts.
 	 * <p>
@@ -35,5 +29,11 @@ public final class FabricDMCC implements DedicatedServerModInitializer {
 		if (loader.isModLoaded("vanish") || loader.isModLoaded("melius-vanish")) {
 			PlayerVisibility.setHiddenCheck(VanishAPI::isVanished);
 		}
+	}
+
+	@Override
+	public void onInitializeServer() {
+		registerVanish();
+		DMCC.init(new MinecraftPlatformHost("fabric"));
 	}
 }

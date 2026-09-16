@@ -23,6 +23,20 @@ final class MixinServerGamePacketListenerImpl {
 	@Shadow
 	public ServerPlayer player;
 
+	/**
+	 * Reports an executed player command to the DMCC PlayerCommand event.
+	 */
+	@Unique
+	private static void postPlayerCommand(ServerPlayer player, String command) {
+		// PlayerCommand Event
+		MinecraftEventHandler.onPlayerCommand(
+				command,
+				player
+		);
+
+		// No need to cancel, because vanilla Minecraft does not broadcast commands
+	}
+
 	@Inject(method = "broadcastChatMessage", at = @At("HEAD"), cancellable = true)
 	private void broadcastChatMessage(PlayerChatMessage message, CallbackInfo ci) {
 		// PlayerChat Event
@@ -44,19 +58,5 @@ final class MixinServerGamePacketListenerImpl {
 	@Inject(method = "performSignedChatCommand", at = @At("HEAD"))
 	private void performSignedChatCommand(ServerboundChatCommandSignedPacket packet, LastSeenMessages lastSeenMessages, CallbackInfo ci) {
 		postPlayerCommand(player, packet.command());
-	}
-
-	/**
-	 * Reports an executed player command to the DMCC PlayerCommand event.
-	 */
-	@Unique
-	private static void postPlayerCommand(ServerPlayer player, String command) {
-		// PlayerCommand Event
-		MinecraftEventHandler.onPlayerCommand(
-				command,
-				player
-		);
-
-		// No need to cancel, because vanilla Minecraft does not broadcast commands
 	}
 }

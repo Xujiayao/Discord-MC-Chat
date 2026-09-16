@@ -22,18 +22,6 @@ import java.util.regex.Pattern;
 public final class MessageParserCommon {
 
 	/**
-	 * Builds the mention notification shown to a mentioned Minecraft player.
-	 *
-	 * @param senderDisplayName Display name of the mention sender.
-	 * @return The localized notification text.
-	 */
-	public static String mentionNotification(String senderDisplayName) {
-		String template = I18nManager.getCustomMessages().path("xxxxx_to_minecraft").path("mentioned")
-				.asString("{effective_name} mentioned you!");
-		return template.replace("{effective_name}", senderDisplayName);
-	}
-
-	/**
 	 * Color used for hyperlinks. Matches the blue Discord uses for its own links.
 	 */
 	static final String URL_COLOR = "#3366CC";
@@ -117,17 +105,15 @@ public final class MessageParserCommon {
 	}
 
 	/**
-	 * Rewrites a matched token inside every segment of {@code segments}. Segments that already carry a
-	 * click URL are never rewritten, and text outside the matches keeps its original styling.
+	 * Builds the mention notification shown to a mentioned Minecraft player.
+	 *
+	 * @param senderDisplayName Display name of the mention sender.
+	 * @return The localized notification text.
 	 */
-	@FunctionalInterface
-	interface TokenStyler {
-		/**
-		 * @param matcher The matcher positioned on the match.
-		 * @param source  The segment the match was found in, used to inherit its styling.
-		 * @return The styled replacement, or null to leave this match as literal text.
-		 */
-		TextSegment style(Matcher matcher, TextSegment source);
+	public static String mentionNotification(String senderDisplayName) {
+		String template = I18nManager.getCustomMessages().path("xxxxx_to_minecraft").path("mentioned")
+				.asString("{effective_name} mentioned you!");
+		return template.replace("{effective_name}", senderDisplayName);
 	}
 
 	static boolean isSplittable(TextSegment segment) {
@@ -169,15 +155,6 @@ public final class MessageParserCommon {
 			}
 		}
 		return out;
-	}
-
-	/**
-	 * One entry of the single-pass token table.
-	 *
-	 * @param pattern Token pattern.
-	 * @param styler  Replacement factory.
-	 */
-	record TokenRule(Pattern pattern, TokenStyler styler) {
 	}
 
 	/**
@@ -477,5 +454,28 @@ public final class MessageParserCommon {
 		TextSegment segment = TextSegment.copyOf(source, alias);
 		segment.color = "yellow";
 		return segment;
+	}
+
+	/**
+	 * Rewrites a matched token inside every segment of {@code segments}. Segments that already carry a
+	 * click URL are never rewritten, and text outside the matches keeps its original styling.
+	 */
+	@FunctionalInterface
+	interface TokenStyler {
+		/**
+		 * @param matcher The matcher positioned on the match.
+		 * @param source  The segment the match was found in, used to inherit its styling.
+		 * @return The styled replacement, or null to leave this match as literal text.
+		 */
+		TextSegment style(Matcher matcher, TextSegment source);
+	}
+
+	/**
+	 * One entry of the single-pass token table.
+	 *
+	 * @param pattern Token pattern.
+	 * @param styler  Replacement factory.
+	 */
+	record TokenRule(Pattern pattern, TokenStyler styler) {
 	}
 }

@@ -38,29 +38,6 @@ final class MarkdownParser {
 	}
 
 	/**
-	 * Emphasis state carried while scanning.
-	 */
-	static final class State {
-		boolean bold;
-		boolean italic;
-		boolean underlined;
-		boolean strikethrough;
-		boolean obfuscated;
-		String color;
-
-		State copy() {
-			State copy = new State();
-			copy.bold = bold;
-			copy.italic = italic;
-			copy.underlined = underlined;
-			copy.strikethrough = strikethrough;
-			copy.obfuscated = obfuscated;
-			copy.color = color;
-			return copy;
-		}
-	}
-
-	/**
 	 * Parses Discord message content into styled segments.
 	 * <p>
 	 * Emphasis never carries across lines: Discord requires the closing delimiter on the same line, so an
@@ -361,5 +338,28 @@ final class MarkdownParser {
 			segment.hoverText = text;
 		}
 		segments.add(segment);
+	}
+
+	/**
+	 * Emphasis state carried while scanning.
+	 */
+	static final class State {
+		boolean bold;
+		boolean italic;
+		boolean underlined;
+		boolean strikethrough;
+		boolean obfuscated;
+		String color;
+
+		State copy() {
+			State copy = new State();
+			copy.bold = bold;
+			copy.italic = italic;
+			copy.underlined = underlined;
+			copy.strikethrough = strikethrough;
+			copy.obfuscated = obfuscated;
+			copy.color = color;
+			return copy;
+		}
 	}
 }

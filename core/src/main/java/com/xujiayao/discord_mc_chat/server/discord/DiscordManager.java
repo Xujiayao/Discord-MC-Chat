@@ -265,60 +265,6 @@ public final class DiscordManager {
 	}
 
 	/**
-	 * A short-lived snapshot of the Discord users and guild members that DMCC has looked up.
-	 * <p>
-	 * Reads and writes are both guarded, but a miss is resolved while holding the lock on purpose: two
-	 * threads that want the same uncached user must not both pay for the REST round trip. The entries are
-	 * cleared whenever the bot reconnects, so the cache never outlives the JDA instance it was filled from.
-	 */
-	private static final class ProfileCache {
-
-		private final Map<String, User> users = new HashMap<>();
-		private final Map<String, Optional<Member>> members = new HashMap<>();
-
-		private User user(String discordId) {
-			synchronized (this) {
-				if (users.containsKey(discordId)) {
-					return users.get(discordId);
-				}
-			}
-			User resolved = null;
-			try {
-				resolved = jda.retrieveUserById(discordId).complete();
-			} catch (Exception ignored) {
-			}
-			synchronized (this) {
-				users.put(discordId, resolved);
-			}
-			return resolved;
-		}
-
-		private Member member(String discordId) {
-			synchronized (this) {
-				Optional<Member> cached = members.get(discordId);
-				if (cached != null) {
-					return cached.orElse(null);
-				}
-			}
-			Optional<Member> resolved = Optional.empty();
-			for (var guild : jda.getGuilds()) {
-				try {
-					Member member = guild.retrieveMemberById(discordId).complete();
-					if (member != null) {
-						resolved = Optional.of(member);
-						break;
-					}
-				} catch (Exception ignored) {
-				}
-			}
-			synchronized (this) {
-				members.put(discordId, resolved);
-			}
-			return resolved.orElse(null);
-		}
-	}
-
-	/**
 	 * @return The current profile snapshot, replacing an expired one with a fresh empty cache.
 	 */
 	private static ProfileCache profiles() {
@@ -545,7 +491,6 @@ public final class DiscordManager {
 		}
 	}
 
-
 	public static void sendExecuteResultViaWebhook(String channelIdentifier, String clientName, String message) {
 		TextChannel channel = DiscordSender.find(channelIdentifier);
 		if (channel == null) return;
@@ -646,7 +591,6 @@ public final class DiscordManager {
 		}
 	}
 
-
 	public static void shutdown() {
 		BotPresenceManager.shutdown();
 		ChannelUpdateManager.shutdown();
@@ -673,6 +617,60 @@ public final class DiscordManager {
 			jda.shutdownNow();
 
 			jda = null;
+		}
+	}
+
+	/**
+	 * A short-lived snapshot of the Discord users and guild members that DMCC has looked up.
+	 * <p>
+	 * Reads and writes are both guarded, but a miss is resolved while holding the lock on purpose: two
+	 * threads that want the same uncached user must not both pay for the REST round trip. The entries are
+	 * cleared whenever the bot reconnects, so the cache never outlives the JDA instance it was filled from.
+	 */
+	private static final class ProfileCache {
+
+		private final Map<String, User> users = new HashMap<>();
+		private final Map<String, Optional<Member>> members = new HashMap<>();
+
+		private User user(String discordId) {
+			synchronized (this) {
+				if (users.containsKey(discordId)) {
+					return users.get(discordId);
+				}
+			}
+			User resolved = null;
+			try {
+				resolved = jda.retrieveUserById(discordId).complete();
+			} catch (Exception ignored) {
+			}
+			synchronized (this) {
+				users.put(discordId, resolved);
+			}
+			return resolved;
+		}
+
+		private Member member(String discordId) {
+			synchronized (this) {
+				Optional<Member> cached = members.get(discordId);
+				if (cached != null) {
+					return cached.orElse(null);
+				}
+			}
+			Optional<Member> resolved = Optional.empty();
+			for (var guild : jda.getGuilds()) {
+				try {
+					Member member = guild.retrieveMemberById(discordId).complete();
+					if (member != null) {
+						resolved = Optional.of(member);
+						break;
+					}
+				} catch (Exception ignored) {
+				}
+			}
+			synchronized (this) {
+				members.put(discordId, resolved);
+			}
+			return resolved.orElse(null);
 		}
 	}
 

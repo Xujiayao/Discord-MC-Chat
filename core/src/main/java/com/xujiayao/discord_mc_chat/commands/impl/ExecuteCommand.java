@@ -44,16 +44,6 @@ public final class ExecuteCommand implements Command {
 		}
 	}
 
-	/**
-	 * The result of one remote command, with the file payload already reassembled.
-	 *
-	 * @param text     Command output.
-	 * @param fileData File bytes, or null when the command returned no file.
-	 * @param fileName File name, or null when the command returned no file.
-	 */
-	public record CommandOutput(String text, byte[] fileData, String fileName) {
-	}
-
 	@Override
 	public String name() {
 		return "execute";
@@ -167,6 +157,16 @@ public final class ExecuteCommand implements Command {
 				pendingRequests.remove(requestId);
 			}
 		}
+	}
+
+	/**
+	 * The result of one remote command, with the file payload already reassembled.
+	 *
+	 * @param text     Command output.
+	 * @param fileData File bytes, or null when the command returned no file.
+	 * @param fileName File name, or null when the command returned no file.
+	 */
+	public record CommandOutput(String text, byte[] fileData, String fileName) {
 	}
 
 }

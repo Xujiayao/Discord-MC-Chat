@@ -51,7 +51,11 @@ public final class MinecraftMessageParser {
 	 * {@link #invalidateMentionCache()}, so one minute of staleness is the accepted upper bound.
 	 */
 	private static final long MENTION_DIRECTORY_TTL_MILLIS = 60_000L;
-
+	/**
+	 * Serializes rebuilds of the mention directory, so a burst of concurrent messages triggers a single
+	 * rebuild and every other reader waits for that result instead of rebuilding it again.
+	 */
+	private static final Object mentionDirectoryLock = new Object();
 	/**
 	 * The cached mention directory, or null when it still has to be built.
 	 * <p>
@@ -59,12 +63,6 @@ public final class MinecraftMessageParser {
 	 * the whole new one, and can never observe a partially built alias table.
 	 */
 	private static volatile MentionDirectory mentionDirectoryCache;
-
-	/**
-	 * Serializes rebuilds of the mention directory, so a burst of concurrent messages triggers a single
-	 * rebuild and every other reader waits for that result instead of rebuilding it again.
-	 */
-	private static final Object mentionDirectoryLock = new Object();
 
 	private MinecraftMessageParser() {
 	}
