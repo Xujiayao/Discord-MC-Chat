@@ -93,18 +93,12 @@ public final class MessageParserCommon {
 	}
 
 	/**
-	 * Rewrites a matched token inside every segment of {@code segments}.
-	 * <p>
-	 * This replaces the handful of near-identical {@code splitSegmentsByXxx} methods that used to exist
-	 * for user/role/channel/everyone mentions, custom emoji, alias emoji, links and timestamps. Segments
-	 * that already carry a click URL are never rewritten, and text outside the matches is carried over
-	 * with the original styling.
+	 * Rewrites a matched token inside every segment of {@code segments}. Segments that already carry a
+	 * click URL are never rewritten, and text outside the matches keeps its original styling.
 	 */
 	@FunctionalInterface
 	interface TokenStyler {
 		/**
-		 * Builds the replacement for one match.
-		 *
 		 * @param matcher The matcher positioned on the match.
 		 * @param source  The segment the match was found in, used to inherit its styling.
 		 * @return The styled replacement, or null to leave this match as literal text.
@@ -112,10 +106,6 @@ public final class MessageParserCommon {
 		TextSegment style(Matcher matcher, TextSegment source);
 	}
 
-	/**
-	 * @param segment Candidate segment.
-	 * @return Whether inline tokens should be searched inside this segment.
-	 */
 	static boolean isSplittable(TextSegment segment) {
 		return segment.clickUrl == null && segment.text != null && !segment.text.isEmpty();
 	}

@@ -48,10 +48,6 @@ public final class DiscordMessageAdapter {
 		return String.format("#%06X", color.getRGB() & 0xFFFFFF);
 	}
 
-	/**
-	 * @param message The Discord message.
-	 * @return The author's display name, falling back to the account name outside a guild.
-	 */
 	public static String effectiveName(Message message) {
 		Member member = message.getMember();
 		return member != null ? member.getEffectiveName() : message.getAuthor().getName();
@@ -59,9 +55,6 @@ public final class DiscordMessageAdapter {
 
 	/**
 	 * Builds the main chat line for a Discord message.
-	 *
-	 * @param message The Discord message.
-	 * @return The list of text segments.
 	 */
 	public static List<TextSegment> chatSegments(Message message) {
 		return DiscordMessageParser.buildChatSegments(effectiveName(message), roleColorHex(message.getMember()),
@@ -106,9 +99,6 @@ public final class DiscordMessageAdapter {
 
 	/**
 	 * Builds the content line shown after an edit notification.
-	 *
-	 * @param message The edited Discord message.
-	 * @return The list of text segments.
 	 */
 	public static List<TextSegment> editedMessageSegments(Message message) {
 		return DiscordMessageParser.buildEditedMessageSegments(effectiveName(message), roleColorHex(message.getMember()),

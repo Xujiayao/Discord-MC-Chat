@@ -73,7 +73,11 @@ public final class CommandTargets {
 		return new Target(List.of(target), target);
 	}
 
-	private static JsonNode findServerConfig(String serverName) {
+	/**
+	 * @param serverName Candidate client name.
+	 * @return The entry under {@code multi_server.servers} with this name, or null when there is none.
+	 */
+	public static JsonNode findServerConfig(String serverName) {
 		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
 		if (!serversNode.isArray()) {
 			return null;

@@ -24,11 +24,6 @@ public record MessageExtras(
 ) {
 
 	/**
-	 * Empty extras, used for messages that only carry text.
-	 */
-	public static final MessageExtras EMPTY = new MessageExtras(List.of(), List.of(), List.of(), false, null);
-
-	/**
 	 * @param type     One of {@code file}, {@code image} or {@code video}.
 	 * @param fileName Display file name.
 	 * @param url      Download URL.

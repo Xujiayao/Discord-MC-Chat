@@ -9,22 +9,16 @@ public interface Command {
 
 	/**
 	 * Gets the name of the command.
-	 *
-	 * @return The command name.
 	 */
 	String name();
 
 	/**
 	 * Gets the list of arguments for the command.
-	 *
-	 * @return The command arguments.
 	 */
 	CommandArgument[] args();
 
 	/**
 	 * Gets the description of the command.
-	 *
-	 * @return The command description.
 	 */
 	String description();
 
@@ -94,9 +88,6 @@ public interface Command {
 
 	/**
 	 * Executes the command.
-	 *
-	 * @param sender The entity that sent the command.
-	 * @param args   The command arguments.
 	 */
 	void execute(CommandSender sender, String... args);
 
@@ -116,9 +107,6 @@ public interface Command {
 
 	/**
 	 * Describes a single command argument displayed in help and usage text.
-	 *
-	 * @param name        The argument name.
-	 * @param description The argument description.
 	 */
 	record CommandArgument(String name, String description) {
 	}

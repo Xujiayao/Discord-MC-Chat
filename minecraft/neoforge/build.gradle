@@ -1,0 +1,36 @@
+apply plugin: "net.neoforged.moddev"
+
+base {
+    archivesName = "Discord-MC-Chat-neoforge"
+}
+
+// DMCC's Minecraft-side code is shared verbatim with the Fabric module.
+// Minecraft 26.1+ is unobfuscated, so both loaders run against the same official names
+// and no remapping step is involved.
+sourceSets {
+    main {
+        java.srcDir "../common/src/main/java"
+        resources.srcDir "../common/src/main/resources"
+    }
+}
+
+neoForge {
+    version = project.neo_version
+
+    mods {
+        "discord_mc_chat" {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+dependencies {
+    implementation(project(":core")) {
+        // Minecraft strictly pins (and ships) its own Netty and SLF4J versions, so a mod must not
+        // pull different ones onto the NeoForge classpath. The shared game-side code in
+        // minecraft/common uses neither library directly, and the final mod JAR carries DMCC's own
+        // relocated copies (dmcc_dep.*), so following Minecraft's pins here costs nothing.
+        exclude group: "io.netty"
+        exclude group: "org.slf4j"
+    }
+}

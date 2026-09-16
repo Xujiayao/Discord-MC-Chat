@@ -106,8 +106,6 @@ public final class BotPresenceManager {
 
 	/**
 	 * Restores the presence the bot would have without DMCC managing it: online, without an activity.
-	 *
-	 * @param jda The JDA instance to reset the presence of.
 	 */
 	private static void resetPresence(JDA jda) {
 		try {

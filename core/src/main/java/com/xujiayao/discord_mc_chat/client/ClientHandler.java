@@ -110,6 +110,7 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 			}
 			case Packets.InfoRequest p -> ctx.writeAndFlush(
 					NetworkManager.createResponsePacket()
+							.withRequestId(p.requestId())
 							.withConnectionLatency(Math.max(0, System.currentTimeMillis() - p.sentAtMillis())));
 			case Packets.LatencyPong p -> client.updateConnectionLatency(
 					Math.max(0, System.currentTimeMillis() - p.sentAtMillis()));

@@ -47,12 +47,8 @@ public final class CommandAutoCompleter {
 		}
 
 		String trimmed = input.trim();
-		String[] parts = trimmed.isEmpty() ? new String[0] : trimmed.split("\\s+");
+		String[] parts = trimmed.split("\\s+");
 		boolean hasTrailingSpace = input.endsWith(" ");
-
-		if (parts.length == 0) {
-			return suggestions;
-		}
 
 		String commandName = parts[0].toLowerCase();
 
@@ -177,7 +173,7 @@ public final class CommandAutoCompleter {
 
 		// Typing first argument: "stats <type...>"
 		if (parts.length == 2 && !hasTrailingSpace) {
-			String typeInput = normalizeMinecraftNamespace(parts[1]);
+			String typeInput = StatsCommand.normalizeMinecraftNamespace(parts[1]);
 			String lowerType = typeInput.toLowerCase();
 
 			List<String> exactType = new ArrayList<>();
@@ -217,7 +213,7 @@ public final class CommandAutoCompleter {
 
 		// "stats <type> "
 		if (parts.length == 2) {
-			String type = normalizeMinecraftNamespace(parts[1]);
+			String type = StatsCommand.normalizeMinecraftNamespace(parts[1]);
 			for (String stat : provider.getStatNames(type)) {
 				suggestions.add("stats " + type + " " + stat);
 			}
@@ -226,8 +222,8 @@ public final class CommandAutoCompleter {
 
 		// Typing second argument: "stats <type> <stat...>"
 		if (parts.length == 3 && !hasTrailingSpace) {
-			String type = normalizeMinecraftNamespace(parts[1]);
-			String statInput = normalizeMinecraftNamespace(parts[2]);
+			String type = StatsCommand.normalizeMinecraftNamespace(parts[1]);
+			String statInput = StatsCommand.normalizeMinecraftNamespace(parts[2]);
 			String lowerStat = statInput.toLowerCase();
 
 			List<String> exactStat = new ArrayList<>();
@@ -262,10 +258,6 @@ public final class CommandAutoCompleter {
 
 		// "stats <type> <stat> " or more arguments (stats only has 2 args)
 		return suggestions;
-	}
-
-	private static String normalizeMinecraftNamespace(String value) {
-		return StatsCommand.normalizeMinecraftNamespace(value);
 	}
 
 	private static List<String> suggestWhitelist(String[] parts, boolean hasTrailingSpace, int opLevel) {

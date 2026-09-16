@@ -30,9 +30,6 @@ public final class JdaCommandSender implements CommandSender, LinkCommand.Discor
 
 	/**
 	 * Constructs a new JdaCommandSender.
-	 *
-	 * @param event   The Discord slash command interaction event.
-	 * @param opLevel The resolved OP level for the Discord user.
 	 */
 	public JdaCommandSender(SlashCommandInteractionEvent event, int opLevel) {
 		this.event = event;
@@ -84,8 +81,6 @@ public final class JdaCommandSender implements CommandSender, LinkCommand.Discor
 
 	/**
 	 * Gets the Discord User object for this sender.
-	 *
-	 * @return The User.
 	 */
 	public User getUser() {
 		return event.getUser();
@@ -108,8 +103,6 @@ public final class JdaCommandSender implements CommandSender, LinkCommand.Discor
 
 	/**
 	 * Gets the Discord channel ID where this command was invoked.
-	 *
-	 * @return The channel ID.
 	 */
 	public String getChannelId() {
 		return event.getChannel().getId();

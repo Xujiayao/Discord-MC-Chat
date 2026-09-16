@@ -15,37 +15,30 @@ import java.util.UUID;
 public interface StatsProvider {
 
 	/**
-	 * Flushes in-memory stats to disk before reading.
+	 * Flushes in-memory stats to disk. Must be called on the game's main thread.
 	 */
 	void saveAll();
 
-	/**
-	 * Gets the stats directory path.
-	 *
-	 * @return Stats directory path.
-	 */
 	Path getStatsDirectory();
 
 	/**
-	 * Resolves a player name from UUID.
-	 *
-	 * @param uuid Player UUID.
-	 * @return Player name, or {@code null} if unknown.
+	 * @return The player name, or {@code null} if the UUID is unknown.
 	 */
 	String getPlayerName(UUID uuid);
 
-	/**
-	 * Gets available stat categories/types.
-	 *
-	 * @return Available stat type identifiers.
-	 */
 	List<String> getStatTypes();
 
 	/**
-	 * Gets available stat names for a category/type.
-	 *
-	 * @param type Stat category/type.
+	 * @param type Stat category/type, with or without the {@code minecraft:} namespace.
 	 * @return Available stat names within the category.
 	 */
 	List<String> getStatNames(String type);
+
+	/**
+	 * Counts the players that have ever played on this server.
+	 * <p>
+	 * The platform answers this from its own player records, so core never has to know where Minecraft
+	 * stores them or how they are keyed.
+	 */
+	int countPlayersEverJoined();
 }

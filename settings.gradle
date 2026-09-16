@@ -23,7 +23,8 @@ plugins {
 // DMCC's platform-independent core.
 include(":core")
 
-// The Minecraft-side code shared by both loaders lives in ./minecraft-common and is compiled
-// into each loader module as a shared source directory (see the loader build scripts).
-include(":fabric")
-include(":neoforge")
+// The Minecraft-side modules.
+// ./minecraft/common holds the code shared by both loaders.
+include(":minecraft:common")
+include(":minecraft:fabric")
+include(":minecraft:neoforge")

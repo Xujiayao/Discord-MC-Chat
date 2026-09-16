@@ -48,8 +48,6 @@ public final class MessageCommandSender implements CommandSender {
 
 	/**
 	 * Gets the Discord channel ID where this command was invoked.
-	 *
-	 * @return The channel ID.
 	 */
 	public String getChannelId() {
 		return event.getChannel().getId();

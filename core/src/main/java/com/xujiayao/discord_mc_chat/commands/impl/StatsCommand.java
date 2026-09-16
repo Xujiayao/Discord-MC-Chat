@@ -47,56 +47,6 @@ public final class StatsCommand implements Command {
 		return "minecraft:" + value;
 	}
 
-	/**
-	 * Counts how many player stats files contain a value for the given stat.
-	 *
-	 * @param type Stat category/type.
-	 * @param stat Stat name.
-	 * @return Number of matching player entries.
-	 */
-	public static int countStatResultEntries(String type, String stat) {
-		StatsProvider provider = statsProvider();
-		if (provider == null) {
-			return 0;
-		}
-
-		try {
-			provider.saveAll();
-		} catch (Exception ignored) {
-			return 0;
-		}
-
-		Path statsDir = provider.getStatsDirectory();
-		if (statsDir == null || !Files.exists(statsDir) || !Files.isDirectory(statsDir)) {
-			return 0;
-		}
-
-		int count = 0;
-
-		try (Stream<Path> stream = Files.list(statsDir)) {
-			for (Path p : stream.filter(Files::isRegularFile)
-					.filter(path -> path.getFileName().toString().endsWith(".json"))
-					.toList()) {
-				String fileName = p.getFileName().toString();
-				String uuidStr = fileName.substring(0, fileName.length() - 5);
-				try {
-					UUID.fromString(uuidStr);
-				} catch (IllegalArgumentException ignored) {
-					// Not a player stats file; skip it.
-					continue;
-				}
-				int value = JsonUtils.getStat(p, normalizeMinecraftNamespace(type), normalizeMinecraftNamespace(stat));
-				if (value > 0) {
-					count++;
-				}
-			}
-		} catch (Exception ignored) {
-			return 0;
-		}
-
-		return count;
-	}
-
 	@Override
 	public String name() {
 		return "stats";

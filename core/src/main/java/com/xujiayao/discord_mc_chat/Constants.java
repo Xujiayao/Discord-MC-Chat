@@ -28,7 +28,6 @@ public final class Constants {
 	 */
 	public static final Logger LOGGER = new Logger();
 
-	// YAML_MAPPER has to be initialized before VERSION because getDmccVersion() uses it.
 	/**
 	 * Shared YAML mapper configured for DMCC config files.
 	 */

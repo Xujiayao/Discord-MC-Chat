@@ -12,8 +12,5 @@ package com.xujiayao.discord_mc_chat.network.protocol;
  */
 public interface Packet {
 
-	/**
-	 * @return The wire type of this packet.
-	 */
 	PacketType type();
 }

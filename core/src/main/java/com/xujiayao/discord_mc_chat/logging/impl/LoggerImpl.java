@@ -144,9 +144,7 @@ public final class LoggerImpl implements Logger {
 	}
 
 	/**
-	 * Closes the file writer if it was initialized and uninstalls AnsiConsole.
-	 * <p>
-	 * Only Standalone environment requires this cleanup.
+	 * Closes the log file. Only the standalone environment needs this cleanup.
 	 */
 	public static void shutdown() {
 		if (fileWriter != null) {
@@ -155,9 +153,7 @@ public final class LoggerImpl implements Logger {
 	}
 
 	/**
-	 * Enable or disable ANSI color output in standalone console logs.
-	 *
-	 * @param enabled true to enable ANSI color output, false to disable
+	 * @param enabled true to colour standalone console output with ANSI escapes, false for plain text.
 	 */
 	public static void setConsoleAnsiEnabled(boolean enabled) {
 		consoleAnsiEnabled = enabled;

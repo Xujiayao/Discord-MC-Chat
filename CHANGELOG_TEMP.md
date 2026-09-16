@@ -822,3 +822,503 @@ token 类型各写一份（约 16 个 `splitSegmentsByXxx` 方法），7 个 `bu
 9. **Bot 状态**：开关 `discord.bot.enable_status`，确认状态切换正常（新防抖会让首次刷新最多晚 0.5 秒）。
 10. **两平台回归**：Fabric 与 NeoForge 各加载一次，`standalone` 跑一次 `java -jar`，
     并确认 `logs/DMCC_<日期>_<时间>.log` **正常生成**（这一条专门覆盖本轮修掉的那个日志文件名 bug）。
+
+## 工作 10
+
+记录日期：2026/9/16（**第 5 轮：激进瘦身与结构清理**；尚未定版）。
+
+> 本轮的起因是用户对上一区间交付的质疑：`git diff f4f46a27..HEAD` 显示 126 files / +8822 / −6385
+> （净 +2437 行），而 `*/src/main/**/*.java` 从 91 个文件涨到 100 个、非空行涨到 16101。
+> 用户原本要求的是**消除过度设计、在合理范围内减少代码量与复杂度**。
+>
+> 本题的结论（已核实）：那 +2437 行里有 **1683 行是纯交接文档**（`TEMP.md` + `TEMP_TODO.md` +
+> `CHANGELOG_TEMP.md`），生产代码净增只有约 **1300 行**，与"新增 NeoForge 平台"这一能力同量级。
+> 真正的问题是**存量结构**：16101 非空行里 **4302 行（27%）是 javadoc/注释**。
+
+### 一、目录重命名（用户明确要求）
+
+```
+之前：core/  minecraft-common/  fabric/  neoforge/          （根目录 9 个文件夹）
+现在：core/  minecraft/{common,fabric,neoforge}/            （根目录 6 个文件夹）
+```
+
+`settings.gradle` 改为 `include(":minecraft:common")` / `include(":minecraft:fabric")` /
+`include(":minecraft:neoforge")`；两个加载器的 `sourceSets` 指向 `../common/src/main/{java,resources}`；
+根 `build.gradle` 的 `universalJar` 依赖与 `project(...)` 路径同步更新。
+
+**`minecraft:common` 没有升级为真正的 Gradle 项目**（原计划要试，已验证不可行）：编译它需要 vanilla 类，
+而 vanilla 类只能由 Loom 或 ModDevGradle 解析；两个插件都是"一个项目 = 一个 Minecraft 版本"，
+无法同时挂在这个模块上。因此保留**共享源码目录**方案，但把它写成**显式排除**并注明理由：
+
+```groovy
+// :minecraft 只是分组目录，:minecraft:common 是共享源码目录而非独立项目
+configure(subprojects.findAll { it.path != ":minecraft" && it.path != ":minecraft:common" }) { ... }
+```
+
+### 二、删除死代码与无效抽象
+
+| 删除项 | 依据 |
+|:--|:--|
+| `ModIntegration` + `ModIntegrations`（141 行 + "如何新增集成"四步文档） | `all()` 与 `modIds()` **零调用点**；整个扩展点只服务一个布尔判定 `isPlayerHidden` |
+| `Platform.isAvailable()` | 零调用点 |
+| `MessageExtras.EMPTY` | 零调用点 |
+| `NetworkManager.getRemoteAddress(Channel)` | 零调用点（全仓 grep + 资源文件扫描） |
+| `CommandFileAssembler.discard(String)` | 零调用点（其 javadoc 声称释放"永远不会完成的请求的缓冲"——即一条本该存在的清理路径从未接上） |
+| `StatsCommand.countStatResultEntries`（35 行） | 唯一调用者是平台层，见下节 |
+| `DiscordManager` 的 `sendWebhookMessage` / `sendWebhookMessageSync` / `sendWebhookMessageWithFile` / `sendBotMessage` 单行重载 | 纯转调 + 完整 javadoc |
+| `MinecraftMessageParser.parseUserMessage` / `parseSystemMessage` | 两个方法体**逐字相同** → 合并为 `parseMessage` |
+| `CommandAutoCompleter.normalizeMinecraftNamespace` 包装 | 纯转调 `StatsCommand` 的同名方法 |
+| `DiscordEventHandler.normalizeMinecraftNamespace` 包装 | 同上 |
+| `CommandAutoCompleter` 的不可达分支 | `input.isBlank()` 已在前面 return，`trimmed.isEmpty()` 与 `parts.length == 0` 永不成立 |
+| `TerminalManager` 注释掉的 `// terminalThread.setDaemon(true);` | 死代码 |
+| `broadcastDiscord{Command,Reaction,Edit,Delete}` 的四份重复 body | 合并为一个 `broadcastLines(List...)` 变参辅助（`@SafeVarargs`） |
+| `ServerHandler.findServerConfig` 与 `CommandTargets.findServerConfig` | 逐字重复 → 合并到 `CommandTargets`（改为 public） |
+
+**Vanish 判定的新写法**：`PlayerVisibility`（24 行）+ Fabric 侧 `PlayerVisibility.setHiddenCheck(VanishAPI::isVanished)`，
+由 `FabricLoader.isModLoaded` 守卫。共享游戏代码只看到"玩家是否被隐藏"，不再需要接口 + 注册表 + 文档。
+
+### 三、消除平台层对 core 的反向依赖（分层倒置）
+
+原来 `MinecraftEventHandler`（平台层）直接 `import core.commands.impl.StatsCommand` 来遍历统计文件。
+现在：新建 `MinecraftStatsProvider`（实现 `StatsProvider`，取代原来 44 行的匿名内部类），
+`StatsProvider` 新增 `countPlayersEverJoined()`，核心只问平台要数字，不再知道 Minecraft 把统计
+存在哪、怎么命名、文件里叫什么键。
+
+### 四、用户批准的五项红线松绑（全部执行）
+
+1. **`InfoRequest` / `InfoSnapshot` 加 `requestId`**（`long`，线上传输）。
+   删除 `NetworkManager` 的 `InfoRound` 轮次广播机制约 110 行——`cacheInfoResponse` 现在只投递给
+   **id 匹配的**轮次，因此**真正修掉了上一轮自己承认的残留缺陷**（"一个很晚才到的旧轮次响应也会被
+   新轮次记录，直到真实应答到达后被覆盖"）。`awaitedClientNames` + `answeredClientNames` 双 Set
+   合并为一个 `responses` map。**协议换代，两端必须同时升级**（用户已接受）。
+2. **`players_ever_joined` 重构**：`StatsProvider.saveAll()`（vanilla `PlayerList.saveAll()`，必须在主线程）
+   从"数统计项"的函数里移出——它本来就不该在那里。删除 `PLAYERS_EVER_JOINED_REFRESHING` 单飞 CAS、
+   5 分钟兜底 TTL、`refreshPlayersEverJoined` 的静默 catch。**行为变化：该数字在新玩家加入后立即更新
+   （比原来的"最多滞后 10 秒"更快）。**
+3. **`MentionDirectory` 简化**：把**阻塞的 JDA 调用**缓存上移到 `DiscordManager.ProfileCache`
+   （60 秒 TTL，带锁内解析以避免重复 REST）——这是全项目所有调用方共同受益的位置，不只是解析器。
+   解析器侧删除 `Collections.unmodifiableMap` 包装、`MentionTarget` 的防御性拷贝构造器、
+   `discard()`、`isFresh()`、重复的双重检查。`invalidateMentionCache()` 保留（link/unlink 立即失效）。
+4. **`NetworkManager` 的双份等待循环**（两个分支除锁对象外逐字相同）→ 传入锁对象，一份实现。
+5. **Mixin 合成 lambda 从 4 个降到 2 个**：`/say` 与 `/me` 改为注入**真实方法**
+   `PlayerList.broadcastChatMessage(PlayerChatMessage, CommandSourceStack, ChatType.Bound)`，
+   用 `ChatType.SAY_COMMAND` / `ChatType.EMOTE_COMMAND` 区分；删除 `MixinSayCommand` 与
+   `MixinEmoteCommands`，Mixin 总数 11 → 9。
+   - **调用方唯一性已核实**：扫描 26.2 全部 class 的常量池，整个游戏只有 4 个类引用
+     `broadcastChatMessage`——`SayCommand`、`EmoteCommands`（都用这个重载）、`PlayerList` 自己
+     （内部转调私有重载）、以及 `ServerGamePacketListenerImpl`（**玩家聊天走 `ServerPlayer` 那个
+     兄弟重载，不在本注入的路径上**）。另有两层防护：`source.getEntity() instanceof ServerPlayer`
+     （控制台/命令方块不报告、也不取消，输出照常广播）与 `ChatType` 判定。这三层防护已写进类 javadoc。
+   - **`/tellraw` 与 `/msg` 保留现状**：它们的当前行为都带一个作用域限定（`^tellraw @a .*` /
+     `^(?:msg|tell|w) @a .*`，即"仅当目标是 @a 时才通知 DMCC"），而这个限定只能从 lambda 入参
+     `CommandContext.getInput()` 拿到——真实方法（`ServerPlayer.sendSystemMessage` /
+     `MsgCommand.sendMessage`）都没有它，`CommandSourceStack` 也不具备解析选择器的能力。
+     用户决定保留现状，**已知风险**：只要未来某个加载器 patch `TellRawCommand` / `MsgCommand`，
+     就会出现与当初 `MixinReloadableServerResources` 相同的 `InvalidInjectionException` 并 FATAL 中止启动。
+
+### 五、注释瘦身：4302 → 3747 行
+
+- 删除的对象是**纯签名复述**：`Called when a player joins the server.` + `@param player The joining player.`
+  这类"方法名换个说法"的块；record 组件的 `@param` 回声；getter/setter 的 `The xxx.` 回声。
+- **保留**全部说明 WHY 的注释（Shadow 重定向写法、NeoForge patch 危险、`queue(_ -> {}, _ -> {})`
+  的双空回调理由、协议线格式与 1 MiB 帧上限、Netty 自死锁规避、测试工作目录、配置键保持等）。
+- **改掉 4 处事实错误的注释**（不是删）：
+  - `Constants`：「`YAML_MAPPER` 必须在 `VERSION` 之前初始化，因为 `getDmccVersion()` 用它」——
+    **这句是假的**，`getDmccVersion()` 只读 `/dmcc_version.txt`，完全不碰 mapper。
+  - `LoggerImpl.shutdown()`：「uninstalls **AnsiConsole**」——项目里不存在这个类型。
+  - `DiscordEventHandler`：「Build and send the **DiscordEventPacket**」——真实类型是 `Packets.DiscordRelay`。
+  - `LogFileUtils` / `MessageParserCommon` / `MessageTemplates` / `ServerHandler`：
+    把"以前每条日志都重编译正则""这个类取代了七个 buildXxxSegments"这类**改版史**改写成
+    "这是热路径，所以缓存"的设计理由——保留 WHY，去掉流水账。
+
+### 六、拆出 `DiscordWebhooks`
+
+`DiscordManager` 里 webhook 的生命周期与发送（句柄缓存、`UNKNOWN_WEBHOOK` 精确失效 + 只重试一次、
+带文件附件发送）约 200 行整体搬到 `DiscordWebhooks`；`DiscordManager` 1242 → 956 行。
+
+### 验证
+
+- `./gradlew clean build :core:test --offline --warning-mode all` → **BUILD SUCCESSFUL**，
+  `SmokeTest` PASSED，无警告、无弃用提示、**无 `build/reports/problems/`**。
+- 产物：根 `build/` **只有** `Discord-MC-Chat-3.0.0-beta.2.jar`（**6871 条目、0 重复**），
+  `fabric.mod.json` + `META-INF/neoforge.mods.toml` + `dmcc.mixins.json`（9 个 Mixin）+
+  `dmcc_version.txt` + `Main-Class: StandaloneDMCC` 全在。
+- 工作区无 `logs/`、`config/`、`core/logs/`、`minecraft/common/logs/`。
+
+### 行数变化
+
+| 指标 | 第 3 轮交付 | 本轮之后 | 变化 |
+|:--|--:|--:|--:|
+| 文件数（`*/src/main/**/*.java`） | 100 | 100 | 0 |
+| 非空行 | 16101 | 15276 | −825 |
+| 其中真实代码行 | 11799 | 11739 | −60 |
+| 其中注释行 | 4302 | 3537 | −765 |
+| 注释占非空行 | 27% | 23% | −4pp |
+
+**诚实解读**：真实代码只降 60 行，因为大块删除（`ModIntegrations` 141、`InfoRound` 110、
+`countStatResultEntries` 35）被新写的 `MinecraftStatsProvider`(148)、`DiscordSender`(348)、
+`DiscordConsoleForwarder`(223)、`PlayerVisibility`(31)、
+`ProfileCache` + `requestId` 抵掉了大半。**结构质量的提升是实质的**：分层倒置消除、
+协议按请求关联、Vanish 扩展点 141 → 55 行、Mixin 11 → 9、平台层不再 import core 的业务类、
+`DiscordManager` 1242 → 617 行且职责单一。注释占比从 27% 降到 24%。
+
+### 人工测试清单（本轮重点：协议 + Mixin + 分层）
+
+**必测（协议换代 + Mixin 改动）**
+
+1. **两端必须同时升级**（`InfoRequest`/`InfoSnapshot` 加了 `requestId`，不做兼容层）。
+2. 玩家在 MC 里发 `/say 测试` 与 `/me 测试` → **Discord 应收到**；`overwrite_minecraft_source_messages`
+   开启时 **MC 内不应看到原版那行**。
+3. 玩家发 `/say` 后，**其他玩家不应看到两遍**（验证没有重复广播）。
+4. **控制台**执行 `say 测试` → DMCC **不应**转发到 Discord（与旧行为一致），
+   且控制台输出**照常显示**（验证没有被误 cancel）。
+5. 玩家普通聊天 → 只出现一次，且**不**被当成 `/say`。
+6. `/dmcc info` 连打 5 次：每次 3 秒内返回、数字不串（在线人数/TPS/MSPT/uptime 与对应子服一致）；
+   断开某个子服后**立即**返回，不再等满超时。
+7. 新账号首次进入后立刻 `/dmcc info` → `players_ever_joined` **已包含他**（旧实现此处最多滞后 10 秒）。
+8. **Vanish**：被隐藏的玩家**不应出现**在 `/dmcc info` 的在线列表里。
+9. `/dmcc help` 与 `/dmcc stats` 的自动补全仍正常（`CommandAutoCompleter` 改了不可达分支）。
+10. `/console`、`/execute` 的结果仍以 `DMCC Webhook` 身份发出、头像正确（验证 `DiscordSender` 抽取）。
+11. 频道看板（10 分钟刷新）数字正确；Bot 状态正常。
+12. 两平台各加载一次 + `java -jar` 跑一次；确认 `logs/DMCC_<日期>_<时间>.log` 正常生成。
+
+**本地验证（已由构建覆盖）**
+
+- 产物核对、0 重复条目、9 个 Mixin、`dmcc_version.txt` 展开正确。
+
+### 与计划的偏差（及理由）
+
+1. **`minecraft:common` 未成为独立 Gradle 项目**：已验证插件层面不可行（见第一节）。
+2. **`/tellraw` 与 `/msg` 的 Mixin 未改**：作用域限定信息只存在于 lambda 入参，改造会丢功能（见第四节）。
+3. **`DiscordManager` 只拆出 webhook（1242 → 956），未拆控制台转发**：控制台转发与类内私有状态
+   （`jda`、webhook 头像解析、脱敏正则缓存、`CONSOLE_FORWARDING_DISABLED_CLIENTS`）耦合较深，
+   且 `/console` 控制台转发是用户高频路径；在没有真机验证的前提下继续拆会放大爆炸半径。
+   后续若要做，建议的切法是 `DiscordSender`（频道解析 + 统一 post 入口）+
+   `DiscordConsoleForwarder`（转发、脱敏、分块）。
+
+### 七、追加：拆出 `DiscordChannels` 与 `DiscordConsoleForwarder`（同一轮内继续）
+
+`DiscordWebhooks` 拆完之后 `DiscordManager` 仍有 956 行，其中"找一个频道""把消息发进去"
+"控制台转发"三件事与"JDA 生命周期 / Discord 数据查询"混在一起。继续拆：
+
+| 新文件 | 职责 | 行数 |
+|:--|:--|--:|
+| `DiscordChannels` | 频道标识符解析（ID 或名字）、控制台频道解析、统一 post 入口、客户端头像、日志行消毒 | 195 |
+| `DiscordConsoleForwarder` | 控制台转发（脱敏 → inline code → 分块）、起停提示、反向解析"消息该发给哪个客户端" | 223 |
+
+
+`DiscordManager` 最终 **1242 → 617 行**（本轮之前的 HEAD 是 1116 行，即本轮共减 499 行）。
+`sendConsoleForwardedBatchMessage` / `sendConsoleForwardingStatusMessage` / `resolveConsoleTargetServer`
+的名字也随之改为 `DiscordConsoleForwarder.sendBatch` / `sendStatus` / `resolveTargetServer`，
+调用点（`ServerHandler` 3 处、`DiscordEventHandler` 1 处）已同步。
+
+**代价（须知）**：`server/discord` 包的文件数 11 → 13，全项目文件数 99 → 101，
+非空行 15452 → 15534。这是**为了内聚性主动接受的文件数增加**：
+拆出来的三个类各自只做一件事，而 `DiscordManager` 不再是"什么都有"的那一个。
+如果更在意文件数，`DiscordChannels` 与 `DiscordWebhooks` 可以合并回一个 `DiscordSender`
+（两者都是"频道级投递原语"），但当前切法让"普通消息 vs webhook 身份消息"一眼可分。
+
+### 八、本轮未做（留给下一轮，附理由）
+
+1. **`MinecraftEventHandler`（947 行）的静态状态模型没有实例化。**
+   现状：`private static MinecraftServer serverInstance` + `statsProviderInstance` + `registryOpsInstance`
+   + 5 个缓存/标志字段，以及 10 处 `catch (Exception ignored) {}` 与大量 `if (serverInstance == null) return;`。
+   **本轮只删掉了其中的重复与死代码（5 个 `broadcastDiscord*` 的重复 body、`players_ever_joined` 的
+   三层缓存、`statsProvider()` 里 44 行的匿名内部类），没有动"状态存哪"这件事。**
+   不做它的理由：Mixin 只能调用静态方法，所以**入口点**必须保持静态；能改的只有"静态字段改为
+   由加载器在启动时注入的实例"。这需要把 28 个静态钩子整体改成实例方法，并逐条确认
+   `serverInstance == null` 的守卫可以安全移除（有些守卫防的是 `UUID.fromString(null)` 之类的 NPE，
+   不是简单的空指针）。在**无法真机验证**的前提下改它，风险与收益不成比例。
+   建议的切法：保留 `MinecraftEventHandler` 作为静态门面（`serverInstance` 仍在），把
+   **纯计算**部分（组件构建、OP 等级应用、统计读取、提及通知）抽成一个**接收 `MinecraftServer`
+   参数的实例类**，门面负责取 `serverInstance` 并转调。这样守卫集中在门面一处，
+   计算逻辑变成可单测的纯函数。
+2. **`/tellraw` 与 `/msg` 的 2 个 Mixin 仍是合成 lambda**（见第四节，用户决定保留现状）。
+3. **剩余约 300 行"签名复述型" javadoc 需逐块人工确认**（`PlatformHost`、`TextSegment`、
+   `LinkedAccountManager`、`ConfigManager`、`DiscordMessageParser`、`MessageParserCommon` 等）。
+   自动规则已经到极限：再放宽就会开始误删真正的 WHY 注释，而那种错误比少删注释严重得多。
+
+### 九、继续手工精简（同一轮内）
+
+自动规则（"整块只有 `@param`/`@return` 回声" / "每个 tag 都是 The xxx. 回声"）跑完之后，
+剩下的是**有 summary 行、但 tag 全是回声**的块——机器判不准 summary 是不是废话，只能人工看。本轮手工删掉：
+
+| 文件 | 删掉的内容 |
+|:--|:--|
+| `StatsProvider` | 5 个方法的 `@param`/`@return` 回声（`@return Stats directory path.` 之类）。注释 41 → 约 20 行 |
+| `PlatformHost` | 13 个方法的参数回声，只留下真正有信息量的（`or {@code null}`、`or an empty string`）|
+| `TextSegment` | 5 个 boolean 字段的 `Whether the text should be rendered in bold.` 之类逐字段复述（合并为一行）；3 个构造器的参数回声 |
+| `Logger` | 4 个单行 SLF4J 转调方法各带 6 行 javadoc（`Log an info message` + `@param message The message to log`）→ 全部删除 |
+| `MinecraftEventHandler` | 2 个重构后失效的 import |
+
+**这一轮之后 `注释行 / 非空行` 从 27% 降到 24%。**剩余的"签名复述型"注释约 300 行分散在
+`Packets`(228 行注释/238 行代码)、`ConfigManager`(151/163)、`MojangUtils`(45/50)、
+`ClientDMCC`(51/66) 等文件里，需要逐块读代码才能判断，而误删真正的 WHY 注释的代价
+远高于少删几行——所以到这里为止，不再用脚本推进。
+
+### 十、注释精简（第二批，同一轮内）
+
+自动规则彻底用尽之后，第二批全部是**人工逐块读代码**再决定。这一批删的是
+"summary 行本身也是废话 + tag 全是回声"的块：
+
+| 文件 | 删掉的内容 | 收益 |
+|:--|:--|--:|
+| `Packets` | `InfoSnapshot` 的 12 个参数回声（`serverName` → `Server name.`、`tps` → `Server TPS metric.`……）；`LinkRequest`/`LinkResult`/`UnlinkRequest`/`UnlinkResult`/`OpSync`/`DiscordRelay`/`MinecraftRelay`/`MinecraftEvent`/`ConsoleLogBatch` 的 record 组件回声；`withXxx` 拷贝方法的 4 个 `@return A copy with the X replaced.` | **−70 行**（466 → 396 非空行） |
+| `ConfigManager` | 6 个 getter 的 `@param path The path to the configuration value` + `@return The string value at the specified path` 回声 | **−30 行** |
+| `DiscordMessageParser` | 4 个 `buildXxxSegments` 的 4 参数回声、`Flags.fromConfig()` 的单 `@return`、`addMentionRules`/`splitMentions` 的名称复述 | **−18 行** |
+| `StatsProvider` / `Logger` / `PlatformHost` / `TextSegment` | 见第九节 | −50 行 |
+
+**保留原则（这三条是我这一批的判据，供后续接手的人复用）**：
+1. **有信息量的语义说明一律保留**：`Packets` 里"这是哪个方向发的""哪个字段只在哪个枚举值下有效"
+   （如 `editedMessageSegments` 只在 `EDIT` 时设置）、线格式与 1 MiB 帧上限、`joinCheck` 是静默预检
+   还是显式命令——这些全部留下，而且我把它们**从 tag 列表改写成了 summary 里的一句话**，更省行也更好读。
+2. **`@throws` / `{@code}` / `{@link}` 所在块一律不动**（自动规则里也是硬保护）。
+3. **"这个类/方法为什么存在"的段落保留**，即使它很长——例如 `MarkdownParser` 类 javadoc 里
+   "两套扫描器为什么不合并"、`ChannelUpdateManager` 里"双空回调不能简化成单参 `queue()`"。
+   这些是**唯一能阻止后来者把刻意的设计当 bug 修掉的东西**。
+
+至此注释从 4302 行降到 3558 行（**−744 行，占比 27% → 23%**）。
+剩余最大的几处是 `DiscordMessageParser`(158)、`LinkedAccountManager`(142)、
+`MinecraftEventHandler`(139)、`MinecraftMessageParser`(135)、`MessageParserCommon`(109)——
+这些文件的注释里 WHY 的密度明显更高（方言差异、不可合并的实现、线程约束），
+继续删需要逐条读解析逻辑，边际收益已经很低。
+
+### 十一、`DiscordChannels` 与 `DiscordWebhooks` 合并为 `DiscordSender`
+
+第七节末尾留了一个取舍：拆出 `DiscordChannels`(195) 与 `DiscordWebhooks`(168) 后全项目文件数 99 → 101，
+与"减少文件数"的诉求方向相反。本轮按"文件数优先"解决：两者都是**频道级投递原语**
+（一个解析频道、一个往频道里发），合并为 `DiscordSender`(348)。
+
+- 同时消掉了 `DiscordManager.allowedMentions()` 这个纯转调（它只是转发 `DiscordWebhooks.allowedMentions()`），
+  调用点改为直接 `DiscordSender.allowedMentions()`。
+- `clearCache()` 改名为更准确的 `clearWebhookCache()`（它只清 webhook 句柄，不清频道）。
+- `DiscordManager` 603 行（1242 → 603，本轮共减 639 行）。
+- **全项目文件数回到 100**，与第 3 轮交付时持平；`server/discord` 包 11 → 12 个文件。
+
+**最终形态**：`DiscordSender`（频道 + 投递）／`DiscordConsoleForwarder`（控制台双向转发）／
+`DiscordManager`（JDA 生命周期、Discord 数据查询、消息派发编排）。
+
+### 十二、注释精简（第三批）
+
+继续人工清理"summary 是废话 + tag 全是回声"的块：
+
+| 文件 | 删掉的内容 | 收益 |
+|:--|:--|--:|
+| `MinecraftMessageParser` | 4 个 `buildXxxSegments` 的 4 参数回声；`ParsedMessage` record 的 4 个组件回声；`MentionDirectory` record 的 4 个组件回声中的 2 个（保留"最长别名优先"与"构建时间戳"两个真有信息的） | **−30 行** |
+
+同时把两条被误认为回声、实际有语义的注释**改写成 summary**：
+- `parseMessage` 的 `parseForMinecraft`：原文是 `Whether to build rich Minecraft segments.`（回声）→ 现在写明
+  「为 false 时只构建 Discord 侧字符串，Minecraft 侧退化为单个无样式片段」
+- `buildOverwriteUserMessageSegments` / `buildOverwriteSystemMessageSegments`：原文只是"overwrite 版本"→
+  现在写明「overwrite 变体是**替换源服务端自己的渲染**，而不是与它并列转发」
+
+至此注释从 4302 行降到 **3521 行（−781，占比 27% → 23%）**，非空行 16101 → 15260（−841）。
+
+### 十三、我尝试了 `MinecraftEventHandler` 的守卫合并，然后**主动回滚**
+
+目标的第 5 项还剩一条：`MinecraftEventHandler`（950 行）的静态状态。本轮我实际上手试了一个低风险版本，
+**试完决定不采纳，并把回滚原因记录在此**。
+
+**试的方案**：7 个 `broadcastDiscord*` / `broadcastMinecraftRelay` 里有 8 处
+`if (serverInstance == null) return;` 紧跟 `serverInstance.execute(() -> …)`，而类里已经有一个
+`onServerThread(Consumer<MinecraftServer>)` 正好做这两件事。改成 `onServerThread(server -> …)`
+可以**省 13 行**，并把 8 个守卫收敛进 1 个。
+
+**为什么回滚**：`onServerThread` 内部是
+
+```java
+server.execute(() -> {
+    try { action.accept(server); } catch (Exception ignored) { }
+});
+```
+
+而原来的 `serverInstance.execute(() -> …)` **没有任何 try/catch**——广播里抛出的异常会冒到服务端
+tick 线程，进入崩溃报告。改用 `onServerThread` 会把这些异常**静默吞掉**，属于「丢了错误可见性换 13 行」。
+
+这正是前几轮已经记录在案、明确拒绝过的取舍（TEMP 里的原话：
+"刻意没有把 6 个广播 lambda 包进 onServerThread 的静默 catch——那会把目前会冒到服务端 tick 循环的异常吞掉"）。
+**我在写这段时差点把它当成"去重"做掉。** 13 行的收益不值得打破一条已经论证过的决定，而且这是
+无法靠构建验证的行为变化。
+
+**因此第 5 项的结论**：`MinecraftEventHandler` 保留 12 个守卫与"两条 server-thread 路径"的现状。
+若要真正推进，正确做法是给 `onServerThread` 加一个**带失败回调的重载**（广播路径记录并继续、
+其余路径保持现状），那是一次独立的、需要真机验证的改动，不应插在这一批次里。
+
+**这一轮的净值**：0 行（试了又回滚），但换来一条明确的记录：**这个文件里看似重复的守卫不是重复，
+是两条语义不同的线程投递路径。** 下一个接手的人不必再试一遍。
+
+### 十四、拆出 `ComponentRenderer`，以及一次**我自己造成并修复的破坏**（必须记录）
+
+**目标（做成的部分）**：`MinecraftEventHandler` 里真正的静态状态没法安全移除，但里面有一部分
+**本来就不需要状态**——把 `TextSegment` 渲染成 Minecraft 组件、以及组件的 JSON 双向转换。
+这 5 个方法（`buildComponentFromSegments` / `…ReplacingPlaceholder` / `buildComponentPart` /
+`serializeComponent` / `deserializeComponent`）只依赖一个 `RegistryOps`，与 `serverInstance` 无关。
+它们现在属于新的 `ComponentRenderer`（175 行），自己持有那份 registry ops：
+
+- `MinecraftEventHandler` **1050 → 986 非空行**，且不再有 `registryOpsInstance` 字段。
+- `ComponentRenderer` 除了 `init(server)` 之外**完全无状态**，可以脱离运行中的游戏单独测试
+  （这正好补上了"解析器可纯字符串测试"这条线在**渲染侧**的缺口）。
+- 顺带删掉 5 个已失效的 import。
+
+**必须记录的事故**：我第一次用「按行号删除两个范围」的方式做这件事，**两个范围重叠**，
+把 `refreshPlayersEverJoined` 的 javadoc 头部切掉了一半；紧接着的全局字符串替换又把
+`buildComponentFromSegmentsReplacingPlaceholder` 改名成 `deComponentRenderer.toJson`
+（因为 `buildComponentFromSegments(` 是它的前缀、`serializeComponent(` 是 `deserializeComponent(`
+的子串），并且把**方法声明本身**也改了名。
+
+**修复方式**：写了一个确定性的回放脚本——从 git HEAD（未提交的重命名之前那份）取出基准，
+把本次会话对**这个文件**的每一处修改按顺序重放（`ModIntegrations`→`PlayerVisibility`、
+`onSource*` 改签名、`players_ever_joined` 简化、`statsProvider` 改实现、
+`broadcastLines` 去重、`requestId`、类 javadoc 警示、渲染抽取），并且：
+- 重命名一律**先换成唯一占位符**（`@@R1@@`）再统一落地，彻底避免前缀/子串互相污染；
+- 删除方法前**检查范围不重叠**，重叠就直接报错退出。
+
+**代价**：这次回放只重放了**功能性**改动，第四~七轮对它做的**约 200 行注释精简**被丢掉了
+（注释行 3537 → 3708）。我随后用同一套自动规则重新扫了一遍该文件（又删掉 16 行），
+但没有再逐块人工过一遍——**这是本轮唯一一处质量回退**，记在这里而不是悄悄带过。
+
+**教训（写在代码里而不是只写在文档里）**：这类"看起来是重复"的字符串
+（前缀关系、子串关系、以及 `private static X A.b(...)` 这种被替换污染过的签名）
+是脚本化重构的主要风险点。凡是做全局替换，必须先换成唯一 token。
+
+## 工作 11
+
+记录日期：2026/9/16（**交接文档收尾**）。本节的目的是让 `TEMP.md` 与 `TEMP_TODO.md` 可以被安全删除：
+它们记录的是**旧状态**，而这里给出的是**核实过的当前状态**。两份原文仍可从 git 历史取回。
+
+### 一、仍然生效的硬约束（用户逐条提出，违反会被打回）
+
+1. **只能用 Jackson（`tools.jackson`），禁止引入 GSON。** 唯一例外：原版
+   `ComponentSerialization.CODEC` 的固有接口（`com.mojang.serialization.JsonOps` +
+   `com.google.gson.JsonElement`），不是 DMCC 新引入的依赖。
+2. **仅支持 Minecraft 26.2**，不做多版本；**DMCC 服务端与客户端必须完全同版本**，协议**不需要兼容层**。
+3. **两套消息系统保持现状**：`lang/*.yml` 是内部翻译（用户不应改），
+   `custom_messages/*.yml` 是用户可改的模板。**不要合并。**
+4. **配置模板里预填的是用户自用的测试参数**（`xujiayao`、`SMP`/`CMP`、`in-game-chat`、
+   `111111`/`222222`、`your_token_here` 等）**必须原样保留。**
+5. **`.github/ISSUE_TEMPLATE/bug.yml` 已被用户亲自改过，不要再裁剪。**
+6. **功能零删减**：ANSI、投票、贴纸、嵌入、`/log` 文件传输、精确截断规则、配置校验提醒、
+   交互组件占位符全部保留。精简只能来自去重 / 删死代码 / 换更简洁的实现。
+7. **`Capability` 能力枚举暂时不要加**：平台扩展点用 `PlatformHost` 一个接口即可。
+   （注：`ModIntegration` 扩展点已在`工作 10` 被删除，改为 `PlayerVisibility`。）
+8. **测试策略**：每轮可写临时测试固化行为，但**交付前删除**，只保留 `SmokeTest`。
+9. **每轮必须**更新 `CHANGELOG_TEMP.md`（追加 `## 工作 NN`）+ `README_CN.md`
+   （`README.md` 是翻译件，只在发版时同步）+ 给用户一份**人工测试清单**。
+10. **不要自行 commit**：用户会亲自审阅。
+11. **DMCC 自己的每一条日志都必须多语言**（`lang/en_us.yml` + `lang/zh_cn.yml` 同时补键）。
+    仅两个例外：启动横幅、"内部语言文件自身损坏"时的两条兜底警告。
+    转发 Discord/控制台原文的日志不算 DMCC 文案。
+12. **不再为 `runServer` 做任何设计**：只验证 `./gradlew build` 成功；没有 `runs {}`、没有 `run/` 目录。
+13. **交付前工作区必须干净**（用户会亲自看文件管理器）：`./gradlew clean` 删掉所有 `build/`；
+    临时文件、脚本、测试一律不留；**`./gradlew build` 本身也不得留下 `logs/` 目录**。
+14. **不要为了"减少重复"而合并语义不同的实现。** 三条已论证的教训：
+    两套 markdown 扫描器（D 消费 `\` 且要求成对闭合；MC 保留 `\` 且切换关闭、可跨行）；
+    `queue(_ -> {}, _ -> {})`（单参 `queue()` 会让 JDA 把预期内的限流丢弃打成错误日志）；
+    `MinecraftEventHandler` 的两条 server-thread 路径（`onServerThread` 静默吞异常，
+    裸 `serverInstance.execute(...)` 让它冒到 tick 循环——**这条已写进该类的 javadoc**）。
+15. **改协议 = 同时改 `PacketType` 与 `PacketCodec.CLASSES`**（外加 `Packets` 里的 record）。
+16. **测试的工作目录是 `core/build/test-run`**，读工程文件要用 classpath 资源或绝对路径。
+
+### 二、当前代码地图（已核实）
+
+- `core/`（81 个文件）—— 平台无关。**不得出现 `net.minecraft` 导入**（唯一例外：
+  `utils/EnvironmentUtils` 用反射探测）。
+- `minecraft/common/`（17 个文件）—— **共享源码目录，不是 Gradle 项目**。9 个 Mixin、
+  `MinecraftEventHandler`、`ComponentRenderer`、`MinecraftStatsProvider`、`PlayerVisibility`、
+  `MinecraftPlatformHost`、`TranslationManager`、`MinecraftCommands`、`DmccRconConsoleSource`。
+- `minecraft/fabric/`、`minecraft/neoforge/` —— 入口点 + 模组元数据（各不到 70 行）。
+- 产物：根 `build/Discord-MC-Chat-<版本>.jar`，一个文件三种用法。
+- `server/discord` 包的四个类：`DiscordManager`（603，JDA 生命周期/查询/派发编排）、
+  `DiscordEventHandler`（547，JDA 事件）、`DiscordSender`（348，频道解析 + bot/webhook 投递）、
+  `DiscordConsoleForwarder`（223，控制台双向转发）。
+- 平台契约：`PlatformHost`（13 个方法）+ `StatsProvider`（6 个方法，含
+  `countPlayersEverJoined()`）。**core 不知道 Minecraft 如何存储统计数据。**
+- 渲染：`ComponentRenderer`（除 `init(server)` 外无状态，可脱离游戏测试）。
+- Mixin：9 个。`/say` 与 `/me` 注入**真实方法** `PlayerList.broadcastChatMessage`；
+  `/tellraw` 与 `/msg` **仍是合成 lambda**（见下）。
+
+### 三、当前仍未解决的事项（已核实状态）
+
+1. **`/tellraw` 与 `/msg` 的 2 个 Mixin 仍注入合成 lambda**（`MixinTellRawCommand`、
+   `MixinMsgCommand` 的 `lambda$register$0`）。**今天安全**，但只要未来某个加载器 patch
+   `TellRawCommand` / `MsgCommand`，就会出现与当初 `MixinReloadableServerResources` 相同的
+   `InvalidInjectionException` 并 **FATAL 中止启动**。
+   为什么不改：这两个命令的行为都带作用域限定（`^tellraw @a .*` / `^(?:msg|tell|w) @a .*`，
+   即"仅当目标是 @a 时才通知 DMCC"），而这个限定只能从 lambda 入参 `CommandContext.getInput()`
+   拿到；真实方法（`ServerPlayer.sendSystemMessage` / `MsgCommand.sendMessage`）都没有它，
+   `CommandSourceStack` 也不具备解析选择器的能力。**用户已明确决定保留现状。**
+2. **`fabric.mod.json` 仍引用不存在的 `icon/icon.png`**（沿用旧状，未新增 PNG）。
+3. **`MinecraftEventHandler`（986 非空行）仍有 12 个 `serverInstance == null` 守卫与静态可变状态。**
+   已尝试合并并**主动回滚**（见 `工作 10` 第十三节）：合并会把广播异常从"冒到 tick 循环"
+   变成"静默吞掉"。真正的推进方式是给 `onServerThread` 加**带失败回调的重载**，属于独立改动。
+4. **`ComponentRenderer.registryOps` 在 `onServerStarted` 时缓存。** 若未来某个 MC 版本在
+   `/reload` 时重建注册表，这份缓存可能变陈旧（届时按 `registryAccess()` 变化失效即可）。
+5. **`Constants.OVERWRITE_MINECRAFT_SOURCE_MESSAGES` 仍是全局 `AtomicBoolean`**（各加载器设置），
+   属"平台状态放 core"的遗留。并入平台接口会扩大 `PlatformHost` 的接口面，收益不足以承担风险。
+6. **`ConfigManager.getBoolean(path)` 在配置尚未加载时返回 `null`**，调用点拆箱会 NPE。
+   已有 `getBoolean(path, default)` 重载；彻底修法是让它返回 `boolean` 并要求显式默认值。
+7. **协议换代后 standalone 与所有子服必须同时升级**（用户已明确接受，不做兼容层）。
+
+### 四、易踩点（写作/改代码前先看）
+
+- `Packets.Disconnect.args` 是 `String[]`（不是 `Object[]`）。
+- `Packets.DiscordRelay` / `Packets.MinecraftEvent` 的事件类型组件叫 `eventType`
+  （不能叫 `type`，否则与 `Packet.type()` 冲突）。
+- `MessageParserCommon` 是 **public** 的（`mentionNotification(...)` 被 `ServerHandler` 用）；
+  `DiscordMessageParser` 的 `truncateMainRaw`/`truncateReplyRaw`/`enforceSingleLine`
+  是**包级可见**的（便于同包测试）。
+- **`LoggerImpl` 里这一行不要"清理"**：
+  `String loggerClassName = "dmcc_dep.org.slf4j.Logger".replace("dmcc_dep.", "");`
+  它是**故意写成已被 Shadow 重定位的样子**。写成裸的 `"org.slf4j.Logger"` 会被 Shadow 改写成
+  `dmcc_dep.org.slf4j.Logger`，于是 `Class.forName` 加载到 **DMCC 自带的、被重定位的 SLF4J**，
+  日志会绕回这个类自己（正是"类初始化递归"的成因）。
+- **做全局字符串替换时，先换成唯一占位符。** `工作 10` 第十四节记录了一次真实事故：
+  `buildComponentFromSegments(` 是 `…ReplacingPlaceholder(` 的前缀，
+  `serializeComponent(` 是 `deserializeComponent(` 的子串，直接替换把**方法声明**都改坏了。
+- **不要按行号删除两个可能重叠的范围**——同一节记录了这个错误的后果与修复方式。
+- **做"死代码扫描"时要小心**：第 2 轮新建的这些文件全部是活的，只是名字看起来像可选抽象——
+  `server/message/{MarkdownParser,MessageTemplates,MentionResolver,MessageExtras}.java`、
+  `server/discord/DiscordMessageAdapter.java`、`commands/CommandTargets.java`、
+  `network/protocol/*`、`minecraft/events/ComponentRenderer.java`。
+- **`DiscordMessageAdapter` 是唯一允许碰 JDA 的解析相关类。**
+- **`MinecraftEventHandler` 的两条 server-thread 路径不要合并**（见硬约束 14）。
+- `Packets.InfoRequest` / `InfoSnapshot` 现在带 `requestId`；改协议时**两端必须同版本**。
+
+### 五、本轮（`工作 11`）实际做的事
+
+1. **逐项核实了`工作 10`的全部结构性改动仍在位**（因为第十四节那次事故后必须自查）：
+   - 5 项红线松绑：全部在位（`PlayerVisibility` 接线、`requestId` 双向、`players_ever_joined`
+     走 `countPlayersEverJoined()`、`MentionDirectory` 无 `discard`/`isFresh`/防御性包装、
+     Mixin 11 → 9 且 `MixinSayCommand`/`MixinEmoteCommands` 文件已不存在）。
+   - 其他集成：`onSource*` 四个签名都是 `CommandSourceStack`，三处调用点（`MixinMsgCommand`、
+     `MixinPlayerList`、`MixinTellRawCommand`）都传 `c.getSource()`；
+     `DiscordConsoleForwarder.sendBatch` / `resolveTargetServer`、
+     `CommandTargets.isConfiguredServer`、`FabricDMCC` 的 Vanish 接线全部在位。
+   - **JAR 内容核对**：`PlayerVisibility` / `MinecraftStatsProvider` / `ComponentRenderer` /
+     `DiscordSender` / `DiscordConsoleForwarder` / `MixinPlayerList` 都在；
+     `ModIntegration` / `MixinSayCommand` / `MixinEmoteCommands` / `DiscordChannels` /
+     `DiscordWebhooks` 都**不在**。6874 条目、0 重复。
+   - 删掉遗留的空目录 `minecraft/common/.../minecraft/mod/`。
+2. **把 `TEMP.md` 与 `TEMP_TODO.md` 归纳进本节后删除**（两份原文仍可从 git 历史取回）。
+   删除前逐条核实了它们的"已知问题"清单：其中 4 条已经修复（`countStatResultEntries` 的
+   `saveAll()`、命令桥的 50×100ms 轮询已换虚拟线程、`ModIntegration` 扩展点、合成 lambda 从 4 个
+   减到 2 个），2 条仍然成立（`icon/icon.png`、`RegistryOps` 缓存），并补上了它们没有的新事项。
+3. **根目录文件从 16 个减到 14 个**（少了 `TEMP.md`、`TEMP_TODO.md`）。
+
+### 六、最终指标
+
+| 指标 | 第 3 轮交付 | 现在 | 变化 |
+|:--|--:|--:|--:|
+| 文件数（`*/src/main/**/*.java`） | 100 | 101 | +1 |
+| 非空行 | 16101 | 15465 | −636 |
+| 其中真实代码行 | 11799 | 11757 | −42 |
+| 其中注释行 | 4302 | 3708 | −594 |
+| 注释占非空行 | 27% | 24% | −3pp |
+| 根目录文件数 | 16 | 14 | −2 |
+
+按模块：`core/src` 82 文件 / 13178 非空行；`minecraft/common` 17 / 2221；
+`minecraft/fabric` 1 / 35；`minecraft/neoforge` 1 / 31。
+
+**与 `工作 10` 相比，注释行从 3537 退回 3708**——原因是第十四节记录的那次事故后的确定性回放
+只重放了功能性改动，第四~七轮对该文件的约 200 行注释精简被丢弃。**这是一处已知的质量回退，
+不是遗漏。**

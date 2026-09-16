@@ -143,9 +143,6 @@ public final class LinkedAccountManager {
 		saveExecutor().execute(() -> writeToDisk(snapshot));
 	}
 
-	/**
-	 * @return The executor the file writes are serialized on, recreated when it was shut down by a reload.
-	 */
 	private static synchronized ExecutorService saveExecutor() {
 		if (saveExecutor == null || saveExecutor.isShutdown()) {
 			saveExecutor = Executors.newSingleThreadExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-LinkSave"));
@@ -376,7 +373,6 @@ public final class LinkedAccountManager {
 	/**
 	 * Checks if a Minecraft UUID is linked to any Discord account.
 	 *
-	 * @param minecraftUuid The Minecraft account UUID.
 	 * @return true if the UUID is linked, false otherwise.
 	 */
 	public static boolean isMinecraftUuidLinked(String minecraftUuid) {

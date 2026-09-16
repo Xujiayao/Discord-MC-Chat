@@ -78,8 +78,7 @@ public final class TerminalManager {
 			scanner.close();
 		}, "DMCC-Terminal");
 
-		// Cannot set as daemon thread. Problematic.
-		// terminalThread.setDaemon(true);
+		// Cannot be a daemon thread: it owns the interactive loop the standalone process lives in.
 		terminalThread.start();
 	}
 

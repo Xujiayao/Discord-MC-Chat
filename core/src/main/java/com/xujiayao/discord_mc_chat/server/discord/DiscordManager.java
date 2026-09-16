@@ -5,7 +5,6 @@ import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.server.message.DiscordMessageParser;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
-import com.xujiayao.discord_mc_chat.utils.StringUtils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -16,16 +15,12 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
-import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.GatewayIntent;
-import net.dv8tion.jda.api.utils.FileUpload;
-import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import tools.jackson.databind.JsonNode;
 
@@ -33,19 +28,18 @@ import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
@@ -56,26 +50,23 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  */
 public final class DiscordManager {
 
-	private static final int CONSOLE_FORWARDING_CHUNK_LIMIT = 1800;
-	private static final int CONSOLE_FORWARDING_INLINE_LIMIT = 1200;
 	private static final long PLAYER_COMMAND_RATE_LIMIT_WINDOW_NANOS = Duration.ofSeconds(10).toNanos();
 	private static final int PLAYER_COMMAND_RATE_LIMIT_MAX_MESSAGES = 10;
 	private static final Object PLAYER_COMMAND_RATE_LIMIT_LOCK = new Object();
 	private static final Deque<Long> PLAYER_COMMAND_RATE_LIMIT_TIMESTAMPS = new ArrayDeque<>();
 
 	private static final Map<String, String> DISCORD_NAME_CACHE = new ConcurrentHashMap<>();
-	private static final Set<String> CONSOLE_FORWARDING_DISABLED_CLIENTS = ConcurrentHashMap.newKeySet();
-	private static final Pattern EMOJI_ALIAS_PATTERN = Pattern.compile("(:[^:]+:)");
 
-	// Resolved "DMCC Webhook" handle per channel ID. Resolving one requires a blocking REST call, so it is
-	// done once per channel instead of once per webhook message; stale handles are dropped on send failure.
-	private static final Map<String, Webhook> WEBHOOK_CACHE = new ConcurrentHashMap<>();
+	/**
+	 * How long a lookup of a Discord user or guild member stays cached.
+	 */
+	private static final long PROFILE_TTL_MILLIS = 60_000L;
+
+	private static final Object PROFILE_CACHE_LOCK = new Object();
+	private static volatile ProfileCache profileCache;
+	private static volatile long profileCacheCreatedAt;
 
 	private static JDA jda;
-
-	// Compiled console redaction patterns, rebuilt only when console_forwarding.filter_regex changes.
-	private static volatile List<Pattern> consoleRedactionPatterns = List.of();
-	private static volatile String consoleRedactionFingerprint = null;
 
 	private DiscordManager() {
 	}
@@ -83,7 +74,7 @@ public final class DiscordManager {
 	/**
 	 * Initializes the Discord bot.
 	 *
-	 * @return true if initialization is successful, false otherwise.
+	 * @return true when the bot connected and its slash commands are registered.
 	 */
 	public static boolean init() {
 		String token = ConfigManager.getString("discord.bot.token");
@@ -231,14 +222,6 @@ public final class DiscordManager {
 		return jda;
 	}
 
-	/**
-	 * Resolves a Discord username from a user ID via JDA.
-	 * Results are cached in memory to avoid repeated blocking API calls.
-	 * Falls back to the raw ID if JDA is not available or the user cannot be found.
-	 *
-	 * @param discordId The Discord user ID.
-	 * @return The resolved username, or the raw ID if resolution fails.
-	 */
 	public static String resolveDiscordUserName(String discordId) {
 		String cached = DISCORD_NAME_CACHE.get(discordId);
 		if (cached != null) {
@@ -258,44 +241,103 @@ public final class DiscordManager {
 
 	/**
 	 * Retrieves a Discord User object by ID.
+	 * <p>
+	 * The result is cached for {@link #PROFILE_TTL_MILLIS}. Resolving an ID that JDA does not hold is a
+	 * blocking REST call, and callers such as the mention directory ask for every linked account, so an
+	 * uncached lookup here runs once per chat message.
 	 *
-	 * @param discordId The Discord user ID.
 	 * @return The User object, or null if JDA is not available or user not found.
 	 */
 	public static User retrieveUser(String discordId) {
 		if (jda == null) return null;
-		try {
-			return jda.retrieveUserById(discordId).complete();
-		} catch (Exception e) {
-			return null;
-		}
+		return profiles().user(discordId);
 	}
 
 	/**
 	 * Retrieves a Discord Member object by user ID from the first mutual guild.
+	 * <p>
+	 * The result is cached for {@link #PROFILE_TTL_MILLIS}, because a member that JDA does not hold has to
+	 * be fetched over REST.
 	 *
-	 * @param discordId The Discord user ID.
 	 * @return The Member object, or null if JDA is not available or member not found.
 	 */
 	public static Member retrieveMember(String discordId) {
 		if (jda == null) return null;
-		for (var guild : jda.getGuilds()) {
-			try {
-				Member member = guild.retrieveMemberById(discordId).complete();
-				if (member != null) {
-					return member;
-				}
-			} catch (Exception ignored) {
-			}
-		}
-		return null;
+		return profiles().member(discordId);
 	}
 
 	/**
-	 * Gets all Discord members from every connected guild.
-	 *
-	 * @return Deduplicated member list from all connected guilds.
+	 * A short-lived snapshot of the Discord users and guild members that DMCC has looked up.
+	 * <p>
+	 * Reads and writes are both guarded, but a miss is resolved while holding the lock on purpose: two
+	 * threads that want the same uncached user must not both pay for the REST round trip. The entries are
+	 * cleared whenever the bot reconnects, so the cache never outlives the JDA instance it was filled from.
 	 */
+	private static final class ProfileCache {
+
+		private final Map<String, User> users = new HashMap<>();
+		private final Map<String, Optional<Member>> members = new HashMap<>();
+
+		private User user(String discordId) {
+			synchronized (this) {
+				if (users.containsKey(discordId)) {
+					return users.get(discordId);
+				}
+			}
+			User resolved = null;
+			try {
+				resolved = jda.retrieveUserById(discordId).complete();
+			} catch (Exception ignored) {
+			}
+			synchronized (this) {
+				users.put(discordId, resolved);
+			}
+			return resolved;
+		}
+
+		private Member member(String discordId) {
+			synchronized (this) {
+				Optional<Member> cached = members.get(discordId);
+				if (cached != null) {
+					return cached.orElse(null);
+				}
+			}
+			Optional<Member> resolved = Optional.empty();
+			for (var guild : jda.getGuilds()) {
+				try {
+					Member member = guild.retrieveMemberById(discordId).complete();
+					if (member != null) {
+						resolved = Optional.of(member);
+						break;
+					}
+				} catch (Exception ignored) {
+				}
+			}
+			synchronized (this) {
+				members.put(discordId, resolved);
+			}
+			return resolved.orElse(null);
+		}
+	}
+
+	/**
+	 * @return The current profile snapshot, replacing an expired one with a fresh empty cache.
+	 */
+	private static ProfileCache profiles() {
+		ProfileCache current = profileCache;
+		long now = System.currentTimeMillis();
+		if (current != null && now - profileCacheCreatedAt < PROFILE_TTL_MILLIS) {
+			return current;
+		}
+		synchronized (PROFILE_CACHE_LOCK) {
+			if (profileCache == null || System.currentTimeMillis() - profileCacheCreatedAt >= PROFILE_TTL_MILLIS) {
+				profileCache = new ProfileCache();
+				profileCacheCreatedAt = System.currentTimeMillis();
+			}
+			return profileCache;
+		}
+	}
+
 	public static List<Member> getAllMembers() {
 		if (jda == null) {
 			return List.of();
@@ -303,11 +345,6 @@ public final class DiscordManager {
 		return collectFromGuilds(Guild::getMembers, Member::getId);
 	}
 
-	/**
-	 * Gets all guild roles from every connected guild.
-	 *
-	 * @return Deduplicated role list from all connected guilds.
-	 */
 	public static List<Role> getAllRoles() {
 		if (jda == null) {
 			return List.of();
@@ -315,12 +352,6 @@ public final class DiscordManager {
 		return collectFromGuilds(Guild::getRoles, Role::getId);
 	}
 
-	/**
-	 * Gets all Discord user IDs for members that currently have the specified role.
-	 *
-	 * @param roleId Discord role ID.
-	 * @return User ID list for members owning the role.
-	 */
 	public static List<String> getDiscordIdsByRoleId(String roleId) {
 		if (jda == null || roleId == null || roleId.isBlank()) {
 			return List.of();
@@ -338,11 +369,6 @@ public final class DiscordManager {
 		return new ArrayList<>(ids);
 	}
 
-	/**
-	 * Gets all custom emojis from every connected guild.
-	 *
-	 * @return Deduplicated custom emoji list from all connected guilds.
-	 */
 	public static List<RichCustomEmoji> getAllCustomEmojis() {
 		if (jda == null) {
 			return List.of();
@@ -362,7 +388,7 @@ public final class DiscordManager {
 		if (channelIdentifier == null || channelIdentifier.isBlank()) {
 			return;
 		}
-		TextChannel channel = getTextChannel(channelIdentifier);
+		TextChannel channel = DiscordSender.find(channelIdentifier);
 		if (channel == null) {
 			return;
 		}
@@ -384,7 +410,7 @@ public final class DiscordManager {
 
 			for (String line : content.split("\n")) {
 				// Escape underscores in :emoji: to prevent being treated as Markdown formatting
-				LOGGER.info(sanitizeLineForLogging(line));
+				LOGGER.info(DiscordSender.sanitizeLineForLogging(line));
 			}
 
 			if (fakeUserStyle) {
@@ -396,13 +422,13 @@ public final class DiscordManager {
 				content = replacePlaceholders(contentTemplate, placeholders);
 
 				String avatarUrl = resolveWebhookAvatarUrl(clientName, placeholders);
-				sendWebhookMessage(channel, username, avatarUrl, content);
+				DiscordSender.send(channel, username, avatarUrl, content, true);
 			} else {
 				if ("standalone".equals(ConfigManager.getMode())) {
-					String avatarUrl = getClientAvatarUrl(clientName);
-					sendWebhookMessage(channel, clientName, avatarUrl, content);
+					String avatarUrl = DiscordSender.clientAvatarUrl(clientName);
+					DiscordSender.send(channel, clientName, avatarUrl, content, true);
 				} else {
-					sendBotMessage(channelIdentifier, content);
+					sendBotMessage(channelIdentifier, null, content);
 				}
 			}
 		} catch (Exception e) {
@@ -439,320 +465,24 @@ public final class DiscordManager {
 		if (channelIdentifier == null || channelIdentifier.isBlank()) {
 			return;
 		}
-		TextChannel channel = getTextChannel(channelIdentifier);
+		TextChannel channel = DiscordSender.find(channelIdentifier);
 		if (channel == null) {
 			return;
 		}
 
 		try {
-			postServerMessage(channel, channelIdentifier, clientName, message, message);
+			DiscordSender.postServerMessage(channel, channelIdentifier, clientName, message, message);
 		} catch (Exception e) {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
 		}
 	}
 
-	/**
-	 * Posts one formatted message to a channel and mirrors it into the DMCC log.
-	 * <p>
-	 * In standalone mode the message is sent through the source client's webhook identity and every log line
-	 * is prefixed with that client name; otherwise the bot posts it directly.
-	 *
-	 * @param channel           Resolved target channel.
-	 * @param channelIdentifier Configured channel identifier, used when the bot posts directly.
-	 * @param clientName        DMCC client/server name used as the webhook identity in standalone mode.
-	 * @param message           Message content to post.
-	 * @param logMessage        Plain-text variant used for the log lines.
-	 */
-	private static void postServerMessage(TextChannel channel, String channelIdentifier, String clientName,
-										  String message, String logMessage) {
-		boolean standaloneMode = "standalone".equals(ConfigManager.getMode());
-		if (standaloneMode) {
-			sendWebhookMessage(channel, clientName, getClientAvatarUrl(clientName), message);
-		} else {
-			sendBotMessage(channelIdentifier, message);
-		}
-		for (String line : logMessage.split("\\n")) {
-			String sanitized = sanitizeLineForLogging(line);
-			if (standaloneMode) {
-				LOGGER.info(StringUtils.format("[{}] {}"), clientName, sanitized);
-			} else {
-				LOGGER.info(sanitized);
-			}
-		}
-	}
-
-	/**
-	 * Sends batched console logs to the configured console forwarding channel.
-	 *
-	 * @param clientName DMCC client/server name.
-	 * @param lines      Console log lines to forward.
-	 */
-	public static void sendConsoleForwardedBatchMessage(String clientName, List<String> lines) {
-		if (!ConfigManager.getBoolean("console_forwarding.enable") || lines == null || lines.isEmpty()) {
-			return;
-		}
-		if (CONSOLE_FORWARDING_DISABLED_CLIENTS.contains(clientName)) {
-			return;
-		}
-
-		String channelIdentifier = resolveConsoleChannel(clientName);
-		if (channelIdentifier == null || channelIdentifier.isBlank()) {
-			return;
-		}
-
-		TextChannel channel = getTextChannel(channelIdentifier);
-		if (channel == null) {
-			CONSOLE_FORWARDING_DISABLED_CLIENTS.add(clientName);
-			return;
-		}
-
-		StringBuilder batch = new StringBuilder();
-		for (String rawLine : lines) {
-			for (String line : formatConsoleLinePartsForDiscord(rawLine)) {
-				if (!batch.isEmpty() && batch.length() + line.length() + 1 > CONSOLE_FORWARDING_CHUNK_LIMIT) {
-					sendConsoleChunk(channel, channelIdentifier, clientName, batch.toString());
-					batch.setLength(0);
-				}
-
-				if (!batch.isEmpty()) {
-					batch.append("\n");
-				}
-				batch.append(line);
-			}
-		}
-
-		if (!batch.isEmpty()) {
-			sendConsoleChunk(channel, channelIdentifier, clientName, batch.toString());
-		}
-	}
-
-	/**
-	 * Sends a localized reminder message when console forwarding starts/stops.
-	 *
-	 * @param clientName DMCC client/server name.
-	 * @param started    true when forwarding starts; false when it stops.
-	 */
-	public static void sendConsoleForwardingStatusMessage(String clientName, boolean started) {
-		if (!ConfigManager.getBoolean("console_forwarding.enable")) {
-			return;
-		}
-		if (started) {
-			CONSOLE_FORWARDING_DISABLED_CLIENTS.remove(clientName);
-		}
-		if (jda == null || jda.getStatus() == JDA.Status.SHUTTING_DOWN || jda.getStatus() == JDA.Status.SHUTDOWN) {
-			return;
-		}
-
-		String channelIdentifier = resolveConsoleChannel(clientName);
-		if (channelIdentifier == null || channelIdentifier.isBlank()) {
-			return;
-		}
-
-		TextChannel channel = getTextChannel(channelIdentifier);
-		if (channel == null) {
-			CONSOLE_FORWARDING_DISABLED_CLIENTS.add(clientName);
-			return;
-		}
-
-		String message = buildConsoleForwardingStatusMessage(started ? "started" : "stopped", clientName);
-		if (message.isBlank()) {
-			return;
-		}
-
-		try {
-			if ("standalone".equals(ConfigManager.getMode())) {
-				sendWebhookMessageSync(channel, clientName, getClientAvatarUrl(clientName), message);
-			} else {
-				sendBotMessageSync(channelIdentifier, message);
-			}
-		} catch (RejectedExecutionException ignored) {
-			// JDA may reject tasks during shutdown races; ignore to avoid noisy stack traces.
-		} catch (Exception e) {
-			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
-		}
-	}
-
-	/**
-	 * Resolves which server should run /console when a message is sent in a console forwarding channel.
-	 *
-	 * @param channelId   Discord channel ID.
-	 * @param channelName Discord channel name.
-	 * @return Target server name, or {@code null} if channel is not configured for console forwarding.
-	 */
-	public static String resolveConsoleTargetServer(String channelId, String channelName) {
-		if (!ConfigManager.getBoolean("console_forwarding.enable")) {
-			return null;
-		}
-
-		if ("standalone".equals(ConfigManager.getMode())) {
-			JsonNode channels = ConfigManager.getConfigNode("console_forwarding.channels");
-			if (!channels.isArray()) {
-				return null;
-			}
-			for (int i = 0; i < channels.size(); i++) {
-				JsonNode node = channels.get(i);
-				String server = node.path("server").asString("").trim();
-				String configuredChannel = node.path("channel").asString("").trim();
-				String configPath = "console_forwarding.channels[" + i + "]";
-				if (server.isBlank()) {
-					LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_identifier_missing", configPath + ".server"));
-					continue;
-				}
-				if (configuredChannel.isBlank()) {
-					LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_identifier_missing", configPath + ".channel"));
-					continue;
-				}
-				if (matchesChannelIdentifier(configuredChannel, channelId, channelName)) {
-					return server;
-				}
-			}
-			return null;
-		}
-
-		String configured = ConfigManager.getString("console_forwarding.channel", "");
-		if (configured == null || configured.isBlank()) {
-			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_identifier_missing", "console_forwarding.channel"));
-			return null;
-		}
-		return matchesChannelIdentifier(configured, channelId, channelName) ? "Internal" : null;
-	}
-
-	private static String resolveConsoleChannel(String clientName) {
-		if ("standalone".equals(ConfigManager.getMode())) {
-			JsonNode channels = ConfigManager.getConfigNode("console_forwarding.channels");
-			if (!channels.isArray()) {
-				return "";
-			}
-			for (JsonNode node : channels) {
-				if (clientName.equals(node.path("server").asString(""))) {
-					return node.path("channel").asString("");
-				}
-			}
-			return "";
-		}
-
-		return ConfigManager.getString("console_forwarding.channel", "");
-	}
-
-	private static String buildConsoleForwardingStatusMessage(String key, String clientName) {
-		JsonNode customMessages = I18nManager.getCustomMessages();
-		if (customMessages == null) {
-			return "";
-		}
-
-		JsonNode statusNode = customMessages.path("console_forwarding").path(key);
-		if (statusNode.isMissingNode() || statusNode.isNull()) {
-			return "";
-		}
-
-		String mode = "standalone".equals(ConfigManager.getMode()) ? "standalone" : "single_server";
-		String template = statusNode.path(mode).asString(statusNode.asString(""));
-		if (template.isBlank()) {
-			return "";
-		}
-
-		return template.replace("{server}", clientName == null ? "" : clientName);
-	}
-
-	private static boolean matchesChannelIdentifier(String configuredChannel, String channelId, String channelName) {
-		if (configuredChannel == null || configuredChannel.isBlank()) {
-			return false;
-		}
-		return configuredChannel.equals(channelId) || configuredChannel.equalsIgnoreCase(channelName);
-	}
-
-	/**
-	 * Applies the configured console redaction patterns.
-	 * <p>
-	 * Patterns are compiled once per configuration revision instead of once per log line, which is what the
-	 * console forwarding hot path used to do.
-	 */
-	private static String applySensitiveRedaction(String message) {
-		String output = message;
-		for (Pattern pattern : consoleRedactionPatterns()) {
-			output = pattern.matcher(output).replaceAll("redacted");
-		}
-		return output;
-	}
-
-	/**
-	 * @return The compiled {@code console_forwarding.filter_regex} patterns, recompiled only when the
-	 * configured list actually changes.
-	 */
-	private static List<Pattern> consoleRedactionPatterns() {
-		List<String> sources = new ArrayList<>();
-		JsonNode regexList = ConfigManager.getConfigNode("console_forwarding.filter_regex");
-		if (regexList.isArray()) {
-			for (JsonNode node : regexList) {
-				if (node != null && node.isString() && !node.asString("").isBlank()) {
-					sources.add(node.asString(""));
-				}
-			}
-		}
-
-		String fingerprint = String.join("\u0000", sources);
-		if (fingerprint.equals(consoleRedactionFingerprint)) {
-			return consoleRedactionPatterns;
-		}
-
-		List<Pattern> compiled = new ArrayList<>();
-		for (String regex : sources) {
-			try {
-				compiled.add(Pattern.compile(regex));
-			} catch (PatternSyntaxException e) {
-				LOGGER.warn(I18nManager.getDmccTranslation("discord.manager.invalid_console_filter_regex", regex));
-			}
-		}
-		consoleRedactionPatterns = List.copyOf(compiled);
-		consoleRedactionFingerprint = fingerprint;
-		return consoleRedactionPatterns;
-	}
-
-	private static List<String> formatConsoleLinePartsForDiscord(String rawLine) {
-		String line = applySensitiveRedaction(rawLine == null ? "" : rawLine)
-				.replace("\r", " ")
-				.replace("\n", " ")
-				.replace("`", "'");
-		if (line.isBlank()) {
-			return List.of();
-		}
-
-		List<String> result = new ArrayList<>();
-		int index = 0;
-		while (index < line.length()) {
-			int end = Math.min(index + CONSOLE_FORWARDING_INLINE_LIMIT, line.length());
-			result.add("`" + line.substring(index, end) + "`");
-			index = end;
-		}
-		return result;
-	}
-
-	private static void sendConsoleChunk(TextChannel channel, String channelIdentifier, String clientName, String chunk) {
-		if (chunk == null || chunk.isBlank()) {
-			return;
-		}
-		try {
-			if ("standalone".equals(ConfigManager.getMode())) {
-				sendWebhookMessage(channel, clientName, getClientAvatarUrl(clientName), chunk);
-			} else {
-				sendBotMessage(channelIdentifier, chunk);
-			}
-		} catch (Exception e) {
-			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
-		}
-	}
 	private static String replacePlaceholders(String template, Map<String, String> placeholders) {
 		String out = template;
 		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
 			out = out.replace("{" + entry.getKey() + "}", entry.getValue() == null ? "" : entry.getValue());
 		}
 		return out;
-	}
-
-	private static String sanitizeLineForLogging(String line) {
-		// Escape underscores in :emoji: to prevent being treated as Markdown formatting
-		line = EMOJI_ALIAS_PATTERN.matcher(line).replaceAll(m -> m.group().replace("_", "\\\\_"));
-		return MarkdownSanitizer.sanitize(line).replace("\\_", "_");
 	}
 
 	private static <T> List<T> collectFromGuilds(Function<Guild, List<T>> extractor, Function<T, String> idExtractor) {
@@ -771,7 +501,7 @@ public final class DiscordManager {
 	private static String resolveWebhookAvatarUrl(String clientName, Map<String, String> placeholders) {
 		String playerUuid = placeholders.getOrDefault("player_uuid", "");
 		if (playerUuid.isBlank()) {
-			return getClientAvatarUrl(clientName);
+			return DiscordSender.clientAvatarUrl(clientName);
 		}
 
 		if (ConfigManager.getBoolean("account_linking.discord_user_avatar_for_webhooks")) {
@@ -794,302 +524,56 @@ public final class DiscordManager {
 	/**
 	 * Sends a message to the specified Discord channel identifier using the bot account.
 	 *
-	 * @param channelIdentifier Channel name or channel ID.
-	 * @param content           Message content.
-	 */
-	public static void sendBotMessage(String channelIdentifier, String content) {
-		sendBotMessage(channelIdentifier, null, content);
-	}
-
-	/**
-	 * Sends a message to the specified Discord channel identifier using the bot account.
-	 *
-	 * @param channelIdentifier         Channel name or channel ID.
 	 * @param fallbackChannelIdentifier Fallback channel name or ID if the primary identifier fails to resolve.
-	 * @param content                   Message content.
 	 */
 	public static void sendBotMessage(String channelIdentifier, String fallbackChannelIdentifier, String content) {
-		TextChannel channel = getTextChannel(channelIdentifier);
+		TextChannel channel = DiscordSender.find(channelIdentifier);
 		if (channel == null && fallbackChannelIdentifier != null) {
-			channel = getTextChannel(fallbackChannelIdentifier);
+			channel = DiscordSender.find(fallbackChannelIdentifier);
 		}
 		if (channel != null) {
 			channel.sendMessage(content)
-					.setAllowedMentions(getAllowedMentions())
+					.setAllowedMentions(DiscordSender.allowedMentions())
 					.queue();
 		}
 	}
 
-	private static void sendBotMessageSync(String channelIdentifier, String content) {
-		TextChannel channel = getTextChannel(channelIdentifier);
+	static void sendBotMessageSync(String channelIdentifier, String content) {
+		TextChannel channel = DiscordSender.find(channelIdentifier);
 		if (channel != null) {
 			channel.sendMessage(content)
-					.setAllowedMentions(getAllowedMentions())
+					.setAllowedMentions(DiscordSender.allowedMentions())
 					.complete();
 		}
 	}
 
-	/**
-	 * Sends one message through the channel webhook without blocking the caller.
-	 *
-	 * @param channel   Target channel.
-	 * @param username  Webhook display name.
-	 * @param avatarUrl Webhook avatar URL.
-	 * @param content   Message content.
-	 */
-	private static void sendWebhookMessage(TextChannel channel, String username, String avatarUrl, String content) {
-		sendWebhookMessage(channel, username, avatarUrl, content, true);
-	}
 
-	/**
-	 * Sends one message through the channel webhook without blocking the caller.
-	 *
-	 * @param channel    Target channel.
-	 * @param username   Webhook display name.
-	 * @param avatarUrl  Webhook avatar URL.
-	 * @param content    Message content.
-	 * @param allowRetry true when the send may still invalidate the cached webhook and retry once.
-	 */
-	private static void sendWebhookMessage(TextChannel channel, String username, String avatarUrl, String content,
-										   boolean allowRetry) {
-		Webhook webhook = getOrCreateWebhook(channel);
 
-		webhook.sendMessage(content)
-				.setUsername(username)
-				.setAvatarUrl(avatarUrl)
-				.setAllowedMentions(getAllowedMentions())
-				.queue(null, error -> {
-					// The cached handle may have been deleted on Discord's side: drop it and retry exactly once
-					// with a freshly resolved webhook instead of losing the message.
-					if (allowRetry && isUnknownWebhookError(error)) {
-						invalidateWebhook(channel.getId(), webhook);
-						sendWebhookMessage(channel, username, avatarUrl, content, false);
-						return;
-					}
-					LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", error.getLocalizedMessage()), error);
-				});
-	}
-
-	/**
-	 * Sends one message through the channel webhook, blocking until the request completes.
-	 *
-	 * @param channel   Target channel.
-	 * @param username  Webhook display name.
-	 * @param avatarUrl Webhook avatar URL.
-	 * @param content   Message content.
-	 */
-	private static void sendWebhookMessageSync(TextChannel channel, String username, String avatarUrl, String content) {
-		sendWebhookMessageSync(channel, username, avatarUrl, content, true);
-	}
-
-	/**
-	 * Sends one message through the channel webhook, blocking until the request completes.
-	 *
-	 * @param channel    Target channel.
-	 * @param username   Webhook display name.
-	 * @param avatarUrl  Webhook avatar URL.
-	 * @param content    Message content.
-	 * @param allowRetry true when the send may still invalidate the cached webhook and retry once.
-	 */
-	private static void sendWebhookMessageSync(TextChannel channel, String username, String avatarUrl, String content,
-											   boolean allowRetry) {
-		Webhook webhook = getOrCreateWebhook(channel);
-
-		try {
-			webhook.sendMessage(content)
-					.setUsername(username)
-					.setAvatarUrl(avatarUrl)
-					.setAllowedMentions(getAllowedMentions())
-					.complete();
-		} catch (RuntimeException e) {
-			if (allowRetry && isUnknownWebhookError(e)) {
-				invalidateWebhook(channel.getId(), webhook);
-				sendWebhookMessageSync(channel, username, avatarUrl, content, false);
-				return;
-			}
-			throw e;
-		}
-	}
-
-	/**
-	 * Sends one message with a file attachment through the channel webhook without blocking the caller.
-	 *
-	 * @param channel   Target channel.
-	 * @param username  Webhook display name.
-	 * @param avatarUrl Webhook avatar URL.
-	 * @param content   Message content.
-	 * @param fileData  Attachment payload.
-	 * @param fileName  Attachment file name.
-	 */
-	private static void sendWebhookMessageWithFile(TextChannel channel, String username, String avatarUrl,
-												   String content, byte[] fileData, String fileName) {
-		sendWebhookMessageWithFile(channel, username, avatarUrl, content, fileData, fileName, true);
-	}
-
-	/**
-	 * Sends one message with a file attachment through the channel webhook without blocking the caller.
-	 *
-	 * @param channel    Target channel.
-	 * @param username   Webhook display name.
-	 * @param avatarUrl  Webhook avatar URL.
-	 * @param content    Message content.
-	 * @param fileData   Attachment payload.
-	 * @param fileName   Attachment file name.
-	 * @param allowRetry true when the send may still invalidate the cached webhook and retry once.
-	 */
-	private static void sendWebhookMessageWithFile(TextChannel channel, String username, String avatarUrl,
-												   String content, byte[] fileData, String fileName, boolean allowRetry) {
-		Webhook webhook = getOrCreateWebhook(channel);
-
-		List<Message.MentionType> allowedMentions = getAllowedMentions();
-
-		webhook.sendMessage(content)
-				.setUsername(username)
-				.setAvatarUrl(avatarUrl)
-				.setAllowedMentions(allowedMentions)
-				.addFiles(FileUpload.fromData(fileData, fileName))
-				.queue(null, error -> {
-					// The cached handle may have been deleted on Discord's side: drop it and retry exactly once
-					// with a freshly resolved webhook instead of losing the message.
-					if (allowRetry && isUnknownWebhookError(error)) {
-						invalidateWebhook(channel.getId(), webhook);
-						sendWebhookMessageWithFile(channel, username, avatarUrl, content, fileData, fileName, false);
-						return;
-					}
-					LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", error.getLocalizedMessage()), error);
-				});
-	}
-
-	/**
-	 * Resolves the {@code "DMCC Webhook"} of a channel, creating it when the channel has none yet.
-	 * <p>
-	 * The resolved handle is cached per channel ID because the lookup itself is a blocking REST call that
-	 * used to run before every single webhook message.
-	 *
-	 * @param channel Target channel.
-	 * @return The cached or newly resolved webhook handle.
-	 */
-	private static Webhook getOrCreateWebhook(TextChannel channel) {
-		Webhook cached = WEBHOOK_CACHE.get(channel.getId());
-		if (cached != null) {
-			return cached;
-		}
-
-		Webhook resolved = channel.retrieveWebhooks().complete()
-				.stream()
-				.filter(i -> "DMCC Webhook".equals(i.getName()))
-				.filter(i -> i.getOwnerAsUser() == jda.getSelfUser())
-				.findFirst()
-				.orElseGet(() -> channel.createWebhook("DMCC Webhook").complete()); // Must use orElseGet to avoid unnecessary creation
-
-		Webhook existing = WEBHOOK_CACHE.putIfAbsent(channel.getId(), resolved);
-		return existing != null ? existing : resolved;
-	}
-
-	/**
-	 * Drops a cached webhook handle so the next send resolves a fresh one.
-	 *
-	 * @param channelId Channel ID the handle was cached for.
-	 * @param webhook   The handle that turned out to be unusable.
-	 */
-	private static void invalidateWebhook(String channelId, Webhook webhook) {
-		// Only drop the entry when it still is the handle that just failed, so a concurrently refreshed
-		// handle is never thrown away.
-		WEBHOOK_CACHE.remove(channelId, webhook);
-	}
-
-	/**
-	 * Checks whether a JDA failure means the addressed webhook no longer exists.
-	 *
-	 * @param error The failure reported by JDA, possibly wrapped in additional causes.
-	 * @return true when Discord answered with {@code Unknown Webhook}.
-	 */
-	private static boolean isUnknownWebhookError(Throwable error) {
-		Throwable current = error;
-		while (current != null) {
-			if (current instanceof ErrorResponseException responseException) {
-				return responseException.getErrorResponse() == ErrorResponse.UNKNOWN_WEBHOOK;
-			}
-			current = current.getCause();
-		}
-		return false;
-	}
-
-	private static List<Message.MentionType> getAllowedMentions() {
-		List<Message.MentionType> allowedMentions = new ArrayList<>();
-		JsonNode allowMentionsNode = ConfigManager.getConfigNode("discord.allow_mentions");
-		if (allowMentionsNode.isArray()) {
-			for (JsonNode node : allowMentionsNode) {
-				switch (node.asString()) {
-					case "everyone" -> {
-						allowedMentions.add(Message.MentionType.EVERYONE);
-						allowedMentions.add(Message.MentionType.HERE);
-					}
-					case "users" -> allowedMentions.add(Message.MentionType.USER);
-					case "roles" -> allowedMentions.add(Message.MentionType.ROLE);
-				}
-			}
-		}
-		return allowedMentions;
-	}
-
-	private static String getClientAvatarUrl(String clientName) {
-		String avatarUrl = "";
-		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
-		if (serversNode != null && serversNode.isArray()) {
-			for (JsonNode node : serversNode) {
-				if (clientName.equals(node.path("name").asString())) {
-					avatarUrl = node.path("avatar_url").asString();
-				}
-			}
-		}
-		if (avatarUrl == null || avatarUrl.isBlank()) {
-			avatarUrl = jda.getSelfUser().getEffectiveAvatarUrl();
-		}
-		return avatarUrl;
-	}
-
-	/**
-	 * Sends an execute command result via webhook to the specified Discord channel.
-	 *
-	 * @param channelIdentifier The target Discord channel identifier.
-	 * @param clientName        The name of the DMCC client.
-	 * @param message           The result message.
-	 */
 	public static void sendExecuteResultViaWebhook(String channelIdentifier, String clientName, String message) {
-		TextChannel channel = getTextChannel(channelIdentifier);
+		TextChannel channel = DiscordSender.find(channelIdentifier);
 		if (channel == null) return;
 
 		try {
-			String avatarUrl = getClientAvatarUrl(clientName);
+			String avatarUrl = DiscordSender.clientAvatarUrl(clientName);
 			for (String block : CodeBlockMessageUtils.splitToCodeBlocks(message)) {
-				sendWebhookMessage(channel, clientName, avatarUrl, block);
+				DiscordSender.send(channel, clientName, avatarUrl, block, true);
 			}
 		} catch (Exception e) {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
 		}
 	}
 
-	/**
-	 * Sends an execute command result with a file attachment via webhook to the specified Discord channel.
-	 *
-	 * @param channelIdentifier The target Discord channel identifier.
-	 * @param clientName        The name of the DMCC client.
-	 * @param message           The result message.
-	 * @param fileData          The file data.
-	 * @param fileName          The file name.
-	 */
 	public static void sendExecuteResultWithFileViaWebhook(String channelIdentifier, String clientName, String message,
 														   byte[] fileData, String fileName) {
-		TextChannel channel = getTextChannel(channelIdentifier);
+		TextChannel channel = DiscordSender.find(channelIdentifier);
 		if (channel == null) return;
 
 		try {
-			String avatarUrl = getClientAvatarUrl(clientName);
+			String avatarUrl = DiscordSender.clientAvatarUrl(clientName);
 			List<String> blocks = CodeBlockMessageUtils.splitToCodeBlocks(message);
-			sendWebhookMessageWithFile(channel, clientName, avatarUrl, blocks.getFirst(), fileData, fileName);
+			DiscordSender.sendWithFile(channel, clientName, avatarUrl, blocks.getFirst(), fileData, fileName, true);
 			for (int i = 1; i < blocks.size(); i++) {
-				sendWebhookMessage(channel, clientName, avatarUrl, blocks.get(i));
+				DiscordSender.send(channel, clientName, avatarUrl, blocks.get(i), true);
 			}
 		} catch (Exception e) {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
@@ -1097,12 +581,8 @@ public final class DiscordManager {
 	}
 
 	/**
-	 * Broadcasts a message to a Discord channel based on the specified parameters.
-	 *
-	 * @param clientName   The name of the DMCC client.
-	 * @param channelNode  The broadcast channel identifier.
-	 * @param lang         The language key for the message.
-	 * @param placeholders A map of placeholders to replace in the message.
+	 * Broadcasts a Minecraft system event to its configured Discord channel, using the template stored
+	 * under {@code custom_messages.minecraft_to_xxxxx.<lang>}.
 	 */
 	public static void clientBroadcast(String clientName, String channelNode, String lang, Map<String, String> placeholders) {
 		String channelIdentifier = ConfigManager.getString("broadcasts.minecraft_to_discord." + channelNode);
@@ -1110,7 +590,7 @@ public final class DiscordManager {
 			// User chooses not to broadcast this event
 			return;
 		}
-		TextChannel channel = getTextChannel(channelIdentifier);
+		TextChannel channel = DiscordSender.find(channelIdentifier);
 		if (channel == null) return;
 
 		try {
@@ -1130,9 +610,9 @@ public final class DiscordManager {
 			}
 
 			if ("standalone".equals(ConfigManager.getMode())) {
-				postServerMessage(channel, channelIdentifier, clientName, message, message);
+				DiscordSender.postServerMessage(channel, channelIdentifier, clientName, message, message);
 			} else {
-				sendBotMessage(channelIdentifier, message);
+				sendBotMessage(channelIdentifier, null, message);
 			}
 		} catch (InsufficientPermissionException e) {
 			String reason = I18nManager.getDmccTranslation("discord.manager.insufficient_permission", channel.getName(), e.getPermission().getName());
@@ -1156,77 +636,30 @@ public final class DiscordManager {
 			return;
 		}
 
-		TextChannel channel = getTextChannel(channelIdentifier);
+		TextChannel channel = DiscordSender.find(channelIdentifier);
 		if (channel == null) {
 			return;
 		}
 
 		try {
 			String logReadyMessage = DiscordMessageParser.formatDiscordTimestampsForPlainText(message);
-			postServerMessage(channel, channelIdentifier, clientName, message, logReadyMessage);
+			DiscordSender.postServerMessage(channel, channelIdentifier, clientName, message, logReadyMessage);
 		} catch (Exception e) {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
 		}
 	}
 
-	private static TextChannel getTextChannel(String identifier) {
-		if (jda == null || jda.getStatus() == JDA.Status.SHUTTING_DOWN || jda.getStatus() == JDA.Status.SHUTDOWN) {
-			return null;
-		}
 
-		if (identifier == null || identifier.isBlank()) {
-			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_not_found", identifier));
-			return null;
-		}
-
-		TextChannel tc;
-		String normalizedIdentifier = identifier.trim();
-
-		// Try search by name
-		// Return first result. Use with caution if multiple channels have the same name.
-		List<TextChannel> channels = jda.getTextChannelsByName(normalizedIdentifier, true);
-		if (!channels.isEmpty()) {
-			tc = channels.getFirst();
-		} else {
-			// Try parsing as ID only when the identifier is a valid snowflake.
-			boolean numericId = !normalizedIdentifier.isEmpty();
-			for (int i = 0; i < normalizedIdentifier.length(); i++) {
-				if (!Character.isDigit(normalizedIdentifier.charAt(i))) {
-					numericId = false;
-					break;
-				}
-			}
-
-			if (!numericId) {
-				LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_not_found", identifier));
-				return null;
-			}
-
-			tc = jda.getTextChannelById(normalizedIdentifier);
-			if (tc == null) {
-				LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_not_found", identifier));
-				return null;
-			}
-		}
-
-		if (!tc.canTalk()) {
-			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.channel_cannot_talk", identifier));
-			return null;
-		}
-
-		return tc;
-	}
-
-	/**
-	 * Shuts down the Discord bot.
-	 */
 	public static void shutdown() {
 		BotPresenceManager.shutdown();
 		ChannelUpdateManager.shutdown();
 		DiscordEventHandler.shutdown();
 
-		// The cached webhook handles belong to the JDA instance that is going away.
-		WEBHOOK_CACHE.clear();
+		// The cached webhook handles and Discord profile lookups belong to the JDA instance that is going away.
+		DiscordSender.clearWebhookCache();
+		synchronized (PROFILE_CACHE_LOCK) {
+			profileCache = null;
+		}
 
 		if (jda != null) {
 			jda.shutdown();
@@ -1246,14 +679,6 @@ public final class DiscordManager {
 		}
 	}
 
-	/**
-	 * Data holder for Discord status info.
-	 *
-	 * @param status            JDA status string
-	 * @param tag               Bot user tag
-	 * @param gatewayPingMillis Gateway ping in milliseconds
-	 * @param restPingMillis    REST ping in milliseconds
-	 */
 	public record DiscordStatusInfo(String status, String tag, long gatewayPingMillis, long restPingMillis) {
 	}
 }

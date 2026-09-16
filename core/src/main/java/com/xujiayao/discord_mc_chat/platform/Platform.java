@@ -18,8 +18,6 @@ public final class Platform {
 
 	/**
 	 * Registers the platform implementation. Called once during DMCC initialization.
-	 *
-	 * @param platformHost The platform implementation.
 	 */
 	public static void set(PlatformHost platformHost) {
 		host = platformHost == null ? NoopPlatformHost.INSTANCE : platformHost;
@@ -32,14 +30,5 @@ public final class Platform {
 	 */
 	public static PlatformHost host() {
 		return host;
-	}
-
-	/**
-	 * Indicates whether a real platform (Minecraft) is registered.
-	 *
-	 * @return {@code true} when a platform other than the no-op implementation is active.
-	 */
-	public static boolean isAvailable() {
-		return host != NoopPlatformHost.INSTANCE;
 	}
 }

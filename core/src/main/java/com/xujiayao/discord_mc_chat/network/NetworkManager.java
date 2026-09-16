@@ -6,9 +6,7 @@ import com.xujiayao.discord_mc_chat.network.protocol.Packets;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import io.netty.channel.Channel;
 
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -33,9 +31,9 @@ public final class NetworkManager {
 	private static final Map<Channel, String> clientChannels = new ConcurrentHashMap<>();
 	private static final Map<String, Long> clientConnectedAt = new ConcurrentHashMap<>();
 
-	// Server-side: Info requests that are currently waiting for responses, keyed by an internally generated
-	// request id. The id never leaves this class; it only gives every concurrent caller its own state.
-	// All access is guarded by infoLock.
+	// Server-side: Info requests that are currently waiting for responses, keyed by request id. The id rides
+	// on the wire (see Packets.InfoRequest/InfoSnapshot), so a response is only ever handed to the call that
+	// asked for it. All access is guarded by infoLock.
 	private static final Map<Long, InfoRound> pendingInfoRounds = new LinkedHashMap<>();
 	private static final AtomicLong nextInfoRequestId = new AtomicLong();
 	private static final AtomicReference<Supplier<Packets.InfoSnapshot>> infoSupplier = new AtomicReference<>();
@@ -52,27 +50,14 @@ public final class NetworkManager {
 	private NetworkManager() {
 	}
 
-	/**
-	 * Registers the client instance for network operations.
-	 *
-	 * @param client The client instance
-	 */
 	public static void registerClient(ClientDMCC client) {
 		clientInstance.set(client);
 	}
 
-	/**
-	 * Registers an information supplier for InfoResponse packets.
-	 *
-	 * @param supplier The supplier to register
-	 */
 	public static void registerInfoSupplier(Supplier<Packets.InfoSnapshot> supplier) {
 		infoSupplier.set(supplier);
 	}
 
-	/**
-	 * Resets the network manager state, clearing client instance and channels.
-	 */
 	public static void clear() {
 		clientInstance.set(null);
 		clientChannels.clear();
@@ -87,11 +72,6 @@ public final class NetworkManager {
 		}
 	}
 
-	/**
-	 * Sends a packet to the server. Should be called from client only.
-	 *
-	 * @param packet The packet to send
-	 */
 	public static void sendPacketToServer(Packet packet) {
 		ClientDMCC client = clientInstance.get();
 		if (client != null) {
@@ -99,12 +79,6 @@ public final class NetworkManager {
 		}
 	}
 
-	/**
-	 * Sends a packet to a specific connected client. Should be called from server only.
-	 *
-	 * @param packet     The packet to send
-	 * @param clientName The name of the target client
-	 */
 	public static void sendPacketToClient(Packet packet, String clientName) {
 		clientChannels.forEach((channel, name) -> {
 			if (clientName.equals(name)) {
@@ -113,22 +87,10 @@ public final class NetworkManager {
 		});
 	}
 
-	/**
-	 * Broadcasts a packet to all connected clients. Should be called from server only.
-	 *
-	 * @param packet The packet to send
-	 */
 	public static void broadcastToClients(Packet packet) {
 		clientChannels.forEach((channel, _) -> channel.writeAndFlush(packet));
 	}
 
-	/**
-	 * Broadcasts a packet to all connected clients except the excluded client.
-	 * Should be called from server only.
-	 *
-	 * @param packet             The packet to send
-	 * @param excludedClientName The client name to exclude
-	 */
 	public static void broadcastToClientsExcept(Packet packet, String excludedClientName) {
 		clientChannels.forEach((channel, name) -> {
 			if (!name.equals(excludedClientName)) {
@@ -137,22 +99,11 @@ public final class NetworkManager {
 		});
 	}
 
-	/**
-	 * Adds a client channel to the managed list.
-	 *
-	 * @param channel The client channel
-	 * @param name    The name of the client
-	 */
 	public static void addClientChannel(Channel channel, String name) {
 		clientChannels.put(channel, name);
 		clientConnectedAt.put(name, System.currentTimeMillis());
 	}
 
-	/**
-	 * Removes a client channel from the managed list.
-	 *
-	 * @param channel The client channel
-	 */
 	public static void removeClientChannel(Channel channel) {
 		String name = clientChannels.remove(channel);
 		if (name != null) {
@@ -166,21 +117,10 @@ public final class NetworkManager {
 		}
 	}
 
-	/**
-	 * Gets all connected client names.
-	 *
-	 * @return A list of connected client names.
-	 */
 	public static List<String> getConnectedClientNames() {
 		return new ArrayList<>(clientChannels.values());
 	}
 
-	/**
-	 * Checks if a client is connected by name.
-	 *
-	 * @param clientName The client name to check.
-	 * @return true if connected, false otherwise.
-	 */
 	public static boolean isClientConnected(String clientName) {
 		return clientChannels.containsValue(clientName);
 	}
@@ -201,28 +141,14 @@ public final class NetworkManager {
 	}
 
 	/**
-	 * Gets the remote address of a channel as a string (IP:Port).
-	 *
-	 * @param channel The channel
-	 * @return The remote address string
-	 */
-	public static String getRemoteAddress(Channel channel) {
-		if (channel.remoteAddress() instanceof InetSocketAddress addr) {
-			return addr.getAddress().getHostAddress() + ":" + addr.getPort();
-		}
-		return channel.remoteAddress().toString();
-	}
-
-	// ===== Info Methods =====
-
-	/**
-	 * Publishes a received InfoSnapshot to every info request that is currently waiting for responses.
+	 * Publishes a received InfoSnapshot to the round that asked for it.
 	 * <p>
-	 * Responses are broadcast to the in-flight rounds instead of being parked in one shared cache, so each
-	 * caller keeps its own result map and no caller can clear, overwrite or consume another caller's data.
+	 * A response whose request id matches no in-flight round is dropped: it can only be a leftover from a
+	 * round that already returned, and recording it would either be ignored or, worse, be reported as the
+	 * answer to a different question.
 	 *
 	 * @param clientName The client name
-	 * @param packet     The packet to cache
+	 * @param packet     The received snapshot
 	 */
 	public static void cacheInfoResponse(String clientName, Packets.InfoSnapshot packet) {
 		if (packet == null) {
@@ -242,33 +168,24 @@ public final class NetworkManager {
 				: packet;
 
 		synchronized (infoLock) {
-			for (InfoRound round : pendingInfoRounds.values()) {
-				round.accept(name, stored);
+			InfoRound round = pendingInfoRounds.get(packet.requestId());
+			if (round != null) {
+				round.responses.put(name, stored);
+				infoLock.notifyAll();
 			}
-			infoLock.notifyAll();
 		}
 	}
 
 	/**
-	 * Sends InfoRequest packets, blocks the current thread, then returns a snapshot of the responses that
-	 * belong to this call.
+	 * Sends InfoRequest packets, blocks the current thread, then returns the responses to this call.
 	 * <p>
-	 * <b>Correlation:</b> {@link Packets.InfoSnapshot} carries no echo of the {@code sentAtMillis} that
-	 * {@link Packets.InfoRequest} was sent with (the client only uses it locally to compute
-	 * {@code connectionLatencyMillis}), so a response cannot be matched to the request that produced it on
-	 * the wire, and changing that would mean changing the packet shape. This method therefore correlates
-	 * round-scoped: every call registers its own {@link InfoRound} under an internally generated request id
-	 * before the request is broadcast, and unregisters it when it returns. A response is recorded by every
-	 * round that is in flight when it arrives, with the latest value winning per server name, so a response
-	 * left over from an older round is replaced by the actual answer to this one as soon as it arrives.
-	 * <p>
-	 * A round only waits for clients that it broadcast to and that are still connected: the awaited set is
-	 * recomputed on every wake-up, so a client that disconnects (or one that connects afterwards) can no
-	 * longer make the caller block until the timeout. The request timestamp is still generated fresh per
-	 * call, so the client-side latency measurement is unchanged.
+	 * The request id is echoed by every client, so a late response from an earlier round can no longer be
+	 * mistaken for the answer to this one. The call still waits for the clients it broadcast to that are
+	 * still connected: the awaited set is recomputed on every wake-up, so a client that disconnects can no
+	 * longer make the caller block until the timeout.
 	 *
 	 * @param timeoutSeconds The waiting time in seconds
-	 * @return A snapshot of cached ResponsePacket items
+	 * @return The responses of this round, keyed by server name
 	 */
 	public static Map<String, Packets.InfoSnapshot> requestInfoSnapshot(int timeoutSeconds) {
 		long requestId = nextInfoRequestId.incrementAndGet();
@@ -282,11 +199,11 @@ public final class NetworkManager {
 
 		try {
 			if (!round.awaitedClientNames.isEmpty()) {
-				broadcastToClients(new Packets.InfoRequest(System.currentTimeMillis()));
+				broadcastToClients(new Packets.InfoRequest(requestId, System.currentTimeMillis()));
 			} else if (clientInstance.get() != null) {
 				// Standalone/single-server fallback: answer locally from the registered supplier.
 				Packets.InfoSnapshot localPacket = createResponsePacket();
-				cacheInfoResponse(localPacket.serverName(), localPacket);
+				cacheInfoResponse(localPacket.serverName(), localPacket.withRequestId(requestId));
 			}
 
 			waitForInfoRound(round, timeoutSeconds);
@@ -296,7 +213,7 @@ public final class NetworkManager {
 			}
 		}
 
-		return round.snapshot();
+		return new LinkedHashMap<>(round.responses);
 	}
 
 	/**
@@ -329,11 +246,6 @@ public final class NetworkManager {
 		}
 	}
 
-	/**
-	 * Creates an ResponsePacket using the registered supplier or a fallback.
-	 *
-	 * @return The ResponsePacket instance
-	 */
 	public static Packets.InfoSnapshot createResponsePacket() {
 		Supplier<Packets.InfoSnapshot> supplier = infoSupplier.get();
 		Packets.InfoSnapshot packet = supplier != null ? supplier.get() : null;
@@ -346,6 +258,7 @@ public final class NetworkManager {
 					: "unknown";
 
 			packet = new Packets.InfoSnapshot(
+					0L,
 					serverName,
 					-1,
 					minecraftVersion,
@@ -375,11 +288,8 @@ public final class NetworkManager {
 	}
 
 	/**
-	 * Correlation state of one {@link #requestInfoSnapshot(int)} call.
-	 * <p>
-	 * All access happens while holding {@link #infoLock}, which is what lets the collections below stay plain
-	 * (non-concurrent) collections: a caller either owns the lock, or it is inside {@link #waitForInfoRound}
-	 * where the monitor is released only while waiting for a response to be published.
+	 * Correlation state of one {@link #requestInfoSnapshot(int)} call. All access happens while holding
+	 * {@link #infoLock}.
 	 */
 	private static final class InfoRound {
 		/**
@@ -393,51 +303,18 @@ public final class NetworkManager {
 		 */
 		private final Map<String, Packets.InfoSnapshot> responses = new LinkedHashMap<>();
 
-		/**
-		 * Client names that answered at least once, so repeat answers do not extend the wait.
-		 */
-		private final Set<String> answeredClientNames = new HashSet<>();
-
-		/**
-		 * Records one response. The latest value wins, so a response left over from an older round is
-		 * replaced by the answer to this round as soon as it arrives.
-		 *
-		 * @param clientName The server name the response is attributed to
-		 * @param packet     The received snapshot
-		 */
-		private void accept(String clientName, Packets.InfoSnapshot packet) {
-			responses.put(clientName, packet);
-			answeredClientNames.add(clientName);
-		}
-
-		/**
-		 * @return true when every client this round is still waiting for is either answered or disconnected.
-		 */
 		private boolean isComplete() {
 			for (String clientName : awaitedClientNames) {
-				if (!answeredClientNames.contains(clientName) && clientChannels.containsValue(clientName)) {
+				if (!responses.containsKey(clientName) && clientChannels.containsValue(clientName)) {
 					return false;
 				}
 			}
 			return true;
 		}
-
-		/**
-		 * @return The collected responses, in the same shape the shared cache used to be returned in.
-		 */
-		private Map<String, Packets.InfoSnapshot> snapshot() {
-			return new LinkedHashMap<>(responses);
-		}
 	}
 
 	// ===== DMCC Command Auto-Complete Methods =====
 
-	/**
-	 * Caches an auto-complete response from a client for DMCC commands.
-	 *
-	 * @param clientName  The client name
-	 * @param suggestions The list of suggestions
-	 */
 	public static void cacheExecuteAutoCompleteResponse(String clientName, List<String> suggestions) {
 		executeAutoCompleteCache.put(clientName, suggestions);
 		synchronized (executeAutoCompleteLock) {
@@ -445,31 +322,17 @@ public final class NetworkManager {
 		}
 	}
 
-	/**
-	 * Requests DMCC command auto-complete suggestions from all connected clients.
-	 *
-	 * @param input          The current user input to complete
-	 * @param opLevel        The OP level of the user requesting auto-complete
-	 * @param timeoutSeconds The waiting time in seconds
-	 * @return A map of client name to suggestion list
-	 */
 	public static Map<String, List<String>> requestExecuteAutoCompleteSnapshot(String input, int opLevel, int timeoutSeconds) {
 		return requestAutoCompleteSnapshot(
 				executeAutoCompleteCache,
+				executeAutoCompleteLock,
 				new Packets.AutoCompleteRequest(Packets.RpcKind.EXECUTE, input, opLevel),
-				timeoutSeconds,
-				true
+				timeoutSeconds
 		);
 	}
 
 	// ===== Minecraft Command Auto-Complete Methods =====
 
-	/**
-	 * Caches an auto-complete response from a client for Minecraft commands.
-	 *
-	 * @param clientName  The client name
-	 * @param suggestions The list of suggestions
-	 */
 	public static void cacheConsoleAutoCompleteResponse(String clientName, List<String> suggestions) {
 		consoleAutoCompleteCache.put(clientName, suggestions);
 		synchronized (consoleAutoCompleteLock) {
@@ -477,61 +340,37 @@ public final class NetworkManager {
 		}
 	}
 
-	/**
-	 * Requests Minecraft command auto-complete suggestions from all connected clients.
-	 *
-	 * @param input          The current user input to complete
-	 * @param opLevel        The OP level of the user requesting auto-complete
-	 * @param timeoutSeconds The waiting time in seconds
-	 * @return A map of client name to suggestion list
-	 */
 	public static Map<String, List<String>> requestConsoleAutoCompleteSnapshot(String input, int opLevel, int timeoutSeconds) {
 		return requestAutoCompleteSnapshot(
 				consoleAutoCompleteCache,
+				consoleAutoCompleteLock,
 				new Packets.AutoCompleteRequest(Packets.RpcKind.CONSOLE, input, opLevel),
-				timeoutSeconds,
-				false
+				timeoutSeconds
 		);
 	}
 
 	private static Map<String, List<String>> requestAutoCompleteSnapshot(Map<String, List<String>> cache,
+																		 Object lock,
 																		 Packet requestPacket,
-																		 int timeoutSeconds,
-																		 boolean executeRequest) {
+																		 int timeoutSeconds) {
 		cache.clear();
 
 		int expectedResponses = clientChannels.size();
 		if (expectedResponses > 0) {
 			broadcastToClients(requestPacket);
-		}
 
-		long deadlineMillis = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(timeoutSeconds);
-
-		if (expectedResponses > 0) {
-			if (executeRequest) {
-				synchronized (executeAutoCompleteLock) {
-					while (cache.size() < expectedResponses) {
-						long remaining = deadlineMillis - System.currentTimeMillis();
-						if (remaining <= 0) break;
-						try {
-							executeAutoCompleteLock.wait(remaining);
-						} catch (InterruptedException e) {
-							Thread.currentThread().interrupt();
-							break;
-						}
+			long deadlineMillis = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(timeoutSeconds);
+			synchronized (lock) {
+				while (cache.size() < expectedResponses) {
+					long remaining = deadlineMillis - System.currentTimeMillis();
+					if (remaining <= 0) {
+						break;
 					}
-				}
-			} else {
-				synchronized (consoleAutoCompleteLock) {
-					while (cache.size() < expectedResponses) {
-						long remaining = deadlineMillis - System.currentTimeMillis();
-						if (remaining <= 0) break;
-						try {
-							consoleAutoCompleteLock.wait(remaining);
-						} catch (InterruptedException e) {
-							Thread.currentThread().interrupt();
-							break;
-						}
+					try {
+						lock.wait(remaining);
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+						break;
 					}
 				}
 			}
@@ -544,20 +383,10 @@ public final class NetworkManager {
 
 	// ===== Client Accessors =====
 
-	/**
-	 * Gets the registered client instance.
-	 *
-	 * @return The client instance, or null if not registered
-	 */
 	public static ClientDMCC getClient() {
 		return clientInstance.get();
 	}
 
-	/**
-	 * Gets the client server name if available.
-	 *
-	 * @return The client server name, or "unknown"
-	 */
 	public static String getClientServerName() {
 		ClientDMCC client = clientInstance.get();
 		if (client == null) {

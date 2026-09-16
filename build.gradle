@@ -1,3 +1,6 @@
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+
 plugins {
     id "com.gradleup.shadow" version "${shadow_version}" apply false
     id "net.fabricmc.fabric-loom" version "${loom_version}" apply false
@@ -22,19 +25,23 @@ allprojects {
     }
 }
 
-subprojects {
-    apply plugin: "java-library"
+// :minecraft is only a grouping directory for the Minecraft-side modules, and :minecraft:common is a
+// shared source directory rather than a project of its own: the two loader modules compile its sources
+// directly (see their build scripts), so that the shared classes and dmcc.mixins.json have exactly one
+// author and each loader still produces a self-contained JAR.
+configure(subprojects.findAll { it.path != ":minecraft" && it.path != ":minecraft:common" }) { subproject ->
+    subproject.apply plugin: "java-library"
 
-    version = mod_version
+    subproject.version = mod_version
 
-    java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+    subproject.java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
-    tasks.withType(JavaCompile).configureEach {
+    subproject.tasks.withType(JavaCompile).configureEach {
         options.release = 25
         options.encoding = "UTF-8"
     }
 
-    processResources {
+    subproject.processResources {
         def propertiesToExpand = new HashMap<String, Object>()
         [
                 "mod_version", "jda_version", "slf4j_api_version", "jackson_version",
@@ -43,7 +50,7 @@ subprojects {
         ].each {
             propertiesToExpand.put(it, providers.gradleProperty(it).get())
         }
-        propertiesToExpand.put("version", version.toString())
+        propertiesToExpand.put("version", subproject.version.toString())
         filesMatching(["**/*.txt", "**/*.yml", "**/*.toml", "**/*.json"]) {
             expand(propertiesToExpand)
         }
@@ -53,14 +60,14 @@ subprojects {
 /**
  * Builds the single universal mod JAR.
  * <p>
- * It carries everything: the core shadow payload, the shared {@code minecraft-common} classes and mixin
+ * It carries everything: the core shadow payload, the shared {@code minecraft/common} classes and mixin
  * configuration, and both the Fabric metadata ({@code fabric.mod.json}) and the NeoForge metadata
  * ({@code META-INF/neoforge.mods.toml}). Each loader reads only its own metadata and loads only its own
  * entry point, so the same file can be dropped into a Fabric or a NeoForge {@code mods} folder, and it
  * still runs as the standalone application through {@code java -jar} because the core shadow JAR's
  * manifest is preserved.
  * <p>
- * The per-loader JARs produced by the {@code :fabric} and {@code :neoforge} modules are only inputs to
+ * The per-loader JARs produced by the {@code :minecraft:fabric} and {@code :minecraft:neoforge} modules are only inputs to
  * this task; the root {@code build/} directory deliberately contains this one file and nothing else.
  */
 tasks.register("universalJar") {
@@ -69,15 +76,15 @@ tasks.register("universalJar") {
 
     def outputFile = new File(rootProject.layout.buildDirectory.get().asFile, "Discord-MC-Chat-${mod_version}.jar")
     def shadowJarFile = project(":core").tasks.named("shadowJar").flatMap { it.archiveFile }
-    def fabricJarFile = project(":fabric").tasks.named("jar").flatMap { it.archiveFile }
-    def neoforgeJarFile = project(":neoforge").tasks.named("jar").flatMap { it.archiveFile }
+    def fabricJarFile = project(":minecraft:fabric").tasks.named("jar").flatMap { it.archiveFile }
+    def neoforgeJarFile = project(":minecraft:neoforge").tasks.named("jar").flatMap { it.archiveFile }
     def tempDir = new File(rootProject.layout.buildDirectory.get().asFile, "universal")
     // Gradle materialises every zipTree() view under build/tmp/.cache/expanded, which would otherwise
     // leave empty zip_<hash> directories behind. Sweep build/tmp too, so that the root build directory
     // contains the universal JAR and nothing else.
     def gradleTmpDir = new File(rootProject.layout.buildDirectory.get().asFile, "tmp")
 
-    dependsOn ":core:shadowJar", ":fabric:jar", ":neoforge:jar"
+    dependsOn ":core:shadowJar", ":minecraft:fabric:jar", ":minecraft:neoforge:jar"
     inputs.files(shadowJarFile, fabricJarFile, neoforgeJarFile)
     outputs.file(outputFile)
 
@@ -85,7 +92,7 @@ tasks.register("universalJar") {
         tempDir.deleteDir()
         tempDir.mkdirs()
 
-        // The shared minecraft-common classes and dmcc.mixins.json are compiled into both loader JARs.
+        // The shared minecraft/common classes and dmcc.mixins.json are compiled into both loader JARs.
         // Keep the Fabric copy and let the NeoForge JAR contribute only what it adds on top.
         [[fabricJarFile.get().asFile, DuplicatesStrategy.INCLUDE],
          [neoforgeJarFile.get().asFile, DuplicatesStrategy.EXCLUDE]].each { jarFile, strategy ->
@@ -98,10 +105,10 @@ tasks.register("universalJar") {
         }
 
         outputFile.parentFile.mkdirs()
-        java.nio.file.Files.copy(
+        Files.copy(
                 shadowJarFile.get().asFile.toPath(),
                 outputFile.toPath(),
-                java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+                StandardCopyOption.REPLACE_EXISTING)
         ant.zip(update: "true", destfile: outputFile) {
             fileset(dir: tempDir)
         }

@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.server;
 
 import com.xujiayao.discord_mc_chat.Constants;
+import com.xujiayao.discord_mc_chat.commands.CommandTargets;
 import com.xujiayao.discord_mc_chat.commands.impl.ConsoleCommand;
 import com.xujiayao.discord_mc_chat.commands.impl.ExecuteCommand;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
@@ -12,6 +13,7 @@ import com.xujiayao.discord_mc_chat.network.protocol.Packet;
 import com.xujiayao.discord_mc_chat.network.protocol.Packets;
 import com.xujiayao.discord_mc_chat.server.discord.BotPresenceManager;
 import com.xujiayao.discord_mc_chat.server.discord.ChannelUpdateManager;
+import com.xujiayao.discord_mc_chat.server.discord.DiscordConsoleForwarder;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordMessageAdapter;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
@@ -72,7 +74,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 			LOGGER.warn(I18nManager.getDmccTranslation("server.network.client_disconnected_normal", clientName));
 		}
 		if (announceConsoleForwardingStop) {
-			DiscordManager.sendConsoleForwardingStatusMessage(clientName, false);
+			DiscordConsoleForwarder.sendStatus(clientName, false);
 		}
 		// Clean up from NetworkManager
 		NetworkManager.removeClientChannel(ctx.channel());
@@ -90,7 +92,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 		if (authenticated) {
 			switch (packet) {
-				case Packets.ConsoleLogBatch p -> DiscordManager.sendConsoleForwardedBatchMessage(clientName, p.lines());
+				case Packets.ConsoleLogBatch p -> DiscordConsoleForwarder.sendBatch(clientName, p.lines());
 				case Packets.MinecraftEvent p -> handleMinecraftEvent(ctx, p);
 				case Packets.InfoSnapshot p -> NetworkManager.cacheInfoResponse(clientName, p);
 				case Packets.LatencyPing p -> ctx.writeAndFlush(new Packets.LatencyPong(p.sentAtMillis()));
@@ -162,7 +164,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 				consoleForwardingEnabled
 		));
 		if (consoleForwardingEnabled) {
-			DiscordManager.sendConsoleForwardingStatusMessage(clientName, true);
+			DiscordConsoleForwarder.sendStatus(clientName, true);
 		}
 		BotPresenceManager.update();
 	}
@@ -304,24 +306,12 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		ctx.close();
 	}
 
-	private JsonNode findServerConfig(String serverName) {
-		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
-		if (serversNode.isArray()) {
-			for (JsonNode node : serversNode) {
-				if (serverName.equals(node.path("name").asString())) {
-					return node;
-				}
-			}
-		}
-		return null;
-	}
-
 	private boolean isWhitelisted(String serverName) {
-		return findServerConfig(serverName) != null;
+		return CommandTargets.isConfiguredServer(serverName);
 	}
 
 	private String getMinecraftVersion(String serverName) {
-		JsonNode config = findServerConfig(serverName);
+		JsonNode config = CommandTargets.findServerConfig(serverName);
 		return config != null ? config.path("minecraft_version").asString() : "";
 	}
 
@@ -333,7 +323,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		String roleColor = resolveDisplayRoleColor(packet.placeholders().getOrDefault("player_uuid", ""));
 
 		boolean parseForMinecraft = true;
-		MinecraftMessageParser.ParsedMessage parsed = MinecraftMessageParser.parseUserMessage(rawContent, parseForMinecraft);
+		MinecraftMessageParser.ParsedMessage parsed = MinecraftMessageParser.parseMessage(rawContent, parseForMinecraft);
 		List<TextSegment> relaySegments = MinecraftMessageParser.buildUserMessageSegments(sourceClientName, displayName, roleColor, parsed.minecraftSegments());
 		List<TextSegment> overwriteSegments = MinecraftMessageParser.buildOverwriteUserMessageSegments(sourceClientName, displayName, roleColor, parsed.minecraftSegments());
 
@@ -444,7 +434,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 			message = resolveMinecraftToDiscordMessage(lang, packet.placeholders());
 		}
 
-		MinecraftMessageParser.ParsedMessage parsed = MinecraftMessageParser.parseSystemMessage(message, true);
+		MinecraftMessageParser.ParsedMessage parsed = MinecraftMessageParser.parseMessage(message, true);
 		List<TextSegment> relaySegments = MinecraftMessageParser.buildSystemMessageSegments(sourceClientName, parsed.minecraftSegments());
 		List<TextSegment> overwriteSegments = MinecraftMessageParser.buildOverwriteSystemMessageSegments(sourceClientName, parsed.minecraftSegments());
 

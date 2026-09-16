@@ -32,8 +32,6 @@ public final class EnvironmentUtils {
 	/**
 	 * Gets the Minecraft version using reflection.
 	 * Should only be called if running in a Minecraft environment.
-	 *
-	 * @return The Minecraft version as a string.
 	 */
 	public static String getMinecraftVersion() {
 		try {

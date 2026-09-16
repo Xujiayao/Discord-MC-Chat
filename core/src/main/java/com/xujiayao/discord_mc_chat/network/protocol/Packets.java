@@ -182,9 +182,6 @@ public final class Packets {
 			return new CommandResult(kind, requestId, response, null);
 		}
 
-		/**
-		 * @return Whether this result announces a file payload that was streamed beforehand.
-		 */
 		public boolean hasFile() {
 			return fileName != null && !fileName.isBlank();
 		}
@@ -269,9 +266,10 @@ public final class Packets {
 	/**
 	 * Request for a runtime info snapshot.
 	 *
+	 * @param requestId    Correlation id, echoed by the {@link InfoSnapshot} that answers this request.
 	 * @param sentAtMillis Sender timestamp, echoed so the receiver can measure round-trip latency.
 	 */
-	public record InfoRequest(long sentAtMillis) implements Packet {
+	public record InfoRequest(long requestId, long sentAtMillis) implements Packet {
 		@Override
 		public PacketType type() {
 			return PacketType.INFO_REQUEST;
@@ -279,22 +277,10 @@ public final class Packets {
 	}
 
 	/**
-	 * Runtime info of one DMCC client.
-	 *
-	 * @param serverName              Server name.
-	 * @param connectionLatencyMillis Connection latency in milliseconds.
-	 * @param minecraftVersion        Minecraft version.
-	 * @param onlinePlayerCount       Current online player count.
-	 * @param maxPlayerCount          Maximum player capacity.
-	 * @param playersAndLatencies     Per-player latency map.
-	 * @param playersEverJoined       Number of players that have ever joined.
-	 * @param tps                     Server TPS metric.
-	 * @param mspt                    Server MSPT metric.
-	 * @param uptimeSeconds           Uptime in seconds.
-	 * @param totalMemory             JVM total memory in bytes.
-	 * @param freeMemory              JVM free memory in bytes.
+	 * Runtime info of one DMCC client. {@code requestId} is copied from the {@link InfoRequest} being
+	 * answered, so the server can tell the answer to this round from a late answer to an earlier one.
 	 */
-	public record InfoSnapshot(String serverName, long connectionLatencyMillis, String minecraftVersion,
+	public record InfoSnapshot(long requestId, String serverName, long connectionLatencyMillis, String minecraftVersion,
 							   int onlinePlayerCount, int maxPlayerCount, Map<String, Integer> playersAndLatencies,
 							   int playersEverJoined, double tps, double mspt, long uptimeSeconds,
 							   long totalMemory, long freeMemory) implements Packet {
@@ -303,30 +289,23 @@ public final class Packets {
 			return PacketType.INFO_SNAPSHOT;
 		}
 
-		/**
-		 * @param serverName New server name.
-		 * @return A copy with the server name replaced.
-		 */
 		public InfoSnapshot withServerName(String serverName) {
-			return new InfoSnapshot(serverName, connectionLatencyMillis, minecraftVersion, onlinePlayerCount,
+			return new InfoSnapshot(requestId, serverName, connectionLatencyMillis, minecraftVersion, onlinePlayerCount,
 					maxPlayerCount, playersAndLatencies, playersEverJoined, tps, mspt, uptimeSeconds, totalMemory, freeMemory);
 		}
 
-		/**
-		 * @param minecraftVersion New Minecraft version.
-		 * @return A copy with the Minecraft version replaced.
-		 */
 		public InfoSnapshot withMinecraftVersion(String minecraftVersion) {
-			return new InfoSnapshot(serverName, connectionLatencyMillis, minecraftVersion, onlinePlayerCount,
+			return new InfoSnapshot(requestId, serverName, connectionLatencyMillis, minecraftVersion, onlinePlayerCount,
 					maxPlayerCount, playersAndLatencies, playersEverJoined, tps, mspt, uptimeSeconds, totalMemory, freeMemory);
 		}
 
-		/**
-		 * @param connectionLatencyMillis Measured round-trip latency.
-		 * @return A copy with the latency replaced.
-		 */
+		public InfoSnapshot withRequestId(long requestId) {
+			return new InfoSnapshot(requestId, serverName, connectionLatencyMillis, minecraftVersion, onlinePlayerCount,
+					maxPlayerCount, playersAndLatencies, playersEverJoined, tps, mspt, uptimeSeconds, totalMemory, freeMemory);
+		}
+
 		public InfoSnapshot withConnectionLatency(long connectionLatencyMillis) {
-			return new InfoSnapshot(serverName, connectionLatencyMillis, minecraftVersion, onlinePlayerCount,
+			return new InfoSnapshot(requestId, serverName, connectionLatencyMillis, minecraftVersion, onlinePlayerCount,
 					maxPlayerCount, playersAndLatencies, playersEverJoined, tps, mspt, uptimeSeconds, totalMemory, freeMemory);
 		}
 	}
@@ -334,12 +313,7 @@ public final class Packets {
 	// --- Account linking -------------------------------------------------------------------------
 
 	/**
-	 * Request to create or re-check a link code.
-	 *
-	 * @param minecraftUuid Minecraft player UUID.
-	 * @param playerName    Minecraft player name.
-	 * @param joinCheck     Whether this is the join-time pre-check rather than an explicit command.
-	 */
+	 * Request to create or re-check a link code. {@code joinCheck} marks the silent pre-check DMCC runs\n	 * when a player joins, as opposed to an explicit {@code /dmcc link}.\n	 */
 	public record LinkRequest(String minecraftUuid, String playerName, boolean joinCheck) implements Packet {
 		@Override
 		public PacketType type() {
@@ -348,13 +322,7 @@ public final class Packets {
 	}
 
 	/**
-	 * Response to a {@link LinkRequest}.
-	 *
-	 * @param minecraftUuid Minecraft player UUID.
-	 * @param code          Verification code, null when already linked.
-	 * @param alreadyLinked Whether the player is already linked.
-	 * @param discordName   Linked Discord display name when already linked.
-	 */
+	 * Response to a {@link LinkRequest}. {@code code} is null when the player is already linked, in which\n	 * case {@code discordName} names the Discord account they are linked to.\n	 */
 	public record LinkResult(String minecraftUuid, String code, boolean alreadyLinked,
 							 String discordName) implements Packet {
 		@Override
@@ -364,11 +332,7 @@ public final class Packets {
 	}
 
 	/**
-	 * Request to unlink a player account.
-	 *
-	 * @param minecraftUuid Minecraft player UUID.
-	 * @param playerName    Minecraft player name.
-	 */
+	 * Request to unlink a player account.\n	 */
 	public record UnlinkRequest(String minecraftUuid, String playerName) implements Packet {
 		@Override
 		public PacketType type() {
@@ -377,12 +341,7 @@ public final class Packets {
 	}
 
 	/**
-	 * Response to an {@link UnlinkRequest}.
-	 *
-	 * @param minecraftUuid Minecraft player UUID.
-	 * @param success       Whether the unlink succeeded.
-	 * @param discordName   Previously linked Discord display name.
-	 */
+	 * Response to an {@link UnlinkRequest}; {@code discordName} is the account that was unlinked from.\n	 */
 	public record UnlinkResult(String minecraftUuid, boolean success, String discordName) implements Packet {
 		@Override
 		public PacketType type() {
@@ -391,10 +350,7 @@ public final class Packets {
 	}
 
 	/**
-	 * Full OP level synchronization payload.
-	 *
-	 * @param opLevels Mapping of Minecraft UUID to OP level.
-	 */
+	 * Full OP level synchronization payload: Minecraft UUID to OP level.\n	 */
 	public record OpSync(Map<String, Integer> opLevels) implements Packet {
 		@Override
 		public PacketType type() {
@@ -416,17 +372,7 @@ public final class Packets {
 	}
 
 	/**
-	 * Relays a parsed Discord event to the Minecraft side.
-	 *
-	 * @param eventType               Discord event type.
-	 * @param segments                Main message segments.
-	 * @param replySegments           Reply/reference message segments.
-	 * @param editedMessageSegments   Edited message segments, only for {@code EDIT}.
-	 * @param mentionNotificationText Mention notification text.
-	 * @param mentionNotificationStyle Mention notification style.
-	 * @param mentionedPlayerUuids    Mentioned player UUIDs.
-	 * @param mentionEveryone         Whether {@code @everyone} was mentioned.
-	 */
+	 * Relays a parsed Discord event to the Minecraft side. {@code editedMessageSegments} is only set for\n	 * {@code EDIT}, and the mention fields are only set when somebody was actually mentioned.\n	 */
 	public record DiscordRelay(DiscordEventType eventType, List<TextSegment> segments, List<TextSegment> replySegments,
 							   List<TextSegment> editedMessageSegments, String mentionNotificationText,
 							   String mentionNotificationStyle, List<String> mentionedPlayerUuids,
@@ -438,28 +384,14 @@ public final class Packets {
 		}
 
 		/**
-		 * Convenience constructor for events without reply, edit or mention data.
-		 *
-		 * @param eventType Discord event type.
-		 * @param segments  Main message segments.
-		 */
+		 * Convenience constructor for events without reply, edit or mention data.\n		 */
 		public DiscordRelay(DiscordEventType eventType, List<TextSegment> segments) {
 			this(eventType, segments, null, null, null, null, null, false);
 		}
 	}
 
 	/**
-	 * Relays a Minecraft-originated message back to Minecraft clients.
-	 *
-	 * @param segments                Parsed message segments.
-	 * @param componentJson           Raw component JSON for tellraw relay.
-	 * @param componentPlaceholder    Placeholder token to replace with the component text.
-	 * @param componentText           Plain text generated from the component JSON.
-	 * @param mentionNotificationText Mention notification text.
-	 * @param mentionNotificationStyle Mention notification style.
-	 * @param mentionedPlayerUuids    Mentioned player UUIDs.
-	 * @param mentionEveryone         Whether {@code @everyone} was mentioned.
-	 */
+	 * Relays a Minecraft-originated message back to Minecraft clients. When {@code componentJson} is set,\n	 * the receiver rebuilds the native component and swaps it in for {@code componentPlaceholder};\n	 * {@code componentText} is the plain-text fallback for clients that cannot.\n	 */
 	public record MinecraftRelay(List<TextSegment> segments, String componentJson, String componentPlaceholder,
 								 String componentText, String mentionNotificationText, String mentionNotificationStyle,
 								 List<String> mentionedPlayerUuids, boolean mentionEveryone) implements Packet {
@@ -470,10 +402,7 @@ public final class Packets {
 		}
 
 		/**
-		 * Convenience constructor for relays without component or mention data.
-		 *
-		 * @param segments Parsed message segments.
-		 */
+		 * Convenience constructor for relays without component or mention data.\n		 */
 		public MinecraftRelay(List<TextSegment> segments) {
 			this(segments, null, null, null, null, null, null, false);
 		}
@@ -499,11 +428,7 @@ public final class Packets {
 	}
 
 	/**
-	 * Carries Minecraft event placeholders for Discord-side templating.
-	 *
-	 * @param eventType    Minecraft event type.
-	 * @param placeholders Placeholder map used for rendering message templates.
-	 */
+	 * Carries Minecraft event placeholders for Discord-side templating.\n	 */
 	public record MinecraftEvent(MinecraftEventType eventType, Map<String, String> placeholders) implements Packet {
 		@Override
 		public PacketType type() {
@@ -512,10 +437,7 @@ public final class Packets {
 	}
 
 	/**
-	 * A batch of console log lines.
-	 *
-	 * @param lines Log lines in this batch.
-	 */
+	 * A batch of console log lines.\n	 */
 	public record ConsoleLogBatch(List<String> lines) implements Packet {
 		@Override
 		public PacketType type() {

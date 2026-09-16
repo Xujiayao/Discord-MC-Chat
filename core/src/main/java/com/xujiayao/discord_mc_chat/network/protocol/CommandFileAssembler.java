@@ -27,8 +27,6 @@ public final class CommandFileAssembler {
 
 	/**
 	 * Stores one received chunk.
-	 *
-	 * @param chunk The received chunk.
 	 */
 	public static void accept(Packets.CommandFileChunk chunk) {
 		if (chunk == null || chunk.requestId() == null || chunk.total() <= 0
@@ -54,17 +52,6 @@ public final class CommandFileAssembler {
 		}
 		Slot slot = SLOTS.remove(requestId);
 		return slot == null ? null : slot.assemble();
-	}
-
-	/**
-	 * Drops any buffered chunks of a request that will never complete.
-	 *
-	 * @param requestId Correlation id of the command.
-	 */
-	public static void discard(String requestId) {
-		if (requestId != null) {
-			SLOTS.remove(requestId);
-		}
 	}
 
 	/**

@@ -16,7 +16,6 @@ import tools.jackson.databind.JsonNode;
 
 import java.awt.Color;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -71,32 +70,17 @@ public final class MinecraftMessageParser {
 	}
 
 	/**
-	 * Parses a player/user message.
+	 * Parses a message coming from Minecraft.
 	 *
-	 * @param raw               Raw message text.
-	 * @param parseForMinecraft Whether to build rich Minecraft segments.
-	 * @return Parsed message container.
+	 * @param parseForMinecraft When false, only the Discord-ready string is built and the Minecraft
+	 *                          segments are left as one unstyled segment.
 	 */
-	public static ParsedMessage parseUserMessage(String raw, boolean parseForMinecraft) {
+	public static ParsedMessage parseMessage(String raw, boolean parseForMinecraft) {
 		return parse(raw, parseForMinecraft);
 	}
 
 	/**
-	 * Parses a system message.
-	 *
-	 * @param raw               Raw message text.
-	 * @param parseForMinecraft Whether to build rich Minecraft segments.
-	 * @return Parsed message container.
-	 */
-	public static ParsedMessage parseSystemMessage(String raw, boolean parseForMinecraft) {
-		return parse(raw, parseForMinecraft);
-	}
-
-	/**
-	 * Parses a command string into display-friendly content.
-	 *
-	 * @param command Raw command string.
-	 * @return Parsed message container.
+	 * Parses a command string into display-friendly content: the Discord side gets it wrapped in backticks.
 	 */
 	public static ParsedMessage parseCommandMessage(String command) {
 		return new ParsedMessage("`" + command + "`", List.of(new TextSegment(command)), Set.of(), false);
@@ -106,12 +90,6 @@ public final class MinecraftMessageParser {
 
 	/**
 	 * Builds user-message template segments.
-	 *
-	 * @param serverName            Source server name.
-	 * @param effectiveName         Sender display name.
-	 * @param roleColor             Sender role color.
-	 * @param parsedMessageSegments Parsed message body segments.
-	 * @return Rendered template segments.
 	 */
 	public static List<TextSegment> buildUserMessageSegments(String serverName, String effectiveName,
 															 String roleColor, List<TextSegment> parsedMessageSegments) {
@@ -127,10 +105,6 @@ public final class MinecraftMessageParser {
 
 	/**
 	 * Builds system-message template segments.
-	 *
-	 * @param serverName            Source server name.
-	 * @param parsedMessageSegments Parsed message body segments.
-	 * @return Rendered template segments.
 	 */
 	public static List<TextSegment> buildSystemMessageSegments(String serverName, List<TextSegment> parsedMessageSegments) {
 		return template("xxxxx_to_minecraft", "system_message")
@@ -144,13 +118,8 @@ public final class MinecraftMessageParser {
 	}
 
 	/**
-	 * Builds overwrite user-message template segments.
-	 *
-	 * @param serverName            Source server name.
-	 * @param effectiveName         Sender display name.
-	 * @param roleColor             Sender role color.
-	 * @param parsedMessageSegments Parsed message body segments.
-	 * @return Rendered overwrite template segments.
+	 * Builds user-message template segments using the "overwrite" variant, which replaces the source
+	 * server's own rendering instead of being relayed next to it.
 	 */
 	public static List<TextSegment> buildOverwriteUserMessageSegments(String serverName, String effectiveName,
 																	  String roleColor, List<TextSegment> parsedMessageSegments) {
@@ -165,11 +134,7 @@ public final class MinecraftMessageParser {
 	}
 
 	/**
-	 * Builds overwrite system-message template segments.
-	 *
-	 * @param serverName            Source server name.
-	 * @param parsedMessageSegments Parsed message body segments.
-	 * @return Rendered overwrite template segments.
+	 * Builds system-message template segments using the "overwrite" variant.
 	 */
 	public static List<TextSegment> buildOverwriteSystemMessageSegments(String serverName, List<TextSegment> parsedMessageSegments) {
 		return template("overwrite", ConfigManager.getString("mode", "single_server"), "system_message")
@@ -319,10 +284,7 @@ public final class MinecraftMessageParser {
 	// --- Mention directory -----------------------------------------------------------------------
 
 	/**
-	 * Builds the per-call mention context on top of the cached mention directory.
-	 * <p>
-	 * Only the two values that describe the message being parsed are per call; the alias table, the sorted
-	 * alias list and the custom emoji table are shared immutable snapshots.
+	 * Builds the per-call mention context on top of the mention directory.
 	 *
 	 * @return A mention context for one message.
 	 */
@@ -334,44 +296,30 @@ public final class MinecraftMessageParser {
 	 * Returns the mention directory, rebuilding it when the cached one has expired or was never built.
 	 * <p>
 	 * The rebuild is single-flight: the first caller to find the cache stale builds the directory while the
-	 * other callers wait for that result, so concurrent messages cannot multiply the blocking JDA lookups.
+	 * other callers wait for that result. It is worth caching because walking every guild member and role is
+	 * far more work than parsing one message, even though the blocking Discord lookups inside it are served
+	 * from {@link DiscordManager}'s own short-lived profile cache.
 	 *
 	 * @return The cached or freshly built mention directory.
 	 */
 	private static MentionDirectory mentionDirectory() {
 		MentionDirectory cached = mentionDirectoryCache;
 		long now = System.currentTimeMillis();
-		if (isFresh(cached, now)) {
+		if (cached != null && now - cached.builtAtMillis() < MENTION_DIRECTORY_TTL_MILLIS) {
 			return cached;
 		}
 
 		synchronized (mentionDirectoryLock) {
 			cached = mentionDirectoryCache;
 			now = System.currentTimeMillis();
-			if (isFresh(cached, now)) {
+			if (cached != null && now - cached.builtAtMillis() < MENTION_DIRECTORY_TTL_MILLIS) {
 				return cached;
 			}
 
 			MentionDirectory rebuilt = buildMentionDirectory(now);
-			// A directory built while the Discord guild data is unavailable is not cached: it would be
-			// missing every member, role and emoji, and caching it would hide them for a whole TTL instead
-			// of letting the next message pick them up. This is the behaviour this parser always had.
-			if (rebuilt.discordDataAvailable()) {
-				mentionDirectoryCache = rebuilt;
-			}
+			mentionDirectoryCache = rebuilt;
 			return rebuilt;
 		}
-	}
-
-	/**
-	 * Checks whether a cached mention directory can still be used.
-	 *
-	 * @param directory The cached directory, may be null.
-	 * @param now       The current timestamp in milliseconds.
-	 * @return true when the directory exists and its TTL has not elapsed.
-	 */
-	private static boolean isFresh(MentionDirectory directory, long now) {
-		return directory != null && now - directory.builtAtMillis() < MENTION_DIRECTORY_TTL_MILLIS;
 	}
 
 	/**
@@ -393,7 +341,6 @@ public final class MinecraftMessageParser {
 	 * every guild member, so that unlinked players can still be mentioned by Discord name.
 	 *
 	 * @param builtAtMillis The timestamp to stamp the directory with, for the TTL check.
-	 * @return A new immutable mention directory.
 	 */
 	private static MentionDirectory buildMentionDirectory(long builtAtMillis) {
 		Map<String, MentionTarget> allMentionByAlias = new HashMap<>();
@@ -467,15 +414,7 @@ public final class MinecraftMessageParser {
 		List<String> aliasesByLengthDesc = new ArrayList<>(allMentionByAlias.keySet());
 		aliasesByLengthDesc.sort(Comparator.comparingInt(String::length).reversed());
 
-		// The three tables are wrapped so the shared directory can never be mutated by a reader; they are
-		// the only copies, so an unmodifiable view keeps the exact iteration order built above.
-		return new MentionDirectory(
-				Collections.unmodifiableMap(allMentionByAlias),
-				List.copyOf(aliasesByLengthDesc),
-				Collections.unmodifiableMap(emojiByAlias),
-				builtAtMillis,
-				!allMembers.isEmpty() || !allRoles.isEmpty() || !allCustomEmojis.isEmpty()
-		);
+		return new MentionDirectory(allMentionByAlias, aliasesByLengthDesc, emojiByAlias, builtAtMillis);
 	}
 
 	private static void putMentionAlias(Map<String, MentionTarget> aliases, String alias, MentionTarget target) {
@@ -580,11 +519,6 @@ public final class MinecraftMessageParser {
 
 	/**
 	 * Parsed message data for both Discord and Minecraft outputs.
-	 *
-	 * @param discordContent       Discord-ready message string.
-	 * @param minecraftSegments    Minecraft-ready rich text segments.
-	 * @param mentionedPlayerUuids Mentioned Minecraft player UUIDs.
-	 * @param mentionEveryone      Whether an @everyone-like mention is detected.
 	 */
 	public record ParsedMessage(
 			String discordContent,
@@ -595,46 +529,35 @@ public final class MinecraftMessageParser {
 	}
 
 	/**
-	 * Immutable mention lookup data, rebuilt lazily and shared by every message until it expires.
+	 * Mention lookup data, rebuilt lazily and shared by every message until it expires.
+	 * <p>
+	 * The tables are only ever read after the directory has been published to {@code mentionDirectoryCache},
+	 * and a rebuild always installs a brand new directory, so no reader can observe one being filled in.
 	 *
-	 * @param allMentionByAlias          Normalized alias to mention target table.
-	 * @param mentionAliasesByLengthDesc Aliases ordered longest first, for greedy matching.
-	 * @param customEmojiByName          Lower-case custom emoji name to emoji table.
-	 * @param builtAtMillis              Build timestamp in milliseconds, used for the TTL check.
-	 * @param discordDataAvailable       Whether the build could see any guild member, role or custom emoji.
+	 * @param mentionAliasesByLengthDesc Aliases ordered longest first, so a longer name wins over a prefix
+	 *                                   of it.
+	 * @param builtAtMillis              Build timestamp, compared against the TTL.
 	 */
 	private record MentionDirectory(Map<String, MentionTarget> allMentionByAlias,
 									List<String> mentionAliasesByLengthDesc,
 									Map<String, RichCustomEmoji> customEmojiByName,
-									long builtAtMillis,
-									boolean discordDataAvailable) {
+									long builtAtMillis) {
 	}
 
 	private record MentionTarget(MentionType type, String id, String displayName, String color,
 								 List<String> linkedMinecraftUuids) {
-		/**
-		 * Defensive copy, so the shared directory never hands a reader a list it could modify.
-		 * {@code unmodifiableList} is used instead of {@code List.copyOf} to keep the tolerance for null
-		 * entries that the previous per-message lists had.
-		 */
-		private MentionTarget {
-			linkedMinecraftUuids = Collections.unmodifiableList(new ArrayList<>(linkedMinecraftUuids));
-		}
 	}
 
 	private record MentionMatch(MentionTarget target, int endExclusive) {
 	}
 
 	/**
-	 * Parsing state of one message: the immutable shared directory plus the two values that belong to the
-	 * message currently being parsed.
+	 * Parsing state of one message: the shared directory plus the two values that belong to the message
+	 * currently being parsed.
 	 */
 	private static final class MentionContext {
-		/** Shared and immutable: never written by a parse. */
 		private final Map<String, MentionTarget> allMentionByAlias;
-		/** Shared and immutable: never written by a parse. */
 		private final List<String> mentionAliasesByLengthDesc;
-		/** Shared and immutable: never written by a parse. */
 		private final Map<String, RichCustomEmoji> customEmojiByName;
 		/** Per call: the Minecraft UUIDs mentioned by this one message. */
 		private final Set<String> mentionedPlayerUuids = new HashSet<>();

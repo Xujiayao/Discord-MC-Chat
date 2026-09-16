@@ -71,10 +71,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 		}
 	}
 
-	private static String normalizeMinecraftNamespace(String value) {
-		return StatsCommand.normalizeMinecraftNamespace(value);
-	}
-
 	@Override
 	public void onReady(@NotNull ReadyEvent event) {
 		BotPresenceManager.update();
@@ -225,9 +221,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 		return choices;
 	}
 
-	/**
-	 * @return The executor used to compute autocomplete choices, recreated when it was shut down by a reload.
-	 */
 	private static synchronized ExecutorService autocompleteExecutor() {
 		if (autocompleteExecutor == null || autocompleteExecutor.isShutdown()) {
 			autocompleteExecutor = Executors.newCachedThreadPool(ExecutorServiceUtils.newThreadFactory("DMCC-Autocomplete"));
@@ -306,7 +299,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 		StatsProvider provider = Platform.host().stats();
 		if (provider == null) return List.of();
 
-		String normalizedValue = normalizeMinecraftNamespace(currentValue);
+		String normalizedValue = StatsCommand.normalizeMinecraftNamespace(currentValue);
 		String lowerValue = normalizedValue == null ? "" : normalizedValue.toLowerCase();
 		return provider.getStatTypes().stream()
 				.filter(t -> t.toLowerCase().contains(lowerValue))
@@ -319,8 +312,8 @@ final class DiscordEventHandler extends ListenerAdapter {
 		StatsProvider provider = Platform.host().stats();
 		if (provider == null || type == null || type.isBlank()) return List.of();
 
-		String normalizedType = normalizeMinecraftNamespace(type);
-		String normalizedValue = normalizeMinecraftNamespace(currentValue);
+		String normalizedType = StatsCommand.normalizeMinecraftNamespace(type);
+		String normalizedValue = StatsCommand.normalizeMinecraftNamespace(currentValue);
 		String lowerValue = normalizedValue == null ? "" : normalizedValue.toLowerCase();
 		return provider.getStatNames(normalizedType).stream()
 				.filter(s -> s.toLowerCase().contains(lowerValue))
@@ -408,7 +401,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 			}
 		}
 
-		// Build and send the DiscordEventPacket to all connected clients
 		Packets.DiscordRelay packet = new Packets.DiscordRelay(Packets.DiscordEventType.CHAT, mainSegments,
 				replySegments, null, mentionNotificationText, mentionNotificationStyle,
 				mentionedPlayerUuids, isMentionEveryone);
@@ -426,7 +418,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 			return false;
 		}
 
-		String targetServer = DiscordManager.resolveConsoleTargetServer(event.getChannel().getId(), event.getChannel().getName());
+		String targetServer = DiscordConsoleForwarder.resolveTargetServer(event.getChannel().getId(), event.getChannel().getName());
 		if (targetServer == null || targetServer.isBlank()) {
 			return false;
 		}

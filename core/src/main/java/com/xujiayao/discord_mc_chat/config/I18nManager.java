@@ -207,8 +207,6 @@ public final class I18nManager {
 
 	/**
 	 * Gets the custom messages JsonNode.
-	 *
-	 * @return The root JsonNode for custom messages.
 	 */
 	public static JsonNode getCustomMessages() {
 		return customMessages;

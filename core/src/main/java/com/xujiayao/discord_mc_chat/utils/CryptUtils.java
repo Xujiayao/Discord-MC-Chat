@@ -19,9 +19,6 @@ public final class CryptUtils {
 
 	/**
 	 * Calculates the SHA-256 hash of a string.
-	 *
-	 * @param input The input string.
-	 * @return The hex string of the hash.
 	 */
 	public static String sha256(String input) {
 		try {
@@ -43,9 +40,6 @@ public final class CryptUtils {
 
 	/**
 	 * Generates a random alphanumeric string.
-	 *
-	 * @param length The length of the string.
-	 * @return The random string.
 	 */
 	public static String generateRandomString(int length) {
 		StringBuilder sb = new StringBuilder(length);

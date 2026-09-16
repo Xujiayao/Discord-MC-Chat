@@ -148,9 +148,6 @@ public final class ConfigManager {
 
 	/**
 	 * Checks whether the given value is a mode DMCC supports.
-	 *
-	 * @param value Mode value to check.
-	 * @return true when the value names a supported mode.
 	 */
 	public static boolean isValidMode(String value) {
 		return MODE_SINGLE_SERVER.equals(value)
@@ -196,8 +193,6 @@ public final class ConfigManager {
 	/**
 	 * Reads a bundled template as bytes.
 	 *
-	 * @param resourcePath Absolute resource path of the template.
-	 * @return The template bytes.
 	 * @throws IOException If the template is missing.
 	 */
 	private static byte[] readTemplateBytes(String resourcePath) throws IOException {
@@ -229,7 +224,7 @@ public final class ConfigManager {
 	 * Gets a specific configuration value as a JsonNode.
 	 *
 	 * @param path The path to the configuration value
-	 * @return The JsonNode at the specified path
+	 * @return The node at that path, or a missing node when nothing is configured there.
 	 */
 	public static JsonNode getConfigNode(String path) {
 		JsonNode node = config;
@@ -264,10 +259,8 @@ public final class ConfigManager {
 	/**
 	 * Generic method to get a configuration value with specified conversion function.
 	 *
-	 * @param <T>       The type to convert the configuration value to
-	 * @param path      The path to the configuration value
-	 * @param converter Function to convert JsonNode to the desired type
-	 * @return The value at the specified path converted to type T, or null if not found
+	 * @param path The path to the configuration value
+	 * @return The converted value, or null when the path is absent or cannot be converted.
 	 */
 	public static <T> T getValue(String path, Function<JsonNode, T> converter) {
 		JsonNode node = getConfigNode(path);
@@ -290,11 +283,7 @@ public final class ConfigManager {
 	}
 
 	/**
-	 * Gets a configuration value as a string, with a default value if not found.
-	 *
-	 * @param path         The path to the configuration value
-	 * @param defaultValue The default value to return if the path is not found
-	 * @return The string value at the specified path, or null if not found
+	 * Gets a configuration value as a string.
 	 */
 	public static String getString(String path, String defaultValue) {
 		String value = getValue(path, JsonNode::asString);
@@ -312,11 +301,7 @@ public final class ConfigManager {
 	}
 
 	/**
-	 * Gets a configuration value as an integer, with a default value if not found.
-	 *
-	 * @param path         The path to the configuration value
-	 * @param defaultValue The default value to return if the path is not found
-	 * @return The integer value at the specified path
+	 * Gets a configuration value as an integer.
 	 */
 	public static Integer getInt(String path, int defaultValue) {
 		Integer value = getValue(path, JsonNode::asInt);
@@ -324,11 +309,7 @@ public final class ConfigManager {
 	}
 
 	/**
-	 * Gets a configuration value as a double, with a default value if not found.
-	 *
-	 * @param path         The path to the configuration value
-	 * @param defaultValue The default value to return if the path is not found
-	 * @return The double value at the specified path
+	 * Gets a configuration value as a double.
 	 */
 	public static Double getDouble(String path, double defaultValue) {
 		Double value = getValue(path, JsonNode::asDouble);
@@ -350,10 +331,6 @@ public final class ConfigManager {
 	 * <p>
 	 * Use this instead of {@link #getBoolean(String)} wherever the key may legitimately be absent, so that
 	 * the returned {@code null} cannot turn into a {@link NullPointerException} at the unboxing site.
-	 *
-	 * @param path         The path to the configuration value
-	 * @param defaultValue The value to return if the path is not found
-	 * @return The boolean value at the specified path
 	 */
 	public static boolean getBoolean(String path, boolean defaultValue) {
 		Boolean value = getValue(path, JsonNode::asBoolean);

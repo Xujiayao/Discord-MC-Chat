@@ -82,8 +82,6 @@ public final class UpdateCheckManager {
 
 	/**
 	 * Performs a manual update check.
-	 *
-	 * @return The check result.
 	 */
 	public static CheckResult checkNow() {
 		try {
@@ -193,12 +191,12 @@ public final class UpdateCheckManager {
 		if (primaryChannel != null && !primaryChannel.isBlank()) {
 			DiscordManager.sendBotMessage(primaryChannel, fallbackChannel, message);
 		} else if (fallbackChannel != null && !fallbackChannel.isBlank()) {
-			DiscordManager.sendBotMessage(fallbackChannel, message);
+			DiscordManager.sendBotMessage(fallbackChannel, null, message);
 		}
 	}
 
 	private static void notifyMinecraft(String mode, String message) {
-		MinecraftMessageParser.ParsedMessage parsedMessage = MinecraftMessageParser.parseSystemMessage(message, true);
+		MinecraftMessageParser.ParsedMessage parsedMessage = MinecraftMessageParser.parseMessage(message, true);
 		List<TextSegment> segments = parsedMessage.minecraftSegments();
 		if (segments == null || segments.isEmpty()) {
 			return;

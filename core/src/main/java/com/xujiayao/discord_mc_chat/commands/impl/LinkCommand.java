@@ -131,15 +131,11 @@ public final class LinkCommand implements Command {
 	public interface PlayerContextProvider {
 		/**
 		 * Gets the player's UUID as a string.
-		 *
-		 * @return The player UUID string.
 		 */
 		String getPlayerUuid();
 
 		/**
 		 * Gets the player's display name.
-		 *
-		 * @return The player name.
 		 */
 		String getPlayerName();
 	}
@@ -152,15 +148,11 @@ public final class LinkCommand implements Command {
 	public interface DiscordUserContextProvider {
 		/**
 		 * Gets the Discord user's ID.
-		 *
-		 * @return The Discord user ID.
 		 */
 		String getDiscordUserId();
 
 		/**
 		 * Gets the Discord user's display name.
-		 *
-		 * @return The Discord username.
 		 */
 		String getDiscordUserName();
 	}

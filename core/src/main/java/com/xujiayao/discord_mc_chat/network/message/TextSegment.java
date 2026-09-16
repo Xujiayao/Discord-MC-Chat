@@ -23,43 +23,21 @@ public final class TextSegment {
 	 */
 	public String text;
 
-	/**
-	 * Whether the text should be rendered in bold.
-	 */
 	public boolean bold;
-
-	/**
-	 * Whether the text should be rendered in italic.
-	 */
 	public boolean italic;
-
-	/**
-	 * Whether the text should be rendered with underline.
-	 */
 	public boolean underlined;
-
-	/**
-	 * Whether the text should be rendered with strikethrough.
-	 */
 	public boolean strikethrough;
-
-	/**
-	 * Whether the text should be rendered obfuscated.
-	 */
 	public boolean obfuscated;
 
 	/**
-	 * The color of the text.
-	 * <p>
-	 * Accepts Minecraft named colors (e.g. "gold", "dark_gray") or hex color codes
+	 * The color of the text, as a Minecraft named color (e.g. "gold", "dark_gray") or a hex code
 	 * (e.g. "#3366CC"). A null or empty value means "inherit / default".
 	 */
 	public String color;
 
 	/**
-	 * An optional URL to open when the player clicks this segment.
-	 * <p>
-	 * When non-null, the segment should be rendered as a clickable link.
+	 * An optional URL to open when the player clicks this segment. When non-null, the segment is rendered
+	 * as a clickable link.
 	 */
 	public String clickUrl;
 
@@ -76,20 +54,11 @@ public final class TextSegment {
 
 	/**
 	 * Creates a plain text segment with no styling.
-	 *
-	 * @param text The display text.
 	 */
 	public TextSegment(String text) {
 		this.text = text;
 	}
 
-	/**
-	 * Creates a styled text segment.
-	 *
-	 * @param text  The display text.
-	 * @param bold  Whether the text is bold.
-	 * @param color The text color (named or hex).
-	 */
 	public TextSegment(String text, boolean bold, String color) {
 		this.text = text;
 		this.bold = bold;
@@ -98,10 +67,6 @@ public final class TextSegment {
 
 	/**
 	 * Copies styling/click/hover metadata from a source segment with a new text value.
-	 *
-	 * @param source Source segment.
-	 * @param text   Text for copied segment.
-	 * @return Copied segment.
 	 */
 	public static TextSegment copyOf(TextSegment source, String text) {
 		TextSegment copy = new TextSegment(text, source.bold, source.color);
@@ -116,9 +81,6 @@ public final class TextSegment {
 
 	/**
 	 * Deep-copies a list of segments.
-	 *
-	 * @param segments Source segments.
-	 * @return Copied segment list.
 	 */
 	public static List<TextSegment> copyOfAll(List<TextSegment> segments) {
 		List<TextSegment> copy = new ArrayList<>();
@@ -129,10 +91,7 @@ public final class TextSegment {
 	}
 
 	/**
-	 * Applies a fallback color to segments without explicit color.
-	 *
-	 * @param segments     Target segments.
-	 * @param defaultColor Fallback color.
+	 * Applies a fallback color to segments without an explicit one.
 	 */
 	public static void applyDefaultColor(List<TextSegment> segments, String defaultColor) {
 		if (defaultColor == null || defaultColor.isEmpty()) {
@@ -146,9 +105,7 @@ public final class TextSegment {
 	}
 
 	/**
-	 * Appends ellipsis to the tail segment, or inserts one when list is empty.
-	 *
-	 * @param segments Target segment list.
+	 * Appends ellipsis to the tail segment, or inserts one when the list is empty.
 	 */
 	public static void appendEllipsis(List<TextSegment> segments) {
 		if (segments.isEmpty()) {
@@ -160,10 +117,7 @@ public final class TextSegment {
 	}
 
 	/**
-	 * Concatenates segment text into plain text.
-	 *
-	 * @param segments Source segments.
-	 * @return Concatenated plain text.
+	 * Concatenates segment text into plain text, skipping null entries.
 	 */
 	public static String toPlainText(List<TextSegment> segments) {
 		if (segments == null || segments.isEmpty()) {

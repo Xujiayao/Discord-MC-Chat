@@ -205,11 +205,6 @@ public final class DiscordMessageParser {
 
 	/**
 	 * Builds segments for a slash-command notification.
-	 *
-	 * @param effectiveName Display name of the Discord user.
-	 * @param roleColor     Hex color of the user's highest role.
-	 * @param commandName   Name of the slash command executed.
-	 * @return The list of text segments.
 	 */
 	public static List<TextSegment> buildCommandSegments(String effectiveName, String roleColor, String commandName) {
 		return template("discord_to_minecraft", "command")
@@ -220,12 +215,7 @@ public final class DiscordMessageParser {
 	}
 
 	/**
-	 * Builds segments for a reaction event.
-	 *
-	 * @param reactorName Display name of the user who reacted.
-	 * @param roleColor   Hex color of the reactor's highest role.
-	 * @param emojiText   The emoji display text (e.g. {@code :test:}).
-	 * @return The list of text segments.
+	 * Builds segments for a reaction event. {@code emojiText} is the rendered emoji, e.g. {@code :test:}.
 	 */
 	public static List<TextSegment> buildReactionSegments(String reactorName, String roleColor, String emojiText) {
 		return template("discord_to_minecraft", "reaction")
@@ -237,10 +227,6 @@ public final class DiscordMessageParser {
 
 	/**
 	 * Builds segments for a message edit notification line.
-	 *
-	 * @param editorName Display name of the user who edited.
-	 * @param roleColor  Hex color of the editor's highest role.
-	 * @return The list of text segments.
 	 */
 	public static List<TextSegment> buildEditNotificationSegments(String editorName, String roleColor) {
 		return template("discord_to_minecraft", "edit")
@@ -251,10 +237,6 @@ public final class DiscordMessageParser {
 
 	/**
 	 * Builds segments for a message delete notification.
-	 *
-	 * @param deleterName Display name of the user who deleted.
-	 * @param roleColor   Hex color of the deleter's highest role.
-	 * @return The list of text segments.
 	 */
 	public static List<TextSegment> buildDeleteSegments(String deleterName, String roleColor) {
 		return template("discord_to_minecraft", "delete")
@@ -746,9 +728,6 @@ public final class DiscordMessageParser {
 		return result;
 	}
 
-	/**
-	 * @return Whether the text contains CJK characters, which are twice as wide in the Minecraft font.
-	 */
 	private static boolean containsFullWidthCharacter(String text) {
 		for (int i = 0; i < text.length(); ) {
 			int codePoint = text.codePointAt(i);

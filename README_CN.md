@@ -164,26 +164,29 @@ DMCC 所有运行模式都基于一个统一的通信模型，该模型包含两
 - 终端不支持 `log` 命令（会提示直接访问 `./logs` 目录），因为终端无法接收附件。
 - 启动参数 `--disable-ascii` 可关闭控制台 ANSI 颜色输出。
 
-### 3.4 平台适配层与模组兼容扩展点
+### 3.4 平台适配层与模组兼容
 
 DMCC 的代码分为三层，任何新平台都只影响最外面一层：
 
-| 模块                 | 职责                                                             | 是否含游戏/加载器依赖              |
-|:-------------------|:---------------------------------------------------------------|:-------------------------|
-| `core`             | DMCC 主控、Server/Client、Netty 协议、命令、账户绑定、配置、i18n                | ❌ 完全没有（`net.minecraft` 仅以反射探测） |
-| `minecraft-common` | 12 个 Mixin、组件渲染、翻译拉取、Brigadier 命令树、平台适配实现                        | ✅ 只依赖原版类，**不依赖任何加载器 API** |
-| `fabric` / `neoforge` | 入口点、模组元数据、加载器专属的模组兼容实现                                          | ✅ 各自的加载器 API              |
+| 模块                       | 职责                                             | 是否含游戏/加载器依赖              |
+|:-------------------------|:-----------------------------------------------|:-------------------------|
+| `core`                   | DMCC 主控、Server/Client、Netty 协议、命令、账户绑定、配置、i18n | ❌ 完全没有（`net.minecraft` 仅以反射探测） |
+| `minecraft/common`       | 9 个 Mixin、组件渲染、翻译拉取、Brigadier 命令树、平台适配实现         | ✅ 只依赖原版类，**不依赖任何加载器 API** |
+| `minecraft/fabric` / `minecraft/neoforge` | 入口点、模组元数据、加载器专属的模组兼容                           | ✅ 各自的加载器 API              |
 
 - **平台适配接口（`PlatformHost`）**：core 需要"在游戏里做事"时（执行命令、广播消息、下发 OP 等级、通知绑定结果……）
-  只调用这一个接口，平台实现再转交给 `MinecraftEventHandler`。历史上这里是一套泛型事件总线，现已完全移除。
+  只调用这一个接口，平台实现再转交给 `MinecraftEventHandler`。
 - **独立模式没有平台**：`standalone` 注册空实现（`NoopPlatformHost`），因此 core 代码无需到处判空。
-- **模组兼容扩展点（`ModIntegration`）**：为特定模组做的兼容（例如 Vanish）实现该接口并注册到 `ModIntegrations`。
-  注册发生在对应加载器模块内，因此 **core 永远不知道是哪个模组**。当前唯一实现是 Fabric 侧的 Vanish
-  （26.2 的 Vanish 只有 fabric/quilt 构建，NeoForge 侧注册表为空）。新增一个模组兼容 = 写一个类 + 一行注册。
+- **模组兼容（`PlayerVisibility`）**：为特定模组做的兼容（例如 Vanish 隐藏玩家）由**拥有该依赖的加载器模块**
+  安装一个判定函数，共享游戏代码只看到「玩家是否被隐藏」。当前唯一实现是 Fabric 侧的 Vanish
+  （26.2 的 Vanish 只有 fabric/quilt 构建，NeoForge 侧没有安装任何判定）。
 - **能力缺失时的行为**：平台不具备某项能力时（例如未来的服务端插件没有 Mixin、无法拦截 `/say`），
   相关功能记一次日志后跳过，不影响其余功能。
-- **两个加载器共享同一份游戏侧源码**：因为 Minecraft 26.1 起官方已不再混淆代码、Fabric 也不再使用
+- **两个加载器共享同一份游戏侧源码**：`minecraft/common` 是**共享源码目录而不是独立 Gradle 项目**，
+  两个加载器各自把它的源码编进自己的产物。因为 Minecraft 26.1 起官方已不再混淆代码、Fabric 也不再使用
   intermediary，Fabric 与 NeoForge 运行时使用同一套官方名称，因此同一份 Mixin 源码可以直接被两个加载器编译。
+  （不把它做成独立项目的原因：编译它需要 vanilla 类，而 vanilla 类只能由 Loom 或 ModDevGradle 解析，
+  两个插件都是「一个项目 = 一个 Minecraft 版本」，无法同时挂在这个模块上。）
 
 ## 4. 账户绑定系统 (Account Linking)
 
@@ -461,9 +464,9 @@ DMCC 对配置文件的完整性与一致性做了强校验，力求在启动阶
 - 用 `java -jar Discord-MC-Chat-<版本>.jar` 启动 → 走 `Main-Class`，作为独立模式（standalone）的中央中枢运行（详见 3.3）。
 
 核心逻辑（`core`）在包内只有一份，即以 `core` 的 shadow JAR 为基底，再把两个加载器的入口类与元数据合并进去；
-两个加载器共用的 `minecraft-common` 类与 `dmcc.mixins.json` 也只会保留一份。
+两个加载器共用的 `minecraft/common` 类与 `dmcc.mixins.json` 也只会保留一份。
 
-> 两个加载器各自的中间 JAR 位于 `fabric/build/libs/` 与 `neoforge/build/libs/`（不进入根 `build/`），
+> 两个加载器各自的中间 JAR 位于 `minecraft/fabric/build/libs/` 与 `minecraft/neoforge/build/libs/`（不进入根 `build/`），
 > 仅在排查"某个加载器是否加载了正确入口"时才会用到，正常分发不需要它们。
 
 构建结束后根 `build/` 目录里**只有这一个 JAR**：Gradle 为 `zipTree` 建立的 `build/tmp/.cache` 临时目录

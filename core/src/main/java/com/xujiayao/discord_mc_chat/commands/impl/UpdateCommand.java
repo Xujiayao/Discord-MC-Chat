@@ -29,9 +29,6 @@ public final class UpdateCommand implements Command {
 
 	/**
 	 * Completes a pending update request with the given response.
-	 *
-	 * @param requestId The request ID.
-	 * @param response  The response packet.
 	 */
 	public static void completeRequest(String requestId, Packets.CommandResult response) {
 		CompletableFuture<Packets.CommandResult> future = pendingRequests.remove(requestId);
