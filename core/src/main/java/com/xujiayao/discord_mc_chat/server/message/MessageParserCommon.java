@@ -40,13 +40,21 @@ public final class MessageParserCommon {
 
 	// --- Inline tokens shared by both directions -------------------------------------------------
 
-	/** {@code <t:EPOCH>} / {@code <t:EPOCH:STYLE>} */
+	/**
+	 * {@code <t:EPOCH>} / {@code <t:EPOCH:STYLE>}
+	 */
 	static final Pattern TIMESTAMP = Pattern.compile("<t:(\\d+)(?::([tTdDfFRsS]))?>");
-	/** {@code [label](https://url)} */
+	/**
+	 * {@code [label](https://url)}
+	 */
 	static final Pattern MARKDOWN_LINK = Pattern.compile("\\[([^]]+)]\\(<?(https?://[^>\\s)]+)>?\\)");
-	/** Plain {@code https://url} that is not already part of a link or an emphasis run. */
+	/**
+	 * Plain {@code https://url} that is not already part of a link or an emphasis run.
+	 */
 	static final Pattern BARE_URL = Pattern.compile("(https?://[^\\s*|~`<>)\\]]+)");
-	/** A single Unicode emoji (including ZWJ sequences and variation selectors). */
+	/**
+	 * A single Unicode emoji (including ZWJ sequences and variation selectors).
+	 */
 	static final Pattern UNICODE_EMOJI = Pattern.compile(
 			"[\\x{1F600}-\\x{1F64F}]|[\\x{1F300}-\\x{1F5FF}]|[\\x{1F680}-\\x{1F6FF}]|" +
 					"[\\x{1F1E0}-\\x{1F1FF}]|[\\x{2600}-\\x{26FF}]|[\\x{2700}-\\x{27BF}]|" +
@@ -60,29 +68,45 @@ public final class MessageParserCommon {
 					"[\\x{26F2}-\\x{26F3}]|\\x{26F5}|\\x{26FA}|\\x{26FD}|" +
 					"\\x{2702}|\\x{2705}|[\\x{2708}-\\x{270D}]|\\x{270F}"
 	);
-	/** Discord's {@code :alias:} emoji syntax. */
+	/**
+	 * Discord's {@code :alias:} emoji syntax.
+	 */
 	static final Pattern ALIAS_EMOJI = Pattern.compile("(?<![A-Za-z0-9_]):([A-Za-z0-9_+\\-]+):(?![A-Za-z0-9_])");
-	/** Discord's {@code <:name:id>} / {@code <a:name:id>} custom emoji token. */
+	/**
+	 * Discord's {@code <:name:id>} / {@code <a:name:id>} custom emoji token.
+	 */
 	static final Pattern CUSTOM_EMOJI = Pattern.compile("<a?:(\\w+):\\d+>");
 
 	// --- Mention tokens --------------------------------------------------------------------------
 
-	/** {@code <@123>} / {@code <@!123>} */
+	/**
+	 * {@code <@123>} / {@code <@!123>}
+	 */
 	static final Pattern USER_MENTION = Pattern.compile("<@!?(\\d+)>");
-	/** {@code <@&123>} */
+	/**
+	 * {@code <@&123>}
+	 */
 	static final Pattern ROLE_MENTION = Pattern.compile("<@&(\\d+)>");
-	/** {@code <#123>} */
+	/**
+	 * {@code <#123>}
+	 */
 	static final Pattern CHANNEL_MENTION = Pattern.compile("<#(\\d+)>");
-	/** {@code @everyone} / {@code @here} */
+	/**
+	 * {@code @everyone} / {@code @here}
+	 */
 	static final Pattern EVERYONE_HERE = Pattern.compile("@(everyone|here)");
 
-	/** Spoiler-wrapped mention tokens. Only used when Markdown parsing is off, because the Markdown
-	 *  scanner already unwraps {@code ||...||} by itself. */
+	/**
+	 * Spoiler-wrapped mention tokens. Only used when Markdown parsing is off, because the Markdown
+	 * scanner already unwraps {@code ||...||} by itself.
+	 */
 	static final Pattern SPOILER_USER_MENTION = Pattern.compile("\\|\\|<@!?(\\d+)>\\|\\|");
 	static final Pattern SPOILER_ROLE_MENTION = Pattern.compile("\\|\\|<@&(\\d+)>\\|\\|");
 	static final Pattern SPOILER_CHANNEL_MENTION = Pattern.compile("\\|\\|<#(\\d+)>\\|\\|");
 	static final Pattern SPOILER_EVERYONE_HERE = Pattern.compile("\\|\\|@(everyone|here)\\|\\|");
-	/** Any {@code ||spoiler||} run, used to detect spoiler-wrapped embed URLs. */
+	/**
+	 * Any {@code ||spoiler||} run, used to detect spoiler-wrapped embed URLs.
+	 */
 	static final Pattern SPOILER_CONTENT = Pattern.compile("\\|\\|(.+?)\\|\\|");
 
 	// --- Line decorations ------------------------------------------------------------------------

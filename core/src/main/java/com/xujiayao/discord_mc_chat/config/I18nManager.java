@@ -14,6 +14,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
 

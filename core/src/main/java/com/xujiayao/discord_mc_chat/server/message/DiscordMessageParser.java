@@ -42,7 +42,9 @@ public final class DiscordMessageParser {
 	private static final int MAIN_TRUNCATE_LIMIT_WIDE = 200;
 	private static final int MAIN_TRUNCATE_LIMIT_NARROW = 400;
 
-	/** Embed descriptions longer than this are shortened before they are used as a fallback title. */
+	/**
+	 * Embed descriptions longer than this are shortened before they are used as a fallback title.
+	 */
 	private static final int EMBED_DESCRIPTION_LIMIT = 50;
 	private static final int EMBED_DESCRIPTION_KEEP = 20;
 
@@ -52,17 +54,17 @@ public final class DiscordMessageParser {
 	/**
 	 * The set of parsing switches for one message.
 	 *
-	 * @param mentions      Parse {@code <@id>} / {@code <@&id>} / {@code <#id>} mentions.
-	 * @param customEmojis  Parse Discord custom and alias emoji.
-	 * @param unicodeEmojis Parse Unicode emoji.
-	 * @param markdown      Parse Markdown emphasis, quotes, headings and code.
-	 * @param hyperlinks    Turn links into clickable segments.
-	 * @param attachments   Append attachment labels.
-	 * @param stickers      Append sticker labels.
-	 * @param embeds        Append embed labels.
-	 * @param components    Append the interactive-components indicator.
-	 * @param polls         Append the poll indicator.
-	 * @param timestamps    Render {@code <t:...>} timestamps.
+	 * @param mentions       Parse {@code <@id>} / {@code <@&id>} / {@code <#id>} mentions.
+	 * @param customEmojis   Parse Discord custom and alias emoji.
+	 * @param unicodeEmojis  Parse Unicode emoji.
+	 * @param markdown       Parse Markdown emphasis, quotes, headings and code.
+	 * @param hyperlinks     Turn links into clickable segments.
+	 * @param attachments    Append attachment labels.
+	 * @param stickers       Append sticker labels.
+	 * @param embeds         Append embed labels.
+	 * @param components     Append the interactive-components indicator.
+	 * @param polls          Append the poll indicator.
+	 * @param timestamps     Render {@code <t:...>} timestamps.
 	 * @param ansiCodeBlocks Render {@code ```ansi} blocks with their colors.
 	 */
 	public record Flags(boolean mentions, boolean customEmojis, boolean unicodeEmojis, boolean markdown,
@@ -148,12 +150,12 @@ public final class DiscordMessageParser {
 	/**
 	 * Builds the reply context line segments (the {@code ┌────} line).
 	 *
-	 * @param refName     Display name of the referenced message author.
+	 * @param refName      Display name of the referenced message author.
 	 * @param refRoleColor Hex color of the referenced message author's highest role.
-	 * @param refRaw      Raw content of the referenced message; null means there is no reply.
-	 * @param mentions    Mention resolver for the referenced message; null disables mention parsing.
-	 * @param extras      Non-textual parts of the referenced message.
-	 * @param flags       Parsing switches.
+	 * @param refRaw       Raw content of the referenced message; null means there is no reply.
+	 * @param mentions     Mention resolver for the referenced message; null disables mention parsing.
+	 * @param extras       Non-textual parts of the referenced message.
+	 * @param flags        Parsing switches.
 	 * @return The list of text segments for the reply line, or null when {@code refRaw} is null.
 	 */
 	public static List<TextSegment> buildReplySegments(String refName, String refRoleColor, String refRaw,

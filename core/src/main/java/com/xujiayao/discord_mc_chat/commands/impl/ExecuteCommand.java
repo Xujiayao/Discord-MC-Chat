@@ -1,8 +1,8 @@
 package com.xujiayao.discord_mc_chat.commands.impl;
 
 import com.xujiayao.discord_mc_chat.commands.Command;
-import com.xujiayao.discord_mc_chat.commands.CommandTargets;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
+import com.xujiayao.discord_mc_chat.commands.CommandTargets;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.protocol.Packets;

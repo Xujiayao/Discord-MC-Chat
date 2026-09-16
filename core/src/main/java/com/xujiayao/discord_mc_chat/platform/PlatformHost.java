@@ -76,8 +76,8 @@ public interface PlatformHost {
 	/**
 	 * Broadcasts a Discord chat message (with optional reply line and mention notification).
 	 *
-	 * @param replySegments   The reply line segments, or {@code null}.
-	 * @param mentionText     The mention notification text, or {@code null} when nobody was mentioned.
+	 * @param replySegments The reply line segments, or {@code null}.
+	 * @param mentionText   The mention notification text, or {@code null} when nobody was mentioned.
 	 */
 	void broadcastDiscordChat(List<TextSegment> segments,
 							  List<TextSegment> replySegments,

@@ -43,8 +43,8 @@ public final class MojangUtils {
 	/**
 	 * A cached resolution result.
 	 *
-	 * @param name       The value to return.
-	 * @param expiresAt  Epoch millis after which the entry must be resolved again.
+	 * @param name      The value to return.
+	 * @param expiresAt Epoch millis after which the entry must be resolved again.
 	 */
 	private record Entry(String name, long expiresAt) {
 

@@ -139,7 +139,6 @@ public final class ChannelUpdateManager {
 	}
 
 
-
 	private static void updateTextChannelTopics(ChannelUpdateContext context, boolean dropWhenRateLimited, boolean synchronous) {
 		if (!ConfigManager.getBoolean("channel_updating.channel_topic_updating.enable")) {
 			return;
@@ -171,7 +170,6 @@ public final class ChannelUpdateManager {
 			updateTextChannelTopic(channel, topic, dropWhenRateLimited, synchronous);
 		}
 	}
-
 
 
 	private static void updateVoiceChannelNames(ChannelUpdateContext context, boolean dropWhenRateLimited, boolean synchronous) {

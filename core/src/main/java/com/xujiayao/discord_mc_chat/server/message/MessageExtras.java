@@ -8,11 +8,11 @@ import java.util.List;
  * Keeping them in a plain record lets the parsing pipeline stay free of JDA types. A JDA-backed adapter
  * extracts these values from a live {@code Message}.
  *
- * @param attachments  File attachments in the order Discord reports them.
- * @param stickers     Sticker names.
- * @param embeds       Rich embeds.
+ * @param attachments   File attachments in the order Discord reports them.
+ * @param stickers      Sticker names.
+ * @param embeds        Rich embeds.
  * @param hasComponents Whether the message carries interactive components (buttons, select menus, ...).
- * @param pollQuestion The poll question, or null when the message has no poll.
+ * @param pollQuestion  The poll question, or null when the message has no poll.
  * @author Xujiayao
  */
 public record MessageExtras(

@@ -1,10 +1,10 @@
 package com.xujiayao.discord_mc_chat.client;
 
 import com.xujiayao.discord_mc_chat.config.I18nManager;
-import com.xujiayao.discord_mc_chat.network.protocol.Packets;
-import com.xujiayao.discord_mc_chat.network.protocol.Packet;
 import com.xujiayao.discord_mc_chat.network.protocol.JsonPacketDecoder;
 import com.xujiayao.discord_mc_chat.network.protocol.JsonPacketEncoder;
+import com.xujiayao.discord_mc_chat.network.protocol.Packet;
+import com.xujiayao.discord_mc_chat.network.protocol.Packets;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;

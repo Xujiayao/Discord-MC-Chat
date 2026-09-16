@@ -559,9 +559,13 @@ public final class MinecraftMessageParser {
 		private final Map<String, MentionTarget> allMentionByAlias;
 		private final List<String> mentionAliasesByLengthDesc;
 		private final Map<String, RichCustomEmoji> customEmojiByName;
-		/** Per call: the Minecraft UUIDs mentioned by this one message. */
+		/**
+		 * Per call: the Minecraft UUIDs mentioned by this one message.
+		 */
 		private final Set<String> mentionedPlayerUuids = new HashSet<>();
-		/** Per call: whether this one message mentioned everyone/here. */
+		/**
+		 * Per call: whether this one message mentioned everyone/here.
+		 */
 		private boolean mentionEveryone;
 
 		private MentionContext(MentionDirectory directory) {

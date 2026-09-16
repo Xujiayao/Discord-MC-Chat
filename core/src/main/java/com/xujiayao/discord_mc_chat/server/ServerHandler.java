@@ -219,7 +219,8 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 				handleMinecraftSystemMessage(packet, clientName, "player.quit", "player.quit", false, false);
 				BotPresenceManager.update();
 			}
-			case PLAYER_DIE -> handleMinecraftSystemMessage(packet, clientName, "player.die", "player.die", false, false);
+			case PLAYER_DIE ->
+					handleMinecraftSystemMessage(packet, clientName, "player.die", "player.die", false, false);
 			case PLAYER_ADVANCEMENT -> handleMinecraftSystemMessage(packet, clientName, "player.advancement",
 					"player.advancement." + packet.placeholders().getOrDefault("type", ""), false, false);
 			case PLAYER_CHANGE_GAME_MODE -> handleMinecraftSystemMessage(packet, clientName, "player.change_game_mode",
@@ -522,9 +523,9 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	 * Cross-client relay only exists in standalone mode, and the source echo additionally depends on
 	 * {@code overwrite_minecraft_source_messages} unless the event forces it.
 	 *
-	 * @param broadcastNode           Config node under {@code broadcasts.minecraft_to_minecraft}.
+	 * @param broadcastNode            Config node under {@code broadcasts.minecraft_to_minecraft}.
 	 * @param canOverwriteEchoToSource Whether the overwrite switch is allowed to trigger the source echo.
-	 * @param forceEchoToSource       Whether the source echo happens regardless of the overwrite switch.
+	 * @param forceEchoToSource        Whether the source echo happens regardless of the overwrite switch.
 	 */
 	private static RelayTargets relayTargets(String broadcastNode, boolean canOverwriteEchoToSource,
 											 boolean forceEchoToSource) {

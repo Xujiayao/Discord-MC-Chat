@@ -202,7 +202,8 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 		switch (request.kind()) {
 			case EXECUTE -> handleDmccCommand(ctx, request);
 			case CONSOLE -> handleMinecraftCommand(ctx, request);
-			case UPDATE_CHECK -> LOGGER.warn(I18nManager.getDmccTranslation("client.network.unexpected_packet", request.type().name()));
+			case UPDATE_CHECK ->
+					LOGGER.warn(I18nManager.getDmccTranslation("client.network.unexpected_packet", request.type().name()));
 		}
 	}
 
