@@ -121,7 +121,7 @@ public class DiscordEventListener extends ListenerAdapter {
 						e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.stoppingServer")).submit().whenComplete((v, ex) -> SERVER.halt(false));
 					} else {
 						e.getHook().sendMessage(Translations.translate("discord.deListener.oscInteraction.executingCommand")).submit().whenComplete((v, ex) -> {
-							CommandSourceStack source = new CommandSourceStack(new DiscordCommandSource(e), Vec3.ZERO, Vec2.ZERO, SERVER.overworld(), LevelBasedPermissionSet.OWNER, "Discord-MC-Chat", Component.literal("Discord-MC-Chat"), SERVER, null);
+							CommandSourceStack source = new CommandSourceStack(new DiscordCommandSource(e), Vec3.ZERO, Vec2.ZERO, SERVER.overworld(), LevelBasedPermissionSet.OWNER, Component.literal("Discord-MC-Chat"), SERVER);
 							ParseResults<CommandSourceStack> results = SERVER.getCommands().getDispatcher().parse(command, source);
 							SERVER.getCommands().performCommand(results, command);
 						});

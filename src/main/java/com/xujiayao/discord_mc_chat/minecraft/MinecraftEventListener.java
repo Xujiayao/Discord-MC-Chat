@@ -209,10 +209,10 @@ public class MinecraftEventListener {
 			}
 			DisplayInfo display = advancementHolder.value().display().get();
 
-			if (CONFIG.generic.announceAdvancements && isDone && display.shouldAnnounceChat() && player.level().getGameRules().get(GameRules.SHOW_ADVANCEMENT_MESSAGES)) {
+			if (CONFIG.generic.announceAdvancements && isDone && display.announceToChat() && player.level().getGameRules().get(GameRules.SHOW_ADVANCEMENT_MESSAGES)) {
 				String message = "null";
 
-				switch (display.getType()) {
+				switch (display.type()) {
 					case GOAL -> message = Translations.translateMessage("message.advancementGoal");
 					case TASK -> message = Translations.translateMessage("message.advancementTask");
 					case CHALLENGE -> message = Translations.translateMessage("message.advancementChallenge");
@@ -221,7 +221,7 @@ public class MinecraftEventListener {
 				String title = Translations.translate("advancements." + advancementHolder.id().getPath().replace("/", ".") + ".title");
 				String description = Translations.translate("advancements." + advancementHolder.id().getPath().replace("/", ".") + ".description");
 
-				message = message.replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString())).replace("%advancement%", title.contains("TranslateError") ? display.getTitle().getString() : title).replace("%description%", description.contains("TranslateError") ? display.getDescription().getString() : description);
+				message = message.replace("%playerName%", MarkdownSanitizer.escape(Objects.requireNonNull(player.getDisplayName()).getString())).replace("%advancement%", title.contains("TranslateError") ? display.title().getString() : title).replace("%description%", description.contains("TranslateError") ? display.description().getString() : description);
 
 				CHANNEL.sendMessage(message).queue();
 				if (CONFIG.multiServer.enable) {
