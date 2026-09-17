@@ -115,9 +115,9 @@ public final class ChannelUpdateManager {
 			return emptyContext(nowEpochSeconds);
 		}
 
-		int onlinePlayerCount = onlinePackets.stream().mapToInt(packet -> packet.onlinePlayerCount()).sum();
-		int maxPlayerCount = onlinePackets.stream().mapToInt(packet -> packet.maxPlayerCount()).sum();
-		int playersEverJoined = onlinePackets.stream().mapToInt(packet -> packet.playersEverJoined()).sum();
+		int onlinePlayerCount = onlinePackets.stream().mapToInt(Packets.InfoSnapshot::onlinePlayerCount).sum();
+		int maxPlayerCount = onlinePackets.stream().mapToInt(Packets.InfoSnapshot::maxPlayerCount).sum();
+		int playersEverJoined = onlinePackets.stream().mapToInt(Packets.InfoSnapshot::playersEverJoined).sum();
 		int onlineServerCount = onlinePackets.size();
 		long maxUptimeSeconds = onlinePackets.stream().mapToLong(packet -> Math.max(0L, packet.uptimeSeconds())).max().orElse(0L);
 		long serverStartedTime = Math.max(0L, nowEpochSeconds - maxUptimeSeconds);

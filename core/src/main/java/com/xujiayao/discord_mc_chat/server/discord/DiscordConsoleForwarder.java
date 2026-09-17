@@ -2,6 +2,7 @@ package com.xujiayao.discord_mc_chat.server.discord;
 
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
+import com.xujiayao.discord_mc_chat.utils.CachedPatterns;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import tools.jackson.databind.JsonNode;
@@ -12,7 +13,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
@@ -38,8 +38,7 @@ public final class DiscordConsoleForwarder {
 	private static final Set<String> DISABLED_CLIENTS = ConcurrentHashMap.newKeySet();
 
 	// Compiled console redaction patterns, rebuilt only when console_forwarding.filter_regex changes.
-	private static volatile List<Pattern> redactionPatterns = List.of();
-	private static volatile String redactionFingerprint = null;
+	private static final CachedPatterns REDACTION_PATTERNS = new CachedPatterns();
 
 	private DiscordConsoleForwarder() {
 	}
@@ -227,31 +226,7 @@ public final class DiscordConsoleForwarder {
 	 * configured list actually changes.
 	 */
 	private static List<Pattern> redactionPatterns() {
-		List<String> sources = new ArrayList<>();
-		JsonNode regexList = ConfigManager.getConfigNode("console_forwarding.filter_regex");
-		if (regexList.isArray()) {
-			for (JsonNode node : regexList) {
-				if (node != null && node.isString() && !node.asString("").isBlank()) {
-					sources.add(node.asString(""));
-				}
-			}
-		}
-
-		String fingerprint = String.join("\u0000", sources);
-		if (fingerprint.equals(redactionFingerprint)) {
-			return redactionPatterns;
-		}
-
-		List<Pattern> compiled = new ArrayList<>();
-		for (String regex : sources) {
-			try {
-				compiled.add(Pattern.compile(regex));
-			} catch (PatternSyntaxException e) {
-				LOGGER.warn(I18nManager.getDmccTranslation("discord.manager.invalid_console_filter_regex", regex));
-			}
-		}
-		redactionPatterns = List.copyOf(compiled);
-		redactionFingerprint = fingerprint;
-		return redactionPatterns;
+		return REDACTION_PATTERNS.of("console_forwarding.filter_regex",
+				regex -> LOGGER.warn(I18nManager.getDmccTranslation("discord.manager.invalid_console_filter_regex", regex)));
 	}
 }

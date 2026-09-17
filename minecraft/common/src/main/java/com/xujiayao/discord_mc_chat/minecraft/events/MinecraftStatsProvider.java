@@ -123,7 +123,7 @@ public final class MinecraftStatsProvider implements StatsProvider {
 	@Override
 	public int countPlayersEverJoined() {
 		Path statsDir = getStatsDirectory();
-		if (statsDir == null || !Files.isDirectory(statsDir)) {
+		if (!Files.isDirectory(statsDir)) {
 			return 0;
 		}
 

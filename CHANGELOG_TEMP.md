@@ -1322,3 +1322,103 @@ tick 线程，进入崩溃报告。改用 `onServerThread` 会把这些异常**�
 **与 `工作 10` 相比，注释行从 3537 退回 3708**——原因是第十四节记录的那次事故后的确定性回放
 只重放了功能性改动，第四~七轮对该文件的约 200 行注释精简被丢弃。**这是一处已知的质量回退，
 不是遗漏。**
+
+## 工作 12
+
+记录日期：2026/9/16（**按 IntelliJ 检查结果逐条复核**）。用户在 `checks/` 放了 IDEA 的检查导出
+（419 条原始条目，去重后约 233 条）。逐条判定结果如下。
+
+### 一、真实缺陷（已修）
+
+1. **`MinecraftEventHandler` 有一个编译级错误 + 一条悬空 javadoc** ——
+   `工作 10` 第十四节那次事故后的回放脚本把 `onServerThread` 的 javadoc 留在了原位置，
+   于是它挂到了后面的 `broadcastLines` 上，导致
+   `@param component The component to send.` 指向一个不存在的方法（IDEA 报 `无法解析符号'component'`
+   与 `悬空的 Javadoc 注释`）。**javac 不会报这个错，所以构建一直是绿的**，只有 IDEA 的检查抓到了。
+   已删除重复的悬空块，并给 `broadcastLines` 与 `broadcast` 各补一句正确描述。
+   同时修掉 `refreshPlayersEverJoined` 的 javadoc 里一句**已经过期的事实错误**：
+   它仍写"底层统计扫描会调用 `PlayerList.saveAll()`"——那正是`工作 10` 移除的行为。
+2. **`Packets.java` 有 11 处 javadoc 里的字面量 `\n` 与 5 处 `* *` 续行。** 这是我早期脚本
+   用 `Set-Content` 写多行字符串时把转义序列当字面量写进去的产物。已全部展开成真正的多行注释。
+3. **`/say` 与 `/me` 的 Mixin 参数名与目标不匹配。** 目标方法 `PlayerList.broadcastChatMessage`
+   的第二个形参叫 `sender`，我的注入写成 `source`。功能无影响，但在 debug 元数据里不匹配，
+   且 IDEA 会报警。已改名对齐。同时把 `MixinPlayerList` 从 `public` 改回包级可见——
+   **包内另外 8 个 Mixin 全是包级可见，只有我新写的这个是 `public`。**
+4. **配置驱动的正则缓存被写了两遍。** `ServerHandler.excludedCommandPatterns()` 与
+   `DiscordConsoleForwarder.redactionPatterns()` 是逐字相同的
+   "收集数组 → 指纹比对 → 逐个 `Pattern.compile` → 替换缓存"（各约 26 行）。
+   抽出 `utils/CachedPatterns`（66 行），两处各缩成一次调用。**行为等价**：
+   同样的指纹算法、同样的"编译失败逐个告警"、同样的"配置变化才重建"。
+   唯一差别是原文用 `catch (Exception)`、`CachedPatterns` 用 `catch (PatternSyntaxException)` ——
+   后者更准确（`Pattern.compile` 只会抛这一种受检异常）。
+5. **`DiscordEventHandler` 里同一段频道判定写了三遍**（`onMessageReactionAdd` /
+   `onMessageUpdate` / `onMessageDelete`，IDEA 报了三条重复代码）。抽出
+   `isFromPlayerChatChannel(channelId, channelName)`。**注意**：`onMessageReceived` 里那段结构相似
+   **没有**合并——它会额外打印一条告警，合并会丢掉那个日志。
+6. **`MinecraftStatsProvider.countPlayersEverJoined` 里的 `statsDir == null` 恒为 false**
+   （`getStatsDirectory()` 返回 `server.getWorldPath(...)`，不可能为 null）。已去掉。
+
+### 二、IDEA 报告但**判定为误报**（逐条给出理由）
+
+1. **`Cannot resolve icon 'icon/icon.png'`（fabric.mod.json / neoforge.mods.toml）** ——
+   **误报，且上一轮交接文档把这条记为"遗留问题"是错的。**
+   图标在 `core/src/main/resources/icon/icon.png`，通过 core 的 shadow 载荷进入最终 JAR；
+   实测发布 JAR 里 `icon/icon.png` **存在**。IDEA 只是无法跨模块看到 shadow 的产物。
+   （真正值得注意的是：`minecraft/fabric`、`minecraft/neoforge` 自己的 resources 里**没有**图标，
+   它们依赖 core 提供——这在多模块下是能工作的，但不如把图标复制到两个加载器模块里直白。
+   本轮未改，因为改了就多两份重复文件。）
+2. **17 × `'ShadowJar' 中的 'relocate' 无法应用于 '(String, String)'`** ——
+   IDEA 的 Gradle DSL 解析器不认识 Shadow 插件的 varargs 重载。构建正常。
+3. **31 × `无法解析符号 'exclude' / 'from' / 'options' / 'archiveFile' / 'asFile'` 等
+   （`core/build.gradle`、根 `build.gradle`、`minecraft/fabric/build.gradle`）** ——
+   同一类 Gradle DSL 解析限制。构建正常。
+4. **`始终反转对布尔方法 'xxx()' 的调用`（6 处）** ——
+   IDEA 对 `if (flag)`、`if (!flag)`、`if (x == y)` 的启发式误判。
+   逐个核对过：`ClientDMCC.start()`、`ConsoleLogTailer.isClientConnected()`、
+   `I18nManager.checkLanguageResources()`、`DiscordMessageParser.hasInlinePasses()`、
+   `MessageParserCommon.isSplittable()`、`YamlUtils.validate()` 的用法都正常。
+5. **`在没有 'try-with-resources' 语句的情况下使用 'ExecutorService'`（3 处）** ——
+   `ClientDMCC.start()` 其实是 `try (ExecutorService ...)`，是 IDEA 的解析问题；
+   `DiscordEventHandler.autocompleteExecutor()` 与 `LinkedAccountManager` 的是**长生命周期执行器**，
+   本来就该活到 `shutdown()`，不能 try-with-resources。
+6. **`'ExecutorService.awaitTermination()' 的结果被忽略`（`ExecutorServiceUtils`）** ——
+   信号方法，调用方本来就要继续做 `shutdownNow()`。可读性上可以加个
+   `boolean ignored = ...`，但那是噪音，不改。
+7. **`方法 'cancelPresenceTask()' 始终返回 'null'`** —— **故意的**，而且这个设计是好的：
+   `presenceUpdateTask = cancelPresenceTask();` 一句话同时取消任务并清空字段，
+   避免了"忘了置 null"的经典 bug。javadoc 里已经写明。
+8. **`方法 'createDefaultConfig()' 始终返回 'false'`** —— 故意的：首次运行必须让用户先编辑配置，
+   所以调用方一定走"不能启动"分支。javadoc 里写明。
+9. **`未使用形参 'modEventBus' / 'modContainer'`（`NeoForgeDMCC`）** ——
+   FML 的 `@Mod` 构造器由框架按可注入参数集调用，签名就是契约。**不改。**
+10. **`在方法形参 'lock' 上同步`（`NetworkManager`）** —— 传锁对象是为了让两个缓存共用一份等待循环，
+    这是刻意的。配合 `工作 10` 的教训（不要把语义不同的东西合并），也不改。
+11. **`重复代码: 行 48-56`（`ClientHandler.logDiscordEventForConsole`）与
+    `行 63-71`（`DiscordEventHandler.logDiscordEventForConsole`）** ——
+    这两个方法**逐字相同**，是真实重复。但合并需要一个两处都能访问的位置，
+    而 `Packets.DiscordRelay` 是 public 记录、这两个类分属不同包。**本轮未合并**，
+    记在此处备查（合并方式：给 `DiscordRelay` 加一个 `logForConsole()` 方法）。
+12. **`MessageParserCommon` 的 `attachment`（253-260）与 `embed`（270-277）** ——
+    结构相似但语义不同（一个拼 `<attachment type=[x] name=[y]>`，一个拼 `<embed title=[x]>`，
+    颜色规则也不同）。**不合并**（硬约束 14）。
+13. **`ServerHandler` 的 `handleMinecraftUserMessage`（416-421）与 `handleMinecraftCommandMessage`（436-441）** ——
+    那 6 行是"构造占位符 map → 发给 Discord → 转发给其他客户端"。合并需要一个带 7 个形参
+    （其中 3 个是 boolean 开关）的方法，会把两处**清晰的显式意图**换成一处**难读的旗标组合**。
+    收益 6 行，代价是可读性。**不合并。**
+14. **`docs/*.mts`、`*.yml`、`*.md`、`*.svg` 上的语法/拼写/语法风格条目** ——
+    `CHANGELOG_TEMP.md` 里那些"应为 class 或 interface""应为标识符"是 IDEA 把 markdown 代码块
+    里的 Java 片段当 Java 解析；`icon.svg` 的 `URI 未注册`是需要配置 XML 目录；
+    中文助词与英文拼写建议（212 条）属风格偏好。**全部忽略。**
+
+### 三、本轮指标
+
+| 指标 | 现在 | 说明 |
+|:--|--:|:--|
+| 文件数 | 102 | +1（新增 `utils/CachedPatterns`） |
+| 非空行 | 15508 | |
+| 其中真实代码行 | 11728 | |
+| 其中注释行 | 3780 | |
+| 构建 | SUCCESSFUL | 零 warning、零 deprecation、无 problems 报告 |
+| JAR | 6875 条目 / 0 重复 | `icon/icon.png` 确认在包内 |
+
+**净变化**：`+118 / −111`（`CachedPatterns` 新增 66 行，两处重复各减约 25 行，其余是注释与改名）。

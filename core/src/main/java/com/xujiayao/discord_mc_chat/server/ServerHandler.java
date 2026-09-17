@@ -22,6 +22,7 @@ import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
 import com.xujiayao.discord_mc_chat.server.message.MessageParserCommon;
 import com.xujiayao.discord_mc_chat.server.message.MinecraftMessageParser;
 import com.xujiayao.discord_mc_chat.update.UpdateCheckManager;
+import com.xujiayao.discord_mc_chat.utils.CachedPatterns;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -29,7 +30,6 @@ import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import tools.jackson.databind.JsonNode;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,8 +46,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	private static final String TELLRAW_COMPONENT_PLACEHOLDER = "__DMCC_TELLRAW_COMPONENT__";
 
 	// Compiled broadcasts.excluded_commands patterns, rebuilt only when the configured list changes.
-	private static volatile List<Pattern> excludedCommandPatterns = List.of();
-	private static volatile String excludedCommandFingerprint = null;
+	private static final CachedPatterns EXCLUDED_COMMAND_PATTERNS = new CachedPatterns();
 
 	private final NettyServer server;
 	private String expectedNonce;
@@ -84,35 +83,11 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 	/**
 	 * @return The compiled {@code broadcasts.excluded_commands} patterns, recompiled only when the configured
-	 * list actually changes. The patterns used to be recompiled for every single chat command.
+	 * list actually changes.
 	 */
 	private static List<Pattern> excludedCommandPatterns() {
-		List<String> sources = new ArrayList<>();
-		JsonNode excludedCommands = ConfigManager.getConfigNode("broadcasts.excluded_commands");
-		if (excludedCommands.isArray()) {
-			for (JsonNode node : excludedCommands) {
-				if (node != null && node.isString() && !node.asString("").isBlank()) {
-					sources.add(node.asString(""));
-				}
-			}
-		}
-
-		String fingerprint = String.join("\u0000", sources);
-		if (fingerprint.equals(excludedCommandFingerprint)) {
-			return excludedCommandPatterns;
-		}
-
-		List<Pattern> compiled = new ArrayList<>();
-		for (String source : sources) {
-			try {
-				compiled.add(Pattern.compile(source));
-			} catch (Exception e) {
-				LOGGER.warn(I18nManager.getDmccTranslation("server.network.invalid_excluded_command_regex", source));
-			}
-		}
-		excludedCommandPatterns = List.copyOf(compiled);
-		excludedCommandFingerprint = fingerprint;
-		return excludedCommandPatterns;
+		return EXCLUDED_COMMAND_PATTERNS.of("broadcasts.excluded_commands",
+				source -> LOGGER.warn(I18nManager.getDmccTranslation("server.network.invalid_excluded_command_regex", source)));
 	}
 
 	/**

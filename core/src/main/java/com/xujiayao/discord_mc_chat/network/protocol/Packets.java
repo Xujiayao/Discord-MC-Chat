@@ -349,7 +349,8 @@ public final class Packets {
 	// --- Account linking -------------------------------------------------------------------------
 
 	/**
-	 * Request to create or re-check a link code. {@code joinCheck} marks the silent pre-check DMCC runs\n	 * when a player joins, as opposed to an explicit {@code /dmcc link}.\n
+	 * Request to create or re-check a link code. {@code joinCheck} marks the silent pre-check DMCC runs
+	 * when a player joins, as opposed to an explicit {@code /dmcc link}.
 	 */
 	public record LinkRequest(String minecraftUuid, String playerName, boolean joinCheck) implements Packet {
 		@Override
@@ -359,7 +360,8 @@ public final class Packets {
 	}
 
 	/**
-	 * Response to a {@link LinkRequest}. {@code code} is null when the player is already linked, in which\n	 * case {@code discordName} names the Discord account they are linked to.\n
+	 * Response to a {@link LinkRequest}. {@code code} is null when the player is already linked, in which
+	 * case {@code discordName} names the Discord account they are linked to.
 	 */
 	public record LinkResult(String minecraftUuid, String code, boolean alreadyLinked,
 							 String discordName) implements Packet {
@@ -370,7 +372,7 @@ public final class Packets {
 	}
 
 	/**
-	 * Request to unlink a player account.\n
+	 * Request to unlink a player account.
 	 */
 	public record UnlinkRequest(String minecraftUuid, String playerName) implements Packet {
 		@Override
@@ -380,7 +382,7 @@ public final class Packets {
 	}
 
 	/**
-	 * Response to an {@link UnlinkRequest}; {@code discordName} is the account that was unlinked from.\n
+	 * Response to an {@link UnlinkRequest}; {@code discordName} is the account that was unlinked from.
 	 */
 	public record UnlinkResult(String minecraftUuid, boolean success, String discordName) implements Packet {
 		@Override
@@ -390,7 +392,7 @@ public final class Packets {
 	}
 
 	/**
-	 * Full OP level synchronization payload: Minecraft UUID to OP level.\n
+	 * Full OP level synchronization payload: Minecraft UUID to OP level.
 	 */
 	public record OpSync(Map<String, Integer> opLevels) implements Packet {
 		@Override
@@ -402,7 +404,8 @@ public final class Packets {
 	// --- Events ----------------------------------------------------------------------------------
 
 	/**
-	 * Relays a parsed Discord event to the Minecraft side. {@code editedMessageSegments} is only set for\n	 * {@code EDIT}, and the mention fields are only set when somebody was actually mentioned.\n
+	 * Relays a parsed Discord event to the Minecraft side. {@code editedMessageSegments} is only set for
+	 * {@code EDIT}, and the mention fields are only set when somebody was actually mentioned.
 	 */
 	public record DiscordRelay(DiscordEventType eventType, List<TextSegment> segments, List<TextSegment> replySegments,
 							   List<TextSegment> editedMessageSegments, String mentionNotificationText,
@@ -410,7 +413,7 @@ public final class Packets {
 							   boolean mentionEveryone) implements Packet {
 
 		/**
-		 * Convenience constructor for events without reply, edit or mention data.\n
+		 * Convenience constructor for events without reply, edit or mention data.
 		 */
 		public DiscordRelay(DiscordEventType eventType, List<TextSegment> segments) {
 			this(eventType, segments, null, null, null, null, null, false);
@@ -423,14 +426,16 @@ public final class Packets {
 	}
 
 	/**
-	 * Relays a Minecraft-originated message back to Minecraft clients. When {@code componentJson} is set,\n	 * the receiver rebuilds the native component and swaps it in for {@code componentPlaceholder};\n	 * {@code componentText} is the plain-text fallback for clients that cannot.\n
+	 * Relays a Minecraft-originated message back to Minecraft clients. When {@code componentJson} is set,
+	 * the receiver rebuilds the native component and swaps it in for {@code componentPlaceholder};
+	 * {@code componentText} is the plain-text fallback for clients that cannot.
 	 */
 	public record MinecraftRelay(List<TextSegment> segments, String componentJson, String componentPlaceholder,
 								 String componentText, String mentionNotificationText, String mentionNotificationStyle,
 								 List<String> mentionedPlayerUuids, boolean mentionEveryone) implements Packet {
 
 		/**
-		 * Convenience constructor for relays without component or mention data.\n
+		 * Convenience constructor for relays without component or mention data.
 		 */
 		public MinecraftRelay(List<TextSegment> segments) {
 			this(segments, null, null, null, null, null, null, false);
@@ -443,7 +448,7 @@ public final class Packets {
 	}
 
 	/**
-	 * Carries Minecraft event placeholders for Discord-side templating.\n
+	 * Carries Minecraft event placeholders for Discord-side templating.
 	 */
 	public record MinecraftEvent(MinecraftEventType eventType, Map<String, String> placeholders) implements Packet {
 		@Override
@@ -453,7 +458,7 @@ public final class Packets {
 	}
 
 	/**
-	 * A batch of console log lines.\n
+	 * A batch of console log lines.
 	 */
 	public record ConsoleLogBatch(List<String> lines) implements Packet {
 		@Override

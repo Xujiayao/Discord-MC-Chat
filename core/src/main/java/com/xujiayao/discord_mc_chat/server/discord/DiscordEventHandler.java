@@ -445,14 +445,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 			return;
 		}
 
-		String configuredChannel = getRequiredPlayerChatChannel();
-		if (configuredChannel == null) {
-			return;
-		}
-
-		String channelId = event.getChannel().getId();
-		String channelName = event.getChannel().getName();
-		if (!channelId.equals(configuredChannel) && !channelName.equalsIgnoreCase(configuredChannel)) {
+		if (!isFromPlayerChatChannel(event.getChannel().getId(), event.getChannel().getName())) {
 			return;
 		}
 
@@ -490,14 +483,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 			return;
 		}
 
-		String configuredChannel = getRequiredPlayerChatChannel();
-		if (configuredChannel == null) {
-			return;
-		}
-
-		String channelId = event.getChannel().getId();
-		String channelName = event.getChannel().getName();
-		if (!channelId.equals(configuredChannel) && !channelName.equalsIgnoreCase(configuredChannel)) {
+		if (!isFromPlayerChatChannel(event.getChannel().getId(), event.getChannel().getName())) {
 			return;
 		}
 
@@ -554,14 +540,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 			return;
 		}
 
-		String configuredChannel = getRequiredPlayerChatChannel();
-		if (configuredChannel == null) {
-			return;
-		}
-
-		String channelId = event.getChannel().getId();
-		String channelName = event.getChannel().getName();
-		if (!channelId.equals(configuredChannel) && !channelName.equalsIgnoreCase(configuredChannel)) {
+		if (!isFromPlayerChatChannel(event.getChannel().getId(), event.getChannel().getName())) {
 			return;
 		}
 
@@ -602,6 +581,16 @@ final class DiscordEventHandler extends ListenerAdapter {
 			return null;
 		}
 		return configuredChannel;
+	}
+
+	/**
+	 * @param channelId   Discord channel ID the event came from.
+	 * @param channelName Discord channel name the event came from.
+	 * @return true when the event came from the configured player chat channel, matched by ID or by name.
+	 */
+	private boolean isFromPlayerChatChannel(String channelId, String channelName) {
+		String configuredChannel = getRequiredPlayerChatChannel();
+		return channelId.equals(configuredChannel) || channelName.equalsIgnoreCase(configuredChannel);
 	}
 
 	private void cacheMessage(Message message) {

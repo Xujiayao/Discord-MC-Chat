@@ -947,16 +947,11 @@ public final class MinecraftEventHandler {
 	}
 
 	/**
-	 * Runs work on the server thread when a server is available.
-	 *
-	 * @param action Work to run on the server thread.
-	 */
-	/**
 	 * Recomputes the "players ever joined" metric on the server thread.
 	 * <p>
-	 * The underlying stats scan calls {@code PlayerList.saveAll()}, which must run on the server thread, and
-	 * it parses every player's stats file. Info requests arrive every 10 seconds from the MSPT monitor, so
-	 * the value is cached and only recomputed when a player joins or quits (or after the safety-net TTL).
+	 * The count comes from the on-disk stats files, one per player that ever played. Info requests arrive
+	 * every 10 seconds from the MSPT monitor, so the value is cached and only recomputed when a player joins
+	 * or quits (plus a safety-net TTL in case a stats file appears without a join event).
 	 */
 	private static void refreshPlayersEverJoined() {
 		playersEverJoinedCache = statsProvider().countPlayersEverJoined();
@@ -1020,9 +1015,7 @@ public final class MinecraftEventHandler {
 	}
 
 	/**
-	 * Sends a component to every online player.
-	 *
-	 * @param component The component to send.
+	 * Broadcasts each non-empty group of segments as its own chat line.
 	 */
 	@SafeVarargs
 	private static void broadcastLines(List<TextSegment>... lineGroups) {
@@ -1033,6 +1026,9 @@ public final class MinecraftEventHandler {
 		}
 	}
 
+	/**
+	 * Sends one component to every online player.
+	 */
 	private static void broadcast(Component component) {
 		for (ServerPlayer player : serverInstance.getPlayerList().getPlayers()) {
 			player.sendSystemMessage(component);

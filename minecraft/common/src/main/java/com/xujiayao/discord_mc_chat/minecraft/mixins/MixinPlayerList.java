@@ -33,7 +33,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * @author Xujiayao
  */
 @Mixin(PlayerList.class)
-public final class MixinPlayerList {
+final class MixinPlayerList {
 
 	@Inject(method = "placeNewPlayer", at = @At("RETURN"))
 	private void placeNewPlayer(Connection connection, ServerPlayer player, CommonListenerCookie cookie, CallbackInfo ci) {
@@ -47,18 +47,18 @@ public final class MixinPlayerList {
 
 	@Inject(method = "broadcastChatMessage(Lnet/minecraft/network/chat/PlayerChatMessage;Lnet/minecraft/commands/CommandSourceStack;Lnet/minecraft/network/chat/ChatType$Bound;)V",
 			at = @At("HEAD"), cancellable = true)
-	private void dmcc$chatCommand(PlayerChatMessage message, CommandSourceStack source, ChatType.Bound bound,
+	private void dmcc$chatCommand(PlayerChatMessage message, CommandSourceStack sender, ChatType.Bound bound,
 								  CallbackInfo ci) {
 		// Console and command blocks have no ServerPlayer entity; they were never reported, and are not
 		// cancelled either, so their output still reaches everyone normally.
-		if (!(source.getEntity() instanceof ServerPlayer)) {
+		if (!(sender.getEntity() instanceof ServerPlayer)) {
 			return;
 		}
 
 		if (bound.chatType().is(ChatType.SAY_COMMAND)) {
-			MinecraftEventHandler.onSourceSay(source, message);
+			MinecraftEventHandler.onSourceSay(sender, message);
 		} else if (bound.chatType().is(ChatType.EMOTE_COMMAND)) {
-			MinecraftEventHandler.onSourceMe(source, message);
+			MinecraftEventHandler.onSourceMe(sender, message);
 		} else {
 			return;
 		}
