@@ -22,11 +22,11 @@ multi_server:
     shared_secret: "to_be_auto_replaced"
   servers: # This list acts as a whitelist. Only clients with a server name defined here are allowed to connect.
     - name: "SMP"
-      minecraft_version: "26.2"
+      minecraft_version: "26.3"
       avatar_url: ""
       color: "yellow"
     - name: "CMP"
-      minecraft_version: "26.2"
+      minecraft_version: "26.3"
       avatar_url: ""
       color: "green"
 

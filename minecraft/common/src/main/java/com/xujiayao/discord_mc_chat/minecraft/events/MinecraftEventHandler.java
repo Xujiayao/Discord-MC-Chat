@@ -216,10 +216,10 @@ public final class MinecraftEventHandler {
 	public static void onPlayerAdvancement(AdvancementHolder holder, ServerPlayer player, AdvancementProgress progress) {
 		DisplayInfo displayInfo = holder.value().display().orElse(null);
 		if (displayInfo != null
-				&& displayInfo.shouldAnnounceChat()
+				&& displayInfo.announceToChat()
 				&& progress.isDone()
 				&& player.level().getGameRules().get(GameRules.SHOW_ADVANCEMENT_MESSAGES)) {
-			String type = switch (displayInfo.getType()) {
+			String type = switch (displayInfo.type()) {
 				case TASK -> "task";
 				case CHALLENGE -> "challenge";
 				case GOAL -> "goal";
@@ -229,8 +229,8 @@ public final class MinecraftEventHandler {
 					"type", type,
 					"player_name", player.getName().getString(),
 					"display_name", player.getDisplayName().getString(),
-					"title", TranslationManager.get(displayInfo.getTitle()),
-					"description", TranslationManager.get(displayInfo.getDescription())
+					"title", TranslationManager.get(displayInfo.title()),
+					"description", TranslationManager.get(displayInfo.description())
 			);
 
 			NetworkManager.sendPacketToServer(new Packets.MinecraftEvent(Packets.MinecraftEventType.PLAYER_ADVANCEMENT, placeholders));
@@ -484,10 +484,8 @@ public final class MinecraftEventHandler {
 				Vec2.ZERO,
 				server.findRespawnDimension(),
 				LevelBasedPermissionSet.forLevel(PermissionLevel.byId(opLevel)),
-				DMCC_SOURCE_NAME,
 				Component.literal(DMCC_SOURCE_NAME),
-				server,
-				null
+				server
 		);
 	}
 
