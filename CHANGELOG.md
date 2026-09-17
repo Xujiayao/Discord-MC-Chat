@@ -1,6 +1,6 @@
 # Changelog 更新日志
 
-## Discord-MC-Chat 2.7.1-compat.2 - 2026/6/19
+## Discord-MC-Chat 2.7.1-compat.3 - 2026/9/17
 
 To use the new voice channel features, please grant your Discord bot the "Connect" permission in the "Voice Channel Permissions" section at your Discord server's "Roles" menu.
 
@@ -28,13 +28,12 @@ The versions listed below have been tested. Other versions may still work but ha
 
 以下列出版本已经过测试。其他版本可能仍可运行，但尚未经过验证。
 
-- Minecraft 26.2
-- Minecraft 26.1.2
+- Minecraft 26.3
 
 ## New Features 新特性
 
-- Compatible with Minecraft 26.2
-  兼容 Minecraft 26.2
+- Compatible with Minecraft 26.3
+  兼容 Minecraft 26.3
 
 ## Changes 更改
 
@@ -50,4 +49,4 @@ N/A
 
 ## Detailed Information 详细信息
 
-https://github.com/Xujiayao/Discord-MC-Chat/compare/2.7.1-compat.1...2.7.1-compat.2
+https://github.com/Xujiayao/Discord-MC-Chat/compare/2.7.1-compat.2...2.7.1-compat.3
