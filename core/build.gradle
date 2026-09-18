@@ -48,7 +48,7 @@ tasks.named("test") {
     }
 
     testLogging {
-        events "passed", "skipped", "failed"
+        events "failed"
         // DMCC's logger also prints to standard out; surface it so failing test runs can be read.
         showStandardStreams = true
     }

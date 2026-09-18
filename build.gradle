@@ -15,10 +15,6 @@ allprojects {
     repositories {
         mavenCentral()
         maven {
-            name = "Modrinth"
-            url = "https://api.modrinth.com/maven"
-        }
-        maven {
             name = "NeoForged"
             url = "https://maven.neoforged.net/releases"
         }

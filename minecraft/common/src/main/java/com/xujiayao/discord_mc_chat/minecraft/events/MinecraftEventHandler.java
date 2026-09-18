@@ -908,9 +908,6 @@ public final class MinecraftEventHandler {
 
 		Map<String, Integer> playersAndLatencies = new HashMap<>();
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-			if (PlayerVisibility.isPlayerHidden(player)) {
-				continue;
-			}
 			playersAndLatencies.put(player.getDisplayName().getString(), player.connection.latency());
 		}
 

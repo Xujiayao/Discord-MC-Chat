@@ -19,8 +19,4 @@ dependencies {
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     implementation project(":core")
-
-    // Compile-only integration dependency; see FabricDMCC.registerVanish.
-    // Vanish only publishes Fabric/Quilt builds for 26.2, so this integration is Fabric-only.
-    compileOnly "maven.modrinth:vanish:${project.vanish_version}"
 }

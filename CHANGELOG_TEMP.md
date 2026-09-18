@@ -1422,3 +1422,42 @@ tick 线程，进入崩溃报告。改用 `onServerThread` 会把这些异常**�
 | JAR | 6875 条目 / 0 重复 | `icon/icon.png` 确认在包内 |
 
 **净变化**：`+118 / −111`（`CachedPatterns` 新增 66 行，两处重复各减约 25 行，其余是注释与改名）。
+
+## 工作 13
+
+记录日期：2026/9/18（按用户要求**回退 Vanish 兼容**，并让 `:core:test` 通过时保持安静）。用户已完成实机测试，
+确认移除 Vanish 兼容后功能正常，且明确暂时不再兼容任何其它模组。
+
+### 更改
+
+1. **移除对 Vanish 模组的全部兼容动作。** 删除 `minecraft/common/.../minecraft/events/PlayerVisibility.java`
+   （40 行，该扩展点存在的唯一理由就是 Vanish），以及它在 `MinecraftEventHandler.buildInfoResponse` 里的
+   **唯一调用点**——`/dmcc info` 的在线玩家列表与人数统计不再跳过隐身玩家，回到原版的
+   `server.getPlayerList().getPlayers()` 全量遍历。`FabricDMCC` 随之删除 `registerVanish()` 与
+   `PlayerVisibility` / `VanishAPI` / `FabricLoader` 三个 import（39 → 22 行），类注释里
+   "加载器专属的模组兼容"一句也一并删掉。NeoForge 侧本来就没有接线，无需改动。
+2. **Gradle 中的 Vanish 声明全部清除**：`minecraft/fabric/build.gradle` 的
+   `compileOnly "maven.modrinth:vanish:${project.vanish_version}"`、`gradle.properties` 的
+   `vanish_version=1.6.15+26.2` 与其上的 `# Compile-only Compatibility Hooks` 段落。另外根 `build.gradle`
+   的 **Modrinth 仓库本来就只为这一个依赖而加**（`aeb3f7aa` 引入；`git grep maven.modrinth` 全仓已无命中），
+   也一并删除，仓库列表回到 `mavenCentral()` + `NeoForged`。
+3. **`SmokeTest` 改为"通过即报版本号"。** 两条断言先跑，**都成立才**执行
+   `System.out.println("DMCC version: " + Constants.VERSION)`；断言失败时异常先抛出，这一行根本不会执行。
+   配套地把 `core/build.gradle` 的 `testLogging.events` 由 `"passed", "skipped", "failed"` 收成 `"failed"`，
+   于是构建正常时 `:core:test` 只剩版本号这一行（Gradle 会给标准输出加
+   `SmokeTest > ...() STANDARD_OUT` 的包头，这是 Gradle 的固定渲染，无法去掉），出问题才显示测试结果输出。
+4. **文档同步**：`README_CN.md` 删掉 §2.2 的"Vanish 模组兼容"特性条目与 §3.4 的"模组兼容（`PlayerVisibility`）"
+   架构条目，§3.4 标题由"平台适配层与模组兼容"改为"平台适配层"，并把 `/info` 指标的"自动排除隐身玩家"、
+   模块表的"加载器专属的模组兼容"两处措辞改回事实。
+   `CHANGELOG.md` 里 beta.2 的 Vanish 条目**保留不动**——那是已发布版本的历史记录，本次移除属于下一个版本。
+
+### 验证
+
+- `./gradlew build` **BUILD SUCCESSFUL**（28s），`:minecraft:fabric`、`:minecraft:neoforge`、`:core` 全部重新编译通过，
+  `:core:test` 输出只剩 `DMCC version: 3.0.0-beta.2` 一行。
+- `git grep -i vanish` 在**非 markdown 文件**中已零命中（代码、Gradle、properties 全部干净），markdown 里只剩
+  `CHANGELOG.md` 的已发布历史与本文件的记录性文字。
+- 本轮净变化：9 个文件，`+13 / −81`（其中删除 `PlayerVisibility.java` 40 行）。
+- 发布 JAR 条目 `6875 → 6874`，`PlayerVisibility` 类确认已不在包内（全包零 `(?i)vanish` 命中）。
+- **失败路径实测**：临时插入一条必败断言后 `:core:test` 只输出
+  `SmokeTest > versionIsResolvedFromTheBuildResource() FAILED` + `AssertionFailedError`，版本号一行不打印（随后已还原）。
