@@ -10,10 +10,6 @@ apply plugin: "base"
 allprojects {
     repositories {
         mavenCentral()
-        maven {
-            name = "Modrinth"
-            url = "https://api.modrinth.com/maven"
-        }
     }
 }
 
@@ -27,6 +23,25 @@ subprojects {
     tasks.withType(JavaCompile).configureEach {
         options.release = 25
         options.encoding = "UTF-8"
+    }
+
+    dependencies {
+        testImplementation "org.junit.jupiter:junit-jupiter:${junit_version}"
+        testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+    }
+
+    tasks.named("test") {
+        useJUnitPlatform()
+
+        // Show test stdout/stderr in the build output, otherwise it is only captured
+        // in the XML/HTML report and the build console stays silent.
+        testLogging {
+            showStandardStreams = true
+        }
+
+        // DMCC's logger creates "logs/DMCC_<timestamp>.log" relative to the working
+        // directory. Run tests inside build/ so they never write into the source tree.
+        workingDir = layout.buildDirectory.get().asFile
     }
 
     processResources {

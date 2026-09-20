@@ -177,3 +177,63 @@
 - `.github/ISSUE_TEMPLATE/bug.yml` 的 "Only DMCC v2 versions are supported." 残留文案（未做）
 - `README.md` 英文翻译件与新 README_CN.md 的同步，留待发布新版本时处理
 
+## 工作 04
+
+记录日期：2026/9/20（第四轮：升级至 Minecraft 26.3 + 移除全部模组兼容代码 + 引入 Gradle 测试；尚未定版）。
+
+### 更改（用户可见 / 行为变更）
+
+- **全面升级至 Minecraft 26.3，并且仅兼容 26.3**。`gradle.properties` 的 `minecraft_version` 由 `26.2` 改为 `26.3`；`fabric.mod.json` 的依赖由 `"minecraft": ">=26.1.0"` 收窄为 `"minecraft": "~26.3"`。**这是一项收窄性变更**：26.1.2 / 26.2 及更早版本将不再允许加载本模组，发布时应在 CHANGELOG 中明确提示。`config_standalone.yml` 中 `multi_server.servers` 的示例 `minecraft_version` 同步更新为 `"26.3"`。
+
+- **彻底移除所有"与其它模组兼容"相关的代码**（此后不再考虑兼容任何模组）：
+    - Gradle：删除 `gradle.properties` 的 `# Compile-only Compatibility Hooks` 段与 `vanish_version` 属性；删除 `minecraft/build.gradle` 中的 `compileOnly "maven.modrinth:vanish:..."` 依赖；并删除根 `build.gradle` 中仅服务于该依赖的 Modrinth Maven 仓库声明（全仓库已无任何 `maven.modrinth` 依赖）
+    - Java：删除 `Constants.MOD_VANISH_INSTALLED` 标志位、`FabricDMCC` 中基于 `FabricLoader#isModLoaded("vanish" / "melius-vanish")` 的探测逻辑，以及 `MinecraftEventHandler#buildInfoResponse` 中排除隐身玩家的分支（连带清理 `me.drex.vanish.api.VanishAPI`、`net.fabricmc.loader.api.FabricLoader`、`Constants` 三处已无用的 import）
+    - 受此影响，`/info`（及 Discord 端信息查询）的在线玩家列表与人数统计**不再排除其它模组隐藏的玩家**
+
+### 更改（构建与测试）
+
+- **新增 Gradle 测试支持**：根 `build.gradle` 的 `subprojects` 块内为所有子项目声明 `testImplementation "org.junit.jupiter:junit-jupiter:${junit_version}"` 与 `testRuntimeOnly "org.junit.platform:junit-platform-launcher"`，并为 `test` 任务启用 `useJUnitPlatform()`
+
+- **`gradle.properties` 新增 `# Test Dependencies` 段**：新增 `junit_version=6.1.3`（JUnit Jupiter 当前最新版）
+
+- **新增唯一测试文件 `core/src/test/java/SmokeTest.java`**：按既定要求仅放入该冒烟测试（默认包），原样保留给定实现，仅补上编译所需的 `import com.xujiayao.discord_mc_chat.Constants;` 与 `import org.junit.jupiter.api.Test;`。该测试打印编译期写入 `mode.yml` 的 DMCC 版本号，用于快速验证"依赖解析 + 资源占位符展开 + 类路径"整条链路
+
+- **测试任务配置（`subprojects` 块内的 `test` 任务）**：
+    - `testLogging { showStandardStreams = true }`：Gradle 默认只在 XML/HTML 报告中捕获测试的标准输出，控制台不显示。开启后 `SmokeTest` 的 `Compiling DMCC Version: 3.0.0-beta.2` 会直接出现在 `> Task :core:test` 之下
+    - `workingDir = layout.buildDirectory.get().asFile`：`LoggerImpl` 会在**工作目录**下创建 `logs/DMCC_<时间戳>.log`，因此把测试的工作目录指向项目自身的 `build/`。测试产物落在 `core/build/logs/DMCC_<时间戳>.log`，随 `clean` 一并清理，源码树与仓库中不再产生任何 `logs/` 目录，也无需为其添加 `.gitignore` 规则
+
+- **`.github/ISSUE_TEMPLATE/bug.yml` 的 Minecraft 版本下拉框顶部新增 `"26.3"`**，以保证新版本的问题反馈能正确选择当前受支持版本
+
+### 代码迁移明细（26.2 → 26.3，全部为编译期强制要求的破坏性 API 变更）
+
+| 位置 | 26.2 写法 | 26.3 写法 | 依据 |
+| --- | --- | --- | --- |
+| `MinecraftEventHandler`（开发者成就广播） | `DisplayInfo#shouldAnnounceChat()` | `DisplayInfo#announceToChat()` | 官方映射改名 |
+| 同上 | `DisplayInfo#getType()` / `getTitle()` / `getDescription()` | `DisplayInfo#type()` / `title()` / `description()` | `DisplayInfo` 已改为 record，访问器随之为 record 风格 |
+| `MinecraftEventHandler`（命令执行桥 / 命令补全桥，共 2 处） | `new CommandSourceStack(source, pos, rot, level, perms, "DMCC", Component.literal("DMCC"), server, null)` | `new CommandSourceStack(source, pos, rot, level, perms, Component.literal("DMCC"), server)` | 26.3 移除了 `String` 文本名参数；`NamesProvider.constant(Component)` 的 `textName()` 即 `Component#getString()`，故 `getTextName()` 仍返回 `"DMCC"`，行为完全等价 |
+| `TranslationManager#loadTranslations`（数据包语言文件扫描） | `try (PackResources packResources = pack.open())` | `try (Stream<PackResources> s = pack.open())` 后逐个 `forEach` | `Pack#open()` 返回值由单个 `PackResources` 改为 `Stream<PackResources>`；且 `PackResources` 在 26.3 已不再是 `AutoCloseable`，无需关闭单个资源 |
+
+> 说明：`Options`/`InputConstants`/Renderpearl/Shader/OIT 等 26.3 的其余破坏性变更全部集中在客户端渲染与输入子系统，本模组为纯服务端模组（`"environment": "server"`）且不含任何客户端代码，故均不受影响。世界生成、战利品表、数据组件等 26.3 重构亦与本模组无交集。
+
+### 验证
+
+环境：Java 25.0.4.1 LTS（Temurin HotSpot）+ Gradle 9.7.1 + Fabric Loom 1.17.21 + Fabric Loader 0.19.5 + Minecraft 26.3
+
+- `./gradlew clean build --warning-mode all` **BUILD SUCCESSFUL**（43s，15 个任务全部实际执行）；全量日志扫描 `deprecat` / `warning` 关键字**零命中**
+
+- **JUnit 冒烟测试通过且输出可见**：构建日志中 `> Task :core:test` 之下直接打印 `Compiling DMCC Version: 3.0.0-beta.2`；`TEST-SmokeTest.xml` 记录 `tests="1" failures="0" errors="0"`——证明 `mode.yml` 的 `${mod_version}` 占位符展开与 `Constants.VERSION` 读取链路在 26.3 下正常；测试日志落在 `core/build/logs/DMCC_20260921_001335.log`，源码树中无任何残留
+
+- **产物 `build/Discord-MC-Chat-3.0.0-beta.2.jar`（13,245,200 字节）**：解包后 `fabric.mod.json` 的 depends 为 `fabricloader: ">=0.19.5"`、`minecraft: "~26.3"`、`java: ">=25.0.0"`；`config/mode.yml` 版本为 `3.0.0-beta.2`；扫描全部 `.json` / `.yml` / `.txt` / `.toml` 资源**无 `${...}` 残留占位符**
+
+- **一次性运行期验证（仅本轮做过，此后不再采用）**：本轮额外以 Loom `:minecraft:runServer` 真实启动过一次 Minecraft 26.3 服务端，确认 12 个 Mixin 中的 10 个随目标类加载完成注入（其余 2 个需真实玩家连接才会加载目标类），并以 RCON 实测 `/dmcc info` 正确返回 Minecraft 版本 `26.3`。**已按开发者决定停止使用该手段：后续所有轮次仅以编译期成功为准，不再启动真实服务端。**
+
+- 逐项以 `javap` 对照 26.3 官方映射 jar 复核了全部 Mixin 注入目标与 `@Shadow` 成员的存在性及签名：`MinecraftServer#runServer/stopServer/onServerExit`、`Commands#<init>/dispatcher`、`PlayerList#placeNewPlayer/remove`、`ServerPlayer#die`、`ServerGamePacketListenerImpl#broadcastChatMessage/performUnsignedChatCommand/performSignedChatCommand` 及其 `player` 字段、`PlayerAdvancements#award` + `AdvancementRewards#grant`、`GameModeCommand#setGameMode`、`MsgCommand/SayCommand/EmoteCommands#lambda$register$*`、`TellRawCommand#lambda$register$0`、`ReloadableServerResources#lambda$loadResources$3`——**全部存在且签名一致**；另与 26.2 的字节码逐条比对确认 `runServer` 的注入点结构未发生变化（该静态比对方式不依赖运行游戏，可长期沿用）
+
+### 待办（供发布时处理）
+
+- `update/versions.json` 需在**发布时**新增一条 `"compatibility": ["26.3"]` 的版本记录，否则 26.3 环境下的 `/update` 与自动更新检查会返回"无兼容版本"（该文件是线上更新检查的数据源，属发布动作，本轮未动）
+- `.github/ISSUE_TEMPLATE/bug.yml` 的 "Only DMCC v2 versions are supported." 残留文案（仍未处理）
+- `README.md` 英文翻译件与本轮 README_CN.md 的同步，留待发布新版本时处理
+
+> 本轮同时删除了开发者提供的 `primer.md`（Minecraft 26.2 → 26.3 迁移指南），因迁移已全部完成。
+

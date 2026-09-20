@@ -7,7 +7,6 @@ import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.serialization.JsonOps;
-import com.xujiayao.discord_mc_chat.Constants;
 import com.xujiayao.discord_mc_chat.DMCC;
 import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
@@ -23,7 +22,6 @@ import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Info.Response
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Link.RequestPacket;
 import com.xujiayao.discord_mc_chat.network.packets.EventPackets.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
-import me.drex.vanish.api.VanishAPI;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.commands.CommandSourceStack;
@@ -196,10 +194,10 @@ public final class MinecraftEventHandler {
 		EventManager.register(MinecraftEvents.PlayerAdvancement.class, event -> {
 			DisplayInfo displayInfo = event.advancementHolder().value().display().orElse(null);
 			if (displayInfo != null
-					&& displayInfo.shouldAnnounceChat()
+					&& displayInfo.announceToChat()
 					&& event.advancementProgress().isDone()
 					&& event.serverPlayer().level().getGameRules().get(GameRules.SHOW_ADVANCEMENT_MESSAGES)) {
-				String type = switch (displayInfo.getType()) {
+				String type = switch (displayInfo.type()) {
 					case TASK -> "task";
 					case CHALLENGE -> "challenge";
 					case GOAL -> "goal";
@@ -209,8 +207,8 @@ public final class MinecraftEventHandler {
 						"type", type,
 						"player_name", event.serverPlayer().getName().getString(),
 						"display_name", event.serverPlayer().getDisplayName().getString(),
-						"title", TranslationManager.get(displayInfo.getTitle()),
-						"description", TranslationManager.get(displayInfo.getDescription())
+						"title", TranslationManager.get(displayInfo.title()),
+						"description", TranslationManager.get(displayInfo.description())
 				);
 
 				NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_ADVANCEMENT, placeholders));
@@ -317,10 +315,8 @@ public final class MinecraftEventHandler {
 					Vec2.ZERO,
 					serverInstance.findRespawnDimension(),
 					LevelBasedPermissionSet.forLevel(PermissionLevel.byId(mcOp)),
-					"DMCC",
 					Component.literal("DMCC"),
-					serverInstance,
-					null
+					serverInstance
 			);
 
 			// Must be dispatched to the main server thread to avoid concurrent modification.
@@ -380,10 +376,8 @@ public final class MinecraftEventHandler {
 					Vec2.ZERO,
 					serverInstance.findRespawnDimension(),
 					LevelBasedPermissionSet.forLevel(PermissionLevel.byId(mcOp)),
-					"DMCC",
 					Component.literal("DMCC"),
-					serverInstance,
-					null
+					serverInstance
 			);
 
 			String rawInput = event.input() == null ? "" : event.input();
@@ -833,9 +827,6 @@ public final class MinecraftEventHandler {
 
 		Map<String, Integer> playersAndLatencies = new HashMap<>();
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-			if (Constants.MOD_VANISH_INSTALLED.get() && VanishAPI.isVanished(player)) {
-				continue;
-			}
 			playersAndLatencies.put(player.getDisplayName().getString(), player.connection.latency());
 		}
 

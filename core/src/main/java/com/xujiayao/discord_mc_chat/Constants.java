@@ -57,13 +57,6 @@ public final class Constants {
 	 */
 	public static final AtomicBoolean OVERWRITE_MINECRAFT_SOURCE_MESSAGES = new AtomicBoolean(false);
 
-	/**
-	 * Whether Vanish Fabric mod is present.
-	 * <p>
-	 * For DMCC Client use.
-	 */
-	public static final AtomicBoolean MOD_VANISH_INSTALLED = new AtomicBoolean(false);
-
 	private Constants() {
 	}
 }
