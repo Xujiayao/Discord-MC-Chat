@@ -378,10 +378,8 @@ public final class MinecraftEventHandler {
 					Vec2.ZERO,
 					serverInstance.findRespawnDimension(),
 					LevelBasedPermissionSet.forLevel(PermissionLevel.byId(mcOp)),
-					"DMCC",
 					Component.literal("DMCC"),
-					serverInstance,
-					null
+					serverInstance
 			);
 
 			String rawInput = event.input() == null ? "" : event.input();
