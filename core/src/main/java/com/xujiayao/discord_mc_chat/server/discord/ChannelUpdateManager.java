@@ -340,29 +340,17 @@ public final class ChannelUpdateManager {
 
 	private static String buildTopic(ChannelUpdateContext context) {
 		JsonNode customMessages = I18nManager.getCustomMessages();
-		if (customMessages == null) {
-			return "";
-		}
-
-		return buildTemplate(customMessages.path("channel_topic_updating"), context, true);
+		return customMessages == null ? "" : buildTemplate(customMessages.path("channel_topic_updating"), context, true);
 	}
 
 	private static String buildServerStatusChannelName(ChannelUpdateContext context) {
 		JsonNode customMessages = I18nManager.getCustomMessages();
-		if (customMessages == null) {
-			return "";
-		}
-
-		return buildTemplate(customMessages.path("voice_channels_updating").path("server_status"), context, true);
+		return customMessages == null ? "" : buildTemplate(customMessages.path("voice_channels_updating").path("server_status"), context, true);
 	}
 
 	private static String buildPlayerCountChannelName(ChannelUpdateContext context) {
 		JsonNode customMessages = I18nManager.getCustomMessages();
-		if (customMessages == null) {
-			return "";
-		}
-
-		return buildTemplate(customMessages.path("voice_channels_updating").path("player_count"), context, false);
+		return customMessages == null ? "" : buildTemplate(customMessages.path("voice_channels_updating").path("player_count"), context, false);
 	}
 
 	private static String buildTemplate(JsonNode node, ChannelUpdateContext context, boolean useModeKeyWhenOnline) {

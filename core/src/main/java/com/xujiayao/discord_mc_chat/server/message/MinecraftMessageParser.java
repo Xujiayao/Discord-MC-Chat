@@ -5,6 +5,7 @@ import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.message.TextSegment;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
+import com.xujiayao.discord_mc_chat.server.message.MessageParserCommon.MarkdownState;
 import com.xujiayao.discord_mc_chat.utils.MojangUtils;
 import com.xujiayao.discord_mc_chat.utils.TextSegmentUtils;
 import net.dv8tion.jda.api.entities.Member;
@@ -297,21 +298,12 @@ public final class MinecraftMessageParser {
 			int lineEnd = newline >= 0 ? newline : raw.length();
 			String line = raw.substring(start, lineEnd);
 
-			MarkdownState lineState = new MarkdownState();
-			lineState.bold = state.bold;
-			lineState.italic = state.italic;
-			lineState.underlined = state.underlined;
-			lineState.strikethrough = state.strikethrough;
-			lineState.obfuscated = state.obfuscated;
+			MarkdownState lineState = state.copy();
 
 			List<TextSegment> lineSegments = parseMarkdownLine(line, lineState);
 			out.addAll(applyLineMarkdownDecorations(line, lineSegments));
 
-			state.bold = lineState.bold;
-			state.italic = lineState.italic;
-			state.underlined = lineState.underlined;
-			state.strikethrough = lineState.strikethrough;
-			state.obfuscated = lineState.obfuscated;
+			state = lineState;
 
 			if (newline < 0) {
 				break;
@@ -436,36 +428,15 @@ public final class MinecraftMessageParser {
 	}
 
 	private static List<TextSegment> splitSegmentsByCustomEmoji(List<TextSegment> segments, MentionContext context) {
-		List<TextSegment> out = new ArrayList<>();
-		for (TextSegment segment : segments) {
-			if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
-				out.add(segment);
-				continue;
+		return MessageParserCommon.splitSegments(segments, DISCORD_ALIAS_EMOJI_PATTERN, (segment, matcher) -> {
+			String aliasName = matcher.group(1).toLowerCase(Locale.ROOT);
+			if (!context.customEmojiByName.containsKey(aliasName) && EmojiManager.getByDiscordAlias(":" + matcher.group(1) + ":").isEmpty()) {
+				return null;
 			}
-			Matcher matcher = DISCORD_ALIAS_EMOJI_PATTERN.matcher(segment.text);
-			int cursor = 0;
-			boolean matched = false;
-			while (matcher.find()) {
-				String aliasName = matcher.group(1).toLowerCase(Locale.ROOT);
-				if (!context.customEmojiByName.containsKey(aliasName) && EmojiManager.getByDiscordAlias(":" + matcher.group(1) + ":").isEmpty()) {
-					continue;
-				}
-				matched = true;
-				if (matcher.start() > cursor) {
-					out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor, matcher.start())));
-				}
-				TextSegment emoji = TextSegmentUtils.copySegment(segment, matcher.group());
-				emoji.color = "yellow";
-				out.add(emoji);
-				cursor = matcher.end();
-			}
-			if (!matched) {
-				out.add(segment);
-			} else if (cursor < segment.text.length()) {
-				out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor)));
-			}
-		}
-		return out;
+			TextSegment emoji = TextSegmentUtils.copySegment(segment, matcher.group());
+			emoji.color = "yellow";
+			return emoji;
+		});
 	}
 
 	private static void toggleMarkdownState(MarkdownState state, String delimiter) {
@@ -718,13 +689,5 @@ public final class MinecraftMessageParser {
 			this.mentionedPlayerUuids = mentionedPlayerUuids;
 			this.mentionEveryone = false;
 		}
-	}
-
-	private static final class MarkdownState {
-		private boolean bold;
-		private boolean italic;
-		private boolean underlined;
-		private boolean strikethrough;
-		private boolean obfuscated;
 	}
 }

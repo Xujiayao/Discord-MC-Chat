@@ -71,28 +71,11 @@ public final class StatsCommand implements Command {
 			return 0;
 		}
 
-		int count = 0;
-
-		try (Stream<Path> stream = Files.list(statsDir)) {
-			for (Path p : stream.filter(Files::isRegularFile)
-					.filter(path -> path.getFileName().toString().endsWith(".json"))
-					.toList()) {
-				String fileName = p.getFileName().toString();
-				String uuidStr = fileName.substring(0, fileName.length() - 5);
-				try {
-					UUID.fromString(uuidStr);
-					int value = JsonUtils.getStat(p, normalizeMinecraftNamespace(type), normalizeMinecraftNamespace(stat));
-					if (value > 0) {
-						count++;
-					}
-				} catch (Exception ignored) {
-				}
-			}
+		try {
+			return loadStatValues(statsDir, normalizeMinecraftNamespace(type), normalizeMinecraftNamespace(stat)).size();
 		} catch (Exception ignored) {
 			return 0;
 		}
-
-		return count;
 	}
 
 	@Override
@@ -103,28 +86,8 @@ public final class StatsCommand implements Command {
 	@Override
 	public CommandArgument[] args() {
 		return new CommandArgument[]{
-				new CommandArgument() {
-					@Override
-					public String name() {
-						return "type";
-					}
-
-					@Override
-					public String description() {
-						return I18nManager.getDmccTranslation("commands.stats.args_desc.type");
-					}
-				},
-				new CommandArgument() {
-					@Override
-					public String name() {
-						return "stat";
-					}
-
-					@Override
-					public String description() {
-						return I18nManager.getDmccTranslation("commands.stats.args_desc.stat");
-					}
-				}
+				new CommandArgument("type", I18nManager.getDmccTranslation("commands.stats.args_desc.type")),
+				new CommandArgument("stat", I18nManager.getDmccTranslation("commands.stats.args_desc.stat"))
 		};
 	}
 
@@ -154,25 +117,17 @@ public final class StatsCommand implements Command {
 
 		Map<String, Integer> leaderboard = new HashMap<>();
 
-		try (Stream<Path> stream = Files.list(statsDir)) {
-			stream.filter(Files::isRegularFile)
-					.filter(p -> p.getFileName().toString().endsWith(".json"))
-					.forEach(p -> {
-						String fileName = p.getFileName().toString();
-						String uuidStr = fileName.substring(0, fileName.length() - 5);
-						try {
-							UUID uuid = UUID.fromString(uuidStr);
-							int value = JsonUtils.getStat(p, normalizeMinecraftNamespace(type), normalizeMinecraftNamespace(stat));
-							if (value > 0) {
-								String name = provider.getPlayerName(uuid);
-								if (name == null || name.isBlank()) {
-									name = uuidStr;
-								}
-								leaderboard.put(name, value);
-							}
-						} catch (Exception ignored) {
-						}
-					});
+		try {
+			for (StatValue statValue : loadStatValues(statsDir, type, stat)) {
+				try {
+					String name = provider.getPlayerName(statValue.uuid());
+					if (name == null || name.isBlank()) {
+						name = statValue.uuidStr();
+					}
+					leaderboard.put(name, statValue.value());
+				} catch (Exception ignored) {
+				}
+			}
 		} catch (Exception e) {
 			sender.reply(I18nManager.getDmccTranslation("commands.stats.read_failed", e.getMessage()));
 			return;
@@ -212,6 +167,49 @@ public final class StatsCommand implements Command {
 		}
 
 		sender.reply(sb.toString());
+	}
+
+	/**
+	 * Scans the stats directory and returns every player entry holding a positive value for the requested stat.
+	 * Files that cannot be read, and file names that are not valid UUIDs, are skipped.
+	 *
+	 * @param statsDir Player stats directory.
+	 * @param type     Namespaced stat category/type.
+	 * @param stat     Namespaced stat name.
+	 * @return The matching entries, or an empty list when none match.
+	 * @throws Exception When the stats directory cannot be listed.
+	 */
+	private static List<StatValue> loadStatValues(Path statsDir, String type, String stat) throws Exception {
+		List<StatValue> values = new ArrayList<>();
+
+		try (Stream<Path> stream = Files.list(statsDir)) {
+			for (Path p : stream.filter(Files::isRegularFile)
+					.filter(path -> path.getFileName().toString().endsWith(".json"))
+					.toList()) {
+				String fileName = p.getFileName().toString();
+				String uuidStr = fileName.substring(0, fileName.length() - 5);
+				try {
+					UUID uuid = UUID.fromString(uuidStr);
+					int value = JsonUtils.getStat(p, type, stat);
+					if (value > 0) {
+						values.add(new StatValue(uuid, uuidStr, value));
+					}
+				} catch (Exception ignored) {
+				}
+			}
+		}
+
+		return values;
+	}
+
+	/**
+	 * A scanned stats entry: the player UUID, its raw file name form, and the stat value.
+	 *
+	 * @param uuid    Player UUID parsed from the file name.
+	 * @param uuidStr UUID as written in the file name, used as a fallback display name.
+	 * @param value   Stat value stored in the file.
+	 */
+	private record StatValue(UUID uuid, String uuidStr, int value) {
 	}
 
 	/**

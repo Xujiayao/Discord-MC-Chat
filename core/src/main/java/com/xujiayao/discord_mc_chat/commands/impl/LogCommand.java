@@ -21,17 +21,7 @@ public final class LogCommand implements Command {
 	@Override
 	public CommandArgument[] args() {
 		return new CommandArgument[]{
-				new CommandArgument() {
-					@Override
-					public String name() {
-						return "file";
-					}
-
-					@Override
-					public String description() {
-						return I18nManager.getDmccTranslation("commands.log.args_desc.file");
-					}
-				}
+				new CommandArgument("file", I18nManager.getDmccTranslation("commands.log.args_desc.file"))
 		};
 	}
 

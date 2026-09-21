@@ -12,6 +12,19 @@ public interface Command {
 	String description();
 
 	/**
+	 * Builds the usage text of this command, listing its arguments (e.g. {@code log <file>}).
+	 *
+	 * @return The usage string built from {@link #name()} and {@link #args()}.
+	 */
+	default String usage() {
+		StringBuilder usage = new StringBuilder(name());
+		for (CommandArgument arg : args()) {
+			usage.append(" <").append(arg.name()).append(">");
+		}
+		return usage.toString();
+	}
+
+	/**
 	 * Gets the list of arguments for the command, potentially adjusted for the sender context.
 	 * <p>
 	 * By default, delegates to {@link #args()}. Commands can override this to
@@ -85,10 +98,10 @@ public interface Command {
 
 	/**
 	 * Describes a single command argument displayed in help and usage text.
+	 *
+	 * @param name        Argument name shown between angle brackets.
+	 * @param description Localized argument description.
 	 */
-	interface CommandArgument {
-		String name();
-
-		String description();
+	record CommandArgument(String name, String description) {
 	}
 }

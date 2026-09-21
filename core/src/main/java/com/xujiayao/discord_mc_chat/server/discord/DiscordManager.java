@@ -341,15 +341,21 @@ public final class DiscordManager {
 				String avatarUrl = resolveWebhookAvatarUrl(clientName, placeholders);
 				sendWebhookMessage(channel, username, avatarUrl, content);
 			} else {
-				if ("standalone".equals(ModeManager.getMode())) {
-					String avatarUrl = getClientAvatarUrl(clientName);
-					sendWebhookMessage(channel, clientName, avatarUrl, content);
-				} else {
-					sendBotMessage(channelIdentifier, content);
-				}
+				sendToChannelOrWebhook(channel, channelIdentifier, clientName, content);
 			}
 		} catch (Exception e) {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
+		}
+	}
+
+	/**
+	 * Sends as the client's webhook identity in standalone mode, as the bot user otherwise.
+	 */
+	private static void sendToChannelOrWebhook(TextChannel channel, String channelIdentifier, String clientName, String content) {
+		if ("standalone".equals(ModeManager.getMode())) {
+			sendWebhookMessage(channel, clientName, getClientAvatarUrl(clientName), content);
+		} else {
+			sendBotMessage(channelIdentifier, content);
 		}
 	}
 
@@ -398,12 +404,7 @@ public final class DiscordManager {
 				}
 			}
 
-			if (standaloneMode) {
-				String avatarUrl = getClientAvatarUrl(clientName);
-				sendWebhookMessage(channel, clientName, avatarUrl, message);
-			} else {
-				sendBotMessage(channelIdentifier, message);
-			}
+			sendToChannelOrWebhook(channel, channelIdentifier, clientName, message);
 		} catch (Exception e) {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
 		}

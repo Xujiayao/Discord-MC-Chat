@@ -36,17 +36,7 @@ public final class WhitelistCommand implements Command {
 	@Override
 	public CommandArgument[] args() {
 		return new CommandArgument[]{
-				new CommandArgument() {
-					@Override
-					public String name() {
-						return "player";
-					}
-
-					@Override
-					public String description() {
-						return I18nManager.getDmccTranslation("commands.whitelist.args_desc.player");
-					}
-				}
+				new CommandArgument("player", I18nManager.getDmccTranslation("commands.whitelist.args_desc.player"))
 		};
 	}
 

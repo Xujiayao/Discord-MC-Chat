@@ -2,8 +2,9 @@ package com.xujiayao.discord_mc_chat.logging.impl;
 
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
-import org.slf4j.Logger;
 import org.slf4j.Marker;
+import org.slf4j.event.Level;
+import org.slf4j.helpers.LegacyAbstractLogger;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -19,14 +20,16 @@ import java.util.Map;
 
 /**
  * DMCC Logger implementation.
+ * <p>
+ * Only the level checks, the caller name and the normalized logging call are implemented here; every
+ * {@code trace}/{@code debug}/{@code info}/{@code warn}/{@code error} overload (including the {@link Marker}
+ * variants) is provided by {@link LegacyAbstractLogger}.
  */
-public final class LoggerImpl implements Logger {
+public final class LoggerImpl extends LegacyAbstractLogger {
 
 	private static volatile PrintWriter fileWriter;
 	private static boolean fileWriterInitialized = false;
 	private static volatile boolean consoleAnsiEnabled = true;
-
-	private final String name;
 
 	private final Object minecraftLogger;
 
@@ -106,9 +109,45 @@ public final class LoggerImpl implements Logger {
 		consoleAnsiEnabled = enabled;
 	}
 
+	// Logging level checks
+	// TRACE and DEBUG are intentionally disabled in DMCC: isTraceEnabled()/isDebugEnabled() always
+	// return false, so the inherited trace()/debug() methods are deliberate no-ops.
+
 	@Override
-	public String getName() {
+	public boolean isTraceEnabled() {
+		return false;
+	}
+
+	@Override
+	public boolean isDebugEnabled() {
+		return false;
+	}
+
+	@Override
+	public boolean isInfoEnabled() {
+		return true;
+	}
+
+	@Override
+	public boolean isWarnEnabled() {
+		return true;
+	}
+
+	@Override
+	public boolean isErrorEnabled() {
+		return true;
+	}
+
+	@Override
+	protected String getFullyQualifiedCallerName() {
 		return name;
+	}
+
+	@Override
+	protected void handleNormalizedLoggingCall(Level level, Marker marker, String message, Object[] arguments, Throwable throwable) {
+		// StringUtils.format() returns the message unchanged when there are no arguments, which is exactly
+		// what the previous hand-written overloads did for the (msg) and (msg, throwable) forms.
+		log(level.name(), StringUtils.format(message, arguments), throwable);
 	}
 
 	private void log(String level, String msg, Throwable t) {
@@ -160,318 +199,5 @@ public final class LoggerImpl implements Logger {
 				t.printStackTrace(System.out);
 			}
 		}
-	}
-
-	private void log(String level, String msg) {
-		log(level, msg, null);
-	}
-
-	// Logging level checks
-	// TRACE and DEBUG are intentionally disabled in DMCC: isTraceEnabled()/isDebugEnabled() always
-	// return false and the corresponding trace()/debug() methods below are deliberate no-ops.
-
-	@Override
-	public boolean isTraceEnabled() {
-		return false;
-	}
-
-	@Override
-	public boolean isDebugEnabled() {
-		return false;
-	}
-
-	@Override
-	public boolean isInfoEnabled() {
-		return true;
-	}
-
-	@Override
-	public boolean isWarnEnabled() {
-		return true;
-	}
-
-	@Override
-	public boolean isErrorEnabled() {
-		return true;
-	}
-
-	@Override
-	public boolean isTraceEnabled(Marker marker) {
-		return false;
-	}
-
-	@Override
-	public boolean isDebugEnabled(Marker marker) {
-		return false;
-	}
-
-	@Override
-	public boolean isInfoEnabled(Marker marker) {
-		return true;
-	}
-
-	@Override
-	public boolean isWarnEnabled(Marker marker) {
-		return true;
-	}
-
-	@Override
-	public boolean isErrorEnabled(Marker marker) {
-		return true;
-	}
-
-	// TRACE (intentionally no-operation: trace is disabled in DMCC, see isTraceEnabled())
-	@Override
-	public void trace(String msg) {
-		// log("TRACE", msg);
-	}
-
-	@Override
-	public void trace(String format, Object arg) {
-		// log("TRACE", StringUtils.format(format, arg));
-	}
-
-	@Override
-	public void trace(String format, Object arg1, Object arg2) {
-		// log("TRACE", StringUtils.format(format, arg1, arg2));
-	}
-
-	@Override
-	public void trace(String format, Object... arguments) {
-		// log("TRACE", StringUtils.format(format, arguments));
-	}
-
-	@Override
-	public void trace(String msg, Throwable t) {
-		// log("TRACE", msg, t);
-	}
-
-	@Override
-	public void trace(Marker marker, String msg) {
-		trace(msg);
-	}
-
-	@Override
-	public void trace(Marker marker, String format, Object arg) {
-		trace(format, arg);
-	}
-
-	@Override
-	public void trace(Marker marker, String format, Object arg1, Object arg2) {
-		trace(format, arg1, arg2);
-	}
-
-	@Override
-	public void trace(Marker marker, String format, Object... arguments) {
-		trace(format, arguments);
-	}
-
-	@Override
-	public void trace(Marker marker, String msg, Throwable t) {
-		trace(msg, t);
-	}
-
-	// DEBUG (intentionally no-operation: debug is disabled in DMCC, see isDebugEnabled())
-	@Override
-	public void debug(String msg) {
-		// log("DEBUG", msg);
-	}
-
-	@Override
-	public void debug(String format, Object arg) {
-		// log("DEBUG", StringUtils.format(format, arg));
-	}
-
-	@Override
-	public void debug(String format, Object arg1, Object arg2) {
-		// log("DEBUG", StringUtils.format(format, arg1, arg2));
-	}
-
-	@Override
-	public void debug(String format, Object... arguments) {
-		// log("DEBUG", StringUtils.format(format, arguments));
-	}
-
-	@Override
-	public void debug(String msg, Throwable t) {
-		// log("DEBUG", msg, t);
-	}
-
-	@Override
-	public void debug(Marker marker, String msg) {
-		debug(msg);
-	}
-
-	@Override
-	public void debug(Marker marker, String format, Object arg) {
-		debug(format, arg);
-	}
-
-	@Override
-	public void debug(Marker marker, String format, Object arg1, Object arg2) {
-		debug(format, arg1, arg2);
-	}
-
-	@Override
-	public void debug(Marker marker, String format, Object... arguments) {
-		debug(format, arguments);
-	}
-
-	@Override
-	public void debug(Marker marker, String msg, Throwable t) {
-		debug(msg, t);
-	}
-
-	// INFO
-	@Override
-	public void info(String msg) {
-		log("INFO", msg);
-	}
-
-	@Override
-	public void info(String format, Object arg) {
-		log("INFO", StringUtils.format(format, arg));
-	}
-
-	@Override
-	public void info(String format, Object arg1, Object arg2) {
-		log("INFO", StringUtils.format(format, arg1, arg2));
-	}
-
-	@Override
-	public void info(String format, Object... arguments) {
-		log("INFO", StringUtils.format(format, arguments));
-	}
-
-	@Override
-	public void info(String msg, Throwable t) {
-		log("INFO", msg, t);
-	}
-
-	@Override
-	public void info(Marker marker, String msg) {
-		info(msg);
-	}
-
-	@Override
-	public void info(Marker marker, String format, Object arg) {
-		info(format, arg);
-	}
-
-	@Override
-	public void info(Marker marker, String format, Object arg1, Object arg2) {
-		info(format, arg1, arg2);
-	}
-
-	@Override
-	public void info(Marker marker, String format, Object... arguments) {
-		info(format, arguments);
-	}
-
-	@Override
-	public void info(Marker marker, String msg, Throwable t) {
-		info(msg, t);
-	}
-
-	// WARN
-	@Override
-	public void warn(String msg) {
-		log("WARN", msg);
-	}
-
-	@Override
-	public void warn(String format, Object arg) {
-		log("WARN", StringUtils.format(format, arg));
-	}
-
-	@Override
-	public void warn(String format, Object arg1, Object arg2) {
-		log("WARN", StringUtils.format(format, arg1, arg2));
-	}
-
-	@Override
-	public void warn(String format, Object... arguments) {
-		log("WARN", StringUtils.format(format, arguments));
-	}
-
-	@Override
-	public void warn(String msg, Throwable t) {
-		log("WARN", msg, t);
-	}
-
-	@Override
-	public void warn(Marker marker, String msg) {
-		warn(msg);
-	}
-
-	@Override
-	public void warn(Marker marker, String format, Object arg) {
-		warn(format, arg);
-	}
-
-	@Override
-	public void warn(Marker marker, String format, Object arg1, Object arg2) {
-		warn(format, arg1, arg2);
-	}
-
-	@Override
-	public void warn(Marker marker, String format, Object... arguments) {
-		warn(format, arguments);
-	}
-
-	@Override
-	public void warn(Marker marker, String msg, Throwable t) {
-		warn(msg, t);
-	}
-
-	// ERROR
-	@Override
-	public void error(String msg) {
-		log("ERROR", msg);
-	}
-
-	@Override
-	public void error(String format, Object arg) {
-		log("ERROR", StringUtils.format(format, arg));
-	}
-
-	@Override
-	public void error(String format, Object arg1, Object arg2) {
-		log("ERROR", StringUtils.format(format, arg1, arg2));
-	}
-
-	@Override
-	public void error(String format, Object... arguments) {
-		log("ERROR", StringUtils.format(format, arguments));
-	}
-
-	@Override
-	public void error(String msg, Throwable t) {
-		log("ERROR", msg, t);
-	}
-
-	@Override
-	public void error(Marker marker, String msg) {
-		error(msg);
-	}
-
-	@Override
-	public void error(Marker marker, String format, Object arg) {
-		error(format, arg);
-	}
-
-	@Override
-	public void error(Marker marker, String format, Object arg1, Object arg2) {
-		error(format, arg1, arg2);
-	}
-
-	@Override
-	public void error(Marker marker, String format, Object... arguments) {
-		error(format, arguments);
-	}
-
-	@Override
-	public void error(Marker marker, String msg, Throwable t) {
-		error(msg, t);
 	}
 }

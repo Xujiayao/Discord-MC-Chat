@@ -1,5 +1,6 @@
 package com.xujiayao.discord_mc_chat.minecraft.events;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.context.CommandContextBuilder;
@@ -78,6 +79,8 @@ public final class MinecraftEventHandler {
 
 	private static final String DEFAULT_MENTION_STYLE = "title";
 	private static MinecraftServer serverInstance;
+	private static MinecraftServer opsServerCache;
+	private static RegistryOps<JsonElement> opsCache;
 
 	private MinecraftEventHandler() {
 	}
@@ -299,15 +302,7 @@ public final class MinecraftEventHandler {
 			// Construct a virtual CommandSourceStack with the sender's OP level
 			// and a custom CommandSource that bridges output back to the DMCC sender
 			DmccRconConsoleSource rconConsoleSource = new DmccRconConsoleSource(serverInstance);
-			CommandSourceStack source = new CommandSourceStack(
-					rconConsoleSource,
-					Vec3.atLowerCornerOf(serverInstance.getRespawnData().pos()),
-					Vec2.ZERO,
-					serverInstance.findRespawnDimension(),
-					LevelBasedPermissionSet.forLevel(PermissionLevel.byId(mcOp)),
-					Component.literal("DMCC"),
-					serverInstance
-			);
+			CommandSourceStack source = buildCommandSource(rconConsoleSource, mcOp);
 
 			// Must be dispatched to the main server thread to avoid concurrent modification.
 			// The completion future is completed after the command has been executed on the server thread,
@@ -359,15 +354,7 @@ public final class MinecraftEventHandler {
 
 			int mcOp = Math.max(0, event.opLevel());
 
-			CommandSourceStack source = new CommandSourceStack(
-					new DmccRconConsoleSource(serverInstance),
-					Vec3.atLowerCornerOf(serverInstance.getRespawnData().pos()),
-					Vec2.ZERO,
-					serverInstance.findRespawnDimension(),
-					LevelBasedPermissionSet.forLevel(PermissionLevel.byId(mcOp)),
-					Component.literal("DMCC"),
-					serverInstance
-			);
+			CommandSourceStack source = buildCommandSource(new DmccRconConsoleSource(serverInstance), mcOp);
 
 			String rawInput = event.input() == null ? "" : event.input();
 
@@ -542,53 +529,16 @@ public final class MinecraftEventHandler {
 
 			serverInstance.execute(() -> {
 				PlayerList playerList = serverInstance.getPlayerList();
-
-				if (event.replySegments() != null && !event.replySegments().isEmpty()) {
-					Component replyComponent = buildComponentFromSegments(event.replySegments());
-					for (ServerPlayer player : playerList.getPlayers()) {
-						player.sendSystemMessage(replyComponent);
-					}
-				}
-
-				Component mainComponent = buildComponentFromSegments(event.segments());
-				for (ServerPlayer player : playerList.getPlayers()) {
-					player.sendSystemMessage(mainComponent);
-				}
-
-				if (event.mentionNotificationText() != null) {
-					Component notificationComponent = Component.literal(event.mentionNotificationText())
-							.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD);
-
-					if (event.mentionEveryone()) {
-						// @everyone/@here: notify ALL online players
-						for (ServerPlayer player : playerList.getPlayers()) {
-							sendMentionNotification(player, notificationComponent, event.mentionNotificationStyle());
-						}
-					} else if (event.mentionedPlayerUuids() != null && !event.mentionedPlayerUuids().isEmpty()) {
-						// Direct/role mentions: notify specific players
-						for (String uuidStr : event.mentionedPlayerUuids()) {
-							try {
-								ServerPlayer player = playerList.getPlayer(UUID.fromString(uuidStr));
-								if (player != null) {
-									sendMentionNotification(player, notificationComponent, event.mentionNotificationStyle());
-								}
-							} catch (Exception ignored) {
-							}
-						}
-					}
-				}
+				broadcastReplyAndMain(playerList, event.replySegments(), event.segments());
+				sendMentionNotifications(playerList, event.mentionNotificationText(), event.mentionNotificationStyle(),
+						event.mentionEveryone(), event.mentionedPlayerUuids());
 			});
 		});
 
 		EventManager.register(CoreEvents.DiscordCommandEvent.class, event -> {
 			if (serverInstance == null) return;
 
-			serverInstance.execute(() -> {
-				Component component = buildComponentFromSegments(event.segments());
-				for (ServerPlayer player : serverInstance.getPlayerList().getPlayers()) {
-					player.sendSystemMessage(component);
-				}
-			});
+			serverInstance.execute(() -> broadcast(serverInstance.getPlayerList(), buildComponentFromSegments(event.segments())));
 		});
 
 		EventManager.register(CoreEvents.DiscordReactionEvent.class, event -> {
@@ -596,18 +546,7 @@ public final class MinecraftEventHandler {
 
 			serverInstance.execute(() -> {
 				PlayerList playerList = serverInstance.getPlayerList();
-
-				if (event.replySegments() != null && !event.replySegments().isEmpty()) {
-					Component replyComponent = buildComponentFromSegments(event.replySegments());
-					for (ServerPlayer player : playerList.getPlayers()) {
-						player.sendSystemMessage(replyComponent);
-					}
-				}
-
-				Component component = buildComponentFromSegments(event.segments());
-				for (ServerPlayer player : playerList.getPlayers()) {
-					player.sendSystemMessage(component);
-				}
+				broadcastReplyAndMain(playerList, event.replySegments(), event.segments());
 			});
 		});
 
@@ -617,25 +556,11 @@ public final class MinecraftEventHandler {
 			serverInstance.execute(() -> {
 				PlayerList playerList = serverInstance.getPlayerList();
 
-				if (event.replySegments() != null && !event.replySegments().isEmpty()) {
-					Component replyComponent = buildComponentFromSegments(event.replySegments());
-					for (ServerPlayer player : playerList.getPlayers()) {
-						player.sendSystemMessage(replyComponent);
-					}
-				}
+				// Reply first, then the edit notification, then the edited message content
+				broadcastReplyAndMain(playerList, event.replySegments(), event.segments());
 
-				// Send edit notification
-				Component notificationComponent = buildComponentFromSegments(event.segments());
-				for (ServerPlayer player : playerList.getPlayers()) {
-					player.sendSystemMessage(notificationComponent);
-				}
-
-				// Send edited message content
 				if (event.editedMessageSegments() != null && !event.editedMessageSegments().isEmpty()) {
-					Component editedComponent = buildComponentFromSegments(event.editedMessageSegments());
-					for (ServerPlayer player : playerList.getPlayers()) {
-						player.sendSystemMessage(editedComponent);
-					}
+					broadcast(playerList, buildComponentFromSegments(event.editedMessageSegments()));
 				}
 			});
 		});
@@ -645,18 +570,7 @@ public final class MinecraftEventHandler {
 
 			serverInstance.execute(() -> {
 				PlayerList playerList = serverInstance.getPlayerList();
-
-				if (event.replySegments() != null && !event.replySegments().isEmpty()) {
-					Component replyComponent = buildComponentFromSegments(event.replySegments());
-					for (ServerPlayer player : playerList.getPlayers()) {
-						player.sendSystemMessage(replyComponent);
-					}
-				}
-
-				Component component = buildComponentFromSegments(event.segments());
-				for (ServerPlayer player : playerList.getPlayers()) {
-					player.sendSystemMessage(component);
-				}
+				broadcastReplyAndMain(playerList, event.replySegments(), event.segments());
 			});
 		});
 
@@ -676,31 +590,76 @@ public final class MinecraftEventHandler {
 					component = buildComponentFromSegments(event.segments());
 				}
 
-				for (ServerPlayer player : playerList.getPlayers()) {
-					player.sendSystemMessage(component);
-				}
-
-				if (event.mentionNotificationText() != null) {
-					Component notificationComponent = Component.literal(event.mentionNotificationText())
-							.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD);
-					if (event.mentionEveryone()) {
-						for (ServerPlayer player : playerList.getPlayers()) {
-							sendMentionNotification(player, notificationComponent, event.mentionNotificationStyle());
-						}
-					} else if (event.mentionedPlayerUuids() != null && !event.mentionedPlayerUuids().isEmpty()) {
-						for (String uuidStr : event.mentionedPlayerUuids()) {
-							try {
-								ServerPlayer player = playerList.getPlayer(UUID.fromString(uuidStr));
-								if (player != null) {
-									sendMentionNotification(player, notificationComponent, event.mentionNotificationStyle());
-								}
-							} catch (Exception ignored) {
-							}
-						}
-					}
-				}
+				broadcast(playerList, component);
+				sendMentionNotifications(playerList, event.mentionNotificationText(), event.mentionNotificationStyle(),
+						event.mentionEveryone(), event.mentionedPlayerUuids());
 			});
 		});
+	}
+
+	/**
+	 * Sends a component to every online player.
+	 */
+	private static void broadcast(PlayerList playerList, Component component) {
+		for (ServerPlayer player : playerList.getPlayers()) {
+			player.sendSystemMessage(component);
+		}
+	}
+
+	/**
+	 * Sends the optional reply component first, then the main component, to every online player.
+	 */
+	private static void broadcastReplyAndMain(PlayerList playerList, List<TextSegment> replySegments, List<TextSegment> mainSegments) {
+		if (replySegments != null && !replySegments.isEmpty()) {
+			broadcast(playerList, buildComponentFromSegments(replySegments));
+		}
+		broadcast(playerList, buildComponentFromSegments(mainSegments));
+	}
+
+	/**
+	 * Sends the mention notification to all online players ({@code @everyone} / {@code @here}) or to the mentioned players only.
+	 */
+	private static void sendMentionNotifications(PlayerList playerList, String notificationText, String style,
+	                                             boolean everyone, List<String> mentionedPlayerUuids) {
+		if (notificationText == null) {
+			return;
+		}
+
+		Component notificationComponent = Component.literal(notificationText)
+				.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD);
+
+		if (everyone) {
+			// @everyone/@here: notify ALL online players
+			for (ServerPlayer player : playerList.getPlayers()) {
+				sendMentionNotification(player, notificationComponent, style);
+			}
+		} else if (mentionedPlayerUuids != null && !mentionedPlayerUuids.isEmpty()) {
+			// Direct/role mentions: notify specific players
+			for (String uuidStr : mentionedPlayerUuids) {
+				try {
+					ServerPlayer player = playerList.getPlayer(UUID.fromString(uuidStr));
+					if (player != null) {
+						sendMentionNotification(player, notificationComponent, style);
+					}
+				} catch (Exception ignored) {
+				}
+			}
+		}
+	}
+
+	/**
+	 * Builds a virtual command source with the sender's OP level, bridging command output back to the DMCC sender.
+	 */
+	private static CommandSourceStack buildCommandSource(DmccRconConsoleSource rconConsoleSource, int mcOp) {
+		return new CommandSourceStack(
+				rconConsoleSource,
+				Vec3.atLowerCornerOf(serverInstance.getRespawnData().pos()),
+				Vec2.ZERO,
+				serverInstance.findRespawnDimension(),
+				LevelBasedPermissionSet.forLevel(PermissionLevel.byId(mcOp)),
+				Component.literal("DMCC"),
+				serverInstance
+		);
 	}
 
 	private static List<String> getSuggestionsForInput(String input, CommandSourceStack source) throws Exception {
@@ -772,34 +731,30 @@ public final class MinecraftEventHandler {
 	}
 
 	private static Component buildNotLinkedMessage(String code) {
+		String command = "/link code: " + code;
 		return Component.empty()
 				.append(Component.literal(I18nManager.getDmccTranslation("linking.message.not_linked_1")))
-				.append(buildCopyToClipboard("/link code: " + code))
+				.append(buildClickable(command, new ClickEvent.CopyToClipboard(command), "linking.tooltip.click_to_copy"))
 				.append(Component.literal(I18nManager.getDmccTranslation("linking.message.not_linked_2")))
-				.append(buildSuggestCommand("/dmcc link"))
+				.append(buildClickable("/dmcc link", new ClickEvent.SuggestCommand("/dmcc link"), "linking.tooltip.click_to_run"))
 				.append(Component.literal(I18nManager.getDmccTranslation("linking.message.not_linked_3")));
 	}
 
 	private static Component buildAlreadyLinkedMessage(String discordName) {
 		return Component.empty()
 				.append(Component.literal(I18nManager.getDmccTranslation("linking.message.already_linked_1", discordName)))
-				.append(buildSuggestCommand("/dmcc unlink"))
+				.append(buildClickable("/dmcc unlink", new ClickEvent.SuggestCommand("/dmcc unlink"), "linking.tooltip.click_to_run"))
 				.append(Component.literal(I18nManager.getDmccTranslation("linking.message.already_linked_2")));
 	}
 
-	private static Component buildCopyToClipboard(String text) {
+	/**
+	 * Builds a green, clickable {@code [text]} component with the given click event and hover tooltip.
+	 */
+	private static Component buildClickable(String text, ClickEvent clickEvent, String tooltipKey) {
 		return Component.literal("[" + text + "]").withStyle(style -> style
-				.withClickEvent(new ClickEvent.CopyToClipboard(text))
+				.withClickEvent(clickEvent)
 				.withHoverEvent(new HoverEvent.ShowText(
-						Component.literal(I18nManager.getDmccTranslation("linking.tooltip.click_to_copy"))))
-				.withColor(ChatFormatting.GREEN));
-	}
-
-	private static Component buildSuggestCommand(String command) {
-		return Component.literal("[" + command + "]").withStyle(style -> style
-				.withClickEvent(new ClickEvent.SuggestCommand(command))
-				.withHoverEvent(new HoverEvent.ShowText(
-						Component.literal(I18nManager.getDmccTranslation("linking.tooltip.click_to_run"))))
+						Component.literal(I18nManager.getDmccTranslation(tooltipKey))))
 				.withColor(ChatFormatting.GREEN));
 	}
 
@@ -849,50 +804,9 @@ public final class MinecraftEventHandler {
 		}
 
 		MutableComponent root = Component.empty();
-
 		for (TextSegment seg : segments) {
-			MutableComponent part = Component.literal(seg.text);
-			Style style = Style.EMPTY;
-
-			if (seg.color != null && !seg.color.isEmpty()) {
-				TextColor textColor = TextColor.parseColor(seg.color).result().orElse(null);
-				if (textColor != null) {
-					style = style.withColor(textColor);
-				}
-			}
-
-			if (seg.bold) {
-				style = style.withBold(true);
-			}
-			if (seg.italic) {
-				style = style.withItalic(true);
-			}
-			if (seg.underlined) {
-				style = style.withUnderlined(true);
-			}
-			if (seg.strikethrough) {
-				style = style.withStrikethrough(true);
-			}
-			if (seg.obfuscated) {
-				style = style.withObfuscated(true);
-			}
-
-			if (seg.clickUrl != null && !seg.clickUrl.isEmpty()) {
-				try {
-					style = style.withClickEvent(new ClickEvent.OpenUrl(URI.create(seg.clickUrl)));
-				} catch (Exception ignored) {
-					// Invalid URL, skip click event
-				}
-			}
-
-			if (seg.hoverText != null && !seg.hoverText.isEmpty()) {
-				style = style.withHoverEvent(new HoverEvent.ShowText(Component.literal(seg.hoverText)));
-			}
-
-			part.withStyle(style);
-			root.append(part);
+			root.append(buildComponentPart(seg));
 		}
-
 		return root;
 	}
 
@@ -916,14 +830,14 @@ public final class MinecraftEventHandler {
 				if (placeholderStart < 0) {
 					String tail = segment.text.substring(cursor);
 					if (!tail.isEmpty()) {
-						root.append(buildComponentPart(copySegmentWithText(segment, tail)));
+						root.append(buildComponentPart(segment.copyWithText(tail)));
 					}
 					break;
 				}
 
 				if (placeholderStart > cursor) {
 					String leading = segment.text.substring(cursor, placeholderStart);
-					root.append(buildComponentPart(copySegmentWithText(segment, leading)));
+					root.append(buildComponentPart(segment.copyWithText(leading)));
 				}
 
 				root.append(replacement.copy());
@@ -932,19 +846,6 @@ public final class MinecraftEventHandler {
 		}
 
 		return root;
-	}
-
-	private static TextSegment copySegmentWithText(TextSegment source, String text) {
-		TextSegment copy = new TextSegment(text);
-		copy.color = source.color;
-		copy.bold = source.bold;
-		copy.italic = source.italic;
-		copy.underlined = source.underlined;
-		copy.strikethrough = source.strikethrough;
-		copy.obfuscated = source.obfuscated;
-		copy.clickUrl = source.clickUrl;
-		copy.hoverText = source.hoverText;
-		return copy;
 	}
 
 	private static MutableComponent buildComponentPart(TextSegment segment) {
@@ -995,7 +896,7 @@ public final class MinecraftEventHandler {
 		}
 		try {
 			return ComponentSerialization.CODEC
-					.encodeStart(RegistryOps.create(JsonOps.INSTANCE, serverInstance.registryAccess()), component)
+					.encodeStart(registryOps(), component)
 					.result()
 					.map(Object::toString)
 					.orElse("");
@@ -1010,12 +911,23 @@ public final class MinecraftEventHandler {
 		}
 		try {
 			return ComponentSerialization.CODEC
-					.parse(RegistryOps.create(JsonOps.INSTANCE, serverInstance.registryAccess()), JsonParser.parseString(json))
+					.parse(registryOps(), JsonParser.parseString(json))
 					.result()
 					.orElse(null);
 		} catch (Exception ignored) {
 			return null;
 		}
+	}
+
+	/**
+	 * Returns the registry ops of the current server, rebuilding the cached instance only when the server changes.
+	 */
+	private static RegistryOps<JsonElement> registryOps() {
+		if (opsCache == null || opsServerCache != serverInstance) {
+			opsServerCache = serverInstance;
+			opsCache = RegistryOps.create(JsonOps.INSTANCE, serverInstance.registryAccess());
+		}
+		return opsCache;
 	}
 
 	private static void sendMentionNotification(ServerPlayer player, Component component, String style) {

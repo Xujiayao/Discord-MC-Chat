@@ -61,6 +61,22 @@ public final class TextSegment implements Serializable {
 		this.color = color;
 	}
 
+	/**
+	 * Creates a copy of this segment carrying the given text, keeping every other field unchanged.
+	 */
+	public TextSegment copyWithText(String newText) {
+		TextSegment copy = new TextSegment(newText);
+		copy.bold = this.bold;
+		copy.italic = this.italic;
+		copy.underlined = this.underlined;
+		copy.strikethrough = this.strikethrough;
+		copy.obfuscated = this.obfuscated;
+		copy.color = this.color;
+		copy.clickUrl = this.clickUrl;
+		copy.hoverText = this.hoverText;
+		return copy;
+	}
+
 	public static String toPlainText(List<TextSegment> segments) {
 		if (segments == null || segments.isEmpty()) {
 			return "";

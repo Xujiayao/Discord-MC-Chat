@@ -179,42 +179,28 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 				case HandshakePacket p -> {
 					if ("single_server".equals(ModeManager.getMode())) {
 						if (!"Internal".equals(p.serverName)) {
-							String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.single_server_mode", p.serverName);
-							LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", p.serverName, reason));
-							ctx.writeAndFlush(new DisconnectPacket("server.network.disconnect_reasons.single_server_mode", p.serverName));
-							ctx.close();
+							reject(ctx, p.serverName, "server.network.disconnect_reasons.single_server_mode", p.serverName);
 							return;
 						}
 					} else {
 						if (!isWhitelisted(p.serverName)) {
-							String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.not_whitelisted", p.serverName);
-							LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", p.serverName, reason));
-							ctx.writeAndFlush(new DisconnectPacket("server.network.disconnect_reasons.not_whitelisted", p.serverName));
-							ctx.close();
+							reject(ctx, p.serverName, "server.network.disconnect_reasons.not_whitelisted", p.serverName);
 							return;
 						}
 
 						if (NetworkManager.isClientConnected(p.serverName)) {
-							String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.duplicate_name", p.serverName);
-							LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", p.serverName, reason));
-							ctx.writeAndFlush(new DisconnectPacket("server.network.disconnect_reasons.duplicate_name", p.serverName));
-							ctx.close();
+							reject(ctx, p.serverName, "server.network.disconnect_reasons.duplicate_name", p.serverName);
 							return;
 						}
 
 						if (!Constants.VERSION.equals(p.dmccVersion)) {
-							String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.version_mismatch", "DMCC", p.dmccVersion, Constants.VERSION);
-							LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", p.serverName, reason));
-							ctx.writeAndFlush(new DisconnectPacket("server.network.disconnect_reasons.version_mismatch", "DMCC", p.dmccVersion, Constants.VERSION));
-							ctx.close();
+							reject(ctx, p.serverName, "server.network.disconnect_reasons.version_mismatch", "DMCC", p.dmccVersion, Constants.VERSION);
 							return;
 						}
 
-						if (!getMinecraftVersion(p.serverName).equals(p.minecraftVersion)) {
-							String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.version_mismatch", "Minecraft", p.minecraftVersion, getMinecraftVersion(p.serverName));
-							LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", p.serverName, reason));
-							ctx.writeAndFlush(new DisconnectPacket("server.network.disconnect_reasons.version_mismatch", "Minecraft", p.minecraftVersion, getMinecraftVersion(p.serverName)));
-							ctx.close();
+						String expectedMinecraftVersion = getMinecraftVersion(p.serverName);
+						if (!expectedMinecraftVersion.equals(p.minecraftVersion)) {
+							reject(ctx, p.serverName, "server.network.disconnect_reasons.version_mismatch", "Minecraft", p.minecraftVersion, expectedMinecraftVersion);
 							return;
 						}
 					}
@@ -244,10 +230,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 						}
 						BotPresenceManager.update();
 					} else {
-						String reason = I18nManager.getDmccTranslation("server.network.disconnect_reasons.auth_failed");
-						LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", clientName, reason));
-						ctx.writeAndFlush(new DisconnectPacket("server.network.disconnect_reasons.auth_failed"));
-						ctx.close();
+						reject(ctx, clientName, "server.network.disconnect_reasons.auth_failed");
 					}
 				}
 				case null, default -> LOGGER.warn(unexpectedPacketMessage);
@@ -270,6 +253,16 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
 		LOGGER.error(I18nManager.getDmccTranslation("server.network.exception_caught"), cause);
+		ctx.close();
+	}
+
+	/**
+	 * Resolves the reason, logs it, flushes the disconnect packet and closes the channel, in that order.
+	 */
+	private void reject(ChannelHandlerContext ctx, String serverName, String reasonKey, Object... args) {
+		String reason = I18nManager.getDmccTranslation(reasonKey, args);
+		LOGGER.error(I18nManager.getDmccTranslation("server.network.reject", serverName, reason));
+		ctx.writeAndFlush(new DisconnectPacket(reasonKey, args));
 		ctx.close();
 	}
 
@@ -351,7 +344,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 		DiscordManager.sendMinecraftSystemMessage(sourceClientName, "source.tell_raw", translatedMessage);
 
-		broadcastMinecraftTellRawRelay(sourceClientName, relaySegments, overwriteSegments, componentJson, translatedMessage, useSerializedComponent);
+		broadcastMinecraftTellRawRelay(sourceClientName, relaySegments, overwriteSegments, componentJson, translatedMessage);
 	}
 
 	private boolean isExcludedMinecraftCommand(String command) {
@@ -438,54 +431,49 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 		String displayName = notifyMentions ? packet.placeholders.getOrDefault("display_name", "Unknown") : null;
 
-		if (toOtherClients) {
-			MinecraftRelayPacket relayPacket = new MinecraftRelayPacket(relaySegments);
-			if (notifyMentions) {
-				applyMentionNotification(relayPacket, displayName, parsed);
-			}
-			NetworkManager.broadcastToClientsExcept(relayPacket, sourceClientName);
+		MinecraftRelayPacket relayPacket = newRelayPacket(relaySegments, "", "");
+		MinecraftRelayPacket sourcePacket = newRelayPacket(overwriteSegments, "", "");
+		if (notifyMentions) {
+			applyMentionNotification(relayPacket, displayName, parsed);
+			applyMentionNotification(sourcePacket, displayName, parsed);
 		}
-
-		if (sourceEchoEnabled) {
-			MinecraftRelayPacket sourcePacket = new MinecraftRelayPacket(overwriteSegments);
-			if (notifyMentions) {
-				applyMentionNotification(sourcePacket, displayName, parsed);
-			}
-			NetworkManager.sendPacketToClient(sourcePacket, sourceClientName);
-		}
+		dispatchRelay(sourceClientName, toOtherClients, sourceEchoEnabled, relayPacket, sourcePacket);
 	}
 
 	private void broadcastMinecraftTellRawRelay(String sourceClientName,
 	                                            List<TextSegment> relaySegments,
 	                                            List<TextSegment> overwriteSegments,
 	                                            String componentJson,
-	                                            String componentText,
-	                                            boolean useSerializedComponent) {
+	                                            String componentText) {
 		boolean sourceEchoEnabled = ConfigManager.getBoolean("message_parsing.overwrite_minecraft_source_messages");
 		boolean supportMinecraftToMinecraftConfig = "standalone".equals(ModeManager.getMode());
-		boolean toOtherClients = supportMinecraftToMinecraftConfig && ConfigManager.getBoolean("broadcasts.minecraft_to_minecraft." + "source.tell_raw");
+		boolean toOtherClients = supportMinecraftToMinecraftConfig && ConfigManager.getBoolean("broadcasts.minecraft_to_minecraft.source.tell_raw");
 
 		if (!toOtherClients && !sourceEchoEnabled) {
 			return;
 		}
 
+		dispatchRelay(sourceClientName, toOtherClients, sourceEchoEnabled,
+				newRelayPacket(relaySegments, componentJson, componentText),
+				newRelayPacket(overwriteSegments, componentJson, componentText));
+	}
+
+	private static MinecraftRelayPacket newRelayPacket(List<TextSegment> segments, String componentJson, String componentText) {
+		MinecraftRelayPacket packet = new MinecraftRelayPacket(segments);
+		if (!componentJson.isBlank()) {
+			packet.componentJson = componentJson;
+			packet.componentPlaceholder = TELLRAW_COMPONENT_PLACEHOLDER;
+			packet.componentText = componentText;
+		}
+		return packet;
+	}
+
+	private static void dispatchRelay(String sourceClientName, boolean toOtherClients, boolean sourceEchoEnabled,
+	                                  MinecraftRelayPacket relayPacket, MinecraftRelayPacket sourcePacket) {
 		if (toOtherClients) {
-			MinecraftRelayPacket relayPacket = new MinecraftRelayPacket(relaySegments);
-			if (useSerializedComponent) {
-				relayPacket.componentJson = componentJson;
-				relayPacket.componentPlaceholder = TELLRAW_COMPONENT_PLACEHOLDER;
-				relayPacket.componentText = componentText;
-			}
 			NetworkManager.broadcastToClientsExcept(relayPacket, sourceClientName);
 		}
-
 		if (sourceEchoEnabled) {
-			MinecraftRelayPacket sourcePacket = new MinecraftRelayPacket(overwriteSegments);
-			if (useSerializedComponent) {
-				sourcePacket.componentJson = componentJson;
-				sourcePacket.componentPlaceholder = TELLRAW_COMPONENT_PLACEHOLDER;
-				sourcePacket.componentText = componentText;
-			}
 			NetworkManager.sendPacketToClient(sourcePacket, sourceClientName);
 		}
 	}

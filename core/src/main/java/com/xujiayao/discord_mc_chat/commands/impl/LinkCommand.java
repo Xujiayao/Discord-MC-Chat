@@ -35,17 +35,7 @@ public final class LinkCommand implements Command {
 		// In Discord context, show the <code> argument
 		if (sender instanceof DiscordUserContextProvider) {
 			return new CommandArgument[]{
-					new CommandArgument() {
-						@Override
-						public String name() {
-							return "code";
-						}
-
-						@Override
-						public String description() {
-							return I18nManager.getDmccTranslation("commands.link.args_desc.code");
-						}
-					}
+					new CommandArgument("code", I18nManager.getDmccTranslation("commands.link.args_desc.code"))
 			};
 		}
 		// In Minecraft context, show no arguments

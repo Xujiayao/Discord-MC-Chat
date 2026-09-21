@@ -70,42 +70,43 @@ final class DiscordEventHandler extends ListenerAdapter {
 
 		int opLevel = OpLevelResolver.resolve(event.getMember(), event.getUser());
 		String name = event.getName();
+		JdaCommandSender sender = new JdaCommandSender(event, opLevel);
 
 		switch (name) {
 			case "execute" -> {
 				String at = event.getOption("at", OptionMapping::getAsString);
 				String command = event.getOption("command", OptionMapping::getAsString);
-				CommandManager.execute(new JdaCommandSender(event, opLevel), name, at, command);
+				CommandManager.execute(sender, name, at, command);
 			}
 			case "console" -> {
 				String at = event.getOption("at", OptionMapping::getAsString);
 				String command = event.getOption("command", OptionMapping::getAsString);
 				if (at != null) {
 					// standalone mode: /console <at> <command>
-					CommandManager.execute(new JdaCommandSender(event, opLevel), name, at, command);
+					CommandManager.execute(sender, name, at, command);
 				} else {
 					// single_server mode: /console <command>
-					CommandManager.execute(new JdaCommandSender(event, opLevel), name, command);
+					CommandManager.execute(sender, name, command);
 				}
 			}
 			case "log" -> {
 				String file = event.getOption("file", OptionMapping::getAsString);
-				CommandManager.execute(new JdaCommandSender(event, opLevel), name, file);
+				CommandManager.execute(sender, name, file);
 			}
 			case "whitelist" -> {
 				String player = event.getOption("player", OptionMapping::getAsString);
-				CommandManager.execute(new JdaCommandSender(event, opLevel), name, player);
+				CommandManager.execute(sender, name, player);
 			}
 			case "stats" -> {
 				String type = event.getOption("type", OptionMapping::getAsString);
 				String stat = event.getOption("stat", OptionMapping::getAsString);
-				CommandManager.execute(new JdaCommandSender(event, opLevel), name, type, stat);
+				CommandManager.execute(sender, name, type, stat);
 			}
 			case "link" -> {
 				String code = event.getOption("code", OptionMapping::getAsString);
-				CommandManager.execute(new JdaCommandSender(event, opLevel), name, code);
+				CommandManager.execute(sender, name, code);
 			}
-			default -> CommandManager.execute(new JdaCommandSender(event, opLevel), name);
+			default -> CommandManager.execute(sender, name);
 		}
 
 		// Forward command execution notification to Minecraft (if enabled)
@@ -414,18 +415,21 @@ final class DiscordEventHandler extends ListenerAdapter {
 			case CUSTOM -> ":" + emoji.getName() + ":";
 		};
 
-		event.retrieveMessage().queue(targetMessage -> {
-			List<TextSegment> segments = DiscordMessageParser.buildReactionSegments(reactorName, roleColor, emojiText);
-			DiscordRelayPacket packet = new DiscordRelayPacket(DiscordRelayPacket.EventType.REACTION, segments);
+		event.retrieveMessage().queue(targetMessage -> broadcastReaction(reactorName, roleColor, emojiText, targetMessage),
+				_ -> broadcastReaction(reactorName, roleColor, emojiText, null));
+	}
+
+	/**
+	 * Relays a reaction, quoting the reacted message when it could be retrieved.
+	 */
+	private static void broadcastReaction(String reactorName, String roleColor, String emojiText, Message targetMessage) {
+		List<TextSegment> segments = DiscordMessageParser.buildReactionSegments(reactorName, roleColor, emojiText);
+		DiscordRelayPacket packet = new DiscordRelayPacket(DiscordRelayPacket.EventType.REACTION, segments);
+		if (targetMessage != null) {
 			packet.replySegments = DiscordMessageParser.buildReplySegments(targetMessage);
-			logDiscordEventForConsole(packet);
-			NetworkManager.broadcastToClients(packet);
-		}, _ -> {
-			List<TextSegment> segments = DiscordMessageParser.buildReactionSegments(reactorName, roleColor, emojiText);
-			DiscordRelayPacket packet = new DiscordRelayPacket(DiscordRelayPacket.EventType.REACTION, segments);
-			logDiscordEventForConsole(packet);
-			NetworkManager.broadcastToClients(packet);
-		});
+		}
+		logDiscordEventForConsole(packet);
+		NetworkManager.broadcastToClients(packet);
 	}
 
 	@Override

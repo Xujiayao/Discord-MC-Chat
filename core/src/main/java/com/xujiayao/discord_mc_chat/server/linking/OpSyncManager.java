@@ -71,38 +71,34 @@ public final class OpSyncManager {
 		Map<String, List<LinkedAccountManager.LinkEntry>> allLinks = LinkedAccountManager.getAllLinks();
 
 		switch (ModeManager.getMode()) {
-			case "single_server" -> {
-				// Compute OP levels for all linked accounts using flat mappings
-				Map<String, Integer> opLevels = new HashMap<>();
-				for (Map.Entry<String, List<LinkedAccountManager.LinkEntry>> entry : allLinks.entrySet()) {
-					String discordId = entry.getKey();
-					int opLevel = resolveOpForDiscordUser(discordId, null);
-					if (opLevel > 0) {
-						for (LinkedAccountManager.LinkEntry link : entry.getValue()) {
-							opLevels.put(link.minecraftUuid(), opLevel);
-						}
-					}
-				}
-				EventManager.post(new CoreEvents.OpSyncEvent(opLevels));
-			}
+			case "single_server" -> EventManager.post(new CoreEvents.OpSyncEvent(buildOpLevels(allLinks, null)));
 			case "standalone" -> {
 				// For each connected client, compute per-server OP levels and send
-				List<String> clients = NetworkManager.getConnectedClientNames();
-				for (String clientName : clients) {
-					Map<String, Integer> opLevels = new HashMap<>();
-					for (Map.Entry<String, List<LinkedAccountManager.LinkEntry>> entry : allLinks.entrySet()) {
-						String discordId = entry.getKey();
-						int opLevel = resolveOpForDiscordUser(discordId, clientName);
-						if (opLevel > 0) {
-							for (LinkedAccountManager.LinkEntry link : entry.getValue()) {
-								opLevels.put(link.minecraftUuid(), opLevel);
-							}
-						}
-					}
-					NetworkManager.sendPacketToClient(new OpSyncPacket(opLevels), clientName);
+				for (String clientName : NetworkManager.getConnectedClientNames()) {
+					NetworkManager.sendPacketToClient(new OpSyncPacket(buildOpLevels(allLinks, clientName)), clientName);
 				}
 			}
 		}
+	}
+
+	/**
+	 * Computes the OP level of every linked Minecraft account, optionally restricted to one DMCC client.
+	 * <p>
+	 * A level of {@code -1} means the Discord user could not be resolved and is skipped; any other level, including
+	 * {@code 0}, is synchronized, because the receiver applies the map as a full reset.
+	 */
+	private static Map<String, Integer> buildOpLevels(Map<String, List<LinkedAccountManager.LinkEntry>> allLinks,
+	                                                  String serverName) {
+		Map<String, Integer> opLevels = new HashMap<>();
+		for (Map.Entry<String, List<LinkedAccountManager.LinkEntry>> entry : allLinks.entrySet()) {
+			int opLevel = resolveOpForDiscordUser(entry.getKey(), serverName);
+			if (opLevel >= 0) {
+				for (LinkedAccountManager.LinkEntry link : entry.getValue()) {
+					opLevels.put(link.minecraftUuid(), opLevel);
+				}
+			}
+		}
+		return opLevels;
 	}
 
 	private static int resolveOpForDiscordUser(String discordId, String serverName) {

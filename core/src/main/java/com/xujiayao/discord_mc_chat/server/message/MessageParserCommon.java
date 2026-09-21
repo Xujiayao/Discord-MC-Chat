@@ -54,88 +54,71 @@ final class MessageParserCommon {
 	}
 
 	static List<TextSegment> splitSegmentsByTimestamp(List<TextSegment> segments) {
-		List<TextSegment> out = new ArrayList<>();
-		for (TextSegment segment : segments) {
-			if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
-				out.add(segment);
-				continue;
+		return splitSegments(segments, DISCORD_TIMESTAMP_PATTERN, (segment, matcher) -> {
+			String timestamp;
+			try {
+				long epoch = Long.parseLong(matcher.group(1));
+				timestamp = "[" + formatDiscordTimestamp(epoch, matcher.group(2)) + "]";
+			} catch (Exception ignored) {
+				timestamp = matcher.group();
 			}
-			Matcher matcher = DISCORD_TIMESTAMP_PATTERN.matcher(segment.text);
-			int cursor = 0;
-			while (matcher.find()) {
-				if (matcher.start() > cursor) {
-					out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor, matcher.start())));
-				}
-				String timestamp;
-				try {
-					long epoch = Long.parseLong(matcher.group(1));
-					timestamp = "[" + formatDiscordTimestamp(epoch, matcher.group(2)) + "]";
-				} catch (Exception ignored) {
-					timestamp = matcher.group();
-				}
-				TextSegment ts = TextSegmentUtils.copySegment(segment, timestamp);
-				ts.color = "yellow";
-				out.add(ts);
-				cursor = matcher.end();
-			}
-			if (cursor == 0) {
-				out.add(segment);
-			} else if (cursor < segment.text.length()) {
-				out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor)));
-			}
-		}
-		return out;
+			TextSegment ts = TextSegmentUtils.copySegment(segment, timestamp);
+			ts.color = "yellow";
+			return ts;
+		});
 	}
 
 	static List<TextSegment> splitSegmentsByMarkdownLink(List<TextSegment> segments) {
-		List<TextSegment> out = new ArrayList<>();
-		for (TextSegment segment : segments) {
-			if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
-				out.add(segment);
-				continue;
-			}
-			Matcher matcher = LINK_TOKEN_PATTERN.matcher(segment.text);
-			int cursor = 0;
-			while (matcher.find()) {
-				if (matcher.start() > cursor) {
-					out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor, matcher.start())));
-				}
-				TextSegment link = TextSegmentUtils.copySegment(segment, matcher.group(1));
-				link.clickUrl = matcher.group(2);
-				link.underlined = true;
-				link.color = URL_COLOR;
-				link.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
-				out.add(link);
-				cursor = matcher.end();
-			}
-			if (cursor == 0) {
-				out.add(segment);
-			} else if (cursor < segment.text.length()) {
-				out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor)));
-			}
-		}
-		return out;
+		return splitSegments(segments, LINK_TOKEN_PATTERN, (segment, matcher) ->
+				buildLinkSegment(segment, matcher.group(1), matcher.group(2)));
 	}
 
 	static List<TextSegment> splitSegmentsByBareUrl(List<TextSegment> segments) {
+		return splitSegments(segments, BARE_URL_PATTERN, (segment, matcher) ->
+				buildLinkSegment(segment, matcher.group(1), matcher.group(1)));
+	}
+
+	static List<TextSegment> splitSegmentsByUnicodeEmoji(List<TextSegment> segments) {
+		return splitSegments(segments, UNICODE_EMOJI_PATTERN, (segment, matcher) -> {
+			String alias = EmojiManager.replaceAllEmojis(matcher.group(), emoji -> emoji.getDiscordAliases().getFirst());
+			TextSegment emojiSegment = TextSegmentUtils.copySegment(segment, alias);
+			emojiSegment.color = "yellow";
+			return emojiSegment;
+		});
+	}
+
+	private static TextSegment buildLinkSegment(TextSegment source, String text, String url) {
+		TextSegment link = TextSegmentUtils.copySegment(source, text);
+		link.clickUrl = url;
+		link.underlined = true;
+		link.color = URL_COLOR;
+		link.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
+		return link;
+	}
+
+	/**
+	 * Splits every segment on {@code pattern}, copying the surrounding plain text as-is and letting
+	 * {@code factory} build each matched token. Returning {@code null} from the factory skips that
+	 * match entirely, so the matched text stays part of the surrounding plain text.
+	 */
+	static List<TextSegment> splitSegments(List<TextSegment> segments, Pattern pattern, TokenFactory factory) {
 		List<TextSegment> out = new ArrayList<>();
 		for (TextSegment segment : segments) {
 			if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
 				out.add(segment);
 				continue;
 			}
-			Matcher matcher = BARE_URL_PATTERN.matcher(segment.text);
+			Matcher matcher = pattern.matcher(segment.text);
 			int cursor = 0;
 			while (matcher.find()) {
+				TextSegment token = factory.create(segment, matcher);
+				if (token == null) {
+					continue;
+				}
 				if (matcher.start() > cursor) {
 					out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor, matcher.start())));
 				}
-				TextSegment url = TextSegmentUtils.copySegment(segment, matcher.group(1));
-				url.clickUrl = matcher.group(1);
-				url.underlined = true;
-				url.color = URL_COLOR;
-				url.hoverText = I18nManager.getDmccTranslation("discord.message_parser.click_to_open_link");
-				out.add(url);
+				out.add(token);
 				cursor = matcher.end();
 			}
 			if (cursor == 0) {
@@ -147,33 +130,9 @@ final class MessageParserCommon {
 		return out;
 	}
 
-	static List<TextSegment> splitSegmentsByUnicodeEmoji(List<TextSegment> segments) {
-		List<TextSegment> out = new ArrayList<>();
-		for (TextSegment segment : segments) {
-			if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
-				out.add(segment);
-				continue;
-			}
-			Matcher matcher = UNICODE_EMOJI_PATTERN.matcher(segment.text);
-			int cursor = 0;
-			while (matcher.find()) {
-				if (matcher.start() > cursor) {
-					out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor, matcher.start())));
-				}
-				String unicodeEmoji = matcher.group();
-				String alias = EmojiManager.replaceAllEmojis(unicodeEmoji, emoji -> emoji.getDiscordAliases().getFirst());
-				TextSegment emojiSegment = TextSegmentUtils.copySegment(segment, alias);
-				emojiSegment.color = "yellow";
-				out.add(emojiSegment);
-				cursor = matcher.end();
-			}
-			if (cursor == 0) {
-				out.add(segment);
-			} else if (cursor < segment.text.length()) {
-				out.add(TextSegmentUtils.copySegment(segment, segment.text.substring(cursor)));
-			}
-		}
-		return out;
+	@FunctionalInterface
+	interface TokenFactory {
+		TextSegment create(TextSegment source, Matcher matcher);
 	}
 
 	static boolean isUnderscoreDelimiter(String delimiter) {
@@ -285,5 +244,25 @@ final class MessageParserCommon {
 			return Locale.ENGLISH;
 		}
 		return locale;
+	}
+
+	static class MarkdownState {
+		boolean bold;
+		boolean italic;
+		boolean underlined;
+		boolean strikethrough;
+		boolean obfuscated;
+		String color;
+
+		MarkdownState copy() {
+			MarkdownState copy = new MarkdownState();
+			copy.bold = bold;
+			copy.italic = italic;
+			copy.underlined = underlined;
+			copy.strikethrough = strikethrough;
+			copy.obfuscated = obfuscated;
+			copy.color = color;
+			return copy;
+		}
 	}
 }

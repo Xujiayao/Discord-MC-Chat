@@ -16,10 +16,13 @@ import com.xujiayao.discord_mc_chat.commands.impl.WhitelistCommand;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.config.ModeManager;
+import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
+import tools.jackson.databind.JsonNode;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -141,13 +144,13 @@ public final class CommandManager {
 
 		// Too few arguments: show the command's own usage
 		if (args.length < expectedArgs) {
-			sender.reply(I18nManager.getDmccTranslation("commands.invalid_usage", buildUsage(name, command)));
+			sender.reply(I18nManager.getDmccTranslation("commands.invalid_usage", command.usage()));
 			return;
 		}
 
 		// Too many arguments: reject (except for commands that accept variable args)
 		if (args.length > expectedArgs && !command.acceptsExtraArgs()) {
-			sender.reply(I18nManager.getDmccTranslation("commands.invalid_usage", buildUsage(name, command)));
+			sender.reply(I18nManager.getDmccTranslation("commands.invalid_usage", command.usage()));
 			return;
 		}
 
@@ -158,11 +161,62 @@ public final class CommandManager {
 		}
 	}
 
-	private static String buildUsage(String name, Command command) {
-		StringBuilder usage = new StringBuilder(name);
-		for (Command.CommandArgument arg : command.args()) {
-			usage.append(" <").append(arg.name()).append(">");
+	/**
+	 * Resolves a multi-server target specification into the client names to act on.
+	 *
+	 * @param sender     The sender to report resolution failures to.
+	 * @param target     Either {@code all_online_clients} or the name of a configured client.
+	 * @param i18nPrefix Translation prefix of the calling command ({@code commands.console} or {@code commands.execute}).
+	 * @return The resolved target, or {@code null} when the target is invalid and the sender was already notified.
+	 */
+	public static ResolvedTarget resolveTarget(CommandSender sender, String target, String i18nPrefix) {
+		List<String> allConnected = NetworkManager.getConnectedClientNames();
+
+		if ("all_online_clients".equalsIgnoreCase(target)) {
+			if (allConnected.isEmpty()) {
+				sender.reply(I18nManager.getDmccTranslation(i18nPrefix + ".no_online_clients"));
+				return null;
+			}
+			return new ResolvedTarget(allConnected, I18nManager.getDmccTranslation(i18nPrefix + ".all_online_clients"));
 		}
-		return usage.toString();
+
+		if (!isValidTarget(target)) {
+			sender.reply(I18nManager.getDmccTranslation(i18nPrefix + ".invalid_target", target, allConnected));
+			return null;
+		}
+
+		if (!allConnected.contains(target)) {
+			sender.reply(I18nManager.getDmccTranslation(i18nPrefix + ".client_offline", target));
+			return null;
+		}
+
+		return new ResolvedTarget(List.of(target), target);
+	}
+
+	/**
+	 * Checks whether the given name matches a client configured in {@code multi_server.servers}.
+	 *
+	 * @param target The client name to look up.
+	 * @return true when the name is configured, false otherwise.
+	 */
+	private static boolean isValidTarget(String target) {
+		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
+		if (serversNode.isArray()) {
+			for (JsonNode node : serversNode) {
+				if (target.equals(node.path("name").asString())) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * A resolved multi-server target: the client names to act on and the display name reported to the sender.
+	 *
+	 * @param clientNames Connected client names to send the request to.
+	 * @param displayName Name shown to the sender in user-facing messages.
+	 */
+	public record ResolvedTarget(List<String> clientNames, String displayName) {
 	}
 }

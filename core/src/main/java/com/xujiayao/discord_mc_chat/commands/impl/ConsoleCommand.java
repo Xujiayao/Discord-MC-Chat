@@ -1,8 +1,8 @@
 package com.xujiayao.discord_mc_chat.commands.impl;
 
 import com.xujiayao.discord_mc_chat.commands.Command;
+import com.xujiayao.discord_mc_chat.commands.CommandManager;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
-import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.events.CoreEvents;
@@ -14,11 +14,8 @@ import com.xujiayao.discord_mc_chat.server.discord.JdaCommandSender;
 import com.xujiayao.discord_mc_chat.server.discord.MessageCommandSender;
 import com.xujiayao.discord_mc_chat.server.discord.OpLevelResolver;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
-import tools.jackson.databind.JsonNode;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -63,43 +60,13 @@ public final class ConsoleCommand implements Command {
 		if ("standalone".equals(ModeManager.getMode())) {
 			// standalone: /console <at> <command>
 			return new CommandArgument[]{
-					new CommandArgument() {
-						@Override
-						public String name() {
-							return "at";
-						}
-
-						@Override
-						public String description() {
-							return I18nManager.getDmccTranslation("commands.console.args_desc.at");
-						}
-					},
-					new CommandArgument() {
-						@Override
-						public String name() {
-							return "command";
-						}
-
-						@Override
-						public String description() {
-							return I18nManager.getDmccTranslation("commands.console.args_desc.command");
-						}
-					}
+					new CommandArgument("at", I18nManager.getDmccTranslation("commands.console.args_desc.at")),
+					new CommandArgument("command", I18nManager.getDmccTranslation("commands.console.args_desc.command"))
 			};
 		} else {
 			// single_server: /console <command>
 			return new CommandArgument[]{
-					new CommandArgument() {
-						@Override
-						public String name() {
-							return "command";
-						}
-
-						@Override
-						public String description() {
-							return I18nManager.getDmccTranslation("commands.console.args_desc.command");
-						}
-					}
+					new CommandArgument("command", I18nManager.getDmccTranslation("commands.console.args_desc.command"))
 			};
 		}
 	}
@@ -169,33 +136,14 @@ public final class ConsoleCommand implements Command {
 			return;
 		}
 
-		List<String> targets = new ArrayList<>();
-		List<String> allConnected = NetworkManager.getConnectedClientNames();
-		String targetName;
-
-		if ("all_online_clients".equalsIgnoreCase(target)) {
-			if (allConnected.isEmpty()) {
-				sender.reply(I18nManager.getDmccTranslation("commands.console.no_online_clients"));
-				return;
-			}
-			targets.addAll(allConnected);
-			targetName = I18nManager.getDmccTranslation("commands.console.all_online_clients");
-		} else {
-			if (!isValidTarget(target)) {
-				sender.reply(I18nManager.getDmccTranslation("commands.console.invalid_target", target, allConnected));
-				return;
-			}
-			if (!allConnected.contains(target)) {
-				sender.reply(I18nManager.getDmccTranslation("commands.console.client_offline", target));
-				return;
-			}
-			targets.add(target);
-			targetName = target;
+		CommandManager.ResolvedTarget resolved = CommandManager.resolveTarget(sender, target, "commands.console");
+		if (resolved == null) {
+			return;
 		}
 
-		sender.reply(I18nManager.getDmccTranslation("commands.console.executing", commandLine, targetName));
+		sender.reply(I18nManager.getDmccTranslation("commands.console.executing", commandLine, resolved.displayName()));
 
-		for (String serverName : targets) {
+		for (String serverName : resolved.clientNames()) {
 			String discordChannelId = null;
 			if (sender instanceof JdaCommandSender jdaSender) {
 				discordChannelId = jdaSender.getChannelId();
@@ -259,17 +207,5 @@ public final class ConsoleCommand implements Command {
 				pendingRequests.remove(requestId);
 			}
 		}
-	}
-
-	private boolean isValidTarget(String target) {
-		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
-		if (serversNode.isArray()) {
-			for (JsonNode node : serversNode) {
-				if (target.equals(node.path("name").asString())) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 }

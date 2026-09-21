@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.minecraft.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
 import com.xujiayao.discord_mc_chat.commands.LocalCommandSender;
 import com.xujiayao.discord_mc_chat.commands.impl.LinkCommand;
@@ -9,15 +10,13 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.IdentifierArgument;
-import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.PermissionCheck;
-import net.minecraft.stats.StatType;
 
-import java.util.Optional;
+import java.util.function.Function;
 
 import static net.minecraft.commands.Commands.LEVEL_ADMINS;
 import static net.minecraft.commands.Commands.LEVEL_GAMEMASTERS;
@@ -32,30 +31,9 @@ public final class MinecraftCommands {
 	}
 
 	public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-		var root = literal("dmcc")
-				.requires(Commands.hasPermission(of("command_permission_levels.help", -1)))
-				.executes(ctx -> {
-					CommandManager.execute(createSenderForSource(ctx.getSource()), "help");
-					return 1;
-				});
-		var help = literal("help")
-				.requires(Commands.hasPermission(of("command_permission_levels.help", -1)))
-				.executes(ctx -> {
-					CommandManager.execute(createSenderForSource(ctx.getSource()), "help");
-					return 1;
-				});
-		var info = literal("info")
-				.requires(Commands.hasPermission(of("command_permission_levels.info", -1)))
-				.executes(ctx -> {
-					CommandManager.execute(new MinecraftCommandSender(ctx.getSource()), "info");
-					return 1;
-				});
-		var reload = literal("reload")
-				.requires(Commands.hasPermission(of("command_permission_levels.reload", 4)))
-				.executes(ctx -> {
-					CommandManager.execute(new MinecraftCommandSender(ctx.getSource()), "reload");
-					return 1;
-				});
+		var help = sub("help", -1, MinecraftCommands::createSenderForSource);
+		var info = sub("info", -1, MinecraftCommandSender::new);
+		var reload = sub("reload", 4, MinecraftCommandSender::new);
 		var stats = literal("stats")
 				.requires(Commands.hasPermission(of("command_permission_levels.stats", -1)))
 				.then(argument("type", IdentifierArgument.id())
@@ -65,14 +43,12 @@ public final class MinecraftCommands {
 								.suggests((ctx, builder) -> {
 									try {
 										Identifier typeLoc = ctx.getArgument("type", Identifier.class);
-										Optional<Holder.Reference<StatType<?>>> optional = BuiltInRegistries.STAT_TYPE.get(typeLoc);
-
-										if (optional.isPresent()) {
-											return SharedSuggestionProvider.suggestResource(optional.get().value().getRegistry().keySet(), builder);
-										}
+										return BuiltInRegistries.STAT_TYPE.get(typeLoc)
+												.map(holder -> SharedSuggestionProvider.suggestResource(holder.value().getRegistry().keySet(), builder))
+												.orElseGet(builder::buildFuture);
 									} catch (Exception ignored) {
+										return builder.buildFuture();
 									}
-									return builder.buildFuture();
 								})
 								.executes(ctx -> {
 									Identifier typeLoc = ctx.getArgument("type", Identifier.class);
@@ -80,24 +56,12 @@ public final class MinecraftCommands {
 									CommandManager.execute(new MinecraftCommandSender(ctx.getSource()), "stats", typeLoc.toString(), statLoc.toString());
 									return 1;
 								})));
-		var link = literal("link")
-				.requires(Commands.hasPermission(of("command_permission_levels.link", 0)))
-				.executes(ctx -> {
-					CommandManager.execute(new MinecraftPlayerCommandSender(ctx.getSource()), "link");
-					return 1;
-				});
-		var unlink = literal("unlink")
-				.requires(Commands.hasPermission(of("command_permission_levels.unlink", 0)))
-				.executes(ctx -> {
-					CommandManager.execute(new MinecraftPlayerCommandSender(ctx.getSource()), "unlink");
-					return 1;
-				});
-		var update = literal("update")
-				.requires(Commands.hasPermission(of("command_permission_levels.update", -1)))
-				.executes(ctx -> {
-					CommandManager.execute(new MinecraftCommandSender(ctx.getSource()), "update");
-					return 1;
-				});
+		var link = sub("link", 0, MinecraftPlayerCommandSender::new);
+		var unlink = sub("unlink", 0, MinecraftPlayerCommandSender::new);
+		var update = sub("update", -1, MinecraftCommandSender::new);
+		var root = literal("dmcc")
+				.requires(Commands.hasPermission(of("command_permission_levels.help", -1)))
+				.executes(help.getCommand());
 
 		dispatcher.register(root
 				.then(help)
@@ -116,6 +80,22 @@ public final class MinecraftCommands {
 		return new MinecraftCommandSender(source);
 	}
 
+	/**
+	 * Registers a DMCC subcommand that forwards to the command with the same name.
+	 * <p>
+	 * The required permission level is read from {@code command_permission_levels.<name>}.
+	 */
+	private static LiteralArgumentBuilder<CommandSourceStack> sub(String name, int defaultLevel,
+	                                                              Function<CommandSourceStack, LocalCommandSender> senderFactory,
+	                                                              String... args) {
+		return literal(name)
+				.requires(Commands.hasPermission(of("command_permission_levels." + name, defaultLevel)))
+				.executes(ctx -> {
+					CommandManager.execute(senderFactory.apply(ctx.getSource()), name, args);
+					return 1;
+				});
+	}
+
 	private static PermissionCheck of(String configPath, int defaultLevel) {
 		int opLevel = ConfigManager.getInt(configPath, defaultLevel);
 		return switch (opLevel) {
@@ -127,60 +107,44 @@ public final class MinecraftCommands {
 		};
 	}
 
-	private record MinecraftCommandSender(CommandSourceStack source) implements LocalCommandSender {
+	/**
+	 * Shared behavior of the command senders backed by a Minecraft {@link CommandSourceStack}.
+	 */
+	private interface SourceBackedSender extends LocalCommandSender {
+
+		CommandSourceStack source();
 
 		@Override
-		public void reply(String message) {
+		default void reply(String message) {
 			for (String line : message.split("\n")) {
-				source.sendSuccess(() -> Component.literal(line), false);
+				source().sendSuccess(() -> Component.literal(line), false);
 			}
 		}
 
 		@Override
-		public int getOpLevel() {
+		default int getOpLevel() {
 			// Probe from highest to lowest to determine the sender's actual permission level
-			if (LEVEL_OWNERS.check(source.permissions())) {
+			if (LEVEL_OWNERS.check(source().permissions())) {
 				return 4;
 			}
-			if (LEVEL_ADMINS.check(source.permissions())) {
+			if (LEVEL_ADMINS.check(source().permissions())) {
 				return 3;
 			}
-			if (LEVEL_GAMEMASTERS.check(source.permissions())) {
+			if (LEVEL_GAMEMASTERS.check(source().permissions())) {
 				return 2;
 			}
-			if (LEVEL_MODERATORS.check(source.permissions())) {
+			if (LEVEL_MODERATORS.check(source().permissions())) {
 				return 1;
 			}
 			return 0;
 		}
 	}
 
+	private record MinecraftCommandSender(CommandSourceStack source) implements SourceBackedSender {
+	}
+
 	private record MinecraftPlayerCommandSender(CommandSourceStack source)
-			implements LocalCommandSender, LinkCommand.PlayerContextProvider {
-
-		@Override
-		public void reply(String message) {
-			for (String line : message.split("\n")) {
-				source.sendSuccess(() -> Component.literal(line), false);
-			}
-		}
-
-		@Override
-		public int getOpLevel() {
-			if (LEVEL_OWNERS.check(source.permissions())) {
-				return 4;
-			}
-			if (LEVEL_ADMINS.check(source.permissions())) {
-				return 3;
-			}
-			if (LEVEL_GAMEMASTERS.check(source.permissions())) {
-				return 2;
-			}
-			if (LEVEL_MODERATORS.check(source.permissions())) {
-				return 1;
-			}
-			return 0;
-		}
+			implements SourceBackedSender, LinkCommand.PlayerContextProvider {
 
 		@Override
 		public String getPlayerUuid() {

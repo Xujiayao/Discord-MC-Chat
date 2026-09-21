@@ -291,3 +291,64 @@
 - 新增：i18n 键 `utils.i18n.check_failed` 已成为无引用死键（仍在 `lang/en_us.yml` 与 `lang/zh_cn.yml` 中）；本轮资源文件禁改，待后续统一清理资源时移除
 - 新增：`core/src/test/java/**` 下的临时特征化测试（阶段 2–4 的验收工装）将在交付前整体删除，只保留 `SmokeTest.java`
 
+## 工作 06
+
+记录日期：2026/9/22（第六轮：3.0 重构·阶段 2「结构性去重」；尚未定版）。
+
+### 更改（用户可见 / 行为变更）
+
+- **本轮仅一处有意的行为变更（已获开发者批准）**：`core/src/main/java/com/xujiayao/discord_mc_chat/server/linking/OpSyncManager.java` 的 OP 同步条件由 `opLevel > 0` 改为 `opLevel >= 0`。原逻辑对"账号已绑定、但当前身份组解析出的 OP 等级为 0"的用户跳过下发，导致其身份组被移除后 Minecraft 侧仍残留旧 OP 权限；现会下发等级 0 完成降权，与该同步"全量重置"的语义一致（`-1` 表示无法解析，仍然跳过）。两条 op-levels 收集循环同时收敛为 `buildOpLevels(...)`，JavaDoc 已写明该语义。
+- **一处缺陷消除（输出不变）**：`minecraft/src/main/java/com/xujiayao/discord_mc_chat/minecraft/events/MinecraftEventHandler.java` 的 Discord→MC 组件构建原有两份近似重复实现，被实际调用的那份在 `TextSegment#text` 为 `null` 时会抛 `NullPointerException` 并中断整条聊天中继。去重后统一复用带 `null` 保护的 `buildComponentPart(...)`（`null` 渲染为空串），正常输入下的输出逐字不变。
+- **一处不可达的语义差异（备案）**：`LoggerImpl` 改为继承 SLF4J `LegacyAbstractLogger` 后，形如 `logger.error("{}", arg, throwable)` 的"末位为 Throwable 的多参调用"会按 SLF4J 语义打印堆栈（原实现把该 Throwable 当作第 3 个格式参数而丢栈）。已核全仓库 112 处多参调用与 36 处三参调用，**无任何调用点末位是 Throwable**，故当前代码不可达。
+- 本轮**未更新 `README_CN.md`**：无用户可见的功能、配置或命令语义变化。
+
+### 更改（代码结构，对用户不可见）
+
+- 按 5 个分区并行去重 24 个 Java 文件，共 **净减 867 行**（`git diff --shortstat` = 24 files changed, +789 / −1656）：
+
+| 分区 | 范围 | 文件数 | 行数变化 |
+| --- | --- | --- | --- |
+| P1 | `core/.../server/message/**` | 3 | 2490 → 2135（−355） |
+| P2 | `minecraft/src/main/java/**` + `core/.../network/message/TextSegment.java` | 5 | 1431 → 1320（−111） |
+| P3 | `core/.../logging/**` | 1 | 477 → 203（−274） |
+| P4 | `core/.../commands/**` + `core/.../network/NetworkManager.java` | 19 | 2706 → 2602（−104） |
+| P5 | `core/.../server/ServerHandler.java`、`server/discord/**`、`server/linking/**` | 5 | 2677 → 2654（−23，另消除约 40 行逐字重复） |
+| 合计 | | 24（去重后） | 9781 → 8914（−867） |
+
+- **主要抽取成果**：
+    - P1（最大单项）：`DiscordMessageParser` 1471 → 1174。7 个模板构建方法收敛为 `buildTemplateSegments(JsonNode, UnaryOperator<String>, UnaryOperator<String>, MessageContentInserter)`；8 个 mention 收集器参数化为 4 个（新增 `boolean spoiler`，`parseRawContent` 内的调用顺序逐字保留，因其影响同起点 token 的稳定排序）；11 处 split（两个解析器 + `MessageParserCommon`）收敛为 `MessageParserCommon.splitSegments(List<TextSegment>, Pattern, TokenFactory)` + `buildLinkSegment(...)`；`removeOverlaps` 泛型化（`interface Span`）并删除重复的 `removeMarkdownOverlaps`；两份私有的 `MarkdownState` 合一到 `MessageParserCommon`（新增 `copy()`，`MinecraftMessageParser` 的逐字段拷贝改为 `state = lineState`）；抽出 `appendAnsiSegment(...)`。
+    - P3：`LoggerImpl` 477 → 203。删掉 26 个 TRACE/DEBUG 空方法与 25 个 `(Marker, …)` 转发重载，改为实现 `LegacyAbstractLogger` 的两个抽象方法（`getFullyQualifiedCallerName()`、`handleNormalizedLoggingCall(...)`）+ 5 个 `isXEnabled()`；日志文件写入、ANSI 着色、异常堆栈、`shutdown()` 行为逐字保留。
+    - P2：`MinecraftEventHandler` 1048 → 960。11 处广播循环收敛为 `broadcast(PlayerList, Component)`；mention 通知与"回复+正文"两段重复收敛为 `sendMentionNotifications(...)`、`broadcastReplyAndMain(...)`（刻意传 `List<TextSegment>` 以保持"先广播回复、后构建正文"的求值次序）；`CommandSourceStack` 构造收敛为 `buildCommandSource(DmccRconConsoleSource, int)`；`buildClickable(String, ClickEvent, String)`；`RegistryOps` 提升为按 `serverInstance` 失效的缓存。`MinecraftCommands` 201 → 165：8 个子命令注册收敛为 `sub(name, defaultLevel, senderFactory, args...)`，两个 sender 的 `reply`/四级权限探测改由 `SourceBackedSender` 接口承载（`stats` 节点故意不套用，避免凭空多出裸 `/dmcc stats`）。`TextSegment` 新增 `copyWithText(String)`（逐字段复制全部 8 个可变字段）。
+    - P4：`CommandArgument` 由匿名 interface 改为 `record CommandArgument(String name, String description)`（10 处匿名类），`Command` 新增 `default String usage()` 取代 `CommandManager` 与 `CommandAutoCompleter` 的手工拼接（输出逐字一致）；`ConsoleCommand`/`ExecuteCommand` 的重复目标解析下沉为 `CommandManager.resolveTarget(sender, target, i18nPrefix)` 与 `isValidTarget(...)`；`StatsCommand` 的统计读取收敛为 `loadStatValues(Path, String, String)`；`NetworkManager` 两段等待循环合并为单段（锁对象作参数传入，清空/广播/超时/快照时序逐字保留）。
+    - P5：握手拒绝 6 处收敛为 `reject(ctx, serverName, reasonKey, args...)`（5 种 reason + 认证失败分支的"无 return"语义保留）；两条 relay 组装收敛为 `newRelayPacket(...)` + `dispatchRelay(...)`；reaction 双 lambda 收敛为 `broadcastReaction(...)`；`DiscordManager` 的"standalone 走 webhook / 否则走 bot"两处收敛为 `sendToChannelOrWebhook(...)`；`ChannelUpdateManager` 三处 `getCustomMessages()` 判空改为三元表达式；`DiscordEventHandler` 的 8 处 sender 构造提前到 switch 之前一次完成。
+- **注释总量上升 80 行（1654 → 1734）**：本轮 diff 新增注释 112 行，全部落在 21 个新 helper 的契约说明上（`null` 语义、`cursor == 0` 的隐含前提、OpSync 全量重置、`RegistryOps` 失效条件等）。已逐块审阅，无复述式噪音；仅 `broadcast(...)` 的"给每个在线玩家发送组件"一句属可删的复述。
+- **保留/拒绝的项**：`getMentionNotificationText`、`formatDiscordTimestampsForPlainText`、`cmd`/`CommandManager` 的默认权限等级 4、`LocalCommandSender` 空标记接口、`sendWebhookMessageSync` 单调用点包装、`applyPlaceholders` 的 7 次连续 replace（级联替换语义）、`LinkedAccountManager` 整文件未改；`sourcePlaceholders(...)` 抽取（会把 `Map.of()` 换成可变 `HashMap`，改变 `null` 值语义）、Msg/Say/Emote 三个 Mixin 的公共 helper（省 6 行却引入跨类耦合）经论证后放弃。
+
+### 验证
+
+环境：Java 25.0.4.1 LTS（Temurin HotSpot）+ Gradle 9.7.1 + Fabric Loom 1.17.21 + Minecraft 26.3
+
+- **编译、测试与打包**：`./gradlew build --console=plain` **BUILD SUCCESSFUL**（10s）；`core/build/test-results/test/` 下 16 个结果文件合计 **145 tests / 0 failures / 0 errors / 0 skipped**（含阶段 2 新增的 15 个特征化测试类 144 用例）。
+
+- **字节码逐类等价性比对**：以阶段 1 冻结产物为基线，`javap -p -c -constants` 逐类 diff 得 **identical 159 / changed 31 / added 7 / removed 12**。removed 恰为 10 个匿名 `CommandArgument` 类（`ConsoleCommand$1..3`、`ExecuteCommand$1..2`、`LinkCommand$1`、`LogCommand$1`、`StatsCommand$1..2`、`WhitelistCommand$2`）与 2 个各自私有的 `MarkdownState`；added 为 7 个新 helper/内部类型（`CommandManager$ResolvedTarget`、`StatsCommand$StatValue`、`MinecraftCommands$SourceBackedSender`、`DiscordMessageParser$MessageContentInserter`、`DiscordMessageParser$Span`、`MessageParserCommon$MarkdownState`、`MessageParserCommon$TokenFactory`）；changed 31 全部落在本轮被改文件及其内部类内。
+
+- **新增差分验证工装（覆盖 JUnit 无法触及的主聊天路径）**：JUnit 层无法构造 JDA `Message`/`Member`，因此 `buildChatSegments`、`parseMessageContent`、`buildReplySegments`、`collectMentionedPlayerUuids` 等入口此前无测试覆盖，而这正是 P1 改动最集中的地方。为此在仓库外（`%TEMP%\dmcc-verify\harness`）建了一次性差分工装：用 `Proxy` 伪造 JDA `Message`/`Mentions`/`User`，对 33 条语料（Markdown 全语法、spoiler、```ansi 代码块、`<@id>`/`<@&role>`/`<#channel>`/`@everyone`、自定义与 unicode emoji、`<t:...:R>`、多行、`|` 前缀、代理对、2100 字符截断、长文本）各调用 11 个解析入口，另有 9 个固定调用（三个模板构建、mention 文案、`getRoleColorHex(null)` 等），共 **440 行确定性转储**；对阶段 1 类树（独立 `javac` 编译出 164 个 class）与阶段 2 类树逐行比对，结果 **0 差异**（转储中 0 条异常、0 条 `null` 结果，证明比对非空转）；并以 `-verbose:class` 确认两侧分别从 `p1classes` 与 `core/build/classes/java/main` 加载类，排除"两次跑的是同一份类"的假阳性。
+
+- **产物 `build/Discord-MC-Chat-3.0.0-beta.3.jar`（13,237,683 字节；阶段 1 为 13,244,428）**：6894 个条目、197 个 `com/xujiayao/*.class`（阶段 1 为 202，减少来自匿名类与私有内部类的合并）；无签名残留文件、无 `module-info.class`。
+
+- **全仓统计（92 个 Java 文件）**：总行 15594 → **14727**，代码 11800 → 10956、注释 1654 → **1734**、空行 2140 → 2037。相对本次重构前的基线（17240 / 11866 / 3210 / 2164）**累计净减 2513 行**。
+
+### 待办（供发布时处理）
+
+- `update/versions.json` 需在**发布时**新增 `"compatibility": ["26.3"]` 记录（沿用工作 04/05 的待办）
+- `.github/ISSUE_TEMPLATE/bug.yml` 的 "Only DMCC v2 versions are supported." 残留文案（仍未处理）
+- `README.md` 英文翻译件的同步，留待发布新版本时处理
+- i18n 键 `utils.i18n.check_failed` 已成为无引用死键（仍在 `lang/en_us.yml` 与 `lang/zh_cn.yml` 中）；待统一清理资源时移除
+- `core/src/test/java/**` 下的临时特征化测试与仓库外的差分工装，将在交付前整体删除/丢弃，只保留 `SmokeTest.java`
+- 新增：`CommandManager.resolveTarget(...)`/`isValidTarget(...)` 暂挂在 `CommandManager`（public static），因本轮规则禁止新增文件；后续若需内聚可下沉到独立工具类
+- 新增：以下需在阶段 2–4 一并交付时由开发者在真实环境手工验证（JUnit 与差分工装均无法覆盖）：
+    1. 在 Discord 发出覆盖全部语法的消息（粗体/斜体/下划线/删除线/剧透/行内代码/```ansi 代码块/附件/贴纸/自定义 emoji/unicode emoji/@某人/@everyone/超链接/embed/按钮/投票/`<t:...:R>`），逐字符比对 Minecraft 端输出；再分别验证"回复 / 编辑 / 加 reaction / 删除"四种模板行的渲染；
+    2. 真实绑定账号后的 @ 提及转换与自定义 emoji 转换是否与绑定前一致；
+    3. `MinecraftEventHandler` 的 Discord→MC 组件渲染（颜色、粗体、clickEvent/hoverEvent、`    ┌──── ` 前缀）与 OP 同步（含工作 06 的等级 0 降权修复）；
+    4. 运行目录下 `./logs/DMCC_<yyyyMMdd_HHmmss>.log` 的首行时间戳与异常堆栈是否照常落文件（覆盖 `LoggerImpl` 改造）。
+

@@ -268,7 +268,7 @@ public final class NetworkManager {
 				executeAutoCompleteCache,
 				new CommandPackets.Execute.AutoCompleteRequestPacket(input, opLevel),
 				timeoutSeconds,
-				true
+				executeAutoCompleteLock
 		);
 	}
 
@@ -286,14 +286,14 @@ public final class NetworkManager {
 				consoleAutoCompleteCache,
 				new CommandPackets.Console.AutoCompleteRequestPacket(input, opLevel),
 				timeoutSeconds,
-				false
+				consoleAutoCompleteLock
 		);
 	}
 
 	private static Map<String, List<String>> requestAutoCompleteSnapshot(Map<String, List<String>> cache,
 	                                                                     Packet requestPacket,
 	                                                                     int timeoutSeconds,
-	                                                                     boolean executeRequest) {
+	                                                                     Object lock) {
 		cache.clear();
 
 		int expectedResponses = clientChannels.size();
@@ -304,30 +304,15 @@ public final class NetworkManager {
 		long deadlineMillis = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(timeoutSeconds);
 
 		if (expectedResponses > 0) {
-			if (executeRequest) {
-				synchronized (executeAutoCompleteLock) {
-					while (cache.size() < expectedResponses) {
-						long remaining = deadlineMillis - System.currentTimeMillis();
-						if (remaining <= 0) break;
-						try {
-							executeAutoCompleteLock.wait(remaining);
-						} catch (InterruptedException e) {
-							Thread.currentThread().interrupt();
-							break;
-						}
-					}
-				}
-			} else {
-				synchronized (consoleAutoCompleteLock) {
-					while (cache.size() < expectedResponses) {
-						long remaining = deadlineMillis - System.currentTimeMillis();
-						if (remaining <= 0) break;
-						try {
-							consoleAutoCompleteLock.wait(remaining);
-						} catch (InterruptedException e) {
-							Thread.currentThread().interrupt();
-							break;
-						}
+			synchronized (lock) {
+				while (cache.size() < expectedResponses) {
+					long remaining = deadlineMillis - System.currentTimeMillis();
+					if (remaining <= 0) break;
+					try {
+						lock.wait(remaining);
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+						break;
 					}
 				}
 			}

@@ -17,7 +17,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 @Mixin(TellRawCommand.class)
@@ -29,9 +28,8 @@ final class MixinTellRawCommand {
 	@Inject(method = "lambda$register$0", at = @At("HEAD"), cancellable = true)
 	private static void lambda$register$0(CommandContext<CommandSourceStack> c, CallbackInfoReturnable<Integer> cir) throws CommandSyntaxException {
 		if (TELLRAW_PATTERN.matcher(c.getInput()).matches()) {
-			Optional<ServerPlayer> optional = EntityArgument.getPlayers(c, "targets").stream().findFirst();
-			if (optional.isPresent()) {
-				ServerPlayer player = optional.get();
+			ServerPlayer player = EntityArgument.getPlayers(c, "targets").stream().findFirst().orElse(null);
+			if (player != null) {
 				Component component = ComponentArgument.getResolvedComponent(c, "message", player);
 
 				EventManager.post(new MinecraftEvents.SourceTellRaw(

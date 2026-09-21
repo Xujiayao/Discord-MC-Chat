@@ -34,18 +34,17 @@ final class MixinServerGamePacketListenerImpl {
 
 	@Inject(method = "performUnsignedChatCommand", at = @At("HEAD"))
 	private void performUnsignedChatCommand(String command, CallbackInfo ci) {
-		EventManager.post(new MinecraftEvents.PlayerCommand(
-				command,
-				player
-		));
-
-		// No need to cancel, because vanilla Minecraft does not broadcast commands
+		postPlayerCommand(command);
 	}
 
 	@Inject(method = "performSignedChatCommand", at = @At("HEAD"))
 	private void performSignedChatCommand(ServerboundChatCommandSignedPacket packet, LastSeenMessages lastSeenMessages, CallbackInfo ci) {
+		postPlayerCommand(packet.command());
+	}
+
+	private void postPlayerCommand(String command) {
 		EventManager.post(new MinecraftEvents.PlayerCommand(
-				packet.command(),
+				command,
 				player
 		));
 

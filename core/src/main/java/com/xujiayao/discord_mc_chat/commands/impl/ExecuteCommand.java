@@ -1,8 +1,8 @@
 package com.xujiayao.discord_mc_chat.commands.impl;
 
 import com.xujiayao.discord_mc_chat.commands.Command;
+import com.xujiayao.discord_mc_chat.commands.CommandManager;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
-import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
@@ -10,10 +10,7 @@ import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.discord.JdaCommandSender;
 import com.xujiayao.discord_mc_chat.server.discord.OpLevelResolver;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
-import tools.jackson.databind.JsonNode;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -50,28 +47,8 @@ public final class ExecuteCommand implements Command {
 	@Override
 	public CommandArgument[] args() {
 		return new CommandArgument[]{
-				new CommandArgument() {
-					@Override
-					public String name() {
-						return "at";
-					}
-
-					@Override
-					public String description() {
-						return I18nManager.getDmccTranslation("commands.execute.args_desc.at");
-					}
-				},
-				new CommandArgument() {
-					@Override
-					public String name() {
-						return "command";
-					}
-
-					@Override
-					public String description() {
-						return I18nManager.getDmccTranslation("commands.execute.args_desc.command");
-					}
-				}
+				new CommandArgument("at", I18nManager.getDmccTranslation("commands.execute.args_desc.at")),
+				new CommandArgument("command", I18nManager.getDmccTranslation("commands.execute.args_desc.command"))
 		};
 	}
 
@@ -104,33 +81,15 @@ public final class ExecuteCommand implements Command {
 				? command.substring(command.indexOf(' ') + 1).split("\\s+")
 				: new String[0];
 
-		List<String> targets = new ArrayList<>();
-		List<String> allConnected = NetworkManager.getConnectedClientNames();
-		String targetName;
-		if ("all_online_clients".equalsIgnoreCase(target)) {
-			if (allConnected.isEmpty()) {
-				sender.reply(I18nManager.getDmccTranslation("commands.execute.no_online_clients"));
-				return;
-			}
-			targets.addAll(allConnected);
-			targetName = I18nManager.getDmccTranslation("commands.execute.all_online_clients");
-		} else {
-			if (!isValidTarget(target)) {
-				sender.reply(I18nManager.getDmccTranslation("commands.execute.invalid_target", target, allConnected));
-				return;
-			}
-			if (!allConnected.contains(target)) {
-				sender.reply(I18nManager.getDmccTranslation("commands.execute.client_offline", target));
-				return;
-			}
-			targets.add(target);
-			targetName = target;
+		CommandManager.ResolvedTarget resolved = CommandManager.resolveTarget(sender, target, "commands.execute");
+		if (resolved == null) {
+			return;
 		}
 
 		// Inform the sender that execution is in progress
-		sender.reply(I18nManager.getDmccTranslation("commands.execute.executing", command, targetName));
+		sender.reply(I18nManager.getDmccTranslation("commands.execute.executing", command, resolved.displayName()));
 
-		for (String serverName : targets) {
+		for (String serverName : resolved.clientNames()) {
 			String discordChannelId = sender instanceof JdaCommandSender jdaSender ? jdaSender.getChannelId() : null;
 
 			if (!NetworkManager.isClientConnected(serverName)) {
@@ -190,17 +149,5 @@ public final class ExecuteCommand implements Command {
 				pendingRequests.remove(requestId);
 			}
 		}
-	}
-
-	private boolean isValidTarget(String target) {
-		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
-		if (serversNode.isArray()) {
-			for (JsonNode node : serversNode) {
-				if (target.equals(node.path("name").asString())) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 }
