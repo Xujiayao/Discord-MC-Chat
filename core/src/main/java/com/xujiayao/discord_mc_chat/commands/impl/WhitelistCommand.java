@@ -23,18 +23,10 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * Because we delegate to Minecraft's native whitelist command, this works correctly on both
  * online-mode and offline-mode servers — Minecraft handles the name-to-UUID resolution internally.
- *
- * @author Xujiayao
  */
 public final class WhitelistCommand implements Command {
 
 	private static final int WHITELIST_COMMAND_TIMEOUT_SECONDS = 10;
-
-	/**
-	 * Creates a whitelist command instance.
-	 */
-	public WhitelistCommand() {
-	}
 
 	@Override
 	public String name() {

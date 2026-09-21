@@ -5,18 +5,10 @@ import com.xujiayao.discord_mc_chat.network.message.TextSegment;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Event and relay packet group.
- *
- * @author Xujiayao
- */
 public final class EventPackets {
 	private EventPackets() {
 	}
 
-	/**
-	 * Packet that relays parsed Discord events to Minecraft side.
-	 */
 	public static final class DiscordRelayPacket extends Packet {
 		/**
 		 * Discord event type.
@@ -51,20 +43,11 @@ public final class EventPackets {
 		 */
 		public List<TextSegment> editedMessageSegments;
 
-		/**
-		 * Creates a Discord relay packet.
-		 *
-		 * @param type     Discord event type.
-		 * @param segments Main message segments.
-		 */
 		public DiscordRelayPacket(EventType type, List<TextSegment> segments) {
 			this.type = type;
 			this.segments = segments;
 		}
 
-		/**
-		 * Event types relayed from Discord to Minecraft.
-		 */
 		public enum EventType {
 			CHAT,
 			COMMAND,
@@ -74,9 +57,6 @@ public final class EventPackets {
 		}
 	}
 
-	/**
-	 * Packet carrying Minecraft event placeholders for Discord-side templating.
-	 */
 	public static final class MinecraftEventPacket extends Packet {
 		/**
 		 * Minecraft event type.
@@ -87,20 +67,11 @@ public final class EventPackets {
 		 */
 		public final Map<String, String> placeholders;
 
-		/**
-		 * Creates a Minecraft event packet.
-		 *
-		 * @param type         Minecraft event type.
-		 * @param placeholders Placeholder map used for rendering message templates.
-		 */
 		public MinecraftEventPacket(MessageType type, Map<String, String> placeholders) {
 			this.type = type;
 			this.placeholders = placeholders;
 		}
 
-		/**
-		 * Supported Minecraft event types for Discord broadcast templates.
-		 */
 		public enum MessageType {
 			SERVER_STARTED,
 			SERVER_STOPPING,
@@ -118,9 +89,6 @@ public final class EventPackets {
 		}
 	}
 
-	/**
-	 * Packet that relays Minecraft-originated messages back to Minecraft clients.
-	 */
 	public static final class MinecraftRelayPacket extends Packet {
 		/**
 		 * Parsed message segments.
@@ -155,30 +123,17 @@ public final class EventPackets {
 		 */
 		public boolean mentionEveryone;
 
-		/**
-		 * Creates a Minecraft relay packet.
-		 *
-		 * @param segments Parsed message segments.
-		 */
 		public MinecraftRelayPacket(List<TextSegment> segments) {
 			this.segments = segments;
 		}
 	}
 
-	/**
-	 * Packet carrying a batch of console log lines.
-	 */
 	public static final class ConsoleLogBatchPacket extends Packet {
 		/**
 		 * Log lines in this batch.
 		 */
 		public final List<String> lines;
 
-		/**
-		 * Creates a console log batch packet.
-		 *
-		 * @param lines Log lines in this batch.
-		 */
 		public ConsoleLogBatchPacket(List<String> lines) {
 			this.lines = lines;
 		}

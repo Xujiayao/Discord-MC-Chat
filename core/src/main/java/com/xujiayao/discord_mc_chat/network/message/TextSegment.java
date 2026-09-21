@@ -16,42 +16,22 @@ import java.util.List;
  * <p>
  * This class is intentionally kept as a simple serializable POJO so that it can be
  * transmitted over the Netty channel inside {@link DiscordRelayPacket}.
- *
- * @author Xujiayao
  */
 public final class TextSegment implements Serializable {
 
 	@Serial
 	private static final long serialVersionUID = 1L;
 
-	/**
-	 * The display text of this segment.
-	 */
 	public String text;
 
-	/**
-	 * Whether the text should be rendered in bold.
-	 */
 	public boolean bold;
 
-	/**
-	 * Whether the text should be rendered in italic.
-	 */
 	public boolean italic;
 
-	/**
-	 * Whether the text should be rendered with underline.
-	 */
 	public boolean underlined;
 
-	/**
-	 * Whether the text should be rendered with strikethrough.
-	 */
 	public boolean strikethrough;
 
-	/**
-	 * Whether the text should be rendered obfuscated.
-	 */
 	public boolean obfuscated;
 
 	/**
@@ -69,39 +49,18 @@ public final class TextSegment implements Serializable {
 	 */
 	public String clickUrl;
 
-	/**
-	 * An optional hover text displayed when the player hovers over this segment.
-	 */
 	public String hoverText;
 
-	/**
-	 * Creates a plain text segment with no styling.
-	 *
-	 * @param text The display text.
-	 */
 	public TextSegment(String text) {
 		this.text = text;
 	}
 
-	/**
-	 * Creates a styled text segment.
-	 *
-	 * @param text  The display text.
-	 * @param bold  Whether the text is bold.
-	 * @param color The text color (named or hex).
-	 */
 	public TextSegment(String text, boolean bold, String color) {
 		this.text = text;
 		this.bold = bold;
 		this.color = color;
 	}
 
-	/**
-	 * Concatenates segment text into plain text.
-	 *
-	 * @param segments Source segments.
-	 * @return Concatenated plain text.
-	 */
 	public static String toPlainText(List<TextSegment> segments) {
 		if (segments == null || segments.isEmpty()) {
 			return "";

@@ -23,19 +23,11 @@ import java.util.concurrent.TimeUnit;
  * Execute command implementation (standalone only).
  * Forwards DMCC commands to connected clients.
  * Results are sent via each client's webhook in the Discord channel.
- *
- * @author Xujiayao
  */
 public final class ExecuteCommand implements Command {
 
 	private static final int EXECUTE_TIMEOUT_SECONDS = 30;
 	private static final Map<String, CompletableFuture<CommandPackets.Execute.ResponsePacket>> pendingRequests = new ConcurrentHashMap<>();
-
-	/**
-	 * Creates an execute command instance.
-	 */
-	public ExecuteCommand() {
-	}
 
 	/**
 	 * Completes a pending execute request with the given response.

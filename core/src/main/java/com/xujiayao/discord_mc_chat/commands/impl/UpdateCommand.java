@@ -18,19 +18,11 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Update command implementation.
- *
- * @author Xujiayao
  */
 public final class UpdateCommand implements Command {
 
 	private static final int UPDATE_TIMEOUT_SECONDS = 30;
 	private static final Map<String, CompletableFuture<CommandPackets.Update.ResponsePacket>> pendingRequests = new ConcurrentHashMap<>();
-
-	/**
-	 * Creates an update command instance.
-	 */
-	public UpdateCommand() {
-	}
 
 	/**
 	 * Completes a pending update request with the given response.

@@ -16,16 +16,12 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.util.concurrent.Future;
 
 import java.net.InetSocketAddress;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
-/**
- * Encapsulates the Netty server setup and lifecycle.
- *
- * @author Xujiayao
- */
 final class NettyServer {
 
 	private final String host;
@@ -86,8 +82,8 @@ final class NettyServer {
 	}
 
 	void stop() {
-		io.netty.util.concurrent.Future<?> workerFuture = null;
-		io.netty.util.concurrent.Future<?> bossFuture = null;
+		Future<?> workerFuture = null;
+		Future<?> bossFuture = null;
 
 		if (workerGroup != null) {
 			workerFuture = workerGroup.shutdownGracefully();

@@ -11,20 +11,14 @@ import java.util.List;
 /**
  * A simple decoder that deserializes ByteBuf into Java objects.
  * Replaces the deprecated Netty ObjectDecoder.
- *
- * @author Xujiayao
  */
 public class JavaSerializerDecoder extends ByteToMessageDecoder {
 
-	/**
-	 * Creates a Java object decoder.
-	 */
 	public JavaSerializerDecoder() {
 	}
 
 	@Override
 	protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-		// Use ObjectInputStream to deserialize the object from the ByteBuf
 		try (ByteBufInputStream bbis = new ByteBufInputStream(in);
 		     ObjectInputStream ois = new ObjectInputStream(bbis)) {
 			out.add(ois.readObject());

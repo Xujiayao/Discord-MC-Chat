@@ -14,8 +14,6 @@ import java.util.List;
  * <p>
  * Suggestions are filtered based on the sender's OP level to ensure
  * users only see commands they are authorized to execute.
- *
- * @author Xujiayao
  */
 public final class CommandAutoCompleter {
 
@@ -27,10 +25,6 @@ public final class CommandAutoCompleter {
 	 * <p>
 	 * The input represents the full command string the user has typed so far
 	 * (e.g., "log lat", "hel", "info").
-	 *
-	 * @param input   The current user input
-	 * @param opLevel The OP level of the user requesting auto-complete
-	 * @return A list of complete command string suggestions authorized for the user
 	 */
 	public static List<String> getSuggestions(String input, int opLevel) {
 		List<String> suggestions = new ArrayList<>();

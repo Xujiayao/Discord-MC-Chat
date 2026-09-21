@@ -32,8 +32,6 @@ import java.util.regex.Pattern;
  * switches. The server builds the full rich-text representation so that DMCC clients can
  * directly convert the segments into Minecraft Components without accessing Discord APIs
  * or custom_messages.
- *
- * @author Xujiayao
  */
 public final class DiscordMessageParser {
 
@@ -69,6 +67,9 @@ public final class DiscordMessageParser {
 	private static final Pattern SPOILER_CONTENT_PATTERN = Pattern.compile("\\|\\|(.+?)\\|\\|");
 	private static final List<String> MARKDOWN_DELIMITERS = List.of("***", "~~", "||", "**", "__", "*", "_");
 
+	// Matches the {message} placeholder inside custom_messages templates
+	private static final Pattern MESSAGE_PLACEHOLDER_PATTERN = Pattern.compile("\\{message}");
+
 	private static final int MAX_CONTENT_LINES = 6;
 	private static final int REPLY_TRUNCATE_LIMIT_WIDE = 20;
 	private static final int REPLY_TRUNCATE_LIMIT_NARROW = 40;
@@ -83,21 +84,6 @@ public final class DiscordMessageParser {
 	private DiscordMessageParser() {
 	}
 
-	/**
-	 * Builds the main message line segments for a Discord chat message.
-	 * <p>
-	 * The format follows the custom_messages {@code common.chat} pattern:
-	 * [server] &lt;effective_name&gt; {parsed message content}
-	 * <p>
-	 * For multi-line messages, uses YAML-style format:
-	 * [server] &lt;effective_name&gt; |
-	 * Line 1
-	 * Line 2
-	 * ...
-	 *
-	 * @param message The Discord message.
-	 * @return The list of text segments for the main message line.
-	 */
 	public static List<TextSegment> buildChatSegments(Message message) {
 		List<TextSegment> segments = new ArrayList<>();
 
@@ -122,8 +108,7 @@ public final class DiscordMessageParser {
 				color = replacePlaceholders(color, effectiveName, roleColor);
 
 				if (text.contains("{message}")) {
-					// Split around {message} and inject parsed message content
-					String[] parts = text.split("\\{message}", -1);
+					String[] parts = MESSAGE_PLACEHOLDER_PATTERN.split(text, -1);
 					if (!parts[0].isEmpty()) {
 						segments.add(new TextSegment(parts[0], bold, color));
 					}
@@ -164,16 +149,6 @@ public final class DiscordMessageParser {
 		return segments;
 	}
 
-	/**
-	 * Builds the command notification segments for when a Discord user executes a slash command.
-	 * <p>
-	 * The format follows the custom_messages {@code discord_to_minecraft.command} pattern.
-	 *
-	 * @param effectiveName The display name of the Discord user.
-	 * @param roleColor     The hex color of the user's highest role.
-	 * @param commandName   The name of the slash command executed.
-	 * @return The list of text segments.
-	 */
 	public static List<TextSegment> buildCommandSegments(String effectiveName, String roleColor, String commandName) {
 		List<TextSegment> segments = new ArrayList<>();
 
@@ -196,16 +171,6 @@ public final class DiscordMessageParser {
 		return segments;
 	}
 
-	/**
-	 * Builds the reply context line segments (the ┌──── line).
-	 * <p>
-	 * The format follows the custom_messages {@code discord_to_minecraft.response} pattern.
-	 * The referenced message content is parsed through the same pipeline as the main message,
-	 * but truncated to a single line (at first newline or at width-based character limit).
-	 *
-	 * @param referencedMessage The message being replied to.
-	 * @return The list of text segments for the reply line, or null if no reply.
-	 */
 	public static List<TextSegment> buildReplySegments(Message referencedMessage) {
 		if (referencedMessage == null) {
 			return null;
@@ -216,15 +181,6 @@ public final class DiscordMessageParser {
 		return buildReplySegments(refName, refRoleColor, referencedMessage, referencedMessage.getContentRaw());
 	}
 
-	/**
-	 * Builds reply context line segments from cached/reference fields.
-	 *
-	 * @param refName        referenced message author's display name
-	 * @param refRoleColor   referenced message author's role color
-	 * @param contextMessage message context for full parsing; may be null for cached/deleted messages
-	 * @param refRaw         raw referenced message content
-	 * @return reply line segments, or null when refRaw is null
-	 */
 	public static List<TextSegment> buildReplySegments(String refName, String refRoleColor, Message contextMessage, String refRaw) {
 		if (refRaw == null) {
 			return null;
@@ -247,7 +203,7 @@ public final class DiscordMessageParser {
 				color = color.replace("{role_color}", refRoleColor);
 
 				if (text.contains("{message}")) {
-					String[] parts = text.split("\\{message}", -1);
+					String[] parts = MESSAGE_PLACEHOLDER_PATTERN.split(text, -1);
 					if (!parts[0].isEmpty()) {
 						segments.add(new TextSegment(parts[0], bold, color));
 					}
@@ -265,16 +221,6 @@ public final class DiscordMessageParser {
 		return segments;
 	}
 
-	/**
-	 * Builds segments for a reaction event.
-	 * <p>
-	 * Format follows the custom_messages {@code discord_to_minecraft.reaction} pattern.
-	 *
-	 * @param reactorName The display name of the user who reacted.
-	 * @param roleColor   The hex color of the reactor's highest role.
-	 * @param emojiText   The emoji display text (e.g. ":test:").
-	 * @return The list of text segments for the reaction notification.
-	 */
 	public static List<TextSegment> buildReactionSegments(String reactorName, String roleColor, String emojiText) {
 		List<TextSegment> segments = new ArrayList<>();
 
@@ -296,15 +242,6 @@ public final class DiscordMessageParser {
 		return segments;
 	}
 
-	/**
-	 * Builds segments for a message edit notification line.
-	 * <p>
-	 * Format follows the custom_messages {@code discord_to_minecraft.edit} pattern.
-	 *
-	 * @param editorName The display name of the user who edited.
-	 * @param roleColor  The hex color of the editor's highest role.
-	 * @return The list of text segments for the edit notification.
-	 */
 	public static List<TextSegment> buildEditNotificationSegments(String editorName, String roleColor) {
 		List<TextSegment> segments = new ArrayList<>();
 
@@ -325,16 +262,6 @@ public final class DiscordMessageParser {
 		return segments;
 	}
 
-	/**
-	 * Builds segments for the edited message content line shown after edit notification.
-	 * <p>
-	 * Format follows the custom_messages {@code discord_to_minecraft.edited_message} pattern.
-	 * This is intentionally separated from {@code common.chat} so edit events can render a
-	 * "bottom bun" style complementary to {@code discord_to_minecraft.response}.
-	 *
-	 * @param message The edited Discord message.
-	 * @return The list of text segments for the edited message content line.
-	 */
 	public static List<TextSegment> buildEditedMessageSegments(Message message) {
 		List<TextSegment> segments = new ArrayList<>();
 		Member member = message.getMember();
@@ -354,7 +281,7 @@ public final class DiscordMessageParser {
 				color = color.replace("{role_color}", roleColor);
 
 				if (text.contains("{message}")) {
-					String[] parts = text.split("\\{message}", -1);
+					String[] parts = MESSAGE_PLACEHOLDER_PATTERN.split(text, -1);
 					if (!parts[0].isEmpty()) {
 						segments.add(new TextSegment(parts[0], bold, color));
 					}
@@ -372,15 +299,6 @@ public final class DiscordMessageParser {
 		return segments;
 	}
 
-	/**
-	 * Builds segments for a message delete notification.
-	 * <p>
-	 * Format follows the custom_messages {@code discord_to_minecraft.delete} pattern.
-	 *
-	 * @param deleterName The display name of the user who deleted.
-	 * @param roleColor   The hex color of the deleter's highest role.
-	 * @return The list of text segments for the delete notification.
-	 */
 	public static List<TextSegment> buildDeleteSegments(String deleterName, String roleColor) {
 		List<TextSegment> segments = new ArrayList<>();
 
@@ -401,36 +319,15 @@ public final class DiscordMessageParser {
 		return segments;
 	}
 
-	/**
-	 * Gets the mention notification text from custom_messages.
-	 *
-	 * @param effectiveName The display name of the message author who mentioned someone.
-	 * @return The mention notification text.
-	 */
 	public static String getMentionNotificationText(String effectiveName) {
 		String template = I18nManager.getCustomMessages().path("xxxxx_to_minecraft").path("mentioned").asString();
 		return template.replace("{effective_name}", effectiveName);
 	}
 
-	/**
-	 * Checks whether the message contains @everyone or @here mentions.
-	 *
-	 * @param message The Discord message.
-	 * @return true if the message mentions everyone/here.
-	 */
 	public static boolean isMentionEveryone(Message message) {
 		return message.getMentions().mentionsEveryone();
 	}
 
-	/**
-	 * Collects the Minecraft player UUIDs that should be notified about mentions in this message.
-	 * <p>
-	 * Checks both user mentions (via account linking) and role mentions (via linked accounts
-	 * that have the mentioned role).
-	 *
-	 * @param message The Discord message.
-	 * @return A set of Minecraft player UUID strings to notify.
-	 */
 	public static Set<String> collectMentionedPlayerUuids(Message message) {
 		Set<String> uuids = new HashSet<>();
 
@@ -455,16 +352,6 @@ public final class DiscordMessageParser {
 		return uuids;
 	}
 
-	/**
-	 * Parses the content of a Discord message into a list of styled text segments,
-	 * using the provided raw content string instead of the message's own raw content.
-	 * <p>
-	 * This overload is used for reply truncation and multi-line limiting.
-	 *
-	 * @param message The Discord message (for resolving mentions, attachments, etc.).
-	 * @param raw     The raw content string to parse (may be truncated).
-	 * @return The list of text segments representing the parsed message body.
-	 */
 	public static List<TextSegment> parseMessageContent(Message message, String raw) {
 		List<TextSegment> segments = new ArrayList<>();
 
@@ -577,7 +464,6 @@ public final class DiscordMessageParser {
 			collectEveryoneHereTokens(raw, message, tokens);
 		}
 
-		// Collect timestamps if configured
 		if (parseTimestamps) {
 			collectTimestampTokens(raw, tokens);
 		}
@@ -653,7 +539,7 @@ public final class DiscordMessageParser {
 					roleName = role.getName();
 					Color roleColor = role.getColors().getPrimary();
 					if (roleColor != null) {
-						color = String.format("#%06X", roleColor.getRGB() & 0xFFFFFF);
+						color = "#%06X".formatted(roleColor.getRGB() & 0xFFFFFF);
 					}
 					break;
 				}
@@ -732,7 +618,7 @@ public final class DiscordMessageParser {
 					roleName = role.getName();
 					Color roleColor = role.getColors().getPrimary();
 					if (roleColor != null) {
-						color = String.format("#%06X", roleColor.getRGB() & 0xFFFFFF);
+						color = "#%06X".formatted(roleColor.getRGB() & 0xFFFFFF);
 					}
 					break;
 				}
@@ -788,13 +674,6 @@ public final class DiscordMessageParser {
 		}
 	}
 
-	/**
-	 * Replaces Discord timestamp tokens (e.g. {@code <t:1234567890:R>}) with
-	 * localized, human-readable text used by the message parser.
-	 *
-	 * @param text Source text that may contain Discord timestamp tokens.
-	 * @return Text with Discord timestamp tokens replaced by human-readable values.
-	 */
 	public static String formatDiscordTimestampsForPlainText(String text) {
 		if (text == null || text.isEmpty()) {
 			return text;
@@ -1099,7 +978,7 @@ public final class DiscordMessageParser {
 						roleName = role.getName();
 						Color roleColor = role.getColors().getPrimary();
 						if (roleColor != null) {
-							color = String.format("#%06X", roleColor.getRGB() & 0xFFFFFF);
+							color = "#%06X".formatted(roleColor.getRGB() & 0xFFFFFF);
 						}
 						break;
 					}
@@ -1255,7 +1134,7 @@ public final class DiscordMessageParser {
 			} else {
 				codeSegments = new ArrayList<>();
 				codeSegments.add(new TextSegment("<code lang=[" + language + "]>", false, "yellow"));
-				for (String line : content.split("\n", 0)) {
+				for (String line : content.split("\n")) {
 					codeSegments.add(new TextSegment("\n  " + line));
 				}
 				codeSegments.add(new TextSegment("\n</code>", false, "yellow"));
@@ -1378,7 +1257,7 @@ public final class DiscordMessageParser {
 
 	private static List<TextSegment> buildAttachmentSegments(String type, String fileName, String url, boolean spoiler) {
 		List<TextSegment> segments = new ArrayList<>();
-		TextSegment prefix = new TextSegment(String.format(ATTACHMENT_LABEL_PREFIX, type), false, URL_COLOR);
+		TextSegment prefix = new TextSegment(ATTACHMENT_LABEL_PREFIX.formatted(type), false, URL_COLOR);
 		TextSegment fileNameSegment = new TextSegment(fileName, false, URL_COLOR);
 		TextSegment suffix = new TextSegment(LABEL_SUFFIX, false, URL_COLOR);
 
@@ -1543,7 +1422,7 @@ public final class DiscordMessageParser {
 		if (color == null) {
 			return "white";
 		}
-		return String.format("#%06X", color.getRGB() & 0xFFFFFF);
+		return "#%06X".formatted(color.getRGB() & 0xFFFFFF);
 	}
 
 	private static String getServerName() {

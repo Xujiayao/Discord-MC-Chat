@@ -7,8 +7,6 @@ import java.util.function.Consumer;
 
 /**
  * A simple event manager to handle event handling and posting.
- *
- * @author Xujiayao
  */
 public final class EventManager {
 
@@ -29,7 +27,7 @@ public final class EventManager {
 	}
 
 	/**
-	 * Post an event and notify all registered handlers.
+	 * Post an event and notify all handlers registered for the event's exact class.
 	 *
 	 * @param event The event object to be posted
 	 * @param <T>   The type of the event

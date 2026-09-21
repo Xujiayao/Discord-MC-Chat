@@ -17,8 +17,6 @@ import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
 
 /**
  * Manages the mode.yml file to determine and provide the operating mode of DMCC.
- *
- * @author Xujiayao
  */
 public final class ModeManager {
 
@@ -44,7 +42,6 @@ public final class ModeManager {
 		}
 
 		try {
-			// Create directories if they do not exist
 			Files.createDirectories(MODE_FILE_PATH.getParent());
 
 			// If mode.yml does not exist, create it from the template
@@ -63,7 +60,6 @@ public final class ModeManager {
 				return false; // Halt initialization, requires user action
 			}
 
-			// Load the user's mode.yml
 			JsonNode userModeConfig = YAML_MAPPER.readTree(Files.newBufferedReader(MODE_FILE_PATH, StandardCharsets.UTF_8));
 
 			// Load the template for validation
@@ -98,7 +94,7 @@ public final class ModeManager {
 	/**
 	 * Gets the currently active operating mode.
 	 *
-	 * @return The current mode as a string, or null if not loaded.
+	 * @return The current mode as a string, or an empty string if not loaded yet.
 	 */
 	public static String getMode() {
 		return mode;

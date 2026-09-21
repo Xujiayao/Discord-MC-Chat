@@ -32,13 +32,14 @@ import java.util.regex.Pattern;
  *   <li>Discord-ready message strings (custom emoji + mention conversion)</li>
  *   <li>Minecraft-ready rich segments (markdown/emoji/mention/link/timestamp rendering)</li>
  * </ul>
- *
- * @author Xujiayao
  */
 public final class MinecraftMessageParser {
 
 	private static final Pattern SIMPLE_MENTION_PATTERN = Pattern.compile("(?<![A-Za-z0-9_])@([A-Za-z0-9_]+)(?![A-Za-z0-9_])");
 	private static final Pattern DISCORD_ALIAS_EMOJI_PATTERN = Pattern.compile("(?<![A-Za-z0-9_]):([A-Za-z0-9_+\\-]+):(?![A-Za-z0-9_])");
+
+	// Matches the {message} placeholder inside custom_messages templates
+	private static final Pattern MESSAGE_PLACEHOLDER_PATTERN = Pattern.compile("\\{message}");
 
 	private static final List<String> MARKDOWN_DELIMITERS = List.of("***", "~~", "||", "**", "__", "*", "_");
 	private static final String QUOTE_COLOR = "gray";
@@ -46,34 +47,14 @@ public final class MinecraftMessageParser {
 	private MinecraftMessageParser() {
 	}
 
-	/**
-	 * Parses a player/user message.
-	 *
-	 * @param raw               Raw message text.
-	 * @param parseForMinecraft Whether to build rich Minecraft segments.
-	 * @return Parsed message container.
-	 */
 	public static ParsedMessage parseUserMessage(String raw, boolean parseForMinecraft) {
 		return parse(raw, parseForMinecraft);
 	}
 
-	/**
-	 * Parses a system message.
-	 *
-	 * @param raw               Raw message text.
-	 * @param parseForMinecraft Whether to build rich Minecraft segments.
-	 * @return Parsed message container.
-	 */
 	public static ParsedMessage parseSystemMessage(String raw, boolean parseForMinecraft) {
 		return parse(raw, parseForMinecraft);
 	}
 
-	/**
-	 * Parses a command string into display-friendly content.
-	 *
-	 * @param command Raw command string.
-	 * @return Parsed message container.
-	 */
 	public static ParsedMessage parseCommandMessage(String command) {
 		String discordContent = "`" + command + "`";
 		List<TextSegment> mc = List.of(new TextSegment(command));
@@ -91,15 +72,6 @@ public final class MinecraftMessageParser {
 		return template.replace("{effective_name}", senderDisplayName);
 	}
 
-	/**
-	 * Builds user-message template segments.
-	 *
-	 * @param serverName            Source server name.
-	 * @param effectiveName         Sender display name.
-	 * @param roleColor             Sender role color.
-	 * @param parsedMessageSegments Parsed message body segments.
-	 * @return Rendered template segments.
-	 */
 	public static List<TextSegment> buildUserMessageSegments(String serverName,
 	                                                         String effectiveName,
 	                                                         String roleColor,
@@ -113,13 +85,6 @@ public final class MinecraftMessageParser {
 		);
 	}
 
-	/**
-	 * Builds system-message template segments.
-	 *
-	 * @param serverName            Source server name.
-	 * @param parsedMessageSegments Parsed message body segments.
-	 * @return Rendered template segments.
-	 */
 	public static List<TextSegment> buildSystemMessageSegments(String serverName, List<TextSegment> parsedMessageSegments) {
 		return buildTemplateSegments(
 				I18nManager.getCustomMessages().path("xxxxx_to_minecraft").path("system_message"),
@@ -130,15 +95,6 @@ public final class MinecraftMessageParser {
 		);
 	}
 
-	/**
-	 * Builds overwrite user-message template segments.
-	 *
-	 * @param serverName            Source server name.
-	 * @param effectiveName         Sender display name.
-	 * @param roleColor             Sender role color.
-	 * @param parsedMessageSegments Parsed message body segments.
-	 * @return Rendered overwrite template segments.
-	 */
 	public static List<TextSegment> buildOverwriteUserMessageSegments(String serverName,
 	                                                                  String effectiveName,
 	                                                                  String roleColor,
@@ -153,13 +109,6 @@ public final class MinecraftMessageParser {
 		);
 	}
 
-	/**
-	 * Builds overwrite system-message template segments.
-	 *
-	 * @param serverName            Source server name.
-	 * @param parsedMessageSegments Parsed message body segments.
-	 * @return Rendered overwrite template segments.
-	 */
 	public static List<TextSegment> buildOverwriteSystemMessageSegments(String serverName, List<TextSegment> parsedMessageSegments) {
 		String mode = ConfigManager.getString("mode", "single_server");
 		return buildTemplateSegments(
@@ -310,7 +259,7 @@ public final class MinecraftMessageParser {
 			String color = "white";
 			Color roleColor = role.getColors().getPrimary();
 			if (roleColor != null) {
-				color = String.format("#%06X", roleColor.getRGB() & 0xFFFFFF);
+				color = "#%06X".formatted(roleColor.getRGB() & 0xFFFFFF);
 			}
 			Set<String> uuids = new HashSet<>();
 			for (String discordId : DiscordManager.getDiscordIdsByRoleId(role.getId())) {
@@ -606,7 +555,7 @@ public final class MinecraftMessageParser {
 				continue;
 			}
 
-			String[] parts = text.split("\\{message}", -1);
+			String[] parts = MESSAGE_PLACEHOLDER_PATTERN.split(text, -1);
 			if (!parts[0].isEmpty()) {
 				out.add(new TextSegment(parts[0], bold, color));
 			}

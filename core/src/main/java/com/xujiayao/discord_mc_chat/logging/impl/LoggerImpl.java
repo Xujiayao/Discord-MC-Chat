@@ -19,8 +19,6 @@ import java.util.Map;
 
 /**
  * DMCC Logger implementation.
- *
- * @author Xujiayao
  */
 public final class LoggerImpl implements Logger {
 
@@ -40,8 +38,6 @@ public final class LoggerImpl implements Logger {
 	 * <p>
 	 * If running in a Minecraft environment, initializes the Minecraft logger via reflection.
 	 * Otherwise, sets up for standard output logging.
-	 *
-	 * @param name Logger name
 	 */
 	public LoggerImpl(String name) {
 		this.name = name;
@@ -91,7 +87,7 @@ public final class LoggerImpl implements Logger {
 	}
 
 	/**
-	 * Closes the file writer if it was initialized and uninstalls AnsiConsole.
+	 * Closes the file writer if it was initialized.
 	 * <p>
 	 * Only Standalone environment requires this cleanup.
 	 */
@@ -115,9 +111,9 @@ public final class LoggerImpl implements Logger {
 		return name;
 	}
 
-	// Helper methods
-
 	private void log(String level, String msg, Throwable t) {
+		// Escaping collapses newlines in msg into the literal two-character sequence "\n",
+		// so every log line stays a single physical line in both the file and the console.
 		msg = StringUtils.escape(msg);
 
 		if (EnvironmentUtils.isMinecraftEnvironment()) {
@@ -171,6 +167,8 @@ public final class LoggerImpl implements Logger {
 	}
 
 	// Logging level checks
+	// TRACE and DEBUG are intentionally disabled in DMCC: isTraceEnabled()/isDebugEnabled() always
+	// return false and the corresponding trace()/debug() methods below are deliberate no-ops.
 
 	@Override
 	public boolean isTraceEnabled() {
@@ -222,8 +220,7 @@ public final class LoggerImpl implements Logger {
 		return true;
 	}
 
-	// TRACE (no-operation)
-
+	// TRACE (intentionally no-operation: trace is disabled in DMCC, see isTraceEnabled())
 	@Override
 	public void trace(String msg) {
 		// log("TRACE", msg);
@@ -274,8 +271,7 @@ public final class LoggerImpl implements Logger {
 		trace(msg, t);
 	}
 
-	// DEBUG (no-operation)
-
+	// DEBUG (intentionally no-operation: debug is disabled in DMCC, see isDebugEnabled())
 	@Override
 	public void debug(String msg) {
 		// log("DEBUG", msg);

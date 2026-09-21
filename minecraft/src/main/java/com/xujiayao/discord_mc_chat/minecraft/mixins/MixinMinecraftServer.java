@@ -8,15 +8,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/**
- * @author Xujiayao
- */
 @Mixin(MinecraftServer.class)
 final class MixinMinecraftServer {
 
 	@Inject(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Util;getNanos()J", ordinal = 0))
 	private void serverStarted(CallbackInfo ci) {
-		// ServerStarted Event
 		EventManager.post(new MinecraftEvents.ServerStarted(
 				(MinecraftServer) (Object) this
 		));
@@ -24,13 +20,11 @@ final class MixinMinecraftServer {
 
 	@Inject(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;stopServer()V"))
 	private void serverStopping(CallbackInfo ci) {
-		// ServerStopping Event
 		EventManager.post(new MinecraftEvents.ServerStopping());
 	}
 
 	@Inject(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;onServerExit()V"))
 	private void serverStopped(CallbackInfo ci) {
-		// ServerStopped Event
 		EventManager.post(new MinecraftEvents.ServerStopped());
 	}
 }

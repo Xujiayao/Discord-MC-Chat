@@ -14,9 +14,6 @@ import org.slf4j.spi.SLF4JServiceProvider;
 
 /**
  * slf4j-simple's implementation of {@link SLF4JServiceProvider}.
- *
- * @author Ceki Gülcü
- * @author Xujiayao
  */
 public final class ServiceProvider implements SLF4JServiceProvider {
 
@@ -32,14 +29,12 @@ public final class ServiceProvider implements SLF4JServiceProvider {
 	private final MDCAdapter mdcAdapter;
 	private ILoggerFactory loggerFactory;
 
-	/**
-	 * Creates an SLF4J service provider instance.
-	 */
 	public ServiceProvider() {
 		markerFactory = new BasicMarkerFactory();
 		mdcAdapter = new NOPMDCAdapter();
 	}
 
+	@Override
 	public ILoggerFactory getLoggerFactory() {
 		return loggerFactory;
 	}

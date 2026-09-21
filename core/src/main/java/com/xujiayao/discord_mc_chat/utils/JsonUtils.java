@@ -6,6 +6,7 @@ import tools.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,8 +20,6 @@ import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
  * <p>
  * Uses the YAML_MAPPER from Constants for JSON processing to support # comments in JSON (BlazeAndCaves).
  * Translation-resource input is normalized before parsing to tolerate legacy translation resources.
- *
- * @author Xujiayao
  */
 public final class JsonUtils {
 
@@ -34,7 +33,7 @@ public final class JsonUtils {
 	 * @return The converted Map
 	 */
 	public static Map<String, String> toStringMap(String json) {
-		return YAML_MAPPER.readValue(normalize(json), new TypeReference<>() {
+		return YAML_MAPPER.readValue(normalize(json), new TypeReference<Map<String, String>>() {
 		});
 	}
 
@@ -46,7 +45,9 @@ public final class JsonUtils {
 	 * @throws IOException If reading or parsing fails
 	 */
 	public static Map<String, String> toStringMap(Reader reader) throws IOException {
-		return YAML_MAPPER.readValue(normalize(readAll(reader)), new TypeReference<>() {
+		StringWriter writer = new StringWriter();
+		reader.transferTo(writer);
+		return YAML_MAPPER.readValue(normalize(writer.toString()), new TypeReference<Map<String, String>>() {
 		});
 	}
 
@@ -58,22 +59,14 @@ public final class JsonUtils {
 	 * @throws IOException If parsing fails
 	 */
 	public static Map<String, String> toStringMap(InputStream inputStream) throws IOException {
-		return YAML_MAPPER.readValue(normalize(new String(inputStream.readAllBytes(), StandardCharsets.UTF_8)), new TypeReference<>() {
+		return YAML_MAPPER.readValue(normalize(new String(inputStream.readAllBytes(), StandardCharsets.UTF_8)), new TypeReference<Map<String, String>>() {
 		});
 	}
 
-	private static String readAll(Reader reader) throws IOException {
-		StringBuilder builder = new StringBuilder();
-		char[] buffer = new char[4096];
-		int length;
-
-		while ((length = reader.read(buffer)) != -1) {
-			builder.append(buffer, 0, length);
-		}
-
-		return builder.toString();
-	}
-
+	/**
+	 * Strips line and block comments from JSON, and expands leading tabs to two spaces.
+	 * Required because BlazeAndCaves stat/advancement resources are not strict JSON.
+	 */
 	private static String normalize(String input) {
 		StringBuilder normalized = new StringBuilder(input.length());
 		boolean inString = false;
@@ -166,14 +159,15 @@ public final class JsonUtils {
 	 * @param path The path to the JSON file
 	 * @param type The stat type (e.g., "minecraft:custom")
 	 * @param stat The stat name (e.g., "minecraft:deaths")
-	 * @return The stat value, or 0 if not found
+	 * @return The stat value, or 0 if not found (read and parse failures are swallowed)
 	 */
 	public static int getStat(Path path, String type, String stat) {
 		try (Reader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
 			JsonNode root = JSON_MAPPER.readTree(reader);
 			JsonNode typeNode = root.path("stats").path(type);
-			if (!typeNode.isMissingNode() && typeNode.has(stat)) {
-				return typeNode.path(stat).asInt();
+			JsonNode statNode = typeNode.path(stat);
+			if (!statNode.isMissingNode()) {
+				return statNode.asInt();
 			}
 		} catch (Exception ignored) {
 		}

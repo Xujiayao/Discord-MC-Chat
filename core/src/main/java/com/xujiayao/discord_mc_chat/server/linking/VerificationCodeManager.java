@@ -8,16 +8,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
-/**
- * Manages temporary verification codes for the secure account linking workflow.
- * <p>
- * Verification codes are 6-character alphanumeric strings that are valid for 5 minutes.
- * Codes are stored in-memory and mapped from code to the pending verification details.
- * <p>
- * This manager runs on the Server side and is the single source of truth for code validation.
- *
- * @author Xujiayao
- */
 public final class VerificationCodeManager {
 
 	private static final int CODE_LENGTH = 6;
@@ -105,9 +95,6 @@ public final class VerificationCodeManager {
 		return pending;
 	}
 
-	/**
-	 * Clears all pending verification codes.
-	 */
 	public static void clear() {
 		PENDING_CODES.clear();
 		UUID_TO_CODE.clear();

@@ -12,9 +12,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/**
- * @author Xujiayao
- */
 @Mixin(PlayerAdvancements.class)
 abstract class MixinPlayerAdvancements {
 
@@ -26,7 +23,6 @@ abstract class MixinPlayerAdvancements {
 
 	@Inject(method = "award", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/AdvancementRewards;grant(Lnet/minecraft/server/level/ServerPlayer;)V", shift = At.Shift.AFTER))
 	private void award(AdvancementHolder holder, String criterion, CallbackInfoReturnable<Boolean> cir) {
-		// PlayerAdvancement Event
 		EventManager.post(new MinecraftEvents.PlayerAdvancement(
 				holder,
 				criterion,

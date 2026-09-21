@@ -28,8 +28,6 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  *   <li>New lines are buffered while disconnected and flushed after reconnect.</li>
  *   <li>On first enable, history is replayed from the start of latest.log.</li>
  * </ul>
- *
- * @author Xujiayao
  */
 final class ConsoleLogTailer {
 

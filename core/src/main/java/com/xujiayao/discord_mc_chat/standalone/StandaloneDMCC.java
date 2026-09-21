@@ -5,8 +5,6 @@ import com.xujiayao.discord_mc_chat.logging.impl.LoggerImpl;
 
 /**
  * The entry point for Standalone environment.
- *
- * @author Xujiayao
  */
 public final class StandaloneDMCC {
 
@@ -25,8 +23,6 @@ public final class StandaloneDMCC {
 
 	/**
 	 * Start Standalone DMCC.
-	 *
-	 * @param args Command line arguments
 	 */
 	static void main(String[] args) {
 		for (String arg : args) {
@@ -36,7 +32,6 @@ public final class StandaloneDMCC {
 			}
 		}
 
-		// Register shutdown hook for standalone mode
 		Runtime.getRuntime().addShutdownHook(SHUTDOWN_THREAD);
 
 		// Initialize DMCC, block until initialization is complete

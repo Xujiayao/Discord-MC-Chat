@@ -10,11 +10,6 @@ import java.util.concurrent.Executors;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
-/**
- * Manages the lifecycle of all server-side components.
- *
- * @author Xujiayao
- */
 public final class ServerDMCC {
 
 	private final String host;

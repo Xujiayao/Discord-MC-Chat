@@ -2,30 +2,13 @@ package com.xujiayao.discord_mc_chat.commands;
 
 /**
  * Interface representing a DMCC command, with arguments support.
- *
- * @author Xujiayao
  */
 public interface Command {
 
-	/**
-	 * Gets the name of the command.
-	 *
-	 * @return The command name.
-	 */
 	String name();
 
-	/**
-	 * Gets the list of arguments for the command.
-	 *
-	 * @return The command arguments.
-	 */
 	CommandArgument[] args();
 
-	/**
-	 * Gets the description of the command.
-	 *
-	 * @return The command description.
-	 */
 	String description();
 
 	/**
@@ -104,18 +87,8 @@ public interface Command {
 	 * Describes a single command argument displayed in help and usage text.
 	 */
 	interface CommandArgument {
-		/**
-		 * Gets the name of the argument.
-		 *
-		 * @return The argument name.
-		 */
 		String name();
 
-		/**
-		 * Gets the description of the argument.
-		 *
-		 * @return The argument description.
-		 */
 		String description();
 	}
 }

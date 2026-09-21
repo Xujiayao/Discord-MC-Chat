@@ -3,11 +3,10 @@ package com.xujiayao.discord_mc_chat.utils;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
+import java.util.HexFormat;
 
 /**
  * Cryptographic utilities.
- *
- * @author Xujiayao
  */
 public final class CryptUtils {
 
@@ -27,15 +26,7 @@ public final class CryptUtils {
 		try {
 			MessageDigest digest = MessageDigest.getInstance("SHA-256");
 			byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-			StringBuilder hexString = new StringBuilder();
-			for (byte b : hash) {
-				String hex = Integer.toHexString(0xff & b);
-				if (hex.length() == 1) {
-					hexString.append('0');
-				}
-				hexString.append(hex);
-			}
-			return hexString.toString();
+			return HexFormat.of().formatHex(hash);
 		} catch (Exception e) {
 			throw new RuntimeException("SHA-256 algorithm not found", e);
 		}

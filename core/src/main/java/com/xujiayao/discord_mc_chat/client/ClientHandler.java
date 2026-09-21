@@ -36,11 +36,6 @@ import java.util.concurrent.TimeUnit;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
-/**
- * Handles client-side network events and handshake protocol.
- *
- * @author Xujiayao
- */
 final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 
 	private static final int CONSOLE_COMMAND_TIMEOUT_SECONDS = 10;

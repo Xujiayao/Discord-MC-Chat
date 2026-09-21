@@ -74,11 +74,6 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Handles Minecraft events posted from the event manager.
- *
- * @author Xujiayao
- */
 public final class MinecraftEventHandler {
 
 	private static final String DEFAULT_MENTION_STYLE = "title";
@@ -87,9 +82,6 @@ public final class MinecraftEventHandler {
 	private MinecraftEventHandler() {
 	}
 
-	/**
-	 * Initializes the Minecraft event handlers.
-	 */
 	public static void init() {
 		EventManager.register(MinecraftEvents.ServerStarted.class, event -> {
 			serverInstance = event.minecraftServer();
@@ -285,12 +277,10 @@ public final class MinecraftEventHandler {
 		});
 
 		EventManager.register(MinecraftEvents.CommandRegister.class, event -> {
-			// Register Minecraft /dmcc commands
 			MinecraftCommands.register(event.dispatcher());
 		});
 
 		EventManager.register(MinecraftEvents.ReloadResources.class, _ -> {
-			// Refresh Minecraft translations
 			TranslationManager.init();
 		});
 
@@ -356,7 +346,6 @@ public final class MinecraftEventHandler {
 								}
 							}
 
-							// Send any collected command output back to the sender
 							event.sender().reply(rconConsoleSource.getCommandResponse());
 							event.completionFuture().complete(null);
 						});
@@ -423,7 +412,6 @@ public final class MinecraftEventHandler {
 		EventManager.register(CoreEvents.LinkCodeResponseEvent.class, event -> {
 			if (serverInstance == null) return;
 
-			// Find the player and notify them
 			serverInstance.execute(() -> {
 				try {
 					UUID uuid = UUID.fromString(event.playerUuid());
@@ -478,7 +466,6 @@ public final class MinecraftEventHandler {
 							NameAndId user = entry.getUser();
 							if (user == null) continue;
 							UUID uuid = UUID.fromString(user.id().toString());
-							// Read level from entry
 							int level = entry.permissions().level().id();
 							if (level >= 0) currentOpLevels.put(uuid, level);
 						} catch (Exception ignored) {
@@ -523,11 +510,9 @@ public final class MinecraftEventHandler {
 						int level = e.getValue();
 						Optional<NameAndId> nameAndIdOpt = serverInstance.services().nameToIdCache().get(uuid);
 						if (nameAndIdOpt.isEmpty()) {
-							// Profile not in cache; skip this entry
 							continue;
 						}
 						NameAndId nameAndId = nameAndIdOpt.get();
-						// If current level equals desired, skip; otherwise add (or re-add) entry
 						Integer currentLevel = currentOpLevels.get(uuid);
 						if (currentLevel != null && currentLevel == level) {
 							continue;
@@ -558,7 +543,6 @@ public final class MinecraftEventHandler {
 			serverInstance.execute(() -> {
 				PlayerList playerList = serverInstance.getPlayerList();
 
-				// Build and broadcast the reply line first (if present)
 				if (event.replySegments() != null && !event.replySegments().isEmpty()) {
 					Component replyComponent = buildComponentFromSegments(event.replySegments());
 					for (ServerPlayer player : playerList.getPlayers()) {
@@ -566,13 +550,11 @@ public final class MinecraftEventHandler {
 					}
 				}
 
-				// Build and broadcast the main message line
 				Component mainComponent = buildComponentFromSegments(event.segments());
 				for (ServerPlayer player : playerList.getPlayers()) {
 					player.sendSystemMessage(mainComponent);
 				}
 
-				// Send mention notifications
 				if (event.mentionNotificationText() != null) {
 					Component notificationComponent = Component.literal(event.mentionNotificationText())
 							.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD);
@@ -872,7 +854,6 @@ public final class MinecraftEventHandler {
 			MutableComponent part = Component.literal(seg.text);
 			Style style = Style.EMPTY;
 
-			// Apply color
 			if (seg.color != null && !seg.color.isEmpty()) {
 				TextColor textColor = TextColor.parseColor(seg.color).result().orElse(null);
 				if (textColor != null) {
@@ -880,7 +861,6 @@ public final class MinecraftEventHandler {
 				}
 			}
 
-			// Apply formatting
 			if (seg.bold) {
 				style = style.withBold(true);
 			}
@@ -897,7 +877,6 @@ public final class MinecraftEventHandler {
 				style = style.withObfuscated(true);
 			}
 
-			// Apply click event (open URL)
 			if (seg.clickUrl != null && !seg.clickUrl.isEmpty()) {
 				try {
 					style = style.withClickEvent(new ClickEvent.OpenUrl(URI.create(seg.clickUrl)));
@@ -906,7 +885,6 @@ public final class MinecraftEventHandler {
 				}
 			}
 
-			// Apply hover text
 			if (seg.hoverText != null && !seg.hoverText.isEmpty()) {
 				style = style.withHoverEvent(new HoverEvent.ShowText(Component.literal(seg.hoverText)));
 			}

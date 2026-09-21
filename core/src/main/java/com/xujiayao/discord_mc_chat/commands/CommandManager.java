@@ -28,8 +28,6 @@ import java.util.concurrent.Executors;
 
 /**
  * Central registry and dispatcher for DMCC commands.
- *
- * @author Xujiayao
  */
 public final class CommandManager {
 
@@ -39,9 +37,6 @@ public final class CommandManager {
 	private CommandManager() {
 	}
 
-	/**
-	 * Initialize and register built-in commands based on the current operating mode.
-	 */
 	public static void initialize() {
 		if (commandExecutor == null || commandExecutor.isShutdown()) {
 			commandExecutor = Executors.newSingleThreadExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-Command"));
@@ -81,9 +76,6 @@ public final class CommandManager {
 		}
 	}
 
-	/**
-	 * Shutdown the command executor.
-	 */
 	public static void shutdown() {
 		if (commandExecutor != null) {
 			commandExecutor.shutdown();
@@ -95,22 +87,10 @@ public final class CommandManager {
 		COMMANDS.put(command.name().toLowerCase(), command);
 	}
 
-	/**
-	 * Get all registered commands.
-	 *
-	 * @return A collection of registered commands
-	 */
 	public static Collection<Command> getCommands() {
 		return new ArrayList<>(COMMANDS.values());
 	}
 
-	/**
-	 * Execute a command line.
-	 *
-	 * @param sender The command sender
-	 * @param name   The command name
-	 * @param args   The command arguments (if any)
-	 */
 	public static void execute(CommandSender sender, String name, String... args) {
 		if (commandExecutor == null || commandExecutor.isShutdown()) {
 			return;
@@ -122,11 +102,6 @@ public final class CommandManager {
 	/**
 	 * Execute a command line and return a CompletableFuture that completes when execution finishes.
 	 * Used by the client handler to send responses after command completion.
-	 *
-	 * @param sender The command sender
-	 * @param name   The command name
-	 * @param args   The command arguments (if any)
-	 * @return A CompletableFuture that completes when the command finishes
 	 */
 	public static CompletableFuture<Void> executeAndWait(CommandSender sender, String name, String... args) {
 		CompletableFuture<Void> future = new CompletableFuture<>();
@@ -166,21 +141,13 @@ public final class CommandManager {
 
 		// Too few arguments: show the command's own usage
 		if (args.length < expectedArgs) {
-			StringBuilder usage = new StringBuilder(name);
-			for (Command.CommandArgument arg : command.args()) {
-				usage.append(" <").append(arg.name()).append(">");
-			}
-			sender.reply(I18nManager.getDmccTranslation("commands.invalid_usage", usage.toString()));
+			sender.reply(I18nManager.getDmccTranslation("commands.invalid_usage", buildUsage(name, command)));
 			return;
 		}
 
 		// Too many arguments: reject (except for commands that accept variable args)
 		if (args.length > expectedArgs && !command.acceptsExtraArgs()) {
-			StringBuilder usage = new StringBuilder(name);
-			for (Command.CommandArgument arg : command.args()) {
-				usage.append(" <").append(arg.name()).append(">");
-			}
-			sender.reply(I18nManager.getDmccTranslation("commands.invalid_usage", usage.toString()));
+			sender.reply(I18nManager.getDmccTranslation("commands.invalid_usage", buildUsage(name, command)));
 			return;
 		}
 
@@ -189,5 +156,13 @@ public final class CommandManager {
 		} catch (Exception e) {
 			sender.reply(I18nManager.getDmccTranslation("commands.execution_failed", e.getMessage()));
 		}
+	}
+
+	private static String buildUsage(String name, Command command) {
+		StringBuilder usage = new StringBuilder(name);
+		for (Command.CommandArgument arg : command.args()) {
+			usage.append(" <").append(arg.name()).append(">");
+		}
+		return usage.toString();
 	}
 }

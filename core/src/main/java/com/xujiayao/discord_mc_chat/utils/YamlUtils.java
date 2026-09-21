@@ -13,8 +13,6 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
 /**
  * YAML utility class.
- *
- * @author Xujiayao
  */
 public final class YamlUtils {
 
@@ -30,10 +28,7 @@ public final class YamlUtils {
 	/**
 	 * Validates the loaded config against the template with optional check for modification.
 	 *
-	 * @param userConfig        The user-loaded config to validate
-	 * @param templateConfig    The template config to validate against
 	 * @param errorOnUnmodified If true, an error is logged if the file is identical to the template
-	 * @return true if the config is valid, false otherwise
 	 */
 	public static boolean validate(JsonNode userConfig, JsonNode templateConfig, boolean errorOnUnmodified) {
 		// Check if config is identical to template (user made no changes)

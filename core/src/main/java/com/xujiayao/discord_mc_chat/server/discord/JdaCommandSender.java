@@ -12,28 +12,11 @@ import java.util.concurrent.RejectedExecutionException;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
-/**
- * Command sender implementation for JDA slash commands.
- * <p>
- * For the execute command, the actual results are sent via webhooks by DiscordManager.
- * This sender only provides the ephemeral acknowledgement to the slash command invoker.
- * <p>
- * Implements {@link LinkCommand.DiscordUserContextProvider} to provide the Discord user ID
- * for account linking commands.
- *
- * @author Xujiayao
- */
 public final class JdaCommandSender implements CommandSender, LinkCommand.DiscordUserContextProvider {
 
 	private final SlashCommandInteractionEvent event;
 	private final int opLevel;
 
-	/**
-	 * Constructs a new JdaCommandSender.
-	 *
-	 * @param event   The Discord slash command interaction event.
-	 * @param opLevel The resolved OP level for the Discord user.
-	 */
 	public JdaCommandSender(SlashCommandInteractionEvent event, int opLevel) {
 		this.event = event;
 		this.opLevel = opLevel;
@@ -73,20 +56,10 @@ public final class JdaCommandSender implements CommandSender, LinkCommand.Discor
 		}
 	}
 
-	/**
-	 * Gets the Discord Member object for this sender.
-	 *
-	 * @return The Member, or null if in DMs.
-	 */
 	public Member getMember() {
 		return event.getMember();
 	}
 
-	/**
-	 * Gets the Discord User object for this sender.
-	 *
-	 * @return The User.
-	 */
 	public User getUser() {
 		return event.getUser();
 	}
@@ -106,11 +79,6 @@ public final class JdaCommandSender implements CommandSender, LinkCommand.Discor
 		return event.getUser().getName();
 	}
 
-	/**
-	 * Gets the Discord channel ID where this command was invoked.
-	 *
-	 * @return The channel ID.
-	 */
 	public String getChannelId() {
 		return event.getChannel().getId();
 	}

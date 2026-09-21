@@ -21,8 +21,6 @@ import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
 /**
  * Manages internationalization (i18n) for DMCC.
  * Handles loading language files for DMCC Translations and Custom Messages.
- *
- * @author Xujiayao
  */
 public final class I18nManager {
 
@@ -35,9 +33,7 @@ public final class I18nManager {
 	}
 
 	/**
-	 * Gets the currently selected language code.
-	 *
-	 * @return The language code (e.g., "en_us").
+	 * Gets the currently selected language code (e.g., "en_us").
 	 */
 	public static String getLanguage() {
 		return language;
@@ -71,7 +67,6 @@ public final class I18nManager {
 				return false;
 			}
 
-			// Load DMCC internal translations
 			return loadDmccTranslations();
 		}
 		return true;
@@ -91,7 +86,6 @@ public final class I18nManager {
 			return false;
 		}
 
-		// Load DMCC internal translations
 		if (!loadDmccTranslations()) {
 			return false;
 		}
@@ -109,19 +103,14 @@ public final class I18nManager {
 	}
 
 	private static boolean checkLanguageResources() {
-		try (InputStream customMessagesStream = I18nManager.class.getResourceAsStream("/config/custom_messages/" + language + ".yml");
-		     InputStream dmccLangStream = I18nManager.class.getResourceAsStream("/lang/" + language + ".yml")) {
-
-			if (customMessagesStream == null || dmccLangStream == null) {
-				LOGGER.error(I18nManager.getDmccTranslation("utils.i18n.language_not_supported", language));
-				LOGGER.info(I18nManager.getDmccTranslation("utils.i18n.contribute"));
-				LOGGER.info(I18nManager.getDmccTranslation("utils.i18n.contribute_link"));
-				return false;
-			}
-		} catch (IOException e) {
-			LOGGER.error(I18nManager.getDmccTranslation("utils.i18n.check_failed"), e);
+		if (I18nManager.class.getResource("/config/custom_messages/" + language + ".yml") == null
+				|| I18nManager.class.getResource("/lang/" + language + ".yml") == null) {
+			LOGGER.error(I18nManager.getDmccTranslation("utils.i18n.language_not_supported", language));
+			LOGGER.info(I18nManager.getDmccTranslation("utils.i18n.contribute"));
+			LOGGER.info(I18nManager.getDmccTranslation("utils.i18n.contribute_link"));
 			return false;
 		}
+
 		return true;
 	}
 
@@ -190,20 +179,13 @@ public final class I18nManager {
 	 * Gets a translation from DMCC's internal translation files (lang/*.yml).
 	 * Placeholders are formatted using {}.
 	 *
-	 * @param key  The translation key (e.g., "whitelist.success").
-	 * @param args The arguments to format into the string.
-	 * @return The formatted translation string, or the key if not found.
+	 * @param key The translation key (e.g., "whitelist.success").
 	 */
 	public static String getDmccTranslation(String key, Object... args) {
 		String translation = DMCC_TRANSLATIONS.getOrDefault(key, key);
 		return StringUtils.format(translation, args);
 	}
 
-	/**
-	 * Gets the custom messages JsonNode.
-	 *
-	 * @return The root JsonNode for custom messages.
-	 */
 	public static JsonNode getCustomMessages() {
 		return customMessages;
 	}

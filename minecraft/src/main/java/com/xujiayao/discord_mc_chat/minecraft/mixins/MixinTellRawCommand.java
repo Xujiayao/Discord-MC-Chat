@@ -20,9 +20,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-/**
- * @author Xujiayao
- */
 @Mixin(TellRawCommand.class)
 final class MixinTellRawCommand {
 
@@ -37,7 +34,6 @@ final class MixinTellRawCommand {
 				ServerPlayer player = optional.get();
 				Component component = ComponentArgument.getResolvedComponent(c, "message", player);
 
-				// SourceTellRaw Event
 				EventManager.post(new MinecraftEvents.SourceTellRaw(
 						c,
 						component

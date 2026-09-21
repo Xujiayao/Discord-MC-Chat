@@ -17,16 +17,8 @@ import static com.xujiayao.discord_mc_chat.Constants.IS_MINECRAFT_ENV;
  * <p>
  * Dynamically displays only the commands the sender is authorized to execute,
  * based on their OP level and the local permission configuration.
- *
- * @author Xujiayao
  */
 public final class HelpCommand implements Command {
-
-	/**
-	 * Creates a help command instance.
-	 */
-	public HelpCommand() {
-	}
 
 	private static String padRight(String text, int width) {
 		if (text.length() >= width) {

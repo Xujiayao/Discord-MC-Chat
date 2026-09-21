@@ -8,26 +8,18 @@ import com.xujiayao.discord_mc_chat.utils.JsonUtils;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 /**
  * Stats command implementation.
- *
- * @author Xujiayao
  */
 public final class StatsCommand implements Command {
 
 	private static StatsProvider provider;
-
-	/**
-	 * Creates a stats command instance.
-	 */
-	public StatsCommand() {
-	}
 
 	/**
 	 * Gets the currently registered stats provider.
@@ -38,11 +30,6 @@ public final class StatsCommand implements Command {
 		return provider;
 	}
 
-	/**
-	 * Registers the stats provider implementation.
-	 *
-	 * @param provider Stats provider implementation.
-	 */
 	public static void setProvider(StatsProvider provider) {
 		StatsCommand.provider = provider;
 	}
@@ -165,7 +152,7 @@ public final class StatsCommand implements Command {
 			return;
 		}
 
-		Map<String, Integer> leaderboard = new ConcurrentHashMap<>();
+		Map<String, Integer> leaderboard = new HashMap<>();
 
 		try (Stream<Path> stream = Files.list(statsDir)) {
 			stream.filter(Files::isRegularFile)

@@ -12,8 +12,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Static final constants used across the project.
- *
- * @author Xujiayao
  */
 public final class Constants {
 
@@ -35,26 +33,9 @@ public final class Constants {
 			.enable(YAMLWriteFeature.MINIMIZE_QUOTES)
 			.disable(YAMLWriteFeature.WRITE_DOC_START_MARKER).build();
 
-	/**
-	 * Shared JSON mapper.
-	 */
 	public static final ObjectMapper JSON_MAPPER = new ObjectMapper();
-
-	/**
-	 * Current DMCC version string.
-	 */
 	public static final String VERSION = EnvironmentUtils.getDmccVersion();
-
-	/**
-	 * Shared OkHttp client instance.
-	 */
 	public static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
-
-	/**
-	 * Whether Minecraft source messages should be overwritten by DMCC formatting.
-	 * <p>
-	 * For DMCC Client use.
-	 */
 	public static final AtomicBoolean OVERWRITE_MINECRAFT_SOURCE_MESSAGES = new AtomicBoolean(false);
 
 	private Constants() {

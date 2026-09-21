@@ -14,9 +14,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/**
- * @author Xujiayao
- */
 @Mixin(ServerGamePacketListenerImpl.class)
 final class MixinServerGamePacketListenerImpl {
 
@@ -25,7 +22,6 @@ final class MixinServerGamePacketListenerImpl {
 
 	@Inject(method = "broadcastChatMessage", at = @At("HEAD"), cancellable = true)
 	private void broadcastChatMessage(PlayerChatMessage message, CallbackInfo ci) {
-		// PlayerChat Event
 		EventManager.post(new MinecraftEvents.PlayerChat(
 				message,
 				player
@@ -38,7 +34,6 @@ final class MixinServerGamePacketListenerImpl {
 
 	@Inject(method = "performUnsignedChatCommand", at = @At("HEAD"))
 	private void performUnsignedChatCommand(String command, CallbackInfo ci) {
-		// PlayerCommand Event
 		EventManager.post(new MinecraftEvents.PlayerCommand(
 				command,
 				player
@@ -49,7 +44,6 @@ final class MixinServerGamePacketListenerImpl {
 
 	@Inject(method = "performSignedChatCommand", at = @At("HEAD"))
 	private void performSignedChatCommand(ServerboundChatCommandSignedPacket packet, LastSeenMessages lastSeenMessages, CallbackInfo ci) {
-		// PlayerCommand Event
 		EventManager.post(new MinecraftEvents.PlayerCommand(
 				packet.command(),
 				player

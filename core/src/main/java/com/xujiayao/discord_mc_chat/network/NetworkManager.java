@@ -16,11 +16,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-/**
- * Central access point for sending network packets and managing connections.
- *
- * @author Xujiayao
- */
 public final class NetworkManager {
 
 	private static final AtomicReference<ClientDMCC> clientInstance = new AtomicReference<>();
@@ -44,27 +39,14 @@ public final class NetworkManager {
 	private NetworkManager() {
 	}
 
-	/**
-	 * Registers the client instance for network operations.
-	 *
-	 * @param client The client instance
-	 */
 	public static void registerClient(ClientDMCC client) {
 		clientInstance.set(client);
 	}
 
-	/**
-	 * Registers an information supplier for InfoResponse packets.
-	 *
-	 * @param supplier The supplier to register
-	 */
 	public static void registerInfoSupplier(Supplier<CommandPackets.Info.ResponsePacket> supplier) {
 		infoSupplier.set(supplier);
 	}
 
-	/**
-	 * Resets the network manager state, clearing client instance and channels.
-	 */
 	public static void clear() {
 		clientInstance.set(null);
 		clientChannels.clear();
@@ -124,22 +106,11 @@ public final class NetworkManager {
 		});
 	}
 
-	/**
-	 * Adds a client channel to the managed list.
-	 *
-	 * @param channel The client channel
-	 * @param name    The name of the client
-	 */
 	public static void addClientChannel(Channel channel, String name) {
 		clientChannels.put(channel, name);
 		clientConnectedAt.put(name, System.currentTimeMillis());
 	}
 
-	/**
-	 * Removes a client channel from the managed list.
-	 *
-	 * @param channel The client channel
-	 */
 	public static void removeClientChannel(Channel channel) {
 		String name = clientChannels.remove(channel);
 		if (name != null) {
@@ -147,21 +118,10 @@ public final class NetworkManager {
 		}
 	}
 
-	/**
-	 * Gets all connected client names.
-	 *
-	 * @return A list of connected client names.
-	 */
 	public static List<String> getConnectedClientNames() {
 		return new ArrayList<>(clientChannels.values());
 	}
 
-	/**
-	 * Checks if a client is connected by name.
-	 *
-	 * @param clientName The client name to check.
-	 * @return true if connected, false otherwise.
-	 */
 	public static boolean isClientConnected(String clientName) {
 		return clientChannels.containsValue(clientName);
 	}
@@ -181,12 +141,6 @@ public final class NetworkManager {
 		return TimeUnit.MILLISECONDS.toSeconds(Math.max(0L, System.currentTimeMillis() - connectedAtMillis));
 	}
 
-	/**
-	 * Gets the remote address of a channel as a string (IP:Port).
-	 *
-	 * @param channel The channel
-	 * @return The remote address string
-	 */
 	public static String getRemoteAddress(Channel channel) {
 		if (channel.remoteAddress() instanceof InetSocketAddress addr) {
 			return addr.getAddress().getHostAddress() + ":" + addr.getPort();
@@ -196,12 +150,6 @@ public final class NetworkManager {
 
 	// ===== Info Methods =====
 
-	/**
-	 * Stores a received ResponsePacket into cache.
-	 *
-	 * @param clientName The client name
-	 * @param packet     The packet to cache
-	 */
 	public static void cacheInfoResponse(String clientName, CommandPackets.Info.ResponsePacket packet) {
 		if (packet == null) {
 			return;
@@ -226,12 +174,6 @@ public final class NetworkManager {
 		}
 	}
 
-	/**
-	 * Sends InfoRequest packets, blocks the current thread, then returns a snapshot of cached responses.
-	 *
-	 * @param timeoutSeconds The waiting time in seconds
-	 * @return A snapshot of cached ResponsePacket items
-	 */
 	public static Map<String, CommandPackets.Info.ResponsePacket> requestInfoSnapshot(int timeoutSeconds) {
 		infoCache.clear();
 
@@ -272,11 +214,6 @@ public final class NetworkManager {
 		return snapshot;
 	}
 
-	/**
-	 * Creates an ResponsePacket using the registered supplier or a fallback.
-	 *
-	 * @return The ResponsePacket instance
-	 */
 	public static CommandPackets.Info.ResponsePacket createResponsePacket() {
 		Supplier<CommandPackets.Info.ResponsePacket> supplier = infoSupplier.get();
 		CommandPackets.Info.ResponsePacket packet = supplier != null ? supplier.get() : null;
@@ -319,12 +256,6 @@ public final class NetworkManager {
 
 	// ===== DMCC Command Auto-Complete Methods =====
 
-	/**
-	 * Caches an auto-complete response from a client for DMCC commands.
-	 *
-	 * @param clientName  The client name
-	 * @param suggestions The list of suggestions
-	 */
 	public static void cacheExecuteAutoCompleteResponse(String clientName, List<String> suggestions) {
 		executeAutoCompleteCache.put(clientName, suggestions);
 		synchronized (executeAutoCompleteLock) {
@@ -332,14 +263,6 @@ public final class NetworkManager {
 		}
 	}
 
-	/**
-	 * Requests DMCC command auto-complete suggestions from all connected clients.
-	 *
-	 * @param input          The current user input to complete
-	 * @param opLevel        The OP level of the user requesting auto-complete
-	 * @param timeoutSeconds The waiting time in seconds
-	 * @return A map of client name to suggestion list
-	 */
 	public static Map<String, List<String>> requestExecuteAutoCompleteSnapshot(String input, int opLevel, int timeoutSeconds) {
 		return requestAutoCompleteSnapshot(
 				executeAutoCompleteCache,
@@ -351,12 +274,6 @@ public final class NetworkManager {
 
 	// ===== Minecraft Command Auto-Complete Methods =====
 
-	/**
-	 * Caches an auto-complete response from a client for Minecraft commands.
-	 *
-	 * @param clientName  The client name
-	 * @param suggestions The list of suggestions
-	 */
 	public static void cacheConsoleAutoCompleteResponse(String clientName, List<String> suggestions) {
 		consoleAutoCompleteCache.put(clientName, suggestions);
 		synchronized (consoleAutoCompleteLock) {
@@ -364,14 +281,6 @@ public final class NetworkManager {
 		}
 	}
 
-	/**
-	 * Requests Minecraft command auto-complete suggestions from all connected clients.
-	 *
-	 * @param input          The current user input to complete
-	 * @param opLevel        The OP level of the user requesting auto-complete
-	 * @param timeoutSeconds The waiting time in seconds
-	 * @return A map of client name to suggestion list
-	 */
 	public static Map<String, List<String>> requestConsoleAutoCompleteSnapshot(String input, int opLevel, int timeoutSeconds) {
 		return requestAutoCompleteSnapshot(
 				consoleAutoCompleteCache,
@@ -431,20 +340,10 @@ public final class NetworkManager {
 
 	// ===== Client Accessors =====
 
-	/**
-	 * Gets the registered client instance.
-	 *
-	 * @return The client instance, or null if not registered
-	 */
 	public static ClientDMCC getClient() {
 		return clientInstance.get();
 	}
 
-	/**
-	 * Gets the client server name if available.
-	 *
-	 * @return The client server name, or "unknown"
-	 */
 	public static String getClientServerName() {
 		ClientDMCC client = clientInstance.get();
 		if (client == null) {

@@ -20,11 +20,6 @@ import java.util.concurrent.TimeUnit;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
-/**
- * Periodically updates configured Discord channel topics and voice channel names.
- *
- * @author Xujiayao
- */
 public final class ChannelUpdateManager {
 
 	private static final int INFO_REQUEST_TIMEOUT_SECONDS = 3;
@@ -36,9 +31,6 @@ public final class ChannelUpdateManager {
 	private ChannelUpdateManager() {
 	}
 
-	/**
-	 * Starts the periodic channel update task.
-	 */
 	public static void start() {
 		if (isAllUpdateDisabled()) {
 			return;

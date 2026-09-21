@@ -14,8 +14,6 @@ import static com.xujiayao.discord_mc_chat.Constants.JSON_MAPPER;
  * Supports both online (Mojang API) and offline UUID formats.
  * Provides fallback to raw UUID display when resolution fails.
  * Results are cached in memory to avoid repeated network calls.
- *
- * @author Xujiayao
  */
 public final class MojangUtils {
 
@@ -70,5 +68,4 @@ public final class MojangUtils {
 
 		return uuidString;
 	}
-
 }

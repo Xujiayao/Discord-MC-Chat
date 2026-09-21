@@ -10,11 +10,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
-/**
- * Manages the lifecycle of all client-side components.
- *
- * @author Xujiayao
- */
 public final class ClientDMCC {
 	private static final AtomicBoolean PRESERVE_LOG_TAILER_ON_NEXT_SHUTDOWN = new AtomicBoolean(false);
 
@@ -83,8 +78,6 @@ public final class ClientDMCC {
 
 	/**
 	 * Sends a packet to the connected DMCC server.
-	 *
-	 * @param packet Packet to send.
 	 */
 	public void sendPacket(Packet packet) {
 		if (nettyClient != null) {
@@ -92,20 +85,10 @@ public final class ClientDMCC {
 		}
 	}
 
-	/**
-	 * Gets the logical server name configured for this client.
-	 *
-	 * @return Configured logical server name.
-	 */
 	public String getServerName() {
 		return serverName;
 	}
 
-	/**
-	 * Indicates whether network channel is currently connected.
-	 *
-	 * @return {@code true} when connected; otherwise {@code false}.
-	 */
 	public boolean isConnected() {
 		return nettyClient != null && nettyClient.isConnected();
 	}

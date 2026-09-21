@@ -17,8 +17,6 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  * <p>
  * The terminal listener thread runs for the entire lifecycle of the JVM
  * and is not shut down during a reload.
- *
- * @author Xujiayao
  */
 public final class TerminalManager {
 
@@ -32,10 +30,7 @@ public final class TerminalManager {
 	 */
 	public static void init() {
 		// The Scanner is created here and never closed, to keep System.in open.
-		// Arguments do not include the command itself
-		// This can happen if System.in is closed externally, which signals the end.
 		Thread terminalThread = new Thread(() -> {
-			// The Scanner is created here and never closed, to keep System.in open.
 			Scanner scanner = new Scanner(System.in);
 			LOGGER.info(I18nManager.getDmccTranslation("terminal.started"));
 
@@ -58,7 +53,6 @@ public final class TerminalManager {
 						// The dmcc_command part (everything after <at>) is treated as a single argument.
 						if ("execute".equals(name) && parts.length >= 3) {
 							String at = parts[1];
-							// Everything after "execute <at> " is the command (single argument)
 							int atEndIndex = line.indexOf(parts[1], name.length()) + parts[1].length();
 							String command = line.substring(atEndIndex).trim();
 							args = new String[]{at, command};
@@ -87,8 +81,6 @@ public final class TerminalManager {
 	 * A CommandSender implementation for terminal commands.
 	 * <p>
 	 * File attachments from execute at log commands are saved to the cache directory.
-	 *
-	 * @author Xujiayao
 	 */
 	public static final class TerminalCommandSender implements LocalCommandSender {
 		private TerminalCommandSender() {
@@ -96,7 +88,6 @@ public final class TerminalManager {
 
 		@Override
 		public void reply(String message) {
-			// For each line in the message, send a separate log message
 			for (String line : message.split("\n")) {
 				LOGGER.info(line);
 			}
@@ -106,7 +97,6 @@ public final class TerminalManager {
 		public void replyWithFile(String message, byte[] fileData, String fileName) {
 			reply(message);
 
-			// Save the file to the cache directory
 			try {
 				Files.createDirectories(LOG_CACHE_DIR);
 				Path outputPath = LOG_CACHE_DIR.resolve(fileName);

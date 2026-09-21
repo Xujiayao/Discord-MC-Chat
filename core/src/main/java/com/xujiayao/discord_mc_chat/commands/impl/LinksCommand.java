@@ -18,19 +18,11 @@ import java.util.Map;
  * <p>
  * Available in single_server and standalone modes (where Server is running).
  * Display names are resolved at query time; if resolution fails, raw IDs are shown.
- *
- * @author Xujiayao
  */
 public final class LinksCommand implements Command {
 
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 			.withZone(ZoneId.systemDefault());
-
-	/**
-	 * Creates a links command instance.
-	 */
-	public LinksCommand() {
-	}
 
 	@Override
 	public String name() {

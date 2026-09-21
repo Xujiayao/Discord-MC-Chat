@@ -6,7 +6,6 @@ import tools.jackson.core.type.TypeReference;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -18,18 +17,9 @@ import java.util.function.Function;
 import static com.xujiayao.discord_mc_chat.Constants.JSON_MAPPER;
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
-/**
- * Manages the persistent storage of Discord-to-Minecraft account links.
- * <p>
- * One Discord account can link multiple Minecraft accounts (1:N).
- * One Minecraft account can only link to one Discord account (N:1 uniqueness).
- * Data is stored in {@code account_linking/links.json} in the DMCC config directory.
- *
- * @author Xujiayao
- */
 public final class LinkedAccountManager {
 
-	private static final Path LINKS_FILE = Paths.get("./config/discord_mc_chat/account_linking/links.json");
+	private static final Path LINKS_FILE = Path.of("./config/discord_mc_chat/account_linking/links.json");
 
 	private static final ConcurrentHashMap<String, List<LinkEntry>> LINKED_ACCOUNTS = new ConcurrentHashMap<>();
 
@@ -42,11 +32,6 @@ public final class LinkedAccountManager {
 	private LinkedAccountManager() {
 	}
 
-	/**
-	 * Registers a function that resolves Discord user ID to username.
-	 *
-	 * @param resolver A function that takes Discord ID and returns the username (or the ID itself as fallback).
-	 */
 	public static void setDiscordNameResolver(Function<String, String> resolver) {
 		discordNameResolver = resolver;
 	}
@@ -108,9 +93,6 @@ public final class LinkedAccountManager {
 		}
 	}
 
-	/**
-	 * Saves the current linked accounts state to the JSON file.
-	 */
 	public static synchronized void save() {
 		try {
 			Files.createDirectories(LINKS_FILE.getParent());
@@ -217,12 +199,6 @@ public final class LinkedAccountManager {
 		return discordId;
 	}
 
-	/**
-	 * Looks up the Discord user ID linked to a given Minecraft UUID.
-	 *
-	 * @param minecraftUuid The Minecraft account UUID.
-	 * @return The Discord user ID, or null if the UUID is not linked.
-	 */
 	public static String getDiscordIdByMinecraftUuid(String minecraftUuid) {
 		return UUID_TO_DISCORD.get(minecraftUuid);
 	}
@@ -245,12 +221,6 @@ public final class LinkedAccountManager {
 				.toList();
 	}
 
-	/**
-	 * Checks if a Minecraft UUID is linked to any Discord account.
-	 *
-	 * @param minecraftUuid The Minecraft account UUID.
-	 * @return true if the UUID is linked, false otherwise.
-	 */
 	public static boolean isMinecraftUuidLinked(String minecraftUuid) {
 		return UUID_TO_DISCORD.containsKey(minecraftUuid);
 	}
@@ -272,14 +242,6 @@ public final class LinkedAccountManager {
 		}
 	}
 
-	/**
-	 * A linked Minecraft account entry.
-	 *
-	 * @param minecraftUuid     The UUID of the linked Minecraft account.
-	 * @param linkedAt          The timestamp (epoch millis) when the link was created.
-	 * @param offlinePlayerName The player name stored at link time for offline-mode UUIDs only.
-	 *                          {@code null} for online-mode players (resolvable via Mojang API).
-	 */
 	public record LinkEntry(
 			String minecraftUuid,
 			long linkedAt,

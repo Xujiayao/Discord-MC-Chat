@@ -44,11 +44,6 @@ import java.util.regex.Pattern;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
-/**
- * Handles server-side network events and handshake protocol.
- *
- * @author Xujiayao
- */
 final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	private static final String TELLRAW_COMPONENT_PLACEHOLDER = "__DMCC_TELLRAW_COMPONENT__";
 
@@ -70,11 +65,6 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	}
 
 	@Override
-	public void channelActive(ChannelHandlerContext ctx) {
-		// Wait for handshake
-	}
-
-	@Override
 	public void channelInactive(ChannelHandlerContext ctx) {
 		boolean announceConsoleForwardingStop = authenticated
 				&& clientName != null
@@ -86,7 +76,6 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		if (announceConsoleForwardingStop) {
 			DiscordManager.sendConsoleForwardingStatusMessage(clientName, false);
 		}
-		// Clean up from NetworkManager
 		NetworkManager.removeClientChannel(ctx.channel());
 		BotPresenceManager.update();
 	}

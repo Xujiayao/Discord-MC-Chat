@@ -12,8 +12,6 @@ import java.util.concurrent.CompletableFuture;
  * <p>
  * These events decouple the core command layer from any Minecraft-specific APIs.
  * Handlers for these events are registered in the Minecraft module (MinecraftEventHandler).
- *
- * @author Xujiayao
  */
 public final class CoreEvents {
 
@@ -61,10 +59,7 @@ public final class CoreEvents {
 
 	/**
 	 * Posted by the Client when receiving a link code response from the Server.
-	 * <p>
-	 * The Minecraft module should notify the player with the verification code.
 	 *
-	 * @param playerUuid    The UUID of the Minecraft player.
 	 * @param code          The verification code, or null if already linked.
 	 * @param alreadyLinked Whether the player is already linked.
 	 * @param discordName   The Discord username if already linked (for display), or empty string.
@@ -79,10 +74,7 @@ public final class CoreEvents {
 
 	/**
 	 * Posted by the Client when receiving an unlink response from the Server.
-	 * <p>
-	 * The Minecraft module should notify the player with the result.
 	 *
-	 * @param playerUuid  The UUID of the Minecraft player.
 	 * @param success     Whether the unlink was successful.
 	 * @param discordName The Discord username that was unlinked from (for display), or empty string.
 	 */
@@ -108,9 +100,6 @@ public final class CoreEvents {
 
 	/**
 	 * Posted when a Discord chat message should be displayed in Minecraft.
-	 * <p>
-	 * The handler should convert the pre-built {@link TextSegment} lists into
-	 * Minecraft Components and broadcast them to all online players.
 	 *
 	 * @param segments                 The main message line segments.
 	 * @param replySegments            The reply context line segments (may be null or empty).
@@ -131,9 +120,6 @@ public final class CoreEvents {
 
 	/**
 	 * Posted when a Discord command execution notification should be displayed in Minecraft.
-	 * <p>
-	 * The handler should convert the pre-built {@link TextSegment} list into
-	 * Minecraft Components and broadcast them to all online players.
 	 *
 	 * @param segments The command notification segments.
 	 */

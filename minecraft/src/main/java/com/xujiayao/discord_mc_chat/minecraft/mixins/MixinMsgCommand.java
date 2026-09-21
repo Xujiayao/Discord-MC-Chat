@@ -16,9 +16,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.regex.Pattern;
 
-/**
- * @author Xujiayao
- */
 @Mixin(MsgCommand.class)
 final class MixinMsgCommand {
 
@@ -29,7 +26,6 @@ final class MixinMsgCommand {
 	private static void lambda$register$0(CommandContext<CommandSourceStack> c, CallbackInfoReturnable<Integer> cir) throws CommandSyntaxException {
 		if (MSG_PATTERN.matcher(c.getInput()).matches()) {
 			MessageArgument.resolveChatMessage(c, "message", playerChatMessage -> {
-				// SourceMsg Event
 				EventManager.post(new MinecraftEvents.SourceMsg(
 						c,
 						playerChatMessage

@@ -9,8 +9,6 @@ import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
 
 /**
  * Environment utility class.
- *
- * @author Xujiayao
  */
 public final class EnvironmentUtils {
 
@@ -35,8 +33,6 @@ public final class EnvironmentUtils {
 	/**
 	 * Gets the Minecraft version using reflection.
 	 * Should only be called if running in a Minecraft environment.
-	 *
-	 * @return The Minecraft version as a string.
 	 */
 	public static String getMinecraftVersion() {
 		try {
@@ -51,20 +47,16 @@ public final class EnvironmentUtils {
 
 	/**
 	 * Gets the DMCC version from the template "mode.yml" file in resources.
-	 *
-	 * @return The DMCC version as a string.
 	 */
 	public static String getDmccVersion() {
 		String filePath = "/config/mode.yml";
 
-		// Load the template from resources
 		try (InputStream templateStream = EnvironmentUtils.class.getResourceAsStream(filePath)) {
 			if (templateStream == null) {
 				throw new RuntimeException("File \"" + filePath + "\" not found");
 			}
 			JsonNode templateConfig = YAML_MAPPER.readTree(templateStream);
 
-			// Extract version field
 			String version = templateConfig.path("version").asString();
 
 			if (version.isBlank()) {

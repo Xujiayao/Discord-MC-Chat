@@ -8,8 +8,6 @@ import org.jspecify.annotations.NonNull;
 /**
  * {@link RconConsoleSource} implementation that captures command output for DMCC
  * and preserves line breaks between messages.
- *
- * @author Xujiayao
  */
 final class DmccRconConsoleSource extends RconConsoleSource {
 
@@ -17,11 +15,6 @@ final class DmccRconConsoleSource extends RconConsoleSource {
 
 	DmccRconConsoleSource(MinecraftServer server) {
 		super(server);
-	}
-
-	@Override
-	public void prepareForCommand() {
-		buffer.setLength(0);
 	}
 
 	@NonNull

@@ -9,15 +9,6 @@ import tools.jackson.databind.JsonNode;
 
 import java.util.List;
 
-/**
- * Centralized OP level resolution for Discord users.
- * <p>
- * Resolves OP levels from config mappings with optional per-server granularity.
- * Used by both DiscordEventHandler (for command authorization) and the
- * sync_op_level_to_minecraft feature.
- *
- * @author Xujiayao
- */
 public final class OpLevelResolver {
 
 	private OpLevelResolver() {

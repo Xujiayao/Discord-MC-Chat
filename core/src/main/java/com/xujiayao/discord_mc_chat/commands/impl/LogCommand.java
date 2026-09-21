@@ -10,16 +10,8 @@ import com.xujiayao.discord_mc_chat.utils.LogFileUtils;
 /**
  * Log command implementation.
  * Retrieves log files and sends them to the sender.
- *
- * @author Xujiayao
  */
 public final class LogCommand implements Command {
-
-	/**
-	 * Creates a log command instance.
-	 */
-	public LogCommand() {
-	}
 
 	@Override
 	public String name() {

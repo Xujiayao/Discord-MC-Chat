@@ -14,19 +14,19 @@ import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.HttpUtils;
 import tools.jackson.databind.JsonNode;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.xujiayao.discord_mc_chat.Constants.JSON_MAPPER;
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
 /**
  * Handles DMCC update checks and notification routing.
- *
- * @author Xujiayao
  */
 public final class UpdateCheckManager {
 
@@ -234,15 +234,9 @@ public final class UpdateCheckManager {
 			return "";
 		}
 
-		StringBuilder builder = new StringBuilder();
-		String[] lines = notes.split("\n", -1);
-		for (int i = 0; i < lines.length; i++) {
-			if (i > 0) {
-				builder.append('\n');
-			}
-			builder.append("> ").append(lines[i]);
-		}
-		return builder.toString();
+		return Arrays.stream(notes.split("\n", -1))
+				.map(line -> "> " + line)
+				.collect(Collectors.joining("\n"));
 	}
 
 	private enum CheckStatus {

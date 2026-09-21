@@ -13,16 +13,8 @@ import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
  * <p>
  * <b>Minecraft side:</b> Unlinks the executing player's Minecraft account.
  * <b>Discord side:</b> Unlinks all Minecraft accounts associated with the Discord user.
- *
- * @author Xujiayao
  */
 public final class UnlinkCommand implements Command {
-
-	/**
-	 * Creates an unlink command instance.
-	 */
-	public UnlinkCommand() {
-	}
 
 	@Override
 	public String name() {

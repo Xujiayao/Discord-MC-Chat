@@ -19,8 +19,6 @@ import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
 /**
  * Configuration manager for DMCC.
  * Handles loading, validation, and access to configuration values.
- *
- * @author Xujiayao
  */
 public final class ConfigManager {
 
@@ -40,9 +38,7 @@ public final class ConfigManager {
 		String configTemplatePath = "/config/config_" + expectedMode + ".yml";
 
 		try {
-			// Create directories if they do not exist
 			Files.createDirectories(CONFIG_FILE_PATH.getParent());
-
 			// If config.yml does not exist or is empty, create it from the appropriate template.
 			if (!Files.exists(CONFIG_FILE_PATH) || Files.size(CONFIG_FILE_PATH) == 0) {
 				LOGGER.error(I18nManager.getDmccTranslation("utils.config.config.not_found"));
@@ -54,11 +50,10 @@ public final class ConfigManager {
 						throw new IOException("Default config template not found: " + configTemplatePath);
 					}
 
-					// Read the template content
 					String template = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
 
-					// Replace the default language with the detected system language.
-					// This ensures the generated config file uses the user's system language if supported.
+					// Replace the default language with the detected system language, so the generated
+					// config file uses the user's system language if supported.
 					template = template.replace("language: \"to_be_auto_replaced\"", StringUtils.format("language: \"{}\"", I18nManager.getLanguage()));
 
 					// If in standalone mode, generate a secure random shared secret
@@ -67,14 +62,12 @@ public final class ConfigManager {
 						template = template.replace("shared_secret: \"to_be_auto_replaced\"", StringUtils.format("shared_secret: \"{}\"", randomSecret));
 					}
 
-					// Write the config file with the replaced language setting
 					Files.writeString(CONFIG_FILE_PATH, template, StandardCharsets.UTF_8);
 				}
 
 				return false;
 			}
 
-			// Load the user's config.yml
 			JsonNode userConfig = YAML_MAPPER.readTree(Files.newBufferedReader(CONFIG_FILE_PATH, StandardCharsets.UTF_8));
 
 			// Check for mode consistency
@@ -86,7 +79,6 @@ public final class ConfigManager {
 				return false;
 			}
 
-			// Load the corresponding template for validation
 			JsonNode templateConfig;
 			try (InputStream templateStream = ConfigManager.class.getResourceAsStream(configTemplatePath)) {
 				if (templateStream == null) {
@@ -95,7 +87,7 @@ public final class ConfigManager {
 				templateConfig = YAML_MAPPER.readTree(templateStream);
 			}
 
-			// Validate config
+			// Validate config against the template for the current mode
 			if (!YamlUtils.validate(userConfig, templateConfig, true)) {
 				LOGGER.error(I18nManager.getDmccTranslation("utils.config.config.validation_failed"));
 				return false;
@@ -142,7 +134,7 @@ public final class ConfigManager {
 	 * @param <T>       The type to convert the configuration value to
 	 * @param path      The path to the configuration value
 	 * @param converter Function to convert JsonNode to the desired type
-	 * @return The value at the specified path converted to type T, or null if not found
+	 * @return The converted value, or null if the path is missing or null
 	 */
 	public static <T> T getValue(String path, Function<JsonNode, T> converter) {
 		JsonNode node = getConfigNode(path);
@@ -158,7 +150,7 @@ public final class ConfigManager {
 	 * Gets a configuration value as a string.
 	 *
 	 * @param path The path to the configuration value
-	 * @return The string value at the specified path, or null if not found
+	 * @return The string value at the specified path, or null if the path is missing or null
 	 */
 	public static String getString(String path) {
 		return getValue(path, JsonNode::asString);
@@ -169,7 +161,7 @@ public final class ConfigManager {
 	 *
 	 * @param path         The path to the configuration value
 	 * @param defaultValue The default value to return if the path is not found
-	 * @return The string value at the specified path, or null if not found
+	 * @return The string value at the specified path, or defaultValue if the path is missing or null
 	 */
 	public static String getString(String path, String defaultValue) {
 		String value = getValue(path, JsonNode::asString);
@@ -180,7 +172,7 @@ public final class ConfigManager {
 	 * Gets a configuration value as an integer.
 	 *
 	 * @param path The path to the configuration value
-	 * @return The integer value at the specified path
+	 * @return The integer value at the specified path, or null if the path is missing or null
 	 */
 	public static Integer getInt(String path) {
 		return getValue(path, JsonNode::asInt);
@@ -191,7 +183,7 @@ public final class ConfigManager {
 	 *
 	 * @param path         The path to the configuration value
 	 * @param defaultValue The default value to return if the path is not found
-	 * @return The integer value at the specified path
+	 * @return The integer value at the specified path, or defaultValue if the path is missing or null
 	 */
 	public static Integer getInt(String path, int defaultValue) {
 		Integer value = getValue(path, JsonNode::asInt);
@@ -203,7 +195,7 @@ public final class ConfigManager {
 	 *
 	 * @param path         The path to the configuration value
 	 * @param defaultValue The default value to return if the path is not found
-	 * @return The double value at the specified path
+	 * @return The double value at the specified path, or defaultValue if the path is missing or null
 	 */
 	public static Double getDouble(String path, double defaultValue) {
 		Double value = getValue(path, JsonNode::asDouble);
@@ -214,7 +206,7 @@ public final class ConfigManager {
 	 * Gets a configuration value as a boolean.
 	 *
 	 * @param path The path to the configuration value
-	 * @return The boolean value at the specified path
+	 * @return The boolean value at the specified path, or null if the path is missing or null
 	 */
 	public static Boolean getBoolean(String path) {
 		return getValue(path, JsonNode::asBoolean);

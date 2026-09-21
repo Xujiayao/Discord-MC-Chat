@@ -11,15 +11,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/**
- * @author Xujiayao
- */
 @Mixin(PlayerList.class)
 final class MixinPlayerList {
 
 	@Inject(method = "placeNewPlayer", at = @At("RETURN"))
 	private void placeNewPlayer(Connection connection, ServerPlayer player, CommonListenerCookie cookie, CallbackInfo ci) {
-		// PlayerJoin Event
 		EventManager.post(new MinecraftEvents.PlayerJoin(
 				connection,
 				player,
@@ -29,7 +25,6 @@ final class MixinPlayerList {
 
 	@Inject(method = "remove", at = @At("RETURN"))
 	private void remove(ServerPlayer player, CallbackInfo ci) {
-		// PlayerQuit Event
 		EventManager.post(new MinecraftEvents.PlayerQuit(
 				player
 		));

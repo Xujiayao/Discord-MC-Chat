@@ -20,7 +20,6 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -31,13 +30,11 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
 /**
  * Manages Minecraft translations for official, mods and datapacks.
- *
- * @author Xujiayao
  */
 public final class TranslationManager {
 
 	private static final Map<String, String> TRANSLATIONS = new HashMap<>();
-	private static final Path CACHE_DIR = Paths.get("./config/discord_mc_chat/cache/lang");
+	private static final Path CACHE_DIR = Path.of("./config/discord_mc_chat/cache/lang");
 
 	private static String currentLoadedLanguage = "";
 	private static MinecraftServer server;
@@ -45,11 +42,6 @@ public final class TranslationManager {
 	private TranslationManager() {
 	}
 
-	/**
-	 * Sets the Minecraft server instance.
-	 *
-	 * @param server The Minecraft server
-	 */
 	public static void setServer(MinecraftServer server) {
 		TranslationManager.server = server;
 	}
@@ -72,7 +64,6 @@ public final class TranslationManager {
 
 				String language = I18nManager.getLanguage();
 
-				// Load the target language translations
 				loadTranslations(language);
 				int loadedCount = TRANSLATIONS.size();
 
@@ -92,8 +83,6 @@ public final class TranslationManager {
 	/**
 	 * Gets a Minecraft translation with the specified key and arguments.
 	 *
-	 * @param key  The translation key
-	 * @param args The arguments to format into the string
 	 * @return The translated and formatted string, or the key if not found
 	 */
 	public static String get(String key, Object... args) {
@@ -118,9 +107,6 @@ public final class TranslationManager {
 	 * Gets the translated string from a Minecraft Component.
 	 * <p>
 	 * This method handles TranslatableContents to get the translation in the configured language.
-	 *
-	 * @param component The component to translate
-	 * @return The translated string
 	 */
 	public static String get(Component component) {
 		ensureTranslationsLoaded();
@@ -129,7 +115,6 @@ public final class TranslationManager {
 			return "";
 		}
 
-		// Check if this is a translatable component
 		if (component.getContents() instanceof TranslatableContents translatable) {
 			String key = translatable.getKey();
 			Object[] args = translatable.getArgs();

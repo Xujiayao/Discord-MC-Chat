@@ -17,6 +17,7 @@ import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import tools.jackson.databind.JsonNode;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -32,20 +33,12 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * Authorization for Minecraft commands is handled by Minecraft's own permission system.
  * The sender's OP level is embedded in the virtual CommandSourceStack.
- *
- * @author Xujiayao
  */
 public final class ConsoleCommand implements Command {
 
 	private static final int CONSOLE_TIMEOUT_SECONDS = 30;
 	private static final int LOCAL_COMMAND_TIMEOUT_SECONDS = 10;
 	private static final Map<String, CompletableFuture<CommandPackets.Console.ResponsePacket>> pendingRequests = new ConcurrentHashMap<>();
-
-	/**
-	 * Creates a console command instance.
-	 */
-	public ConsoleCommand() {
-	}
 
 	/**
 	 * Completes a pending console request with the given response.
@@ -166,12 +159,7 @@ public final class ConsoleCommand implements Command {
 	private void executeStandalone(CommandSender sender, String[] args) {
 		String target = args[0];
 		// Rebuild the command from remaining args
-		StringBuilder commandBuilder = new StringBuilder();
-		for (int i = 1; i < args.length; i++) {
-			if (i > 1) commandBuilder.append(" ");
-			commandBuilder.append(args[i]);
-		}
-		String commandLine = commandBuilder.toString();
+		String commandLine = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
 		if (commandLine.startsWith("/")) {
 			commandLine = commandLine.substring(1);
 		}
@@ -272,7 +260,6 @@ public final class ConsoleCommand implements Command {
 			}
 		}
 	}
-
 
 	private boolean isValidTarget(String target) {
 		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");

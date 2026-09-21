@@ -11,8 +11,6 @@ import static com.xujiayao.discord_mc_chat.Constants.OK_HTTP_CLIENT;
 
 /**
  * HTTP utility class that wraps OkHttp operations.
- *
- * @author Xujiayao
  */
 public final class HttpUtils {
 

@@ -48,11 +48,6 @@ import java.util.regex.PatternSyntaxException;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
-/**
- * Manages Discord using JDA (Java Discord API).
- *
- * @author Xujiayao
- */
 public final class DiscordManager {
 
 	private static final int CONSOLE_FORWARDING_CHUNK_LIMIT = 1800;
@@ -70,11 +65,6 @@ public final class DiscordManager {
 	private DiscordManager() {
 	}
 
-	/**
-	 * Initializes the Discord bot.
-	 *
-	 * @return true if initialization is successful, false otherwise.
-	 */
 	public static boolean init() {
 		String token = ConfigManager.getString("discord.bot.token");
 		if (token.isBlank()) {
@@ -188,11 +178,6 @@ public final class DiscordManager {
 		return false;
 	}
 
-	/**
-	 * Retrieves the current Discord status info.
-	 *
-	 * @return The DiscordStatusInfo, or null if JDA is not ready
-	 */
 	public static DiscordStatusInfo getStatusInfo() {
 		if (jda == null) {
 			return null;
@@ -212,11 +197,6 @@ public final class DiscordManager {
 		);
 	}
 
-	/**
-	 * Gets the JDA instance.
-	 *
-	 * @return The JDA instance, or null if not initialized
-	 */
 	static JDA getJda() {
 		return jda;
 	}
@@ -246,12 +226,6 @@ public final class DiscordManager {
 		}
 	}
 
-	/**
-	 * Retrieves a Discord User object by ID.
-	 *
-	 * @param discordId The Discord user ID.
-	 * @return The User object, or null if JDA is not available or user not found.
-	 */
 	public static User retrieveUser(String discordId) {
 		if (jda == null) return null;
 		try {
@@ -261,12 +235,6 @@ public final class DiscordManager {
 		}
 	}
 
-	/**
-	 * Retrieves a Discord Member object by user ID from the first mutual guild.
-	 *
-	 * @param discordId The Discord user ID.
-	 * @return The Member object, or null if JDA is not available or member not found.
-	 */
 	public static Member retrieveMember(String discordId) {
 		if (jda == null) return null;
 		for (var guild : jda.getGuilds()) {
@@ -281,11 +249,6 @@ public final class DiscordManager {
 		return null;
 	}
 
-	/**
-	 * Gets all Discord members from every connected guild.
-	 *
-	 * @return Deduplicated member list from all connected guilds.
-	 */
 	public static List<Member> getAllMembers() {
 		if (jda == null) {
 			return List.of();
@@ -293,11 +256,6 @@ public final class DiscordManager {
 		return collectFromGuilds(Guild::getMembers, Member::getId);
 	}
 
-	/**
-	 * Gets all guild roles from every connected guild.
-	 *
-	 * @return Deduplicated role list from all connected guilds.
-	 */
 	public static List<Role> getAllRoles() {
 		if (jda == null) {
 			return List.of();
@@ -328,11 +286,6 @@ public final class DiscordManager {
 		return new ArrayList<>(ids);
 	}
 
-	/**
-	 * Gets all custom emojis from every connected guild.
-	 *
-	 * @return Deduplicated custom emoji list from all connected guilds.
-	 */
 	public static List<RichCustomEmoji> getAllCustomEmojis() {
 		if (jda == null) {
 			return List.of();
@@ -866,13 +819,6 @@ public final class DiscordManager {
 		return avatarUrl;
 	}
 
-	/**
-	 * Sends an execute command result via webhook to the specified Discord channel.
-	 *
-	 * @param channelIdentifier The target Discord channel identifier.
-	 * @param clientName        The name of the DMCC client.
-	 * @param message           The result message.
-	 */
 	public static void sendExecuteResultViaWebhook(String channelIdentifier, String clientName, String message) {
 		TextChannel channel = getTextChannel(channelIdentifier);
 		if (channel == null) return;
@@ -887,15 +833,6 @@ public final class DiscordManager {
 		}
 	}
 
-	/**
-	 * Sends an execute command result with a file attachment via webhook to the specified Discord channel.
-	 *
-	 * @param channelIdentifier The target Discord channel identifier.
-	 * @param clientName        The name of the DMCC client.
-	 * @param message           The result message.
-	 * @param fileData          The file data.
-	 * @param fileName          The file name.
-	 */
 	public static void sendExecuteResultWithFileViaWebhook(String channelIdentifier, String clientName, String message,
 	                                                       byte[] fileData, String fileName) {
 		TextChannel channel = getTextChannel(channelIdentifier);
@@ -913,14 +850,6 @@ public final class DiscordManager {
 		}
 	}
 
-	/**
-	 * Broadcasts a message to a Discord channel based on the specified parameters.
-	 *
-	 * @param clientName   The name of the DMCC client.
-	 * @param channelNode  The broadcast channel identifier.
-	 * @param lang         The language key for the message.
-	 * @param placeholders A map of placeholders to replace in the message.
-	 */
 	public static void clientBroadcast(String clientName, String channelNode, String lang, Map<String, String> placeholders) {
 		String channelIdentifier = ConfigManager.getString("broadcasts.minecraft_to_discord." + channelNode);
 		if (channelIdentifier == null || channelIdentifier.isBlank()) {
@@ -1052,9 +981,6 @@ public final class DiscordManager {
 		return tc;
 	}
 
-	/**
-	 * Shuts down the Discord bot.
-	 */
 	public static void shutdown() {
 		BotPresenceManager.shutdown();
 		ChannelUpdateManager.shutdown();
@@ -1064,10 +990,10 @@ public final class DiscordManager {
 			try {
 				if (ConfigManager.getBoolean("shutdown.graceful_shutdown")) {
 					// Allow up to 10 minutes for ongoing requests to complete
-					boolean ignored = jda.awaitShutdown(Duration.ofMinutes(10));
+					jda.awaitShutdown(Duration.ofMinutes(10));
 				} else {
 					// Allow up to 5 seconds for ongoing requests to complete
-					boolean ignored = jda.awaitShutdown(Duration.ofSeconds(5));
+					jda.awaitShutdown(Duration.ofSeconds(5));
 				}
 			} catch (Exception ignored) {
 			}

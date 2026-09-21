@@ -22,18 +22,6 @@ import java.util.concurrent.RejectedExecutionException;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
-/**
- * Manages the synchronization of OP levels from Discord mappings to Minecraft servers.
- * <p>
- * When {@code sync_op_level_to_minecraft} is enabled, this class computes the desired OP level
- * for every linked Minecraft account based on the Discord user's mapping configuration,
- * then applies a full-reset sync to the Minecraft server(s).
- * <p>
- * All sync operations are queued on a dedicated single-thread executor to avoid
- * blocking Netty IO threads or other callers with JDA's blocking API calls.
- *
- * @author Xujiayao
- */
 public final class OpSyncManager {
 
 	private static ExecutorService syncExecutor;
@@ -57,9 +45,6 @@ public final class OpSyncManager {
 		}
 	}
 
-	/**
-	 * Stops the OP sync executor and releases its thread.
-	 */
 	public static void shutdown() {
 		synchronized (OpSyncManager.class) {
 			if (syncExecutor != null) {

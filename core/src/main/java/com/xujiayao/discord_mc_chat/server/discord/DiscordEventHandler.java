@@ -33,15 +33,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
-/**
- * Handles Discord JDA events.
- *
- * @author Xujiayao
- */
 final class DiscordEventHandler extends ListenerAdapter {
 
 	private static final int AUTOCOMPLETE_TIMEOUT_SECONDS = 5;
@@ -202,7 +196,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 		}
 
 		// Discord limits to 25 choices
-		return choices.stream().limit(25).collect(Collectors.toList());
+		return choices.stream().limit(25).toList();
 	}
 
 	private List<Command.Choice> getCommandChoices(BiFunction<String, Integer, Map<String, List<String>>> autoCompleteProvider,
@@ -227,7 +221,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 				.distinct()
 				.limit(25)
 				.map(s -> new Command.Choice(s, s))
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	private List<Command.Choice> getLogFileChoices(String currentValue) {
@@ -238,7 +232,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 				.filter(f -> f.toLowerCase().contains(lowerValue))
 				.limit(25)
 				.map(f -> new Command.Choice(f, f))
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	private List<Command.Choice> getStatsTypeChoices(String currentValue) {
@@ -251,7 +245,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 				.filter(t -> t.toLowerCase().contains(lowerValue))
 				.limit(25)
 				.map(t -> new Command.Choice(t, t))
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	private List<Command.Choice> getStatsStatChoices(String type, String currentValue) {
@@ -265,7 +259,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 				.filter(s -> s.toLowerCase().contains(lowerValue))
 				.limit(25)
 				.map(s -> new Command.Choice(s, s))
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override

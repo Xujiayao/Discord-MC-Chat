@@ -17,8 +17,6 @@ import java.util.regex.Pattern;
 
 /**
  * Shared parser helpers used by both Discord and Minecraft message parsing pipelines.
- *
- * @author Xujiayao
  */
 final class MessageParserCommon {
 
@@ -41,6 +39,16 @@ final class MessageParserCommon {
 	);
 
 	private static final String URL_COLOR = "#3366CC";
+
+	// DateTimeFormatter is immutable and thread-safe, so these can be shared across calls.
+	private static final DateTimeFormatter SHORT_TIME_FORMATTER = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT);
+	private static final DateTimeFormatter MEDIUM_TIME_FORMATTER = DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM);
+	private static final DateTimeFormatter SHORT_DATE_FORMATTER = DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT);
+	private static final DateTimeFormatter LONG_DATE_FORMATTER = DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG);
+	private static final DateTimeFormatter SHORT_SHORT_DATE_TIME_FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.SHORT);
+	private static final DateTimeFormatter SHORT_MEDIUM_DATE_TIME_FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.MEDIUM);
+	private static final DateTimeFormatter FULL_SHORT_DATE_TIME_FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL, FormatStyle.SHORT);
+	private static final DateTimeFormatter LONG_SHORT_DATE_TIME_FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG, FormatStyle.SHORT);
 
 	private MessageParserCommon() {
 	}
@@ -213,27 +221,19 @@ final class MessageParserCommon {
 		}
 
 		return switch (style) {
-			case "t" -> DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale)
-					.format(instant.atZone(zone));
-			case "T" -> DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM).withLocale(locale)
-					.format(instant.atZone(zone));
-			case "d" -> DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(locale)
-					.format(instant.atZone(zone));
-			case "D" -> DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale)
-					.format(instant.atZone(zone));
-			case "s" -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.SHORT).withLocale(locale)
-					.format(instant.atZone(zone));
-			case "S" -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.MEDIUM).withLocale(locale)
-					.format(instant.atZone(zone));
-			case "F" -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL, FormatStyle.SHORT).withLocale(locale)
-					.format(instant.atZone(zone));
+			case "t" -> SHORT_TIME_FORMATTER.withLocale(locale).format(instant.atZone(zone));
+			case "T" -> MEDIUM_TIME_FORMATTER.withLocale(locale).format(instant.atZone(zone));
+			case "d" -> SHORT_DATE_FORMATTER.withLocale(locale).format(instant.atZone(zone));
+			case "D" -> LONG_DATE_FORMATTER.withLocale(locale).format(instant.atZone(zone));
+			case "s" -> SHORT_SHORT_DATE_TIME_FORMATTER.withLocale(locale).format(instant.atZone(zone));
+			case "S" -> SHORT_MEDIUM_DATE_TIME_FORMATTER.withLocale(locale).format(instant.atZone(zone));
+			case "F" -> FULL_SHORT_DATE_TIME_FORMATTER.withLocale(locale).format(instant.atZone(zone));
 			case "R" -> {
 				long now = Instant.now().getEpochSecond();
 				long diff = now - epoch;
 				yield formatRelativeTime(diff);
 			}
-			default -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG, FormatStyle.SHORT).withLocale(locale)
-					.format(instant.atZone(zone));
+			default -> LONG_SHORT_DATE_TIME_FORMATTER.withLocale(locale).format(instant.atZone(zone));
 		};
 	}
 

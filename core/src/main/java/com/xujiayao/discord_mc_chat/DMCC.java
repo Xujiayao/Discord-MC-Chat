@@ -23,8 +23,6 @@ import static com.xujiayao.discord_mc_chat.Constants.VERSION;
 
 /**
  * The main class of Discord-MC-Chat (DMCC).
- *
- * @author Xujiayao
  */
 public final class DMCC {
 
@@ -63,7 +61,7 @@ public final class DMCC {
 				}
 
 				// Pad the version string to ensure consistent formatting in the banner
-				String versionString = VERSION + " ".repeat(Math.max(0, 34 - VERSION.length()));
+				String versionString = "%-34s".formatted(VERSION);
 
 				// Print the DMCC banner
 				LOGGER.info("┌─────────────────────────────────────────────────────────────────────────────────┐");
@@ -118,13 +116,13 @@ public final class DMCC {
 						if (port == -1) {
 							LOGGER.error(I18nManager.getDmccTranslation("main.init.failed"));
 							return false;
-						} else {
-							// Client instance gets the same secret to authenticate
-							clientInstance = new ClientDMCC("127.0.0.1", port, internalServerName, internalSharedSecret);
-							if (!clientInstance.start()) {
-								LOGGER.error(I18nManager.getDmccTranslation("main.init.failed"));
-								return false;
-							}
+						}
+
+						// Client instance gets the same secret to authenticate
+						clientInstance = new ClientDMCC("127.0.0.1", port, internalServerName, internalSharedSecret);
+						if (!clientInstance.start()) {
+							LOGGER.error(I18nManager.getDmccTranslation("main.init.failed"));
+							return false;
 						}
 					}
 					case "multi_server_client" -> {
@@ -198,14 +196,10 @@ public final class DMCC {
 
 				// Do NOT clear event handlers here. They are registered once during mod initialization
 				// and should persist across DMCC reloads.
-				// EventManager.clear();
 
-				// Shutdown OkHttpClient
+				// OK_HTTP_CLIENT is static final. We should NOT shut down its dispatcher executor
+				// because it would prevent the client from being reused after a reload.
 				try (Cache ignored = OK_HTTP_CLIENT.cache()) {
-					// OK_HTTP_CLIENT is static final. We should NOT shut down its dispatcher executor
-					// because it would prevent the client from being reused after a reload.
-					// ExecutorServiceUtils.shutdownAnExecutor(ok_http_executor);
-
 					OK_HTTP_CLIENT.connectionPool().evictAll();
 				} catch (Exception e) {
 					LOGGER.error(I18nManager.getDmccTranslation("main.shutdown.okhttp_failed"), e);

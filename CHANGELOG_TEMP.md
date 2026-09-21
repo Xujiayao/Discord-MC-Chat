@@ -237,3 +237,57 @@
 
 > 本轮同时删除了开发者提供的 `primer.md`（Minecraft 26.2 → 26.3 迁移指南），因迁移已全部完成。
 
+## 工作 05
+
+记录日期：2026/9/21（第五轮：3.0 重构·阶段 1「纯清理」；尚未定版）。
+
+### 更改（用户可见 / 行为变更）
+
+- **本轮对用户零感知**：未改动任何用户可见行为、日志文本、配置键、i18n 键、协议字段、命令语义与资源文件。全部改动经字节码逐类比对证明为等价（见「验证」）。
+- 本轮**未更新 `README_CN.md`**：本轮没有产生新的用户可见功能或语义变化，文档待阶段 6（首次加载自动生成 `mode.yml` + `config.yml`）时一并同步。
+
+### 更改（代码清理，对用户不可见）
+
+- **按 7 个分区并行清理 90 个 Java 文件**，共 **净减 1646 行**（`git diff --shortstat` = 90 files changed, +129 / −1777）：
+
+| 分区 | 范围 | 文件数 | 行数变化 |
+| --- | --- | --- | --- |
+| A | `core/.../network/**`、`core/.../client/**` | 13 | 2459 → 1845（−614） |
+| B | `core/.../commands/**` | 18 | 2550 → 2352（−198） |
+| C | `core/.../server/discord/**`、`core/.../server/linking/**` | 12 | 3390 → 3168（−222） |
+| D | `core/.../server/message/**` | 3 | 2662 → 2490（−172） |
+| E | `core/.../server/*.java`（直属） | 3 | 728 → 708（−20） |
+| F | `core/.../config`、`utils`、`logging`、`events`、`standalone`、`update`、`DMCC.java`、`Constants.java` | 24 | 3181 → 2971（−210） |
+| G | `minecraft/src/main/java/**` | 18 | 2255 → 2045（−210） |
+| 合计 | | 91（含 1 个重复计数） | 17225 → 15579（−1646） |
+
+- **清理内容分四类**：
+    - **复述式注释与 JavaDoc**：删除全部 `@author Xujiayao`（92 处）、只复述方法名/参数名的 JavaDoc、与实现不符或错位的注释（约占本轮减少量的 90%，仅注释 1654 行，从 3210 行降下来）。保留真正承载契约的说明（跨模块 future 必须完成、`suggestions` 为可变追加列表、OpSync 是"全量重置"、协议方向、`ItemStack`/`TextSegment` 字段语义、`// CRITICAL FIX: Prevent Deadlock`、`safeTruncate` 的 high-surrogate 回退、`MARKDOWN_DELIMITERS` 最长优先顺序等）。
+    - **可证明零引用的死代码**：`DmccRconConsoleSource#prepareForCommand()`、`FabricDMCC` 的显式空构造器（`fabric.mod.json` 的 entrypoint 字符串未动）、`JsonUtils.readAll(Reader)`、`DMCC` 中两处被注释掉的死调用、13 个命令类的冗余显式无参构造器、`I18nManager#checkLanguageResources` 的流式探测等（每处均先 grep 全仓库确认零引用）。
+    - **Java 25 惯用写法**：`HexFormat.of().formatHex()`、`GZIPInputStream#readAllBytes()`、`Path.of()`、`.toList()`、`String#formatted`、`"%mo".formatted`、`Comparator.comparing(...).reversed()`、`Collectors.joining`、`Arrays.copyOfRange` + `String.join`、静态 `DateTimeFormatter` / `Pattern`（消除热路径上的重复编译）、去掉 `boolean ignored =` 等 30 余处。
+    - **空行与结构**：清理纯装饰性空行，行尾与文件尾规范化。
+
+- **保留的既有契约（后续轮次同样不可破坏）**：`dmcc.mixins.json` 的 `required`/`injectors.defaultRequire`、`LengthFieldPrepender(4)` 与 1MB 帧上限、`IdleStateHandler(30,0,0)`、`DmccRconConsoleSource` 的同步 `StringBuffer`、`MinecraftEventHandler` 的 `opList` 防御性拷贝与三重守卫、`TranslationManager#ensureTranslationsLoaded`、`CommandSender` 的默认 `getOpLevel() == 4`、`ConfigManager` 的两套 null 语义、`Packet` 的 `protected` 构造器与 `serialVersionUID`、各 packet 公有可变字段（record 化被 `Packet` 抽象类阻塞，留待 v4）。
+
+### 验证
+
+环境：Java 25.0.4.1 LTS（Temurin HotSpot）+ Gradle 9.7.1 + Fabric Loom 1.17.21 + Minecraft 26.3
+
+- **编译与打包**：`./gradlew build -x test --console=plain` **BUILD SUCCESSFUL**（9s；`:core:compileJava`、`:core:shadowJar`、`:core:mergeJars`、`:minecraft:jar` 均实际执行）。
+
+- **字节码逐类等价性比对（本轮主要验收手段）**：以改动前的 `build/Discord-MC-Chat-3.0.0-beta.3.jar` 为基线（202 个 `com/xujiayao/*.class`），对每个类执行 `javap -p -c -constants` 反汇编后逐类 diff，结果 **identical 182 / changed 20 / added 0 / removed 0**。20 个 changed 与各分区申报的"非注释改动"集合**完全一致**；全部 diff 中的"新增非注释行"共 91 行，已逐行复核确认为已论证的等价替换（比较器写法、`Path.of`、`"%-34s".formatted`、`pop` 取代 `istore_0` 等）。
+
+- **产物 `build/Discord-MC-Chat-3.0.0-beta.3.jar`（13,244,428 字节，基线 13,245,195）**：无签名残留文件、无 `module-info.class`、条目数 6899 与类数 202 均与基线一致。
+
+- **全仓统计（92 个 Java 文件）**：总行 17240 → **15594**，其中代码 11866 → 11800、注释 3210 → **1654**、空行 2164 → 2140。
+
+- **过程记录（教训）**：本轮有两处编译错误源于我给出的审计建议本身有误——`DMCC.java` 的 `import okhttp3.Cache;` 被误判为无用 import 删除；`JsonUtils` 的 `Reader#transferTo(Writer)` 返回值是 `long`（我误写成链式 `.toString()`）。两处均由分区代理修复并以 `javac 25` 独立编译全部 73 个 core 源文件（exit 0，产出 164 个 class）复核。后续轮次对新写法的签名一律先核实再用。
+
+### 待办（供发布时处理）
+
+- `update/versions.json` 需在**发布时**新增 `"compatibility": ["26.3"]` 记录（沿用工作 04 的待办）
+- `.github/ISSUE_TEMPLATE/bug.yml` 的 "Only DMCC v2 versions are supported." 残留文案（仍未处理）
+- `README.md` 英文翻译件的同步，留待发布新版本时处理
+- 新增：i18n 键 `utils.i18n.check_failed` 已成为无引用死键（仍在 `lang/en_us.yml` 与 `lang/zh_cn.yml` 中）；本轮资源文件禁改，待后续统一清理资源时移除
+- 新增：`core/src/test/java/**` 下的临时特征化测试（阶段 2–4 的验收工装）将在交付前整体删除，只保留 `SmokeTest.java`
+

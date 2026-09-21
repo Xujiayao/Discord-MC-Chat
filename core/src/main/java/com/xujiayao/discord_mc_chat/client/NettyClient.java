@@ -29,11 +29,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
-/**
- * Encapsulates the Netty client, connection, and reconnection logic.
- *
- * @author Xujiayao
- */
 final class NettyClient {
 
 	private static final int MAX_RECONNECT_DELAY = 512;

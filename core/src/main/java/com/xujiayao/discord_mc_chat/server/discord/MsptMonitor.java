@@ -20,11 +20,6 @@ import java.util.concurrent.TimeUnit;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
-/**
- * Monitors MSPT and sends threshold alerts to Discord.
- *
- * @author Xujiayao
- */
 public final class MsptMonitor {
 
 	private static final int INFO_REQUEST_TIMEOUT_SECONDS = 3;
@@ -41,9 +36,6 @@ public final class MsptMonitor {
 	private MsptMonitor() {
 	}
 
-	/**
-	 * Starts MSPT monitoring if enabled in config.
-	 */
 	public static void start() {
 		if (!ConfigManager.getBoolean("mspt_monitoring.enable")) {
 			return;
@@ -194,8 +186,8 @@ public final class MsptMonitor {
 		}
 
 		String message = template
-				.replace("{mspt}", String.format("%.2f", packet.mspt))
-				.replace("{threshold}", String.format("%.2f", threshold))
+				.replace("{mspt}", "%.2f".formatted(packet.mspt))
+				.replace("{threshold}", "%.2f".formatted(threshold))
 				.replace("{next_check_time}", String.valueOf(nextCheckEpochSeconds));
 
 		DiscordManager.sendMsptMonitoringMessage(packet.serverName, message);
@@ -216,9 +208,6 @@ public final class MsptMonitor {
 		return Math.min(seconds, MAX_BACKOFF_SECONDS);
 	}
 
-	/**
-	 * Stops MSPT monitoring and releases scheduler resources.
-	 */
 	public static void shutdown() {
 		synchronized (MsptMonitor.class) {
 			if (monitorTask != null) {

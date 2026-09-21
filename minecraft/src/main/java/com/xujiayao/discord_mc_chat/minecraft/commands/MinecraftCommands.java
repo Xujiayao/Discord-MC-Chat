@@ -26,21 +26,11 @@ import static net.minecraft.commands.Commands.LEVEL_OWNERS;
 import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
-/**
- * Registers DMCC commands into Minecraft Brigadier dispatcher.
- *
- * @author Xujiayao
- */
 public final class MinecraftCommands {
 
 	private MinecraftCommands() {
 	}
 
-	/**
-	 * Registers /dmcc commands.
-	 *
-	 * @param dispatcher The command dispatcher
-	 */
 	public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
 		var root = literal("dmcc")
 				.requires(Commands.hasPermission(of("command_permission_levels.help", -1)))
@@ -141,7 +131,6 @@ public final class MinecraftCommands {
 
 		@Override
 		public void reply(String message) {
-			// For each line in the message, send a separate chat message
 			for (String line : message.split("\n")) {
 				source.sendSuccess(() -> Component.literal(line), false);
 			}

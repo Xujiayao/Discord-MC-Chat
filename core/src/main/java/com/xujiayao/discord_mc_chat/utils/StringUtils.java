@@ -2,8 +2,6 @@ package com.xujiayao.discord_mc_chat.utils;
 
 /**
  * String utility class.
- *
- * @author Xujiayao
  */
 public final class StringUtils {
 
@@ -12,9 +10,6 @@ public final class StringUtils {
 
 	/**
 	 * Escape special characters in strings.
-	 *
-	 * @param s String to escape
-	 * @return Escaped string
 	 */
 	public static String escape(String s) {
 		return s.replace("\t", "\\t")
@@ -43,7 +38,6 @@ public final class StringUtils {
 			return str;
 		}
 
-		// Check if the string uses indexed DMCC-style placeholders (e.g., "{0}", "{1}")
 		if (str.contains("{0}")) {
 			for (int i = 0; i < args.length; i++) {
 				String target = "{" + i + "}";
@@ -53,7 +47,6 @@ public final class StringUtils {
 			return str;
 		}
 
-		// Check if the string uses sequential DMCC-style "{}" placeholders
 		if (str.contains("{}")) {
 			StringBuilder sb = new StringBuilder(str.length());
 			int searchStart = 0;
@@ -78,11 +71,9 @@ public final class StringUtils {
 
 		// Check if the string uses Minecraft-style placeholders (%s or %n$s)
 		if (str.contains("%s") || str.matches(".*%\\d+\\$s.*")) {
-			// Use String.format for standard printf-style formatting
 			return String.format(str, args);
 		}
 
-		// No valid placeholders found, return original string
 		return str;
 	}
 }
