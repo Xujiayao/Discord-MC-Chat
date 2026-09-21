@@ -3,8 +3,8 @@ package com.xujiayao.discord_mc_chat.minecraft.events;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.mojang.brigadier.ParseResults;
-import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.suggestion.Suggestion;
+import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.serialization.JsonOps;
@@ -23,6 +23,7 @@ import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Info.Response
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Link.RequestPacket;
 import com.xujiayao.discord_mc_chat.network.packets.EventPackets.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
+import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.commands.CommandSourceStack;
@@ -36,7 +37,6 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
-import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
 import net.minecraft.network.protocol.game.ClientboundSoundPacket;
@@ -65,7 +65,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -73,16 +73,58 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public final class MinecraftEventHandler {
 
 	private static final String DEFAULT_MENTION_STYLE = "title";
+
+	// Callers are Netty event loop threads, so this bounded wait must stay short; on expiry the
+	// late server-thread result is discarded and no suggestions are returned.
+	private static final long AUTOCOMPLETE_TIMEOUT_MILLIS = 500L;
+
+	// 49 polls one interval apart span the same five-second window as the previous
+	// "for (int i = 0; i < 50; i++)" loop; one extra interval before the response is collected
+	// bounds the total wait at 5.1 seconds.
+	private static final long COMMAND_RESPONSE_POLL_INTERVAL_MILLIS = 100L;
+	private static final int COMMAND_RESPONSE_MAX_POLLS = 49;
+
 	private static MinecraftServer serverInstance;
 	private static MinecraftServer opsServerCache;
 	private static RegistryOps<JsonElement> opsCache;
 
+	// Capacity: a single reusable scheduler thread. Invalidation: shut down once the Minecraft
+	// server has stopped; reset to null so a subsequent server start builds a fresh executor.
+	private static ScheduledExecutorService commandResponseTimeoutExecutor;
+
 	private MinecraftEventHandler() {
+	}
+
+	/**
+	 * Returns the lazily created bound polling scheduler. Cancelled tasks leave the queue
+	 * immediately so a burst of console commands cannot pile up triggered tasks.
+	 */
+	private static synchronized ScheduledExecutorService commandResponseTimeoutExecutor() {
+		if (commandResponseTimeoutExecutor == null) {
+			ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
+					1,
+					ExecutorServiceUtils.newThreadFactory("DMCC-Command-Timeout"));
+			executor.setRemoveOnCancelPolicy(true);
+			commandResponseTimeoutExecutor = executor;
+		}
+		return commandResponseTimeoutExecutor;
+	}
+
+	// Shuts down the DMCC executors owned by this handler so no DMCC thread outlives the server.
+	private static synchronized void shutdownExecutorHelpers() {
+		if (commandResponseTimeoutExecutor != null) {
+			commandResponseTimeoutExecutor.shutdownNow();
+			commandResponseTimeoutExecutor = null;
+		}
 	}
 
 	public static void init() {
@@ -137,11 +179,10 @@ public final class MinecraftEventHandler {
 			Map<String, String> placeholders = Map.of();
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SERVER_STARTED, placeholders));
 
-			// Initialize translation manager with the started server instance after announcing server started event
+			// Must run after the SERVER_STARTED packet above
 			TranslationManager.setServer(event.minecraftServer());
 			TranslationManager.init();
 
-			// Register info supplier after server is started
 			NetworkManager.registerInfoSupplier(() -> buildInfoResponse(event.minecraftServer()));
 		});
 
@@ -151,9 +192,11 @@ public final class MinecraftEventHandler {
 		});
 
 		EventManager.register(MinecraftEvents.ServerStopped.class, _ -> {
-			// Shutdown DMCC when the server is stopped
 			// Blocks until shutdown is complete
 			DMCC.shutdown();
+
+			// No command can arrive anymore once the server is stopped
+			shutdownExecutorHelpers();
 		});
 
 		EventManager.register(MinecraftEvents.PlayerJoin.class, event -> {
@@ -163,7 +206,7 @@ public final class MinecraftEventHandler {
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_JOIN, placeholders));
 
-			// Account linking: check if this player is linked (via network packet)
+			// Account linking check: routed via network packet
 			String playerUuid = event.serverPlayer().getStringUUID();
 			String playerName = event.serverPlayer().getName().getString();
 			NetworkManager.sendPacketToServer(new RequestPacket(playerUuid, playerName, true));
@@ -296,54 +339,25 @@ public final class MinecraftEventHandler {
 				return;
 			}
 
-			// Discord visitors (-1) default to OP 0 for Minecraft's permission system
+			// Discord visitors (-1) default to OP 0
 			int mcOp = Math.max(0, event.sender().getOpLevel());
 
-			// Construct a virtual CommandSourceStack with the sender's OP level
-			// and a custom CommandSource that bridges output back to the DMCC sender
 			DmccRconConsoleSource rconConsoleSource = new DmccRconConsoleSource(serverInstance);
-			CommandSourceStack source = buildCommandSource(rconConsoleSource, mcOp);
+			CommandSourceStack source = buildCommandSource(serverInstance, rconConsoleSource, mcOp);
 
-			// Must be dispatched to the main server thread to avoid concurrent modification.
-			// The completion future is completed after the command has been executed on the server thread,
-			// ensuring all output has been sent to the sender before the response is collected.
+			// Must be dispatched to the main server thread to avoid concurrent modification, and the
+			// completion future is only completed once all output has been sent to the sender.
 			serverInstance.execute(() -> {
 				try {
 					serverInstance.getCommands().performPrefixedCommand(source, event.commandLine());
 				} finally {
-					// First check if there's an immediate response
-					// (for simple commands that execute synchronously and produce output right away)
 					if (!rconConsoleSource.getCommandResponse().isEmpty()) {
 						event.sender().reply(rconConsoleSource.getCommandResponse());
 						event.completionFuture().complete(null);
 					} else {
-						// For commands that execute asynchronously or produce output after a delay
-						// (e.g. due to network calls, database access, or scheduled tasks)
-						CompletableFuture.runAsync(() -> {
-							// Wait for up to 5 seconds for command output to be produced, checking every 100ms,
-							// and wait an extra 100ms after the first non-empty response.
-							for (int i = 0; i < 50; i++) {
-								if (!rconConsoleSource.getCommandResponse().isEmpty()) {
-									// Extra 100ms wait to allow for any additional output to be produced
-									try {
-										Thread.sleep(100);
-									} catch (InterruptedException ie) {
-										Thread.currentThread().interrupt();
-										break;
-									}
-									break;
-								}
-								try {
-									Thread.sleep(100);
-								} catch (InterruptedException ie) {
-									Thread.currentThread().interrupt();
-									break;
-								}
-							}
-
-							event.sender().reply(rconConsoleSource.getCommandResponse());
-							event.completionFuture().complete(null);
-						});
+						// No output yet: the command may produce it later (network calls, database
+						// access, scheduled tasks)
+						awaitCommandResponse(rconConsoleSource, COMMAND_RESPONSE_MAX_POLLS, event);
 					}
 				}
 			});
@@ -354,43 +368,14 @@ public final class MinecraftEventHandler {
 
 			int mcOp = Math.max(0, event.opLevel());
 
-			CommandSourceStack source = buildCommandSource(new DmccRconConsoleSource(serverInstance), mcOp);
-
 			String rawInput = event.input() == null ? "" : event.input();
 
-			try {
-				List<String> currentResult = getSuggestionsForInput(rawInput, source);
-
-				if (!rawInput.isBlank() && !rawInput.endsWith(" ") && isExactPath(rawInput, source)) {
-					List<String> nextResult = getSuggestionsForInput(rawInput + " ", source);
-
-					// Priority:
-					// 1) self (only if self is a valid candidate)
-					// 2) suggestions for "<input> "
-					// 3) current suggestions
-					Set<String> added = new HashSet<>();
-
-					if (isSelfCandidate(rawInput, source, nextResult, currentResult)) {
-						added.add(rawInput);
-						event.suggestions().add(rawInput);
-					}
-
-					for (String s : nextResult) {
-						if (added.add(s)) {
-							event.suggestions().add(s);
-						}
-					}
-
-					for (String s : currentResult) {
-						if (added.add(s)) {
-							event.suggestions().add(s);
-						}
-					}
-					return;
-				}
-
-				event.suggestions().addAll(currentResult);
-			} catch (Exception ignored) {
+			// Brigadier parsing and completion read live dispatcher/source state, so they run on the
+			// server thread and are awaited for a short bounded time; on timeout or failure no
+			// suggestions are produced.
+			List<String> computed = computeSuggestionsWithTimeout(rawInput, mcOp);
+			if (!computed.isEmpty()) {
+				event.suggestions().addAll(computed);
 			}
 		});
 
@@ -446,20 +431,21 @@ public final class MinecraftEventHandler {
 					PlayerList playerList = serverInstance.getPlayerList();
 					ServerOpList opList = playerList.getOps();
 
-					// Build a map of current OP levels: UUID -> level
 					Map<UUID, Integer> currentOpLevels = new HashMap<>();
 					for (ServerOpListEntry entry : opList.getEntries()) {
 						try {
 							NameAndId user = entry.getUser();
 							if (user == null) continue;
-							UUID uuid = UUID.fromString(user.id().toString());
+							// id() already is the UUID; the previous String round trip only added a
+							// per-entry parse and a failure mode for non-canonical UUID strings
+							UUID uuid = user.id();
 							int level = entry.permissions().level().id();
 							if (level >= 0) currentOpLevels.put(uuid, level);
 						} catch (Exception ignored) {
 						}
 					}
 
-					// Build desired OP levels map from the event (UUID -> level), skipping non-positive levels
+					// Non-positive levels are never added, so the de-op loop below removes them
 					Map<UUID, Integer> desiredOpLevels = new HashMap<>();
 					for (Map.Entry<String, Integer> e : event.opLevels().entrySet()) {
 						int level = e.getValue();
@@ -470,19 +456,19 @@ public final class MinecraftEventHandler {
 						}
 					}
 
-					// Quick equality check: if both maps equal, skip save and permission update
+					// Equal maps: skip both save and permission update
 					if (currentOpLevels.equals(desiredOpLevels)) {
 						return;
 					}
 
 					boolean changed = false;
 
-					// De-op users that are currently opped but not desired
+					// De-op users that are opped but not desired
 					for (ServerOpListEntry entry : new ArrayList<>(opList.getEntries())) {
 						NameAndId user = entry.getUser();
 						if (user == null) continue;
 						try {
-							UUID uuid = UUID.fromString(user.id().toString());
+							UUID uuid = user.id();
 							if (!desiredOpLevels.containsKey(uuid)) {
 								playerList.deop(user);
 								changed = true;
@@ -514,7 +500,7 @@ public final class MinecraftEventHandler {
 						} catch (Exception ignored) {
 						}
 
-						// Update permission levels for online players only if OP list was modified
+						// Online players only, and only when the OP list was modified
 						for (ServerPlayer player : playerList.getPlayers()) {
 							playerList.sendPlayerPermissionLevel(player);
 						}
@@ -556,7 +542,7 @@ public final class MinecraftEventHandler {
 			serverInstance.execute(() -> {
 				PlayerList playerList = serverInstance.getPlayerList();
 
-				// Reply first, then the edit notification, then the edited message content
+				// Order matters: reply, then edit notification, then edited message content
 				broadcastReplyAndMain(playerList, event.replySegments(), event.segments());
 
 				if (event.editedMessageSegments() != null && !event.editedMessageSegments().isEmpty()) {
@@ -597,18 +583,13 @@ public final class MinecraftEventHandler {
 		});
 	}
 
-	/**
-	 * Sends a component to every online player.
-	 */
 	private static void broadcast(PlayerList playerList, Component component) {
 		for (ServerPlayer player : playerList.getPlayers()) {
 			player.sendSystemMessage(component);
 		}
 	}
 
-	/**
-	 * Sends the optional reply component first, then the main component, to every online player.
-	 */
+	// Reply (when present) is sent before the main component
 	private static void broadcastReplyAndMain(PlayerList playerList, List<TextSegment> replySegments, List<TextSegment> mainSegments) {
 		if (replySegments != null && !replySegments.isEmpty()) {
 			broadcast(playerList, buildComponentFromSegments(replySegments));
@@ -616,9 +597,7 @@ public final class MinecraftEventHandler {
 		broadcast(playerList, buildComponentFromSegments(mainSegments));
 	}
 
-	/**
-	 * Sends the mention notification to all online players ({@code @everyone} / {@code @here}) or to the mentioned players only.
-	 */
+	// Null notificationText means no mention notification at all
 	private static void sendMentionNotifications(PlayerList playerList, String notificationText, String style,
 	                                             boolean everyone, List<String> mentionedPlayerUuids) {
 		if (notificationText == null) {
@@ -647,38 +626,65 @@ public final class MinecraftEventHandler {
 		}
 	}
 
-	/**
-	 * Builds a virtual command source with the sender's OP level, bridging command output back to the DMCC sender.
-	 */
-	private static CommandSourceStack buildCommandSource(DmccRconConsoleSource rconConsoleSource, int mcOp) {
+	// The server is passed explicitly because auto-complete reaches this from the Minecraft
+	// server thread, where the static instance field must not be read off-thread.
+	private static CommandSourceStack buildCommandSource(MinecraftServer server, DmccRconConsoleSource rconConsoleSource, int mcOp) {
 		return new CommandSourceStack(
 				rconConsoleSource,
-				Vec3.atLowerCornerOf(serverInstance.getRespawnData().pos()),
+				Vec3.atLowerCornerOf(server.getRespawnData().pos()),
 				Vec2.ZERO,
-				serverInstance.findRespawnDimension(),
+				server.findRespawnDimension(),
 				LevelBasedPermissionSet.forLevel(PermissionLevel.byId(mcOp)),
 				Component.literal("DMCC"),
-				serverInstance
+				server
 		);
 	}
 
-	private static List<String> getSuggestionsForInput(String input, CommandSourceStack source) throws Exception {
-		ParseResults<CommandSourceStack> parse = serverInstance.getCommands().getDispatcher().parse(input, source);
+	// Never blocks the server thread. Polling runs on a named single-thread scheduler and each
+	// round re-schedules itself, so the wait is bounded by
+	// COMMAND_RESPONSE_POLL_INTERVAL_MILLIS * (maxAttempts + 1) and the completion future is
+	// always completed exactly once. The countdown continues while output is empty and stops on
+	// the first round that observes output, which is still collected one interval later.
+	private static void awaitCommandResponse(DmccRconConsoleSource rconConsoleSource,
+	                                         int maxAttempts,
+	                                         CoreEvents.MinecraftCommandExecutionEvent event) {
+		if (maxAttempts <= 0 || !rconConsoleSource.getCommandResponse().isEmpty()) {
+			// Output already produced, or poll budget exhausted: wait one more interval before
+			// collecting so a late first line is still included.
+			commandResponseTimeoutExecutor().schedule(
+					() -> {
+						event.sender().reply(rconConsoleSource.getCommandResponse());
+						event.completionFuture().complete(null);
+					},
+					COMMAND_RESPONSE_POLL_INTERVAL_MILLIS,
+					TimeUnit.MILLISECONDS);
+			return;
+		}
 
-		Suggestions suggestions = serverInstance.getCommands().getDispatcher()
+		// Re-scheduling every round instead of looping keeps the executor free for other commands
+		commandResponseTimeoutExecutor().schedule(
+				() -> awaitCommandResponse(rconConsoleSource, maxAttempts - 1, event),
+				COMMAND_RESPONSE_POLL_INTERVAL_MILLIS,
+				TimeUnit.MILLISECONDS);
+	}
+
+	private static List<String> getSuggestionsForInput(MinecraftServer server, String input, CommandSourceStack source) throws Exception {
+		ParseResults<CommandSourceStack> parse = server.getCommands().getDispatcher().parse(input, source);
+
+		Suggestions suggestions = server.getCommands().getDispatcher()
 				.getCompletionSuggestions(parse)
 				.get(3, TimeUnit.SECONDS);
 
 		boolean isRootToken = !input.contains(" ");
-		Set<String> allowedRoot = new HashSet<>();
-		for (CommandNode<CommandSourceStack> child : serverInstance.getCommands().getDispatcher().getRoot().getChildren()) {
+		Set<String> allowedRoot = new LinkedHashSet<>();
+		for (CommandNode<CommandSourceStack> child : server.getCommands().getDispatcher().getRoot().getChildren()) {
 			if (!child.getName().isEmpty() && child.canUse(source)) {
 				allowedRoot.add(child.getName());
 			}
 		}
 
 		List<String> result = new ArrayList<>();
-		Set<String> seen = new HashSet<>();
+		Set<String> seen = new LinkedHashSet<>();
 		for (Suggestion suggestion : suggestions.getList()) {
 			if (isRootToken && !allowedRoot.contains(suggestion.getText())) {
 				continue;
@@ -691,43 +697,148 @@ public final class MinecraftEventHandler {
 		return result;
 	}
 
-	private static boolean isExactPath(String input, CommandSourceStack source) {
-		ParseResults<CommandSourceStack> parse = serverInstance.getCommands().getDispatcher().parse(input, source);
-		CommandContextBuilder<CommandSourceStack> ctx = parse.getContext();
-
-		if (ctx.getRange().getEnd() != input.length()) {
-			return false;
+	// Caller runs on a Netty event loop thread, so the wait is bounded by
+	// AUTOCOMPLETE_TIMEOUT_MILLIS. On timeout or failure an empty list is returned and the late
+	// server-thread result (if any) is discarded.
+	private static List<String> computeSuggestionsWithTimeout(String rawInput, int mcOp) {
+		MinecraftServer server = serverInstance;
+		if (server == null) {
+			return List.of();
 		}
 
-		if (!parse.getExceptions().isEmpty()) {
-			return false;
+		// Already on the server thread (e.g. a command source that completes its own input):
+		// compute directly, since submitting and then blocking would deadlock the server thread.
+		if (server.isSameThread()) {
+			try {
+				return computeSuggestions(server, rawInput, buildCommandSource(server, new DmccRconConsoleSource(server), mcOp));
+			} catch (Exception ignored) {
+				return List.of();
+			}
 		}
 
-		return !ctx.getNodes().isEmpty();
+		CompletableFuture<List<String>> future = server.submit(() ->
+				computeSuggestions(server, rawInput, buildCommandSource(server, new DmccRconConsoleSource(server), mcOp)));
+
+		try {
+			return future.get(AUTOCOMPLETE_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+		} catch (TimeoutException ignored) {
+			// Bounded wait expired; the suggestion response is sent empty, as before on failure
+			future.cancel(true);
+			return List.of();
+		} catch (InterruptedException ie) {
+			Thread.currentThread().interrupt();
+			future.cancel(true);
+			return List.of();
+		} catch (ExecutionException ignored) {
+			// computeSuggestions already catches its own exceptions; kept for safety
+			return List.of();
+		}
 	}
 
-	private static boolean isSelfCandidate(String rawInput,
-	                                       CommandSourceStack source,
+	private static List<String> computeSuggestions(MinecraftServer server, String rawInput, CommandSourceStack source) {
+		try {
+			// One parse per distinct input string: the rawInput result is reused by the exact-path
+			// check and the "<input> " result by the self-candidate probe.
+			SuggestionsResult current = computeSuggestionsResult(server, rawInput, source);
+
+			if (!rawInput.isBlank() && !isExactPath(rawInput, current)) {
+				return current.suggestions();
+			}
+			if (rawInput.isBlank() || rawInput.endsWith(" ")) {
+				return current.suggestions();
+			}
+
+			SuggestionsResult next = computeSuggestionsResult(server, rawInput + " ", source);
+
+			// Priority:
+			// 1) self (only if self is a valid candidate)
+			// 2) suggestions for "<input> "
+			// 3) current suggestions
+			Set<String> added = new LinkedHashSet<>();
+			List<String> result = new ArrayList<>();
+
+			if (isSelfCandidate(server, rawInput, next.suggestions(), current, source)) {
+				added.add(rawInput);
+				result.add(rawInput);
+			}
+
+			for (String s : next.suggestions()) {
+				if (added.add(s)) {
+					result.add(s);
+				}
+			}
+
+			for (String s : current.suggestions()) {
+				if (added.add(s)) {
+					result.add(s);
+				}
+			}
+
+			return result;
+		} catch (Exception ignored) {
+			return List.of();
+		}
+	}
+
+	private static SuggestionsResult computeSuggestionsResult(MinecraftServer server, String input, CommandSourceStack source) throws Exception {
+		List<String> suggestions = getSuggestionsForInput(server, input, source);
+
+		boolean isRootToken = !input.contains(" ");
+		boolean exactPath = !isRootToken || isRootCommandToken(server, input, source);
+
+		return new SuggestionsResult(suggestions, exactPath, isRootToken);
+	}
+
+	// Equivalent to the previous parse-based check, which required the parse context range to
+	// reach the end of the input, an empty exception map and at least one consumed node: a
+	// non-root input addresses an exact path only when it does not end in a trailing partial
+	// token, and for a single token only when that token is empty or exactly a usable root
+	// command name (the dispatcher skips a leading "/").
+	private static boolean isExactPath(String input, SuggestionsResult current) {
+		if (current.isRootToken()) {
+			return current.exactPath();
+		}
+		return !input.endsWith(" ");
+	}
+
+	private static boolean isSelfCandidate(MinecraftServer server,
+	                                       String rawInput,
 	                                       List<String> nextResult,
-	                                       List<String> currentResult) {
+	                                       SuggestionsResult current,
+	                                       CommandSourceStack source) {
 		// Fast path: already present in computed suggestions.
-		if (nextResult.contains(rawInput) || currentResult.contains(rawInput)) {
+		if (nextResult.contains(rawInput) || current.suggestions().contains(rawInput)) {
 			return true;
 		}
 
-		// Backspace test:
-		// if input-1 can suggest rawInput, treat rawInput as a valid candidate.
+		// Backspace test: input-1 suggesting rawInput makes rawInput a valid candidate. This re-parse
+		// matches the previous implementation; it only runs on this rare path, so the common case
+		// stays at two parses instead of three.
 		if (rawInput.length() <= 1) {
 			return false;
 		}
 
-		String backspaced = rawInput.substring(0, rawInput.length() - 1);
 		try {
-			List<String> fromBackspaced = getSuggestionsForInput(backspaced, source);
-			return fromBackspaced.contains(rawInput);
+			SuggestionsResult backspaced = computeSuggestionsResult(server,
+					rawInput.substring(0, rawInput.length() - 1), source);
+			return backspaced.suggestions().contains(rawInput);
 		} catch (Exception ignored) {
 			return false;
 		}
+	}
+
+	private static boolean isRootCommandToken(MinecraftServer server, String input, CommandSourceStack source) {
+		for (CommandNode<CommandSourceStack> child : server.getCommands().getDispatcher().getRoot().getChildren()) {
+			if (!child.getName().isEmpty() && child.canUse(source) && child.getName().equals(input)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	// The visible suggestions plus the flags needed to decide whether the input addresses a
+	// command path exactly and whether it is a single token.
+	private record SuggestionsResult(List<String> suggestions, boolean exactPath, boolean isRootToken) {
 	}
 
 	private static Component buildNotLinkedMessage(String code) {
@@ -747,9 +858,6 @@ public final class MinecraftEventHandler {
 				.append(Component.literal(I18nManager.getDmccTranslation("linking.message.already_linked_2")));
 	}
 
-	/**
-	 * Builds a green, clickable {@code [text]} component with the given click event and hover tooltip.
-	 */
 	private static Component buildClickable(String text, ClickEvent clickEvent, String tooltipKey) {
 		return Component.literal("[" + text + "]").withStyle(style -> style
 				.withClickEvent(clickEvent)
@@ -774,7 +882,10 @@ public final class MinecraftEventHandler {
 
 		double mspt = ((double) server.getAverageTickTimeNanos()) / TimeUtil.NANOSECONDS_PER_MILLISECOND;
 		ServerTickRateManager manager = server.tickRateManager();
-		double tps = 1000.0D / Math.max(manager.isSprinting() ? 0.0 : manager.millisecondsPerTick(), mspt);
+		// The 1.0 MSPT lower bound keeps the division finite when the tick-rate manager reports a
+		// zero milliseconds-per-tick during sprinting before any tick was measured (previously
+		// +Infinity); any positive value is unchanged.
+		double tps = 1000.0D / Math.max(manager.isSprinting() ? 0.0 : manager.millisecondsPerTick(), Math.max(1.0D, mspt));
 		if (manager.isFrozen()) {
 			tps = 0;
 		}
@@ -919,9 +1030,7 @@ public final class MinecraftEventHandler {
 		}
 	}
 
-	/**
-	 * Returns the registry ops of the current server, rebuilding the cached instance only when the server changes.
-	 */
+	// Cached per server: rebuilt only when serverInstance changes
 	private static RegistryOps<JsonElement> registryOps() {
 		if (opsCache == null || opsServerCache != serverInstance) {
 			opsServerCache = serverInstance;
@@ -939,10 +1048,12 @@ public final class MinecraftEventHandler {
 			case "action_bar" -> player.connection.send(new ClientboundSetActionBarTextPacket(component));
 			case "chat" -> player.sendSystemMessage(component);
 			default -> {
-				// "title" and any unrecognized style fallback to title display
+				// Any unrecognized style falls back to title display
 				player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 70, 20));
 				player.connection.send(new ClientboundSetTitleTextPacket(component));
-				player.connection.send(new ClientboundSetSubtitleTextPacket(Component.empty()));
+				// No subtitle packet is sent: the subtitle was always Component.empty(), and the client
+				// renders a null subtitle and an empty subtitle identically while setTitle() still
+				// resets the title timer.
 			}
 		}
 

@@ -11,35 +11,46 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
 
-/**
- * Configuration manager for DMCC.
- * Handles loading, validation, and access to configuration values.
- */
 public final class ConfigManager {
 
 	private static final Path CONFIG_FILE_PATH = Paths.get("./config/discord_mc_chat/config.yml");
-	private static JsonNode config;
+
+	/** Upper bound of {@link #PATH_PARTS_CACHE}. */
+	private static final int PATH_PARTS_CACHE_MAX_ENTRIES = 256;
+
+	/**
+	 * Cache of configuration paths to their pre-split segments, so that the hot read path (about eleven
+	 * boolean lookups per Discord-to-Minecraft message) does not re-split the same path string every time.
+	 * <p>
+	 * Capacity: {@value #PATH_PARTS_CACHE_MAX_ENTRIES} entries; the cache is dropped once the cap is reached
+	 * and refilled on demand, which keeps the entry set bounded even for dynamically built paths.
+	 * Invalidation: none needed — splitting a path never depends on the configuration content, so a cached
+	 * entry cannot go stale across {@link #load()} calls.
+	 */
+	private static final Map<String, String[]> PATH_PARTS_CACHE = new ConcurrentHashMap<>();
+
+	/**
+	 * The loaded configuration tree. Written once by {@link #load()} and read by any thread afterwards,
+	 * hence volatile so that other threads observe the fully parsed tree.
+	 */
+	private static volatile JsonNode config;
 
 	private ConfigManager() {
 	}
 
-	/**
-	 * Loads the configuration file based on the determined operating mode.
-	 *
-	 * @return true if the config was loaded and validated successfully, false otherwise.
-	 */
 	public static boolean load() {
 		String expectedMode = ModeManager.getMode();
 		String configTemplatePath = "/config/config_" + expectedMode + ".yml";
 
 		try {
 			Files.createDirectories(CONFIG_FILE_PATH.getParent());
-			// If config.yml does not exist or is empty, create it from the appropriate template.
 			if (!Files.exists(CONFIG_FILE_PATH) || Files.size(CONFIG_FILE_PATH) == 0) {
 				LOGGER.error(I18nManager.getDmccTranslation("utils.config.config.not_found"));
 				LOGGER.info(I18nManager.getDmccTranslation("utils.config.config.creating", CONFIG_FILE_PATH));
@@ -56,7 +67,6 @@ public final class ConfigManager {
 					// config file uses the user's system language if supported.
 					template = template.replace("language: \"to_be_auto_replaced\"", StringUtils.format("language: \"{}\"", I18nManager.getLanguage()));
 
-					// If in standalone mode, generate a secure random shared secret
 					if ("standalone".equals(expectedMode)) {
 						String randomSecret = CryptUtils.generateRandomString(32);
 						template = template.replace("shared_secret: \"to_be_auto_replaced\"", StringUtils.format("shared_secret: \"{}\"", randomSecret));
@@ -70,7 +80,6 @@ public final class ConfigManager {
 
 			JsonNode userConfig = YAML_MAPPER.readTree(Files.newBufferedReader(CONFIG_FILE_PATH, StandardCharsets.UTF_8));
 
-			// Check for mode consistency
 			String configMode = userConfig.path("mode").asString();
 			if (!expectedMode.equals(configMode)) {
 				LOGGER.error(I18nManager.getDmccTranslation("utils.config.config.mode_mismatch"));
@@ -87,7 +96,6 @@ public final class ConfigManager {
 				templateConfig = YAML_MAPPER.readTree(templateStream);
 			}
 
-			// Validate config against the template for the current mode
 			if (!YamlUtils.validate(userConfig, templateConfig, true)) {
 				LOGGER.error(I18nManager.getDmccTranslation("utils.config.config.validation_failed"));
 				return false;
@@ -101,23 +109,14 @@ public final class ConfigManager {
 		}
 	}
 
-	/**
-	 * Gets a specific configuration value as a JsonNode.
-	 *
-	 * @param path The path to the configuration value
-	 * @return The JsonNode at the specified path
-	 */
 	public static JsonNode getConfigNode(String path) {
-		if (config == null) {
-			// This can happen if config is not loaded yet.
-			// Returning a missing node is safer than a NullPointerException.
+		JsonNode node = config;
+		if (node == null) {
+			// Config may not be loaded yet; a missing node is safer than a NullPointerException.
 			return YAML_MAPPER.missingNode();
 		}
 
-		String[] parts = path.split("\\.");
-		JsonNode node = config;
-
-		for (String part : parts) {
+		for (String part : pathParts(path)) {
 			if (node == null || node.isMissingNode() || node.isNull()) {
 				LOGGER.warn(I18nManager.getDmccTranslation("utils.config.config.path_not_found", path));
 				return node;
@@ -129,11 +128,23 @@ public final class ConfigManager {
 	}
 
 	/**
-	 * Generic method to get a configuration value with specified conversion function.
-	 *
-	 * @param <T>       The type to convert the configuration value to
-	 * @param path      The path to the configuration value
-	 * @param converter Function to convert JsonNode to the desired type
+	 * @return The path segments, identical to {@code path.split("\\.")}
+	 */
+	private static String[] pathParts(String path) {
+		String[] cached = PATH_PARTS_CACHE.get(path);
+		if (cached != null) {
+			return cached;
+		}
+
+		String[] parts = path.split("\\.");
+		if (PATH_PARTS_CACHE.size() >= PATH_PARTS_CACHE_MAX_ENTRIES) {
+			PATH_PARTS_CACHE.clear();
+		}
+		PATH_PARTS_CACHE.put(path, parts);
+		return parts;
+	}
+
+	/**
 	 * @return The converted value, or null if the path is missing or null
 	 */
 	public static <T> T getValue(String path, Function<JsonNode, T> converter) {
@@ -147,9 +158,6 @@ public final class ConfigManager {
 	}
 
 	/**
-	 * Gets a configuration value as a string.
-	 *
-	 * @param path The path to the configuration value
 	 * @return The string value at the specified path, or null if the path is missing or null
 	 */
 	public static String getString(String path) {
@@ -157,10 +165,6 @@ public final class ConfigManager {
 	}
 
 	/**
-	 * Gets a configuration value as a string, with a default value if not found.
-	 *
-	 * @param path         The path to the configuration value
-	 * @param defaultValue The default value to return if the path is not found
 	 * @return The string value at the specified path, or defaultValue if the path is missing or null
 	 */
 	public static String getString(String path, String defaultValue) {
@@ -169,9 +173,6 @@ public final class ConfigManager {
 	}
 
 	/**
-	 * Gets a configuration value as an integer.
-	 *
-	 * @param path The path to the configuration value
 	 * @return The integer value at the specified path, or null if the path is missing or null
 	 */
 	public static Integer getInt(String path) {
@@ -179,10 +180,6 @@ public final class ConfigManager {
 	}
 
 	/**
-	 * Gets a configuration value as an integer, with a default value if not found.
-	 *
-	 * @param path         The path to the configuration value
-	 * @param defaultValue The default value to return if the path is not found
 	 * @return The integer value at the specified path, or defaultValue if the path is missing or null
 	 */
 	public static Integer getInt(String path, int defaultValue) {
@@ -191,10 +188,6 @@ public final class ConfigManager {
 	}
 
 	/**
-	 * Gets a configuration value as a double, with a default value if not found.
-	 *
-	 * @param path         The path to the configuration value
-	 * @param defaultValue The default value to return if the path is not found
 	 * @return The double value at the specified path, or defaultValue if the path is missing or null
 	 */
 	public static Double getDouble(String path, double defaultValue) {
@@ -203,9 +196,6 @@ public final class ConfigManager {
 	}
 
 	/**
-	 * Gets a configuration value as a boolean.
-	 *
-	 * @param path The path to the configuration value
 	 * @return The boolean value at the specified path, or null if the path is missing or null
 	 */
 	public static Boolean getBoolean(String path) {

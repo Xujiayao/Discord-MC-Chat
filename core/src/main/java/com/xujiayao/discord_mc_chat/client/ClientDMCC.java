@@ -3,6 +3,7 @@ package com.xujiayao.discord_mc_chat.client;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
+import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,12 +21,7 @@ public final class ClientDMCC {
 	private NettyClient nettyClient;
 
 	/**
-	 * Creates a DMCC client wrapper.
-	 *
-	 * @param host         Target DMCC server host.
-	 * @param port         Target DMCC server port.
-	 * @param serverName   Logical client/server name used in DMCC protocol.
-	 * @param sharedSecret Shared secret used for authentication handshake.
+	 * @param serverName Logical client/server name used in DMCC protocol.
 	 */
 	public ClientDMCC(String host, int port, String serverName, String sharedSecret) {
 		this.host = host;
@@ -47,12 +43,11 @@ public final class ClientDMCC {
 	 * @return {@code true} if startup and login succeed; {@code false} otherwise.
 	 */
 	public boolean start() {
-		try (ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Client"))) {
+		try (ExecutorService executor = Executors.newSingleThreadExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-Client"))) {
 			return executor.submit(() -> {
 				nettyClient = new NettyClient(host, port, serverName, sharedSecret);
 				boolean success = nettyClient.start();
 				if (success) {
-					// Register to NetworkManager on successful start
 					NetworkManager.registerClient(this);
 				}
 				return success;
@@ -63,9 +58,6 @@ public final class ClientDMCC {
 		}
 	}
 
-	/**
-	 * Stops client networking and console log tailing.
-	 */
 	public void shutdown() {
 		boolean preserveLogTailerState = PRESERVE_LOG_TAILER_ON_NEXT_SHUTDOWN.getAndSet(false);
 		if (!preserveLogTailerState) {
@@ -76,9 +68,6 @@ public final class ClientDMCC {
 		}
 	}
 
-	/**
-	 * Sends a packet to the connected DMCC server.
-	 */
 	public void sendPacket(Packet packet) {
 		if (nettyClient != null) {
 			nettyClient.sendPacket(packet);
@@ -94,8 +83,6 @@ public final class ClientDMCC {
 	}
 
 	/**
-	 * Gets the latest measured connection latency.
-	 *
 	 * @return Connection latency in milliseconds, or {@code 0} when unavailable.
 	 */
 	public long getConnectionLatencyMillis() {
@@ -103,8 +90,6 @@ public final class ClientDMCC {
 	}
 
 	/**
-	 * Requests an active latency sample from server.
-	 *
 	 * @param timeoutMillis Timeout in milliseconds for waiting a sample.
 	 * @return Sampled latency in milliseconds, or {@code -1} when unavailable/timed out.
 	 */

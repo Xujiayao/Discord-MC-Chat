@@ -14,6 +14,8 @@ import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,21 +33,27 @@ public final class LoggerImpl extends LegacyAbstractLogger {
 	private static boolean fileWriterInitialized = false;
 	private static volatile boolean consoleAnsiEnabled = true;
 
+	/**
+	 * Format of the per-line log timestamp. {@link DateTimeFormatter} is immutable and thread-safe, so it can
+	 * be shared instead of allocating a {@link SimpleDateFormat} for every log line.
+	 */
+	private static final DateTimeFormatter LOG_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+	/**
+	 * Whether this runtime is a Minecraft environment. Resolved once at class initialization (the runtime
+	 * classpath cannot change afterwards) instead of probing the classpath on every log line.
+	 */
+	private static final boolean IS_MINECRAFT_ENV = EnvironmentUtils.isMinecraftEnvironment();
+
 	private final Object minecraftLogger;
 
 	private final Map<String, Method> logMethods = new HashMap<>();
 	private final Map<String, Method> logThrowMethods = new HashMap<>();
 
-	/**
-	 * Create a new Logger instance.
-	 * <p>
-	 * If running in a Minecraft environment, initializes the Minecraft logger via reflection.
-	 * Otherwise, sets up for standard output logging.
-	 */
 	public LoggerImpl(String name) {
 		this.name = name;
 
-		if (EnvironmentUtils.isMinecraftEnvironment()) {
+		if (IS_MINECRAFT_ENV) {
 			try {
 				String loggerClassName = "dmcc_dep.org.slf4j.Logger";
 				String loggerFactoryClassName = "dmcc_dep.org.slf4j.LoggerFactory";
@@ -90,9 +98,7 @@ public final class LoggerImpl extends LegacyAbstractLogger {
 	}
 
 	/**
-	 * Closes the file writer if it was initialized.
-	 * <p>
-	 * Only Standalone environment requires this cleanup.
+	 * Only the Standalone environment requires this cleanup.
 	 */
 	public static void shutdown() {
 		if (fileWriter != null) {
@@ -100,16 +106,10 @@ public final class LoggerImpl extends LegacyAbstractLogger {
 		}
 	}
 
-	/**
-	 * Enable or disable ANSI color output in standalone console logs.
-	 *
-	 * @param enabled true to enable ANSI color output, false to disable
-	 */
 	public static void setConsoleAnsiEnabled(boolean enabled) {
 		consoleAnsiEnabled = enabled;
 	}
 
-	// Logging level checks
 	// TRACE and DEBUG are intentionally disabled in DMCC: isTraceEnabled()/isDebugEnabled() always
 	// return false, so the inherited trace()/debug() methods are deliberate no-ops.
 
@@ -155,7 +155,7 @@ public final class LoggerImpl extends LegacyAbstractLogger {
 		// so every log line stays a single physical line in both the file and the console.
 		msg = StringUtils.escape(msg);
 
-		if (EnvironmentUtils.isMinecraftEnvironment()) {
+		if (IS_MINECRAFT_ENV) {
 			try {
 				if (t == null) {
 					Method m = logMethods.get(level);
@@ -168,10 +168,9 @@ public final class LoggerImpl extends LegacyAbstractLogger {
 				throw new RuntimeException("Failed to log message: " + msg, e);
 			}
 		} else {
-			String time = new SimpleDateFormat("HH:mm:ss").format(System.currentTimeMillis());
+			String time = LocalTime.now().format(LOG_TIME_FORMATTER);
 			String thread = Thread.currentThread().getName();
 
-			// 1. Log to File (Plain Text, no colors)
 			if (fileWriter != null) {
 				fileWriter.println(StringUtils.format("[{}] [{}/{}]: {}", time, thread, level, msg));
 				if (t != null) {
@@ -179,7 +178,6 @@ public final class LoggerImpl extends LegacyAbstractLogger {
 				}
 			}
 
-			// 2. Log to Console (ANSI colors are optional)
 			String consoleLine;
 			if (consoleAnsiEnabled) {
 				String color = switch (level) {

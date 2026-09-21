@@ -22,8 +22,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
@@ -33,11 +33,27 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  */
 public final class TranslationManager {
 
-	private static final Map<String, String> TRANSLATIONS = new HashMap<>();
+	/**
+	 * Published in a single volatile write, so concurrent readers only ever observe a complete snapshot
+	 * instead of a half-loaded map; the map is never mutated afterwards, making it safe to read anywhere.
+	 */
+	private static volatile Map<String, String> translations = Map.of();
 	private static final Path CACHE_DIR = Path.of("./config/discord_mc_chat/cache/lang");
 
-	private static String currentLoadedLanguage = "";
-	private static MinecraftServer server;
+	private static volatile String currentLoadedLanguage = "";
+	private static volatile MinecraftServer server;
+
+	/**
+	 * Missing keys already warned about for the currently published snapshot, cleared right before a new
+	 * snapshot is published, so a missing key is warned about at most once per load.
+	 */
+	private static final Set<String> WARNED_KEYS = ConcurrentHashMap.newKeySet();
+
+	/**
+	 * Thread currently executing {@link #init()}. The load runs directly on the calling thread now, so a
+	 * nested call (for example through {@link #get(String, Object...)}) would recurse forever.
+	 */
+	private static volatile Thread loadingThread;
 
 	private TranslationManager() {
 	}
@@ -47,51 +63,66 @@ public final class TranslationManager {
 	}
 
 	/**
-	 * Initializes the translation manager.
-	 * <p>
 	 * Loads translations for the current target language first, then falls back to en_us.
 	 */
 	public static void init() {
-		try (ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Translations"))) {
-			executor.submit(() -> {
-				if (server == null) {
-					// Called before ServerStarted event (before MinecraftServer is available)
-					// Will be called again when the first get() is requested
-					return;
-				}
+		Thread current = Thread.currentThread();
+		if (loadingThread == current) {
+			// Re-entrant call from inside the running load: the outer call publishes the result.
+			return;
+		}
 
-				TRANSLATIONS.clear();
-
-				String language = I18nManager.getLanguage();
-
-				loadTranslations(language);
-				int loadedCount = TRANSLATIONS.size();
-
-				// Load en_us translations to fill in missing keys (fallback)
-				if (!"en_us".equals(language)) {
-					loadTranslations("en_us");
-				}
-
-				LOGGER.info(I18nManager.getDmccTranslation("minecraft.translations.loaded", loadedCount, TRANSLATIONS.size(), language));
-				currentLoadedLanguage = language;
-			}).get();
-		} catch (Exception e) {
-			LOGGER.error(I18nManager.getDmccTranslation("minecraft.translations.init_failed"), e);
+		synchronized (TranslationManager.class) {
+			loadingThread = current;
+			try {
+				loadAll();
+			} catch (Exception e) {
+				LOGGER.error(I18nManager.getDmccTranslation("minecraft.translations.init_failed"), e);
+			} finally {
+				loadingThread = null;
+			}
 		}
 	}
 
+	private static void loadAll() {
+		if (server == null) {
+			// Called before ServerStarted event (no MinecraftServer yet); init() runs again on the first get()
+			return;
+		}
+
+		Map<String, String> loaded = new HashMap<>();
+
+		String language = I18nManager.getLanguage();
+
+		loadTranslations(language, loaded);
+		int loadedCount = loaded.size();
+
+		// Load en_us translations to fill in missing keys (fallback)
+		if (!"en_us".equals(language)) {
+			loadTranslations("en_us", loaded);
+		}
+
+		// A new snapshot gets a fresh warn-once bookkeeping.
+		WARNED_KEYS.clear();
+		translations = loaded;
+
+		LOGGER.info(I18nManager.getDmccTranslation("minecraft.translations.loaded", loadedCount, loaded.size(), language));
+		currentLoadedLanguage = language;
+	}
+
 	/**
-	 * Gets a Minecraft translation with the specified key and arguments.
-	 *
 	 * @return The translated and formatted string, or the key if not found
 	 */
 	public static String get(String key, Object... args) {
 		ensureTranslationsLoaded();
 
-		String translation = TRANSLATIONS.get(key);
+		String translation = translations.get(key);
 
 		if (translation == null) {
-			LOGGER.warn(I18nManager.getDmccTranslation("minecraft.translations.key_not_found", key));
+			// Warn at most once per key for the currently published snapshot.
+			if (WARNED_KEYS.add(key)) {
+				LOGGER.warn(I18nManager.getDmccTranslation("minecraft.translations.key_not_found", key));
+			}
 			return key;
 		}
 
@@ -104,9 +135,7 @@ public final class TranslationManager {
 	}
 
 	/**
-	 * Gets the translated string from a Minecraft Component.
-	 * <p>
-	 * This method handles TranslatableContents to get the translation in the configured language.
+	 * Resolves {@code TranslatableContents} against the configured language.
 	 */
 	public static String get(Component component) {
 		ensureTranslationsLoaded();
@@ -132,11 +161,10 @@ public final class TranslationManager {
 			return get(key, translatedArgs);
 		}
 
-		// For non-translatable components, just return the string representation
 		return component.getString();
 	}
 
-	private static void loadTranslations(String language) {
+	private static void loadTranslations(String language, Map<String, String> target) {
 		// Step 1: Official Minecraft translations
 		try {
 			String version = EnvironmentUtils.getMinecraftVersion();
@@ -146,11 +174,10 @@ public final class TranslationManager {
 			Path langCachePath = CACHE_DIR.resolve(fileName);
 
 			boolean loaded = false;
-			// If a valid cached file exists, use it.
 			if (Files.exists(langCachePath)) {
 				try {
-					Map<String, String> translations = JsonUtils.toStringMap(Files.newBufferedReader(langCachePath, StandardCharsets.UTF_8));
-					translations.forEach(TRANSLATIONS::putIfAbsent);
+					Map<String, String> entries = JsonUtils.toStringMap(Files.newBufferedReader(langCachePath, StandardCharsets.UTF_8));
+					entries.forEach(target::putIfAbsent);
 
 					LOGGER.info(I18nManager.getDmccTranslation("minecraft.translations.cache_loaded", language, version));
 					loaded = true;
@@ -161,7 +188,6 @@ public final class TranslationManager {
 			}
 
 			if (!loaded) {
-				// Otherwise, download the file.
 				LOGGER.info(I18nManager.getDmccTranslation("minecraft.translations.downloading", language, version));
 				String url = "https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@" + version + "/assets/minecraft/lang/" + language + ".json";
 
@@ -169,8 +195,8 @@ public final class TranslationManager {
 					String jsonContent = HttpUtils.get(url);
 					Files.writeString(langCachePath, jsonContent);
 
-					Map<String, String> translations = JsonUtils.toStringMap(jsonContent);
-					translations.forEach(TRANSLATIONS::putIfAbsent);
+					Map<String, String> entries = JsonUtils.toStringMap(jsonContent);
+					entries.forEach(target::putIfAbsent);
 
 					LOGGER.info(I18nManager.getDmccTranslation("minecraft.translations.downloaded", language, jsonContent.length()));
 				} catch (Exception e) {
@@ -202,8 +228,8 @@ public final class TranslationManager {
 								}
 
 								try (InputStream is = Files.newInputStream(langFile)) {
-									Map<String, String> translations = JsonUtils.toStringMap(is);
-									translations.forEach(TRANSLATIONS::putIfAbsent);
+									Map<String, String> entries = JsonUtils.toStringMap(is);
+									entries.forEach(target::putIfAbsent);
 								} catch (Exception e) {
 									LOGGER.error(I18nManager.getDmccTranslation("minecraft.translations.mod_load_failed"), e);
 								}
@@ -230,8 +256,8 @@ public final class TranslationManager {
 
 						if (supplier != null) {
 							try (InputStream is = supplier.get()) {
-								Map<String, String> translations = JsonUtils.toStringMap(is);
-								translations.forEach(TRANSLATIONS::putIfAbsent);
+								Map<String, String> entries = JsonUtils.toStringMap(is);
+								entries.forEach(target::putIfAbsent);
 							} catch (Exception e) {
 								LOGGER.error(I18nManager.getDmccTranslation("minecraft.translations.datapack_load_failed"), e);
 							}
@@ -243,6 +269,12 @@ public final class TranslationManager {
 	}
 
 	private static void ensureTranslationsLoaded() {
+		if (server == null) {
+			// Called before ServerStarted event (no MinecraftServer yet): init() would only return, so
+			// skipping keeps the same observable output without rebuilding the load machinery per get().
+			return;
+		}
+
 		if (!currentLoadedLanguage.equals(I18nManager.getLanguage())) {
 			init();
 		}

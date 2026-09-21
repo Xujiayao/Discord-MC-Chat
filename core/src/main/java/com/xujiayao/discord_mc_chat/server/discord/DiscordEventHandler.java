@@ -27,11 +27,12 @@ import net.fellbaum.jemoji.EmojiManager;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
@@ -39,8 +40,19 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 final class DiscordEventHandler extends ListenerAdapter {
 
 	private static final int AUTOCOMPLETE_TIMEOUT_SECONDS = 5;
-	private static final ConcurrentHashMap<String, CachedMessage> messageCache = new ConcurrentHashMap<>();
 	private static final int MAX_CACHE_SIZE = 200;
+	/**
+	 * LRU cache ({@value #MAX_CACHE_SIZE} entries) of recent Discord messages, used to resolve replies, edits and
+	 * deletes. Invalidation is explicit in {@link #onMessageDelete(MessageDeleteEvent)}, with no TTL (matching the
+	 * previous behaviour); the map is synchronized because JDA event-pool and callback-pool threads both touch it.
+	 */
+	private static final Map<String, CachedMessage> messageCache = Collections.synchronizedMap(
+			new LinkedHashMap<>(MAX_CACHE_SIZE, 0.75f, true) {
+				@Override
+				protected boolean removeEldestEntry(Map.Entry<String, CachedMessage> eldest) {
+					return size() > MAX_CACHE_SIZE;
+				}
+			});
 
 	private static void logDiscordEventForConsole(DiscordRelayPacket packet) {
 		if (packet.replySegments != null && !packet.replySegments.isEmpty()) {
@@ -109,7 +121,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 			default -> CommandManager.execute(sender, name);
 		}
 
-		// Forward command execution notification to Minecraft (if enabled)
 		boolean commandBroadcastEnabled = ConfigManager.getBoolean("broadcasts.discord_to_minecraft.command");
 		if (commandBroadcastEnabled) {
 			Member member = event.getMember();
@@ -265,7 +276,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 
 	@Override
 	public void onMessageReceived(@NotNull MessageReceivedEvent event) {
-		// Ignore messages from DMCC Bot itself
 		if (event.getAuthor() == event.getJDA().getSelfUser()) {
 			return;
 		}
@@ -285,29 +295,24 @@ final class DiscordEventHandler extends ListenerAdapter {
 			return;
 		}
 
-		// Check if Discord-to-Minecraft chat is enabled
 		if (!ConfigManager.getBoolean("broadcasts.discord_to_minecraft.chat")) {
 			return;
 		}
 
-		// Only handle messages from the configured in-game-chat channel
-		// Use the same channel as minecraft_to_discord player chat
+		// Only handle messages from the configured in-game-chat channel (same as minecraft_to_discord player chat)
 		String configuredChannel = ConfigManager.getString("broadcasts.minecraft_to_discord.player.chat", "in-game-chat");
 		if (configuredChannel.isBlank()) {
 			return;
 		}
 
-		// Check if the message is from the configured channel (by name or by ID)
 		String channelId = event.getChannel().getId();
 		String channelName = event.getChannel().getName();
 		if (!channelId.equals(configuredChannel) && !channelName.equalsIgnoreCase(configuredChannel)) {
 			return;
 		}
 
-		// Build the main message line segments using DiscordMessageParser
 		List<TextSegment> mainSegments = DiscordMessageParser.buildChatSegments(message);
 
-		// Build reply segments if this is a reply to another message
 		List<TextSegment> replySegments = DiscordMessageParser.buildReplySegments(message.getReferencedMessage());
 		if (replySegments == null && message.getMessageReference() != null) {
 			CachedMessage cachedRef = messageCache.get(message.getMessageReference().getMessageId());
@@ -324,7 +329,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 			}
 		}
 
-		// Build mention notification data
 		String mentionNotificationText = null;
 		String mentionNotificationStyle = null;
 		List<String> mentionedPlayerUuids = null;
@@ -342,7 +346,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 			}
 		}
 
-		// Build and send the DiscordEventPacket to all connected clients
 		DiscordRelayPacket packet = new DiscordRelayPacket(DiscordRelayPacket.EventType.CHAT, mainSegments);
 		packet.replySegments = replySegments;
 		packet.mentionNotificationText = mentionNotificationText;
@@ -353,7 +356,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 		logDiscordEventForConsole(packet);
 		NetworkManager.broadcastToClients(packet);
 
-		// Cache message for edit/delete reference
 		cacheMessage(message);
 	}
 
@@ -419,9 +421,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 				_ -> broadcastReaction(reactorName, roleColor, emojiText, null));
 	}
 
-	/**
-	 * Relays a reaction, quoting the reacted message when it could be retrieved.
-	 */
 	private static void broadcastReaction(String reactorName, String roleColor, String emojiText, Message targetMessage) {
 		List<TextSegment> segments = DiscordMessageParser.buildReactionSegments(reactorName, roleColor, emojiText);
 		DiscordRelayPacket packet = new DiscordRelayPacket(DiscordRelayPacket.EventType.REACTION, segments);
@@ -481,10 +480,8 @@ final class DiscordEventHandler extends ListenerAdapter {
 			}
 		}
 
-		// Build edit notification segments
 		List<TextSegment> notificationSegments = DiscordMessageParser.buildEditNotificationSegments(editorName, roleColor);
 
-		// Build new message content segments
 		List<TextSegment> editedMessageSegments = DiscordMessageParser.buildEditedMessageSegments(message);
 
 		DiscordRelayPacket packet = new DiscordRelayPacket(DiscordRelayPacket.EventType.EDIT, notificationSegments);
@@ -493,7 +490,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 		logDiscordEventForConsole(packet);
 		NetworkManager.broadcastToClients(packet);
 
-		// Update cache
 		cacheMessage(message);
 	}
 
@@ -519,7 +515,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 			return;
 		}
 		if (cached == null) {
-			// No cached info - send a generic delete notification
 			List<TextSegment> segments = DiscordMessageParser.buildDeleteSegments(I18nManager.getDmccTranslation("discord.message_parser.unknown_user"), "white");
 			DiscordRelayPacket packet = new DiscordRelayPacket(DiscordRelayPacket.EventType.DELETE, segments);
 			logDiscordEventForConsole(packet);
@@ -553,15 +548,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 	}
 
 	private void cacheMessage(Message message) {
-		// Evict entries if cache is full
-		if (messageCache.size() >= MAX_CACHE_SIZE) {
-			var iterator = messageCache.keySet().iterator();
-			while (iterator.hasNext() && messageCache.size() >= MAX_CACHE_SIZE) {
-				iterator.next();
-				iterator.remove();
-			}
-		}
-
 		Member member = message.getMember();
 		String name = member != null ? member.getEffectiveName() : message.getAuthor().getName();
 		String roleColor = DiscordMessageParser.getRoleColorHex(member);

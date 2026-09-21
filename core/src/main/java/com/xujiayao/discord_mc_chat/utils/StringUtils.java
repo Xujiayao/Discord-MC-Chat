@@ -1,16 +1,21 @@
 package com.xujiayao.discord_mc_chat.utils;
 
-/**
- * String utility class.
- */
+import java.util.regex.Pattern;
+
 public final class StringUtils {
+
+	/**
+	 * Detects Minecraft-style indexed placeholders ({@code %1$s}).
+	 * <p>
+	 * Used with {@link java.util.regex.Matcher#matches()} and not with {@code find()}: the previous code was
+	 * {@code str.matches(".*%\\d+\\$s.*")} and {@code .} does not match line terminators, so a placeholder that
+	 * follows a newline must stay undetected. {@code matches()} is the exact equivalent of {@code String.matches}.
+	 */
+	private static final Pattern INDEXED_PRINTF_PLACEHOLDER = Pattern.compile(".*%\\d+\\$s.*");
 
 	private StringUtils() {
 	}
 
-	/**
-	 * Escape special characters in strings.
-	 */
 	public static String escape(String s) {
 		return s.replace("\t", "\\t")
 				.replace("\b", "\\b")
@@ -20,18 +25,11 @@ public final class StringUtils {
 	}
 
 	/**
-	 * Formats a string with placeholders.
+	 * Formats a string with placeholders. Supports DMCC-style sequential <code>{}</code> and indexed
+	 * <code>{n}</code> placeholders, plus Minecraft-style sequential <code>%s</code> and indexed
+	 * <code>%n$s</code> placeholders.
 	 * <p>
-	 * Supports multiple placeholder styles:
-	 * <ul>
-	 *   <li>DMCC-style Sequential <code>{}</code> and indexed <code>{n}</code> placeholders</li>
-	 *   <li>Minecraft-style sequential <code>%s</code> and indexed <code>%n$s</code> placeholders</li>
-	 * </ul>
-	 * Note: Do not mix different styles in the same string.
-	 *
-	 * @param str  String with placeholders
-	 * @param args Arguments to replace the placeholders
-	 * @return String with placeholders replaced
+	 * Do not mix different styles in the same string.
 	 */
 	public static String format(String str, Object... args) {
 		if (str == null || args == null || args.length == 0) {
@@ -69,8 +67,7 @@ public final class StringUtils {
 			return sb.toString();
 		}
 
-		// Check if the string uses Minecraft-style placeholders (%s or %n$s)
-		if (str.contains("%s") || str.matches(".*%\\d+\\$s.*")) {
+		if (str.contains("%s") || INDEXED_PRINTF_PLACEHOLDER.matcher(str).matches()) {
 			return String.format(str, args);
 		}
 

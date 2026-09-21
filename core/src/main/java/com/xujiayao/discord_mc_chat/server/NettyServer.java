@@ -19,10 +19,16 @@ import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.Future;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
 final class NettyServer {
+
+	// Explicit shutdown parameters instead of the Netty defaults (2s quiet period + 15s timeout).
+	// Both groups are shut down concurrently, so the worst case here is ~5.5s instead of ~30s.
+	private static final long SHUTDOWN_QUIET_PERIOD_MILLIS = 500;
+	private static final long SHUTDOWN_TIMEOUT_MILLIS = 5000;
 
 	private final String host;
 	private final int port;
@@ -77,21 +83,36 @@ final class NettyServer {
 
 		} catch (Exception e) {
 			LOGGER.error(I18nManager.getDmccTranslation("server.network.bind_failed", port), e);
+			// Release the event loop threads that were created above; without this a failed start() leaks
+			// them and every later start() attempt would pile up more non-daemon threads.
+			shutdownEventLoopGroups();
 			return -1;
 		}
 	}
 
 	void stop() {
+		shutdownEventLoopGroups();
+	}
+
+	private void shutdownEventLoopGroups() {
+		EventLoopGroup worker = workerGroup;
+		EventLoopGroup boss = bossGroup;
+		// Clearing the fields keeps this method idempotent (e.g. the failed-start path followed by stop()).
+		workerGroup = null;
+		bossGroup = null;
+
 		Future<?> workerFuture = null;
 		Future<?> bossFuture = null;
 
-		if (workerGroup != null) {
-			workerFuture = workerGroup.shutdownGracefully();
+		if (worker != null) {
+			workerFuture = worker.shutdownGracefully(SHUTDOWN_QUIET_PERIOD_MILLIS, SHUTDOWN_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
 		}
-		if (bossGroup != null) {
-			bossFuture = bossGroup.shutdownGracefully();
+		if (boss != null) {
+			bossFuture = boss.shutdownGracefully(SHUTDOWN_QUIET_PERIOD_MILLIS, SHUTDOWN_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
 		}
 
+		// Both graceful shutdowns are already in flight before the first wait, so the total wait is bounded by
+		// the slower group (~5.5s) and not by the sum of the two.
 		if (workerFuture != null) {
 			workerFuture.awaitUninterruptibly();
 		}

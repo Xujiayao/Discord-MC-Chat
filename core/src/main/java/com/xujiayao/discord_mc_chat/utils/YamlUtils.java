@@ -8,12 +8,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.regex.Pattern;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
-/**
- * YAML utility class.
- */
 public final class YamlUtils {
 
 	private static final List<String> REQUIRED_MODIFIED_KEYS = List.of(
@@ -21,6 +19,12 @@ public final class YamlUtils {
 			"multi_server.server_name",
 			"multi_server.connection.shared_secret"
 	);
+
+	/**
+	 * Pre-compiled separator used to split configuration paths; {@code Pattern.split(key)} is the exact
+	 * equivalent of the {@code key.split("\\.")} call it replaces.
+	 */
+	private static final Pattern PATH_SEPARATOR = Pattern.compile("\\.");
 
 	private YamlUtils() {
 	}
@@ -31,13 +35,11 @@ public final class YamlUtils {
 	 * @param errorOnUnmodified If true, an error is logged if the file is identical to the template
 	 */
 	public static boolean validate(JsonNode userConfig, JsonNode templateConfig, boolean errorOnUnmodified) {
-		// Check if config is identical to template (user made no changes)
 		if (errorOnUnmodified && userConfig.equals(templateConfig)) {
 			LOGGER.error(I18nManager.getDmccTranslation("utils.yaml.unmodified"));
 			return false;
 		}
 
-		// Check config version
 		String configVersion = userConfig.path("version").asString();
 		String templateVersion = templateConfig.path("version").asString();
 
@@ -47,7 +49,6 @@ public final class YamlUtils {
 			return false;
 		}
 
-		// Check for missing and extra keys in the user's config
 		Set<String> missingKeys = new HashSet<>();
 		Set<String> extraKeys = new HashSet<>();
 		findKeyDiffs(templateConfig, userConfig, "", missingKeys, extraKeys);
@@ -68,7 +69,6 @@ public final class YamlUtils {
 			return false;
 		}
 
-		// Check all node types for all items recursively
 		Set<String> typeIssues = validateNodeTypes(templateConfig, userConfig, "");
 		if (!typeIssues.isEmpty()) {
 			LOGGER.error(I18nManager.getDmccTranslation("utils.yaml.type_mismatch"));
@@ -78,8 +78,7 @@ public final class YamlUtils {
 			return false;
 		}
 
-		// A hard-coded list of keys that should be modified by the user
-		// This is to catch cases where the user leaves a key unchanged from the template
+		// Hard-coded list of keys the user should modify, to catch keys left unchanged from the template
 		Set<String> unmodifiedKeys = findUnmodifiedKeys(userConfig, templateConfig);
 		if (!unmodifiedKeys.isEmpty()) {
 			LOGGER.error(I18nManager.getDmccTranslation("utils.yaml.unchanged_keys"));
@@ -120,10 +119,8 @@ public final class YamlUtils {
 	private static Set<String> validateNodeTypes(JsonNode template, JsonNode config, String path) {
 		Set<String> issues = new HashSet<>();
 
-		// Check for direct node type mismatch (covers string/object/array/etc.)
 		if (template.getNodeType() != config.getNodeType()) {
-			// Special case: The user emptied an array
-			// Consider this case valid
+			// Special case: the user emptied an array; consider it valid
 			if (!(template.isArray() && config.isNull())) {
 				issues.add((path.isEmpty() ? "(root)" : path) + ": Expected type " + template.getNodeType()
 						+ " but found " + config.getNodeType());
@@ -131,7 +128,6 @@ public final class YamlUtils {
 			return issues; // If types mismatch, don't recurse further at this node
 		}
 
-		// If the node is an object, recurse for each field
 		if (template.isObject()) {
 			forEachObjectField(template, path, (fieldName, currentPath) -> {
 				JsonNode templateValue = template.get(fieldName);
@@ -143,7 +139,6 @@ public final class YamlUtils {
 			});
 		}
 
-		// If the node is an array, check each element against the template's first element (if present)
 		else if (template.isArray() && !template.isEmpty() && config.isArray()) {
 			JsonNode templateItem = template.get(0);
 
@@ -151,7 +146,6 @@ public final class YamlUtils {
 				JsonNode configItem = config.get(i);
 				String currentPath = path + "[" + i + "]";
 
-				// Recursively validate each array element
 				issues.addAll(validateNodeTypes(templateItem, configItem, currentPath));
 			}
 		}
@@ -163,7 +157,7 @@ public final class YamlUtils {
 		Set<String> unmodifiedKeys = new HashSet<>();
 
 		for (String key : YamlUtils.REQUIRED_MODIFIED_KEYS) {
-			String[] parts = key.split("\\.");
+			String[] parts = PATH_SEPARATOR.split(key);
 			JsonNode configNode = config;
 			JsonNode templateNode = templateConfig;
 
@@ -172,8 +166,7 @@ public final class YamlUtils {
 				templateNode = templateNode.path(part);
 			}
 
-			// If either node is missing, it is the case that config files of different modes have different keys.
-			// Or it is the case that language files and config files have different keys.
+			// A missing node just means different modes, or language vs config files, have different keys.
 			if (configNode.isMissingNode() || templateNode.isMissingNode()) {
 				continue;
 			}

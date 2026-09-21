@@ -11,6 +11,7 @@ import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.message.DiscordMessageParser;
 import com.xujiayao.discord_mc_chat.server.message.MinecraftMessageParser;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
+import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import com.xujiayao.discord_mc_chat.utils.HttpUtils;
 import tools.jackson.databind.JsonNode;
 
@@ -25,9 +26,6 @@ import java.util.stream.Collectors;
 import static com.xujiayao.discord_mc_chat.Constants.JSON_MAPPER;
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
-/**
- * Handles DMCC update checks and notification routing.
- */
 public final class UpdateCheckManager {
 
 	private static final String UPDATE_URL = "https://cdn.jsdelivr.net/gh/Xujiayao/Discord-MC-Chat@vv3/update/versions.json";
@@ -42,16 +40,14 @@ public final class UpdateCheckManager {
 	private UpdateCheckManager() {
 	}
 
-	/**
-	 * Starts the automatic update checker.
-	 */
 	public static void start() {
 		if ("multi_server_client".equals(ModeManager.getMode()) || !ConfigManager.getBoolean("check_for_updates.enable")) {
 			return;
 		}
 
 		if (updateExecutor == null || updateExecutor.isShutdown()) {
-			updateExecutor = Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "DMCC-UpdateCheck"));
+			// Use the shared factory so the thread inherits the Mod ClassLoader (required under Fabric).
+			updateExecutor = Executors.newSingleThreadScheduledExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-UpdateCheck"));
 		}
 
 		if (updateTask != null) {
@@ -67,9 +63,6 @@ public final class UpdateCheckManager {
 		}, 0, AUTO_CHECK_INTERVAL_SECONDS, TimeUnit.SECONDS);
 	}
 
-	/**
-	 * Stops the automatic update checker.
-	 */
 	public static void shutdown() {
 		if (updateTask != null) {
 			updateTask.cancel(false);
@@ -81,11 +74,6 @@ public final class UpdateCheckManager {
 		}
 	}
 
-	/**
-	 * Performs a manual update check.
-	 *
-	 * @return The check result.
-	 */
 	public static CheckResult checkNow() {
 		try {
 			return checkAndNotify(false);

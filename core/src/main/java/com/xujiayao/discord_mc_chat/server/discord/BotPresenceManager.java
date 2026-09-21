@@ -28,8 +28,7 @@ public final class BotPresenceManager {
 	}
 
 	/**
-	 * Updates the Discord bot's status and activity based on the current server state.
-	 * Debounce rapid calls and automatically updates every 30 seconds.
+	 * Updates the bot status/activity, debouncing rapid calls and re-running every 30 seconds.
 	 */
 	public static void update() {
 		JDA jda = DiscordManager.getJda();
@@ -39,11 +38,15 @@ public final class BotPresenceManager {
 		boolean enableActivity = ConfigManager.getBoolean("discord.bot.enable_activity");
 		if (!enableStatus && !enableActivity) return;
 
-		if (statusUpdateExecutor == null || statusUpdateExecutor.isShutdown()) {
-			statusUpdateExecutor = Executors.newSingleThreadScheduledExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-BotPresence"));
-		}
-
+		// Create the executor while holding the lock, otherwise two concurrent update() calls (Netty event loop
+		// threads and JDA threads both call this) could each create one and leak the loser.
+		ScheduledExecutorService staleExecutor = null;
 		synchronized (BotPresenceManager.class) {
+			if (statusUpdateExecutor == null || statusUpdateExecutor.isShutdown()) {
+				staleExecutor = statusUpdateExecutor;
+				statusUpdateExecutor = Executors.newSingleThreadScheduledExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-BotPresence"));
+			}
+
 			if (presenceUpdateTask != null) {
 				presenceUpdateTask.cancel(false);
 			}
@@ -55,6 +58,13 @@ public final class BotPresenceManager {
 					LOGGER.warn(I18nManager.getDmccTranslation("discord.manager.presence_update_failed", e.getMessage()));
 				}
 			}, 0, 30, TimeUnit.SECONDS);
+		}
+
+		// The replaced executor can only be an already shut-down one here; shutdownNow() merely guarantees that
+		// no task of it is still running. Done outside the lock, and non-blocking, because update() may be
+		// called from a Netty event loop thread.
+		if (staleExecutor != null) {
+			staleExecutor.shutdownNow();
 		}
 	}
 

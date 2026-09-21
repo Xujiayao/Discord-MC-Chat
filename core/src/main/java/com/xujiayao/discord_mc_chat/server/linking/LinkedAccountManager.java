@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.server.linking;
 
 import com.xujiayao.discord_mc_chat.config.I18nManager;
+import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import tools.jackson.core.type.TypeReference;
 
 import java.io.IOException;
@@ -12,6 +13,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.function.Function;
 
 import static com.xujiayao.discord_mc_chat.Constants.JSON_MAPPER;
@@ -29,6 +33,13 @@ public final class LinkedAccountManager {
 	// Discord name resolver, set by the server module to avoid circular dependencies
 	private static Function<String, String> discordNameResolver;
 
+	// Serializes save() disk writes on one background thread so callers (including Netty event loop
+	// threads) no longer block on IO. Guarded by the LinkedAccountManager class monitor.
+	private static ExecutorService writeExecutor;
+
+	// Set by save(), cleared by the writer: mutations close together collapse into one write of the newest state.
+	private static volatile boolean dirty;
+
 	private LinkedAccountManager() {
 	}
 
@@ -37,11 +48,7 @@ public final class LinkedAccountManager {
 	}
 
 	/**
-	 * Resolves a Discord username from an ID using the registered resolver.
 	 * Falls back to the raw ID if no resolver is registered.
-	 *
-	 * @param discordId The Discord user ID.
-	 * @return The resolved username, or the raw ID.
 	 */
 	public static String resolveDiscordName(String discordId) {
 		if (discordNameResolver != null) {
@@ -51,10 +58,7 @@ public final class LinkedAccountManager {
 	}
 
 	/**
-	 * Loads linked accounts from the JSON file.
-	 * Creates an empty file if it does not exist.
-	 *
-	 * @return true if the accounts were loaded successfully, false otherwise.
+	 * Loads linked accounts from JSON, creating an empty file if it does not exist.
 	 */
 	public static boolean load() {
 		try {
@@ -63,7 +67,7 @@ public final class LinkedAccountManager {
 			if (!Files.exists(LINKS_FILE) || Files.size(LINKS_FILE) == 0) {
 				LINKED_ACCOUNTS.clear();
 				UUID_TO_DISCORD.clear();
-				save();
+				writeNow();
 				LOGGER.info(I18nManager.getDmccTranslation("linking.manager.loaded", 0));
 				return true;
 			}
@@ -93,40 +97,120 @@ public final class LinkedAccountManager {
 		}
 	}
 
+	/**
+	 * The write is handed to the background executor so callers - including Netty event loop threads -
+	 * are not blocked on disk IO; consecutive mutations coalesce into one write of the newest state.
+	 * The in-memory maps stay the authoritative source and are left untouched, exactly as before.
+	 */
 	public static synchronized void save() {
+		dirty = true;
+
 		try {
-			Files.createDirectories(LINKS_FILE.getParent());
-			JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValue(LINKS_FILE.toFile(), LINKED_ACCOUNTS);
-			LOGGER.info(I18nManager.getDmccTranslation("linking.manager.saved"));
-		} catch (IOException e) {
-			LOGGER.error(I18nManager.getDmccTranslation("linking.manager.save_failed"), e);
+			getOrCreateWriteExecutor().execute(LinkedAccountManager::writeIfDirty);
+		} catch (RejectedExecutionException e) {
+			// The executor is already shut down (shutdown/reload race): write on the caller thread.
+			writeIfDirty();
+		}
+	}
+
+	private static void writeIfDirty() {
+		if (!dirty) {
+			return;
+		}
+
+		dirty = false;
+		writeNow();
+	}
+
+	/**
+	 * Serialization runs under the class monitor, just like the original {@code synchronized save()} did.
+	 * That is required: the stored values are mutable lists, so a write concurrent with {@code linkAccount}
+	 * /{@code unlink*} could serialize a list while it is being modified. Nothing here mutates the maps.
+	 */
+	private static void writeNow() {
+		synchronized (LinkedAccountManager.class) {
+			try {
+				Files.createDirectories(LINKS_FILE.getParent());
+				JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValue(LINKS_FILE.toFile(), LINKED_ACCOUNTS);
+				LOGGER.info(I18nManager.getDmccTranslation("linking.manager.saved"));
+			} catch (IOException e) {
+				LOGGER.error(I18nManager.getDmccTranslation("linking.manager.save_failed"), e);
+			}
+		}
+	}
+
+	private static ExecutorService getOrCreateWriteExecutor() {
+		synchronized (LinkedAccountManager.class) {
+			if (writeExecutor == null || writeExecutor.isShutdown()) {
+				writeExecutor = Executors.newSingleThreadExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-DataSave"));
+			}
+			return writeExecutor;
 		}
 	}
 
 	/**
-	 * Clears all linked accounts from memory without writing to disk.
+	 * Barrier: on a single-thread executor a no-op task only runs after all previously queued writes.
+	 */
+	private static void flushPendingWrites() {
+		ExecutorService executor;
+		synchronized (LinkedAccountManager.class) {
+			executor = writeExecutor;
+		}
+
+		if (executor == null) {
+			writeIfDirty();
+			return;
+		}
+
+		try {
+			executor.submit(() -> {
+			}).get();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			writeIfDirty();
+		} catch (Exception e) {
+			writeIfDirty();
+		}
+	}
+
+	/**
+	 * Clears all linked accounts from memory without writing to disk, so users can manually edit
+	 * {@code links.json} while DMCC is running and reload to apply their changes. That is intentional:
+	 * every mutation calls {@link #save()} immediately, so nothing is lost on the normal path.
 	 * <p>
-	 * This intentionally does NOT save to disk, so users can manually edit
-	 * {@code links.json} while DMCC is running and reload to apply their changes.
-	 * Any in-memory changes that were not yet persisted via {@link #save()} will be lost.
-	 * In practice, all mutations (link/unlink) call {@link #save()} immediately,
-	 * so no data is lost under normal operation.
+	 * A write already requested by {@link #save()} is completed before the maps are cleared; without that
+	 * flush the emptied maps below could be written instead.
 	 */
 	public static void shutdown() {
+		flushPendingWrites();
+
+		ExecutorService executor;
+		synchronized (LinkedAccountManager.class) {
+			executor = writeExecutor;
+		}
+
+		// shutdownAnExecutor blocks, so it must not run while holding the class monitor: a write
+		// submitted concurrently would then wait for that monitor and never let the executor terminate.
+		if (executor != null) {
+			ExecutorServiceUtils.shutdownAnExecutor(executor);
+			synchronized (LinkedAccountManager.class) {
+				if (writeExecutor == executor) {
+					writeExecutor = null;
+				}
+			}
+		}
+
 		LINKED_ACCOUNTS.clear();
 		UUID_TO_DISCORD.clear();
 		discordNameResolver = null;
 	}
 
 	/**
-	 * Links a Minecraft account to a Discord account.
-	 * Enforces uniqueness: a Minecraft UUID can only be linked to one Discord account.
+	 * A Minecraft UUID can only be linked to one Discord account.
 	 *
-	 * @param discordId     The Discord user ID.
-	 * @param discordName   The Discord username (for logging only, not persisted).
-	 * @param minecraftUuid The Minecraft account UUID.
-	 * @param minecraftName The Minecraft player name (for logging only, not persisted).
-	 * @return true if the link was created successfully, false if the Minecraft UUID is already linked.
+	 * @param discordName   For logging only, not persisted.
+	 * @param minecraftName For logging only, not persisted.
+	 * @return false if the Minecraft UUID is already linked.
 	 */
 	public static synchronized boolean linkAccount(String discordId, String discordName, String minecraftUuid, String minecraftName) {
 		String existingDiscordId = UUID_TO_DISCORD.get(minecraftUuid);
@@ -147,10 +231,7 @@ public final class LinkedAccountManager {
 	}
 
 	/**
-	 * Removes all Minecraft account links for a Discord user.
-	 *
-	 * @param discordId   The Discord user ID.
-	 * @param discordName The Discord username (for logging only).
+	 * @param discordName For logging only.
 	 * @return The number of Minecraft accounts that were unlinked.
 	 */
 	public static synchronized int unlinkByDiscordId(String discordId, String discordName) {
@@ -168,10 +249,7 @@ public final class LinkedAccountManager {
 	}
 
 	/**
-	 * Removes a specific Minecraft UUID link from any Discord account.
-	 *
-	 * @param minecraftUuid The Minecraft account UUID to unlink.
-	 * @param minecraftName The Minecraft player name (for logging only).
+	 * @param minecraftName For logging only.
 	 * @return The Discord user ID that was unlinked from, or null if the UUID was not linked.
 	 */
 	public static synchronized String unlinkByMinecraftUuid(String minecraftUuid, String minecraftName) {
@@ -204,9 +282,6 @@ public final class LinkedAccountManager {
 	}
 
 	/**
-	 * Gets all Minecraft UUIDs linked to a Discord user.
-	 *
-	 * @param discordId The Discord user ID.
 	 * @return An unmodifiable list of linked Minecraft UUIDs, or an empty list if none.
 	 */
 	public static List<String> getMinecraftUuidsByDiscordId(String discordId) {
@@ -226,9 +301,7 @@ public final class LinkedAccountManager {
 	}
 
 	/**
-	 * Gets all linked accounts as an unmodifiable map.
-	 *
-	 * @return A map of Discord IDs to their linked account entries.
+	 * @return An unmodifiable map of Discord IDs to their linked account entries.
 	 */
 	public static Map<String, List<LinkEntry>> getAllLinks() {
 		return Collections.unmodifiableMap(LINKED_ACCOUNTS);

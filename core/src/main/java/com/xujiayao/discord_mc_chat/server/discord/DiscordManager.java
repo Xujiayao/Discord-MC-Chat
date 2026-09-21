@@ -23,6 +23,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
@@ -32,6 +33,7 @@ import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +59,29 @@ public final class DiscordManager {
 	private static final Object PLAYER_COMMAND_RATE_LIMIT_LOCK = new Object();
 	private static final Deque<Long> PLAYER_COMMAND_RATE_LIMIT_TIMESTAMPS = new ArrayDeque<>();
 
-	private static final Map<String, String> DISCORD_NAME_CACHE = new ConcurrentHashMap<>();
+	// Bounds and lifetimes of the caches below; the entity caches need an explicit lifetime because they remember IDs JDA does not know.
+	private static final int ENTITY_CACHE_CAPACITY = 4096;
+	private static final Duration ENTITY_CACHE_TTL = Duration.ofSeconds(60);
+	private static final int ENTITY_NEGATIVE_CACHE_TTL_SECONDS = 60;
+	private static final int WEBHOOK_CACHE_CAPACITY = 128;
+	private static final Duration WEBHOOK_CACHE_TTL = Duration.ofMinutes(5);
+	private static final int CONSOLE_FILTER_PATTERN_CACHE_CAPACITY = 256;
+	private static final int DISCORD_NAME_CACHE_CAPACITY = 4096;
+
+	// Capacity 4096 (LRU), TTL 60 s: avoids a blocking REST call per message for users not in JDA's own cache.
+	private static final BoundedCache<String, User> RESOLVED_USERS = new BoundedCache<>(ENTITY_CACHE_CAPACITY, ENTITY_CACHE_TTL);
+	// Capacity 4096 (LRU), TTL 60 s: negative cache for IDs that cannot be resolved (REST 404, REST outage),
+	// consulted only after JDA's own cache missed, so a user JDA learns about later is still resolved immediately.
+	private static final BoundedCache<String, Boolean> UNRESOLVED_USERS = new BoundedCache<>(ENTITY_CACHE_CAPACITY, Duration.ofSeconds(ENTITY_NEGATIVE_CACHE_TTL_SECONDS));
+	private static final BoundedCache<String, Boolean> UNRESOLVED_MEMBERS = new BoundedCache<>(ENTITY_CACHE_CAPACITY, Duration.ofSeconds(ENTITY_NEGATIVE_CACHE_TTL_SECONDS));
+	// Capacity 128 (LRU), TTL 5 min: one webhook lookup per channel instead of a retrieveWebhooks() per message;
+	// an entry is also dropped when a send with it fails, so a webhook deleted on Discord's side is rebuilt next message.
+	private static final BoundedCache<String, Webhook> WEBHOOK_CACHE = new BoundedCache<>(WEBHOOK_CACHE_CAPACITY, WEBHOOK_CACHE_TTL);
+	// Capacity 256 (LRU), no TTL: keys are the configured regex strings themselves, and only successfully compiled
+	// patterns are stored, so the per-line "invalid regex" warning is unchanged.
+	private static final BoundedCache<String, Pattern> CONSOLE_FILTER_PATTERNS = new BoundedCache<>(CONSOLE_FILTER_PATTERN_CACHE_CAPACITY, null);
+	// Capacity 4096 (LRU), no TTL: bounded version of the previous unbounded name cache, same "cached until evicted" semantics.
+	private static final BoundedCache<String, String> DISCORD_NAME_CACHE = new BoundedCache<>(DISCORD_NAME_CACHE_CAPACITY, null);
 	private static final Set<String> CONSOLE_FORWARDING_DISABLED_CLIENTS = ConcurrentHashMap.newKeySet();
 	private static final Pattern EMOJI_ALIAS_PATTERN = Pattern.compile("(:[^:]+:)");
 	private static JDA jda;
@@ -66,6 +90,9 @@ public final class DiscordManager {
 	}
 
 	public static boolean init() {
+		// Caches may still hold entities and webhooks of a previous JDA instance.
+		clearCaches();
+
 		String token = ConfigManager.getString("discord.bot.token");
 		if (token.isBlank()) {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.token_missing"));
@@ -75,7 +102,6 @@ public final class DiscordManager {
 		// Use a custom executor with our special ThreadFactory to ensure ClassLoader is correct
 		try (ExecutorService executor = Executors.newCachedThreadPool(ExecutorServiceUtils.newThreadFactory("DMCC-DiscordInit"))) {
 			try {
-				// Blocks until JDA is ready
 				CompletableFuture<Void> readyFuture = CompletableFuture.runAsync(() -> {
 					ExecutorService eventExecutor = Executors.newSingleThreadExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-DiscordEvent"));
 					ExecutorService callbackExecutor = Executors.newCachedThreadPool(ExecutorServiceUtils.newThreadFactory("DMCC-DiscordCallback"));
@@ -123,7 +149,6 @@ public final class DiscordManager {
 				return false;
 			}
 
-			// Blocks until commands are updated
 			try {
 				List<CommandData> commands = new ArrayList<>();
 				commands.add(Commands.slash("help", I18nManager.getDmccTranslation("commands.help.description")));
@@ -202,12 +227,8 @@ public final class DiscordManager {
 	}
 
 	/**
-	 * Resolves a Discord username from a user ID via JDA.
-	 * Results are cached in memory to avoid repeated blocking API calls.
-	 * Falls back to the raw ID if JDA is not available or the user cannot be found.
-	 *
-	 * @param discordId The Discord user ID.
-	 * @return The resolved username, or the raw ID if resolution fails.
+	 * Resolves a Discord username from a user ID via JDA, caching the result to avoid repeated blocking API calls.
+	 * Falls back to the raw ID when JDA is unavailable or the user cannot be found.
 	 */
 	public static String resolveDiscordUserName(String discordId) {
 		String cached = DISCORD_NAME_CACHE.get(discordId);
@@ -226,26 +247,81 @@ public final class DiscordManager {
 		}
 	}
 
+	/**
+	 * Resolves a Discord user from a user ID: JDA's own cache first (kept current by gateway events, so a hit is never
+	 * stale), REST only on a real miss, and a failed lookup remembered for {@value #ENTITY_NEGATIVE_CACHE_TTL_SECONDS}
+	 * seconds so an unresolvable ID cannot cause one blocking REST call per message. {@code null} when unresolvable.
+	 */
 	public static User retrieveUser(String discordId) {
 		if (jda == null) return null;
-		try {
-			return jda.retrieveUserById(discordId).complete();
-		} catch (Exception e) {
-			return null;
+
+		User cached = RESOLVED_USERS.get(discordId);
+		if (cached != null) {
+			return cached;
 		}
+
+		User user = null;
+		try {
+			// MemberCachePolicy.ALL plus the GUILD_MEMBERS intent keep this cache current, so a hit is never stale.
+			user = jda.getUserById(discordId);
+			// The negative cache only replaces the REST fallback below; it can never hide a user JDA already knows.
+			if (user == null && !Boolean.TRUE.equals(UNRESOLVED_USERS.get(discordId))) {
+				user = jda.retrieveUserById(discordId).complete();
+			}
+		} catch (Exception ignored) {
+			// Same result as before for malformed IDs and failed lookups: no user.
+		}
+
+		if (user == null) {
+			// Fixed TTL: the entry is not refreshed by further misses, so the REST fallback is retried (and can recover)
+			// at most once per minute per ID.
+			UNRESOLVED_USERS.putIfAbsent(discordId, Boolean.TRUE);
+		} else {
+			RESOLVED_USERS.put(discordId, user);
+		}
+		return user;
 	}
 
+	/**
+	 * Resolves a guild member from a user ID, scanning the guilds in the same order as before: member cache first (no
+	 * REST on a hit), then the previous per-guild REST fallback, with a miss remembered for
+	 * {@value #ENTITY_NEGATIVE_CACHE_TTL_SECONDS} s; {@code null} when JDA is unavailable or the user is in no known guild.
+	 */
 	public static Member retrieveMember(String discordId) {
 		if (jda == null) return null;
+
+		Member member = null;
+		try {
+			for (var guild : jda.getGuilds()) {
+				member = guild.getMemberById(discordId);
+				if (member != null) {
+					return member;
+				}
+			}
+		} catch (Exception ignored) {
+			// Same result as before for malformed IDs: no member.
+			return null;
+		}
+
+		if (Boolean.TRUE.equals(UNRESOLVED_MEMBERS.get(discordId))) {
+			return null;
+		}
+
+		// Only reachable when the member is in no guild JDA knows about. JDA inserts a REST result into its own member
+		// cache, so from then on the loop above resolves it from memory.
 		for (var guild : jda.getGuilds()) {
 			try {
-				Member member = guild.retrieveMemberById(discordId).complete();
+				member = guild.retrieveMemberById(discordId).complete();
 				if (member != null) {
 					return member;
 				}
 			} catch (Exception ignored) {
 			}
 		}
+
+		// Fixed TTL: the entry is not refreshed by further misses, so the REST fallback is retried (and can recover)
+		// at most once per minute per ID.
+		UNRESOLVED_MEMBERS.putIfAbsent(discordId, Boolean.TRUE);
 		return null;
 	}
 
@@ -263,12 +339,6 @@ public final class DiscordManager {
 		return collectFromGuilds(Guild::getRoles, Role::getId);
 	}
 
-	/**
-	 * Gets all Discord user IDs for members that currently have the specified role.
-	 *
-	 * @param roleId Discord role ID.
-	 * @return User ID list for members owning the role.
-	 */
 	public static List<String> getDiscordIdsByRoleId(String roleId) {
 		if (jda == null || roleId == null || roleId.isBlank()) {
 			return List.of();
@@ -294,11 +364,8 @@ public final class DiscordManager {
 	}
 
 	/**
-	 * Sends a Minecraft user-originated message to Discord using the configured style template.
-	 *
-	 * @param clientName   DMCC client/server name.
-	 * @param channelNode  Config node under {@code broadcasts.minecraft_to_discord}.
-	 * @param placeholders Placeholder values used by the selected message template.
+	 * Sends a Minecraft user message using the configured style template; {@code channelNode} is a config node under
+	 * {@code broadcasts.minecraft_to_discord} and {@code placeholders} feed the selected message template.
 	 */
 	public static void sendMinecraftUserMessage(String clientName, String channelNode, Map<String, String> placeholders) {
 		String channelIdentifier = ConfigManager.getString("broadcasts.minecraft_to_discord." + channelNode);
@@ -326,7 +393,6 @@ public final class DiscordManager {
 			String content = replacePlaceholders(contentTemplate, placeholders);
 
 			for (String line : content.split("\n")) {
-				// Escape underscores in :emoji: to prevent being treated as Markdown formatting
 				LOGGER.info(sanitizeLineForLogging(line));
 			}
 
@@ -377,11 +443,8 @@ public final class DiscordManager {
 	}
 
 	/**
-	 * Sends an already-formatted Minecraft system message to Discord.
-	 *
-	 * @param clientName  DMCC client/server name.
-	 * @param channelNode Config node under {@code broadcasts.minecraft_to_discord}.
-	 * @param message     Already formatted message content.
+	 * Sends an already-formatted Minecraft system message; {@code channelNode} is a config node under
+	 * {@code broadcasts.minecraft_to_discord}.
 	 */
 	public static void sendMinecraftSystemMessage(String clientName, String channelNode, String message) {
 		String channelIdentifier = ConfigManager.getString("broadcasts.minecraft_to_discord." + channelNode);
@@ -410,12 +473,6 @@ public final class DiscordManager {
 		}
 	}
 
-	/**
-	 * Sends batched console logs to the configured console forwarding channel.
-	 *
-	 * @param clientName DMCC client/server name.
-	 * @param lines      Console log lines to forward.
-	 */
 	public static void sendConsoleForwardedBatchMessage(String clientName, List<String> lines) {
 		if (!ConfigManager.getBoolean("console_forwarding.enable") || lines == null || lines.isEmpty()) {
 			return;
@@ -455,12 +512,6 @@ public final class DiscordManager {
 		}
 	}
 
-	/**
-	 * Sends a localized reminder message when console forwarding starts/stops.
-	 *
-	 * @param clientName DMCC client/server name.
-	 * @param started    true when forwarding starts; false when it stops.
-	 */
 	public static void sendConsoleForwardingStatusMessage(String clientName, boolean started) {
 		if (!ConfigManager.getBoolean("console_forwarding.enable")) {
 			return;
@@ -502,11 +553,8 @@ public final class DiscordManager {
 	}
 
 	/**
-	 * Resolves which server should run /console when a message is sent in a console forwarding channel.
-	 *
-	 * @param channelId   Discord channel ID.
-	 * @param channelName Discord channel name.
-	 * @return Target server name, or {@code null} if channel is not configured for console forwarding.
+	 * Resolves which server should run /console when a message is sent in a console forwarding channel; returns
+	 * {@code null} when the channel is not configured for console forwarding.
 	 */
 	public static String resolveConsoleTargetServer(String channelId, String channelName) {
 		if (!ConfigManager.getBoolean("console_forwarding.enable")) {
@@ -606,13 +654,26 @@ public final class DiscordManager {
 				continue;
 			}
 			try {
-				output = Pattern.compile(regex).matcher(output).replaceAll("redacted");
+				output = consoleFilterPattern(regex).matcher(output).replaceAll("redacted");
 			} catch (PatternSyntaxException e) {
 				LOGGER.warn(I18nManager.getDmccTranslation("discord.manager.invalid_console_filter_regex", regex));
 			}
 		}
 
 		return output;
+	}
+
+	/**
+	 * Returns the compiled form of a {@code console_forwarding.filter_regex} entry, compiling each distinct regex once
+	 * instead of once per console line. Invalid patterns are deliberately not cached, keeping the old per-line warning.
+	 */
+	private static Pattern consoleFilterPattern(String regex) {
+		Pattern pattern = CONSOLE_FILTER_PATTERNS.get(regex);
+		if (pattern == null) {
+			pattern = Pattern.compile(regex);
+			CONSOLE_FILTER_PATTERNS.put(regex, pattern);
+		}
+		return pattern;
 	}
 
 	private static List<String> formatConsoleLinePartsForDiscord(String rawLine) {
@@ -699,12 +760,6 @@ public final class DiscordManager {
 		return replacePlaceholders(avatarTemplate, placeholders);
 	}
 
-	/**
-	 * Sends a message to the specified Discord channel identifier using the bot account.
-	 *
-	 * @param channelIdentifier Channel name or channel ID.
-	 * @param content           Message content.
-	 */
 	public static void sendBotMessage(String channelIdentifier, String content) {
 		TextChannel channel = getTextChannel(channelIdentifier);
 		if (channel != null) {
@@ -714,13 +769,6 @@ public final class DiscordManager {
 		}
 	}
 
-	/**
-	 * Sends a message to the specified Discord channel identifier using the bot account.
-	 *
-	 * @param channelIdentifier         Channel name or channel ID.
-	 * @param fallbackChannelIdentifier Fallback channel name or ID if the primary identifier fails to resolve.
-	 * @param content                   Message content.
-	 */
 	public static void sendBotMessage(String channelIdentifier, String fallbackChannelIdentifier, String content) {
 		TextChannel channel = getTextChannel(channelIdentifier);
 		if (channel == null) {
@@ -743,24 +791,29 @@ public final class DiscordManager {
 	}
 
 	private static void sendWebhookMessage(TextChannel channel, String username, String avatarUrl, String content) {
-		// Find or create webhook
 		Webhook webhook = getOrCreateWebhook(channel);
 
 		webhook.sendMessage(content)
 				.setUsername(username)
 				.setAvatarUrl(avatarUrl)
 				.setAllowedMentions(getAllowedMentions())
-				.queue();
+				.queue(null, failure -> handleWebhookSendFailure(channel, failure));
 	}
 
 	private static void sendWebhookMessageSync(TextChannel channel, String username, String avatarUrl, String content) {
 		Webhook webhook = getOrCreateWebhook(channel);
 
-		webhook.sendMessage(content)
-				.setUsername(username)
-				.setAvatarUrl(avatarUrl)
-				.setAllowedMentions(getAllowedMentions())
-				.complete();
+		try {
+			webhook.sendMessage(content)
+					.setUsername(username)
+					.setAvatarUrl(avatarUrl)
+					.setAllowedMentions(getAllowedMentions())
+					.complete();
+		} catch (RuntimeException e) {
+			// Drop the cached webhook before rethrowing, so the caller's error handling stays unchanged.
+			WEBHOOK_CACHE.remove(channel.getId());
+			throw e;
+		}
 	}
 
 	private static void sendWebhookMessageWithFile(TextChannel channel, String username, String avatarUrl,
@@ -774,16 +827,45 @@ public final class DiscordManager {
 				.setAvatarUrl(avatarUrl)
 				.setAllowedMentions(allowedMentions)
 				.addFiles(FileUpload.fromData(fileData, fileName))
-				.queue();
+				.queue(null, failure -> handleWebhookSendFailure(channel, failure));
 	}
 
+	/**
+	 * Resolves the DMCC webhook of the channel, creating it when it does not exist yet; the result is cached per
+	 * channel ID, so a send no longer performs a full {@code retrieveWebhooks()} REST call. On lookup/creation failure
+	 * the entry is dropped and the failure rethrown, exactly as the callers handled before.
+	 */
 	private static Webhook getOrCreateWebhook(TextChannel channel) {
-		return channel.retrieveWebhooks().complete()
-				.stream()
-				.filter(i -> "DMCC Webhook".equals(i.getName()))
-				.filter(i -> i.getOwnerAsUser() == jda.getSelfUser())
-				.findFirst()
-				.orElseGet(() -> channel.createWebhook("DMCC Webhook").complete()); // Must use orElseGet to avoid unnecessary creation
+		String channelId = channel.getId();
+
+		Webhook cached = WEBHOOK_CACHE.get(channelId);
+		if (cached != null) {
+			return cached;
+		}
+
+		try {
+			Webhook webhook = channel.retrieveWebhooks().complete()
+					.stream()
+					.filter(i -> "DMCC Webhook".equals(i.getName()))
+					.filter(i -> i.getOwnerAsUser() == jda.getSelfUser())
+					.findFirst()
+					.orElseGet(() -> channel.createWebhook("DMCC Webhook").complete()); // Must use orElseGet to avoid unnecessary creation
+			WEBHOOK_CACHE.put(channelId, webhook);
+			return webhook;
+		} catch (RuntimeException e) {
+			// Never keep a half-resolved entry around; the next message retries the lookup once, as before.
+			WEBHOOK_CACHE.remove(channelId);
+			throw e;
+		}
+	}
+
+	/**
+	 * Drops the cached webhook after a failed send (deleted webhook, revoked permission, ...) so the next message
+	 * re-resolves it; the previous failure handling is unchanged.
+	 */
+	private static void handleWebhookSendFailure(TextChannel channel, Throwable failure) {
+		WEBHOOK_CACHE.remove(channel.getId());
+		RestAction.getDefaultFailure().accept(failure);
 	}
 
 	private static List<Message.MentionType> getAllowedMentions() {
@@ -881,7 +963,6 @@ public final class DiscordManager {
 				sendWebhookMessage(channel, clientName, avatarUrl, message);
 
 				for (String line : message.split("\n")) {
-					// Escape underscores in :emoji: to prevent being treated as Markdown formatting
 					LOGGER.info(StringUtils.format("[{}] {}"), clientName, sanitizeLineForLogging(line));
 				}
 			} else {
@@ -947,8 +1028,7 @@ public final class DiscordManager {
 		TextChannel tc;
 		String normalizedIdentifier = identifier.trim();
 
-		// Try search by name
-		// Return first result. Use with caution if multiple channels have the same name.
+		// Try search by name first; the first result wins, which is ambiguous when several channels share the name.
 		List<TextChannel> channels = jda.getTextChannelsByName(normalizedIdentifier, true);
 		if (!channels.isEmpty()) {
 			tc = channels.getFirst();
@@ -990,10 +1070,8 @@ public final class DiscordManager {
 			jda.shutdown();
 			try {
 				if (ConfigManager.getBoolean("shutdown.graceful_shutdown")) {
-					// Allow up to 10 minutes for ongoing requests to complete
 					jda.awaitShutdown(Duration.ofMinutes(10));
 				} else {
-					// Allow up to 5 seconds for ongoing requests to complete
 					jda.awaitShutdown(Duration.ofSeconds(5));
 				}
 			} catch (Exception ignored) {
@@ -1002,16 +1080,80 @@ public final class DiscordManager {
 
 			jda = null;
 		}
+
+		clearCaches();
 	}
 
 	/**
-	 * Data holder for Discord status info.
-	 *
-	 * @param status            JDA status string
-	 * @param tag               Bot user tag
-	 * @param gatewayPingMillis Gateway ping in milliseconds
-	 * @param restPingMillis    REST ping in milliseconds
+	 * Drops everything tied to the current JDA instance or configuration; the resolved Discord names are deliberately
+	 * kept because they stay valid across a reconnect.
 	 */
+	private static void clearCaches() {
+		RESOLVED_USERS.clear();
+		UNRESOLVED_USERS.clear();
+		UNRESOLVED_MEMBERS.clear();
+		WEBHOOK_CACHE.clear();
+		CONSOLE_FILTER_PATTERNS.clear();
+	}
+
+	/**
+	 * Tiny thread-safe cache with a hard entry bound: inserting beyond {@code maxSize} evicts the least recently used
+	 * entry; a non-null {@code ttl} also expires entries, while {@code null} means the key itself carries validity
+	 * (e.g. a configured regex string). Operations synchronize because callers live on the Netty event loop and JDA threads.
+	 */
+	private static final class BoundedCache<K, V> {
+
+		private final int maxSize;
+		private final long ttlNanos;
+		private final Map<K, Entry<V>> entries;
+
+		BoundedCache(int maxSize, Duration ttl) {
+			this.maxSize = maxSize;
+			this.ttlNanos = ttl == null ? Long.MAX_VALUE : ttl.toNanos();
+			this.entries = new LinkedHashMap<>(16, 0.75f, true) {
+				@Override
+				protected boolean removeEldestEntry(Map.Entry<K, BoundedCache.Entry<V>> eldest) {
+					return size() > BoundedCache.this.maxSize;
+				}
+			};
+		}
+
+		synchronized V get(K key) {
+			Entry<V> entry = entries.get(key);
+			if (entry == null) {
+				return null;
+			}
+			if (System.nanoTime() - entry.storedAtNanos() > ttlNanos) {
+				entries.remove(key);
+				return null;
+			}
+			return entry.value();
+		}
+
+		synchronized void put(K key, V value) {
+			entries.put(key, new Entry<>(value, System.nanoTime()));
+		}
+
+		/** Stores only when no live entry exists, so repeated misses cannot extend the first (negative) entry's lifetime. */
+		synchronized void putIfAbsent(K key, V value) {
+			Entry<V> entry = entries.get(key);
+			if (entry == null || System.nanoTime() - entry.storedAtNanos() > ttlNanos) {
+				entries.put(key, new Entry<>(value, System.nanoTime()));
+			}
+		}
+
+		synchronized void remove(K key) {
+			entries.remove(key);
+		}
+
+		synchronized void clear() {
+			entries.clear();
+		}
+
+		private record Entry<V>(V value, long storedAtNanos) {
+		}
+	}
+
 	public record DiscordStatusInfo(String status, String tag, long gatewayPingMillis, long restPingMillis) {
 	}
 }

@@ -37,7 +37,9 @@ import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import tools.jackson.databind.JsonNode;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -46,6 +48,21 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
 final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	private static final String TELLRAW_COMPONENT_PLACEHOLDER = "__DMCC_TELLRAW_COMPONENT__";
+
+	private static final int EXCLUDED_COMMAND_PATTERN_CACHE_SIZE = 64;
+
+	/**
+	 * Compiled {@code broadcasts.excluded_commands} patterns. Capacity 64, access-order LRU eviction.
+	 * Entries never go stale: the key is the configured regex source string itself, so a configuration
+	 * reload can only add new entries, never invalidate an existing one.
+	 */
+	private static final Map<String, Pattern> EXCLUDED_COMMAND_PATTERNS =
+			Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true) {
+				@Override
+				protected boolean removeEldestEntry(Map.Entry<String, Pattern> eldest) {
+					return size() > EXCLUDED_COMMAND_PATTERN_CACHE_SIZE;
+				}
+			});
 
 	private final NettyServer server;
 	private String expectedNonce;
@@ -215,7 +232,6 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 					if (correctHash.equals(p.hash)) {
 						this.authenticated = true;
 
-						// Register client in NetworkManager
 						NetworkManager.addClientChannel(ctx.channel(), clientName);
 
 						LOGGER.info(I18nManager.getDmccTranslation("server.network.auth_success", clientName));
@@ -347,6 +363,15 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		broadcastMinecraftTellRawRelay(sourceClientName, relaySegments, overwriteSegments, componentJson, translatedMessage);
 	}
 
+	/**
+	 * Compiled form of an excluded command regex, at most one compilation per distinct source string.
+	 * Compilation stays lazy at the same loop position as the old {@code Pattern.matches}, so an invalid
+	 * regex still throws {@link java.util.regex.PatternSyntaxException} there; failures are not cached.
+	 */
+	private static Pattern excludedCommandPattern(String regex) {
+		return EXCLUDED_COMMAND_PATTERNS.computeIfAbsent(regex, Pattern::compile);
+	}
+
 	private boolean isExcludedMinecraftCommand(String command) {
 		if (command == null || command.isBlank()) {
 			return false;
@@ -355,7 +380,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		JsonNode excludedCommands = ConfigManager.getConfigNode("broadcasts.excluded_commands");
 		if (excludedCommands.isArray()) {
 			for (JsonNode excludedCommand : excludedCommands) {
-				if (excludedCommand != null && excludedCommand.isString() && Pattern.matches(excludedCommand.asString(), command)) {
+				if (excludedCommand != null && excludedCommand.isString() && excludedCommandPattern(excludedCommand.asString()).matcher(command).matches()) {
 					return true;
 				}
 			}

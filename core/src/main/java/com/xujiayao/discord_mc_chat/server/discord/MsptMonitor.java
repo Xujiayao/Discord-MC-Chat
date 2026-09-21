@@ -8,9 +8,11 @@ import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import tools.jackson.databind.JsonNode;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -41,17 +43,27 @@ public final class MsptMonitor {
 			return;
 		}
 
-		if (monitorExecutor == null || monitorExecutor.isShutdown()) {
-			monitorExecutor = Executors.newSingleThreadScheduledExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-MsptMonitor"));
-		}
-
+		// Create the executor while holding the lock, otherwise two concurrent start() calls could each create
+		// one and leak the loser (a permanently alive scheduler thread that keeps reporting).
+		ScheduledExecutorService staleExecutor = null;
 		synchronized (MsptMonitor.class) {
+			if (monitorExecutor == null || monitorExecutor.isShutdown()) {
+				staleExecutor = monitorExecutor;
+				monitorExecutor = Executors.newSingleThreadScheduledExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-MsptMonitor"));
+			}
+
 			if (monitorTask != null) {
 				monitorTask.cancel(false);
 			}
 			roundExceededServers = new LinkedHashSet<>();
 			backoffExponent = 0;
 			scheduleNextPoll(getBaseIntervalSeconds());
+		}
+
+		// The replaced executor can only be an already shut-down one here; shutdownNow() merely guarantees that
+		// no task of it is still running. Done outside the lock so a stuck task cannot block start().
+		if (staleExecutor != null) {
+			staleExecutor.shutdownNow();
 		}
 	}
 
@@ -99,6 +111,10 @@ public final class MsptMonitor {
 			}
 		}
 
+		// Notifications are collected while the lock is held and dispatched after it is released, so that the
+		// Discord/webhook network I/O of notifyMspt() never happens inside the critical section.
+		List<PendingNotification> notifications = new ArrayList<>();
+		long nextDelay;
 		synchronized (MsptMonitor.class) {
 			roundExceededServers.removeAll(graceServers);
 			if (roundExceededServers.isEmpty()) {
@@ -107,68 +123,76 @@ public final class MsptMonitor {
 
 			if (roundExceededServers.isEmpty()) {
 				if (exceededNow.isEmpty()) {
-					return baseIntervalSeconds;
+					// Nothing was over the threshold and nothing is now: no notification to collect.
+					nextDelay = baseIntervalSeconds;
+				} else {
+					nextDelay = computeBackoffSeconds(baseIntervalSeconds, backoffExponent);
+					long nextCheckEpochSeconds = Instant.now().plusSeconds(nextDelay).getEpochSecond();
+
+					for (String server : exceededNow) {
+						CommandPackets.Info.ResponsePacket packet = infoMap.get(server);
+						if (packet != null) {
+							notifications.add(new PendingNotification("first_exceeded", packet, nextCheckEpochSeconds));
+						}
+					}
+
+					roundExceededServers = new LinkedHashSet<>(exceededNow);
+					if (nextDelay < MAX_BACKOFF_SECONDS) {
+						backoffExponent = 1;
+					}
 				}
-
-				long nextDelay = computeBackoffSeconds(baseIntervalSeconds, backoffExponent);
-				long nextCheckEpochSeconds = Instant.now().plusSeconds(nextDelay).getEpochSecond();
-
-				for (String server : exceededNow) {
+			} else {
+				Set<String> recovered = new HashSet<>(roundExceededServers);
+				recovered.removeAll(exceededNow);
+				for (String server : recovered) {
 					CommandPackets.Info.ResponsePacket packet = infoMap.get(server);
 					if (packet != null) {
-						notifyMspt("first_exceeded", packet, threshold, nextCheckEpochSeconds);
+						notifications.add(new PendingNotification("first_recovered", packet, -1));
 					}
 				}
 
-				roundExceededServers = new LinkedHashSet<>(exceededNow);
-				if (nextDelay < MAX_BACKOFF_SECONDS) {
-					backoffExponent = 1;
-				}
-				return nextDelay;
-			}
+				if (exceededNow.isEmpty()) {
+					// Every previously exceeded server recovered; the recovery notifications collected
+					// above are still dispatched below, after the lock is released.
+					roundExceededServers = new LinkedHashSet<>();
+					backoffExponent = 0;
+					nextDelay = baseIntervalSeconds;
+				} else {
+					nextDelay = computeBackoffSeconds(baseIntervalSeconds, backoffExponent);
+					long nextCheckEpochSeconds = Instant.now().plusSeconds(nextDelay).getEpochSecond();
 
-			Set<String> recovered = new HashSet<>(roundExceededServers);
-			recovered.removeAll(exceededNow);
-			for (String server : recovered) {
-				CommandPackets.Info.ResponsePacket packet = infoMap.get(server);
-				if (packet != null) {
-					notifyMspt("first_recovered", packet, threshold, -1);
-				}
-			}
+					Set<String> stillExceeded = new HashSet<>(exceededNow);
+					stillExceeded.retainAll(roundExceededServers);
+					for (String server : stillExceeded) {
+						CommandPackets.Info.ResponsePacket packet = infoMap.get(server);
+						if (packet != null) {
+							notifications.add(new PendingNotification("still_exceeded", packet, nextCheckEpochSeconds));
+						}
+					}
 
-			if (exceededNow.isEmpty()) {
-				roundExceededServers = new LinkedHashSet<>();
-				backoffExponent = 0;
-				return baseIntervalSeconds;
-			}
+					Set<String> newlyExceeded = new HashSet<>(exceededNow);
+					newlyExceeded.removeAll(roundExceededServers);
+					for (String server : newlyExceeded) {
+						CommandPackets.Info.ResponsePacket packet = infoMap.get(server);
+						if (packet != null) {
+							notifications.add(new PendingNotification("first_exceeded", packet, nextCheckEpochSeconds));
+						}
+					}
 
-			long nextDelay = computeBackoffSeconds(baseIntervalSeconds, backoffExponent);
-			long nextCheckEpochSeconds = Instant.now().plusSeconds(nextDelay).getEpochSecond();
-
-			Set<String> stillExceeded = new HashSet<>(exceededNow);
-			stillExceeded.retainAll(roundExceededServers);
-			for (String server : stillExceeded) {
-				CommandPackets.Info.ResponsePacket packet = infoMap.get(server);
-				if (packet != null) {
-					notifyMspt("still_exceeded", packet, threshold, nextCheckEpochSeconds);
-				}
-			}
-
-			Set<String> newlyExceeded = new HashSet<>(exceededNow);
-			newlyExceeded.removeAll(roundExceededServers);
-			for (String server : newlyExceeded) {
-				CommandPackets.Info.ResponsePacket packet = infoMap.get(server);
-				if (packet != null) {
-					notifyMspt("first_exceeded", packet, threshold, nextCheckEpochSeconds);
+					roundExceededServers = new LinkedHashSet<>(exceededNow);
+					if (nextDelay < MAX_BACKOFF_SECONDS) {
+						backoffExponent += 1;
+					}
 				}
 			}
-
-			roundExceededServers = new LinkedHashSet<>(exceededNow);
-			if (nextDelay < MAX_BACKOFF_SECONDS) {
-				backoffExponent += 1;
-			}
-			return nextDelay;
 		}
+
+		// Message keys, per-server iteration order, thresholds and placeholder values are unchanged; only the
+		// point in time at which the messages are sent moved out of the lock.
+		for (PendingNotification notification : notifications) {
+			notifyMspt(notification.messageKey(), notification.packet(), threshold, notification.nextCheckEpochSeconds());
+		}
+		return nextDelay;
 	}
 
 	private static void notifyMspt(String messageKey,
@@ -206,6 +230,14 @@ public final class MsptMonitor {
 			}
 		}
 		return Math.min(seconds, MAX_BACKOFF_SECONDS);
+	}
+
+	/**
+	 * A notification collected under the monitor lock, to be dispatched after the lock is released.
+	 */
+	private record PendingNotification(String messageKey,
+	                                   CommandPackets.Info.ResponsePacket packet,
+	                                   long nextCheckEpochSeconds) {
 	}
 
 	public static void shutdown() {

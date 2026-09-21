@@ -18,36 +18,32 @@ import java.util.Map;
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
 
-/**
- * Manages internationalization (i18n) for DMCC.
- * Handles loading language files for DMCC Translations and Custom Messages.
- */
 public final class I18nManager {
 
-	private static final Map<String, String> DMCC_TRANSLATIONS = new HashMap<>();
+	/**
+	 * Replaced as a whole by {@link #loadDmccTranslations()} and never mutated after publication, so readers
+	 * see either the previous or the fully built new map, never a half-loaded one (the previous implementation
+	 * cleared and refilled a shared {@code HashMap} in place).
+	 */
+	private static volatile Map<String, String> dmccTranslations = new HashMap<>();
+
 	private static final Path CUSTOM_MESSAGES_DIR = Paths.get("./config/discord_mc_chat/custom_messages");
-	private static String language = detectLanguage();
-	private static JsonNode customMessages;
+	private static volatile String language = detectLanguage();
+	private static volatile JsonNode customMessages;
 
 	private I18nManager() {
 	}
 
-	/**
-	 * Gets the currently selected language code (e.g., "en_us").
-	 */
 	public static String getLanguage() {
 		return language;
 	}
 
 	/**
-	 * Detects the system language and checks if it is supported by DMCC.
-	 *
 	 * @return The detected language code (e.g., "zh_cn") if supported, otherwise "en_us".
 	 */
 	public static String detectLanguage() {
 		String code = Locale.getDefault().toString().toLowerCase();
 
-		// Check if the internal translation file exists for the detected language
 		if (I18nManager.class.getResource("/lang/" + code + ".yml") != null) {
 			return code;
 		}
@@ -55,14 +51,8 @@ public final class I18nManager {
 		return "en_us";
 	}
 
-	/**
-	 * Loads only DMCC's internal translations from resources.
-	 *
-	 * @return true if DMCC translations were loaded successfully, false otherwise.
-	 */
 	public static boolean loadInternalTranslationsOnly() {
-		if (DMCC_TRANSLATIONS.isEmpty()) {
-			// Check if required resource files exist for the selected language
+		if (dmccTranslations.isEmpty()) {
 			if (!checkLanguageResources()) {
 				return false;
 			}
@@ -72,16 +62,9 @@ public final class I18nManager {
 		return true;
 	}
 
-	/**
-	 * Loads all necessary language files based on the selected language.
-	 *
-	 * @param lang The language code to load (e.g., "en_us").
-	 * @return true if all necessary language files were loaded successfully, false otherwise.
-	 */
 	public static boolean load(String lang) {
 		language = lang;
 
-		// Check if required resource files exist for the selected language
 		if (!checkLanguageResources()) {
 			return false;
 		}
@@ -92,7 +75,6 @@ public final class I18nManager {
 
 		// For client-only mode, we only need DMCC translations for logs and basic messages.
 		if (!"multi_server_client".equals(ModeManager.getMode())) {
-			// For server-enabled modes, load the full I18n suite.
 			if (!loadCustomMessages()) {
 				return false;
 			}
@@ -115,17 +97,21 @@ public final class I18nManager {
 	}
 
 	private static boolean loadDmccTranslations() {
-		DMCC_TRANSLATIONS.clear();
 		String resourcePath = "/lang/" + language + ".yml";
+
+		// Build into a fresh map and publish it with a single volatile write, so a concurrent reader can never
+		// observe a partially filled translation table.
+		Map<String, String> translations = new HashMap<>();
 
 		try (InputStream inputStream = I18nManager.class.getResourceAsStream(resourcePath)) {
 			JsonNode rootNode = YAML_MAPPER.readTree(inputStream);
-			flattenJsonToMap(rootNode, "", DMCC_TRANSLATIONS);
+			flattenJsonToMap(rootNode, "", translations);
 		} catch (IOException e) {
 			LOGGER.error(I18nManager.getDmccTranslation("utils.i18n.load_failed", resourcePath), e);
 			return false;
 		}
 
+		dmccTranslations = translations;
 		return true;
 	}
 
@@ -135,7 +121,6 @@ public final class I18nManager {
 			Path customMessagesPath = CUSTOM_MESSAGES_DIR.resolve(language + ".yml");
 			String templatePath = "/config/custom_messages/" + language + ".yml";
 
-			// If the custom messages file does not exist or is empty, copy the template.
 			if (!Files.exists(customMessagesPath) || Files.size(customMessagesPath) == 0) {
 				try (InputStream inputStream = I18nManager.class.getResourceAsStream(templatePath)) {
 					if (inputStream == null) {
@@ -150,17 +135,14 @@ public final class I18nManager {
 				}
 			}
 
-			// Load the user's custom messages file.
 			JsonNode userMessages = YAML_MAPPER.readTree(Files.newBufferedReader(customMessagesPath, StandardCharsets.UTF_8));
 
-			// Load the template for validation.
 			JsonNode templateMessages;
 			try (InputStream templateStream = I18nManager.class.getResourceAsStream(templatePath)) {
 				templateMessages = YAML_MAPPER.readTree(templateStream);
 			}
 
-			// Validate the user's file against the template.
-			// The `errorOnUnmodified` flag is set to false because users might not need to customize messages.
+			// `errorOnUnmodified` is false because users might not need to customize messages.
 			if (!YamlUtils.validate(userMessages, templateMessages, false)) {
 				LOGGER.error(I18nManager.getDmccTranslation("utils.i18n.custom_validation_failed"));
 				return false;
@@ -176,13 +158,12 @@ public final class I18nManager {
 	}
 
 	/**
-	 * Gets a translation from DMCC's internal translation files (lang/*.yml).
-	 * Placeholders are formatted using {}.
-	 *
-	 * @param key The translation key (e.g., "whitelist.success").
+	 * Gets a translation from DMCC's internal translation files (lang/*.yml). Placeholders use <code>{}</code>.
 	 */
 	public static String getDmccTranslation(String key, Object... args) {
-		String translation = DMCC_TRANSLATIONS.getOrDefault(key, key);
+		// Single volatile read of the published snapshot: the map is never mutated in place, so this is safe
+		// without locking and can not observe a half-loaded table.
+		String translation = dmccTranslations.getOrDefault(key, key);
 		return StringUtils.format(translation, args);
 	}
 

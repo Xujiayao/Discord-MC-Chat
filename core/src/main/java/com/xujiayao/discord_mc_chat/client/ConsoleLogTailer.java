@@ -3,6 +3,7 @@ package com.xujiayao.discord_mc_chat.client;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.EventPackets.ConsoleLogBatchPacket;
+import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
@@ -22,18 +23,16 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 /**
  * Tails logs/latest.log on the client and forwards lines in batches.
  * <p>
- * Design notes:
- * <ul>
- *   <li>The listener stays alive across network reconnects.</li>
- *   <li>New lines are buffered while disconnected and flushed after reconnect.</li>
- *   <li>On first enable, history is replayed from the start of latest.log.</li>
- * </ul>
+ * The listener stays alive across network reconnects, buffering new lines while disconnected and flushing
+ * them after reconnect; on first enable, history is replayed from the start of latest.log.
  */
 final class ConsoleLogTailer {
 
 	private static final long POLL_INTERVAL_MS = 1000;
 	private static final int MAX_LINES_PER_BATCH = 80;
 	private static final int MAX_CHARS_PER_BATCH = 6000;
+	// Upper bound for the disconnected-buffer, so a long disconnect cannot exhaust the heap.
+	private static final int MAX_PENDING_LINES = 1000;
 	private static final Path LATEST_LOG_PATH = Path.of("logs", "latest.log");
 
 	private static final AtomicBoolean ENABLED = new AtomicBoolean(false);
@@ -68,7 +67,7 @@ final class ConsoleLogTailer {
 		if (executor != null && !executor.isShutdown()) {
 			return;
 		}
-		executor = Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "DMCC-ConsoleLogTailer"));
+		executor = Executors.newSingleThreadScheduledExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-ConsoleLogTailer"));
 		executor.scheduleWithFixedDelay(ConsoleLogTailer::poll, 0, POLL_INTERVAL_MS, TimeUnit.MILLISECONDS);
 	}
 
@@ -115,10 +114,19 @@ final class ConsoleLogTailer {
 			while ((line = localReader.readLine()) != null) {
 				String utf8 = new String(line.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
 				if (!utf8.isBlank()) {
-					pendingLines.addLast(normalizeLine(utf8));
+					addPendingLine(normalizeLine(utf8));
 				}
 			}
 			pointer = localReader.getFilePointer();
+		}
+	}
+
+	private static void addPendingLine(String line) {
+		pendingLines.addLast(line);
+		// Bounded buffer: while disconnected, drop the oldest lines instead of growing without limit.
+		// Nothing is logged here on purpose (all DMCC messages are localized resources).
+		while (pendingLines.size() > MAX_PENDING_LINES) {
+			pendingLines.removeFirst();
 		}
 	}
 

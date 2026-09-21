@@ -28,18 +28,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Parses plain-text messages originating from Minecraft into:
- * <ul>
- *   <li>Discord-ready message strings (custom emoji + mention conversion)</li>
- *   <li>Minecraft-ready rich segments (markdown/emoji/mention/link/timestamp rendering)</li>
- * </ul>
+ * Parses plain-text messages originating from Minecraft into Discord-ready message strings and
+ * Minecraft-ready rich segments.
  */
 public final class MinecraftMessageParser {
 
 	private static final Pattern SIMPLE_MENTION_PATTERN = Pattern.compile("(?<![A-Za-z0-9_])@([A-Za-z0-9_]+)(?![A-Za-z0-9_])");
 	private static final Pattern DISCORD_ALIAS_EMOJI_PATTERN = Pattern.compile("(?<![A-Za-z0-9_]):([A-Za-z0-9_+\\-]+):(?![A-Za-z0-9_])");
 
-	// Matches the {message} placeholder inside custom_messages templates
 	private static final Pattern MESSAGE_PLACEHOLDER_PATTERN = Pattern.compile("\\{message}");
 
 	private static final List<String> MARKDOWN_DELIMITERS = List.of("***", "~~", "||", "**", "__", "*", "_");
@@ -62,12 +58,6 @@ public final class MinecraftMessageParser {
 		return new ParsedMessage(discordContent, mc, Set.of(), false);
 	}
 
-	/**
-	 * Builds the mention notification text shown to mentioned Minecraft players.
-	 *
-	 * @param senderDisplayName Display name of the mention sender.
-	 * @return Localized mention notification text.
-	 */
 	public static String getMentionNotificationText(String senderDisplayName) {
 		String template = I18nManager.getCustomMessages().path("xxxxx_to_minecraft").path("mentioned").asString("{effective_name} mentioned you!");
 		return template.replace("{effective_name}", senderDisplayName);
@@ -123,7 +113,9 @@ public final class MinecraftMessageParser {
 
 	private static ParsedMessage parse(String raw, boolean parseForMinecraft) {
 		String source = raw == null ? "" : raw;
-		MentionContext context = buildMentionContext();
+		// The mention and emoji tables are built lazily on first actual use, so a message without any
+		// '@' or ':alias:' never walks linked accounts, members, roles or emojis.
+		MentionContext context = new MentionContext();
 
 		boolean parseDiscordMentions = ConfigManager.getBoolean("message_parsing.minecraft_to_discord.mentions");
 		boolean parseDiscordCustomEmojis = ConfigManager.getBoolean("message_parsing.minecraft_to_discord.custom_emojis");
@@ -161,7 +153,7 @@ public final class MinecraftMessageParser {
 		while (emojiMatcher.find()) {
 			rebuilt.append(out, cursor, emojiMatcher.start());
 			String emojiAlias = emojiMatcher.group(1);
-			RichCustomEmoji emoji = context.customEmojiByName.get(emojiAlias.toLowerCase(Locale.ROOT));
+			RichCustomEmoji emoji = context.customEmojiNames().get(emojiAlias.toLowerCase(Locale.ROOT));
 			if (emoji != null) {
 				rebuilt.append(emoji.isAnimated() ? "<a:" : "<:")
 						.append(emoji.getName())
@@ -207,20 +199,36 @@ public final class MinecraftMessageParser {
 		return segments;
 	}
 
-	private static MentionContext buildMentionContext() {
+	/**
+	 * Only called when a message really contains a mention candidate, because it walks every linked
+	 * account, member and role. Members come from JDA's event-maintained cache (the same member the REST
+	 * lookup returned for guild members); the two REST lookups stay as the fallback for unknown ids.
+	 */
+	private static void buildMentionTables(MentionContext context) {
 		Map<String, MentionTarget> userByAlias = new HashMap<>();
 		Map<String, MentionTarget> roleByAlias = new HashMap<>();
 		Map<String, MentionTarget> allMentionByAlias = new HashMap<>();
-		Map<String, RichCustomEmoji> emojiByAlias = new HashMap<>();
 		Map<String, MentionTarget> targetByDiscordId = new HashMap<>();
+
+		List<Member> allMembers = DiscordManager.getAllMembers();
+		Map<String, Member> membersById = new HashMap<>();
+		for (Member member : allMembers) {
+			membersById.put(member.getId(), member);
+		}
 
 		Map<String, List<LinkedAccountManager.LinkEntry>> allLinks = LinkedAccountManager.getAllLinks();
 		for (Map.Entry<String, List<LinkedAccountManager.LinkEntry>> entry : allLinks.entrySet()) {
 			String discordId = entry.getKey();
 			List<String> linkedUuids = entry.getValue().stream().map(LinkedAccountManager.LinkEntry::minecraftUuid).toList();
 
-			User user = DiscordManager.retrieveUser(discordId);
-			Member member = DiscordManager.retrieveMember(discordId);
+			Member member = membersById.get(discordId);
+			User user;
+			if (member != null) {
+				user = member.getUser();
+			} else {
+				user = DiscordManager.retrieveUser(discordId);
+				member = DiscordManager.retrieveMember(discordId);
+			}
 			String displayName = member != null ? member.getEffectiveName() : (user != null ? user.getName() : discordId);
 			String roleColor = DiscordMessageParser.getRoleColorHex(member);
 
@@ -241,7 +249,7 @@ public final class MinecraftMessageParser {
 			}
 		}
 
-		for (Member member : DiscordManager.getAllMembers()) {
+		for (Member member : allMembers) {
 			String discordId = member.getId();
 			MentionTarget target = targetByDiscordId.computeIfAbsent(discordId, id -> new MentionTarget(
 					MentionType.USER,
@@ -275,14 +283,17 @@ public final class MinecraftMessageParser {
 		allMentionByAlias.put("everyone", everyone);
 		allMentionByAlias.put("here", here);
 
-		for (RichCustomEmoji emoji : DiscordManager.getAllCustomEmojis()) {
-			emojiByAlias.putIfAbsent(emoji.getName().toLowerCase(Locale.ROOT), emoji);
-		}
-
+		// Longest alias first, as before, additionally bucketed by first character to avoid scanning all aliases.
 		List<String> aliasesByLengthDesc = new ArrayList<>(allMentionByAlias.keySet());
 		aliasesByLengthDesc.sort(Comparator.comparingInt(String::length).reversed());
 
-		return new MentionContext(allMentionByAlias, aliasesByLengthDesc, emojiByAlias, new HashSet<>());
+		Map<Character, List<String>> aliasesByFirstChar = new HashMap<>();
+		for (String alias : aliasesByLengthDesc) {
+			aliasesByFirstChar.computeIfAbsent(Character.toUpperCase(alias.charAt(0)), firstChar -> new ArrayList<>()).add(alias);
+		}
+
+		context.allMentionByAlias = allMentionByAlias;
+		context.mentionAliasesByFirstChar = aliasesByFirstChar;
 	}
 
 	private static List<TextSegment> parseMarkdownSegments(String raw) {
@@ -317,6 +328,7 @@ public final class MinecraftMessageParser {
 	private static List<TextSegment> parseMarkdownLine(String raw, MarkdownState state) {
 		List<TextSegment> out = new ArrayList<>();
 		StringBuilder plain = new StringBuilder();
+		ClosingDelimiterLookup closingDelimiters = new ClosingDelimiterLookup(raw);
 
 		int i = 0;
 		while (i < raw.length()) {
@@ -329,7 +341,7 @@ public final class MinecraftMessageParser {
 						&& MessageParserCommon.isInsideDiscordAliasEmoji(raw, i, DISCORD_ALIAS_EMOJI_PATTERN)) {
 					continue;
 				}
-				if (!shouldConsumeDelimiter(state, delimiter, raw, i)) {
+				if (!shouldConsumeDelimiter(state, delimiter, i, closingDelimiters)) {
 					continue;
 				}
 				appendStyled(out, plain, state);
@@ -430,7 +442,8 @@ public final class MinecraftMessageParser {
 	private static List<TextSegment> splitSegmentsByCustomEmoji(List<TextSegment> segments, MentionContext context) {
 		return MessageParserCommon.splitSegments(segments, DISCORD_ALIAS_EMOJI_PATTERN, (segment, matcher) -> {
 			String aliasName = matcher.group(1).toLowerCase(Locale.ROOT);
-			if (!context.customEmojiByName.containsKey(aliasName) && EmojiManager.getByDiscordAlias(":" + matcher.group(1) + ":").isEmpty()) {
+			// Same order as before: the custom emoji table first, the jemoji lookup only as fallback.
+			if (!context.customEmojiNames().containsKey(aliasName) && !context.hasJemojiAlias(":" + matcher.group(1) + ":")) {
 				return null;
 			}
 			TextSegment emoji = TextSegmentUtils.copySegment(segment, matcher.group());
@@ -455,24 +468,50 @@ public final class MinecraftMessageParser {
 		}
 	}
 
-	private static boolean hasClosingDelimiter(String text, int start, String delimiter) {
-		for (int i = start; i <= text.length() - delimiter.length(); i++) {
-			if (text.charAt(i) == '\\') {
-				i++;
-				continue;
-			}
-			if (text.startsWith(delimiter, i)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private static boolean shouldConsumeDelimiter(MarkdownState state, String delimiter, String text, int at) {
+	private static boolean shouldConsumeDelimiter(MarkdownState state, String delimiter, int at, ClosingDelimiterLookup closingDelimiters) {
 		if (isDelimiterActive(state, delimiter)) {
 			return true;
 		}
-		return hasClosingDelimiter(text, at + delimiter.length(), delimiter);
+		return closingDelimiters.hasClosingDelimiter(at + delimiter.length(), delimiter);
+	}
+
+	/**
+	 * Answers "does a closing delimiter follow?" in O(1) after one lazy O(n) scan per delimiter instead
+	 * of rescanning from every occurrence. The escape-aware walk is unchanged (a backslash skips the next
+	 * character, otherwise advance by one, stopping past the last fitting position); reachable[i] is the
+	 * first delimiter occurrence reachable from i, or -1.
+	 */
+	private static final class ClosingDelimiterLookup {
+		private final String text;
+		private final Map<String, int[]> reachableByDelimiter = new HashMap<>();
+
+		private ClosingDelimiterLookup(String text) {
+			this.text = text;
+		}
+
+		private boolean hasClosingDelimiter(int start, String delimiter) {
+			int limit = text.length() - delimiter.length();
+			if (start > limit) {
+				return false;
+			}
+			return reachableByDelimiter.computeIfAbsent(delimiter, this::scan)[start] >= 0;
+		}
+
+		private int[] scan(String delimiter) {
+			int limit = text.length() - delimiter.length();
+			int[] reachable = new int[limit + 1];
+			for (int i = limit; i >= 0; i--) {
+				if (text.charAt(i) == '\\') {
+					int next = i + 2;
+					reachable[i] = next <= limit ? reachable[next] : -1;
+				} else if (text.startsWith(delimiter, i)) {
+					reachable[i] = i;
+				} else {
+					reachable[i] = i + 1 <= limit ? reachable[i + 1] : -1;
+				}
+			}
+			return reachable;
+		}
 	}
 
 	private static boolean isDelimiterActive(MarkdownState state, String delimiter) {
@@ -607,24 +646,35 @@ public final class MinecraftMessageParser {
 	}
 
 	private static MentionMatch findMentionMatch(String text, int contentStart, MentionContext context) {
-		for (String alias : context.mentionAliasesByLengthDesc) {
-			int end = contentStart + alias.length();
-			if (end > text.length()) {
-				continue;
-			}
-			if (!text.regionMatches(true, contentStart, alias, 0, alias.length())) {
-				continue;
-			}
-			if (end < text.length() && isWordChar(text.charAt(end))) {
-				continue;
-			}
-			MentionTarget target = context.allMentionByAlias.get(alias);
-			if (target != null) {
-				return new MentionMatch(target, end);
+		context.ensureMentionTables();
+
+		// Bucket lookup instead of a scan over every alias: regionMatches(ignoreCase) compares the
+		// first character with Character.toUpperCase, so only aliases in that bucket can match, and
+		// the bucket keeps the original longest-alias-first order.
+		List<String> candidates = contentStart < text.length()
+				? context.mentionAliasesByFirstChar.get(Character.toUpperCase(text.charAt(contentStart)))
+				: null;
+		if (candidates != null) {
+			for (String alias : candidates) {
+				int end = contentStart + alias.length();
+				if (end > text.length()) {
+					continue;
+				}
+				if (!text.regionMatches(true, contentStart, alias, 0, alias.length())) {
+					continue;
+				}
+				if (end < text.length() && isWordChar(text.charAt(end))) {
+					continue;
+				}
+				MentionTarget target = context.allMentionByAlias.get(alias);
+				if (target != null) {
+					return new MentionMatch(target, end);
+				}
 			}
 		}
 
-		Matcher simple = SIMPLE_MENTION_PATTERN.matcher(text.substring(contentStart - 1));
+		// A region instead of a copied substring: both start the match right after the '@'.
+		Matcher simple = SIMPLE_MENTION_PATTERN.matcher(text).region(contentStart - 1, text.length());
 		if (simple.lookingAt()) {
 			String token = simple.group(1).toLowerCase(Locale.ROOT);
 			MentionTarget fallback = context.allMentionByAlias.get(token);
@@ -650,12 +700,7 @@ public final class MinecraftMessageParser {
 	}
 
 	/**
-	 * Parsed message data for both Discord and Minecraft outputs.
-	 *
-	 * @param discordContent       Discord-ready message string.
-	 * @param minecraftSegments    Minecraft-ready rich text segments.
-	 * @param mentionedPlayerUuids Mentioned Minecraft player UUIDs.
-	 * @param mentionEveryone      Whether an @everyone-like mention is detected.
+	 * Parsed message for both the Discord and the Minecraft output.
 	 */
 	public record ParsedMessage(
 			String discordContent,
@@ -673,21 +718,37 @@ public final class MinecraftMessageParser {
 	}
 
 	private static final class MentionContext {
-		private final Map<String, MentionTarget> allMentionByAlias;
-		private final List<String> mentionAliasesByLengthDesc;
-		private final Map<String, RichCustomEmoji> customEmojiByName;
-		private final Set<String> mentionedPlayerUuids;
+		private final Set<String> mentionedPlayerUuids = new HashSet<>();
 		private boolean mentionEveryone;
 
-		private MentionContext(Map<String, MentionTarget> allMentionByAlias,
-		                       List<String> mentionAliasesByLengthDesc,
-		                       Map<String, RichCustomEmoji> customEmojiByName,
-		                       Set<String> mentionedPlayerUuids) {
-			this.allMentionByAlias = allMentionByAlias;
-			this.mentionAliasesByLengthDesc = mentionAliasesByLengthDesc;
-			this.customEmojiByName = customEmojiByName;
-			this.mentionedPlayerUuids = mentionedPlayerUuids;
-			this.mentionEveryone = false;
+		// Lazily filled, valid only until the end of this parse; never cached across messages because
+		// account link/unlink or Discord-side member/role/emoji changes have no invalidation hook here.
+		private Map<String, MentionTarget> allMentionByAlias;
+		private Map<Character, List<String>> mentionAliasesByFirstChar;
+		private Map<String, RichCustomEmoji> customEmojiByName;
+
+		// Per-context cache; remembering an answer cannot go stale because the jemoji table is static at runtime.
+		private final Map<String, Boolean> jemojiAliasQueries = new HashMap<>();
+
+		private void ensureMentionTables() {
+			if (allMentionByAlias == null) {
+				buildMentionTables(this);
+			}
+		}
+
+		private Map<String, RichCustomEmoji> customEmojiNames() {
+			if (customEmojiByName == null) {
+				Map<String, RichCustomEmoji> emojisByName = new HashMap<>();
+				for (RichCustomEmoji emoji : DiscordManager.getAllCustomEmojis()) {
+					emojisByName.putIfAbsent(emoji.getName().toLowerCase(Locale.ROOT), emoji);
+				}
+				customEmojiByName = emojisByName;
+			}
+			return customEmojiByName;
+		}
+
+		private boolean hasJemojiAlias(String discordAlias) {
+			return jemojiAliasQueries.computeIfAbsent(discordAlias, alias -> !EmojiManager.getByDiscordAlias(alias).isEmpty());
 		}
 	}
 }

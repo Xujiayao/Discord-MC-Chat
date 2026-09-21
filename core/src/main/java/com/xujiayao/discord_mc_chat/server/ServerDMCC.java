@@ -4,6 +4,7 @@ import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.discord.MsptMonitor;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
+import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -18,11 +19,7 @@ public final class ServerDMCC {
 	private int port;
 
 	/**
-	 * Creates a server-side DMCC lifecycle manager.
-	 *
-	 * @param host         Bind host.
-	 * @param port         Bind port (0 for ephemeral).
-	 * @param sharedSecret Shared secret for client authentication.
+	 * @param port Bind port (0 for ephemeral).
 	 */
 	public ServerDMCC(String host, int port, String sharedSecret) {
 		this.host = host;
@@ -31,12 +28,12 @@ public final class ServerDMCC {
 	}
 
 	/**
-	 * Starts the DMCC server. Blocks until startup is complete.
+	 * Blocks until startup is complete.
 	 *
 	 * @return the port number the server is listening on, or -1 if startup failed
 	 */
 	public int start() {
-		try (ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "DMCC-Server"))) {
+		try (ExecutorService executor = Executors.newSingleThreadExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-Server"))) {
 			return executor.submit(() -> {
 				// Load linked accounts before Discord initialization
 				if (!LinkedAccountManager.load()) {
@@ -64,9 +61,6 @@ public final class ServerDMCC {
 		}
 	}
 
-	/**
-	 * Stops server networking and dependent server-side services.
-	 */
 	public void shutdown() {
 		if (nettyServer != null) {
 			nettyServer.stop();

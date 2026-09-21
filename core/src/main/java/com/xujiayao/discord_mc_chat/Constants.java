@@ -8,34 +8,36 @@ import tools.jackson.dataformat.yaml.YAMLFactory;
 import tools.jackson.dataformat.yaml.YAMLMapper;
 import tools.jackson.dataformat.yaml.YAMLWriteFeature;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * Static final constants used across the project.
- */
 public final class Constants {
 
-	/**
-	 * Whether the current runtime is inside Minecraft.
-	 */
 	public static final boolean IS_MINECRAFT_ENV = EnvironmentUtils.isMinecraftEnvironment();
 
-	/**
-	 * Global logger used by all DMCC modules.
-	 */
 	public static final Logger LOGGER = new Logger();
 
 	// YAML_MAPPER has to be initialized before VERSION because getDmccVersion() uses it.
-	/**
-	 * Shared YAML mapper configured for DMCC config files.
-	 */
 	public static final ObjectMapper YAML_MAPPER = new YAMLMapper.Builder(new YAMLFactory())
 			.enable(YAMLWriteFeature.MINIMIZE_QUOTES)
 			.disable(YAMLWriteFeature.WRITE_DOC_START_MARKER).build();
 
 	public static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 	public static final String VERSION = EnvironmentUtils.getDmccVersion();
-	public static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
+
+	/**
+	 * Shared HTTP client used for every outbound request.
+	 * <p>
+	 * Timeouts bound how long a caller can be blocked: 10 s to connect, 20 s to read and 30 s for the whole
+	 * call. Everything else stays at the bare-client defaults (no response cache, default write timeout), so
+	 * {@code OK_HTTP_CLIENT.cache()} remains {@code null}.
+	 */
+	public static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient.Builder()
+			.connectTimeout(10, TimeUnit.SECONDS)
+			.readTimeout(20, TimeUnit.SECONDS)
+			.callTimeout(30, TimeUnit.SECONDS)
+			.build();
+
 	public static final AtomicBoolean OVERWRITE_MINECRAFT_SOURCE_MESSAGES = new AtomicBoolean(false);
 
 	private Constants() {
