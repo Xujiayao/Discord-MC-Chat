@@ -302,6 +302,10 @@ utils:
     missing_keys: "Your configuration file is missing the following required keys:"
     type_mismatch: "Your configuration file has type mismatch issues:"
     unchanged_keys: "The following configuration keys are still unchanged from the template:"
+  network:
+    packet_rejected: "Rejected packet from {}: {}"
+  events:
+    handler_failed: "An event handler for {} threw an exception."
   i18n:
     language_not_supported: "Language \"{}\" is not supported."
     contribute: "You are welcome to contribute translations to DMCC!"
@@ -332,6 +336,8 @@ linking:
     consumed: "Minecraft player {} completed account linking."
   op_sync:
     resolve_failed: "Failed to resolve OP level for Discord user {}: {}"
+    schedule_failed: "OP sync could not be scheduled; Minecraft OP levels were not synchronized: {}"
+    unsupported_mode: "OP sync skipped; unsupported operating mode: '{}'"
   message:
     not_linked_1: "You are not linked to a Discord user. Use "
     not_linked_2: " command on Discord to complete linking. The code expires in 5 minutes. Run "
@@ -357,3 +363,5 @@ minecraft:
     jar_open_failed: "Cannot open JAR file."
     mods_scan_failed: "Error scanning mods directory."
     datapack_load_failed: "Failed to load translations from datapack."
+  events:
+    op_sync_unknown_player: "Cannot apply OP level {} to {} because the player is unknown to the name cache."

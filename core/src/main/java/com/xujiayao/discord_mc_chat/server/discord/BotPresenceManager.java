@@ -53,7 +53,12 @@ public final class BotPresenceManager {
 
 			presenceUpdateTask = statusUpdateExecutor.scheduleWithFixedDelay(() -> {
 				try {
-					doUpdateBotPresence(enableStatus, enableActivity);
+					// Re-read the switches on every cycle, otherwise this task would keep using the values
+					// captured when update() was called and /dmcc reload would not take effect here.
+					doUpdateBotPresence(
+							ConfigManager.getBoolean("discord.bot.enable_status"),
+							ConfigManager.getBoolean("discord.bot.enable_activity")
+					);
 				} catch (Exception e) {
 					LOGGER.warn(I18nManager.getDmccTranslation("discord.manager.presence_update_failed", e.getMessage()));
 				}
@@ -111,9 +116,13 @@ public final class BotPresenceManager {
 					activityText = customMessages.path("activity").path("at_least_one_server_online").asString();
 				}
 
-				activityText = activityText.replace("{online_player_count}", String.valueOf(onlinePlayerCount))
-						.replace("{max_player_count}", String.valueOf(maxPlayerCount));
-				jda.getPresence().setActivity(Activity.playing(activityText));
+				// A missing key makes asString() return "", and Activity.playing("") would clear the
+				// activity text; skip it instead, like the other blank-template call sites do.
+				if (!activityText.isBlank()) {
+					activityText = activityText.replace("{online_player_count}", String.valueOf(onlinePlayerCount))
+							.replace("{max_player_count}", String.valueOf(maxPlayerCount));
+					jda.getPresence().setActivity(Activity.playing(activityText));
+				}
 			}
 		}
 	}

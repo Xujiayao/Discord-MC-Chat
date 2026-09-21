@@ -7,6 +7,7 @@ import tools.jackson.databind.JsonNode;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -78,7 +79,10 @@ public final class ConfigManager {
 				return false;
 			}
 
-			JsonNode userConfig = YAML_MAPPER.readTree(Files.newBufferedReader(CONFIG_FILE_PATH, StandardCharsets.UTF_8));
+			JsonNode userConfig;
+			try (Reader reader = Files.newBufferedReader(CONFIG_FILE_PATH, StandardCharsets.UTF_8)) {
+				userConfig = YAML_MAPPER.readTree(reader);
+			}
 
 			String configMode = userConfig.path("mode").asString();
 			if (!expectedMode.equals(configMode)) {
@@ -122,6 +126,12 @@ public final class ConfigManager {
 				return node;
 			}
 			node = node.path(part);
+		}
+
+		if (node == null || node.isMissingNode() || node.isNull()) {
+			// The loop only checks the node it is about to descend into, so a path whose last segment is
+			// missing would otherwise return silently.
+			LOGGER.warn(I18nManager.getDmccTranslation("utils.config.config.path_not_found", path));
 		}
 
 		return node;
@@ -182,7 +192,7 @@ public final class ConfigManager {
 	/**
 	 * @return The integer value at the specified path, or defaultValue if the path is missing or null
 	 */
-	public static Integer getInt(String path, int defaultValue) {
+	public static int getInt(String path, int defaultValue) {
 		Integer value = getValue(path, JsonNode::asInt);
 		return value == null ? defaultValue : value;
 	}
@@ -200,5 +210,13 @@ public final class ConfigManager {
 	 */
 	public static Boolean getBoolean(String path) {
 		return getValue(path, JsonNode::asBoolean);
+	}
+
+	/**
+	 * @return The boolean value at the specified path, or defaultValue if the path is missing or null
+	 */
+	public static boolean getBoolean(String path, boolean defaultValue) {
+		Boolean value = getValue(path, JsonNode::asBoolean);
+		return value == null ? defaultValue : value;
 	}
 }

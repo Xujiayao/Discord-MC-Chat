@@ -41,7 +41,10 @@ public final class OpSyncManager {
 	public static void syncAll() {
 		try {
 			getOrCreateExecutor().execute(OpSyncManager::doSyncAll);
-		} catch (RejectedExecutionException ignored) {
+		} catch (RejectedExecutionException e) {
+			// Swallowing this hid the loss of an OP level update; it happens while shutting down, so the
+			// update is dropped but stays traceable
+			LOGGER.warn(I18nManager.getDmccTranslation("linking.op_sync.schedule_failed", e.toString()));
 		}
 	}
 
@@ -78,6 +81,9 @@ public final class OpSyncManager {
 					NetworkManager.sendPacketToClient(new OpSyncPacket(buildOpLevels(allLinks, clientName)), clientName);
 				}
 			}
+			// getMode() also returns an empty string before the mode is loaded, and an unrecognized mode
+			// would otherwise skip the sync without leaving any trace
+			default -> LOGGER.warn(I18nManager.getDmccTranslation("linking.op_sync.unsupported_mode", ModeManager.getMode()));
 		}
 	}
 

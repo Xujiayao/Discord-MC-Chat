@@ -21,11 +21,12 @@ import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.Future;
 
+import java.util.Deque;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
@@ -38,10 +39,14 @@ final class NettyClient {
 	private final String sharedSecret;
 	private final AtomicBoolean isRunning = new AtomicBoolean(false);
 	private final AtomicInteger reconnectDelay = new AtomicInteger(2); // Initial delay seconds
-	private final AtomicReference<CompletableFuture<Long>> latencyFuture = new AtomicReference<>();
+	// Latency samples that are still waiting for their pong, oldest first: every request keeps its own
+	// entry (tagged with the timestamp it sent), so a pong answers the request it echoes instead of
+	// whichever request happened to register last. Entries are removed by the waiting request itself
+	// and by the paths that make a pong impossible (shutdown, lost connection), so none can leak.
+	private final Deque<LatencySample> pendingLatencySamples = new ConcurrentLinkedDeque<>();
 	private volatile long connectionLatencyMillis;
 	private EventLoopGroup workerGroup;
-	private Channel channel;
+	private volatile Channel channel;
 	private CompletableFuture<Boolean> initialLoginFuture;
 
 	NettyClient(String host, int port, String serverName, String sharedSecret) {
@@ -135,6 +140,9 @@ final class NettyClient {
 	void scheduleReconnect() {
 		if (!isRunning.get()) return;
 
+		// The pings sent on the lost connection will never be answered.
+		releasePendingLatencySamples();
+
 		int delay = reconnectDelay.get();
 		workerGroup.schedule(() -> connect(false), delay, TimeUnit.SECONDS);
 
@@ -144,6 +152,8 @@ final class NettyClient {
 
 	void stop() {
 		isRunning.set(false);
+		// The connection is going away, so no outstanding ping can be answered anymore.
+		releasePendingLatencySamples();
 		if (channel != null) {
 			channel.close();
 		}
@@ -156,11 +166,35 @@ final class NettyClient {
 			// If we are inside the Netty thread (e.g. called from ClientHandler), waiting for ourselves to die causes a deadlock.
 			// But if we are on the Main thread (ServerStopped event), we MUST wait to prevent ClassLoader issues.
 			try {
-				if (!Thread.currentThread().getName().contains("DMCC-NettyClient")) {
+				if (!isInNettyEventLoop()) {
 					future.awaitUninterruptibly();
 				}
 			} catch (Exception ignored) {
 			}
+		}
+	}
+
+	/**
+	 * Whether the caller runs on a thread owned by this client's Netty event loop group, i.e. a thread
+	 * that must never wait for the group to shut down (it would wait for itself).
+	 */
+	private boolean isInNettyEventLoop() {
+		Channel currentChannel = channel;
+		// The channel knows its own event loop, which is exact where the field is set; the thread name
+		// stays as a fallback for the window in which channel is still null or already replaced.
+		if (currentChannel != null && currentChannel.eventLoop().inEventLoop()) {
+			return true;
+		}
+		return Thread.currentThread().getName().contains("DMCC-NettyClient");
+	}
+
+	/**
+	 * Releases every outstanding latency sample with the last known latency, used once the connection
+	 * can no longer deliver the matching pong.
+	 */
+	private void releasePendingLatencySamples() {
+		for (LatencySample sample = pendingLatencySamples.poll(); sample != null; sample = pendingLatencySamples.poll()) {
+			sample.future.complete(connectionLatencyMillis);
 		}
 	}
 
@@ -181,29 +215,51 @@ final class NettyClient {
 			return -1;
 		}
 
-		CompletableFuture<Long> future = new CompletableFuture<>();
-		CompletableFuture<Long> previous = latencyFuture.getAndSet(future);
-		if (previous != null && !previous.isDone()) {
-			previous.complete(connectionLatencyMillis);
-		}
-
 		long sentAtMillis = System.currentTimeMillis();
-		channel.writeAndFlush(new LatencyPingPacket(sentAtMillis));
+		LatencySample sample = new LatencySample(sentAtMillis);
+		pendingLatencySamples.add(sample);
 
 		try {
-			return future.get(timeoutMillis, TimeUnit.MILLISECONDS);
+			channel.writeAndFlush(new LatencyPingPacket(sentAtMillis));
+			return sample.future.get(timeoutMillis, TimeUnit.MILLISECONDS);
 		} catch (Exception ignored) {
-			latencyFuture.compareAndSet(future, null);
 			return connectionLatencyMillis > 0 ? connectionLatencyMillis : -1;
+		} finally {
+			// Removal happens for every outcome (answered, timed out, interrupted, released by a
+			// disconnect), which is what keeps the pending list from growing with dead entries.
+			pendingLatencySamples.remove(sample);
 		}
 	}
 
+	/**
+	 * Records the latency of the connection, as reported by the arriving pong.
+	 */
 	void updateConnectionLatency(long latencyMillis) {
 		connectionLatencyMillis = latencyMillis;
+	}
 
-		CompletableFuture<Long> future = latencyFuture.getAndSet(null);
-		if (future != null && !future.isDone()) {
-			future.complete(latencyMillis);
+	/**
+	 * Answers the in-flight request that sent this timestamp; a pong without a waiting sample is
+	 * ignored.
+	 */
+	void completeLatencySample(long sentAtMillis, long latencyMillis) {
+		for (LatencySample sample : pendingLatencySamples) {
+			if (sample.sentAtMillis == sentAtMillis) {
+				sample.future.complete(latencyMillis);
+				return;
+			}
+		}
+	}
+
+	/**
+	 * One outstanding latency round trip, identified by the timestamp of the ping it sent.
+	 */
+	private static final class LatencySample {
+		final long sentAtMillis;
+		final CompletableFuture<Long> future = new CompletableFuture<>();
+
+		LatencySample(long sentAtMillis) {
+			this.sentAtMillis = sentAtMillis;
 		}
 	}
 }

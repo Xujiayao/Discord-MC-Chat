@@ -1,5 +1,6 @@
 package com.xujiayao.discord_mc_chat.utils;
 
+import java.util.IllegalFormatException;
 import java.util.regex.Pattern;
 
 public final class StringUtils {
@@ -16,12 +17,27 @@ public final class StringUtils {
 	private StringUtils() {
 	}
 
+	/**
+	 * Escapes control characters into their literal two-character sequences.
+	 * <p>
+	 * The backslash itself is escaped as well: without that, the text {@code a\nb} (backslash, n) and a real
+	 * line break would both come out as {@code a\nb}, so the escaping could not be undone.
+	 */
 	public static String escape(String s) {
-		return s.replace("\t", "\\t")
-				.replace("\b", "\\b")
-				.replace("\n", "\\n")
-				.replace("\r", "\\r")
-				.replace("\f", "\\f");
+		StringBuilder sb = new StringBuilder(s.length());
+		for (int i = 0; i < s.length(); i++) {
+			char c = s.charAt(i);
+			switch (c) {
+				case '\\' -> sb.append("\\\\");
+				case '\t' -> sb.append("\\t");
+				case '\b' -> sb.append("\\b");
+				case '\n' -> sb.append("\\n");
+				case '\r' -> sb.append("\\r");
+				case '\f' -> sb.append("\\f");
+				default -> sb.append(c);
+			}
+		}
+		return sb.toString();
 	}
 
 	/**
@@ -68,7 +84,13 @@ public final class StringUtils {
 		}
 
 		if (str.contains("%s") || INDEXED_PRINTF_PLACEHOLDER.matcher(str).matches()) {
-			return String.format(str, args);
+			try {
+				return String.format(str, args);
+			} catch (IllegalFormatException ignored) {
+				// A literal '%' in the text, or a placeholder/argument mismatch, must not break the caller:
+				// fall back to the unformatted string like every unsupported style above does.
+				return str;
+			}
 		}
 
 		return str;

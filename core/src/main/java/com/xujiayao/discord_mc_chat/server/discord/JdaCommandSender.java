@@ -31,9 +31,11 @@ public final class JdaCommandSender implements CommandSender, LinkCommand.Discor
 			for (String block : CodeBlockMessageUtils.splitToCodeBlocks(message)) {
 				event.getHook().sendMessage(block).complete();
 			}
-		} catch (RejectedExecutionException e) {
+		} catch (RejectedExecutionException | IllegalStateException e) {
 			// This usually happens when trying to send the "Success" message after a reload/shutdown,
-			// because the JDA instance belonging to this event has been shut down.
+			// because the JDA instance belonging to this event has been shut down. Depending on how far
+			// the shutdown has progressed, JDA rejects the task with RejectedExecutionException or throws
+			// IllegalStateException from complete() itself.
 			// We log it as a warning but don't crash the thread, state that it is expected behavior.
 			LOGGER.warn(I18nManager.getDmccTranslation("discord.command.reply_failed"));
 			LOGGER.warn(I18nManager.getDmccTranslation("discord.command.reply_failed_detail"));
@@ -50,7 +52,7 @@ public final class JdaCommandSender implements CommandSender, LinkCommand.Discor
 			for (int i = 1; i < blocks.size(); i++) {
 				event.getHook().sendMessage(blocks.get(i)).complete();
 			}
-		} catch (RejectedExecutionException e) {
+		} catch (RejectedExecutionException | IllegalStateException e) {
 			LOGGER.warn(I18nManager.getDmccTranslation("discord.command.reply_failed"));
 			LOGGER.warn(I18nManager.getDmccTranslation("discord.command.reply_failed_detail"));
 		}

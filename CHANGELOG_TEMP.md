@@ -423,3 +423,92 @@
     6. standalone：`dmcc </dev/null` 或关掉输入管道后进程 CPU 占用应为 0%、不再空转；`cache/log` 目录运行多轮后只保留约 10 个日志文件；
     7. @everyone 提及：Minecraft 端只应看到一次标题 + 音效（不再有多余的空 subtitle 包），200 人规模时确认不再出现明显卡顿。
 
+## 工作 08
+
+记录日期：2026/9/22
+
+第八轮：3.0 重构·阶段 4「缺陷修复」。四个阶段审计中确认的真实缺陷在本轮一次性收口（安全、正确性、资源、稳定性四类），并补齐 5 个多语言键。**除下文明确列出的修复外，行为与 3.0.0-beta.3 保持一致**；本轮不更新 `README_CN.md`（留到阶段 5/6 收尾时统一处理）。
+
+### 更改（用户可见 / 行为变更）
+
+**安全**
+
+- **`/dmcc log` 不再能读取 `logs/` 之外的文件**：原来把文件名直接拼到 `./logs/` 下解析，`/dmcc log ../../config/discord_mc_chat/config.yml` 可以读出 bot token 与 shared_secret。现在做规范化后的目录包含性校验，越界/非法名/超限一律回既有「文件未找到」提示（不泄露目标是否存在）。
+- **单次日志读取上限 8 MiB**（`.gz` 按解压后体量边解压边计数）：超限即拒绝并记 `commands.log.read_failed`，避免把整个 `latest.log` 或 gzip 炸弹读进内存再作为 Discord 附件上传。
+- **握手认证新增状态校验与失败限流**：必须先收到 `HandshakePacket` 才能处理 `AuthResponsePacket`（原来 nonce 为 null 时会退化成比较 `"null" + shared_secret` 的路径）；同一连接连续失败 3 次后直接拒绝。可感知面仅限「异常客户端被更早拒绝」。
+- **原生反序列化加白名单过滤器**：只允许 DMCC 自身包、`java.util.*` 与 `java.lang.*`（排除 `reflect`/`invoke`），并限制深度 32、引用数/流大小/数组长度各 1 MiB；越界数据包被拒绝并记录 `utils.network.packet_rejected`（新增键）。正常客户端不受影响。
+
+**正确性**
+
+- **`/dmcc execute` 带前导空白或 Tab 时参数不再错位**（原来命令名按 trim 后切分、参数却基于未 trim 的原串，导致首个参数被重复）。
+- **`/dmcc info` 不再串台或白等**：多客户端快照改为按请求隔离（原来共用一份全局缓存，并发请求互相清空，客户端中途断开必然等到超时）；连接延迟采样改为按 `sentAtMillis` 配对（不再显示过期或 0 ms 的延迟）；客户端执行命令补 10 秒超时（原来可能永不回包）、控制台补全移出 Netty 事件循环、未知包类型不再有 NPE 风险。
+- **`/dmcc update` 不再误报**：只在「清单中存在兼容且比当前更新的最高版本」时提示（原来取第一个命中 `compatibility` 的条目，清单排序一变就会把更旧的版本报成新版本）；`/dmcc reload` 期间被取消的旧检查任务不再补发通告，也不再写「检查失败」。
+- **TPS 不再出现 `Infinity`**（mspt 为 0 且正在冲刺时的除零）；Discord → Minecraft 中继不再因某段文本为 null 抛 NPE（组件构建的两套实现合一并做 null 安全渲染）。
+- **`multi_server_client` 模式下自定义消息缺失不再 NPE**：13 处模板查找改为可空节点访问，提及通知回退到内置文案。
+- **Webhook 复用判定改为按 ID 比较**（原来是引用比较，几乎永不相等 → 反复创建 webhook，最终撞上 Discord 每频道 15 个的上限）；提及与角色占位符的 null 兜底补上。
+- **机器人不再中继自己的消息**：自消息过滤由引用比较改为 ID 比较（编辑消息路径同样修正）。
+- **验证码在土耳其语等 locale 下可正常使用**（`toUpperCase` 指定 `Locale.ROOT`），并消除生成/消费/过期三条路径的竞态（不再残留陈旧映射）。
+- **`/dmcc help` 对齐按码点计算**，中文/emoji 描述不再错位；standalone 终端输入空行不再输出「未知命令」。
+- **MSPS 恢复通知的 `{next_check_time}` 由字面 `-1` 改为真实时间戳**（与另两类通知一致，通知顺序与文案不变）。
+- **`StringUtils.escape` 现在也转义反斜杠**：日志中 `C:\path` 显示为 `C:\\path`（此前反斜杠不转义，转义不可逆）；`StringUtils.format` 遇到非法 printf 格式串时回退原串，不再从日志/中继内部抛异常。
+- **超长代码块分块不再切断 emoji 代理对**；事件处理器抛异常不再中断其余处理器（新增 `utils.events.handler_failed` 日志）。
+- **配置最后一段键缺失时会告警**（原来只对中间段告警，末段缺失完全静默）。
+- **OP 同步的静默失败现在有迹可循**：调度被拒、未知模式、玩家名未知三种情况各记一条 warn（`linking.op_sync.schedule_failed`、`linking.op_sync.unsupported_mode`、`minecraft.events.op_sync_unknown_player`）。
+- **未知运行模式不再「静默成功」**：`mode.yml` 中无法识别的模式会记 `main.init.failed` 并拒绝初始化（原来跳过全部初始化却仍打印成功）。
+
+**保留的既有行为（经确认）**
+
+- Bot 显示名继续使用 `getAsTag()`（`名称#1234`），与重构前逐字一致 —— 该处一度改为 JDA 6 的 `getEffectiveName()`，按「严格零感知」原则回退。
+- Embed 标题截断保留修复为 50 字符（原代码判断 `> 50` 却截到 20；>50 字符的 embed 标题显示会变长，经用户确认保留）。
+
+**资源与稳定性**
+
+- 3 处 Reader 未关闭（`ConfigManager`、`I18nManager`、`ModeManager`）与翻译缓存 Reader 全部改为 try-with-resources（Windows 上文件不再被锁、每次 reload 不再泄漏句柄）；日志文件改为显式 UTF-8 写入（原用平台默认字符集，中文日志在 Windows 上的编码取决于系统区域设置）。
+- `LoggerImpl.shutdown()` 关闭并重置 writer，之后的日志重新打开文件（不再静默写入已关闭的 writer 而丢日志）。
+- 数据包语言扫描失败不再丢弃已加载的翻译（保留官方/mod 两级结果并记 `minecraft.translations.datapack_load_failed`）。
+- shutdown 时回收 OkHttp 连接池（原来的 `try (Cache ignored = OK_HTTP_CLIENT.cache())` 是恒为 null 的空操作）。
+
+### 更改（代码结构，对用户不可见）
+
+- 按 6 个分区并行修复 39 个 Java 文件（+1003 / −312），并新增 5 个 i18n 键；两个语言文件各增 8 行（含 3 个分组头），叶子键集合完全一致（各 237 个）。
+
+| 分区 | 范围 | 主要修复 |
+| --- | --- | --- |
+| F1 | `server/ServerHandler.java`、`network/**` | 认证守卫与限流、惰性数据包日志、快照按请求隔离、反序列化白名单、更新检查移出事件循环 |
+| F2 | `utils/LogFileUtils.java`、`client/**` | 路径穿越、8 MiB 上限、延迟配对、补全移出事件循环、执行超时 |
+| F3 | `config/**`、`utils/**`、`logging/**`、`events/EventManager.java`、`DMCC.java` | Reader 关闭、`escape`/`format` 回退、缺键告警、日志 UTF-8、事件异常隔离、模式校验 |
+| F4 | `commands/**`、`update/UpdateCheckManager.java`、`standalone/**` | 参数错位、版本比较、任务代次失效、帮助对齐、终端空行 |
+| F5 | `server/message/**`、`server/discord/**` | 模板可空访问、webhook 归属、标题截断、presence 热更新、MSPS 时间戳、代理对 |
+| F6 | `minecraft/**`、`server/linking/**` | 验证码 Locale 与互斥、OP 同步告警、数据包翻译容错 |
+
+- `ConfigManager.getInt(String, int)` 返回类型由 `Integer` 改为 `int`（本仓库整体重编译，无兼容影响）；`ConfigManager` 新增 `getBoolean(String, boolean)`、`Logger` 新增 `info/warn(String, Throwable)`。
+- 未修清单（有理由，不是疏漏）：`ServerDMCC` 在 `NettyServer.start()` 返回 -1 时仍启动 MSPS 监控；`MinecraftEventHandler.getPlayerName` 静默返回 null（`/dmcc stats` 已有 UUID 兜底，补 warn 会按玩家刷屏）；`MsptMonitor` 轮询失败复用 `discord.manager.broadcast_failed` 键；WARN/ERROR 未改到 `System.err`（会改变可观察输出流）；`YamlUtils` 两处 HashSet 的报错顺序；`countStatResultEntries` 仍在 Netty 线程做写盘 + 全量 JSON 解析（修复点在 network/command 层，留待后续）。
+- Mixin 注入点本轮做了 javap 全量体检（26.3 反混淆 jar）：12 个 Mixin 的目标方法/字段全部存在；`AdvancementRewards.grant` 在 `PlayerAdvancements.award` 中只有一处且被 `isDone()` 双重判断包住（不存在「每个 criterion 重复上报」）；`lambda$loadResources$3` 的第二参数 `Object` 就是真实类型；`MinecraftServer.runServer` 中 `Util.getNanos()J` 的 `ordinal = 0` 语义正确，`stopServer`/`onServerExit` 分布在互斥收尾路径上（事件不会重复）。
+
+### 验证
+
+环境：Java 25.0.4.1 LTS（Temurin HotSpot）+ Gradle 9.7.1 + Fabric Loom 1.17.21 + Minecraft 26.3
+
+- **编译、测试与打包**：`./gradlew build --console=plain` **BUILD SUCCESSFUL**（11s）；`core/build/test-results/test/` 下 16 个结果文件合计 **149 tests / 0 failures / 0 errors / 0 skipped**（阶段 3 为 145；本轮新增 4 条，覆盖 `StringUtils.escape`/`format` 回退、`ConfigManager.getBoolean(String,boolean)`、`LogFileUtils` 的越界/超限/不可变、`LoggerImpl.shutdown()` 后仍能记录）。
+- **字节码逐类比对**（`phase3.jar` → `phase4.jar`，同口径 jar 对 jar）：**identical 164 / changed 40 / added 2 / removed 1**；added 2 为 `NettyClient$LatencySample`、`NetworkManager$SnapshotRequest`；removed 1 为 `ClientHandler$3`（补全改造后减少的匿名类）；changed 40 覆盖 F1–F6 全部改动文件，另有 `CommandAutoCompleter` 与 `MinecraftCommands` 属常量池索引随被调用方变化。
+- **两个语言文件的结构校验**：以项目同版本的 `YAMLMapper` 解析 `en_us.yml` 与 `zh_cn.yml` → 均解析成功，5 个新键在预期路径可读；扁平化后两侧各 **237 个叶子键、零差异**。
+- **分区自检**：F1 用真实 `ObjectInputFilter` 往返全部具体 Packet 子类 + 集合/数组形态（40 成功 / 0 失败），负例（`java.io.File`、包外类、60 层嵌套、2 MiB 数组）全部被拒；F4 以反射实测 17 组版本比较与 5 个选择场景；F5 用自建 launcher 跑完 145 条测试（3 条失败全部来自并发进行的 `StringUtils` 改动，已由测试代理校准）；各分区 `javac` 全量编译 exit 0。
+- **产物 `build/Discord-MC-Chat-3.0.0-beta.3.jar`**：13,264,562 字节（阶段 3 为 13,255,420）、6903 个条目、**206** 个 `com/xujiayao/*.class`（阶段 3 为 205）；无签名残留文件、无 `module-info.class`。
+- **全仓统计（91 个 main Java 文件，不含 `SmokeTest`）**：总行 15,917、代码 11,792、注释 1,936、空行 2,189。相对重构前基线（17,225 / 11,866 / 3,210 / 2,164）累计净减 **1,308** 行（注释 −1,274、代码 −74、空行 +25）—— 阶段 3/4 引入的缓存、并发与防御逻辑把「净减代码行」抵消掉了，这两轮的价值主要在注释削减与缺陷修复本身。
+
+### 待办（供发布时处理）
+
+- 阶段 5：`minecraft` 模块按 `common`/`fabric`/`neoforge` 拆分 + NeoForge 26.3 支持 + 单 jar 双加载器（`MinecraftModBootstrap.init()` 统一入口、`META-INF/neoforge.mods.toml`、manifest 卫生、签名文件排除、重复策略统一）；随后是阶段 6 的 `mode.yml`/`config.yml` 预生成。
+- 后续可做（本轮仅记录）：`countStatResultEntries` 的 Netty 线程写盘与全量 JSON 解析（应改为异步并在命令/info 层同步等待）、`ServerDMCC` 的 MSPS 监控启动条件、`ServerHandler` 每命令顺序扫描配置数组、`getPlayerName` 的静默 null。
+- 沿用工作 05–07 的发布待办：`update/versions.json` 的 `"compatibility": ["26.3"]`、`.github/ISSUE_TEMPLATE/bug.yml` 文案、`README.md` 英文翻译件、死键 `utils.i18n.check_failed`、临时特征化测试与仓库外差分工装在交付前删除（只留 `SmokeTest.java`）。
+- 需开发者在真实环境手工验证（本轮新增，与工作 07 的 7 项一并执行）：
+    1. `/dmcc log ../../config/discord_mc_chat/config.yml`、`/dmcc log ../mode.yml`、超长/超限日志、`.gz` 巨文件 → 均应得到「文件未找到」而不是文件内容；
+    2. `/dmcc execute` 前导空白/Tab 的参数解析；`/dmcc help` 中文描述对齐；`/dmcc info` 在两个以上客户端并存、其中一个中途断开时的结果与耗时；
+    3. `/dmcc update` 四种清单场景（无兼容、兼容但更旧、兼容且更新、预发布版本比较）；
+    4. 验证码：以 `-Duser.language=tr` 启动后用含 `i` 的验证码完成绑定；快速连续刷新/消费；
+    5. 反序列化过滤：正常客户端连接/聊天/命令/统计全流程；旧版本客户端连接应被明确拒绝并记录 `utils.network.packet_rejected`；
+    6. Webhook：手工删除频道 webhook 或收回权限后下一条消息应自动重建；连续发送多条 webhook 消息不再创建多余 webhook；
+    7. OP 同步：绑定者失去身份组时等级回落到 0（阶段 2 的 `opLevel >= 0` 变更）；关闭期触发同步、未知模式启动时各应看到一条 warn；
+    8. `multi_server_client` 模式下未加载 custom_messages 时的提及通知文案；
+    9. MSPS 恢复通知中的 `{next_check_time}` 为真实时间戳；standalone 终端直接回车不再输出「未知命令」。
+

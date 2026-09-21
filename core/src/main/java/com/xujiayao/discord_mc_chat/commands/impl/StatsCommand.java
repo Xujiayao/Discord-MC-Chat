@@ -19,7 +19,7 @@ import java.util.stream.Stream;
  */
 public final class StatsCommand implements Command {
 
-	private static StatsProvider provider;
+	private static volatile StatsProvider provider;
 
 	/**
 	 * Gets the currently registered stats provider.
@@ -141,13 +141,8 @@ public final class StatsCommand implements Command {
 		List<Map.Entry<String, Integer>> sorted = new ArrayList<>(leaderboard.entrySet());
 		sorted.sort((e1, e2) -> e2.getValue().compareTo(e1.getValue()));
 
-		int maxWidth = 4;
-		if (!sorted.isEmpty()) {
-			int maxValLen = String.valueOf(sorted.getFirst().getValue()).length();
-			if (maxValLen > maxWidth) {
-				maxWidth = maxValLen;
-			}
-		}
+		// sorted is never empty here - an empty leaderboard returned above - so the top entry is always present.
+		int maxWidth = Math.max(4, String.valueOf(sorted.getFirst().getValue()).length());
 
 		String format = "%-" + maxWidth + "d %s";
 

@@ -120,6 +120,7 @@ public final class DiscordManager {
 
 						jda.awaitReady();
 					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
 						LOGGER.error(I18nManager.getDmccTranslation("discord.manager.init_interrupted"), e);
 					} catch (RuntimeException e) {
 						// If build() fails before JDA takes ownership of executors, shut them down to avoid leaks
@@ -458,7 +459,9 @@ public final class DiscordManager {
 
 		try {
 			boolean standaloneMode = "standalone".equals(ModeManager.getMode());
-			for (String line : message.split("\\n")) {
+			// A single-character pattern takes String.split's fast path (no Pattern compile) and keeps
+			// the exact same trailing-empty-string behaviour as the regex "\\n" did.
+			for (String line : message.split("\n")) {
 				String sanitized = sanitizeLineForLogging(line);
 				if (standaloneMode) {
 					LOGGER.info(StringUtils.format("[{}] {}"), clientName, sanitized);
@@ -847,7 +850,10 @@ public final class DiscordManager {
 			Webhook webhook = channel.retrieveWebhooks().complete()
 					.stream()
 					.filter(i -> "DMCC Webhook".equals(i.getName()))
-					.filter(i -> i.getOwnerAsUser() == jda.getSelfUser())
+					.filter(i -> {
+						User owner = i.getOwnerAsUser();
+						return owner != null && owner.getId().equals(jda.getSelfUser().getId());
+					})
 					.findFirst()
 					.orElseGet(() -> channel.createWebhook("DMCC Webhook").complete()); // Must use orElseGet to avoid unnecessary creation
 			WEBHOOK_CACHE.put(channelId, webhook);
@@ -955,7 +961,7 @@ public final class DiscordManager {
 			String message = messageNode.asString();
 
 			for (Map.Entry<String, String> entry : placeholders.entrySet()) {
-				message = message.replace("{" + entry.getKey() + "}", entry.getValue());
+				message = message.replace("{" + entry.getKey() + "}", entry.getValue() == null ? "" : entry.getValue());
 			}
 
 			if ("standalone".equals(ModeManager.getMode())) {
@@ -1001,12 +1007,12 @@ public final class DiscordManager {
 			if ("standalone".equals(ModeManager.getMode())) {
 				String avatarUrl = getClientAvatarUrl(clientName);
 				sendWebhookMessage(channel, clientName, avatarUrl, message);
-				for (String line : logReadyMessage.split("\\n")) {
+				for (String line : logReadyMessage.split("\n")) {
 					LOGGER.info(StringUtils.format("[{}] {}"), clientName, sanitizeLineForLogging(line));
 				}
 			} else {
 				sendBotMessage(channelIdentifier, message);
-				for (String line : logReadyMessage.split("\\n")) {
+				for (String line : logReadyMessage.split("\n")) {
 					LOGGER.info(sanitizeLineForLogging(line));
 				}
 			}

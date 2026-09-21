@@ -44,6 +44,23 @@ public final class MinecraftMessageParser {
 	private MinecraftMessageParser() {
 	}
 
+	/**
+	 * Custom messages are not loaded in {@code multi_server_client} mode, and stay unset when the
+	 * custom_messages file fails to load, so every template lookup must tolerate a null root.
+	 *
+	 * @return The template node at the given path, or null when custom messages are unavailable.
+	 */
+	private static JsonNode customMessageNode(String... path) {
+		JsonNode node = I18nManager.getCustomMessages();
+		if (node == null) {
+			return null;
+		}
+		for (String part : path) {
+			node = node.path(part);
+		}
+		return node;
+	}
+
 	public static ParsedMessage parseUserMessage(String raw, boolean parseForMinecraft) {
 		return parse(raw, parseForMinecraft);
 	}
@@ -59,7 +76,8 @@ public final class MinecraftMessageParser {
 	}
 
 	public static String getMentionNotificationText(String senderDisplayName) {
-		String template = I18nManager.getCustomMessages().path("xxxxx_to_minecraft").path("mentioned").asString("{effective_name} mentioned you!");
+		JsonNode mentionedNode = customMessageNode("xxxxx_to_minecraft", "mentioned");
+		String template = mentionedNode == null ? "{effective_name} mentioned you!" : mentionedNode.asString("{effective_name} mentioned you!");
 		return template.replace("{effective_name}", senderDisplayName);
 	}
 
@@ -68,7 +86,7 @@ public final class MinecraftMessageParser {
 	                                                         String roleColor,
 	                                                         List<TextSegment> parsedMessageSegments) {
 		return buildTemplateSegments(
-				I18nManager.getCustomMessages().path("xxxxx_to_minecraft").path("user_message"),
+				customMessageNode("xxxxx_to_minecraft", "user_message"),
 				serverName,
 				effectiveName,
 				roleColor,
@@ -78,7 +96,7 @@ public final class MinecraftMessageParser {
 
 	public static List<TextSegment> buildSystemMessageSegments(String serverName, List<TextSegment> parsedMessageSegments) {
 		return buildTemplateSegments(
-				I18nManager.getCustomMessages().path("xxxxx_to_minecraft").path("system_message"),
+				customMessageNode("xxxxx_to_minecraft", "system_message"),
 				serverName,
 				"",
 				"white",
@@ -92,7 +110,7 @@ public final class MinecraftMessageParser {
 	                                                                  List<TextSegment> parsedMessageSegments) {
 		String mode = ConfigManager.getString("mode", "single_server");
 		return buildTemplateSegments(
-				I18nManager.getCustomMessages().path("overwrite").path(mode).path("user_message"),
+				customMessageNode("overwrite", mode, "user_message"),
 				serverName,
 				effectiveName,
 				roleColor,
@@ -103,7 +121,7 @@ public final class MinecraftMessageParser {
 	public static List<TextSegment> buildOverwriteSystemMessageSegments(String serverName, List<TextSegment> parsedMessageSegments) {
 		String mode = ConfigManager.getString("mode", "single_server");
 		return buildTemplateSegments(
-				I18nManager.getCustomMessages().path("overwrite").path(mode).path("system_message"),
+				customMessageNode("overwrite", mode, "system_message"),
 				serverName,
 				"",
 				"white",
@@ -549,7 +567,7 @@ public final class MinecraftMessageParser {
 	                                                       String roleColor,
 	                                                       List<TextSegment> parsedMessageSegments) {
 		List<TextSegment> out = new ArrayList<>();
-		if (!templateNode.isArray()) {
+		if (templateNode == null || !templateNode.isArray()) {
 			return out;
 		}
 		for (JsonNode segNode : templateNode) {

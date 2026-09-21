@@ -24,6 +24,7 @@ import com.xujiayao.discord_mc_chat.network.packets.MiscPackets.LatencyPongPacke
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
+import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
@@ -32,13 +33,29 @@ import io.netty.handler.timeout.IdleStateEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
 final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 
 	private static final int CONSOLE_COMMAND_TIMEOUT_SECONDS = 10;
+	private static final int EXECUTE_COMMAND_TIMEOUT_SECONDS = 10;
+
+	/**
+	 * Auto-complete requests read the log directory, the configuration and the Minecraft dispatcher,
+	 * none of which belongs on a Netty event loop (it would stall every other packet for the duration
+	 * of the lookup). A single thread keeps the answers in the order the requests arrived; daemon
+	 * threads keep a pending lookup from holding up JVM shutdown.
+	 */
+	private static final ExecutorService AUTO_COMPLETE_EXECUTOR = Executors.newSingleThreadExecutor(r -> {
+		Thread thread = ExecutorServiceUtils.newThreadFactory("DMCC-ClientAutoComplete").newThread(r);
+		thread.setDaemon(true);
+		return thread;
+	});
 
 	private final NettyClient client;
 	private final CompletableFuture<Boolean> initialLoginFuture;
@@ -47,6 +64,14 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 	ClientHandler(NettyClient client, CompletableFuture<Boolean> initialLoginFuture) {
 		this.client = client;
 		this.initialLoginFuture = initialLoginFuture;
+	}
+
+	/**
+	 * A completion future failed by {@link CompletableFuture#orTimeout} surfaces the timeout either
+	 * directly or wrapped, depending on which stage observes it.
+	 */
+	private static boolean isTimeout(Throwable ex) {
+		return ex instanceof TimeoutException || ex.getCause() instanceof TimeoutException;
 	}
 
 	private static void logDiscordEventForConsole(DiscordRelayPacket p) {
@@ -123,6 +148,8 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 			case LatencyPongPacket p -> {
 				long latency = Math.max(0, System.currentTimeMillis() - p.sentAtMillis);
 				client.updateConnectionLatency(latency);
+				// The timestamp echoes the ping this pong belongs to, so only that request is answered.
+				client.completeLatencySample(p.sentAtMillis, latency);
 			}
 			case CommandPackets.Execute.RequestPacket p -> {
 				// Handle DMCC command execution with OP level credential for edge authorization
@@ -153,10 +180,14 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 				};
 
 				try {
+					// Bounded like the console branch below: a command that never completes must still
+					// be answered, otherwise the request stays pending on the server forever. A timeout
+					// is reported the same way there - with the output captured so far.
 					CommandManager.executeAndWait(captureSender, p.command, p.args)
+							.orTimeout(EXECUTE_COMMAND_TIMEOUT_SECONDS, TimeUnit.SECONDS)
 							.whenComplete((_, ex) -> {
 								CommandPackets.Execute.ResponsePacket response;
-								if (ex != null) {
+								if (ex != null && !isTimeout(ex)) {
 									response = new CommandPackets.Execute.ResponsePacket(p.requestId, I18nManager.getDmccTranslation("commands.execution_failed", ex.getMessage()));
 								} else if (fileDataHolder[0] != null) {
 									String prefixedFileName = client.getServerName() + "_" + fileNameHolder[0];
@@ -198,17 +229,17 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 						.orTimeout(CONSOLE_COMMAND_TIMEOUT_SECONDS, TimeUnit.SECONDS)
 						.whenComplete((_, _) -> ctx.writeAndFlush(new CommandPackets.Console.ResponsePacket(p.requestId, responseBuilder.toString())));
 			}
-			case CommandPackets.Execute.AutoCompleteRequestPacket p -> {
+			case CommandPackets.Execute.AutoCompleteRequestPacket p -> AUTO_COMPLETE_EXECUTOR.execute(() -> {
 				// Handle DMCC command auto-complete with OP level filtering
 				List<String> suggestions = CommandAutoCompleter.getSuggestions(p.input, p.opLevel);
 				ctx.writeAndFlush(new CommandPackets.Execute.AutoCompleteResponsePacket(suggestions));
-			}
-			case CommandPackets.Console.AutoCompleteRequestPacket p -> {
+			});
+			case CommandPackets.Console.AutoCompleteRequestPacket p -> AUTO_COMPLETE_EXECUTOR.execute(() -> {
 				// Handle Minecraft command auto-complete via CoreEvents
 				List<String> suggestions = new ArrayList<>();
 				EventManager.post(new CoreEvents.MinecraftCommandAutoCompleteEvent(p.input, p.opLevel, suggestions));
 				ctx.writeAndFlush(new CommandPackets.Console.AutoCompleteResponsePacket(suggestions));
-			}
+			});
 			case CommandPackets.Link.ResponsePacket p -> // Handle link code response from server - notify the player
 					EventManager.post(new CoreEvents.LinkCodeResponseEvent(p.minecraftUuid, p.code, p.alreadyLinked, p.discordName != null ? p.discordName : ""));
 			case CommandPackets.Unlink.ResponsePacket p -> // Handle unlink response from server - notify the player
@@ -243,6 +274,10 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 							p.segments,
 							p.replySegments
 					));
+					// A null type cannot be dispatched anywhere; ignoring it matches the former
+					// implicit default instead of throwing on the event loop.
+					case null, default -> {
+					}
 				}
 			}
 			case MinecraftRelayPacket p -> {

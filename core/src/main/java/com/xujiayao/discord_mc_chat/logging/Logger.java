@@ -17,8 +17,18 @@ public final class Logger {
 		logger.info(message, args);
 	}
 
+	// Explicit (String, Throwable) overloads: without them such a call binds to the Object... overload and
+	// relies on the SLF4J binding detecting the trailing Throwable inside the varargs array.
+	public void info(String message, Throwable t) {
+		logger.info(message, t);
+	}
+
 	public void warn(String message, Object... args) {
 		logger.warn(message, args);
+	}
+
+	public void warn(String message, Throwable t) {
+		logger.warn(message, t);
 	}
 
 	public void error(String message, Object... args) {

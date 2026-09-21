@@ -46,6 +46,12 @@ public final class TerminalManager {
 
 					String line = scanner.nextLine().trim();
 
+					// "".split("\\s+") yields [""], so a bare Enter would otherwise be dispatched as an
+					// empty command name and log an "unknown command" error on every keystroke.
+					if (line.isEmpty()) {
+						continue;
+					}
+
 					if (line.startsWith("/")) {
 						line = line.substring(1);
 					}

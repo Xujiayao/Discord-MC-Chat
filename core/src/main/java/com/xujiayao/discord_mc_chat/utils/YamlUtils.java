@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
 
@@ -49,8 +50,9 @@ public final class YamlUtils {
 			return false;
 		}
 
-		Set<String> missingKeys = new HashSet<>();
-		Set<String> extraKeys = new HashSet<>();
+		// Sorted sets: the reported key lists must not depend on hash order.
+		Set<String> missingKeys = new TreeSet<>();
+		Set<String> extraKeys = new TreeSet<>();
 		findKeyDiffs(templateConfig, userConfig, "", missingKeys, extraKeys);
 
 		if (!extraKeys.isEmpty() || !missingKeys.isEmpty()) {

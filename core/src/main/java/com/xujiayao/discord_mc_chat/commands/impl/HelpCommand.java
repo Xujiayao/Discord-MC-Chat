@@ -21,10 +21,13 @@ import static com.xujiayao.discord_mc_chat.Constants.IS_MINECRAFT_ENV;
 public final class HelpCommand implements Command {
 
 	private static String padRight(String text, int width) {
-		if (text.length() >= width) {
+		// Padded by code point, matching how maxLeftWidth is measured: String.length() counts a
+		// surrogate pair as two, which over-pads any non-BMP label and misaligns the column.
+		int length = text.codePointCount(0, text.length());
+		if (length >= width) {
 			return text;
 		}
-		return text + " ".repeat(width - text.length());
+		return text + " ".repeat(width - length);
 	}
 
 	@Override
@@ -63,14 +66,14 @@ public final class HelpCommand implements Command {
 		int maxLeftWidth = 0;
 		for (Command cmd : visibleCommands) {
 			String commandLabel = "- " + mcPrefix + cmd.name();
-			maxLeftWidth = Math.max(maxLeftWidth, commandLabel.length());
+			maxLeftWidth = Math.max(maxLeftWidth, commandLabel.codePointCount(0, commandLabel.length()));
 
 			Command.CommandArgument[] arguments = cmd.argsForSender(sender);
 			for (int i = 0; i < arguments.length; i++) {
 				boolean isLast = (i == arguments.length - 1);
 				String branch = isLast ? "  └─ " : "  ├─ ";
 				String argLabel = branch + "<" + arguments[i].name() + ">";
-				maxLeftWidth = Math.max(maxLeftWidth, argLabel.length());
+				maxLeftWidth = Math.max(maxLeftWidth, argLabel.codePointCount(0, argLabel.length()));
 			}
 		}
 

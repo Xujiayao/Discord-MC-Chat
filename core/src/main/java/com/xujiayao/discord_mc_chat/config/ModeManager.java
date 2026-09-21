@@ -5,6 +5,7 @@ import tools.jackson.databind.JsonNode;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -60,7 +61,10 @@ public final class ModeManager {
 				return false; // Halt initialization, requires user action
 			}
 
-			JsonNode userModeConfig = YAML_MAPPER.readTree(Files.newBufferedReader(MODE_FILE_PATH, StandardCharsets.UTF_8));
+			JsonNode userModeConfig;
+			try (Reader reader = Files.newBufferedReader(MODE_FILE_PATH, StandardCharsets.UTF_8)) {
+				userModeConfig = YAML_MAPPER.readTree(reader);
+			}
 
 			// Load the template for validation
 			JsonNode templateModeConfig;

@@ -67,6 +67,8 @@ public final class DiscordMessageParser {
 	// Matches spoiler-wrapped @everyone/@here tokens: ||@everyone|| / ||@here||
 	private static final Pattern SPOILER_EVERYONE_HERE_PATTERN = Pattern.compile("\\|\\|@(everyone|here)\\|\\|");
 	private static final Pattern SPOILER_CONTENT_PATTERN = Pattern.compile("\\|\\|(.+?)\\|\\|");
+	// Markdown/whitespace characters removed when comparing a spoiler body with an embed URL
+	private static final Pattern SPOILER_URL_STRIP_PATTERN = Pattern.compile("[*_~`\\s]");
 	private static final List<String> MARKDOWN_DELIMITERS = List.of("***", "~~", "||", "**", "__", "*", "_");
 
 	// Matches the {message} placeholder inside custom_messages templates
@@ -86,6 +88,23 @@ public final class DiscordMessageParser {
 	private DiscordMessageParser() {
 	}
 
+	/**
+	 * Custom messages are not loaded in {@code multi_server_client} mode, and stay unset when the
+	 * custom_messages file fails to load, so every template lookup must tolerate a null root.
+	 *
+	 * @return The template node at the given path, or null when custom messages are unavailable.
+	 */
+	private static JsonNode customMessageNode(String... path) {
+		JsonNode node = I18nManager.getCustomMessages();
+		if (node == null) {
+			return null;
+		}
+		for (String part : path) {
+			node = node.path(part);
+		}
+		return node;
+	}
+
 	public static List<TextSegment> buildChatSegments(Message message) {
 		Member member = message.getMember();
 		String effectiveName = member != null ? member.getEffectiveName() : message.getAuthor().getName();
@@ -95,7 +114,7 @@ public final class DiscordMessageParser {
 		boolean isMultiLine = truncatedRaw.contains("\n");
 
 		return buildTemplateSegments(
-				I18nManager.getCustomMessages().path("xxxxx_to_minecraft").path("user_message"),
+				customMessageNode("xxxxx_to_minecraft", "user_message"),
 				text -> replacePlaceholders(text, effectiveName, roleColor),
 				color -> replacePlaceholders(color, effectiveName, roleColor),
 				(out, color, bold) -> {
@@ -115,7 +134,7 @@ public final class DiscordMessageParser {
 
 	public static List<TextSegment> buildCommandSegments(String effectiveName, String roleColor, String commandName) {
 		return buildTemplateSegments(
-				I18nManager.getCustomMessages().path("discord_to_minecraft").path("command"),
+				customMessageNode("discord_to_minecraft", "command"),
 				text -> text.replace("{effective_name}", effectiveName)
 						.replace("{role_color}", roleColor)
 						.replace("{command}", commandName),
@@ -144,7 +163,7 @@ public final class DiscordMessageParser {
 				: parseMessageContentWithoutMessage(truncatedRaw));
 
 		return buildTemplateSegments(
-				I18nManager.getCustomMessages().path("discord_to_minecraft").path("response"),
+				customMessageNode("discord_to_minecraft", "response"),
 				text -> text.replace("{effective_name}", refName),
 				color -> color.replace("{role_color}", refRoleColor),
 				(out, color, bold) -> {
@@ -156,7 +175,7 @@ public final class DiscordMessageParser {
 
 	public static List<TextSegment> buildReactionSegments(String reactorName, String roleColor, String emojiText) {
 		return buildTemplateSegments(
-				I18nManager.getCustomMessages().path("discord_to_minecraft").path("reaction"),
+				customMessageNode("discord_to_minecraft", "reaction"),
 				text -> text.replace("{effective_name}", reactorName).replace("{emoji}", emojiText),
 				color -> color.replace("{role_color}", roleColor),
 				null
@@ -165,7 +184,7 @@ public final class DiscordMessageParser {
 
 	public static List<TextSegment> buildEditNotificationSegments(String editorName, String roleColor) {
 		return buildTemplateSegments(
-				I18nManager.getCustomMessages().path("discord_to_minecraft").path("edit"),
+				customMessageNode("discord_to_minecraft", "edit"),
 				text -> text.replace("{effective_name}", editorName),
 				color -> color.replace("{role_color}", roleColor),
 				null
@@ -179,7 +198,7 @@ public final class DiscordMessageParser {
 		List<TextSegment> contentSegments = parseMessageContent(message, truncateMainRaw(message.getContentRaw()));
 
 		return buildTemplateSegments(
-				I18nManager.getCustomMessages().path("discord_to_minecraft").path("edited_message"),
+				customMessageNode("discord_to_minecraft", "edited_message"),
 				text -> text.replace("{effective_name}", effectiveName),
 				color -> color.replace("{role_color}", roleColor),
 				(out, color, bold) -> {
@@ -191,7 +210,7 @@ public final class DiscordMessageParser {
 
 	public static List<TextSegment> buildDeleteSegments(String deleterName, String roleColor) {
 		return buildTemplateSegments(
-				I18nManager.getCustomMessages().path("discord_to_minecraft").path("delete"),
+				customMessageNode("discord_to_minecraft", "delete"),
 				text -> text.replace("{effective_name}", deleterName),
 				color -> color.replace("{role_color}", roleColor),
 				null
@@ -213,7 +232,7 @@ public final class DiscordMessageParser {
 	                                                       UnaryOperator<String> colorReplacer,
 	                                                       MessageContentInserter contentInserter) {
 		List<TextSegment> segments = new ArrayList<>();
-		if (!templateNode.isArray()) {
+		if (templateNode == null || !templateNode.isArray()) {
 			return segments;
 		}
 		for (JsonNode segNode : templateNode) {
@@ -239,7 +258,8 @@ public final class DiscordMessageParser {
 	}
 
 	public static String getMentionNotificationText(String effectiveName) {
-		String template = I18nManager.getCustomMessages().path("xxxxx_to_minecraft").path("mentioned").asString();
+		JsonNode mentionedNode = customMessageNode("xxxxx_to_minecraft", "mentioned");
+		String template = mentionedNode == null ? "" : mentionedNode.asString();
 		return template.replace("{effective_name}", effectiveName);
 	}
 
@@ -328,7 +348,7 @@ public final class DiscordMessageParser {
 				if (title.isEmpty() && embed.getDescription() != null) {
 					title = embed.getDescription();
 					if (title.length() > 50) {
-						title = safeTruncate(title, 20) + "...";
+						title = safeTruncate(title, 50) + "...";
 					}
 				}
 
@@ -970,7 +990,7 @@ public final class DiscordMessageParser {
 			if (content == null) {
 				continue;
 			}
-			String normalized = content.replaceAll("[*_~`\\s]", "");
+			String normalized = SPOILER_URL_STRIP_PATTERN.matcher(content).replaceAll("");
 			if (url.equals(normalized)) {
 				return true;
 			}

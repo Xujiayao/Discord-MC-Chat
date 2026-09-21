@@ -301,7 +301,11 @@ public final class LinkedAccountManager {
 	}
 
 	/**
-	 * @return An unmodifiable map of Discord IDs to their linked account entries.
+	 * Returns a read-only view of the currently linked accounts. It is a live view and not a snapshot:
+	 * it reflects later link/unlink operations, and its values are the internal lists themselves, so
+	 * callers must not modify them and must expect the content to change while they iterate.
+	 *
+	 * @return An unmodifiable view of the internal map of Discord IDs to their linked account entries.
 	 */
 	public static Map<String, List<LinkEntry>> getAllLinks() {
 		return Collections.unmodifiableMap(LINKED_ACCOUNTS);
@@ -310,7 +314,8 @@ public final class LinkedAccountManager {
 	private static boolean isOfflineUuid(String uuidString) {
 		try {
 			return UUID.fromString(uuidString).version() == 3;
-		} catch (Exception e) {
+		} catch (IllegalArgumentException | NullPointerException _) {
+			// The only failures fromString can produce: a malformed UUID or a null argument
 			return false;
 		}
 	}

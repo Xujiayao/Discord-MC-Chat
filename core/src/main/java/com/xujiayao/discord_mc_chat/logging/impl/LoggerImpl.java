@@ -6,13 +6,14 @@ import org.slf4j.Marker;
 import org.slf4j.event.Level;
 import org.slf4j.helpers.LegacyAbstractLogger;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -30,7 +31,7 @@ import java.util.Map;
 public final class LoggerImpl extends LegacyAbstractLogger {
 
 	private static volatile PrintWriter fileWriter;
-	private static boolean fileWriterInitialized = false;
+	private static volatile boolean fileWriterInitialized = false;
 	private static volatile boolean consoleAnsiEnabled = true;
 
 	/**
@@ -80,18 +81,28 @@ public final class LoggerImpl extends LegacyAbstractLogger {
 			}
 		} else {
 			minecraftLogger = null;
-			synchronized (LoggerImpl.class) {
-				if (!fileWriterInitialized) {
-					try {
-						Files.createDirectories(Paths.get("logs"));
-						String fileName = "logs/DMCC_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".log";
-						fileWriter = new PrintWriter(new FileWriter(fileName, true), true);
-					} catch (IOException e) {
-						System.err.println("Failed to create log file: " + e.getMessage());
-						e.printStackTrace(System.err);
-					} finally {
-						fileWriterInitialized = true;
-					}
+			initializeFileWriter();
+		}
+	}
+
+	/**
+	 * Opens the log file of this JVM once. Called on construction, and again after {@link #shutdown()} so that a
+	 * Standalone JVM which shuts the logger down without exiting keeps writing log lines to a file.
+	 */
+	private static void initializeFileWriter() {
+		synchronized (LoggerImpl.class) {
+			if (!fileWriterInitialized) {
+				try {
+					Files.createDirectories(Paths.get("logs"));
+					String fileName = "logs/DMCC_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".log";
+					// UTF-8 instead of the platform default charset, which is not UTF-8 on every platform.
+					fileWriter = new PrintWriter(Files.newBufferedWriter(Paths.get(fileName), StandardCharsets.UTF_8,
+							StandardOpenOption.CREATE, StandardOpenOption.APPEND), true);
+				} catch (IOException e) {
+					System.err.println("Failed to create log file: " + e.getMessage());
+					e.printStackTrace(System.err);
+				} finally {
+					fileWriterInitialized = true;
 				}
 			}
 		}
@@ -99,10 +110,17 @@ public final class LoggerImpl extends LegacyAbstractLogger {
 
 	/**
 	 * Only the Standalone environment requires this cleanup.
+	 * <p>
+	 * The writer is closed and forgotten, so a later log call opens a new log file instead of writing into the
+	 * closed one, where every line would be dropped silently.
 	 */
 	public static void shutdown() {
-		if (fileWriter != null) {
-			fileWriter.close();
+		synchronized (LoggerImpl.class) {
+			if (fileWriter != null) {
+				fileWriter.close();
+				fileWriter = null;
+			}
+			fileWriterInitialized = false;
 		}
 	}
 
@@ -170,6 +188,11 @@ public final class LoggerImpl extends LegacyAbstractLogger {
 		} else {
 			String time = LocalTime.now().format(LOG_TIME_FORMATTER);
 			String thread = Thread.currentThread().getName();
+
+			if (!fileWriterInitialized) {
+				// shutdown() closed the log file of this JVM: re-open it instead of dropping these lines.
+				initializeFileWriter();
+			}
 
 			if (fileWriter != null) {
 				fileWriter.println(StringUtils.format("[{}] [{}/{}]: {}", time, thread, level, msg));

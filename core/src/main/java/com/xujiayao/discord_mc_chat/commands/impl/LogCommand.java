@@ -47,7 +47,14 @@ public final class LogCommand implements Command {
 
 		String fileName = args[0];
 
-		byte[] fileData = LogFileUtils.readLogFile(fileName);
+		byte[] fileData;
+		try {
+			fileData = LogFileUtils.readLogFile(fileName);
+		} catch (RuntimeException e) {
+			// A rejected file name (e.g. one pointing outside the logs directory) may be signalled by an
+			// exception instead of null; both mean "no such log file" to the sender.
+			fileData = null;
+		}
 		if (fileData == null) {
 			sender.reply(I18nManager.getDmccTranslation("commands.log.file_not_found", fileName));
 			return;

@@ -14,6 +14,7 @@ import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.server.packs.resources.IoSupplier;
 
+import java.io.BufferedReader;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
@@ -175,8 +176,8 @@ public final class TranslationManager {
 
 			boolean loaded = false;
 			if (Files.exists(langCachePath)) {
-				try {
-					Map<String, String> entries = JsonUtils.toStringMap(Files.newBufferedReader(langCachePath, StandardCharsets.UTF_8));
+				try (BufferedReader cacheReader = Files.newBufferedReader(langCachePath, StandardCharsets.UTF_8)) {
+					Map<String, String> entries = JsonUtils.toStringMap(cacheReader);
 					entries.forEach(target::putIfAbsent);
 
 					LOGGER.info(I18nManager.getDmccTranslation("minecraft.translations.cache_loaded", language, version));
@@ -245,26 +246,33 @@ public final class TranslationManager {
 		}
 
 		// Step 3: Scan datapacks directory
-		for (Pack pack : server.getPackRepository().getSelectedPacks()) {
-			pack.open().forEach(packResources -> {
-				try (PackResources resources = packResources) {
-					resources.getNamespaces(PackType.CLIENT_RESOURCES).forEach(namespace -> {
-						IoSupplier<InputStream> supplier = resources.getResource(
-								PackType.CLIENT_RESOURCES,
-								Identifier.fromNamespaceAndPath(namespace, "lang/" + language + ".json")
-						);
+		// pack.open()/getSelectedPacks() can throw; without this guard the exception escaped to init(),
+		// which logged init_failed and dropped everything loaded so far, including the official and mod
+		// translations collected above
+		try {
+			for (Pack pack : server.getPackRepository().getSelectedPacks()) {
+				pack.open().forEach(packResources -> {
+					try (PackResources resources = packResources) {
+						resources.getNamespaces(PackType.CLIENT_RESOURCES).forEach(namespace -> {
+							IoSupplier<InputStream> supplier = resources.getResource(
+									PackType.CLIENT_RESOURCES,
+									Identifier.fromNamespaceAndPath(namespace, "lang/" + language + ".json")
+							);
 
-						if (supplier != null) {
-							try (InputStream is = supplier.get()) {
-								Map<String, String> entries = JsonUtils.toStringMap(is);
-								entries.forEach(target::putIfAbsent);
-							} catch (Exception e) {
-								LOGGER.error(I18nManager.getDmccTranslation("minecraft.translations.datapack_load_failed"), e);
+							if (supplier != null) {
+								try (InputStream is = supplier.get()) {
+									Map<String, String> entries = JsonUtils.toStringMap(is);
+									entries.forEach(target::putIfAbsent);
+								} catch (Exception e) {
+									LOGGER.error(I18nManager.getDmccTranslation("minecraft.translations.datapack_load_failed"), e);
+								}
 							}
-						}
-					});
-				}
-			});
+						});
+					}
+				});
+			}
+		} catch (Exception e) {
+			LOGGER.error(I18nManager.getDmccTranslation("minecraft.translations.datapack_load_failed"), e);
 		}
 	}
 

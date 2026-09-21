@@ -19,6 +19,8 @@ public class JavaSerializerEncoder extends MessageToByteEncoder<Serializable> {
 
 	@Override
 	protected void encode(ChannelHandlerContext ctx, Serializable msg, ByteBuf out) throws Exception {
+		// No ObjectInputFilter belongs here: this side only writes objects, and the trust decision is made by
+		// the decoder that reads the bytes back
 		try (ByteBufOutputStream bbos = new ByteBufOutputStream(out);
 		     ObjectOutputStream oos = new ObjectOutputStream(bbos)) {
 			oos.writeObject(msg);

@@ -301,6 +301,10 @@ utils:
     missing_keys: "你的配置文件缺少以下必需的键："
     type_mismatch: "你的配置文件存在类型不匹配问题："
     unchanged_keys: "以下配置键仍未从模板更改："
+  network:
+    packet_rejected: "已拒绝来自 {} 的数据包：{}"
+  events:
+    handler_failed: "事件处理器在处理 {} 时抛出异常。"
   i18n:
     language_not_supported: "不支持语言 \"{}\"。"
     contribute: "欢迎为 DMCC 贡献翻译！"
@@ -331,6 +335,8 @@ linking:
     consumed: "Minecraft 玩家 {} 完成了账户绑定。"
   op_sync:
     resolve_failed: "解析 Discord 用户 {} 的 OP 等级失败：{}"
+    schedule_failed: "无法调度 OP 同步，Minecraft 端的 OP 等级未同步：{}"
+    unsupported_mode: "已跳过 OP 同步，不支持的操作模式：'{}'"
   message:
     not_linked_1: "你尚未绑定 Discord 用户。在 Discord 上使用 "
     not_linked_2: " 命令完成绑定。验证码将在 5 分钟后过期，届时可在游戏内执行 "
@@ -356,3 +362,5 @@ minecraft:
     jar_open_failed: "无法打开 JAR 文件。"
     mods_scan_failed: "扫描模组目录时出错。"
     datapack_load_failed: "无法从数据包加载翻译。"
+  events:
+    op_sync_unknown_player: "无法将 OP 等级 {} 应用到 {}，因为该玩家不在名称缓存中。"

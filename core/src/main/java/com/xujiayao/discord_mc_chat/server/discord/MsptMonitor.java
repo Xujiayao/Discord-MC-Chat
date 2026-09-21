@@ -144,23 +144,28 @@ public final class MsptMonitor {
 			} else {
 				Set<String> recovered = new HashSet<>(roundExceededServers);
 				recovered.removeAll(exceededNow);
-				for (String server : recovered) {
-					CommandPackets.Info.ResponsePacket packet = infoMap.get(server);
-					if (packet != null) {
-						notifications.add(new PendingNotification("first_recovered", packet, -1));
-					}
-				}
 
 				if (exceededNow.isEmpty()) {
 					// Every previously exceeded server recovered; the recovery notifications collected
-					// above are still dispatched below, after the lock is released.
+					// below are still dispatched after the lock is released.
 					roundExceededServers = new LinkedHashSet<>();
 					backoffExponent = 0;
 					nextDelay = baseIntervalSeconds;
 				} else {
 					nextDelay = computeBackoffSeconds(baseIntervalSeconds, backoffExponent);
-					long nextCheckEpochSeconds = Instant.now().plusSeconds(nextDelay).getEpochSecond();
+				}
 
+				// The delay computed above is the one scheduleNextPoll() will use, so the recovery
+				// notifications can carry the same real next check time as the other notifications.
+				long nextCheckEpochSeconds = Instant.now().plusSeconds(nextDelay).getEpochSecond();
+				for (String server : recovered) {
+					CommandPackets.Info.ResponsePacket packet = infoMap.get(server);
+					if (packet != null) {
+						notifications.add(new PendingNotification("first_recovered", packet, nextCheckEpochSeconds));
+					}
+				}
+
+				if (!exceededNow.isEmpty()) {
 					Set<String> stillExceeded = new HashSet<>(exceededNow);
 					stillExceeded.retainAll(roundExceededServers);
 					for (String server : stillExceeded) {

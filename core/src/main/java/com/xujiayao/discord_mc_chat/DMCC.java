@@ -12,7 +12,6 @@ import com.xujiayao.discord_mc_chat.server.linking.OpSyncManager;
 import com.xujiayao.discord_mc_chat.update.UpdateCheckManager;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
-import okhttp3.Cache;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -140,6 +139,12 @@ public final class DMCC {
 							return false;
 						}
 					}
+					default -> {
+						// A mode that ModeManager did not hand out must not silently count as a successful
+						// initialization (and with an empty mode no instance at all would have been started).
+						LOGGER.error(I18nManager.getDmccTranslation("main.init.failed"));
+						return false;
+					}
 				}
 
 				UpdateCheckManager.start();
@@ -189,7 +194,7 @@ public final class DMCC {
 
 				// OK_HTTP_CLIENT is static final. We should NOT shut down its dispatcher executor
 				// because it would prevent the client from being reused after a reload.
-				try (Cache ignored = OK_HTTP_CLIENT.cache()) {
+				try {
 					OK_HTTP_CLIENT.connectionPool().evictAll();
 				} catch (Exception e) {
 					LOGGER.error(I18nManager.getDmccTranslation("main.shutdown.okhttp_failed"), e);

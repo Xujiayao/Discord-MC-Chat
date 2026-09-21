@@ -35,7 +35,8 @@ import java.util.concurrent.Executors;
 public final class CommandManager {
 
 	private static final Map<String, Command> COMMANDS = new ConcurrentHashMap<>();
-	private static ExecutorService commandExecutor;
+	// Written by initialize()/shutdown() and read by every dispatching thread, so it has to be volatile.
+	private static volatile ExecutorService commandExecutor;
 
 	private CommandManager() {
 	}

@@ -36,15 +36,19 @@ public final class ExecutorServiceUtils {
 	public static void shutdownAnExecutor(ExecutorService executor) {
 		executor.shutdown();
 		try {
-			if (ConfigManager.getBoolean("shutdown.graceful_shutdown")) {
+			if (ConfigManager.getBoolean("shutdown.graceful_shutdown", false)) {
 				// Allow up to 10 minutes for ongoing requests to complete
 				executor.awaitTermination(10, TimeUnit.MINUTES);
 			} else {
 				// Allow up to 5 seconds for ongoing requests to complete
 				executor.awaitTermination(5, TimeUnit.SECONDS);
 			}
-		} catch (Exception ignored) {
+		} catch (InterruptedException e) {
+			// Restore the interrupt status: the shutdown hook must not swallow the interruption.
+			Thread.currentThread().interrupt();
+		} finally {
+			// Whatever is still running after the grace period must not keep the JVM alive.
+			executor.shutdownNow();
 		}
-		executor.shutdownNow();
 	}
 }

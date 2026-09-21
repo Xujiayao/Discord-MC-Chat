@@ -6,6 +6,7 @@ import tools.jackson.databind.JsonNode;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,7 +43,9 @@ public final class I18nManager {
 	 * @return The detected language code (e.g., "zh_cn") if supported, otherwise "en_us".
 	 */
 	public static String detectLanguage() {
-		String code = Locale.getDefault().toString().toLowerCase();
+		// Locale.ROOT: language codes are compared as plain ASCII, so the default locale must not be able to
+		// change the result (the Turkish locale would turn "I" into "ı").
+		String code = Locale.getDefault().toString().toLowerCase(Locale.ROOT);
 
 		if (I18nManager.class.getResource("/lang/" + code + ".yml") != null) {
 			return code;
@@ -135,7 +138,10 @@ public final class I18nManager {
 				}
 			}
 
-			JsonNode userMessages = YAML_MAPPER.readTree(Files.newBufferedReader(customMessagesPath, StandardCharsets.UTF_8));
+			JsonNode userMessages;
+			try (Reader reader = Files.newBufferedReader(customMessagesPath, StandardCharsets.UTF_8)) {
+				userMessages = YAML_MAPPER.readTree(reader);
+			}
 
 			JsonNode templateMessages;
 			try (InputStream templateStream = I18nManager.class.getResourceAsStream(templatePath)) {

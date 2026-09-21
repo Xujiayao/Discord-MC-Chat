@@ -66,10 +66,6 @@ final class DiscordEventHandler extends ListenerAdapter {
 		}
 	}
 
-	private static String normalizeMinecraftNamespace(String value) {
-		return StatsCommand.normalizeMinecraftNamespace(value);
-	}
-
 	@Override
 	public void onReady(@NotNull ReadyEvent event) {
 		BotPresenceManager.update();
@@ -251,7 +247,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 		StatsCommand.StatsProvider provider = StatsCommand.getProvider();
 		if (provider == null) return List.of();
 
-		String normalizedValue = normalizeMinecraftNamespace(currentValue);
+		String normalizedValue = StatsCommand.normalizeMinecraftNamespace(currentValue);
 		String lowerValue = normalizedValue == null ? "" : normalizedValue.toLowerCase();
 		return provider.getStatTypes().stream()
 				.filter(t -> t.toLowerCase().contains(lowerValue))
@@ -264,8 +260,8 @@ final class DiscordEventHandler extends ListenerAdapter {
 		StatsCommand.StatsProvider provider = StatsCommand.getProvider();
 		if (provider == null || type == null || type.isBlank()) return List.of();
 
-		String normalizedType = normalizeMinecraftNamespace(type);
-		String normalizedValue = normalizeMinecraftNamespace(currentValue);
+		String normalizedType = StatsCommand.normalizeMinecraftNamespace(type);
+		String normalizedValue = StatsCommand.normalizeMinecraftNamespace(currentValue);
 		String lowerValue = normalizedValue == null ? "" : normalizedValue.toLowerCase();
 		return provider.getStatNames(normalizedType).stream()
 				.filter(s -> s.toLowerCase().contains(lowerValue))
@@ -276,7 +272,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 
 	@Override
 	public void onMessageReceived(@NotNull MessageReceivedEvent event) {
-		if (event.getAuthor() == event.getJDA().getSelfUser()) {
+		if (event.getAuthor().getIdLong() == event.getJDA().getSelfUser().getIdLong()) {
 			return;
 		}
 
@@ -454,7 +450,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 		}
 
 		// The bot will edit message when replying slash commands
-		if (event.getAuthor() == event.getJDA().getSelfUser()) {
+		if (event.getAuthor().getIdLong() == event.getJDA().getSelfUser().getIdLong()) {
 			return;
 		}
 

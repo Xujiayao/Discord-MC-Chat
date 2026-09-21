@@ -79,6 +79,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
+
 public final class MinecraftEventHandler {
 
 	private static final String DEFAULT_MENTION_STYLE = "title";
@@ -483,6 +485,9 @@ public final class MinecraftEventHandler {
 						int level = e.getValue();
 						Optional<NameAndId> nameAndIdOpt = serverInstance.services().nameToIdCache().get(uuid);
 						if (nameAndIdOpt.isEmpty()) {
+							// An OP entry needs a name, so this account previously kept its old level with no
+							// trace at all; the player stays unsynced until the next successful sync
+							LOGGER.warn(I18nManager.getDmccTranslation("minecraft.events.op_sync_unknown_player", level, uuid));
 							continue;
 						}
 						NameAndId nameAndId = nameAndIdOpt.get();

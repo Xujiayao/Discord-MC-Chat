@@ -17,6 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
@@ -112,17 +113,24 @@ public final class ChannelUpdateManager {
 			return emptyContext(nowEpochSeconds);
 		}
 
-		int onlinePlayerCount = onlinePackets.stream().mapToInt(packet -> packet.onlinePlayerCount).sum();
-		int maxPlayerCount = onlinePackets.stream().mapToInt(packet -> packet.maxPlayerCount).sum();
-		int playersEverJoined = onlinePackets.stream().mapToInt(packet -> packet.playersEverJoined).sum();
+		// One pass over the packets instead of one stream per aggregate; the sums and the maximum are
+		// exactly the values the previous mapToInt/mapToLong pipelines produced.
+		int onlinePlayerCount = 0;
+		int maxPlayerCount = 0;
+		int playersEverJoined = 0;
+		long maxUptimeSeconds = 0L;
+		for (CommandPackets.Info.ResponsePacket packet : onlinePackets) {
+			onlinePlayerCount += packet.onlinePlayerCount;
+			maxPlayerCount += packet.maxPlayerCount;
+			playersEverJoined += packet.playersEverJoined;
+			maxUptimeSeconds = Math.max(maxUptimeSeconds, Math.max(0L, packet.uptimeSeconds));
+		}
 		int onlineServerCount = onlinePackets.size();
-		long maxUptimeSeconds = onlinePackets.stream().mapToLong(packet -> Math.max(0L, packet.uptimeSeconds)).max().orElse(0L);
 		long serverStartedTime = Math.max(0L, nowEpochSeconds - maxUptimeSeconds);
 		String onlineServerList = onlinePackets.stream()
 				.map(packet -> packet.serverName == null ? "unknown" : packet.serverName)
 				.sorted(String.CASE_INSENSITIVE_ORDER)
-				.reduce((left, right) -> left + ", " + right)
-				.orElse("");
+				.collect(Collectors.joining(", "));
 
 		return new ChannelUpdateContext(
 				nowEpochSeconds,

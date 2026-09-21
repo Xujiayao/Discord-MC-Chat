@@ -3,6 +3,7 @@ package com.xujiayao.discord_mc_chat.server.linking;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 
 import java.security.SecureRandom;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,6 +22,16 @@ public final class VerificationCodeManager {
 	// Minecraft UUID -> Code (for fast lookup by player UUID)
 	private static final Map<String, String> UUID_TO_CODE = new ConcurrentHashMap<>();
 
+	/**
+	 * Guards every read and write of the two maps above. They only make sense together (a pending code
+	 * owns one UUID mapping and vice versa), but a ConcurrentHashMap only makes a single-map operation
+	 * atomic. Without this lock, generation, consumption and the expiry purge can interleave and leave
+	 * the pair inconsistent: for example a refresh resurrecting a code that was just consumed, or a
+	 * purge dropping a UUID mapping that was just rewritten with a fresh code. Verification is
+	 * human-paced, so one coarse lock is enough and keeps every path trivially consistent.
+	 */
+	private static final Object LOCK = new Object();
+
 	private VerificationCodeManager() {
 	}
 
@@ -36,7 +47,14 @@ public final class VerificationCodeManager {
 	 * @return The verification code.
 	 */
 	public static String generateOrRefreshCode(String minecraftUuid, String playerName) {
-		purgeExpired();
+		synchronized (LOCK) {
+			return generateOrRefreshCodeLocked(minecraftUuid, playerName);
+		}
+	}
+
+	// Caller must hold LOCK
+	private static String generateOrRefreshCodeLocked(String minecraftUuid, String playerName) {
+		purgeExpiredLocked();
 
 		String existingCode = UUID_TO_CODE.get(minecraftUuid);
 		if (existingCode != null) {
@@ -76,9 +94,18 @@ public final class VerificationCodeManager {
 	 * @return The PendingVerification details if the code is valid, or null if invalid/expired.
 	 */
 	public static PendingVerification consumeCode(String code) {
-		purgeExpired();
+		synchronized (LOCK) {
+			return consumeCodeLocked(code);
+		}
+	}
 
-		String upperCode = code.toUpperCase();
+	// Caller must hold LOCK
+	private static PendingVerification consumeCodeLocked(String code) {
+		purgeExpiredLocked();
+
+		// Locale.ROOT: the code alphabet is ASCII, and the default locale (for example tr) would not
+		// uppercase 'i' to 'I', so a valid code could fail to match
+		String upperCode = code.toUpperCase(Locale.ROOT);
 		PendingVerification pending = PENDING_CODES.remove(upperCode);
 
 		if (pending == null) {
@@ -96,11 +123,14 @@ public final class VerificationCodeManager {
 	}
 
 	public static void clear() {
-		PENDING_CODES.clear();
-		UUID_TO_CODE.clear();
+		synchronized (LOCK) {
+			PENDING_CODES.clear();
+			UUID_TO_CODE.clear();
+		}
 	}
 
-	private static void purgeExpired() {
+	// Caller must hold LOCK
+	private static void purgeExpiredLocked() {
 		long now = System.currentTimeMillis();
 		PENDING_CODES.entrySet().removeIf(entry -> {
 			if (entry.getValue().expiresAt() <= now) {

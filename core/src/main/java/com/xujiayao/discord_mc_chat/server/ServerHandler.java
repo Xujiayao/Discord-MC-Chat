@@ -31,6 +31,8 @@ import com.xujiayao.discord_mc_chat.server.message.DiscordMessageParser;
 import com.xujiayao.discord_mc_chat.server.message.MinecraftMessageParser;
 import com.xujiayao.discord_mc_chat.update.UpdateCheckManager;
 import com.xujiayao.discord_mc_chat.utils.CryptUtils;
+import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
@@ -42,6 +44,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
@@ -50,6 +54,24 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	private static final String TELLRAW_COMPONENT_PLACEHOLDER = "__DMCC_TELLRAW_COMPONENT__";
 
 	private static final int EXCLUDED_COMMAND_PATTERN_CACHE_SIZE = 64;
+
+	/**
+	 * Upper bound on failed authentication attempts on a single connection. A failure already closes the
+	 * channel, but packets decoded in the same read batch are still delivered to this handler, so this stops
+	 * them from being answered (and hashed) one by one.
+	 */
+	private static final int MAX_CONSECUTIVE_AUTH_FAILURES = 3;
+
+	/**
+	 * Update checks block on an HTTP request (30 s call timeout), so they must never run on a Netty event
+	 * loop. A single thread keeps concurrent checks serialized exactly as they were while running on the
+	 * event loop; daemon threads keep an in-flight check from holding up JVM shutdown.
+	 */
+	private static final ExecutorService UPDATE_CHECK_EXECUTOR = Executors.newSingleThreadExecutor(r -> {
+		Thread thread = ExecutorServiceUtils.newThreadFactory("DMCC-UpdateRequest").newThread(r);
+		thread.setDaemon(true);
+		return thread;
+	});
 
 	/**
 	 * Compiled {@code broadcasts.excluded_commands} patterns. Capacity 64, access-order LRU eviction.
@@ -68,6 +90,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 	private String expectedNonce;
 	private boolean authenticated = false;
 	private boolean initialOpSyncDone = false;
+	private int authFailureCount = 0;
 	private String clientName;
 
 	ServerHandler(NettyServer server) {
@@ -103,8 +126,6 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 			// No-op, just resets idle timer
 			return;
 		}
-
-		String unexpectedPacketMessage = I18nManager.getDmccTranslation("server.network.unexpected_packet", clientName, packet == null ? "null" : packet.getClass().getSimpleName());
 
 		if (authenticated) {
 			switch (packet) {
@@ -161,8 +182,12 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 				case CommandPackets.Execute.ResponsePacket p -> ExecuteCommand.completeRequest(p.requestId, p);
 				case CommandPackets.Console.ResponsePacket p -> ConsoleCommand.completeRequest(p.requestId, p);
 				case CommandPackets.Update.RequestPacket p -> {
-					UpdateCheckManager.CheckResult result = UpdateCheckManager.checkNow();
-					ctx.writeAndFlush(new CommandPackets.Update.ResponsePacket(p.requestId, result.message()));
+					// The check blocks on an HTTP request for up to 30 s, so it must not run on the event loop;
+					// writeAndFlush is safe from another thread and still targets the requesting client.
+					Channel channel = ctx.channel();
+					UPDATE_CHECK_EXECUTOR.execute(() -> channel.writeAndFlush(
+							new CommandPackets.Update.ResponsePacket(p.requestId, UpdateCheckManager.checkNow().message())
+					));
 				}
 				case CommandPackets.Execute.AutoCompleteResponsePacket p ->
 						NetworkManager.cacheExecuteAutoCompleteResponse(clientName, p.suggestions);
@@ -189,7 +214,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 					}
 					ctx.writeAndFlush(new CommandPackets.Unlink.ResponsePacket(p.minecraftUuid, unlinkedDiscordId != null, discordName));
 				}
-				case null, default -> LOGGER.warn(unexpectedPacketMessage);
+				case null, default -> logUnexpectedPacket(packet);
 			}
 		} else {
 			switch (packet) {
@@ -200,7 +225,10 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 							return;
 						}
 					} else {
-						if (!isWhitelisted(p.serverName)) {
+						// Resolve the config entry once: the whitelist check and the Minecraft version check both
+						// need it, and every lookup walks the whole multi_server.servers array.
+						JsonNode serverConfig = findServerConfig(p.serverName);
+						if (serverConfig == null) {
 							reject(ctx, p.serverName, "server.network.disconnect_reasons.not_whitelisted", p.serverName);
 							return;
 						}
@@ -215,7 +243,7 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 							return;
 						}
 
-						String expectedMinecraftVersion = getMinecraftVersion(p.serverName);
+						String expectedMinecraftVersion = serverConfig.path("minecraft_version").asString();
 						if (!expectedMinecraftVersion.equals(p.minecraftVersion)) {
 							reject(ctx, p.serverName, "server.network.disconnect_reasons.version_mismatch", "Minecraft", p.minecraftVersion, expectedMinecraftVersion);
 							return;
@@ -227,6 +255,16 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 					ctx.writeAndFlush(new ChallengePacket(this.expectedNonce));
 				}
 				case AuthResponsePacket p -> {
+					// A nonce only exists after a successful HandshakePacket. Without one the hash would be derived
+					// from the literal "null" prefix, which must never count as authentication; the failure counter
+					// bounds how many attempts a connection gets before it is dropped for good.
+					if (this.expectedNonce == null || this.authFailureCount >= MAX_CONSECUTIVE_AUTH_FAILURES) {
+						this.authFailureCount++;
+						// Without a handshake no name is known yet, so report the connection as unknown
+						reject(ctx, clientName != null ? clientName : "unknown", "server.network.disconnect_reasons.auth_failed");
+						return;
+					}
+
 					String correctHash = CryptUtils.sha256(this.expectedNonce + server.getSharedSecret());
 
 					if (correctHash.equals(p.hash)) {
@@ -246,10 +284,11 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 						}
 						BotPresenceManager.update();
 					} else {
+						this.authFailureCount++;
 						reject(ctx, clientName, "server.network.disconnect_reasons.auth_failed");
 					}
 				}
-				case null, default -> LOGGER.warn(unexpectedPacketMessage);
+				case null, default -> logUnexpectedPacket(packet);
 			}
 		}
 	}
@@ -282,6 +321,14 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 		ctx.close();
 	}
 
+	/**
+	 * Builds the unexpected-packet message only when there is an unexpected packet to report, instead of on
+	 * every inbound packet.
+	 */
+	private void logUnexpectedPacket(Packet packet) {
+		LOGGER.warn(I18nManager.getDmccTranslation("server.network.unexpected_packet", clientName, packet == null ? "null" : packet.getClass().getSimpleName()));
+	}
+
 	private JsonNode findServerConfig(String serverName) {
 		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
 		if (serversNode.isArray()) {
@@ -292,15 +339,6 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 			}
 		}
 		return null;
-	}
-
-	private boolean isWhitelisted(String serverName) {
-		return findServerConfig(serverName) != null;
-	}
-
-	private String getMinecraftVersion(String serverName) {
-		JsonNode config = findServerConfig(serverName);
-		return config != null ? config.path("minecraft_version").asString() : "";
 	}
 
 	private void handleMinecraftUserMessage(MinecraftEventPacket packet,

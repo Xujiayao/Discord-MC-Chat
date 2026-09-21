@@ -41,8 +41,10 @@ public final class CodeBlockMessageUtils {
 				}
 			}
 
-			if (end <= index) {
-				end = Math.min(index + CODE_BLOCK_CONTENT_LIMIT, normalized.length());
+			// A high surrogate as the last kept char would be separated from its low surrogate and
+			// render as a broken character, so back off by one (same idea as safeTruncate).
+			if (end < normalized.length() && end > index && Character.isHighSurrogate(normalized.charAt(end - 1))) {
+				end--;
 			}
 
 			blocks.add("```\n" + normalized.substring(index, end) + "\n```");

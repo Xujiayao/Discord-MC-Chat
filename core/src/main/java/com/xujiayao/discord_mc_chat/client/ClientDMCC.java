@@ -18,7 +18,9 @@ public final class ClientDMCC {
 	private final int port;
 	private final String serverName;
 	private final String sharedSecret;
-	private NettyClient nettyClient;
+	// Written by the startup thread in start() and read from Netty event loops, the command executor
+	// and Discord threads (sendPacket, isConnected, latency sampling).
+	private volatile NettyClient nettyClient;
 
 	/**
 	 * @param serverName Logical client/server name used in DMCC protocol.

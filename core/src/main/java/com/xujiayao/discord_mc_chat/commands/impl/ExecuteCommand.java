@@ -71,15 +71,15 @@ public final class ExecuteCommand implements Command {
 		String target = args[0];
 		String command = args[1];
 
-		// Parse the command and its arguments from the single command string
-		String[] commandParts = command.trim().split("\\s+");
-		String commandName = commandParts[0].toLowerCase();
+		// Split the trimmed command string once: deriving the name and the arguments from different
+		// views of the input (trimmed vs. original) duplicated the first argument when it was
+		// preceded by leading whitespace or separated by a tab.
+		String[] commandHead = command.trim().split("\\s+", 2);
+		String commandName = commandHead[0].toLowerCase();
 		if (commandName.startsWith("/")) {
 			commandName = commandName.substring(1);
 		}
-		String[] commandArgs = commandParts.length > 1
-				? command.substring(command.indexOf(' ') + 1).split("\\s+")
-				: new String[0];
+		String[] commandArgs = commandHead.length > 1 ? commandHead[1].split("\\s+") : new String[0];
 
 		CommandManager.ResolvedTarget resolved = CommandManager.resolveTarget(sender, target, "commands.execute");
 		if (resolved == null) {
