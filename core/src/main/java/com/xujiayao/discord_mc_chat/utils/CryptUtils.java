@@ -7,6 +7,8 @@ import java.util.HexFormat;
 
 /**
  * Cryptographic utilities.
+ *
+ * @author Xujiayao
  */
 public final class CryptUtils {
 

@@ -27,6 +27,8 @@ import java.util.Map;
  * Only the level checks, the caller name and the normalized logging call are implemented here; every
  * {@code trace}/{@code debug}/{@code info}/{@code warn}/{@code error} overload (including the {@link Marker}
  * variants) is provided by {@link LegacyAbstractLogger}.
+ *
+ * @author Xujiayao
  */
 public final class LoggerImpl extends LegacyAbstractLogger {
 

@@ -22,6 +22,9 @@ import java.util.concurrent.RejectedExecutionException;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
+/**
+ * @author Xujiayao
+ */
 public final class OpSyncManager {
 
 	private static ExecutorService syncExecutor;

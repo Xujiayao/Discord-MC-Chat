@@ -11,6 +11,8 @@ import java.io.Serializable;
 /**
  * A simple encoder that serializes Java objects into ByteBuf.
  * Replaces the deprecated Netty ObjectEncoder.
+ *
+ * @author Xujiayao
  */
 public class JavaSerializerEncoder extends MessageToByteEncoder<Serializable> {
 

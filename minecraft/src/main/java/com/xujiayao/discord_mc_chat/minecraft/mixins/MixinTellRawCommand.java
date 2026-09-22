@@ -19,6 +19,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.regex.Pattern;
 
+/**
+ * @author Xujiayao
+ */
 @Mixin(TellRawCommand.class)
 final class MixinTellRawCommand {
 

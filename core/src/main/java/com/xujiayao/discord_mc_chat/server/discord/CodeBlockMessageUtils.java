@@ -5,6 +5,8 @@ import java.util.List;
 
 /**
  * Utilities for splitting long messages into Discord-safe code blocks.
+ *
+ * @author Xujiayao
  */
 public final class CodeBlockMessageUtils {
 

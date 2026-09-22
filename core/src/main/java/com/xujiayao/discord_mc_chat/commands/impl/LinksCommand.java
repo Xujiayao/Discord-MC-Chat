@@ -18,6 +18,8 @@ import java.util.Map;
  * <p>
  * Available in single_server and standalone modes (where Server is running).
  * Display names are resolved at query time; if resolution fails, raw IDs are shown.
+ *
+ * @author Xujiayao
  */
 public final class LinksCommand implements Command {
 

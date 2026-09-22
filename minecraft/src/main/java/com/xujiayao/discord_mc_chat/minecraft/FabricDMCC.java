@@ -4,6 +4,9 @@ import com.xujiayao.discord_mc_chat.DMCC;
 import com.xujiayao.discord_mc_chat.minecraft.events.MinecraftEventHandler;
 import net.fabricmc.api.DedicatedServerModInitializer;
 
+/**
+ * @author Xujiayao
+ */
 public final class FabricDMCC implements DedicatedServerModInitializer {
 
 	@Override

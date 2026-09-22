@@ -11,6 +11,9 @@ import java.util.concurrent.Executors;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
+/**
+ * @author Xujiayao
+ */
 public final class ServerDMCC {
 
 	private final String host;

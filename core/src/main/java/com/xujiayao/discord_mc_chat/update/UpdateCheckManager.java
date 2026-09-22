@@ -26,6 +26,9 @@ import java.util.stream.Collectors;
 import static com.xujiayao.discord_mc_chat.Constants.JSON_MAPPER;
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
+/**
+ * @author Xujiayao
+ */
 public final class UpdateCheckManager {
 
 	private static final String UPDATE_URL = "https://cdn.jsdelivr.net/gh/Xujiayao/Discord-MC-Chat@vv3/update/versions.json";

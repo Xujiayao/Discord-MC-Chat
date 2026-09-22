@@ -9,6 +9,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
+/**
+ * @author Xujiayao
+ */
 public final class VerificationCodeManager {
 
 	private static final int CODE_LENGTH = 6;

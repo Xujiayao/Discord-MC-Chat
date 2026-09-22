@@ -17,6 +17,8 @@ import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
  * <p>
  * <b>Discord side (1 arg):</b> Completes account linking using a verification code.
  * Available in single_server and standalone modes (where Server is running).
+ *
+ * @author Xujiayao
  */
 public final class LinkCommand implements Command {
 

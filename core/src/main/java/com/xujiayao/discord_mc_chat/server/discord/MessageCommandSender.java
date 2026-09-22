@@ -6,6 +6,8 @@ import net.dv8tion.jda.api.utils.FileUpload;
 
 /**
  * Command sender for text-channel messages that trigger DMCC commands.
+ *
+ * @author Xujiayao
  */
 public final class MessageCommandSender implements CommandSender {
 

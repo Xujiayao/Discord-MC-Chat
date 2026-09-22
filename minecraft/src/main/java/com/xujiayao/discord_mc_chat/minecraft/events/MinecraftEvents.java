@@ -13,6 +13,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.world.level.GameType;
 
+/**
+ * @author Xujiayao
+ */
 public final class MinecraftEvents {
 
 	private MinecraftEvents() {

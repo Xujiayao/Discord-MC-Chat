@@ -11,6 +11,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
+/**
+ * @author Xujiayao
+ */
 public final class ClientDMCC {
 	private static final AtomicBoolean PRESERVE_LOG_TAILER_ON_NEXT_SHUTDOWN = new AtomicBoolean(false);
 

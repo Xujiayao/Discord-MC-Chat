@@ -21,6 +21,9 @@ import java.util.function.Function;
 import static com.xujiayao.discord_mc_chat.Constants.JSON_MAPPER;
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
+/**
+ * @author Xujiayao
+ */
 public final class LinkedAccountManager {
 
 	private static final Path LINKS_FILE = Path.of("./config/discord_mc_chat/account_linking/links.json");

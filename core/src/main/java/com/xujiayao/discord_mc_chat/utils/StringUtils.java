@@ -3,6 +3,9 @@ package com.xujiayao.discord_mc_chat.utils;
 import java.util.IllegalFormatException;
 import java.util.regex.Pattern;
 
+/**
+ * @author Xujiayao
+ */
 public final class StringUtils {
 
 	/**
@@ -19,16 +22,12 @@ public final class StringUtils {
 
 	/**
 	 * Escapes control characters into their literal two-character sequences.
-	 * <p>
-	 * The backslash itself is escaped as well: without that, the text {@code a\nb} (backslash, n) and a real
-	 * line break would both come out as {@code a\nb}, so the escaping could not be undone.
 	 */
 	public static String escape(String s) {
 		StringBuilder sb = new StringBuilder(s.length());
 		for (int i = 0; i < s.length(); i++) {
 			char c = s.charAt(i);
 			switch (c) {
-				case '\\' -> sb.append("\\\\");
 				case '\t' -> sb.append("\\t");
 				case '\b' -> sb.append("\\b");
 				case '\n' -> sb.append("\\n");

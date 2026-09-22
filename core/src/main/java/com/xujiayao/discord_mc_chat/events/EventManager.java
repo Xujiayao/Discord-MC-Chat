@@ -11,6 +11,8 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
 /**
  * A simple event manager to handle event handling and posting.
+ *
+ * @author Xujiayao
  */
 public final class EventManager {
 

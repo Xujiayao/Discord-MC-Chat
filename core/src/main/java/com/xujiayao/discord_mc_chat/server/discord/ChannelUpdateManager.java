@@ -21,6 +21,9 @@ import java.util.stream.Collectors;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
+/**
+ * @author Xujiayao
+ */
 public final class ChannelUpdateManager {
 
 	private static final int INFO_REQUEST_TIMEOUT_SECONDS = 3;

@@ -14,6 +14,8 @@ import java.util.List;
  * <p>
  * Suggestions are filtered based on the sender's OP level to ensure
  * users only see commands they are authorized to execute.
+ *
+ * @author Xujiayao
  */
 public final class CommandAutoCompleter {
 

@@ -2,6 +2,8 @@ package com.xujiayao.discord_mc_chat.commands;
 
 /**
  * Represents an entity that can send commands to DMCC.
+ *
+ * @author Xujiayao
  */
 public interface CommandSender {
 

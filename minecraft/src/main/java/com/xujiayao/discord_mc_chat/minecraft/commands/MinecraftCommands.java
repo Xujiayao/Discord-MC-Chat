@@ -25,6 +25,9 @@ import static net.minecraft.commands.Commands.LEVEL_OWNERS;
 import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
+/**
+ * @author Xujiayao
+ */
 public final class MinecraftCommands {
 
 	private MinecraftCommands() {

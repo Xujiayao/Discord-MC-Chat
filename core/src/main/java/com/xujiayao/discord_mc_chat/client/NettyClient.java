@@ -30,6 +30,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
+/**
+ * @author Xujiayao
+ */
 final class NettyClient {
 
 	private static final int MAX_RECONNECT_DELAY = 512;

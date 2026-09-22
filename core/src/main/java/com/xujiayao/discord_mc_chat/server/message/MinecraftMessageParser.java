@@ -30,6 +30,8 @@ import java.util.regex.Pattern;
 /**
  * Parses plain-text messages originating from Minecraft into Discord-ready message strings and
  * Minecraft-ready rich segments.
+ *
+ * @author Xujiayao
  */
 public final class MinecraftMessageParser {
 

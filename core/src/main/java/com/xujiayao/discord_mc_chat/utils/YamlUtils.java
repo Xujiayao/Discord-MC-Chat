@@ -13,6 +13,9 @@ import java.util.regex.Pattern;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
+/**
+ * @author Xujiayao
+ */
 public final class YamlUtils {
 
 	private static final List<String> REQUIRED_MODIFIED_KEYS = List.of(

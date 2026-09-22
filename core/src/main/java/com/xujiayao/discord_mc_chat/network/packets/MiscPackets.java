@@ -1,5 +1,8 @@
 package com.xujiayao.discord_mc_chat.network.packets;
 
+/**
+ * @author Xujiayao
+ */
 public final class MiscPackets {
 	private MiscPackets() {
 	}

@@ -20,6 +20,8 @@ import java.util.concurrent.TimeUnit;
  * Execute command implementation (standalone only).
  * Forwards DMCC commands to connected clients.
  * Results are sent via each client's webhook in the Discord channel.
+ *
+ * @author Xujiayao
  */
 public final class ExecuteCommand implements Command {
 

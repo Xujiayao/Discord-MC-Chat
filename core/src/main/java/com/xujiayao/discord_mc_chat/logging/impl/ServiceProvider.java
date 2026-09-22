@@ -14,6 +14,8 @@ import org.slf4j.spi.SLF4JServiceProvider;
 
 /**
  * slf4j-simple's implementation of {@link SLF4JServiceProvider}.
+ *
+ * @author Xujiayao
  */
 public final class ServiceProvider implements SLF4JServiceProvider {
 

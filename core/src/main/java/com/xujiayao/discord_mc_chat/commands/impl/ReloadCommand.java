@@ -7,6 +7,8 @@ import com.xujiayao.discord_mc_chat.config.I18nManager;
 
 /**
  * Reload command implementation.
+ *
+ * @author Xujiayao
  */
 public final class ReloadCommand implements Command {
 

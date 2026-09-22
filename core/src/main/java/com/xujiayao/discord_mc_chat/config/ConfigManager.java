@@ -19,6 +19,9 @@ import java.util.function.Function;
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
 
+/**
+ * @author Xujiayao
+ */
 public final class ConfigManager {
 
 	private static final Path CONFIG_FILE_PATH = Paths.get("./config/discord_mc_chat/config.yml");
@@ -126,12 +129,6 @@ public final class ConfigManager {
 				return node;
 			}
 			node = node.path(part);
-		}
-
-		if (node == null || node.isMissingNode() || node.isNull()) {
-			// The loop only checks the node it is about to descend into, so a path whose last segment is
-			// missing would otherwise return silently.
-			LOGGER.warn(I18nManager.getDmccTranslation("utils.config.config.path_not_found", path));
 		}
 
 		return node;

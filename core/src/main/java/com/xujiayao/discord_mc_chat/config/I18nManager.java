@@ -19,6 +19,9 @@ import java.util.Map;
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
 
+/**
+ * @author Xujiayao
+ */
 public final class I18nManager {
 
 	/**

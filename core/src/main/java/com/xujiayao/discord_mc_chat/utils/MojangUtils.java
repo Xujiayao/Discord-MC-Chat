@@ -14,6 +14,8 @@ import static com.xujiayao.discord_mc_chat.Constants.OK_HTTP_CLIENT;
 /**
  * Utilities for resolving Minecraft player names from UUIDs. Supports both online (Mojang API) and offline
  * UUID formats, falls back to raw UUID display when resolution fails, and caches results in memory.
+ *
+ * @author Xujiayao
  */
 public final class MojangUtils {
 

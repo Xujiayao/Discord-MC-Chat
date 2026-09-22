@@ -2,6 +2,8 @@ package com.xujiayao.discord_mc_chat.commands;
 
 /**
  * Interface representing a DMCC command, with arguments support.
+ *
+ * @author Xujiayao
  */
 public interface Command {
 

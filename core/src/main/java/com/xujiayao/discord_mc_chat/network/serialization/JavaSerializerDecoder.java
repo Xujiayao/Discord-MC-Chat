@@ -16,6 +16,8 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 /**
  * A simple decoder that deserializes ByteBuf into Java objects.
  * Replaces the deprecated Netty ObjectDecoder.
+ *
+ * @author Xujiayao
  */
 public class JavaSerializerDecoder extends ByteToMessageDecoder {
 

@@ -3,6 +3,9 @@ package com.xujiayao.discord_mc_chat.network.packets;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @author Xujiayao
+ */
 public final class CommandPackets {
 	private CommandPackets() {
 	}

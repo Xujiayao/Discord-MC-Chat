@@ -50,6 +50,9 @@ import java.util.regex.PatternSyntaxException;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
+/**
+ * @author Xujiayao
+ */
 public final class DiscordManager {
 
 	private static final int CONSOLE_FORWARDING_CHUNK_LIMIT = 1800;

@@ -34,6 +34,8 @@ import java.util.regex.Pattern;
  * switches. The server builds the full rich-text representation so that DMCC clients can
  * directly convert the segments into Minecraft Components without accessing Discord APIs
  * or custom_messages.
+ *
+ * @author Xujiayao
  */
 public final class DiscordMessageParser {
 

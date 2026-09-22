@@ -18,6 +18,8 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 /**
  * Handles interactive terminal commands for standalone mode. The terminal listener thread lives for the
  * whole JVM and is not shut down during a reload.
+ *
+ * @author Xujiayao
  */
 public final class TerminalManager {
 
@@ -45,12 +47,6 @@ public final class TerminalManager {
 					}
 
 					String line = scanner.nextLine().trim();
-
-					// "".split("\\s+") yields [""], so a bare Enter would otherwise be dispatched as an
-					// empty command name and log an "unknown command" error on every keystroke.
-					if (line.isEmpty()) {
-						continue;
-					}
 
 					if (line.startsWith("/")) {
 						line = line.substring(1);

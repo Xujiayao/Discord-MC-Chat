@@ -17,6 +17,8 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
 /**
  * Utility class for reading and listing log files.
+ *
+ * @author Xujiayao
  */
 public final class LogFileUtils {
 

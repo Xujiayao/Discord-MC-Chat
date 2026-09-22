@@ -18,6 +18,8 @@ import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
 
 /**
  * Manages the mode.yml file to determine and provide the operating mode of DMCC.
+ *
+ * @author Xujiayao
  */
 public final class ModeManager {
 

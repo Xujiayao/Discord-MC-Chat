@@ -12,6 +12,8 @@ import java.util.concurrent.CompletableFuture;
  * <p>
  * These events decouple the core command layer from any Minecraft-specific APIs.
  * Handlers for these events are registered in the Minecraft module (MinecraftEventHandler).
+ *
+ * @author Xujiayao
  */
 public final class CoreEvents {
 

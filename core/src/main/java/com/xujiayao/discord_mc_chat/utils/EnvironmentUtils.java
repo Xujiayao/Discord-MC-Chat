@@ -7,6 +7,9 @@ import java.io.InputStream;
 
 import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
 
+/**
+ * @author Xujiayao
+ */
 public final class EnvironmentUtils {
 
 	/**

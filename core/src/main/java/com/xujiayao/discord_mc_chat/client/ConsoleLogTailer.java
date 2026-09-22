@@ -25,6 +25,8 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
  * <p>
  * The listener stays alive across network reconnects, buffering new lines while disconnected and flushing
  * them after reconnect; on first enable, history is replayed from the start of latest.log.
+ *
+ * @author Xujiayao
  */
 final class ConsoleLogTailer {
 

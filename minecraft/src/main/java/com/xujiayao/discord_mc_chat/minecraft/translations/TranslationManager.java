@@ -31,6 +31,8 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
 /**
  * Manages Minecraft translations for official, mods and datapacks.
+ *
+ * @author Xujiayao
  */
 public final class TranslationManager {
 

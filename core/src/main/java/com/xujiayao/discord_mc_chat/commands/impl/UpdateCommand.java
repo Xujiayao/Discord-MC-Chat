@@ -18,6 +18,8 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Update command implementation.
+ *
+ * @author Xujiayao
  */
 public final class UpdateCommand implements Command {
 

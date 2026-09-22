@@ -10,6 +10,8 @@ import static com.xujiayao.discord_mc_chat.standalone.StandaloneDMCC.SHUTDOWN_TH
 
 /**
  * Shutdown command implementation (standalone only).
+ *
+ * @author Xujiayao
  */
 public final class ShutdownCommand implements Command {
 

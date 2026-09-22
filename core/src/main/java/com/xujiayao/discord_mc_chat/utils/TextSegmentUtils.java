@@ -7,6 +7,8 @@ import java.util.List;
 
 /**
  * Shared utility helpers for working with {@link TextSegment} collections.
+ *
+ * @author Xujiayao
  */
 public final class TextSegmentUtils {
 

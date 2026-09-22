@@ -5,6 +5,9 @@ import com.xujiayao.discord_mc_chat.network.message.TextSegment;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @author Xujiayao
+ */
 public final class EventPackets {
 	private EventPackets() {
 	}

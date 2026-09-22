@@ -19,6 +19,9 @@ import java.util.concurrent.TimeUnit;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
+/**
+ * @author Xujiayao
+ */
 public final class BotPresenceManager {
 
 	private static ScheduledExecutorService statusUpdateExecutor;

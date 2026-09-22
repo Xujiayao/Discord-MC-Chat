@@ -5,6 +5,8 @@ import com.xujiayao.discord_mc_chat.logging.impl.LoggerImpl;
 
 /**
  * The entry point for Standalone environment.
+ *
+ * @author Xujiayao
  */
 public final class StandaloneDMCC {
 

@@ -12,6 +12,9 @@ import java.util.concurrent.RejectedExecutionException;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
+/**
+ * @author Xujiayao
+ */
 public final class JdaCommandSender implements CommandSender, LinkCommand.DiscordUserContextProvider {
 
 	private final SlashCommandInteractionEvent event;

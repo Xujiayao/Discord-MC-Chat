@@ -9,6 +9,9 @@ import tools.jackson.databind.JsonNode;
 
 import java.util.List;
 
+/**
+ * @author Xujiayao
+ */
 public final class OpLevelResolver {
 
 	private OpLevelResolver() {

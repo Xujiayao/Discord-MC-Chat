@@ -31,6 +31,8 @@ import java.util.concurrent.Executors;
 
 /**
  * Central registry and dispatcher for DMCC commands.
+ *
+ * @author Xujiayao
  */
 public final class CommandManager {
 

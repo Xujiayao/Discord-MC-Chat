@@ -16,6 +16,8 @@ import java.util.List;
  * <p>
  * This class is intentionally kept as a simple serializable POJO so that it can be
  * transmitted over the Netty channel inside {@link DiscordRelayPacket}.
+ *
+ * @author Xujiayao
  */
 public final class TextSegment implements Serializable {
 

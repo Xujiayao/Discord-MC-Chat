@@ -21,6 +21,8 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Info command implementation.
+ *
+ * @author Xujiayao
  */
 public final class InfoCommand implements Command {
 

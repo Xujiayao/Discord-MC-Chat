@@ -30,6 +30,8 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * Authorization for Minecraft commands is handled by Minecraft's own permission system.
  * The sender's OP level is embedded in the virtual CommandSourceStack.
+ *
+ * @author Xujiayao
  */
 public final class ConsoleCommand implements Command {
 

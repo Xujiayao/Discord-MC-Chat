@@ -23,6 +23,9 @@ import java.util.concurrent.TimeUnit;
 
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 
+/**
+ * @author Xujiayao
+ */
 final class NettyServer {
 
 	// Explicit shutdown parameters instead of the Netty defaults (2s quiet period + 15s timeout).

@@ -20,6 +20,8 @@ import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
  * <p>
  * Uses the YAML_MAPPER from Constants for JSON processing to support # comments in JSON (BlazeAndCaves).
  * Translation-resource input is normalized before parsing to tolerate legacy translation resources.
+ *
+ * @author Xujiayao
  */
 public final class JsonUtils {
 

@@ -16,6 +16,8 @@ import java.util.stream.Stream;
 
 /**
  * Stats command implementation.
+ *
+ * @author Xujiayao
  */
 public final class StatsCommand implements Command {
 

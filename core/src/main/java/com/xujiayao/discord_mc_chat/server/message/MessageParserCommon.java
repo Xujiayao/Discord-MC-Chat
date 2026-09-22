@@ -17,6 +17,8 @@ import java.util.regex.Pattern;
 
 /**
  * Shared parser helpers used by both Discord and Minecraft message parsing pipelines.
+ *
+ * @author Xujiayao
  */
 final class MessageParserCommon {
 

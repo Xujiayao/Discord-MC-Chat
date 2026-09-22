@@ -4,6 +4,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A simple logger wrapper around SLF4J for consistency between Minecraft and Standalone environments.
+ *
+ * @author Xujiayao
  */
 public final class Logger {
 

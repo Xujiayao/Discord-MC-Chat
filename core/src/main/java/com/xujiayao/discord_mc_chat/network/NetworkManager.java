@@ -19,6 +19,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
+/**
+ * @author Xujiayao
+ */
 public final class NetworkManager {
 
 	private static final AtomicReference<ClientDMCC> clientInstance = new AtomicReference<>();

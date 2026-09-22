@@ -14,6 +14,8 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * An implementation of {@link ILoggerFactory} which always returns
  * {@link LoggerImpl} instances.
+ *
+ * @author Xujiayao
  */
 final class LoggerFactory implements ILoggerFactory {
 

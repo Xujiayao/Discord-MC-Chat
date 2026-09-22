@@ -448,13 +448,14 @@
 - **Webhook 复用判定改为按 ID 比较**（原来是引用比较，几乎永不相等 → 反复创建 webhook，最终撞上 Discord 每频道 15 个的上限）；提及与角色占位符的 null 兜底补上。
 - **机器人不再中继自己的消息**：自消息过滤由引用比较改为 ID 比较（编辑消息路径同样修正）。
 - **验证码在土耳其语等 locale 下可正常使用**（`toUpperCase` 指定 `Locale.ROOT`），并消除生成/消费/过期三条路径的竞态（不再残留陈旧映射）。
-- **`/dmcc help` 对齐按码点计算**，中文/emoji 描述不再错位；standalone 终端输入空行不再输出「未知命令」。
+- **`/dmcc help` 对齐按码点计算**，中文/emoji 描述不再错位。（standalone 终端空行的处理一度改为静默忽略，实机测试后已回退为原有的「未知命令」提示，见工作 09。）
 - **MSPS 恢复通知的 `{next_check_time}` 由字面 `-1` 改为真实时间戳**（与另两类通知一致，通知顺序与文案不变）。
-- **`StringUtils.escape` 现在也转义反斜杠**：日志中 `C:\path` 显示为 `C:\\path`（此前反斜杠不转义，转义不可逆）；`StringUtils.format` 遇到非法 printf 格式串时回退原串，不再从日志/中继内部抛异常。
+- **`StringUtils.format` 遇到非法 printf 格式串时回退原串**，不再从日志/中继内部抛异常。（同一轮里给 `StringUtils.escape` 增加的反斜杠转义已按实机测试反馈回退，见工作 09。）
 - **超长代码块分块不再切断 emoji 代理对**；事件处理器抛异常不再中断其余处理器（新增 `utils.events.handler_failed` 日志）。
-- **配置最后一段键缺失时会告警**（原来只对中间段告警，末段缺失完全静默）。
 - **OP 同步的静默失败现在有迹可循**：调度被拒、未知模式、玩家名未知三种情况各记一条 warn（`linking.op_sync.schedule_failed`、`linking.op_sync.unsupported_mode`、`minecraft.events.op_sync_unknown_player`）。
 - **未知运行模式不再「静默成功」**：`mode.yml` 中无法识别的模式会记 `main.init.failed` 并拒绝初始化（原来跳过全部初始化却仍打印成功）。
+
+（同一轮新增的「配置路径最后一段缺失也告警」在 `multi_server_client` 下会误报 `language` 键缺失，实机测试后已回退为只对中间段告警，见工作 09。）
 
 **保留的既有行为（经确认）**
 
@@ -476,7 +477,7 @@
 | --- | --- | --- |
 | F1 | `server/ServerHandler.java`、`network/**` | 认证守卫与限流、惰性数据包日志、快照按请求隔离、反序列化白名单、更新检查移出事件循环 |
 | F2 | `utils/LogFileUtils.java`、`client/**` | 路径穿越、8 MiB 上限、延迟配对、补全移出事件循环、执行超时 |
-| F3 | `config/**`、`utils/**`、`logging/**`、`events/EventManager.java`、`DMCC.java` | Reader 关闭、`escape`/`format` 回退、缺键告警、日志 UTF-8、事件异常隔离、模式校验 |
+| F3 | `config/**`、`utils/**`、`logging/**`、`events/EventManager.java`、`DMCC.java` | Reader 关闭、`format` 回退、缺键告警、日志 UTF-8、事件异常隔离、模式校验 |
 | F4 | `commands/**`、`update/UpdateCheckManager.java`、`standalone/**` | 参数错位、版本比较、任务代次失效、帮助对齐、终端空行 |
 | F5 | `server/message/**`、`server/discord/**` | 模板可空访问、webhook 归属、标题截断、presence 热更新、MSPS 时间戳、代理对 |
 | F6 | `minecraft/**`、`server/linking/**` | 验证码 Locale 与互斥、OP 同步告警、数据包翻译容错 |
@@ -510,5 +511,33 @@
     6. Webhook：手工删除频道 webhook 或收回权限后下一条消息应自动重建；连续发送多条 webhook 消息不再创建多余 webhook；
     7. OP 同步：绑定者失去身份组时等级回落到 0（阶段 2 的 `opLevel >= 0` 变更）；关闭期触发同步、未知模式启动时各应看到一条 warn；
     8. `multi_server_client` 模式下未加载 custom_messages 时的提及通知文案；
-    9. MSPS 恢复通知中的 `{next_check_time}` 为真实时间戳；standalone 终端直接回车不再输出「未知命令」。
+    9. MSPS 恢复通知中的 `{next_check_time}` 为真实时间戳；standalone 终端直接回车仍输出「未知命令：""。输入 "help" 查看可用命令列表。」（该处的静默化改动已在工作 09 回退）。
+
+## 工作 09
+
+记录日期：2026/9/22
+
+第九轮：3.0 重构·实机测试反馈修复。阶段 1–4 的实机测试除下列 4 项外全部通过；本轮只做「回退与补齐」，不引入新的行为变更，也不更新 `README_CN.md`（留到阶段 5/6 收尾统一处理）。
+
+### 更改（用户可见 / 行为变更）
+
+- **每个 Java 文件恢复类级 `@author Xujiayao`**：阶段 1 为提高信息密度把 92 处 `@author` 全部删除，本轮按用户要求补回，覆盖 91 个主源码文件（`core` 73 + `minecraft` 18）——45 个在已有类级 JavaDoc 末尾追加一行（前加一个空 ` *` 行），46 个在阶段 1 中被整体删除类级 JavaDoc 的文件补回仅含 `@author Xujiayao` 的三行 JavaDoc。`SmokeTest` 的 `@author` 自始未动。
+- **日志中的反斜杠不再被重复**：`StringUtils.escape` 回退为只翻译 `\t` `\b` `\n` `\r` `\f` 五个控制字符、其余字符原样复制（阶段 4 一度让它把 `\` 写成 `\\`，导致控制台与 `.log` 文件里的 ASCII 横幅、Windows 路径都显示成 `\\`；Standalone 与 Minecraft 环境均复现）。
+- **standalone 终端直接回车恢复原有提示**：空行仍走「未知命令：""。输入 "help" 查看可用命令列表。」（阶段 4 一度改为静默忽略）；阶段 4 新增的 EOF 保护保留 —— 重定向/关闭 stdin（`dmcc </dev/null`、服务方式启动、Ctrl-D）时不再 100% CPU 空转。
+- **不再误报「配置路径未找到：language」**：`ConfigManager.getConfigNode` 回退为只对中间段缺失告警、末段缺失静默（阶段 4 新增的「末段缺失也告警」在 `multi_server_client` 模式下必然触发，因为该模式的 `config.yml` 模板本就没有 `language` 键，语言由 standalone 侧下发；其余路径的告警行为不受影响）。
+
+### 更改（代码结构，对用户不可见）
+
+- 共 92 个文件 +233 / −20：91 个主源码文件的 `@author` 插入（+228 行 = 46 文件 × 3 行 + 45 文件 × 2 行）、三处回退的代码/注释删除（16 行：`StringUtils` 的反斜杠分支与相应 JavaDoc 说明、`TerminalManager` 的空行守卫与注释、`ConfigManager` 的末段告警块与注释）、`CHANGELOG_TEMP.md`。
+
+### 验证
+
+- `./gradlew build --console=plain` → **BUILD SUCCESSFUL**（35s）；`core/build/test-results/test/` 下 16 个结果文件合计 **149 tests / 0 failures / 0 errors / 0 skipped**。测试期望值同步回退：`StringUtilsTest` 的 7 处（两处 `@DisplayName`、两处注释、`escape("a\b")`、`escape("C:\path")`、二次转义）改回「反斜杠原样保留」，其中 `C:\path` 用例保留并改为断言「原样不变」，用于锁死「再次引入反斜杠转义」；测试树全量搜索确认没有其它文件隐含「反斜杠被转义」的假设。
+- **`@author` 插入的自查**：`git diff -U0` 的 233 个新增行只可能是 `/**`、` * @author Xujiayao`、` */`、` *` 四种形式（`CHANGELOG_TEMP.md` 的 Markdown 行除外）；代理另以编辑前基线快照逐文件比对，确认「删除/改动行数 = 0」，即纯插入；终态结构校验 91/91 恰好一个 `@author Xujiayao`、位于最外层类型 JavaDoc 的 `*/` 之前、注解位于 JavaDoc 之后、无连续空 ` *` 行、LF 与末尾换行未变、无 BOM。
+- **产物 `build/Discord-MC-Chat-3.0.0-beta.3.jar`**：13,264,470 字节、6903 个条目、**206** 个 `com/xujiayao/*.class`、无签名残留文件、无 `module-info.class`。
+
+### 待办（供发布时处理）
+
+- 阶段 5（`minecraft` 模块 `common`/`fabric`/`neoforge` 拆分 + NeoForge 26.3 + 单 jar 双加载器）与阶段 6（`mode.yml`/`config.yml` 预生成）**尚未开始**，需用户对本轮修复做实机确认后再继续。
+- 沿用工作 05–08 的发布待办：`update/versions.json` 的 `"compatibility": ["26.3"]`、`.github/ISSUE_TEMPLATE/bug.yml` 文案、`README.md` 英文翻译件、死键 `utils.i18n.check_failed`、临时特征化测试（`core/src/test/java/com/`）与仓库外差分工装在交付前删除（只留 `SmokeTest.java`）。
 

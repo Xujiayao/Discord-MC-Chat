@@ -11,6 +11,9 @@ import tools.jackson.dataformat.yaml.YAMLWriteFeature;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * @author Xujiayao
+ */
 public final class Constants {
 
 	public static final boolean IS_MINECRAFT_ENV = EnvironmentUtils.isMinecraftEnvironment();
