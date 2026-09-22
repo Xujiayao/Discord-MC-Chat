@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 import static com.xujiayao.discord_mc_chat.Constants.IS_MINECRAFT_ENV;
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
@@ -24,12 +25,6 @@ public final class ModeManager {
 
 	private static final Path MODE_FILE_PATH = Paths.get("./config/discord_mc_chat/mode.yml");
 	private static final String MODE_TEMPLATE_PATH = "/config/mode.yml";
-
-	/** Mode written into a freshly generated mode.yml. */
-	private static final String DEFAULT_MODE = "single_server";
-
-	/** Value of the mode template that {@link #DEFAULT_MODE} replaces. */
-	private static final String MODE_PLACEHOLDER = "your_option_here";
 
 	private static String mode = "";
 
@@ -62,13 +57,8 @@ public final class ModeManager {
 					if (inputStream == null) {
 						throw new IOException("Default mode template not found: " + MODE_TEMPLATE_PATH);
 					}
-					String template = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-					Files.writeString(MODE_FILE_PATH, template.replace(MODE_PLACEHOLDER, DEFAULT_MODE), StandardCharsets.UTF_8);
+					Files.copy(inputStream, MODE_FILE_PATH, StandardCopyOption.REPLACE_EXISTING);
 				}
-
-				LOGGER.info(I18nManager.getDmccTranslation("utils.config.mode.set", DEFAULT_MODE));
-				mode = DEFAULT_MODE;
-				return true;
 			}
 
 			JsonNode userModeConfig;

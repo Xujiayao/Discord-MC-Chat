@@ -31,4 +31,4 @@ version: ${mod_version}
 # ==================================================
 
 # Set your desired mode here.
-mode: your_option_here
+mode: single_server

@@ -10,6 +10,7 @@ pluginManagement {
 }
 
 include(":core")
+
 // The shared Minecraft code is compiled once in :minecraft:common; the two platform modules only
 // add a loader entry point and the loader metadata, and both consume the common jar as a file.
 include(":minecraft:common")

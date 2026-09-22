@@ -47,7 +47,7 @@ subprojects {
 
     processResources {
         def propertiesToExpand = new HashMap<String, Object>()
-        ["mod_version", "mod_id", "mod_name", "mod_license", "minecraft_version_range", "neo_version", "jda_version", "slf4j_api_version", "jackson_version", "okhttp_version", "netty_version", "jemoji_version"].each {
+        ["mod_version", "minecraft_version_range_fabric", "minecraft_version_range_neoforge", "neo_version", "jda_version", "slf4j_api_version", "jackson_version", "okhttp_version", "netty_version", "jemoji_version"].each {
             propertiesToExpand.put(it, providers.gradleProperty(it).get())
         }
         propertiesToExpand.put("version", version.toString())
