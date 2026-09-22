@@ -8,14 +8,20 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * @author Xujiayao
  */
 @Mixin(ReloadableServerResources.class)
 final class MixinReloadableServerResources {
 
-	@Inject(method = "lambda$loadResources$3", at = @At("RETURN"))
-	private static void lambda$loadResources$3(ReloadableServerResources result, Object ignore, CallbackInfoReturnable<ReloadableServerResources> cir) {
-		EventManager.post(new MinecraftEvents.ReloadResources());
+	// The event is posted when the future returned by loadResources completes, instead of inside the
+	// synthetic "lambda$loadResources$N" method doing the same thing. NeoForge recompiles the patched
+	// Minecraft sources, which renumbers those lambdas, so their names are not stable across loaders.
+	@Inject(method = "loadResources", at = @At("RETURN"))
+	private static void loadResources(CallbackInfoReturnable<CompletableFuture<ReloadableServerResources>> cir) {
+		// ReloadResources Event
+		cir.getReturnValue().whenComplete((resources, throwable) -> EventManager.post(new MinecraftEvents.ReloadResources()));
 	}
 }

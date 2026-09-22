@@ -589,3 +589,42 @@
     4. **IPv6 过滤**：用 IPv6 地址连接或用日志制造含 IPv6 的行，确认 Discord 控制台频道里显示 `redacted`（含 `地址:端口` 形式），且时间戳/MAC/UUID/`std::map` 不被误替换；把模板里的 IPv6 行补进存量 `config.yml` 后同样生效；
     5. **常规回归**：单服务器与多服务器-客户端两种模式的启动、双向消息、`/dmcc info`、`/dmcc stats`、`/dmcc log`、`/dmcc update`、`/dmcc reload`、`/dmcc shutdown`、控制台转发、以及 standalone 模式的终端命令。
 
+## 工作 11
+
+记录日期：2026/9/22
+
+第十一轮：实机测试修复 —— ① NeoForge 26.3 服务端启动即崩溃（Mixin 注入点跨加载器失效）；② 消除 Gradle 弃用告警（Gradle 10 兼容）。
+
+### 更改（用户可见 / 行为变更）
+
+- **NeoForge 26.3.0.8-beta 服务端现在可以正常启动**。修复前，服务端在 Mixin 应用阶段直接崩溃、完全无法启动：`InvalidInjectionException Invalid descriptor on dmcc.mixins.json:MixinReloadableServerResources ... @Inject::lambda$loadResources$3(...)` → `MixinTransformerError: An unexpected critical error was encountered` → `Failed to start the minecraft server`。修复后 Fabric 与 NeoForge 用同一份 jar 都能通过启动阶段。
+- **事件语义零变化**：`ReloadResources` 事件仍在资源/数据包重载**完成时**触发一次 —— 同样在完成线程上、成功与异常都触发，用户可见的「资源已重载」广播（含自定义消息模板）与重构前逐字一致。
+- 除上述启动崩溃外，无其它用户可见变化（本次未改动任何日志文案、配置键、命令行为或消息格式）。
+
+### 更改（代码结构，对用户不可见）
+
+- `minecraft/common/src/main/java/com/xujiayao/discord_mc_chat/minecraft/mixins/MixinReloadableServerResources.java`：注入目标由合成 lambda `lambda$loadResources$3` 改为**具名方法** `loadResources`（`at = @At("RETURN")`），handler 改为 `private static void loadResources(CallbackInfoReturnable<CompletableFuture<ReloadableServerResources>> cir)`，事件改由 `cir.getReturnValue().whenComplete((resources, throwable) -> EventManager.post(new MinecraftEvents.ReloadResources()))` 在**同一个 future** 完成时投递；文件内保留说明性注释，写明为何不能再改回合成 lambda。
+- **根因**：NeoForge 的 Minecraft jar 是「反编译 → 打补丁 → 重新编译」的产物，javac 会**重新编号合成 lambda**，因此 lambda 名不是跨加载器稳定的锚点：
+    - Fabric：`lambda$loadResources$3(ReloadableServerResources, java.lang.Object)` 是恒等函数（方法体仅 `aload_0; areturn`）；
+    - NeoForge：同一个恒等 lambda 被重新编号为 `lambda$loadResources$5(ReloadableServerResources, java.lang.Void)`，而 `lambda$loadResources$3(ReloadableServerResources, java.util.List)V` 是 NeoForge 自己插入的 lambda（`ConditionContext.clear()` + `List.forEach`）；
+    - 于是 `@Inject(method = "lambda$loadResources$3")` 在 NeoForge 上解析到**同名但签名不同**的方法，Mixin 校验描述符后抛 `Invalid descriptor`。
+    - 具名方法 `public static CompletableFuture<ReloadableServerResources> loadResources(...)`（8 个参数）在两个 jar 中**字节码完全一致**（`ReloadableServerRegistries.reload(...)` → `thenCompose(...)` → 单个 `areturn`，offset 均为 27），故它是跨加载器稳定锚点。
+- `core/build.gradle` 的 `mergeJars`：消除 Gradle 弃用告警。原先在任务动作里访问 `project`（第 104 行 `project.delete(tempDir)`、第 108 行 `def subproj = project(path)`）会触发 `Invocation of Task.project at execution time has been deprecated. This will fail with an error in Gradle 10.`；现改为在任务注册之前预解析 `def mergedJars = mergedProjects.collect { [name: project(it).name, jar: project(it).tasks.named("jar").flatMap { it.archiveFile }] }`，动作内改用 `tempDir.deleteDir()` 与 `merged.jar.get().asFile`（重复文件告警文案保持不变）。
+
+### 验证
+
+环境：Java 25.0.4.1 LTS（Temurin HotSpot）+ Gradle 9.7.1 + Fabric Loom 1.17.21 + ModDevGradle 2.0.147 + Minecraft 26.3
+
+- **构建与弃用**：`./gradlew build --console=plain` **BUILD SUCCESSFUL**（15s，20 个任务，`:core:mergeJars` 实际执行）；`./gradlew build --console=plain --warning-mode all` 的输出中**不再出现任何 `Deprecated` 行**（修复前同一命令报上述 2 条）。
+- **跨加载器 Mixin 目标核对**（新工装，仓库外 `%TEMP%\dmcc-verify\checkmixins.ps1`）：对 12 个 Mixin 源文件里的每个 `@Inject(method = ...)`（含带完整描述符者）与每个 `@Shadow` 成员，分别用 `javap -p` 在 **NeoForge 的 `minecraft-server-patched-26.3.0.8-beta.jar`** 与 **Fabric Loom 的 `minecraft-merged-deobf-26.3.jar`** 上校验 → 两个 jar 均为 **checked=21 failed=0**（覆盖 `MinecraftServer.runServer`/`stopServer`/`onServerExit`、`Commands.<init>`、`GameModeCommand.setGameMode` 的两个重载、`PlayerAdvancements.award`、`ServerGamePacketListenerImpl` 的三个方法、四个命令类中的合成 lambda、`PlayerList`、`ServerPlayer.die`、`ReloadableServerResources.loadResources` 以及全部 `@Shadow`）。
+- **跨加载器锚点复核**：`Util.getNanos()J` 在两个 jar 中各 5 处且**第一处都在 `initServer()` 之后**（Fabric offset 8 / NeoForge offset 23，NeoForge 在 initServer 后插入了自己的钩子）⇒ `ordinal = 0` 语义一致，`serverStarted` 锚点成立；`PlayerAdvancements.award` 内 `AdvancementRewards.grant` 的 INVOKE 各只有 1 处且都被 `isDone()` 守卫（Fabric offset 67 / NeoForge offset 81）⇒ 不会按 criterion 重复上报；`MinecraftServer.stopServer()` 各 3 处、`onServerExit()` 各 9 处且分布在互斥收尾路径。
+- **产物取证**：`build/Discord-MC-Chat-3.0.0-beta.3.jar` = **13,266,708 字节 / 6906 条目 / 208 个 `com/xujiayao/*.class` / 12 个 mixin 类 / 重复条目名 0 / 无 `module-info.class` / 无签名文件 / 无 `net/minecraft/**` 条目**；`fabric.mod.json`、`META-INF/neoforge.mods.toml`、`dmcc.mixins.json`、`config/mode.yml`、`config/config_single_server.yml`、`icon/icon.png`、`META-INF/MANIFEST.MF` 各恰好 1 个。
+- **字节码逐类比对**（阶段 6 产物 → 本次产物，同口径 jar 对 jar）：**identical 206 / changed 2 / added 0 / removed 0**。changed 只有 `minecraft.mixins.MixinReloadableServerResources`（本次修复：`lambda$loadResources$3` → `loadResources` + 合成 `lambda$loadResources$0(ReloadableServerResources, Throwable)`）与 `config.ModeManager`（`279c9ee2`/`6988b6cf` 对 mode.yml 处理的改写，非本次引入）—— 证明本次改动是外科手术式的，其余 206 个类逐字节未变。
+- **测试**：`SmokeTest` 通过（打印 `Compiling DMCC Version: 3.0.0-beta.3`）。
+
+### 待办
+
+- **需实机复测（本次改动点）**：把 `build/Discord-MC-Chat-3.0.0-beta.3.jar` 放进 NeoForge 26.3 服务端的 `mods/` 后启动，应无 `InvalidInjectionException`、能到达 `Done`；随后执行 `/reload` 触发 `ReloadResources`，确认 Discord 端收到资源重载广播；Fabric 侧用同一 jar 同样复测一次 `/reload`（注入点两个加载器共用）。
+- 其余四个命令类的合成 lambda 注入点（`MsgCommand` / `TellRawCommand` / `EmoteCommands` / `SayCommand`）本次核对在两个加载器上名称与签名一致、无需改动，但它们仍属「依赖参考实现编译产物」的脆弱锚点，未来升级 MC/NeoForge 版本时需用同一工装重新核对。
+- 沿用工作 05–10 的发布待办：`update/versions.json` 的 `"compatibility": ["26.3"]`、`.github/ISSUE_TEMPLATE/bug.yml` 文案、`README.md` 英文翻译件、死键 `utils.i18n.check_failed`、存量用户 `config.yml` 需手动补 IPv6 规则。
+
