@@ -2,15 +2,21 @@ package com.xujiayao.discord_mc_chat.minecraft;
 
 import com.xujiayao.discord_mc_chat.DMCC;
 import com.xujiayao.discord_mc_chat.minecraft.events.MinecraftEventHandler;
-import net.fabricmc.api.DedicatedServerModInitializer;
 
 /**
+ * Platform-independent mod entry point shared by the Fabric and NeoForge entry points.
+ *
  * @author Xujiayao
  */
-public final class FabricDMCC implements DedicatedServerModInitializer {
+public final class MinecraftModBootstrap {
 
-	@Override
-	public void onInitializeServer() {
+	private MinecraftModBootstrap() {
+	}
+
+	/**
+	 * Initializes DMCC and registers the Minecraft event handlers.
+	 */
+	public static void init() {
 		DMCC.init();
 
 		// Minecraft commands have to be registered after DMCC is initialized

@@ -1,0 +1,19 @@
+// Shared Minecraft code (commands, event handlers, mixins, translations).
+// Loom is only used here to obtain the Minecraft classes and the Mixin annotations on the
+// compile classpath; nothing in this module references a loader API, so the classes it
+// produces are loadable by Fabric and NeoForge alike.
+apply plugin: "net.fabricmc.fabric-loom"
+
+base {
+    archivesName = "Discord-MC-Chat-minecraft-common"
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+
+    // The Mixin API arrives transitively with the loader; the loader itself is provided at
+    // runtime by the platform module that ships this code.
+    compileOnly "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    implementation project(":core")
+}

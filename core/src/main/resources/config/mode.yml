@@ -9,8 +9,9 @@ version: ${mod_version}
 # Discord-MC-Chat Docs:
 # https://dmcc.xujiayao.com/
 #
-# Please choose how this instance of DMCC will operate by setting the "mode" option
-# at the bottom of this file to one of the available mode options listed below.
+# This file selects how this instance of DMCC operates. It is generated with the
+# recommended "single_server" mode already selected; change the "mode" option at
+# the bottom of this file to one of the available mode options listed below.
 #
 # Run "/dmcc reload" command in Minecraft after changing this file.
 # A corresponding "config.yml" will be generated.
@@ -30,5 +31,4 @@ version: ${mod_version}
 # ==================================================
 
 # Set your desired mode here.
-# Replace "your_option_here" with one of the available modes.
 mode: your_option_here

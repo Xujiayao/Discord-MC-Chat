@@ -1,0 +1,23 @@
+// Fabric entry point. This module holds nothing but the entry point and fabric.mod.json: the
+// loader classes are the only API it compiles against, so Loom is not needed here.
+base {
+    archivesName = "Discord-MC-Chat-minecraft-fabric"
+}
+
+// fabric-loader is published on the Fabric maven repository, which Loom would otherwise add.
+repositories {
+    maven {
+        name = "Fabric"
+        url = "https://maven.fabricmc.net/"
+    }
+}
+
+// The shared code comes from a plain file collection: resolving a Loom project from a ModDevGradle
+// project (and the other way around) would require matching two different variant attribute schemes.
+def commonJar = files(project(":minecraft:common").tasks.named("jar").flatMap { it.archiveFile })
+
+dependencies {
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    implementation commonJar
+}

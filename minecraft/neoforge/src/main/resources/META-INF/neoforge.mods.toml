@@ -1,0 +1,33 @@
+# NeoForge metadata of Discord-MC-Chat. The same jar also carries fabric.mod.json, so this file
+# is only read by FML. Properties in ${} are expanded by the processResources task.
+license="${mod_license}"
+issueTrackerURL="https://github.com/Xujiayao/Discord-MC-Chat/issues"
+displayURL="https://dmcc.xujiayao.com/"
+
+[[mods]]
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+authors="Xujiayao"
+logoFile="icon/icon.png"
+description='''
+Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat and MCDiscordChat (MCDC), is a practical and powerful Minecraft <> Discord chat bridge inspired by BRForgers/DisFabric.
+'''
+
+# The mixin configuration is shared with the Fabric build and lives in the common module.
+[[mixins]]
+config="dmcc.mixins.json"
+
+[[dependencies.${mod_id}]]
+modId="neoforge"
+type="required"
+versionRange="[${neo_version},)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="minecraft"
+type="required"
+versionRange="${minecraft_version_range}"
+ordering="NONE"
+side="BOTH"

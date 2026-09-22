@@ -10,7 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 
 import static com.xujiayao.discord_mc_chat.Constants.IS_MINECRAFT_ENV;
 import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
@@ -26,6 +25,12 @@ public final class ModeManager {
 	private static final Path MODE_FILE_PATH = Paths.get("./config/discord_mc_chat/mode.yml");
 	private static final String MODE_TEMPLATE_PATH = "/config/mode.yml";
 
+	/** Mode written into a freshly generated mode.yml. */
+	private static final String DEFAULT_MODE = "single_server";
+
+	/** Value of the mode template that {@link #DEFAULT_MODE} replaces. */
+	private static final String MODE_PLACEHOLDER = "your_option_here";
+
 	private static String mode = "";
 
 	private ModeManager() {
@@ -33,7 +38,8 @@ public final class ModeManager {
 
 	/**
 	 * Loads and validates the mode from mode.yml. If the file does not exist,
-	 * it creates a default one and returns false to halt initialization.
+	 * it is generated from the template with the default mode preselected,
+	 * and that mode is used.
 	 *
 	 * @return true if the mode was loaded and validated successfully, false otherwise.
 	 */
@@ -47,20 +53,22 @@ public final class ModeManager {
 		try {
 			Files.createDirectories(MODE_FILE_PATH.getParent());
 
-			// If mode.yml does not exist, create it from the template
+			// If mode.yml does not exist, generate it from the template with the default mode preselected
 			if (!Files.exists(MODE_FILE_PATH) || Files.size(MODE_FILE_PATH) == 0) {
 				LOGGER.warn(I18nManager.getDmccTranslation("utils.config.mode.not_found"));
 				LOGGER.warn(I18nManager.getDmccTranslation("utils.config.mode.creating", MODE_FILE_PATH));
-				LOGGER.warn(I18nManager.getDmccTranslation("utils.config.mode.edit_prompt", MODE_FILE_PATH));
 
 				try (InputStream inputStream = ModeManager.class.getResourceAsStream(MODE_TEMPLATE_PATH)) {
 					if (inputStream == null) {
 						throw new IOException("Default mode template not found: " + MODE_TEMPLATE_PATH);
 					}
-					Files.copy(inputStream, MODE_FILE_PATH, StandardCopyOption.REPLACE_EXISTING);
+					String template = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+					Files.writeString(MODE_FILE_PATH, template.replace(MODE_PLACEHOLDER, DEFAULT_MODE), StandardCharsets.UTF_8);
 				}
 
-				return false; // Halt initialization, requires user action
+				LOGGER.info(I18nManager.getDmccTranslation("utils.config.mode.set", DEFAULT_MODE));
+				mode = DEFAULT_MODE;
+				return true;
 			}
 
 			JsonNode userModeConfig;

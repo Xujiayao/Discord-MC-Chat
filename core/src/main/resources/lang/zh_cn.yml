@@ -278,7 +278,6 @@ utils:
       set: "运行模式已设置为 \"{}\"。"
       not_found: "模式配置文件未找到或为空。"
       creating: "正在于 \"{}\" 创建默认文件。"
-      edit_prompt: "请在重新加载 DMCC 之前编辑 \"{}\"。"
       validation_failed: "mode.yml 验证失败。"
       invalid_selection: "在 \"{1}\" 中选择了无效的模式 \"{0}\"。"
       available_modes: "可用模式为：\"single_server\", \"multi_server_client\""

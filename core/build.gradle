@@ -87,21 +87,26 @@ shadowJar {
 
 //========== Merge JARs ==========
 
-def otherSubprojects = rootProject.subprojects.findAll { it.name != project.name }
+// The shared Minecraft code is compiled once in :minecraft:common, so the platform modules hold
+// nothing but an entry point and the loader metadata. Nested projects are not part of
+// rootProject.subprojects, hence the explicit list.
+def mergedProjects = [":minecraft:common", ":minecraft:fabric", ":minecraft:neoforge"]
 
 tasks.register("mergeJars") {
-    dependsOn ":minecraft:jar"
     dependsOn shadowJar
+    mergedProjects.each { dependsOn "${it}:jar" }
 
     def shadowJarFile = tasks.shadowJar.archiveFile.get().asFile
     def tempDir = project.layout.buildDirectory.dir("merged_temp").get().asFile
 
     doLast {
+        // Start from an empty directory, otherwise files of a previous build survive in the jar.
+        project.delete(tempDir)
         tempDir.mkdirs()
         def addedFiles = [:]
-        otherSubprojects.each { subproj ->
-            def jarTask = subproj.tasks.named("jar").get()
-            def jarFile = jarTask.archiveFile.get().asFile
+        mergedProjects.each { path ->
+            def subproj = project(path)
+            def jarFile = subproj.tasks.named("jar").get().archiveFile.get().asFile
             copy {
                 from zipTree(jarFile)
                 into tempDir

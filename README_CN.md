@@ -7,8 +7,13 @@ Discord-MC-Chat (DMCC) 是一个 Minecraft 模组，旨在为 Discord 和 Minecr
 本次 v3 重构的核心目标是实现一个**统一的、基于"服务端-客户端 (Server-Client)"的通信架构**
 。在此架构下，所有运行模式都将复用同一套核心逻辑，以达到最大程度的代码复用、架构一致性和未来的可扩展性。
 
-项目当前**仅兼容 Fabric 26.3**。但为了未来能够无缝支持 NeoForge
-等其他加载器，整体架构设计严格遵循平台无关原则，所有核心代码中**不得含有任何启动器专属的调用**，仅通过 Mixin 进行注入。
+项目当前**同时兼容 Fabric 与 NeoForge 26.3**：构建产出的同一份 `build/Discord-MC-Chat-3.0.0-beta.X.jar` 可直接被两种加载器加载（不再分别产出
+`-fabric.jar` / `-neoforge.jar`）。整体架构设计严格遵循平台无关原则，所有核心代码中**不得含有任何启动器专属的调用**，仅通过 Mixin 进行注入。
+
+代码按加载器拆分为四个 Gradle 模块：`:core`（平台无关的核心逻辑与 Standalone 模式）、`:minecraft:common`（Mixin、事件适配与全部游戏内逻辑）、
+`:minecraft:fabric` 与 `:minecraft:neoforge`（各自的入口类与 `fabric.mod.json` / `META-INF/neoforge.mods.toml` 元数据，仅依赖 common 模块的编译产物）。
+最终产物由 `:core` 的 `shadowJar` 重定位全部依赖后，再合并三个 `minecraft` 模块的 jar 得到（`mergeJars`）。NeoForge 侧使用 ModDevGradle 构建
+（`moddev_version=2.0.147`），目标版本见 `neo_version`（当前 `26.3.0.8-beta`）。
 
 ## 2. 核心功能需求
 
@@ -101,7 +106,7 @@ Discord-MC-Chat (DMCC) 是一个 Minecraft 模组，旨在为 Discord 和 Minecr
       服务端断开期间产生的日志会先入队，重连后补发。
     - **频道直连终端**: 拥有权限的管理员可直接在该 Discord 控制台频道中发送文本，系统会将其等同于控制台指令在游戏内直接执行。
     - **敏感信息过滤**: 考虑到有些人会选择公开此 Discord 频道，因此提供可选但默认启用的敏感信息过滤器（如 IP 地址），确保安全。
-      过滤器由正则列表 `console_forwarding.filter_regex` 定义（默认内置 IPv4 规则），命中内容在发送前会被替换为 `redacted`。
+      过滤器由正则列表 `console_forwarding.filter_regex` 定义（默认内置 IPv4 与 IPv6 两条规则），命中内容在发送前会被替换为 `redacted`。
     - **起止提示**: 控制台转发的开始与结束提示消息同样可自定义。
 
 - **Discord 侧斜杠命令**: 提供 `/info`, `/stats`, `/log`, `/whitelist` 等管理命令。支持通过 Discord 查阅完整日志文件（以附件形式传输，`.gz`
@@ -344,7 +349,9 @@ DMCC 对配置文件的完整性与一致性做了强校验，力求在启动阶
 - **未修改提醒**: 对必须由用户填写的关键项（`discord.bot.token`、`multi_server.server_name`、
   `multi_server.connection.shared_secret`）以及仍未从模板改动的键给出提醒。
 - **模式一致性校验**: 若 `mode.yml`（或运行环境）推导出的模式与 `config.yml` 中记录的模式不一致，会给出明确错误并提示备份、删除旧配置以重新生成。
-- **首次运行生成**: 任意配置文件缺失时会自动从内置模板创建，并提示用户编辑后重载。
+- **首次运行生成**: 任意配置文件缺失时会自动从内置模板创建，并提示用户编辑后重载。其中 `mode.yml` 在 Minecraft 环境首次加载时会直接以推荐的
+  `single_server` 模式写入（用户无需再手动选择模式），并随即据此生成对应的 `config.yml`，用户只需填写 `discord.bot.token` 等必要项；
+  Standalone 模式不涉及 `mode.yml`，固定以 `standalone` 运行。
 - **语言自动检测**: 模板中的 `language: "to_be_auto_replaced"` 会在首次加载时被自动替换为检测到的语言代码。
 
 ### 8.2 语言与自定义消息

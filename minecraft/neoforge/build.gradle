@@ -1,0 +1,27 @@
+// NeoForge entry point. ModDevGradle provides the Minecraft and NeoForge classes; the shared
+// code comes from :minecraft:common as a plain file collection (see the Fabric module).
+apply plugin: "net.neoforged.moddev"
+
+base {
+    archivesName = "Discord-MC-Chat-minecraft-neoforge"
+}
+
+// Has to run before the dependencies block: setting the version is what makes ModDevGradle
+// add its own NeoForge dependencies.
+neoForge {
+    version = project.neo_version
+}
+
+repositories {
+    maven {
+        name = "NeoForged"
+        url = "https://maven.neoforged.net/releases/"
+    }
+}
+
+// The shared code comes from a plain file collection, see the Fabric module.
+def commonJar = files(project(":minecraft:common").tasks.named("jar").flatMap { it.archiveFile })
+
+dependencies {
+    implementation commonJar
+}

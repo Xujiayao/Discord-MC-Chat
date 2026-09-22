@@ -279,7 +279,6 @@ utils:
       set: "Operating mode set to \"{}\"."
       not_found: "Mode configuration file not found or is empty."
       creating: "Creating a default one at \"{}\"."
-      edit_prompt: "Please edit \"{}\" before reloading DMCC."
       validation_failed: "Validation of mode.yml failed."
       invalid_selection: "Invalid mode \"{}\" selected in \"{}\"."
       available_modes: "Available modes are: \"single_server\", \"multi_server_client\""

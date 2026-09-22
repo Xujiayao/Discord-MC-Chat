@@ -541,3 +541,51 @@
 - 阶段 5（`minecraft` 模块 `common`/`fabric`/`neoforge` 拆分 + NeoForge 26.3 + 单 jar 双加载器）与阶段 6（`mode.yml`/`config.yml` 预生成）**尚未开始**，需用户对本轮修复做实机确认后再继续。
 - 沿用工作 05–08 的发布待办：`update/versions.json` 的 `"compatibility": ["26.3"]`、`.github/ISSUE_TEMPLATE/bug.yml` 文案、`README.md` 英文翻译件、死键 `utils.i18n.check_failed`、临时特征化测试（`core/src/test/java/com/`）与仓库外差分工装在交付前删除（只留 `SmokeTest.java`）。
 
+## 工作 10
+
+记录日期：2026/9/22
+
+第十轮：3.0 重构·阶段 5–7 一并交付 —— 阶段 5「平台拆分 + NeoForge 26.3 + 单 jar 双加载器」、阶段 6「首次加载预生成 `mode.yml`/`config.yml`」、阶段 7「收尾」，并顺带交付用户新增要求的 **IPv6 过滤规则**。至此重构的全部阶段完成。
+
+### 更改（用户可见 / 行为变更）
+
+- **同一份 jar 同时支持 Fabric 与 NeoForge 26.3**：产物 `build/Discord-MC-Chat-3.0.0-beta.X.jar` 可直接放入任一加载器的 `mods/`，不再分别产出 `-fabric.jar` / `-neoforge.jar`。加载器元数据（`fabric.mod.json` 与 `META-INF/neoforge.mods.toml`）、Mixin 配置（`dmcc.mixins.json`）与全部游戏内逻辑都在这一个 jar 里；Fabric 入口仍为 `FabricDMCC`，NeoForge 入口为 `NeoForgeDMCC`，两者都只调用统一的 `MinecraftModBootstrap.init()`。`fabric.mod.json` 的描述文案去掉了 "Fabric" 字样（同一 jar 现在也由 NeoForge 加载）。
+- **首次加载不再需要手动选择运行模式**：Minecraft 环境首次加载时，`mode.yml` 直接以预选的 `single_server` 写入（不再留下 `mode: your_option_here` 等用户手改），并随即据此生成对应的 `config.yml`，用户只需填写 `discord.bot.token` 等必要项；日志顺序与文案不变（仍是「未找到 → 正在创建 → 请编辑配置文件」）。Standalone 模式不涉及 `mode.yml`，固定以 `standalone` 运行。
+- **控制台日志的敏感信息过滤默认同时覆盖 IPv6**：`console_forwarding.filter_regex` 的默认规则由 1 条（IPv4）变为 2 条（IPv4 + IPv6）。实测：`2001:db8::1`、`fe80::1%eth0`、`fd00::abcd`、`::1`、`abcd::`、8 组全写等形式均被替换为 `redacted`；玩家地址的 `地址:端口` 形式（`/2001:db8::1:25565`）整段替换（不会因端口冒号而漏报）；同时**不误伤**时间戳 `[10:44:27]`、`std::map`、`foo::bar`、MAC 地址、`12:34`、UUID 与普通玩家名；方括号形式 `[::1]:25565` → `[redacted]:25565`（端口保留，与 IPv4 规则行为一致）。**注意：这只是一条模板默认值 —— 已经生成过 `config.yml` 的用户不会自动获得该规则**，需手动把模板中的 IPv6 行补进自己的 `console_forwarding.filter_regex`（按用户裁决，不改为代码内置兜底）。
+- 工作 09 记录的三处回退（日志反斜杠、standalone 终端空行、配置末段告警）已在最终产物中确认（详见下方字节码比对）。
+
+### 更改（代码结构，对用户不可见）
+
+- **模块拆分**：`minecraft` 拆为三个子模块 —— `:minecraft:common`（18 个文件：全部 Mixin、事件适配与游戏内逻辑，新增统一入口 `MinecraftModBootstrap`）、`:minecraft:fabric`（`FabricDMCC` + `fabric.mod.json`）、`:minecraft:neoforge`（`NeoForgeDMCC` + `META-INF/neoforge.mods.toml`）；`:core` 保持不变（平台无关核心 + Standalone）。
+- `settings.gradle` 改为四个 `include`；`gradle.properties` 新增 `mod_id` / `mod_name` / `mod_license` / `minecraft_version_range` / `neo_version=26.3.0.8-beta` / `moddev_version=2.0.147`，并纳入根 `build.gradle` 的 `propertiesToExpand`（供 `neoforge.mods.toml` 的 `${}` 展开）。
+- `core/build.gradle` 的 `mergeJars` 改为合并 `:minecraft:common` + `:minecraft:fabric` + `:minecraft:neoforge` 三个 jar（嵌套项目不在 `rootProject.subprojects` 中，故改为显式列表），并在每次合并前清空 `build/merged_temp`，避免上次构建的残留文件混入产物。
+- `:minecraft:fabric` **不应用 Loom**（否则报 `Configuration 'minecraft' has no dependencies`；该模块只编译 `DedicatedServerModInitializer`，不需要 MC 类），改为普通 `java-library` + 显式 Fabric 仓库 + `fabric-loader`；两个加载器模块都用脚本顶层的 `files(project(":minecraft:common").tasks.named("jar").flatMap { it.archiveFile })` 依赖 common 的 jar（不能写在 `dependencies {}` 内，那里的委托是 `DependencyHandler`）。
+- NeoForge 侧使用 ModDevGradle（`net.neoforged.moddev` 2.0.147），入口类用 `@Mod(value = NeoForgeDMCC.MOD_ID, dist = Dist.DEDICATED_SERVER)`；`:minecraft:common` 继续用 Loom 获取 Minecraft 类与 Mixin 注解处理器。
+- `ModeManager` 新增 `DEFAULT_MODE = "single_server"` 与 `MODE_PLACEHOLDER = "your_option_here"`，创建分支由 `Files.copy` 改为「读模板 → 替换占位值 → `Files.writeString`」并返回 `true`；删除零引用的 i18n 键 `utils.config.mode.edit_prompt`（两份语言文件各 −1 行）；`mode.yml` 模板注释改写为「已预选推荐模式」，锚点行 `mode: your_option_here` 保留。
+- **交付清理**：删除 `core/src/test/java/com/`（16 个临时特征化测试与 `TestEnv`），只保留 `SmokeTest.java`；构建产物与仓库外差分工装按规则丢弃。
+- 行数：main 源码 93 个文件（阶段 4 为 91，新增 `MinecraftModBootstrap` 与 `NeoForgeDMCC`），总 **16,178** / 代码 **11,806** / 注释 **2,175** / 空行 **2,197**。相对重构前基线（17,225 / 11,866 / 3,210 / 2,164）累计净减 **1,047** 行（注释 −1,035、代码 −60、空行 +33）；与阶段 4 相比注释回涨 239 行，主要来自工作 09 按实机反馈补回的 228 行类级 `@author` JavaDoc。
+
+### 验证
+
+环境：Java 25.0.4.1 LTS（Temurin HotSpot）+ Gradle 9.7.1 + Fabric Loom 1.17.21 + ModDevGradle 2.0.147 + Minecraft 26.3
+
+- **构建**：`./gradlew projects` 层级正确（Root + `:core` + `:minecraft`{`common`,`fabric`,`neoforge`}）；`./gradlew build --console=plain` **BUILD SUCCESSFUL**（首次含 NeoForge 产物解析与 7301 个 MC 源文件重编译；修复后复跑 12s；删测试后复跑 11s，仅 `SmokeTest > version()` 运行并打印 `Compiling DMCC Version: 3.0.0-beta.3`）。
+- **测试**：删除临时测试前，`core/build/test-results/test/` 下 16 个文件合计 **149 tests / 0 failures / 0 errors / 0 skipped**；删除后只剩 `SmokeTest`（1 test / 0 failures）。
+- **首次加载端到端验收**（仓库外工装：用 `net.minecraft.SharedConstants` 桩类让 `IS_MINECRAFT_ENV` 为 true，在全新空目录里启动真实产物）：`DMCC.init()` 返回 `false`（按设计停下等用户填 token）；生成的 `mode.yml` 与模板逐字相同、仅 `mode` 值被替换（不含 `your_option_here`）；`config.yml` 同时生成、`language: "to_be_auto_replaced"` 被替换为检测到的语言；再次 `ModeManager.load()` 返回 `true`（真实校验路径通过）。该验收抓出一个真实缺陷并已修复：占位符常量曾写成整行 `mode: your_option_here`，而替换值只有 `single_server`，导致生成文件末行变成裸的 `single_server`（根节点变字符串、下次启动校验必失败）。
+- **IPv6 规则实测**（仓库外工装，按 `DiscordManager` 的真实管线顺序 `IPv4 → IPv6` 逐个 `replaceAll("redacted")`）：**27 项检查全部通过、零失败**。规则本身不含反斜杠，因此源码值即运行时值（IPv4 那条因 `processResources` 的 Groovy `expand` 会折叠 `\\`，源码里需写 4 个反斜杠）。
+- **单 jar 产物取证**：`build/Discord-MC-Chat-3.0.0-beta.3.jar` = **13,266,623 字节 / 6906 条目 / 208 个 `com/xujiayao/*.class` / 重复条目名 0**；`fabric.mod.json`、`META-INF/neoforge.mods.toml`、`dmcc.mixins.json`、`config/mode.yml`、`config/config_single_server.yml`、`icon/icon.png` 各恰好 1 个；无 `module-info.class`、无签名文件、无 `net/minecraft/**` 条目（未泄漏 MC 类）；依赖服务文件仍为重定位后的 `dmcc_dep.*`。
+- **字节码逐类比对**（阶段 4 产物 → 阶段 6 产物，同口径 jar 对 jar）：**identical 201 / changed 5 / added 2 / removed 0**；added 为 `minecraft.MinecraftModBootstrap` 与 `minecraft.NeoForgeDMCC`（阶段 5 新增）；changed 为 `config.ModeManager`（阶段 6）、`minecraft.FabricDMCC`（改为调用统一入口）与工作 09 已回退的 `utils.StringUtils`（`lookupswitch` 6 → 5 个分支）、`standalone.TerminalManager`、`config.ConfigManager` —— 与工作 09 记录的回退逐项对应。
+- **语言文件结构校验**：以项目同版本的 `YAMLMapper` 解析 `en_us.yml` 与 `zh_cn.yml`，扁平化后各 **236 个叶子键、零差异**。
+- **文档**：`README_CN.md` 已同步 —— §1 改为「同一 jar 同时兼容 Fabric 与 NeoForge 26.3」并新增四模块结构与构建链说明；§2.3 敏感信息过滤改为「默认内置 IPv4 与 IPv6 两条规则」；§8.1「首次运行生成」补充 `mode.yml` 预选 `single_server` 与 `config.yml` 随之生成的说明。
+
+### 待办（供发布时处理）
+
+- **存量用户的 `config.yml` 需手动补 IPv6 规则**（按用户裁决只改模板，不加代码内置兜底）。
+- 沿用工作 05–09 的发布待办：`update/versions.json` 的 `"compatibility": ["26.3"]`、`.github/ISSUE_TEMPLATE/bug.yml` 文案、`README.md` 英文翻译件（`README_CN.md` 已更新，英文翻译件留待发布时同步）、死键 `utils.i18n.check_failed`。
+- 需开发者在真实环境手工验证（本阶段新增，与工作 07–08 的清单可合并执行）：
+    1. **双加载器**：把同一个 jar 分别放进 Fabric 26.3 与 NeoForge 26.3 服务端的 `mods/`，各自应正常加载（NeoForge 的 mods 列表中显示 Discord-MC-Chat 3.0.0-beta.3）、无 Mixin 应用失败日志、`/dmcc` 命令与 Discord 双向通信均可用；
+    2. **NeoForge 侧注入点**：逐一触发聊天、命令（含 `/msg`、`/emote`、`/gamemode`）、玩家进出、成就上报等路径，确认 12 个 Mixin 在 NeoForge 下都生效（Fabric 侧此前已实测）；
+    3. **首次加载**：全新目录首次启动 → `config/discord_mc_chat/mode.yml` 末行为 `mode: single_server`、同目录已生成 `config.yml`；填好 token 后 `/dmcc reload` 或重启应正常进入初始化；
+    4. **IPv6 过滤**：用 IPv6 地址连接或用日志制造含 IPv6 的行，确认 Discord 控制台频道里显示 `redacted`（含 `地址:端口` 形式），且时间戳/MAC/UUID/`std::map` 不被误替换；把模板里的 IPv6 行补进存量 `config.yml` 后同样生效；
+    5. **常规回归**：单服务器与多服务器-客户端两种模式的启动、双向消息、`/dmcc info`、`/dmcc stats`、`/dmcc log`、`/dmcc update`、`/dmcc reload`、`/dmcc shutdown`、控制台转发、以及 standalone 模式的终端命令。
+
