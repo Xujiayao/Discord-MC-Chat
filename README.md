@@ -1,4 +1,371 @@
-# Discord-MC-Chat (DMCC) Design Document (v3)
+<div align="center">
+
+# Discord-MC-Chat (DMCC)
+
+**A powerful, highly customizable bidirectional chat bridge between Discord and Minecraft.**
+
+[Documentation](https://dmcc.xujiayao.com/) · [Modrinth](https://modrinth.com/mod/discord-mc-chat) · [CurseForge](https://www.curseforge.com/minecraft/mc-mods/discord-mc-chat) · [Discord](https://discord.gg/kbXkV6k2XU) · [中文说明 (README_CN)](README_CN.md)
+
+</div>
+
+> [!NOTE]
+> **DMCC v3 (`3.0.0-beta.x`) is a complete rewrite** with a new "Server–Client" architecture, multi-server support, a zero-trust permission system, and many other new features. v3 is **not** configuration-compatible with v2 — the old single JSON config has been replaced by several **YAML** files. If you are migrating, do not copy your old config; generate fresh files and re-apply your settings.
+
+---
+
+## Table of Contents
+
+- [What is DMCC?](#what-is-dmcc)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Discord Bot Setup](#discord-bot-setup)
+- [First-Time Configuration Walkthrough](#first-time-configuration-walkthrough)
+- [Configuration Files Reference](#configuration-files-reference)
+- [Where Things Live (Quick Lookup)](#where-things-live-quick-lookup)
+- [Message Formatting (`custom_messages`)](#message-formatting-custom_messages)
+- [Key `config.yml` Sections Explained](#key-configyml-sections-explained)
+- [Operation Modes](#operation-modes)
+- [Commands](#commands)
+- [Troubleshooting](#troubleshooting)
+- [Building From Source](#building-from-source)
+- [Architecture & Design Reference](#architecture--design-reference)
+- [License](#license)
+
+---
+
+## What is DMCC?
+
+Discord-MC-Chat (DMCC), formerly known as MC-Discord-Chat / MCDiscordChat (MCDC), is a server-side Fabric mod (and optional standalone application) that bridges chat and events between one or many Minecraft servers and a Discord server. It forwards chat in both directions, mirrors in-game events (joins, deaths, advancements, etc.), exposes Discord slash commands for server management, and supports an account-linking + permission system that maps Discord identities to Minecraft OP levels.
+
+---
+
+## Requirements
+
+| Component | Requirement | Notes |
+| :-- | :-- | :-- |
+| **Minecraft** | `>= 26.1.0` | Tested on **26.2** and **26.1.2**. Other versions may work but are unverified. |
+| **Mod loader** | **Fabric Loader** `>= 0.18.4` | NeoForge is planned but not yet supported. |
+| **Java** | **Java 25** or newer | This is required — DMCC will not load on older Java versions. |
+| **Side** | **Server only** | `"environment": "server"`. Do not install it on the client. |
+| **Fabric API** | **Not required** | DMCC has no dependency on Fabric API. |
+
+All other libraries (JDA, Jackson, OkHttp, Netty, jemoji, …) are **bundled inside the jar** (shaded). You do not need to install them separately.
+
+---
+
+## Installation
+
+### As a Minecraft mod (modes `single_server` and `multi_server_client`)
+
+1. Make sure your server runs **Fabric Loader 0.18.4+** on **Minecraft 26.1+** with **Java 25+**.
+2. Download the DMCC jar from [Modrinth](https://modrinth.com/mod/discord-mc-chat), [CurseForge](https://www.curseforge.com/minecraft/mc-mods/discord-mc-chat), or [GitHub Releases](https://github.com/Xujiayao/Discord-MC-Chat/releases).
+3. Place the jar in your server's `mods/` folder.
+4. Start the server **once**. DMCC generates `config/discord_mc_chat/mode.yml` and then stops its own initialization, asking you to configure it (see [First-Time Configuration](#first-time-configuration-walkthrough)).
+
+### As a standalone hub (mode `standalone`)
+
+The standalone hub has **no Minecraft**; it is the central router for a multi-server setup.
+
+1. Install **Java 25+**.
+2. Download the **same** DMCC jar.
+3. Run it **from a real terminal** (a console/TTY is required — double-clicking the jar is not supported):
+
+   ```bash
+   java -jar discord-mc-chat-<version>.jar
+   ```
+
+   Optional flag: `--disable-ascii` disables ANSI colors in the console output.
+4. On first run it generates `config/discord_mc_chat/mode.yml` (already set to `standalone` if you run the standalone entry point) and exits. Edit the configuration, then start it again.
+
+> [!TIP]
+> The standalone process is interactive: it reads commands directly from its own terminal. Run it inside `screen`/`tmux` or as a service so it keeps a controlling terminal.
+
+---
+
+## Discord Bot Setup
+
+DMCC talks to Discord through a bot you create. **Channels are matched by name** (case-insensitive) for text channels, and by **numeric ID** for the optional voice "dashboard" channels.
+
+1. Go to the [Discord Developer Portal](https://discord.com/developers/applications) → **New Application**.
+2. Open the **Bot** tab and copy the **token** (used for `discord.bot.token`).
+3. Under **Privileged Gateway Intents**, enable **all three** of the following — DMCC will fail to connect or behave correctly without them:
+   - **Message Content Intent** (`MESSAGE_CONTENT`)
+   - **Server Members Intent** (`GUILD_MEMBERS`)
+   - **Presence Intent is _not_ required**, but message reactions are used (`GUILD_MESSAGE_REACTIONS`, not privileged).
+4. Invite the bot to your server (OAuth2 → URL Generator → `bot` scope). Recommended permissions:
+   - **View Channels**, **Send Messages**, **Read Message History**
+   - **Manage Webhooks** — required for "fake-user style" messages; DMCC auto-creates a webhook named **`DMCC Webhook`** in the chat channels.
+   - **Manage Channels** — only if you use channel **topic** updates or the voice-channel status dashboard.
+5. Create the text channels you reference in the config (default name: `in-game-chat`, and `console` for console forwarding). The channel **names must match** the values in `config.yml`.
+
+---
+
+## First-Time Configuration Walkthrough
+
+DMCC uses a **two-stage generate-then-edit** workflow. Files live under `config/discord_mc_chat/`.
+
+1. **First start** → DMCC creates `mode.yml`.
+2. **Edit `mode.yml`** and set `mode:` to one of `single_server`, `multi_server_client`, or `standalone`.
+3. **Reload** (`/dmcc reload` in-game, or restart a standalone process). DMCC now generates the matching `config.yml` **and** the `custom_messages/<language>.yml` file.
+4. **Edit `config.yml`** — at minimum set `discord.bot.token` and the channel names under `broadcasts.minecraft_to_discord`.
+5. **Reload again** to apply your changes.
+
+```text
+First boot ──► mode.yml created
+                   │ (set mode, reload)
+                   ▼
+            config.yml + custom_messages/<lang>.yml created
+                   │ (set token & channels, reload)
+                   ▼
+              DMCC connects to Discord ✔
+```
+
+> [!IMPORTANT]
+> - In **Minecraft modes**, a failed config load does **not** crash the server — fix the file and run `/dmcc reload`.
+> - In **standalone mode**, the process exits on a failed/missing config — fix the file and start it again (there is no live reload from the host process for the initial bootstrap).
+> - Do **not** edit `version:` or `mode:` at the top of generated files by hand.
+
+---
+
+## Configuration Files Reference
+
+Everything DMCC reads or writes lives under **`config/discord_mc_chat/`** (relative to the server / process working directory):
+
+```text
+config/discord_mc_chat/
+├── mode.yml                      # Selects the operating mode (you edit this first)
+├── config.yml                    # Main configuration (generated to match the chosen mode)
+├── custom_messages/
+│   └── en_us.yml                 # ★ ALL message FORMATTING lives here (per language)
+├── account_linking/
+│   └── links.json                # Discord ↔ Minecraft link data (managed by DMCC)
+└── cache/
+    ├── lang/                     # Downloaded vanilla translations (advancements, deaths, …)
+    └── log/                      # Standalone log transfer cache
+```
+
+| File | What it controls | Edit it? |
+| :-- | :-- | :-- |
+| `mode.yml` | Which of the three modes DMCC runs as. | ✅ Yes — set `mode:`. |
+| `config.yml` | Bot token, channels, broadcasts, parsing toggles, console forwarding, MSPT alerts, channel/voice updating, account linking, OP mappings, per-command permission levels, update checks. | ✅ Yes — your main config. |
+| `custom_messages/<lang>.yml` | **The text/JSON-text format of every message** (chat layout, colors, prefixes, embeds, event templates, topic strings, voice channel names, MSPT alert text, …). | ✅ Yes — this is where formatting lives. |
+| `account_linking/links.json` | Stored link relationships, keyed by Discord ID. | ⚠️ Managed by DMCC; only edit while stopped if you know what you're doing. |
+| `cache/` | Auto-managed caches. | ❌ No. |
+
+> [!NOTE]
+> `config.yml` is **mode-specific**. A `single_server`, `multi_server_client`, and `standalone` instance each generate a different `config.yml`. If you change the mode, regenerate the config (back up the old one first — DMCC will refuse to load a config whose `mode:` doesn't match `mode.yml`).
+
+---
+
+## Where Things Live (Quick Lookup)
+
+A common point of confusion (especially coming from v2's single JSON file) is **which file** holds a given feature. Use this table:
+
+| I want to change… | File | Key / location |
+| :-- | :-- | :-- |
+| **The look of chat messages** (colors, `<name>`, prefixes) | `custom_messages/<lang>.yml` | `xxxxx_to_minecraft`, `discord_to_minecraft`, `minecraft_to_discord` |
+| **Join / leave / death / advancement text** | `custom_messages/<lang>.yml` | `minecraft_to_xxxxx.player.*`, `.server.*`, `.source.*` |
+| **Channel topic / voice channel name text** | `custom_messages/<lang>.yml` | `channel_topic_updating`, `voice_channels_updating` |
+| **MSPT warning wording / bot activity text** | `custom_messages/<lang>.yml` | `mspt_monitoring`, `activity` |
+| **Which Discord channel receives each event** | `config.yml` | `broadcasts.minecraft_to_discord.*` (channel name; empty = disabled) |
+| **Enable/disable a direction or event type** | `config.yml` | `broadcasts.*`, `message_parsing.*` |
+| **Markdown / emoji / mention parsing toggles** | `config.yml` | `message_parsing.*` |
+| **Bot token, webhook avatar, allowed mentions** | `config.yml` | `discord.*` |
+| **Console forwarding & sensitive-data filtering** | `config.yml` | `console_forwarding.*` |
+| **Hide private commands from being broadcast** | `config.yml` | `broadcasts.excluded_commands` |
+| **Who can run which Discord command** | `config.yml` | `command_permission_levels.*` |
+| **Map Discord roles/users to OP levels** | `config.yml` | `account_linking.op_sync.*` |
+| **The language used** | `config.yml` | `language:` (must have a matching `custom_messages/<lang>.yml`) |
+
+---
+
+## Message Formatting (`custom_messages`)
+
+> This section directly answers the most common complaint: *"I couldn't find where message formatting lives."* **It is not in `config.yml`.** It lives in `config/discord_mc_chat/custom_messages/<language>.yml`.
+
+This file is generated the first time DMCC fully loads (after `config.yml` exists), copied from the built-in template for your `language`. Editing it lets you fully control how every message is rendered. Built-in languages: `en_us`, `zh_cn`.
+
+> [!NOTE]
+> `custom_messages` is **not loaded** in `multi_server_client` mode — a client doesn't talk to Discord, so formatting is handled by the `standalone`/`single_server` instance that owns the Discord connection.
+
+### How the format is structured
+
+Minecraft-bound messages are defined as a **list of text segments**, each with `text`, `bold`, and `color`. They are concatenated to build a single Minecraft chat line. Discord-bound messages are plain strings that support **Discord Markdown** and `:emoji:` shortcodes.
+
+Example (Discord → Minecraft user message):
+
+```yaml
+xxxxx_to_minecraft:                # applies to discord→mc and mc→mc
+  user_message:
+    - text: "[{server}] "
+      bold: true
+      color: "{server_color}"
+    - text: "<{effective_name}> "
+      bold: false
+      color: "{role_color}"
+    - text: "{message}"
+      bold: false
+      color: "gray"
+```
+
+Example (Minecraft → Discord event strings, with Markdown + emoji):
+
+```yaml
+minecraft_to_xxxxx:
+  server:
+    start: ":white_check_mark: **Server started!**"
+  player:
+    join: ":wave: **{display_name} joined the server**"
+    die: ":skull: **{death_message}**"
+```
+
+### Top-level groups in `custom_messages`
+
+| Group | Direction | Purpose |
+| :-- | :-- | :-- |
+| `xxxxx_to_minecraft` | →MC | Shared layout for Discord→MC and MC→MC chat (`user_message`, `system_message`, `mentioned`). |
+| `overwrite` | →MC | Layout used when `overwrite_minecraft_source_messages` is on (per `single_server` / `standalone`). |
+| `discord_to_minecraft` | D→MC | Reply quotes, executed-command, reaction, edit/delete notifications. |
+| `minecraft_to_xxxxx` | MC→ | **System** event templates: server start/stop, join/quit, death, advancement (task/challenge/goal), game-mode change, `/me`. |
+| `minecraft_to_discord` | MC→D | **User** chat formatting for Discord, incl. fake-user webhook username/content. |
+| `activity` | →D | Bot "Playing …" activity text. |
+| `channel_topic_updating` | →D | Text channel topic strings (online/offline). |
+| `voice_channels_updating` | →D | Voice channel status & player-count names. |
+| `mspt_monitoring` | →D | MSPT threshold warning / recovery messages. |
+| `console_forwarding` | →D | "Started/stopped forwarding console" notices. |
+
+### Placeholders
+
+Placeholders are written as `{name}` and are substituted at runtime. The most useful ones:
+
+| Placeholder | Meaning |
+| :-- | :-- |
+| `{message}` | The message body. |
+| `{effective_name}` / `{display_name}` | Discord display name / Minecraft display name. |
+| `{server}`, `{server_color}` | Sub-server name and its configured color (multi-server). |
+| `{role_color}` | Color of the user's highest Discord role. |
+| `{command}` | The executed command. |
+| `{emoji}` | The reaction emoji. |
+| `{death_message}` | Vanilla death message text. |
+| `{title}`, `{description}` | Advancement title / description. |
+| `{mode}` | New game mode (game-mode change event). |
+| `{action}` | The `/me` action text. |
+| `{player_name}` | Used by `discord.webhook.avatar_url` to build the head URL. |
+| `{online_player_count}`, `{max_player_count}` | Player counts. |
+| `{players_ever_joined}`, `{online_server_count}`, `{online_server_list}` | Aggregate stats (topic strings). |
+| `{server_started_time}`, `{last_update_time}`, `{next_check_time}` | Unix timestamps (use Discord `<t:...:f>` styling). |
+| `{mspt}`, `{threshold}` | Current MSPT and the configured threshold. |
+
+**Colors** accept any vanilla Minecraft color name (`white`, `gray`, `dark_gray`, `blue`, `yellow`, `green`, …) or the dynamic placeholders `{server_color}` / `{role_color}`.
+
+---
+
+## Key `config.yml` Sections Explained
+
+The exact keys differ slightly per mode; below covers `single_server` (the most common). See the generated file's inline comments for the authoritative, mode-specific layout.
+
+### `discord`
+- `bot.token` — your bot token (**required**).
+- `bot.enable_status` / `enable_activity` — bot presence (Online/Idle/DND by player count) and "Playing …" activity.
+- `webhook.enable_fake_user_style` — send player chat via webhooks so each message shows the player's name/avatar.
+- `webhook.avatar_url` — avatar URL template, e.g. `https://mc-heads.net/avatar/{player_name}`.
+- `allow_mentions` — which mention types (`everyone`, `users`, `roles`) DMCC is allowed to ping.
+
+### `broadcasts`
+- `discord_to_minecraft.*` — `true`/`false` toggles for forwarding chat, reactions, edits, deletes, and command notices into Minecraft.
+- `minecraft_to_discord.*` — for each event, the **Discord channel name** to post to; **leave empty to disable** that event. Events include `server.started/stopped`, `player.join/quit/chat/command/die/advancement/change_game_mode`, and `source.say/tell_raw/msg/me` (intercepted vanilla broadcasts).
+- `excluded_commands` — **regex** list of commands that must **not** be broadcast (e.g. `/login`, `/msg` private messages). The defaults already block common auth/private commands.
+- `echo_player_command_to_source` / `echo_player_change_game_mode_to_source` — echo the parsed message back to the player who triggered it.
+
+### `message_parsing`
+Fine-grained on/off switches for rich-content parsing in each direction (`discord_to_minecraft`, `minecraft_to_discord`, `minecraft_to_minecraft`): markdown, attachments, stickers, unicode/custom emojis, mentions, hyperlinks, embeds, components, timestamps, ANSI code blocks, polls.
+- `overwrite_minecraft_source_messages` — when `true`, DMCC **cancels** the vanilla message and re-broadcasts its own formatted version (using the `overwrite` block in `custom_messages`).
+
+### `mspt_monitoring`
+Periodically samples server MSPT and warns in `channel` when it stays above `threshold`. Tune `interval_seconds` and `threshold`.
+
+### `console_forwarding`
+- `enable` — stream `latest.log` to a Discord `channel` (default name `console`).
+- `execute_messages_from_channel` — treat messages typed in that channel as console commands (**powerful — restrict who can post there**).
+- `filter_regex` — regex list to redact sensitive data (IP addresses by default).
+
+### `channel_updating`
+- `channel_topic_updating` — periodically rewrite the topic of listed text channels.
+- `voice_channel_updating` — rewrite voice channel **names** (by **numeric ID** in `server_status_channel_id` / `player_count_channel_id`) as a live status dashboard.
+
+### `account_linking` (always enabled)
+- `op_sync.sync_op_level_to_minecraft` — when `true`, DMCC becomes the source of truth and force-syncs in-game OP based on Discord identity.
+- `op_sync.user_mappings` / `role_mappings` — map a Discord user/role to an OP level (`-1`–`4`). The **highest** match wins. In multi-server configs, entries can carry `server_overrides`.
+- `mention_notifications.style` — how cross-platform `@` pings appear in-game: `action_bar`, `title`, or `chat`.
+- `use_discord_role_color_for_mc_chats` — color in-game names with the linked Discord role color.
+
+### `command_permission_levels`
+Minimum OP level required to run each Discord command. `-1` = anyone (even unlinked). See the [Commands](#commands) table for defaults.
+
+### `check_for_updates` / `shutdown`
+- `check_for_updates` — announce new DMCC versions to a channel.
+- `shutdown.graceful_shutdown` — perform a clean shutdown sequence.
+
+---
+
+## Operation Modes
+
+Set in `mode.yml`. For full details see [§3.2 in the reference](#32-operation-modes-and-deployment).
+
+| Mode | Connects to Discord? | Runs Minecraft? | Use when |
+| :-- | :--: | :--: | :-- |
+| `single_server` | ✅ | ✅ | The standard all-in-one setup. **Most users want this.** |
+| `multi_server_client` | ❌ | ✅ | A sub-server that reports to a central `standalone` hub. |
+| `standalone` | ✅ | ❌ | The central hub aggregating multiple `multi_server_client` servers. |
+
+For multi-server setups, the `standalone` config defines a `multi_server` block (host/port/`shared_secret` and the allowed `servers` whitelist). Each client's `mode.yml`→`config.yml` provides its `server_name` and the matching connection details.
+
+---
+
+## Commands
+
+Discord slash commands and their default required OP level (configurable via `command_permission_levels`). In-game, the mod also registers `/dmcc <help|info|reload|stats|link|unlink|update>`. The full per-mode availability table is in [§7 of the reference](#7-command-list-and-permission-reference).
+
+---
+
+## Troubleshooting
+
+| Symptom | Likely cause & fix |
+| :-- | :-- |
+| **Mod doesn't load / `UnsupportedClassVersionError`** | You're on Java < 25. Install **Java 25+** and point the server at it. |
+| **Server starts but DMCC says it created `mode.yml` and stopped** | Expected on first run. Edit `mode.yml`, then `/dmcc reload`. |
+| **"mode mismatch" / config refuses to load** | `mode:` in `config.yml` ≠ `mode:` in `mode.yml`. Back up and regenerate `config.yml` for the correct mode. |
+| **Bot won't connect / no messages** | Check `discord.bot.token`; ensure **Message Content** and **Server Members** privileged intents are enabled in the Developer Portal. |
+| **Messages reach Discord but not the right channel** | Channel is matched **by name**. Make sure the text channel name exactly matches the value in `broadcasts.minecraft_to_discord.*` (and `console`, etc.). |
+| **No player avatars / "fake user" style not working** | The bot needs **Manage Webhooks**; DMCC creates a `DMCC Webhook` in the channel. |
+| **Voice channel dashboard not updating** | Voice channels use **numeric IDs** (not names). Set `server_status_channel_id` / `player_count_channel_id`, and grant **Manage Channels**. |
+| **I edited formatting in `config.yml` but nothing changed** | Message formatting is in `custom_messages/<lang>.yml`, **not** `config.yml`. Edit there, then `/dmcc reload`. |
+| **Private commands (e.g. `/login`) appear in Discord** | Add/adjust a regex in `broadcasts.excluded_commands`. |
+| **A change to `config.yml` didn't apply** | Run `/dmcc reload` (Minecraft) or restart the `standalone` process. |
+| **Standalone won't start / "headless not supported"** | Run it from a real terminal (`java -jar …`), not by double-clicking. Use `screen`/`tmux` or a service. |
+| **Players can't join (whitelist) so can't link** | Have them get a base role (mapped to OP 0) and run `/whitelist <name>` on Discord, then join and link normally. |
+
+If you're still stuck, ask in the [Discord server](https://discord.gg/kbXkV6k2XU) or open an issue with your `mode.yml`, the relevant parts of `config.yml`, and the server log.
+
+---
+
+## Building From Source
+
+Requires **JDK 25**.
+
+```bash
+git clone https://github.com/Xujiayao/Discord-MC-Chat.git
+cd Discord-MC-Chat
+./gradlew build        # use gradlew.bat on Windows
+```
+
+The project is multi-module: `:core` (platform-agnostic Server/Client logic, no `net.minecraft` imports) and `:minecraft` (the Fabric mod, integrating via Mixins). Built artifacts are produced by the Gradle Shadow plugin.
+
+---
+
+# Architecture & Design Reference
+
+> The sections below document the internal design and behavior of DMCC v3. They are useful for advanced configuration and contributors.
 
 ## 1. Project Overview
 
@@ -6,7 +373,7 @@ Discord-MC-Chat (DMCC) is a Minecraft mod designed to establish a powerful, high
 
 The core goal of this v3 refactoring is to implement a **unified communication architecture based on "Server-Client"**. Under this architecture, all operation modes reuse the same core logic to achieve maximum code reuse, architectural consistency, and future extensibility.
 
-In the early stage, the project prioritizes compatibility with **Fabric 26.1.2**. However, to seamlessly support other loaders like NeoForge in the future, the overall architecture design strictly follows platform-agnostic principles. All core code **must not contain any loader-specific calls**, and injection is performed exclusively via Mixins.
+In the early stage, the project prioritizes compatibility with the **Fabric** loader on **Minecraft 26.1+** (tested on 26.2 and 26.1.2), running on **Java 25**. However, to seamlessly support other loaders like NeoForge in the future, the overall architecture design strictly follows platform-agnostic principles. All core code **must not contain any loader-specific calls**, and injection is performed exclusively via Mixins.
 
 ## 2. Core Feature Requirements
 
@@ -150,3 +517,9 @@ In the `user_mappings` and `role_mappings` of the `standalone` configuration, ea
 | `whitelist <player>`     | `0`              | ✅                         | ✅                   | ❌          | DMCC-specific low-permission whitelist command proxy.                                                             |
 
 > v3 removes the `/stop` shortcut command provided in v2. If you need to shut down the Minecraft server from Discord, an administrator with level 4 permission should directly use `/console stop` to simulate a safe shutdown via the console.
+
+---
+
+## License
+
+Discord-MC-Chat is released under the [MIT License](LICENSE).
