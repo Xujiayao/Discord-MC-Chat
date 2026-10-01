@@ -269,9 +269,17 @@ client:
     reconnecting: "Reconnecting to DMCC Server..."
     reconnect_failed: "Reconnection failed. Retrying in {} seconds."
     send_while_disconnected: "Attempted to send packet while disconnected: {}"
+    send_failed: "Failed to send packet: {} ({})"
     unexpected_packet: "Ignored unexpected packet from DMCC Server: {}"
   console_log_tailer:
     poll_failed: "Console log tailer polling failed: {}"
+  pending_queue:
+    queued: "Could not send packets, {} message(s) buffered and will be sent in order after reconnecting."
+    drained: "Replayed {} buffered message(s) in order, taking {} ms."
+    dropped_full: "The pending message queue is full (limit: {}), dropped the oldest message."
+    send_failed: "Failed to replay a buffered message, retrying after the next connection: {}"
+    discarded_identity_changed: "DMCC Server address changed, discarded {} buffered message(s)."
+    discarded_shutdown: "DMCC client is shutting down, discarded {} buffered message(s)."
 
 utils:
   config:
@@ -309,7 +317,6 @@ utils:
     language_not_supported: "Language \"{}\" is not supported."
     contribute: "You are welcome to contribute translations to DMCC!"
     contribute_link: "For more details, see: https://github.com/Xujiayao/Discord-MC-Chat#Contributing"
-    check_failed: "Failed to check language resources."
     load_failed: "Failed to load DMCC translations from {}."
     custom_not_found: "Custom messages file for \"{}\" not found or is empty."
     custom_creating: "Creating a default one at \"{}\"."

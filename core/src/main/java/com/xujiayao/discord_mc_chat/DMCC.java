@@ -7,6 +7,7 @@ import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.server.ServerDMCC;
+import com.xujiayao.discord_mc_chat.server.discord.ChannelUpdateManager;
 import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
 import com.xujiayao.discord_mc_chat.server.linking.OpSyncManager;
 import com.xujiayao.discord_mc_chat.update.UpdateCheckManager;
@@ -174,6 +175,13 @@ public final class DMCC {
 
 				// Clear the network manager references first
 				NetworkManager.clear();
+
+				// The standalone process owns the Discord channels and is about to disconnect the bot, so push
+				// the offline state now. After DiscordManager.shutdown() the channel update manager can no
+				// longer send anything. Reloads are skipped to avoid a short offline flicker.
+				if (!forReload) {
+					ChannelUpdateManager.updateOfflineForStandaloneShutdownAndWait();
+				}
 
 				if (clientInstance != null) {
 					if (forReload) {

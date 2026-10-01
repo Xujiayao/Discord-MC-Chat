@@ -132,12 +132,28 @@ final class NettyClient {
 		});
 	}
 
-	void sendPacket(Packet packet) {
-		if (channel != null && channel.isActive()) {
-			channel.writeAndFlush(packet);
-		} else {
-			LOGGER.warn(I18nManager.getDmccTranslation("client.network.send_while_disconnected", packet.getClass().getSimpleName()));
+	/**
+	 * Writes a packet on the current connection.
+	 *
+	 * @param packet The packet to write.
+	 * @return {@code true} if the packet was handed to the connection, {@code false} if there is no usable
+	 * connection right now, in which case the caller decides whether to buffer or drop the packet.
+	 */
+	boolean trySend(Packet packet) {
+		Channel currentChannel = channel;
+		if (currentChannel == null || !currentChannel.isActive() || !currentChannel.isWritable()) {
+			return false;
 		}
+
+		currentChannel.writeAndFlush(packet).addListener((ChannelFuture future) -> {
+			if (!future.isSuccess()) {
+				LOGGER.warn(I18nManager.getDmccTranslation("client.network.send_failed",
+						packet.getClass().getSimpleName(),
+						future.cause() == null ? "" : future.cause().getMessage()));
+			}
+		});
+
+		return true;
 	}
 
 	void scheduleReconnect() {

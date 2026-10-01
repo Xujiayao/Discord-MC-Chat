@@ -112,6 +112,9 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 	public void channelInactive(ChannelHandlerContext ctx) {
 		LOGGER.warn(I18nManager.getDmccTranslation("client.network.disconnected_generic"));
 
+		// Keep whatever is still buffered for the next connection.
+		PendingPacketQueue.onConnectionLost();
+
 		// Trigger reconnection if this was not an intentional stop AND the server didn't explicitly reject us
 		if (client.isRunning()) {
 			if (allowReconnect) {
@@ -138,6 +141,9 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 				Constants.OVERWRITE_MINECRAFT_SOURCE_MESSAGES.set(p.overwriteMinecraftSourceMessages);
 				ConsoleLogTailer.updateEnabled(p.consoleForwardingEnabled);
 				LOGGER.info(I18nManager.getDmccTranslation("client.network.connected"));
+
+				// The connection is authenticated now, so anything buffered while it was gone can be replayed.
+				PendingPacketQueue.onAuthenticated(ctx.channel());
 
 				if (!initialLoginFuture.isDone()) {
 					initialLoginFuture.complete(true);

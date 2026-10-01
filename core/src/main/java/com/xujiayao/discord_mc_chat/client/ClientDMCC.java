@@ -33,6 +33,9 @@ public final class ClientDMCC {
 		this.port = port;
 		this.serverName = serverName;
 		this.sharedSecret = sharedSecret;
+
+		// Packets buffered for a different DMCC server must not be replayed into this one.
+		PendingPacketQueue.onClientIdentity(host, port, serverName);
 	}
 
 	/**
@@ -67,6 +70,8 @@ public final class ClientDMCC {
 		boolean preserveLogTailerState = PRESERVE_LOG_TAILER_ON_NEXT_SHUTDOWN.getAndSet(false);
 		if (!preserveLogTailerState) {
 			ConsoleLogTailer.stop();
+			// A reload comes back and replays the buffer, a real shutdown never can.
+			PendingPacketQueue.discard();
 		}
 		if (nettyClient != null) {
 			nettyClient.stop();
@@ -74,9 +79,11 @@ public final class ClientDMCC {
 	}
 
 	public void sendPacket(Packet packet) {
-		if (nettyClient != null) {
-			nettyClient.sendPacket(packet);
+		if (nettyClient != null && nettyClient.trySend(packet)) {
+			return;
 		}
+
+		PendingPacketQueue.enqueue(packet);
 	}
 
 	public String getServerName() {

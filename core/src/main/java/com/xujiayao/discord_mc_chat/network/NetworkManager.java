@@ -1,6 +1,7 @@
 package com.xujiayao.discord_mc_chat.network;
 
 import com.xujiayao.discord_mc_chat.client.ClientDMCC;
+import com.xujiayao.discord_mc_chat.client.PendingPacketQueue;
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
 import com.xujiayao.discord_mc_chat.network.packets.Packet;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
@@ -68,6 +69,9 @@ public final class NetworkManager {
 		ClientDMCC client = clientInstance.get();
 		if (client != null) {
 			client.sendPacket(packet);
+		} else {
+			// Nothing to send to yet: keep what can be replayed later instead of dropping it without a trace.
+			PendingPacketQueue.enqueue(packet);
 		}
 	}
 

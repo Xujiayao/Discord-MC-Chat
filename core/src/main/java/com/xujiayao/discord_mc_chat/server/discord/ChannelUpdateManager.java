@@ -28,6 +28,7 @@ public final class ChannelUpdateManager {
 
 	private static final int INFO_REQUEST_TIMEOUT_SECONDS = 3;
 	private static final int ONLINE_ASYNC_UPDATE_TIMEOUT_SECONDS = 10;
+	private static final int SHUTDOWN_UPDATE_TIMEOUT_SECONDS = 10;
 
 	private static ScheduledExecutorService channelUpdateExecutor;
 	private static ScheduledFuture<?> channelUpdateTask;
@@ -67,7 +68,27 @@ public final class ChannelUpdateManager {
 	 * For single_server shutdown flow: push an offline status update and block until requests complete.
 	 */
 	public static void updateOfflineForSingleServerShutdownAndWait() {
-		if (!"single_server".equals(ModeManager.getMode()) || isAllUpdateDisabled()) {
+		if (!"single_server".equals(ModeManager.getMode())) {
+			return;
+		}
+
+		updateOfflineAndWait();
+	}
+
+	/**
+	 * For standalone shutdown flow: push an offline status update before the bot disconnects and block until
+	 * requests complete, so the channels do not keep showing the last known online state.
+	 */
+	public static void updateOfflineForStandaloneShutdownAndWait() {
+		if (!"standalone".equals(ModeManager.getMode())) {
+			return;
+		}
+
+		updateOfflineAndWait();
+	}
+
+	private static void updateOfflineAndWait() {
+		if (isAllUpdateDisabled()) {
 			return;
 		}
 
@@ -233,7 +254,13 @@ public final class ChannelUpdateManager {
 
 		try {
 			if (synchronous) {
-				channel.getManager().setTopic(topic).complete();
+				// Skip the REST call when the topic already shows this value: channels only allow a couple of
+				// name/topic edits per ten minutes, and a shutdown must not wait for that bucket.
+				if (topic.equals(channel.getTopic())) {
+					return;
+				}
+
+				channel.getManager().setTopic(topic).timeout(SHUTDOWN_UPDATE_TIMEOUT_SECONDS, TimeUnit.SECONDS).complete();
 				return;
 			}
 
@@ -291,7 +318,13 @@ public final class ChannelUpdateManager {
 
 		try {
 			if (synchronous) {
-				channel.getManager().setName(name).complete();
+				// Skip the REST call when the name already shows this value: channels only allow a couple of
+				// name/topic edits per ten minutes, and a shutdown must not wait for that bucket.
+				if (name.equals(channel.getName())) {
+					return;
+				}
+
+				channel.getManager().setName(name).timeout(SHUTDOWN_UPDATE_TIMEOUT_SECONDS, TimeUnit.SECONDS).complete();
 				return;
 			}
 
