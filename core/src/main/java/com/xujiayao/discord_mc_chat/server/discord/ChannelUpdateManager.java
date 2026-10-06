@@ -37,11 +37,11 @@ public final class ChannelUpdateManager {
 	}
 
 	public static void start() {
-		if (isAllUpdateDisabled()) {
+		if (isJdaUnavailable(DiscordManager.getJda())) {
 			return;
 		}
 
-		if (isJdaUnavailable(DiscordManager.getJda())) {
+		if (isAllUpdateDisabled()) {
 			return;
 		}
 
@@ -88,6 +88,12 @@ public final class ChannelUpdateManager {
 	}
 
 	private static void updateOfflineAndWait() {
+		// Shutdown runs even when initialization never got as far as starting the bot (for example when
+		// config.yml failed validation); there is no channel state to push in that case.
+		if (isJdaUnavailable(DiscordManager.getJda())) {
+			return;
+		}
+
 		if (isAllUpdateDisabled()) {
 			return;
 		}
@@ -176,7 +182,7 @@ public final class ChannelUpdateManager {
 	}
 
 	private static void updateTextChannelTopics(ChannelUpdateContext context, boolean dropWhenRateLimited, boolean synchronous) {
-		if (!ConfigManager.getBoolean("channel_updating.channel_topic_updating.enable")) {
+		if (!ConfigManager.getBoolean("channel_updating.channel_topic_updating.enable", false)) {
 			return;
 		}
 
@@ -216,7 +222,7 @@ public final class ChannelUpdateManager {
 	}
 
 	private static void updateVoiceChannelNames(ChannelUpdateContext context, boolean dropWhenRateLimited, boolean synchronous) {
-		if (!ConfigManager.getBoolean("channel_updating.voice_channel_updating.enable")) {
+		if (!ConfigManager.getBoolean("channel_updating.voice_channel_updating.enable", false)) {
 			return;
 		}
 
@@ -426,8 +432,12 @@ public final class ChannelUpdateManager {
 	}
 
 	private static boolean isAllUpdateDisabled() {
-		return !ConfigManager.getBoolean("channel_updating.channel_topic_updating.enable")
-				&& !ConfigManager.getBoolean("channel_updating.voice_channel_updating.enable");
+		// The default overloads are used on purpose: the configuration may not be loaded at all (for example
+		// when initialization aborted on an invalid config.yml) while the shutdown hook still runs, and the
+		// nullable overloads would throw a NullPointerException on unboxing. A missing key means "disabled",
+		// which is the safe answer — there is nothing to update when the configuration is unusable.
+		return !ConfigManager.getBoolean("channel_updating.channel_topic_updating.enable", false)
+				&& !ConfigManager.getBoolean("channel_updating.voice_channel_updating.enable", false);
 	}
 
 	private static boolean isJdaUnavailable(JDA jda) {
