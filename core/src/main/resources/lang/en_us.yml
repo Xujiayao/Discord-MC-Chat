@@ -166,6 +166,7 @@ commands:
     uuid_already_linked: "Linking failed. This Minecraft player is already linked to another Discord user."
     status_linked: "You have linked {0} Minecraft player(s): {1}"
     status_not_linked: "You have not linked any Minecraft player. Run /dmcc link in Minecraft to get a verification code, then run /link <code> on Discord to complete linking."
+    limit_reached: "Linking failed. A Discord user can link at most {0} Minecraft player(s); you have already linked: {1}. Run /unlink to remove an existing link and try again."
   unlink:
     description: "Unlink your Minecraft player from a Discord user"
     not_available: "This command can only be used by a Minecraft player or a Discord user."
@@ -338,6 +339,7 @@ linking:
     unlinked_discord: "Unlinked {0} Minecraft player(s) from Discord user {1} ({2})."
     unlinked_minecraft: "Unlinked Minecraft player {} ({}) from Discord user {} ({})."
     uuid_already_linked: "Linking failed. Minecraft player {} ({}) is already linked to Discord user {} ({})."
+    limit_reached: "Rejected linking for Discord user {} ({}); the limit of {} was reached."
   verification:
     generated: "Generated account linking verification code for Minecraft player {}."
     refreshed: "Refreshed account linking verification code validity for Minecraft player {}."

@@ -1,5 +1,6 @@
 package com.xujiayao.discord_mc_chat.server.linking;
 
+import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 import tools.jackson.core.type.TypeReference;
@@ -209,18 +210,26 @@ public final class LinkedAccountManager {
 	}
 
 	/**
-	 * A Minecraft UUID can only be linked to one Discord account.
+	 * A Minecraft UUID can only be linked to one Discord account, and a Discord account can only link
+	 * up to account_linking.max_minecraft_accounts_per_discord_user accounts (0 = unlimited).
 	 *
 	 * @param discordName   For logging only, not persisted.
 	 * @param minecraftName For logging only, not persisted.
-	 * @return false if the Minecraft UUID is already linked.
+	 * @return The outcome of the attempt; only {@link LinkResult#SUCCESS} records the link.
 	 */
-	public static synchronized boolean linkAccount(String discordId, String discordName, String minecraftUuid, String minecraftName) {
+	public static synchronized LinkResult linkAccount(String discordId, String discordName, String minecraftUuid, String minecraftName) {
 		String existingDiscordId = UUID_TO_DISCORD.get(minecraftUuid);
 		if (existingDiscordId != null) {
 			String existingDiscordName = resolveDiscordName(existingDiscordId);
 			LOGGER.warn(I18nManager.getDmccTranslation("linking.manager.uuid_already_linked", minecraftName, minecraftUuid, existingDiscordName, existingDiscordId));
-			return false;
+			return LinkResult.UUID_ALREADY_LINKED;
+		}
+
+		int limit = Math.max(0, ConfigManager.getInt("account_linking.max_minecraft_accounts_per_discord_user", 1));
+		List<LinkEntry> existingEntries = LINKED_ACCOUNTS.get(discordId);
+		if (limit > 0 && existingEntries != null && existingEntries.size() >= limit) {
+			LOGGER.warn(I18nManager.getDmccTranslation("linking.manager.limit_reached", discordName, discordId, limit));
+			return LinkResult.LIMIT_REACHED;
 		}
 
 		LINKED_ACCOUNTS.computeIfAbsent(discordId, _ -> new ArrayList<>())
@@ -230,7 +239,7 @@ public final class LinkedAccountManager {
 		LOGGER.info(I18nManager.getDmccTranslation("linking.manager.linked", discordName, discordId, minecraftName, minecraftUuid));
 		save();
 		OpSyncManager.syncAll();
-		return true;
+		return LinkResult.SUCCESS;
 	}
 
 	/**
@@ -336,6 +345,25 @@ public final class LinkedAccountManager {
 			// The only failures fromString can produce: a malformed UUID or a null argument
 			return false;
 		}
+	}
+
+	/**
+	 * The outcome of a link attempt.
+	 */
+	public enum LinkResult {
+		/**
+		 * The Minecraft account was linked to the Discord user.
+		 */
+		SUCCESS,
+		/**
+		 * The Minecraft UUID is already linked to another Discord user.
+		 */
+		UUID_ALREADY_LINKED,
+		/**
+		 * The Discord user already reached
+		 * account_linking.max_minecraft_accounts_per_discord_user.
+		 */
+		LIMIT_REACHED
 	}
 
 	public record LinkEntry(

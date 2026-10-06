@@ -2,6 +2,7 @@ package com.xujiayao.discord_mc_chat.commands.impl;
 
 import com.xujiayao.discord_mc_chat.commands.Command;
 import com.xujiayao.discord_mc_chat.commands.CommandSender;
+import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
@@ -130,11 +131,13 @@ public final class LinkCommand implements Command {
 			return;
 		}
 
-		boolean success = LinkedAccountManager.linkAccount(discordId, discordName, pending.minecraftUuid(), pending.playerName());
-		if (success) {
-			sender.reply(I18nManager.getDmccTranslation("commands.link.success", pending.playerName()));
-		} else {
-			sender.reply(I18nManager.getDmccTranslation("commands.link.uuid_already_linked"));
+		LinkedAccountManager.LinkResult result = LinkedAccountManager.linkAccount(discordId, discordName, pending.minecraftUuid(), pending.playerName());
+		switch (result) {
+			case SUCCESS -> sender.reply(I18nManager.getDmccTranslation("commands.link.success", pending.playerName()));
+			case UUID_ALREADY_LINKED -> sender.reply(I18nManager.getDmccTranslation("commands.link.uuid_already_linked"));
+			case LIMIT_REACHED -> sender.reply(I18nManager.getDmccTranslation("commands.link.limit_reached",
+					Math.max(0, ConfigManager.getInt("account_linking.max_minecraft_accounts_per_discord_user", 1)),
+					describeLinkedPlayers(LinkedAccountManager.getLinkEntriesByDiscordId(discordId))));
 		}
 	}
 
@@ -149,6 +152,13 @@ public final class LinkCommand implements Command {
 			return;
 		}
 
+		sender.reply(I18nManager.getDmccTranslation("commands.link.status_linked", entries.size(), describeLinkedPlayers(entries)));
+	}
+
+	/**
+	 * Renders linked accounts as a comma-separated list of Minecraft player names.
+	 */
+	private static String describeLinkedPlayers(List<LinkedAccountManager.LinkEntry> entries) {
 		StringBuilder players = new StringBuilder();
 		for (LinkedAccountManager.LinkEntry entry : entries) {
 			if (!players.isEmpty()) {
@@ -156,8 +166,7 @@ public final class LinkCommand implements Command {
 			}
 			players.append(MojangUtils.resolvePlayerName(entry.minecraftUuid(), entry.offlinePlayerName()));
 		}
-
-		sender.reply(I18nManager.getDmccTranslation("commands.link.status_linked", entries.size(), players.toString()));
+		return players.toString();
 	}
 
 	/**
