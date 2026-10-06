@@ -197,16 +197,21 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 				case CommandPackets.Console.AutoCompleteResponsePacket p ->
 						NetworkManager.cacheConsoleAutoCompleteResponse(clientName, p.suggestions);
 				case CommandPackets.Link.RequestPacket p -> {
+					// Always answer: the client decides from the response whether the player has to be
+					// held back, so a join check must never be left unanswered.
 					if (LinkedAccountManager.isMinecraftUuidLinked(p.minecraftUuid)) {
-						if (!p.joinCheck) {
-							// Only notify "already linked" for explicit /dmcc link commands, not join checks
-							String discordId = LinkedAccountManager.getDiscordIdByMinecraftUuid(p.minecraftUuid);
-							String discordName = DiscordManager.resolveDiscordUserName(discordId != null ? discordId : "");
-							ctx.writeAndFlush(new CommandPackets.Link.ResponsePacket(p.minecraftUuid, null, true, discordName));
-						}
+						String discordId = LinkedAccountManager.getDiscordIdByMinecraftUuid(p.minecraftUuid);
+						// The Discord name is only rendered by the explicit command output
+						String discordName = p.joinCheck ? "" : DiscordManager.resolveDiscordUserName(discordId != null ? discordId : "");
+						ctx.writeAndFlush(new CommandPackets.Link.ResponsePacket(p.minecraftUuid, null, true, discordName, p.joinCheck));
 					} else {
-						String code = VerificationCodeManager.generateOrRefreshCode(p.minecraftUuid, p.playerName);
-						ctx.writeAndFlush(new CommandPackets.Link.ResponsePacket(p.minecraftUuid, code, false, ""));
+						// A join check only needs a code while the reminder is enabled; an explicit
+						// /dmcc link always gets one so the player can refresh an expired code.
+						boolean requireLinkingEnabled = ConfigManager.getBoolean("account_linking.require_linking.enable", false);
+						String code = (!p.joinCheck || requireLinkingEnabled)
+								? VerificationCodeManager.generateOrRefreshCode(p.minecraftUuid, p.playerName)
+								: null;
+						ctx.writeAndFlush(new CommandPackets.Link.ResponsePacket(p.minecraftUuid, code, false, "", p.joinCheck));
 					}
 				}
 				case CommandPackets.Unlink.RequestPacket p -> {
@@ -280,7 +285,9 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 						ctx.writeAndFlush(new LoginSuccessPacket(
 								ConfigManager.getString("language"),
 								ConfigManager.getBoolean("message_parsing.overwrite_minecraft_source_messages"),
-								consoleForwardingEnabled
+								consoleForwardingEnabled,
+								ConfigManager.getBoolean("account_linking.require_linking.enable", false),
+								ConfigManager.getString("account_linking.require_linking.unlinked_player_action", "none")
 						));
 						if (consoleForwardingEnabled) {
 							DiscordManager.sendConsoleForwardingStatusMessage(clientName, true);

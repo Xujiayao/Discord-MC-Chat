@@ -395,7 +395,11 @@ public final class MinecraftEventHandler {
 					ServerPlayer player = serverInstance.getPlayerList().getPlayer(uuid);
 					if (player != null) {
 						if (event.alreadyLinked()) {
-							player.sendSystemMessage(buildAlreadyLinkedMessage(event.discordName()));
+							// A join check stays silent: the player did not ask for anything, and
+							// there is nothing for them to do about an existing link.
+							if (!event.joinCheck()) {
+								player.sendSystemMessage(buildAlreadyLinkedMessage(event.discordName()));
+							}
 						} else if (event.code() != null) {
 							player.sendSystemMessage(buildNotLinkedMessage(event.code()));
 						}

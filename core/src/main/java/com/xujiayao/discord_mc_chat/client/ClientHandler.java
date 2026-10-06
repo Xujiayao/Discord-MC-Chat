@@ -139,6 +139,8 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 			case LoginSuccessPacket p -> {
 				I18nManager.load(p.language);
 				Constants.OVERWRITE_MINECRAFT_SOURCE_MESSAGES.set(p.overwriteMinecraftSourceMessages);
+				Constants.REQUIRE_LINKING_ENABLED.set(p.requireLinkingEnabled);
+				Constants.UNLINKED_PLAYER_ACTION.set(p.unlinkedPlayerAction != null ? p.unlinkedPlayerAction : "none");
 				ConsoleLogTailer.updateEnabled(p.consoleForwardingEnabled);
 				LOGGER.info(I18nManager.getDmccTranslation("client.network.connected"));
 
@@ -250,7 +252,7 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 				ctx.writeAndFlush(new CommandPackets.Console.AutoCompleteResponsePacket(suggestions));
 			});
 			case CommandPackets.Link.ResponsePacket p -> // Handle link code response from server - notify the player
-					EventManager.post(new CoreEvents.LinkCodeResponseEvent(p.minecraftUuid, p.code, p.alreadyLinked, p.discordName != null ? p.discordName : ""));
+					EventManager.post(new CoreEvents.LinkCodeResponseEvent(p.minecraftUuid, p.code, p.alreadyLinked, p.discordName != null ? p.discordName : "", p.joinCheck));
 			case CommandPackets.Unlink.ResponsePacket p -> // Handle unlink response from server - notify the player
 					EventManager.post(new CoreEvents.UnlinkResponseEvent(p.minecraftUuid, p.success, p.discordName != null ? p.discordName : ""));
 			case CommandPackets.Link.OpSyncPacket p -> // Handle OP sync from server - apply OP levels to Minecraft players

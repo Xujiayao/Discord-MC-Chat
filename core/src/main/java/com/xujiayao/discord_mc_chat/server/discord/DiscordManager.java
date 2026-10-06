@@ -182,8 +182,9 @@ public final class DiscordManager {
 				}
 
 				// Account linking commands (available in both standalone and single_server modes)
+				// The code is optional: an omitted code reports the linking status of the caller
 				commands.add(Commands.slash("link", I18nManager.getDmccTranslation("commands.link.description"))
-						.addOption(OptionType.STRING, "code", I18nManager.getDmccTranslation("commands.link.args_desc.code"), true));
+						.addOption(OptionType.STRING, "code", I18nManager.getDmccTranslation("commands.link.args_desc.code"), false));
 				commands.add(Commands.slash("unlink", I18nManager.getDmccTranslation("commands.unlink.description")));
 				commands.add(Commands.slash("links", I18nManager.getDmccTranslation("commands.links.description")));
 

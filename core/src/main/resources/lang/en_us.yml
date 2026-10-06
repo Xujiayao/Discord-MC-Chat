@@ -157,13 +157,15 @@ commands:
   link:
     description: "Link your Minecraft player to a Discord user"
     args_desc:
-      code: "Verification code from Minecraft"
+      code: "Verification code from Minecraft, leave empty to view your linking status"
     player_only: "This command can only be used by a Minecraft player."
     discord_only: "This command can only be used by a Discord user."
     not_available: "This command is not available in the current mode."
     invalid_code: "Invalid or expired verification code."
     success: "Successfully linked to Minecraft player \"{}\"!"
     uuid_already_linked: "Linking failed. This Minecraft player is already linked to another Discord user."
+    status_linked: "You have linked {0} Minecraft player(s): {1}"
+    status_not_linked: "You have not linked any Minecraft player. Run /dmcc link in Minecraft to get a verification code, then run /link <code> on Discord to complete linking."
   unlink:
     description: "Unlink your Minecraft player from a Discord user"
     not_available: "This command can only be used by a Minecraft player or a Discord user."

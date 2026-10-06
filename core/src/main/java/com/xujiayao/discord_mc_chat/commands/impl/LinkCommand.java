@@ -8,12 +8,17 @@ import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Link.RequestPacket;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
+import com.xujiayao.discord_mc_chat.utils.MojangUtils;
+
+import java.util.List;
 
 /**
  * Link command implementation supporting both MC-side and Discord-side workflows.
  * <p>
  * <b>Minecraft side (0 args):</b> Generates or refreshes a verification code for the executing player.
  * Available in single_server and multi_server_client modes.
+ * <p>
+ * <b>Discord side (0 args):</b> Reports the Minecraft players currently linked to the executing Discord user.
  * <p>
  * <b>Discord side (1 arg):</b> Completes account linking using a verification code.
  * Available in single_server and standalone modes (where Server is running).
@@ -68,6 +73,11 @@ public final class LinkCommand implements Command {
 	@Override
 	public void execute(CommandSender sender, String... args) {
 		if (args.length == 0) {
+			if (sender instanceof DiscordUserContextProvider discord) {
+				// Discord-side without a code: report the current linking status
+				executeDiscordStatus(sender, discord);
+				return;
+			}
 			// Minecraft-side: generate/refresh verification code
 			executeMcLink(sender);
 		} else if (args.length == 1) {
@@ -105,6 +115,12 @@ public final class LinkCommand implements Command {
 			return;
 		}
 
+		// The code option is optional on Discord, so a null code means "report the status"
+		if (code == null) {
+			executeDiscordStatus(sender, discord);
+			return;
+		}
+
 		String discordId = discord.getDiscordUserId();
 		String discordName = discord.getDiscordUserName();
 
@@ -120,6 +136,28 @@ public final class LinkCommand implements Command {
 		} else {
 			sender.reply(I18nManager.getDmccTranslation("commands.link.uuid_already_linked"));
 		}
+	}
+
+	/**
+	 * Reports the Minecraft players linked to a Discord user, without consuming any verification code.
+	 */
+	private void executeDiscordStatus(CommandSender sender, DiscordUserContextProvider discord) {
+		List<LinkedAccountManager.LinkEntry> entries = LinkedAccountManager.getLinkEntriesByDiscordId(discord.getDiscordUserId());
+
+		if (entries.isEmpty()) {
+			sender.reply(I18nManager.getDmccTranslation("commands.link.status_not_linked"));
+			return;
+		}
+
+		StringBuilder players = new StringBuilder();
+		for (LinkedAccountManager.LinkEntry entry : entries) {
+			if (!players.isEmpty()) {
+				players.append(", ");
+			}
+			players.append(MojangUtils.resolvePlayerName(entry.minecraftUuid(), entry.offlinePlayerName()));
+		}
+
+		sender.reply(I18nManager.getDmccTranslation("commands.link.status_linked", entries.size(), players.toString()));
 	}
 
 	/**

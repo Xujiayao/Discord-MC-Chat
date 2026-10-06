@@ -158,6 +158,18 @@ account_linking:
     style: "title"  # action_bar, title, or chat
   discord_user_avatar_for_webhooks: false
   use_discord_role_color_for_mc_chats: true
+  require_linking:
+    # Whether to remind unlinked players in Minecraft when they join (false = silence)
+    enable: true
+    # What to do with an unlinked player who joins: "none", "freeze" or "kick", only applicable when require_linking is enabled
+    unlinked_player_action: "freeze"
+  # Maximum Minecraft accounts a single Discord account may link (0 = unlimited)
+  max_minecraft_accounts_per_discord_user: 1
+  nickname_sync:
+    enable: false
+    # Discord nickname template applied to linked members
+    # Placeholders: {player_name} {effective_name} {discord_name}
+    template: "+{effective_name}"
 
 # Configure the minimum OP level required to run each command.
 # Special value:

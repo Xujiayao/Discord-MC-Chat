@@ -304,6 +304,21 @@ public final class LinkedAccountManager {
 	}
 
 	/**
+	 * Returns a snapshot of the accounts currently linked to one Discord user.
+	 *
+	 * @return A copy of the linked account entries, or an empty list if none.
+	 */
+	public static List<LinkEntry> getLinkEntriesByDiscordId(String discordId) {
+		List<LinkEntry> entries = LINKED_ACCOUNTS.get(discordId);
+
+		if (entries == null || entries.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		return List.copyOf(entries);
+	}
+
+	/**
 	 * Returns a read-only view of the currently linked accounts. It is a live view and not a snapshot:
 	 * it reflects later link/unlink operations, and its values are the internal lists themselves, so
 	 * callers must not modify them and must expect the content to change while they iterate.

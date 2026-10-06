@@ -10,6 +10,7 @@ import tools.jackson.dataformat.yaml.YAMLWriteFeature;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author Xujiayao
@@ -42,6 +43,18 @@ public final class Constants {
 			.build();
 
 	public static final AtomicBoolean OVERWRITE_MINECRAFT_SOURCE_MESSAGES = new AtomicBoolean(false);
+
+	/**
+	 * Whether unlinked players are reminded (and enforced) when they join. Pushed by the Server on login.
+	 * <p>
+	 * Defaults to false on the client, so a missing or failed login never enforces anything (fail-open).
+	 */
+	public static final AtomicBoolean REQUIRE_LINKING_ENABLED = new AtomicBoolean(false);
+
+	/**
+	 * What to do with an unlinked player who joins: "none", "freeze" or "kick". Pushed by the Server on login.
+	 */
+	public static final AtomicReference<String> UNLINKED_PLAYER_ACTION = new AtomicReference<>("none");
 
 	private Constants() {
 	}

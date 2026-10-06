@@ -218,12 +218,35 @@ public final class CommandPackets {
 			 * Linked Discord display name when already linked.
 			 */
 			public final String discordName;
+			/**
+			 * Whether this response answers a join-time pre-check (see {@link RequestPacket#joinCheck}).
+			 */
+			public final boolean joinCheck;
 
-			public ResponsePacket(String minecraftUuid, String code, boolean alreadyLinked, String discordName) {
+			public ResponsePacket(String minecraftUuid, String code, boolean alreadyLinked, String discordName, boolean joinCheck) {
 				this.minecraftUuid = minecraftUuid;
 				this.code = code;
 				this.alreadyLinked = alreadyLinked;
 				this.discordName = discordName;
+				this.joinCheck = joinCheck;
+			}
+		}
+
+		/**
+		 * Broadcast when the linking state of a Minecraft UUID changes.
+		 * <p>
+		 * The client uses it to release players that are held by the require_linking enforcement.
+		 */
+		public static final class StatePacket extends Packet {
+			public final String minecraftUuid;
+			/**
+			 * Whether the UUID is linked to a Discord account now.
+			 */
+			public final boolean linked;
+
+			public StatePacket(String minecraftUuid, boolean linked) {
+				this.minecraftUuid = minecraftUuid;
+				this.linked = linked;
 			}
 		}
 

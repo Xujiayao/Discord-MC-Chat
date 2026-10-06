@@ -94,11 +94,22 @@ public final class AuthPackets {
 		 * Whether console forwarding is enabled.
 		 */
 		public final boolean consoleForwardingEnabled;
+		/**
+		 * Whether unlinked players should be reminded (and enforced) when they join.
+		 */
+		public final boolean requireLinkingEnabled;
+		/**
+		 * What to do with an unlinked player who joins: "none", "freeze" or "kick".
+		 */
+		public final String unlinkedPlayerAction;
 
-		public LoginSuccessPacket(String language, boolean overwriteMinecraftSourceMessages, boolean consoleForwardingEnabled) {
+		public LoginSuccessPacket(String language, boolean overwriteMinecraftSourceMessages, boolean consoleForwardingEnabled,
+								  boolean requireLinkingEnabled, String unlinkedPlayerAction) {
 			this.language = language;
 			this.overwriteMinecraftSourceMessages = overwriteMinecraftSourceMessages;
 			this.consoleForwardingEnabled = consoleForwardingEnabled;
+			this.requireLinkingEnabled = requireLinkingEnabled;
+			this.unlinkedPlayerAction = unlinkedPlayerAction;
 		}
 	}
 }

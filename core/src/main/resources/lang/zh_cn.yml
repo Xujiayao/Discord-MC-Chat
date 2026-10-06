@@ -156,13 +156,15 @@ commands:
   link:
     description: "将你的 Minecraft 玩家与 Discord 用户绑定"
     args_desc:
-      code: "来自 Minecraft 的验证码"
+      code: "来自 Minecraft 的验证码，留空则查询当前绑定状态"
     player_only: "此命令只能由 Minecraft 玩家使用。"
     discord_only: "此命令只能由 Discord 用户使用。"
     not_available: "此命令在当前模式下不可用。"
     invalid_code: "无效或已过期的验证码。"
     success: "成功绑定 Minecraft 玩家 \"{}\"！"
     uuid_already_linked: "绑定失败。此 Minecraft 玩家已绑定到另一个 Discord 用户。"
+    status_linked: "你已绑定 {0} 个 Minecraft 玩家：{1}"
+    status_not_linked: "你尚未绑定任何 Minecraft 玩家。在 Minecraft 中执行 /dmcc link 获取验证码，然后在 Discord 上执行 /link <code> 完成绑定。"
   unlink:
     description: "解除你的 Minecraft 玩家与 Discord 用户的绑定"
     not_available: "此命令只能由 Minecraft 玩家或 Discord 用户使用。"

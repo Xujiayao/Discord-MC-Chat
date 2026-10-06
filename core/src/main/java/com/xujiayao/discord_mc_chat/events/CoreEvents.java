@@ -62,15 +62,30 @@ public final class CoreEvents {
 	/**
 	 * Posted by the Client when receiving a link code response from the Server.
 	 *
-	 * @param code          The verification code, or null if already linked.
+	 * @param code          The verification code, or null if already linked or while require_linking is disabled.
 	 * @param alreadyLinked Whether the player is already linked.
 	 * @param discordName   The Discord username if already linked (for display), or empty string.
+	 * @param joinCheck     Whether this response answers a join-time pre-check instead of an explicit command.
 	 */
 	public record LinkCodeResponseEvent(
 			String playerUuid,
 			String code,
 			boolean alreadyLinked,
-			String discordName
+			String discordName,
+			boolean joinCheck
+	) {
+	}
+
+	/**
+	 * Posted by the Client when the Server reports that a Minecraft UUID was linked or unlinked.
+	 * <p>
+	 * The handler uses it to release players held by the require_linking enforcement.
+	 *
+	 * @param linked Whether the UUID is linked to a Discord account now.
+	 */
+	public record LinkStateEvent(
+			String playerUuid,
+			boolean linked
 	) {
 	}
 

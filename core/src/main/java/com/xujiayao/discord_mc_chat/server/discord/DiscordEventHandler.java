@@ -115,7 +115,12 @@ final class DiscordEventHandler extends ListenerAdapter {
 			}
 			case "link" -> {
 				String code = event.getOption("code", OptionMapping::getAsString);
-				CommandManager.execute(sender, name, code);
+				if (code == null || code.isEmpty()) {
+					// The code option is optional, so an omitted code asks for the linking status
+					CommandManager.execute(sender, name);
+				} else {
+					CommandManager.execute(sender, name, code);
+				}
 			}
 			default -> CommandManager.execute(sender, name);
 		}
