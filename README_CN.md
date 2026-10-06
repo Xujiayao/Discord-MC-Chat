@@ -117,7 +117,8 @@ Discord-MC-Chat (DMCC) 是一个 Minecraft 模组，旨在为 Discord 和 Minecr
 
 - **系统重载**: 动态重载 DMCC 配置文件（`/dmcc reload` 或 Discord `/reload`）。
 
-- **账户绑定管辖**: 提供完整的账户绑定管理命令（`link` / `unlink` / `links`），支持跨端协同认证。
+- **账户绑定管辖**: 提供完整的账户绑定管理命令（`link` / `unlink` / `links`），支持跨端协同认证；可限制每个 Discord 账户可绑定的 Minecraft
+  账户数量，并可对未绑定玩家施加提醒、冻结或踢出的强制策略（详见 4.4）。
 
 - **独立模式终端**: `standalone` 模式提供交互式命令行终端，可直接输入全部 DMCC 命令进行运维（详见 3.3）。
 
@@ -172,7 +173,8 @@ DMCC 所有运行模式都基于一个统一的通信模型，该模型包含两
 
 ### 4.1 非对称映射关系
 
-- **一个 Discord 账户可关联多个 Minecraft 账户**（方便玩家管理大号与小号）。
+- **一个 Discord 账户可关联多个 Minecraft 账户**（方便玩家管理大号与小号），可关联的数量上限由
+  `account_linking.max_minecraft_accounts_per_discord_user` 控制（默认 `1`，即严格一对一；设为 `0` 表示不限制）。
 - **一个 Minecraft 账户只能关联一个 Discord 账户**（确保游戏内身份的绝对唯一性）。
 - **数据持久化**: 绑定关系作为永久数据存储在 `Server` 端的 `account_linking/links.json` 中，以 Discord ID 为主键。查询时，Discord
   显示名与正版玩家名均通过 API 实时动态解析，离线玩家则保留绑定时的历史快照。
@@ -182,17 +184,58 @@ DMCC 所有运行模式都基于一个统一的通信模型，该模型包含两
 
 为防止在正版/离线服务器中出现身份冒用，**严禁在 Discord 端直接输入游戏名进行绑定**。
 
-1. **玩家进服自动检查**: 玩家每次进入 Minecraft 服务器时，Client 通过网络包请求 Server 检查其 UUID 是否已绑定。
+1. **玩家进服自动检查**: 玩家每次进入 Minecraft 服务器时，Client 通过网络包请求 Server 检查其 UUID 是否已绑定。该判定**只在进服时进行一次**
+   ——在线玩家在游戏内被解绑不会被立刻限制，下次进服时才会重新判定。
 2. **自动生成凭证**: 若未绑定，Server 生成一个 6 位临时验证码（如 `A7X9P2`），Client 在游戏内发送包含内联可点击元素的消息指引玩家在
    Discord 执行 `/link A7X9P2`，验证码 5 分钟有效。验证码字符集刻意排除了易混淆字符（不使用 `I`、`O`、`0`、`1`），且为一次性使用。
+   若 `account_linking.require_linking.enable` 为 `false`，进服检查完全静默（既不提醒也不限制）；该开关为 `true` 时，
+   `unlinked_player_action` 决定提醒之外的处理方式（详见 4.4）。
 3. **手动刷新凭证**: Minecraft 端提供 `/dmcc link` 命令进行验证码续期或重新生成。若原验证码尚未过期，续期会沿用同一个码，仅重置有效期。
-4. **确认所有权**: 玩家前往 Discord，使用斜杠命令 `/link A7X9P2` 完成最终绑定。
-5. **身份提示**: 已绑定的玩家再次进服时，游戏内会提示其当前绑定的 Discord 用户，并给出解除绑定的可点击入口。
+4. **确认所有权**: 玩家前往 Discord，使用斜杠命令 `/link A7X9P2`（选项名为 `code`）完成最终绑定。该选项是可选的：省略 `code` 时 `/link`
+   会直接回报当前绑定状态（已绑定的玩家与验证码提示均由 Bot 公开回复，频道内所有人可见）。
+5. **身份提示**: 玩家主动执行 `/dmcc link` 时，已绑定的玩家会在游戏内看到自己当前绑定的 Discord 用户，以及解除绑定的可点击入口；进服时的自动检查
+   则不会重复播报这条提示，避免每次进服都刷屏。
 
 ### 4.3 跨平台交互反馈
 
 - **同频渲染**: 玩家在游戏内的聊天名字颜色，将自动同步为其绑定的 Discord 账户的最高角色颜色（`account_linking.use_discord_role_color_for_mc_chats`）。
 - **跨平台艾特提醒**: 跨平台提及 (`@`) 时，自动在游戏内通过 Action Bar、Title 或 Chat 高亮提醒对应的玩家，并附带提示音。
+
+### 4.4 绑定强制策略与昵称同步
+
+DMCC 可以要求玩家必须完成绑定才能正常游戏，并可选地把 Discord 昵称与绑定状态保持一致。相关配置项位于 `account_linking` 段，以下是模板中的原文（希望保持原样时可直接把下面前 5 个键追加到已有
+`config.yml` 的 `use_discord_role_color_for_mc_chats` 之后）：
+
+```yaml
+account_linking:
+  # ...
+  require_linking:
+    # Whether to remind unlinked players in Minecraft when they join (false = silence)
+    enable: true
+    # What to do with an unlinked player who joins: "none", "freeze" or "kick", only applicable when require_linking is enabled
+    unlinked_player_action: "freeze"
+  # Maximum Minecraft accounts a single Discord account may link (0 = unlimited)
+  max_minecraft_accounts_per_discord_user: 1
+  nickname_sync:
+    enable: false
+    # Discord nickname template applied to linked members
+    # Placeholders: {player_name} {effective_name} {discord_name}
+    template: "+{effective_name}"
+```
+
+- **判定时机与档位**: 未绑定玩家的处理只在**进服时**判定一次。`none` 与旧行为一致，只发送验证码提示；`freeze`（默认）会取消该玩家的移动与全部世界交互
+  （放置、攻击、交互、物品栏、容器、载具等），但聊天与命令**不受影响**，因此玩家仍能读到验证码提示并执行 `/dmcc link`，绑定成功后**立即解除**限制；
+  `kick` 会以提示消息把玩家踢出服务器。玩家主动执行的 `/dmcc link` 与 Discord 端的 `/link <code>` 不受该开关限制，始终可用。
+- **失败放行**: 判定依赖 DMCC 的 Server-Client 通道。若通道不可用（例如 Standalone 未运行），未绑定玩家既不会被冻结也不会被踢出，避免误锁服务器。
+- **白名单死结**: 若同时启用了服务器白名单与 `kick` 档，未绑定玩家会在拿到验证码之前就被拦在门外，形成"进不去 → 收不到码 → 绑不了"的死结。
+  此时请用 5.4 的 `whitelist` 代理命令先放行，或改用 `freeze` / `none` 档，让玩家先进服取码。
+- **解绑不追溯**: 在线玩家被解绑（游戏内 `/dmcc unlink` 或 Discord 端 `/unlink`）不会立刻被冻结或踢出，只会在下次进服时重新判定。
+- **昵称同步**: `nickname_sync.enable` 为 `true` 时，DMCC 会把 Discord 成员昵称视为可管辖状态：已绑定成员的昵称固定为模板渲染值（例如 `+Steve`，
+  其中 `{player_name}` / `{effective_name}` 取其最新绑定的 Minecraft 玩家名，`{discord_name}` 为其 Discord 用户名，超过 Discord 的 32 字符上限会被截断），
+  **未绑定成员会被清除昵称**（只能使用自己的 Discord 用户名），从而杜绝改昵称假扮他人。成员自行修改昵称会很快被改回；解绑时昵称被清除
+  （与 5.5 的 OP 回收语义一致）；模板变更不做全量重推，而是在成员下次进服或再次绑定时校正。
+- **权限与容错**: 昵称同步需要机器人在 Discord 服务器中具备"管理昵称"权限，否则会记录一条警告并跳过该服务器的昵称同步；机器人账户与无法管理的成员
+  （角色层级低于机器人）同样会被跳过。
 
 ## 5. 零信任委托权限系统 (Delegated Authorization)
 
@@ -272,7 +315,7 @@ DMCC 在 Client 端提供独立的 `whitelist` 代理命令（默认所需权限
 | `help`                   | `-1`     | ✅                          | ✅                    | ✅                 | 动态显示用户当前有权执行的可用命令。                                                 |
 | `info`                   | `-1`     | ✅ ①                        | ✅                    | ✅                 | 查看状态。Client 只显自身数据，Server 聚合全局数据。                                   |
 | `link`                   | `0`      | ✅                          | ✅                    | ❌                 | Minecraft 端生成或刷新 6 位验证码。                                            |
-| `link <code>`            | `0`      | ❌                          | ✅                    | ✅                 | Discord 端使用验证码完成最终绑定。                                               |
+| `link [code]`            | `0`      | ❌                          | ✅                    | ✅                 | Discord 端使用验证码完成最终绑定；省略 `code` 时改为回报调用者的当前绑定状态。                    |
 | `links`                  | `4`      | ❌                          | ✅                    | ✅                 | 管理员查询所有已绑定的账户关系数据。                                                 |
 | `log <file>`             | `4`      | ✅ ①                        | ✅                    | ✅                 | 将指定的后台日志文件以附件形式传输至 Discord，支持自动补全。                                  |
 | `reload`                 | `4`      | ✅                          | ✅                    | ✅                 | 重新加载 DMCC 配置。                                                       |
@@ -346,6 +389,10 @@ DMCC 对配置文件的完整性与一致性做了强校验，力求在启动阶
 
 - **模板版本校验**: `config.yml` / `mode.yml` / `custom_messages` 中的 `version` 必须与当前 DMCC 版本一致，否则提示前往文档升级配置。
 - **键完整性校验**: 会逐项比对模板，报告**缺失的键**、**未识别的键**（多余键）与**类型不匹配**的键。
+- **升级时的键补齐**: DMCC 不会自动合并或迁移旧配置。升级后若模板新增了键，启动时会明确报告缺失的键并拒绝加载，按提示从模板手工补齐即可。
+  本次新增的键共 5 个：`account_linking.require_linking.enable`、`account_linking.require_linking.unlinked_player_action`
+  （见 4.4）、`account_linking.max_minecraft_accounts_per_discord_user`（见 4.1）、`account_linking.nickname_sync.enable` 与
+  `account_linking.nickname_sync.template`（见 4.4）。
 - **未修改提醒**: 对必须由用户填写的关键项（`discord.bot.token`、`multi_server.server_name`、
   `multi_server.connection.shared_secret`）以及仍未从模板改动的键给出提醒。
 - **模式一致性校验**: 若 `mode.yml`（或运行环境）推导出的模式与 `config.yml` 中记录的模式不一致，会给出明确错误并提示备份、删除旧配置以重新生成。
@@ -379,6 +426,7 @@ DMCC 对配置文件的完整性与一致性做了强校验，力求在启动阶
 | `{online_server_count}` / `{online_server_list}` / `{server_started_time}` / `{last_update_time}`                                | 频道看板变量                  |
 | `{mspt}` / `{threshold}` / `{next_check_time}`                                                                                   | MSPT 告警                 |
 | `{player_name}`（用于 `discord.webhook.avatar_url`）                                                                                 | Webhook 头像模板            |
+| `{player_name}` / `{effective_name}` / `{discord_name}`（用于 `nickname_sync.template`）                                             | Discord 昵称同步模板          |
 
 ## 9. 网络与安全
 

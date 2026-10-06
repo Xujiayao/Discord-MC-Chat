@@ -94,6 +94,16 @@
 - 一期未做（按用户裁决留作二期）：初始化失败后自动重连——现在仍需手动 `/dmcc reload` 才会重新登录并补发。
 - 验证：`gradlew.bat :core:compileJava :core:test --offline` → BUILD SUCCESSFUL（SmokeTest 3.0.0-beta.3）。
 
+## 工作 14 · 2026/10/7 · 账户绑定强化（#326 / #337 / #340 / #343）
+- **用户可见（含两处行为变更）**：① 新增 `account_linking.require_linking.enable`（默认 `true`）与 `unlinked_player_action`（`none` / `freeze` / `kick`，默认 `freeze`）——未绑定玩家进服时会被提醒，默认还会被冻结在原地、无法移动与交互（聊天与命令不受影响，绑定成功立即解除）；`none` 等同旧行为（只提醒），`enable: false` 则完全静默（既不提醒也不限制）。② 新增 `account_linking.max_minecraft_accounts_per_discord_user`（默认 `1`）——**默认值本身即行为变更**：一个 Discord 账户默认只能绑定 1 个 Minecraft 账户（`0` = 不限制）。③ Discord `/link` 的 `code` 选项改为可选：省略时公开回报调用者的绑定状态；顺带确认全仓 0 处 `setEphemeral`，所有命令回复本就对频道内所有人可见。④ 新增 `account_linking.nickname_sync.{enable,template}`（默认 `false` / `"+{effective_name}"`）：启用后已绑定成员的昵称固定为模板渲染值、**未绑定成员的昵称被清除**（只能用 Discord 用户名，杜绝改昵称假扮他人），成员自行篡改会被改回，解绑即清除，模板变更在下次进服/再次绑定时校正。
+- 协议与判定：`LoginSuccessPacket` 增 `requireLinkingEnabled` / `unlinkedPlayerAction`（档位由服务端下发，客户端统一转小写归一）；`Link.ResponsePacket` 增 `joinCheck`；新增 `Link.StatePacket` + `CoreEvents.LinkStateEvent`（绑定成功后广播以解除限制）。判定**只在进服时进行一次**，在线被解绑不追溯（下次进服再判）。
+- 冻结实现：新增 `PlayerFreezeManager`（记录维度与坐标，每秒最多抓回一次）与 `MixinServerGamePacketListenerImpl` 的两个注入——丢弃移动包，以及放置/攻击/交互/物品栏/容器/载具/切换物品等 15 个操作包（`require = 15`，锚点缺失即启动失败）；聊天与命令注入刻意不碰，保证玩家能读到验证码提示并执行 `/dmcc link`。fail-open：`Link.RequestPacket` 不在 `PendingPacketQueue` 白名单内，DMCC 不可达时既不会被冻结，也不会在重连后被延迟踢出。
+- 昵称同步实现：新增 `NicknameSyncManager`（单线程 `DMCC-NicknameSync` + 同一用户去重 + 先比较再写即零 REST；触发点为绑定/解绑成功、已绑定玩家进服、`onGuildMemberJoin`、`onGuildMemberUpdateNickname` 防篡改，以及 JDA ready 后的一次全量扫描）；需要“管理昵称”权限，权限缺失或成员不可管理时跳过该服务器/成员并限频告警。`Permission.MANAGE_NICKNAMES` 在 JDA 6.6.0 中不存在，正确常量为 `NICKNAME_MANAGE`。
+- **破坏性变更（需手工补键）**：DMCC 不做配置迁移，上述 5 个新键不会自动补进已有 `config.yml`，升级后启动会报告缺失键，发布说明需给出可直接粘贴的片段。
+- 验证：`gradlew.bat build --offline` BUILD SUCCESSFUL；用 `javap` 对 Fabric `minecraft-merged-deobf-26.3.jar` 与 NeoForge recompile 产物复核 15 个注入点全部命中（`handleAcceptTeleportPacket` 存在但**不能**拦截，否则服务端收不到传送确认）；合并产物 `core/build/libs/Discord-MC-Chat-3.0.0-beta.3.jar` 已确认含 `PlayerFreezeManager`、`NicknameSyncManager` 与新 Mixin 类。实机回归清单（默认 `freeze` 档、`enable:false` 静默、`none` 档、`kick` 档、`/link` 无参公开回复、绑定上限、昵称同步含未绑定清空、以及 OP 同步与跨服中继等旧功能回归）待开发者执行。
+- `README_CN.md` 已同步：§4.1 绑定上限、§4.2 进服判定与可选 `code`、新增 §4.4「绑定强制策略与昵称同步」（含白名单死结的答复：与 `kick` 档并用时会形成“进不去 → 收不到码 → 绑不了”，应先用 5.4 的 `whitelist` 代理放行，或改用 `freeze` / `none` 档）、§7.1 命令表、§8.1 升级补键、§8.3 占位符。
+- 四个提交：`6d37fc17`（#326 骨架与全局开关）、`7c0bed92`（#340 绑定上限）、`884f784e`（#343 昵称同步）、`0e6eb942`（#337 冻结/踢出）。
+
 ## 发布待办（汇总）
 - 待处理（发布前，三项按用户裁决都先不动）：`.github/ISSUE_TEMPLATE/bug.yml` 的 v2 残留文案；`docs/package.json` 缺 `license` 字段；`README.md`（英文翻译件）与 `README_CN.md` 的同步。
 - 已核对无需改动：`update/versions.json` 的 `3.0.0-beta.3` 条目本就是 `"compatibility": ["26.3"]`（`update/versions.json:3-7`）；存量用户 `config.yml` 补 IPv6 规则、四个命令类的合成 lambda 注入点两项按开发者裁决暂不处理。
