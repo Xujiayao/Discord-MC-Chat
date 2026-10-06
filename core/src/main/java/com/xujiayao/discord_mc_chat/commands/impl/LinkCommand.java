@@ -6,6 +6,7 @@ import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
+import com.xujiayao.discord_mc_chat.network.packets.CommandPackets;
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Link.RequestPacket;
 import com.xujiayao.discord_mc_chat.server.discord.NicknameSyncManager;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
@@ -137,6 +138,8 @@ public final class LinkCommand implements Command {
 			case SUCCESS -> {
 				// The Discord nickname follows the linking state
 				NicknameSyncManager.syncForDiscordUser(discordId);
+				// A player who was held back on join can be released right away, on every client
+				NetworkManager.broadcastToClients(new CommandPackets.Link.StatePacket(pending.minecraftUuid(), true));
 				sender.reply(I18nManager.getDmccTranslation("commands.link.success", pending.playerName()));
 			}
 			case UUID_ALREADY_LINKED -> sender.reply(I18nManager.getDmccTranslation("commands.link.uuid_already_linked"));

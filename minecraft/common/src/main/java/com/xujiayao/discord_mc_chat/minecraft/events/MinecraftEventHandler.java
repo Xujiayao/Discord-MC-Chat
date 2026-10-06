@@ -8,6 +8,7 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.serialization.JsonOps;
+import com.xujiayao.discord_mc_chat.Constants;
 import com.xujiayao.discord_mc_chat.DMCC;
 import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
@@ -16,6 +17,7 @@ import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.events.CoreEvents;
 import com.xujiayao.discord_mc_chat.events.EventManager;
 import com.xujiayao.discord_mc_chat.minecraft.commands.MinecraftCommands;
+import com.xujiayao.discord_mc_chat.minecraft.linking.PlayerFreezeManager;
 import com.xujiayao.discord_mc_chat.minecraft.translations.TranslationManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.message.TextSegment;
@@ -197,6 +199,9 @@ public final class MinecraftEventHandler {
 		});
 
 		EventManager.register(MinecraftEvents.ServerStopped.class, _ -> {
+			// Nothing is held in place once the server is gone
+			PlayerFreezeManager.clear();
+
 			// Blocks until shutdown is complete
 			DMCC.shutdown();
 
@@ -218,6 +223,9 @@ public final class MinecraftEventHandler {
 		});
 
 		EventManager.register(MinecraftEvents.PlayerQuit.class, event -> {
+			// The decision is taken again on the next join, so a leaving player is never remembered
+			PlayerFreezeManager.unfreeze(event.serverPlayer().getUUID());
+
 			Map<String, String> placeholders = Map.of(
 					"player_name", event.serverPlayer().getName().getString(),
 					"display_name", event.serverPlayer().getDisplayName().getString()
@@ -401,7 +409,7 @@ public final class MinecraftEventHandler {
 								player.sendSystemMessage(buildAlreadyLinkedMessage(event.discordName()));
 							}
 						} else if (event.code() != null) {
-							player.sendSystemMessage(buildNotLinkedMessage(event.code()));
+							holdUnlinkedPlayer(player, event.code(), event.joinCheck());
 						}
 					}
 				} catch (Exception ignored) {
@@ -424,6 +432,27 @@ public final class MinecraftEventHandler {
 							player.sendSystemMessage(Component.literal(
 									I18nManager.getDmccTranslation("commands.unlink.not_linked")));
 						}
+					}
+				} catch (Exception ignored) {
+				}
+			});
+		});
+
+		// ===== Account Linking State Pushes =====
+
+		EventManager.register(CoreEvents.LinkStateEvent.class, event -> {
+			if (serverInstance == null) return;
+
+			serverInstance.execute(() -> {
+				try {
+					UUID uuid = UUID.fromString(event.playerUuid());
+					ServerPlayer player = serverInstance.getPlayerList().getPlayer(uuid);
+					// Only a successful link releases a player: being unlinked while playing never
+					// freezes or kicks anyone, the next join takes care of that.
+					if (player != null && event.linked() && PlayerFreezeManager.isFrozen(player)) {
+						PlayerFreezeManager.unfreeze(uuid);
+						player.sendSystemMessage(Component.literal(
+								I18nManager.getDmccTranslation("linking.require_linking.released")));
 					}
 				} catch (Exception ignored) {
 				}
@@ -876,6 +905,28 @@ public final class MinecraftEventHandler {
 				.withHoverEvent(new HoverEvent.ShowText(
 						Component.literal(I18nManager.getDmccTranslation(tooltipKey))))
 				.withColor(ChatFormatting.GREEN));
+	}
+
+	/**
+	 * Applies the configured policy to a player who joined without a linked Discord account. Only the
+	 * join check is enforced: a player who is already playing is never frozen or kicked later on.
+	 */
+	private static void holdUnlinkedPlayer(ServerPlayer player, String code, boolean joinCheck) {
+		if (joinCheck && Constants.REQUIRE_LINKING_ENABLED.get()) {
+			String action = Constants.UNLINKED_PLAYER_ACTION.get();
+			if ("kick".equals(action)) {
+				player.connection.disconnect(Component.literal(
+						I18nManager.getDmccTranslation("linking.require_linking.kick", code)));
+				return;
+			}
+			if ("freeze".equals(action)) {
+				PlayerFreezeManager.freeze(player);
+				player.sendSystemMessage(Component.literal(
+						I18nManager.getDmccTranslation("linking.require_linking.frozen")));
+			}
+		}
+
+		player.sendSystemMessage(buildNotLinkedMessage(code));
 	}
 
 	private static ResponsePacket buildInfoResponse(MinecraftServer server) {

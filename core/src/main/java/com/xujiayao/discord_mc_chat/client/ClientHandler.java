@@ -32,6 +32,7 @@ import io.netty.handler.timeout.IdleStateEvent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -140,7 +141,8 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 				I18nManager.load(p.language);
 				Constants.OVERWRITE_MINECRAFT_SOURCE_MESSAGES.set(p.overwriteMinecraftSourceMessages);
 				Constants.REQUIRE_LINKING_ENABLED.set(p.requireLinkingEnabled);
-				Constants.UNLINKED_PLAYER_ACTION.set(p.unlinkedPlayerAction != null ? p.unlinkedPlayerAction : "none");
+				// The value decides which packets a frozen player may still send, so keep it comparable
+				Constants.UNLINKED_PLAYER_ACTION.set(p.unlinkedPlayerAction != null ? p.unlinkedPlayerAction.trim().toLowerCase(Locale.ROOT) : "none");
 				ConsoleLogTailer.updateEnabled(p.consoleForwardingEnabled);
 				LOGGER.info(I18nManager.getDmccTranslation("client.network.connected"));
 
@@ -257,6 +259,8 @@ final class ClientHandler extends SimpleChannelInboundHandler<Packet> {
 					EventManager.post(new CoreEvents.UnlinkResponseEvent(p.minecraftUuid, p.success, p.discordName != null ? p.discordName : ""));
 			case CommandPackets.Link.OpSyncPacket p -> // Handle OP sync from server - apply OP levels to Minecraft players
 					EventManager.post(new CoreEvents.OpSyncEvent(p.opLevels));
+			case CommandPackets.Link.StatePacket p -> // Handle linking state push from server - release held players
+					EventManager.post(new CoreEvents.LinkStateEvent(p.minecraftUuid, p.linked));
 			case DiscordRelayPacket p -> {
 				// Handle Discord event forwarded from server - render in Minecraft
 				if ("multi_server_client".equals(ModeManager.getMode())) {

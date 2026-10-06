@@ -364,6 +364,10 @@ linking:
   tooltip:
     click_to_copy: "Click to copy to clipboard"
     click_to_run: "Click to fill command"
+  require_linking:
+    frozen: "You have not linked a Discord account yet, so you cannot move or interact with the world for now. Follow the instructions below to link and this will be lifted immediately."
+    kick: "You have not linked a Discord account and cannot join the server. Run /link code: {} on Discord to link, then try again."
+    released: "Linking succeeded, the restrictions have been lifted."
 
 minecraft:
   translations:

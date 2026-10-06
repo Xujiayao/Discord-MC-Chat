@@ -363,6 +363,10 @@ linking:
   tooltip:
     click_to_copy: "点击复制到剪贴板"
     click_to_run: "点击填入命令"
+  require_linking:
+    frozen: "你尚未绑定 Discord 用户，暂时无法移动或与世界交互。按照下方提示完成绑定后将立即恢复。"
+    kick: "你尚未绑定 Discord 用户，无法加入服务器。请在 Discord 上执行 /link code: {} 完成绑定后重试。"
+    released: "绑定成功，已解除限制。"
 
 minecraft:
   translations:

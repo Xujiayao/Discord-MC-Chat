@@ -3,6 +3,7 @@ package com.xujiayao.discord_mc_chat.minecraft.mixins;
 import com.xujiayao.discord_mc_chat.Constants;
 import com.xujiayao.discord_mc_chat.events.EventManager;
 import com.xujiayao.discord_mc_chat.minecraft.events.MinecraftEvents;
+import com.xujiayao.discord_mc_chat.minecraft.linking.PlayerFreezeManager;
 import net.minecraft.network.chat.LastSeenMessages;
 import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.network.protocol.game.ServerboundChatCommandSignedPacket;
@@ -31,6 +32,46 @@ final class MixinServerGamePacketListenerImpl {
 		));
 
 		if (Constants.OVERWRITE_MINECRAFT_SOURCE_MESSAGES.get()) {
+			ci.cancel();
+		}
+	}
+
+	/**
+	 * A player who is held until they link a Discord account must not move. Dropping the packet also
+	 * drops the vanilla correction, so the client is pulled back explicitly.
+	 */
+	@Inject(method = "handleMovePlayer", at = @At("HEAD"), cancellable = true)
+	private void dmccBlockFrozenMovement(CallbackInfo ci) {
+		if (PlayerFreezeManager.isFrozen(player)) {
+			ci.cancel();
+			PlayerFreezeManager.correctIfNeeded(player);
+		}
+	}
+
+	/**
+	 * Everything a frozen player could use to change the world, their inventory or another entity.
+	 * Chat and commands are not in this list on purpose: the reply that explains how to link has to
+	 * reach the player, and {@code /dmcc link} has to stay usable.
+	 */
+	@Inject(method = {
+			"handlePlayerAction",
+			"handleUseItem",
+			"handleUseItemOn",
+			"handleAttack",
+			"handleInteract",
+			"handleSetCarriedItem",
+			"handleSetCreativeModeSlot",
+			"handleContainerClick",
+			"handleContainerButtonClick",
+			"handlePlaceRecipe",
+			"handleMoveVehicle",
+			"handlePaddleBoat",
+			"handlePlayerInput",
+			"handlePlayerCommand",
+			"handleTeleportToEntityPacket"
+	}, at = @At("HEAD"), cancellable = true, require = 15)
+	private void dmccBlockFrozenActions(CallbackInfo ci) {
+		if (PlayerFreezeManager.isFrozen(player)) {
 			ci.cancel();
 		}
 	}
