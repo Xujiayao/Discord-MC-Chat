@@ -212,6 +212,13 @@ discord:
     insufficient_permission: "Discord 机器人在频道 {} 中权限不足：\"{}\""
     broadcast_failed: "无法将消息广播到 Discord 频道。原因：{}"
     invalid_console_filter_regex: "无效的控制台转发过滤器正则表达式：{}"
+  nickname_sync:
+    template_invalid: "account_linking.nickname_sync.template 无效，已跳过 Discord 成员昵称同步。"
+    missing_permission: "Discord 机器人缺少「管理昵称」权限，已跳过服务器 {} 的成员昵称同步。"
+    cannot_interact: "Discord 机器人无法管理服务器 {} 中权限更高的成员，已跳过这些成员。"
+    update_failed: "同步 Discord 成员 {} 的昵称失败：{}"
+    sweep_done: "Discord 成员昵称同步完成：共检查 {} 个成员，更新了 {} 个昵称。"
+    failed: "Discord 成员昵称同步出错：{}"
   command:
     reply_failed: "无法向 Discord 命令发送者发送回复消息。"
     reply_failed_detail: "对于 reload/shutdown 命令，这是预期的行为。"

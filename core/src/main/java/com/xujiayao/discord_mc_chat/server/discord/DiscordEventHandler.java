@@ -13,6 +13,8 @@ import com.xujiayao.discord_mc_chat.utils.LogFileUtils;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.emoji.EmojiUnion;
+import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
+import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateNicknameEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
@@ -73,6 +75,19 @@ final class DiscordEventHandler extends ListenerAdapter {
 	public void onReady(@NotNull ReadyEvent event) {
 		BotPresenceManager.update();
 		ChannelUpdateManager.start();
+	}
+
+	@Override
+	public void onGuildMemberJoin(@NotNull GuildMemberJoinEvent event) {
+		// A member joining the guild gets the nickname their linking state asks for
+		NicknameSyncManager.syncForDiscordUser(event.getMember().getId());
+	}
+
+	@Override
+	public void onGuildMemberUpdateNickname(@NotNull GuildMemberUpdateNicknameEvent event) {
+		// Renaming is not allowed to break the linking policy: the expected nickname is re-applied,
+		// and an unlinked member loses the nickname again
+		NicknameSyncManager.onNicknameChanged(event.getMember().getId());
 	}
 
 	@Override

@@ -7,6 +7,7 @@ import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Link.RequestPacket;
+import com.xujiayao.discord_mc_chat.server.discord.NicknameSyncManager;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
 import com.xujiayao.discord_mc_chat.utils.MojangUtils;
@@ -133,7 +134,11 @@ public final class LinkCommand implements Command {
 
 		LinkedAccountManager.LinkResult result = LinkedAccountManager.linkAccount(discordId, discordName, pending.minecraftUuid(), pending.playerName());
 		switch (result) {
-			case SUCCESS -> sender.reply(I18nManager.getDmccTranslation("commands.link.success", pending.playerName()));
+			case SUCCESS -> {
+				// The Discord nickname follows the linking state
+				NicknameSyncManager.syncForDiscordUser(discordId);
+				sender.reply(I18nManager.getDmccTranslation("commands.link.success", pending.playerName()));
+			}
 			case UUID_ALREADY_LINKED -> sender.reply(I18nManager.getDmccTranslation("commands.link.uuid_already_linked"));
 			case LIMIT_REACHED -> sender.reply(I18nManager.getDmccTranslation("commands.link.limit_reached",
 					Math.max(0, ConfigManager.getInt("account_linking.max_minecraft_accounts_per_discord_user", 1)),

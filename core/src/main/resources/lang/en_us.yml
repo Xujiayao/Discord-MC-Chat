@@ -213,6 +213,13 @@ discord:
     insufficient_permission: "Discord bot has insufficient permissions in channel {}: \"{}\""
     broadcast_failed: "Failed to broadcast message to Discord channel. Reason: {}"
     invalid_console_filter_regex: "Invalid console forwarding filter regex: {}"
+  nickname_sync:
+    template_invalid: "account_linking.nickname_sync.template is invalid; Discord member nickname sync was skipped."
+    missing_permission: "The Discord bot lacks the Manage Nicknames permission; nickname sync was skipped for guild {}."
+    cannot_interact: "The Discord bot cannot manage members with higher roles; those members were skipped in guild {}."
+    update_failed: "Failed to sync the nickname of Discord member {}: {}"
+    sweep_done: "Discord member nickname sync finished: {} member(s) checked, {} nickname(s) updated."
+    failed: "Discord member nickname sync failed: {}"
   command:
     reply_failed: "Failed to send reply message to Discord command sender."
     reply_failed_detail: "This is expected behavior for reload/shutdown commands."

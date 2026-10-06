@@ -6,6 +6,7 @@ import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Unlink.RequestPacket;
+import com.xujiayao.discord_mc_chat.server.discord.NicknameSyncManager;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 
 /**
@@ -77,6 +78,8 @@ public final class UnlinkCommand implements Command {
 		int count = LinkedAccountManager.unlinkByDiscordId(discordId, discordName);
 
 		if (count > 0) {
+			// The Discord nickname follows the linking state, so it is cleared together with the link
+			NicknameSyncManager.syncForDiscordUser(discordId);
 			sender.reply(I18nManager.getDmccTranslation("commands.unlink.success_discord", count, discordName));
 		} else {
 			sender.reply(I18nManager.getDmccTranslation("commands.unlink.not_linked"));

@@ -199,6 +199,10 @@ public final class DiscordManager {
 				checkFuture.cancel(false);
 
 				LOGGER.info(I18nManager.getDmccTranslation("discord.manager.commands_success"));
+
+				// Reverts the nicknames that were changed while DMCC was offline; the linked accounts
+				// are guaranteed to be loaded by now, so an empty link list really means "unlinked"
+				NicknameSyncManager.sweepAll();
 				return true;
 			} catch (Exception e) {
 				LOGGER.error(I18nManager.getDmccTranslation("discord.manager.commands_failed"), e);
@@ -1075,6 +1079,7 @@ public final class DiscordManager {
 	public static void shutdown() {
 		BotPresenceManager.shutdown();
 		ChannelUpdateManager.shutdown();
+		NicknameSyncManager.shutdown();
 
 		if (jda != null) {
 			jda.shutdown();

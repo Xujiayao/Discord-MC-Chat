@@ -24,6 +24,7 @@ import com.xujiayao.discord_mc_chat.network.packets.Packet;
 import com.xujiayao.discord_mc_chat.server.discord.BotPresenceManager;
 import com.xujiayao.discord_mc_chat.server.discord.ChannelUpdateManager;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
+import com.xujiayao.discord_mc_chat.server.discord.NicknameSyncManager;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.server.linking.OpSyncManager;
 import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
@@ -203,6 +204,10 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 						String discordId = LinkedAccountManager.getDiscordIdByMinecraftUuid(p.minecraftUuid);
 						// The Discord name is only rendered by the explicit command output
 						String discordName = p.joinCheck ? "" : DiscordManager.resolveDiscordUserName(discordId != null ? discordId : "");
+						if (p.joinCheck && discordId != null) {
+							// Lazy resync: joining is when a renamed Minecraft account gets noticed
+							NicknameSyncManager.syncForDiscordUser(discordId);
+						}
 						ctx.writeAndFlush(new CommandPackets.Link.ResponsePacket(p.minecraftUuid, null, true, discordName, p.joinCheck));
 					} else {
 						// A join check only needs a code while the reminder is enabled; an explicit
@@ -219,6 +224,8 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 					String discordName = "";
 					if (unlinkedDiscordId != null) {
 						discordName = DiscordManager.resolveDiscordUserName(unlinkedDiscordId);
+						// The Discord nickname follows the linking state, so it goes away with the link
+						NicknameSyncManager.syncForDiscordUser(unlinkedDiscordId);
 					}
 					ctx.writeAndFlush(new CommandPackets.Unlink.ResponsePacket(p.minecraftUuid, unlinkedDiscordId != null, discordName));
 				}
