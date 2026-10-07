@@ -1,0 +1,359 @@
+# ==================================================
+# Discord-MC-Chat (DMCC)
+# By Xujiayao
+#
+# Internal Translations
+#
+# Code:     en_us
+# Language: English (US)
+# ==================================================
+
+terminal:
+  started: "Interaktivní terminál spuštěn. Zadejte \"help\" pro seznam dostupných příkazů."
+  unknown_command: "Neznámý příkaz: \"{}\". Zadejte \"help\" pro seznam dostupných příkazů."
+  input_closed: "Vstupní proud terminálu uzavřen. Ukončuji správce terminálu."
+
+commands:
+  execution_failed: "Spuštění příkazu selhalo: {}"
+  invalid_usage: "Neplatné použití. Správná syntaxe: \"{}\""
+  insufficient_permission: "Nemáte dostatečná oprávnění k provedení tohoto příkazu."
+  remote_result_prefix: "[{}] {}"
+  console:
+    description: "Spustí Minecraft příkaz"
+    args_desc:
+      at: "Název cílového serveru nebo \"all_online_clients\""
+      command: "Minecraft příkaz k provedení"
+    executing: "Spouštím \"{}\" na {}..."
+    executing_local: "Spouštím \"{}\"..."
+    client_offline: "DMCC klient \"{}\" je offline."
+    timeout: "Spuštění příkazu na \"{}\" vypršelo."
+    invalid_target: "Neplatný cílový DMCC klient: \"{}\". Dostupní klienti: {}"
+    all_online_clients: "všichni online DMCC klienti"
+    no_online_clients: "Žádní DMCC klienti nejsou online."
+    dmcc_not_supported: "Spouštění DMCC příkazů přes příkaz \"console\" není podporováno. Použijte příkaz \"execute\"."
+    server_not_ready: "Minecraft server ještě není připraven."
+    no_response: |
+      Nebyla přijata žádná odpověď od DMCC klienta.
+      
+      To může být normální pro některé Minecraft příkazy. Pokud jste očekávali odpověď, zkontrolujte log serveru spuštěním příkazu "{}".
+
+  help:
+    description: "Zobrazí seznam dostupných příkazů"
+    help: "Nápověda"
+  reload:
+    description: "Znovu načte DMCC a použije nejnovější změny v konfiguraci"
+    reloading: "Znovu načítám DMCC..."
+    success: "DMCC úspěšně znovu načten!"
+    failure: "Selhalo znovu načtení DMCC."
+  update:
+    description: "Zkontroluje aktualizace DMCC"
+    checking: "Kontroluji aktualizace DMCC..."
+    available_short: "Nalezena nová verze DMCC {}!"
+    available_full: |
+      # :arrow_up: :partying_face: Nová verze Discord-MC-Chat (DMCC) je k dispozici!
+      
+      ## Verze {} → {}
+      
+      :clock4: Vydáno <t:{}:F> (<t:{}:R>)
+      
+      :inbox_tray: [Stáhnout novou verzi](<{}>)
+      
+      :clipboard: [Zobrazit changelog](<{}>)
+      
+      :warning: Poznámky k aktualizaci:
+      
+      {}
+    up_to_date: "Již používáte nejnovější kompatibilní verzi DMCC!"
+    no_compatible: "Pro Minecraft verzi {} není k dispozici žádná kompatibilní verze DMCC."
+    check_failed: "Kontrola aktualizací selhala: {}"
+    server_unavailable: "Nelze zkontrolovat aktualizace, protože není připojen žádný DMCC server."
+  shutdown:
+    description: "Vypne samostatnou aplikaci DMCC"
+    shutting_down: "Vypínám DMCC..."
+    success: "DMCC úspěšně vypnuto. Nashledanou!"
+    failure: "Vypnutí DMCC selhalo."
+  info:
+    description: "Zobrazí stav DMCC a Minecraft serveru"
+    common_part: |
+      ========== Stav běhu ==========
+      
+      [DMCC]
+        Verze: {}
+        Režim: {}
+        Doba běhu: {}d {}h {}m {}s
+        Využití JVM paměti: {}/{} MiB
+    discord_part: |
+      [Discord]
+        Stav připojení: {}
+        Tag uživatele bota: {}
+        Latence heartbeat: {}ms
+        Latence REST požadavku: {}ms
+    server_part:
+      base: |
+        [DMCC Server]
+          Online klienti: ({}/{})
+        {}
+      no_clients: "- Žádní DMCC klienti nejsou online."
+      clients: |
+        - [{}]
+              Latence připojení: {}ms
+              Verze Minecraftu: {}
+              Online hráči: ({}/{})
+              {}
+              Celkový počet hráčů: {}
+              TPS serveru: {}
+              MSPT serveru: {}
+              Doba běhu: {}d {}h {}m {}s
+              Využití JVM paměti: {}/{} MiB
+    client_part: |
+      [DMCC Client]
+        Stav připojení: {}
+        Latence připojení: {}ms
+        Verze Minecraftu: {}
+        Online hráči: ({}/{})
+        {}
+        Celkový počet hráčů: {}
+        TPS serveru: {}
+        MSPT serveru: {}
+    players: "- [{}ms] {}"
+    no_players: "- Žádní hráči online."
+  execute:
+    description: "Spustí DMCC příkaz na vzdáleném klientovi"
+    args_desc:
+      at: "Název cílového serveru nebo \"all_online_clients\""
+      command: "DMCC příkaz k provedení"
+    executing: "Spouštím \"{}\" na {}..."
+    client_offline: "DMCC klient \"{}\" je offline."
+    timeout: "Spuštění příkazu na \"{}\" vypršelo."
+    invalid_target: "Neplatný cílový DMCC klient: \"{}\". Dostupní klienti: {}"
+    all_online_clients: "všichni online DMCC klienti"
+    no_online_clients: "Žádní DMCC klienti nejsou online."
+  log:
+    description: "Načte soubor s logy"
+    args_desc:
+      file: "Název souboru s logy"
+    file_not_found: "Log soubor \"{}\" nebyl nalezen."
+    success: "Log soubor \"{}\" úspěšně načten!"
+    list_failed: "Selhalo načtení seznamu log souborů."
+    read_failed: "Selhalo čtení log souboru: {}"
+    saved_to_cache: "Log soubor uložen do: {}"
+    save_failed: "Uložení log souboru do cache selhalo: {}"
+    terminal_not_supported: "Načítání log souborů v terminálu není podporováno. Přistupte přímo do adresáře \"./logs\"."
+  stats:
+    description: "Zobrazí statistiky Minecraftu"
+    args_desc:
+      type: "Typ statistiky"
+      stat: "Název statistiky"
+    server_not_ready: "Minecraft server ještě není připraven."
+    dir_not_found: "Adresář statistik nebyl nalezen."
+    read_failed: "Selhalo čtení statistik: {}"
+    no_stats: "Žádné statistiky pro {0} {1}."
+    stats: "Statistiky"
+    colon: ": "
+  whitelist:
+    description: "Přidá hráče na whitelist serveru"
+    args_desc:
+      player: "Jméno hráče"
+  link:
+    description: "Propojí vaše Minecraft hráče s Discord uživatelem"
+    args_desc:
+      code: "Ověřovací kód z Minecraftu"
+    player_only: "Tento příkaz může použít pouze Minecraft hráč."
+    discord_only: "Tento příkaz může použít pouze Discord uživatel."
+    not_available: "Tento příkaz není v aktuálním režimu k dispozici."
+    invalid_code: "Neplatný nebo vypršený ověřovací kód."
+    success: "Úspěšně propojeno s Minecraft hráčem \"{}\"!"
+    uuid_already_linked: "Propojení selhalo. Tento Minecraft hráč je již propojen s jiným Discord uživatelem."
+  unlink:
+    description: "Odpojí vašeho Minecraft hráče od Discord uživatele"
+    not_available: "Tento příkaz může použít pouze Minecraft hráč nebo Discord uživatel."
+    success_minecraft: "Byli jste odpojeni od Discord uživatele \"{}\"!"
+    success_discord: "Úspěšně odpojeno {0} Minecraft hráč(ů) od Discord uživatele \"{1}\"!"
+    not_linked: "Nenalezena žádná propojená účty."
+  links:
+    description: "Zobrazí všechny záznamy o propojení účtů"
+    no_links: "Nenalezeny žádné záznamy o propojení účtů."
+    title: "Záznamy o propojení účtů"
+    total: "Celkem: {} propojených Minecraft hráčů napříč {} Discord uživateli."
+
+main:
+  init:
+    headless:
+      detected: "Nebyl detekován žádný konzolový výstup, což naznačuje, že DMCC běží v headless režimu."
+      not_supported: "DMCC nepodporuje spuštění dvojklikem na JAR soubor."
+      usage: "Spusťte DMCC z příkazové řádky: \"java -jar Discord-MC-Chat-{}.jar\"."
+    info_minecraft_env: "Inicializuji DMCC v Minecraft prostředí..."
+    info_standalone_env: "Inicializuji DMCC v samostatném (standalone) prostředí..."
+    minecraft_reload_prompt: "Opravte výše uvedené chyby a poté spusťte \"/dmcc reload\"."
+    standalone_reload_prompt: "Opravte výše uvedené chyby a poté znovu načtěte DMCC."
+    success: "DMCC úspěšně inicializováno!"
+    failed: "Při inicializaci DMCC došlo k chybě."
+  shutdown:
+    okhttp_failed: "Při ukončování OkHttpClient došlo k chybě."
+    success: "DMCC úspěšně vypnuto!"
+    failed: "Při vypínání DMCC došlo k chybě."
+
+discord:
+  manager:
+    token_missing: "Token Discord bota není nastaven v konfiguračním souboru."
+    init_interrupted: "Inicializace Discord bota byla přerušena."
+    waiting_ready: "Čekám, až bude JDA připravena. Může to trvat až 1 minutu..."
+    ready: "Discord bot je připraven. Přihlášen jako tag: \"{}\""
+    registering_commands: "Registruji Discord DMCC příkazy. Může to chvíli trvat..."
+    commands_success: "Discord DMCC příkazy úspěšně zaregistrovány!"
+    commands_failed: "Registrace Discord DMCC příkazů selhala."
+    presence_update_failed: "Aktualizace presence bota selhala: {}"
+    channel_update_failed: "Aktualizace metadat Discord kanálu selhala: {}"
+    channel_identifier_missing: "Discord kanál není nastaven pro {}."
+    channel_not_found: "Discord kanál nenalezen: \"{}\""
+    channel_cannot_talk: "Nelze odesílat zprávy do Discord textového kanálu: \"{}\""
+    insufficient_permission: "Discord bot má nedostatečná oprávnění v kanálu {}: \"{}\""
+    broadcast_failed: "Rozeslání zprávy do Discord kanálu selhalo. Důvod: {}"
+    invalid_console_filter_regex: "Neplatný regex pro filtraci console forwarding: {}"
+  command:
+    reply_failed: "Odeslání odpovědi na Discord příkaz selhalo."
+    reply_failed_detail: "Toto je očekávané chování pro příkazy reload/shutdown."
+  message_parser:
+    click_to_open_link: "Klikněte pro otevření odkazu"
+    unknown_user: "Neznámý uživatel"
+    relative:
+      past: "{} {} předtím"
+      future: "za {} {}"
+      units:
+        second:
+          one: "sekunda"
+          other: "sekund"
+        minute:
+          one: "minuta"
+          other: "minut"
+        hour:
+          one: "hodina"
+          other: "hodin"
+        day:
+          one: "den"
+          other: "dnů"
+        month:
+          one: "měsíc"
+          other: "měsíců"
+        year:
+          one: "rok"
+          other: "let"
+
+server:
+  discord_init_failed: "Inicializace Discord správce selhala. Přerušení spuštění DMCC Serveru."
+  startup_interrupted: "Spuštění DMCC Serveru bylo přerušeno."
+  network:
+    listening: "DMCC Server naslouchá na portu {}."
+    bind_failed: "Připojení k portu {} selhalo."
+    reject: "Odmítnuto připojení DMCC klienta \"{}\". Důvod: {}"
+    auth_success: "DMCC klient úspěšně autentizován: \"{}\""
+    client_disconnected_normal: "DMCC klient se odpojil: \"{}\""
+    client_timeout: "DMCC klient překročil časový limit, odpojuji: \"{}\""
+    unexpected_packet: "Ignoruji neočekávaný paket od DMCC klienta \"{}\": {}"
+    disconnect_reasons:
+      single_server_mode: "DMCC Server běží v režimu single_server, odmítá další připojení."
+      not_whitelisted: "Název \"{}\" není na whitelistu."
+      duplicate_name: "Jiný DMCC klient se stejným názvem \"{}\" je již připojen."
+      version_mismatch: "{} nesoulad verzí. Klient: {}, Server: {}"
+      auth_failed: "Autentizace selhala. Zkontrolujte sdílené tajemství."
+    exception_caught: "Netty zachytil výjimku."
+
+client:
+  startup_interrupted: "Spuštění DMCC klienta bylo přerušeno."
+  network:
+    connecting: "Připojuji se k DMCC Serveru na {}:{}..."
+    connected: "Připojeno k DMCC Serveru!"
+    connect_failed: "Připojení k DMCC Serveru selhalo."
+    disconnected_generic: "Odpojeno od DMCC Serveru."
+    disconnected_reason: "Odpojeno od DMCC Serveru. Důvod: {}"
+    reconnecting: "Znovu se připojuji k DMCC Serveru..."
+    reconnect_failed: "Opětovné připojení selhalo. Zkusím znovu za {} sekund."
+    send_while_disconnected: "Pokus o odeslání paketu během odpojení: {}"
+    unexpected_packet: "Ignoruji neočekávaný paket od DMCC Serveru: {}"
+  console_log_tailer:
+    poll_failed: "Načítání logu z konzole selhalo: {}"
+
+utils:
+  config:
+    mode:
+      set: "Provozní režim nastaven na \"{}\"."
+      not_found: "Soubor s nastavením režimu nebyl nalezen nebo je prázdný."
+      creating: "Vytvářím výchozí soubor na \"{}\"."
+      edit_prompt: "Upravte prosím \"{}\" před opětovným načtením DMCC."
+      validation_failed: "Validace souboru mode.yml selhala."
+      invalid_selection: "Neplatný režim \"{}\" vybrán v \"{}\"."
+      available_modes: "Dostupné režimy: \"single_server\", \"multi_server_client\""
+      load_failed: "Načtení nebo vytvoření mode.yml selhalo."
+    config:
+      not_found: "Konfigurační soubor nebyl nalezen nebo je prázdný."
+      creating: "Vytvářím výchozí soubor na \"{}\"."
+      edit_prompt: "Upravte prosím \"{}\" před opětovným načtením DMCC."
+      mode_mismatch: "Zjištěn nesoulad režimu."
+      mode_mismatch_detail: "Očekávaný režim je \"{}\" (z mode.yml nebo prostředí), ale config.yml je pro \"{}\"."
+      backup_prompt: "Zálohujte a smažte existující config.yml, aby DMCC mohl vytvořit nový a správný."
+      validation_failed: "Validace config.yml selhala."
+      load_failed: "Načtení nebo validace konfigurace selhala."
+      path_not_found: "Cesta ke konfiguraci nenalezena: {}"
+  yaml:
+    unmodified: "Konfigurační soubor nebyl změněn oproti výchozímu šabloně."
+    version_mismatch: "Neshoda verzí konfigurace. Očekávaná verze: {}, nalezená verze: {}"
+    upgrade_prompt: "Prosím aktualizujte konfigurační soubor podle dokumentace DMCC."
+    unrecognized_keys: "Váš konfigurační soubor obsahuje následující nerozpoznané klíče:"
+    missing_keys: "Váš konfigurační soubor postrádá následující povinné klíče:"
+    type_mismatch: "Váš konfigurační soubor má nesprávné typy hodnot:"
+    unchanged_keys: "Následující konfigurační klíče zůstaly nezměněny oproti šabloně:"
+  i18n:
+    language_not_supported: "Jazyk \"{}\" není podporován."
+    contribute: "Přispějte k překladům DMCC!"
+    contribute_link: "Více informací: https://github.com/Xujiayao/Discord-MC-Chat#Contributing"
+    check_failed: "Načítání jazykových zdrojů selhalo."
+    load_failed: "Načítání překladů DMCC z {} selhalo."
+    custom_not_found: "Soubor s vlastními zprávami pro \"{}\" nebyl nalezen nebo je prázdný."
+    custom_creating: "Vytvářím výchozí soubor na \"{}\"."
+    using_default: "DMCC bude nadále používat výchozí hodnoty."
+    custom_edit_prompt: "Pokud chcete upravit zprávy, upravte prosím \"{}\" a znovu načtěte DMCC."
+    custom_validation_failed: "Validace souboru s vlastními zprávami selhala."
+    custom_load_failed: "Načítání vlastních zpráv selhalo."
+    fully_loaded: "Jazykové zdroje DMCC úspěšně načteny!"
+
+linking:
+  manager:
+    loaded: "Načteno {} záznam(ů) o propojení účtů."
+    load_failed: "Načtení záznamů o propojení účtů selhalo."
+    saved: "Záznamy o propojení účtů uloženy do souboru."
+    save_failed: "Uložení záznamů o propojení účtů selhalo."
+    linked: "Propojen Discord uživatel {} ({}) s Minecraft hráčem {} ({})."
+    unlinked_discord: "Odpojeno {0} Minecraft hráč(ů) od Discord uživatele {1} ({2})."
+    unlinked_minecraft: "Odpojeno Minecraft hráč {} ({}) od Discord uživatele {} ({})."
+    uuid_already_linked: "Propojení selhalo. Minecraft hráč {} ({}) je již propojen s Discord uživatelem {} ({})."
+  verification:
+    generated: "Vygenerován ověřovací kód pro propojení účtů pro Minecraft hráče {}."
+    refreshed: "Obnovená platnost ověřovacího kódu pro Minecraft hráče {}."
+    consumed: "Minecraft hráč {} dokončil propojení účtů."
+  op_sync:
+    resolve_failed: "Selhalo získání OP úrovně pro Discord uživatele {}: {}"
+  message:
+    not_linked_1: "Nejste propojeni s Discord uživatelem. Použijte "
+    not_linked_2: " příkaz na Discordu pro dokončení propojení. Kód vyprší za 5 minut. Spusťte "
+    not_linked_3: " příkaz ve hře pro obnovení platnosti kódu."
+    already_linked_1: "Již jste propojeni s Discord uživatelem \"{}\". Spusťte "
+    already_linked_2: " příkaz pro odpojení."
+  tooltip:
+    click_to_copy: "Klikněte pro zkopírování do schránky"
+    click_to_run: "Klikněte pro vyplnění příkazu"
+
+minecraft:
+  translations:
+    loaded: "Načteno {}/{} Minecraft \"{}\" překladů."
+    init_failed: "Inicializace Minecraft překladů selhala."
+    key_not_found: "Překlad pro klíč \"{}\" nenalezen, vracím klíč jako výsledek."
+    cache_loaded: "Načteny Minecraft \"{}\" překlady z cache pro verzi {}."
+    cache_read_failed: "Čtení cache Minecraft překladů selhalo, pokusím se znovu stáhnout."
+    downloading: "Stahuji Minecraft \"{}\" překlady pro verzi {}..."
+    downloaded: "Stáhnuto a uloženo do cache Minecraft \"{}\" překlady, velikost souboru: {} bajtů"
+    download_failed: "Stahování nebo uložení do cache Minecraft \"{}\" překladů pro verzi {} selhalo."
+    official_load_failed: "Neočekávaná chyba při načítání oficiálních Minecraft překladů."
+    mod_load_failed: "Načítání překladů z mod JAR selhalo."
+    jar_open_failed: "Nelze otevřít JAR soubor."
+    mods_scan_failed: "Chyba při skenování adresáře s mody."
+    datapack_load_failed: "Načítání překladů z datapacku selhalo."
