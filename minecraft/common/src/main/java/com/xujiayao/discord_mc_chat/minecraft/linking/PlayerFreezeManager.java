@@ -15,6 +15,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * Chat and commands are deliberately left alone: a frozen player must still be able to ask for help,
  * run {@code /dmcc link} and read the reply that tells them what to do.
  * <p>
+ * Frozen players are also made invulnerable for as long as they are held, so monsters neither pick
+ * them as a target nor hurt them. Their game mode is never touched: servers do not all default to
+ * survival, and a frozen player must not be moved in or out of a game mode by DMCC.
+ * <p>
  * The whole state is in memory and disappears with the server process, which is the point: the
  * decision is taken per join, and a DMCC server that is not reachable never freezes anyone.
  *
@@ -40,12 +44,22 @@ public final class PlayerFreezeManager {
 			if (existing != null && existing.level == player.level()) {
 				return existing;
 			}
-			return new Anchor(player);
+			// An anchor that is replaced (another dimension) still remembers what invulnerability
+			// looked like before DMCC touched it
+			Anchor anchor = new Anchor(player, existing != null ? existing.wasInvulnerable : player.isPermanentlyInvulnerable());
+			player.setPermanentlyInvulnerable(true);
+			return anchor;
 		});
 	}
 
-	public static void unfreeze(UUID uuid) {
-		FROZEN.remove(uuid);
+	/**
+	 * Releases a player and puts their invulnerability back the way it was before they were frozen.
+	 */
+	public static void unfreeze(ServerPlayer player) {
+		Anchor anchor = FROZEN.remove(player.getUUID());
+		if (anchor != null) {
+			player.setPermanentlyInvulnerable(anchor.wasInvulnerable);
+		}
 	}
 
 	public static boolean isFrozen(ServerPlayer player) {
@@ -84,15 +98,17 @@ public final class PlayerFreezeManager {
 		private final double z;
 		private final float yRot;
 		private final float xRot;
+		private final boolean wasInvulnerable;
 		private long lastCorrectionAt;
 
-		private Anchor(ServerPlayer player) {
+		private Anchor(ServerPlayer player, boolean wasInvulnerable) {
 			this.level = player.level();
 			this.x = player.getX();
 			this.y = player.getY();
 			this.z = player.getZ();
 			this.yRot = player.getYRot();
 			this.xRot = player.getXRot();
+			this.wasInvulnerable = wasInvulnerable;
 		}
 	}
 }

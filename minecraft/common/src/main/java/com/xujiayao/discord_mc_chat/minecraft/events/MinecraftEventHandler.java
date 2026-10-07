@@ -75,7 +75,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -100,37 +102,49 @@ public final class MinecraftEventHandler {
 	private static final long COMMAND_RESPONSE_POLL_INTERVAL_MILLIS = 100L;
 	private static final int COMMAND_RESPONSE_MAX_POLLS = 49;
 
+	// A player who is about to be kicked is held in place for a moment first. A disconnect that
+	// reaches the client while it is still loading the world is sometimes reported to the player as a
+	// bare "connection lost" instead of the reason it was sent with, which would hide the
+	// verification code they need; letting the client get into the world first makes the reason show
+	// up, and the player is frozen while they wait so they cannot touch anything in the meantime.
+	private static final long KICK_DELAY_MILLIS = 2_000L;
+
+	// The players that are only waiting for their kick to go out, mapped to the reason to send. A
+	// player who links an account inside the delay is removed here and simply stays.
+	private static final Map<UUID, String> PENDING_KICKS = new ConcurrentHashMap<>();
+
 	private static MinecraftServer serverInstance;
 	private static MinecraftServer opsServerCache;
 	private static RegistryOps<JsonElement> opsCache;
 
-	// Capacity: a single reusable scheduler thread. Invalidation: shut down once the Minecraft
-	// server has stopped; reset to null so a subsequent server start builds a fresh executor.
-	private static ScheduledExecutorService commandResponseTimeoutExecutor;
+	// Capacity: a single reusable scheduler thread, shared by the console response timeout and the
+	// delayed kick of an unlinked player. Invalidation: shut down once the Minecraft server has
+	// stopped; reset to null so a subsequent server start builds a fresh executor.
+	private static ScheduledExecutorService handlerScheduler;
 
 	private MinecraftEventHandler() {
 	}
 
 	/**
-	 * Returns the lazily created bound polling scheduler. Cancelled tasks leave the queue
+	 * Returns the lazily created scheduler of this handler. Cancelled tasks leave the queue
 	 * immediately so a burst of console commands cannot pile up triggered tasks.
 	 */
-	private static synchronized ScheduledExecutorService commandResponseTimeoutExecutor() {
-		if (commandResponseTimeoutExecutor == null) {
+	private static synchronized ScheduledExecutorService handlerScheduler() {
+		if (handlerScheduler == null) {
 			ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
 					1,
-					ExecutorServiceUtils.newThreadFactory("DMCC-Command-Timeout"));
+					ExecutorServiceUtils.newThreadFactory("DMCC-Handler"));
 			executor.setRemoveOnCancelPolicy(true);
-			commandResponseTimeoutExecutor = executor;
+			handlerScheduler = executor;
 		}
-		return commandResponseTimeoutExecutor;
+		return handlerScheduler;
 	}
 
 	// Shuts down the DMCC executors owned by this handler so no DMCC thread outlives the server.
 	private static synchronized void shutdownExecutorHelpers() {
-		if (commandResponseTimeoutExecutor != null) {
-			commandResponseTimeoutExecutor.shutdownNow();
-			commandResponseTimeoutExecutor = null;
+		if (handlerScheduler != null) {
+			handlerScheduler.shutdownNow();
+			handlerScheduler = null;
 		}
 	}
 
@@ -201,6 +215,7 @@ public final class MinecraftEventHandler {
 		EventManager.register(MinecraftEvents.ServerStopped.class, _ -> {
 			// Nothing is held in place once the server is gone
 			PlayerFreezeManager.clear();
+			PENDING_KICKS.clear();
 
 			// Blocks until shutdown is complete
 			DMCC.shutdown();
@@ -224,7 +239,8 @@ public final class MinecraftEventHandler {
 
 		EventManager.register(MinecraftEvents.PlayerQuit.class, event -> {
 			// The decision is taken again on the next join, so a leaving player is never remembered
-			PlayerFreezeManager.unfreeze(event.serverPlayer().getUUID());
+			PlayerFreezeManager.unfreeze(event.serverPlayer());
+			PENDING_KICKS.remove(event.serverPlayer().getUUID());
 
 			Map<String, String> placeholders = Map.of(
 					"player_name", event.serverPlayer().getName().getString(),
@@ -448,11 +464,15 @@ public final class MinecraftEventHandler {
 					UUID uuid = UUID.fromString(event.playerUuid());
 					ServerPlayer player = serverInstance.getPlayerList().getPlayer(uuid);
 					// Only a successful link releases a player: being unlinked while playing never
-					// freezes or kicks anyone, the next join takes care of that.
-					if (player != null && event.linked() && PlayerFreezeManager.isFrozen(player)) {
-						PlayerFreezeManager.unfreeze(uuid);
-						player.sendSystemMessage(Component.literal(
-								I18nManager.getDmccTranslation("linking.require_linking.released")));
+					// freezes or kicks anyone, the next join takes care of that. A player who links
+					// inside the delay before their kick also stays.
+					if (player != null && event.linked()) {
+						PENDING_KICKS.remove(uuid);
+						if (PlayerFreezeManager.isFrozen(player)) {
+							PlayerFreezeManager.unfreeze(player);
+							player.sendSystemMessage(Component.literal(
+									I18nManager.getDmccTranslation("linking.require_linking.released")));
+						}
 					}
 				} catch (Exception ignored) {
 				}
@@ -692,7 +712,7 @@ public final class MinecraftEventHandler {
 		if (maxAttempts <= 0 || !rconConsoleSource.getCommandResponse().isEmpty()) {
 			// Output already produced, or poll budget exhausted: wait one more interval before
 			// collecting so a late first line is still included.
-			commandResponseTimeoutExecutor().schedule(
+			handlerScheduler().schedule(
 					() -> {
 						event.sender().reply(rconConsoleSource.getCommandResponse());
 						event.completionFuture().complete(null);
@@ -703,7 +723,7 @@ public final class MinecraftEventHandler {
 		}
 
 		// Re-scheduling every round instead of looping keeps the executor free for other commands
-		commandResponseTimeoutExecutor().schedule(
+		handlerScheduler().schedule(
 				() -> awaitCommandResponse(rconConsoleSource, maxAttempts - 1, event),
 				COMMAND_RESPONSE_POLL_INTERVAL_MILLIS,
 				TimeUnit.MILLISECONDS);
@@ -915,8 +935,19 @@ public final class MinecraftEventHandler {
 		if (joinCheck && Constants.REQUIRE_LINKING_ENABLED.get()) {
 			String action = Constants.UNLINKED_PLAYER_ACTION.get();
 			if ("kick".equals(action)) {
-				player.connection.disconnect(Component.literal(
-						I18nManager.getDmccTranslation("linking.require_linking.kick", code)));
+				String reason = I18nManager.getDmccTranslation("linking.require_linking.kick", code);
+				// The player is held until the kick actually goes out, and the reason is put in chat
+				// as well: the disconnect screen is the client's to draw, the chat line is not.
+				PlayerFreezeManager.freeze(player);
+				player.sendSystemMessage(Component.literal(reason));
+
+				UUID uuid = player.getUUID();
+				PENDING_KICKS.put(uuid, reason);
+				try {
+					handlerScheduler().schedule(() -> kickPendingPlayer(uuid), KICK_DELAY_MILLIS, TimeUnit.MILLISECONDS);
+				} catch (RejectedExecutionException ignored) {
+					// The server is already stopping, so there is nothing left to kick anyone from
+				}
 				return;
 			}
 			if ("freeze".equals(action)) {
@@ -927,6 +958,29 @@ public final class MinecraftEventHandler {
 		}
 
 		player.sendSystemMessage(buildNotLinkedMessage(code));
+	}
+
+	/**
+	 * Runs the kick that was held back for a player who joined without a linked account. Called from
+	 * the handler scheduler, so the disconnect itself is handed to the server thread.
+	 */
+	private static void kickPendingPlayer(UUID uuid) {
+		MinecraftServer server = serverInstance;
+		if (server == null) {
+			PENDING_KICKS.remove(uuid);
+			return;
+		}
+		try {
+			server.execute(() -> {
+				String reason = PENDING_KICKS.remove(uuid);
+				ServerPlayer player = server.getPlayerList().getPlayer(uuid);
+				if (reason != null && player != null) {
+					player.connection.disconnect(Component.literal(reason));
+				}
+			});
+		} catch (RejectedExecutionException ignored) {
+			// The server is already stopping, so there is nothing left to kick anyone from
+		}
 	}
 
 	private static ResponsePacket buildInfoResponse(MinecraftServer server) {
