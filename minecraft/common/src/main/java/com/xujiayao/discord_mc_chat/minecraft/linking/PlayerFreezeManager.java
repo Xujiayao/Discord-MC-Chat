@@ -19,6 +19,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * them as a target nor hurt them. Their game mode is never touched: servers do not all default to
  * survival, and a frozen player must not be moved in or out of a game mode by DMCC.
  * <p>
+ * That flag is not private state: {@code Entity} saves it into the player data as the
+ * {@code Invulnerable} tag and reads it back on the next login, so a release that is missed (a crash
+ * or a save while the player is still held) would leave the player untouchable forever. It is
+ * therefore always put back when the player is released or leaves, and cleared once more on join in
+ * case an earlier build left it behind.
+ * <p>
  * The whole state is in memory and disappears with the server process, which is the point: the
  * decision is taken per join, and a DMCC server that is not reachable never freezes anyone.
  *
@@ -59,6 +65,18 @@ public final class PlayerFreezeManager {
 		Anchor anchor = FROZEN.remove(player.getUUID());
 		if (anchor != null) {
 			player.setPermanentlyInvulnerable(anchor.wasInvulnerable);
+		}
+	}
+
+	/**
+	 * Clears what an earlier login may have left behind. Nobody can be held at the moment they join,
+	 * and the invulnerable flag travels with the player data, so this is the one place where the
+	 * leftovers of a freeze that never got released can be undone.
+	 */
+	public static void repairOnJoin(ServerPlayer player) {
+		FROZEN.remove(player.getUUID());
+		if (player.isPermanentlyInvulnerable()) {
+			player.setPermanentlyInvulnerable(false);
 		}
 	}
 

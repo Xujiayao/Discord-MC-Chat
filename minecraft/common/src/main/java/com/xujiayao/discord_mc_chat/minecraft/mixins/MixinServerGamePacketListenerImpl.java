@@ -4,13 +4,9 @@ import com.xujiayao.discord_mc_chat.Constants;
 import com.xujiayao.discord_mc_chat.events.EventManager;
 import com.xujiayao.discord_mc_chat.minecraft.events.MinecraftEvents;
 import com.xujiayao.discord_mc_chat.minecraft.linking.PlayerFreezeManager;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.LastSeenMessages;
 import net.minecraft.network.chat.PlayerChatMessage;
-import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
 import net.minecraft.network.protocol.game.ServerboundChatCommandSignedPacket;
-import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
-import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import org.spongepowered.asm.mixin.Mixin;
@@ -55,11 +51,12 @@ final class MixinServerGamePacketListenerImpl {
 	/**
 	 * Everything a frozen player could use to change the world, their inventory or another entity.
 	 * Chat and commands are not in this list on purpose: the reply that explains how to link has to
-	 * reach the player, and {@code /dmcc link} has to stay usable. Breaking and placing blocks are
-	 * injected separately, because those two are also undone on the client.
+	 * reach the player, and {@code /dmcc link} has to stay usable.
 	 */
 	@Inject(method = {
+			"handlePlayerAction",
 			"handleUseItem",
+			"handleUseItemOn",
 			"handleAttack",
 			"handleInteract",
 			"handleSetCarriedItem",
@@ -72,41 +69,11 @@ final class MixinServerGamePacketListenerImpl {
 			"handlePlayerInput",
 			"handlePlayerCommand",
 			"handleTeleportToEntityPacket"
-	}, at = @At("HEAD"), cancellable = true, require = 13)
+	}, at = @At("HEAD"), cancellable = true, require = 15)
 	private void dmccBlockFrozenActions(CallbackInfo ci) {
 		if (PlayerFreezeManager.isFrozen(player)) {
 			ci.cancel();
 		}
-	}
-
-	/**
-	 * A dropped block change has to be undone on the client as well: the client predicts the block
-	 * being broken or placed, and without this correction the world would only look right again
-	 * after a relog.
-	 */
-	@Inject(method = "handlePlayerAction", at = @At("HEAD"), cancellable = true)
-	private void dmccBlockFrozenPlayerAction(ServerboundPlayerActionPacket packet, CallbackInfo ci) {
-		if (PlayerFreezeManager.isFrozen(player)) {
-			switch (packet.getAction()) {
-				case START_DESTROY_BLOCK, ABORT_DESTROY_BLOCK, STOP_DESTROY_BLOCK ->
-						resendBlock(packet.getPos());
-				default -> {
-				}
-			}
-			ci.cancel();
-		}
-	}
-
-	@Inject(method = "handleUseItemOn", at = @At("HEAD"), cancellable = true)
-	private void dmccBlockFrozenUseItemOn(ServerboundUseItemOnPacket packet, CallbackInfo ci) {
-		if (PlayerFreezeManager.isFrozen(player)) {
-			resendBlock(packet.hitResult().getBlockPos());
-			ci.cancel();
-		}
-	}
-
-	private void resendBlock(BlockPos pos) {
-		player.connection.send(new ClientboundBlockUpdatePacket(player.level(), pos));
 	}
 
 	@Inject(method = "performUnsignedChatCommand", at = @At("HEAD"))

@@ -225,6 +225,10 @@ public final class MinecraftEventHandler {
 		});
 
 		EventManager.register(MinecraftEvents.PlayerJoin.class, event -> {
+			// Nobody can be held the moment they join, so any leftover of an earlier freeze (the
+			// invulnerable flag travels with the player data) is dropped first
+			PlayerFreezeManager.repairOnJoin(event.serverPlayer());
+
 			Map<String, String> placeholders = Map.of(
 					"player_name", event.serverPlayer().getName().getString(),
 					"display_name", event.serverPlayer().getDisplayName().getString()
@@ -936,10 +940,11 @@ public final class MinecraftEventHandler {
 			String action = Constants.UNLINKED_PLAYER_ACTION.get();
 			if ("kick".equals(action)) {
 				String reason = I18nManager.getDmccTranslation("linking.require_linking.kick", code);
-				// The player is held until the kick actually goes out, and the reason is put in chat
-				// as well: the disconnect screen is the client's to draw, the chat line is not.
+				// The player is held for a moment so the client has time to finish loading the world:
+				// a disconnect that lands before that is sometimes shown as a bare "connection lost",
+				// hiding the reason (and the verification code) the player needs. Holding is enough
+				// on its own, nothing is added to chat.
 				PlayerFreezeManager.freeze(player);
-				player.sendSystemMessage(Component.literal(reason));
 
 				UUID uuid = player.getUUID();
 				PENDING_KICKS.put(uuid, reason);
@@ -975,6 +980,10 @@ public final class MinecraftEventHandler {
 				String reason = PENDING_KICKS.remove(uuid);
 				ServerPlayer player = server.getPlayerList().getPlayer(uuid);
 				if (reason != null && player != null) {
+					// The player data is written while the player is removed, so the hold has to be
+					// released before disconnecting, otherwise the invulnerable flag would be saved
+					// and the player would stay untouchable on their next login
+					PlayerFreezeManager.unfreeze(player);
 					player.connection.disconnect(Component.literal(reason));
 				}
 			});
