@@ -13,6 +13,7 @@
     "MixinReloadableServerResources",
     "MixinSayCommand",
     "MixinServerGamePacketListenerImpl",
+    "MixinServerLoginPacketListenerImpl",
     "MixinServerPlayer",
     "MixinTellRawCommand"
   ],

@@ -17,6 +17,7 @@ import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.events.CoreEvents;
 import com.xujiayao.discord_mc_chat.events.EventManager;
 import com.xujiayao.discord_mc_chat.minecraft.commands.MinecraftCommands;
+import com.xujiayao.discord_mc_chat.minecraft.linking.LoginGate;
 import com.xujiayao.discord_mc_chat.minecraft.linking.PlayerFreezeManager;
 import com.xujiayao.discord_mc_chat.minecraft.translations.TranslationManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
@@ -75,9 +76,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -102,24 +101,13 @@ public final class MinecraftEventHandler {
 	private static final long COMMAND_RESPONSE_POLL_INTERVAL_MILLIS = 100L;
 	private static final int COMMAND_RESPONSE_MAX_POLLS = 49;
 
-	// A player who is about to be kicked is held in place for a moment first. A disconnect that
-	// reaches the client while it is still loading the world is sometimes reported to the player as a
-	// bare "connection lost" instead of the reason it was sent with, which would hide the
-	// verification code they need; letting the client get into the world first makes the reason show
-	// up, and the player is frozen while they wait so they cannot touch anything in the meantime.
-	private static final long KICK_DELAY_MILLIS = 2_000L;
-
-	// The players that are only waiting for their kick to go out, mapped to the reason to send. A
-	// player who links an account inside the delay is removed here and simply stays.
-	private static final Map<UUID, String> PENDING_KICKS = new ConcurrentHashMap<>();
-
 	private static MinecraftServer serverInstance;
 	private static MinecraftServer opsServerCache;
 	private static RegistryOps<JsonElement> opsCache;
 
-	// Capacity: a single reusable scheduler thread, shared by the console response timeout and the
-	// delayed kick of an unlinked player. Invalidation: shut down once the Minecraft server has
-	// stopped; reset to null so a subsequent server start builds a fresh executor.
+	// Capacity: a single reusable scheduler thread, shared by the console response timeouts.
+	// Invalidation: shut down once the Minecraft server has stopped; reset to null so a subsequent
+	// server start builds a fresh executor.
 	private static ScheduledExecutorService handlerScheduler;
 
 	private MinecraftEventHandler() {
@@ -215,7 +203,6 @@ public final class MinecraftEventHandler {
 		EventManager.register(MinecraftEvents.ServerStopped.class, _ -> {
 			// Nothing is held in place once the server is gone
 			PlayerFreezeManager.clear();
-			PENDING_KICKS.clear();
 
 			// Blocks until shutdown is complete
 			DMCC.shutdown();
@@ -244,7 +231,6 @@ public final class MinecraftEventHandler {
 		EventManager.register(MinecraftEvents.PlayerQuit.class, event -> {
 			// The decision is taken again on the next join, so a leaving player is never remembered
 			PlayerFreezeManager.unfreeze(event.serverPlayer());
-			PENDING_KICKS.remove(event.serverPlayer().getUUID());
 
 			Map<String, String> placeholders = Map.of(
 					"player_name", event.serverPlayer().getName().getString(),
@@ -415,6 +401,12 @@ public final class MinecraftEventHandler {
 		// ===== Account Linking Response Events =====
 
 		EventManager.register(CoreEvents.LinkCodeResponseEvent.class, event -> {
+			// A player who is still logging in has no ServerPlayer yet: the answer releases the login
+			// that is waiting for it, and must not be looked up in the player list
+			if (LoginGate.onResponse(event)) {
+				return;
+			}
+
 			if (serverInstance == null) return;
 
 			serverInstance.execute(() -> {
@@ -468,10 +460,8 @@ public final class MinecraftEventHandler {
 					UUID uuid = UUID.fromString(event.playerUuid());
 					ServerPlayer player = serverInstance.getPlayerList().getPlayer(uuid);
 					// Only a successful link releases a player: being unlinked while playing never
-					// freezes or kicks anyone, the next join takes care of that. A player who links
-					// inside the delay before their kick also stays.
+					// freezes or kicks anyone, the next join takes care of that.
 					if (player != null && event.linked()) {
-						PENDING_KICKS.remove(uuid);
 						if (PlayerFreezeManager.isFrozen(player)) {
 							PlayerFreezeManager.unfreeze(player);
 							player.sendSystemMessage(Component.literal(
@@ -933,63 +923,17 @@ public final class MinecraftEventHandler {
 
 	/**
 	 * Applies the configured policy to a player who joined without a linked Discord account. Only the
-	 * join check is enforced: a player who is already playing is never frozen or kicked later on.
+	 * join check is enforced: a player who is already playing is never frozen later on. The kick
+	 * policy never reaches this method, it is applied while the player is still logging in.
 	 */
 	private static void holdUnlinkedPlayer(ServerPlayer player, String code, boolean joinCheck) {
-		if (joinCheck && Constants.REQUIRE_LINKING_ENABLED.get()) {
-			String action = Constants.UNLINKED_PLAYER_ACTION.get();
-			if ("kick".equals(action)) {
-				String reason = I18nManager.getDmccTranslation("linking.require_linking.kick", code);
-				// The player is held for a moment so the client has time to finish loading the world:
-				// a disconnect that lands before that is sometimes shown as a bare "connection lost",
-				// hiding the reason (and the verification code) the player needs. Holding is enough
-				// on its own, nothing is added to chat.
-				PlayerFreezeManager.freeze(player);
-
-				UUID uuid = player.getUUID();
-				PENDING_KICKS.put(uuid, reason);
-				try {
-					handlerScheduler().schedule(() -> kickPendingPlayer(uuid), KICK_DELAY_MILLIS, TimeUnit.MILLISECONDS);
-				} catch (RejectedExecutionException ignored) {
-					// The server is already stopping, so there is nothing left to kick anyone from
-				}
-				return;
-			}
-			if ("freeze".equals(action)) {
-				PlayerFreezeManager.freeze(player);
-				player.sendSystemMessage(Component.literal(
-						I18nManager.getDmccTranslation("linking.require_linking.frozen")));
-			}
+		if (joinCheck && Constants.REQUIRE_LINKING_ENABLED.get() && "freeze".equals(Constants.UNLINKED_PLAYER_ACTION.get())) {
+			PlayerFreezeManager.freeze(player);
+			player.sendSystemMessage(Component.literal(
+					I18nManager.getDmccTranslation("linking.require_linking.frozen")));
 		}
 
 		player.sendSystemMessage(buildNotLinkedMessage(code));
-	}
-
-	/**
-	 * Runs the kick that was held back for a player who joined without a linked account. Called from
-	 * the handler scheduler, so the disconnect itself is handed to the server thread.
-	 */
-	private static void kickPendingPlayer(UUID uuid) {
-		MinecraftServer server = serverInstance;
-		if (server == null) {
-			PENDING_KICKS.remove(uuid);
-			return;
-		}
-		try {
-			server.execute(() -> {
-				String reason = PENDING_KICKS.remove(uuid);
-				ServerPlayer player = server.getPlayerList().getPlayer(uuid);
-				if (reason != null && player != null) {
-					// The player data is written while the player is removed, so the hold has to be
-					// released before disconnecting, otherwise the invulnerable flag would be saved
-					// and the player would stay untouchable on their next login
-					PlayerFreezeManager.unfreeze(player);
-					player.connection.disconnect(Component.literal(reason));
-				}
-			});
-		} catch (RejectedExecutionException ignored) {
-			// The server is already stopping, so there is nothing left to kick anyone from
-		}
 	}
 
 	private static ResponsePacket buildInfoResponse(MinecraftServer server) {
