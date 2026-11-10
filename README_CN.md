@@ -13,7 +13,7 @@ Discord-MC-Chat (DMCC) 是一个 Minecraft 模组，旨在为 Discord 和 Minecr
 代码按加载器拆分为四个 Gradle 模块：`:core`（平台无关的核心逻辑与 Standalone 模式）、`:minecraft:common`（Mixin、事件适配与全部游戏内逻辑）、
 `:minecraft:fabric` 与 `:minecraft:neoforge`（各自的入口类与 `fabric.mod.json` / `META-INF/neoforge.mods.toml` 元数据，仅依赖 common 模块的编译产物）。
 最终产物由 `:core` 的 `shadowJar` 重定位全部依赖后，再合并三个 `minecraft` 模块的 jar 得到（`mergeJars`）。NeoForge 侧使用 ModDevGradle 构建
-（`moddev_version=2.0.147`），目标版本见 `neo_version`（当前 `26.3.0.8-beta`）。
+（`moddev_version=2.0.148`），目标版本见 `neo_version`（当前 `26.3.0.102`）。
 
 ## 2. 核心功能需求
 

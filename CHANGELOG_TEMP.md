@@ -88,6 +88,12 @@
 - 实现：新增 `LoginGate`（`minecraft/common/.../linking/LoginGate.java`）与 `MixinServerLoginPacketListenerImpl`（注入 `verifyLoginAndFinishConnectionSetup` 的 HEAD，`cancellable`）——cancel 后登录停在 `VERIFYING`，原版下一 tick 自动重试，天然形成“挂起登录”，无需额外调度；判定前先跑原版 `PlayerList.canPlayerLogin(...)`，封禁/白名单/IP 封禁/满员仍由原版给出自己的原因（**原版先判**）。通道不可用或 5 秒内无结论则放行（远未到原版 30 秒登录超时），与原“失败放行”一致。原进服后延迟 2 秒踢出的整套逻辑（`KICK_DELAY_MILLIS` / `PENDING_KICKS` / `kickPendingPlayer`）随之删除。
 - `README_CN.md` §4.2 / §4.4 已同步：`kick` 的判定时机、与原版白名单的先后顺序（原先的“白名单死结”不再成立）、失败放行的 5 秒超时。**实机验证待开发者执行**（登录挂起、放行、拒绝、原版白名单先判）。
 
+## 工作 18 · 2026/11/10 · 依赖升级（Gradle 9.9.0 / NeoForge 26.3.0.102）
+- **依赖与工具链（不含 docs）**：Gradle 9.8.2 → **9.9.0**（用 `wrapper --gradle-version 9.9.0` 跑两轮重新生成，`gradle-wrapper.jar` 与 `gradlew.bat` 随模板更新，`gradlew` 无变化）；NeoForge 26.3.0.99 → **26.3.0.102**；Jackson 3.2.4 → **3.3.0**；Netty 4.2.19.Final → **4.2.20.Final**。其余已是各自最新正式稳定版，未动：Minecraft 26.3（26.4 仅有快照）、Fabric Loader 0.20.1、Fabric Loom `1.19-SNAPSHOT`（按仓库约定，本次解析到 1.19.4）、ModDevGradle 2.0.148、Shadow 9.6.1、JDA 6.7.0、slf4j-api 2.0.20、OkHttp 5.5.1、jemoji 2.1.0、JUnit 6.1.3；CI 的四个 Actions 仍是最新大版本的浮动标签（`checkout@v7`、`setup-java@v6`、`setup-gradle@v6`、`upload-artifact@v7`）。
+- **唯一源码级改动**：Gradle 9.9 弃用 Ant builder（`Task.getAnt()`，Gradle 10 将移除），`mergeJars` 里把三个 `:minecraft:*` jar 并入 shadow jar 的 `ant.zip(update: true, ...)` 改用 JDK zipfs（`FileSystems.newFileSystem` + `Files.copy(..., REPLACE_EXISTING)`）；合并语义与产物不变——6943 个条目、无重复条目、`testzip` 通过，`FabricDMCC` / `NeoForgeDMCC` 与 `fabric.mod.json` / `neoforge.mods.toml` / `dmcc.mixins.json` 均在最终 jar 内。
+- 验证：`./gradlew clean --no-daemon` + `./gradlew build --no-daemon --warning-mode all` 全绿（`BUILD SUCCESSFUL`），**零编译警告、零 Gradle 弃用警告**（原先的 “Deprecated Gradle features” 汇总行已消失）；1 test / 0 failures。
+- `README_CN.md` §1 中过时的 `moddev_version=2.0.147` 与 `neo_version` 26.3.0.8-beta 修正为 **2.0.148 / 26.3.0.102**；用户可见行为无变化。
+
 ## 发布待办（汇总）
 - 待处理（按用户裁决都先不动）：`.github/ISSUE_TEMPLATE/bug.yml` 的 v2 残留文案；`docs/package.json` 缺 `license` 字段；`README.md`（英文翻译件）与 `README_CN.md` 的同步；配置迁移工具（发布前会提供在线版本，届时新键不再需要手工补）。
 - 已核对无需改动：`update/versions.json` 的 `3.0.0-beta.3` 条目本就是 `"compatibility": ["26.3"]`；存量用户 `config.yml` 补 IPv6 规则按开发者裁决暂不处理。

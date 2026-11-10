@@ -1,3 +1,7 @@
+import java.nio.file.FileSystems
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+
 apply plugin: "com.gradleup.shadow"
 
 base {
@@ -122,9 +126,19 @@ tasks.register("mergeJars") {
                 }
             }
         }
-        // Add the decompressed content to the core jar
-        ant.zip(update: "true", destfile: shadowJarFile) {
-            fileset(dir: tempDir)
+        // Add the decompressed content to the core jar. The archive is updated in place through the
+        // JDK zip filesystem because the Ant builder is deprecated as of Gradle 9.9.
+        def tempRoot = tempDir.toPath()
+        def jarUri = URI.create("jar:" + shadowJarFile.toURI())
+        FileSystems.newFileSystem(jarUri, [create: "false"] as Map<String, String>).withCloseable { fs ->
+            Files.walk(tempRoot).withCloseable { paths ->
+                paths.filter { Files.isRegularFile(it) }.forEach { path ->
+                    def entryName = tempRoot.relativize(path).toString().replace(File.separatorChar, (char) '/')
+                    def target = fs.getPath("/" + entryName)
+                    Files.createDirectories(target.parent)
+                    Files.copy(path, target, StandardCopyOption.REPLACE_EXISTING)
+                }
+            }
         }
     }
 }
