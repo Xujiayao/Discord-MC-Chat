@@ -1,7 +1,3 @@
-import java.nio.file.FileSystems
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
-
 apply plugin: "com.gradleup.shadow"
 
 base {
@@ -96,62 +92,45 @@ shadowJar {
 // rootProject.subprojects, hence the explicit list.
 def mergedProjects = [":minecraft:common", ":minecraft:fabric", ":minecraft:neoforge"]
 // Resolved here because Project and Task APIs of other projects must not be called from a task action.
-def mergedJars = mergedProjects.collect { [name: project(it).name, jar: project(it).tasks.named("jar").flatMap { it.archiveFile }] }
+def mergedJars = mergedProjects.collect { project(it).tasks.named("jar").flatMap { it.archiveFile } }
 
-tasks.register("mergeJars") {
+tasks.register("mergeJars", Zip) {
     dependsOn shadowJar
     mergedProjects.each { dependsOn "${it}:jar" }
 
-    def shadowJarFile = tasks.shadowJar.archiveFile.get().asFile
-    def tempDir = project.layout.buildDirectory.dir("merged_temp").get().asFile
+    // Assemble the final jar in its own directory instead of updating the shadow jar in place.
+    // A Zip task is the Gradle-native replacement for the deprecated Ant zip builder, and it
+    // gives the merge proper task inputs and outputs.
+    archiveFileName = shadowJar.archiveFileName.get()
+    destinationDirectory = layout.buildDirectory.dir("merged")
+    // Module jars only contribute their own files; the shadow jar's manifest is kept as-is.
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
-    doLast {
-        // Start from an empty directory, otherwise files of a previous build survive in the jar.
-        tempDir.deleteDir()
-        tempDir.mkdirs()
-        def addedFiles = [:]
-        mergedJars.each { merged ->
-            def jarFile = merged.jar.get().asFile
-            copy {
-                from zipTree(jarFile)
-                into tempDir
-                exclude "META-INF/MANIFEST.MF"
-                eachFile { fcd ->
-                    def relPath = fcd.relativePath.toString()
-                    if (addedFiles.containsKey(relPath)) {
-                        logger.warn("Warning: Duplicate file found: $relPath in ${merged.name} and ${addedFiles[relPath]}")
-                    } else {
-                        addedFiles[relPath] = merged.name
-                    }
-                }
-            }
+    // Include the shadow jar's manifest before the module jars and the rest of the shadow jar.
+    // JarInputStream accepts it as the first or second entry, and java -jar reads it from the
+    // archive directory either way.
+    from(zipTree(shadowJar.archiveFile)) {
+        include "META-INF/MANIFEST.MF"
+    }
+    // Module entries are added before the rest of the shadow jar, so they still replace any
+    // same-named shadow entry, matching the previous ant.zip(update: true) behavior.
+    mergedJars.each { merged ->
+        from(zipTree(merged)) {
+            exclude "META-INF/MANIFEST.MF"
         }
-        // Add the decompressed content to the core jar. The archive is updated in place through the
-        // JDK zip filesystem because the Ant builder is deprecated as of Gradle 9.9.
-        def tempRoot = tempDir.toPath()
-        def jarUri = URI.create("jar:" + shadowJarFile.toURI())
-        FileSystems.newFileSystem(jarUri, [create: "false"] as Map<String, String>).withCloseable { fs ->
-            Files.walk(tempRoot).withCloseable { paths ->
-                paths.filter { Files.isRegularFile(it) }.forEach { path ->
-                    def entryName = tempRoot.relativize(path).toString().replace(File.separatorChar, (char) '/')
-                    def target = fs.getPath("/" + entryName)
-                    Files.createDirectories(target.parent)
-                    Files.copy(path, target, StandardCopyOption.REPLACE_EXISTING)
-                }
-            }
-        }
+    }
+    from(zipTree(shadowJar.archiveFile)) {
+        exclude "META-INF/MANIFEST.MF"
     }
 }
 
 build {
-    dependsOn shadowJar
     dependsOn tasks.named("mergeJars")
 
     doLast {
         copy {
-            from "build/libs"
+            from layout.buildDirectory.dir("merged")
             into "../build"
-            exclude "*core*"
         }
     }
 }
