@@ -293,7 +293,8 @@ client:
     drained: "已按序补发 {} 条暂存消息，共耗时 {} 毫秒。"
     dropped_full: "暂存消息队列已满（上限 {} 条），已丢弃最旧的一条。"
     send_failed: "补发暂存消息失败，将在下次连接后重试：{}"
-    discarded_identity_changed: "DMCC 服务端地址已变更，已丢弃 {} 条暂存消息。"
+    kept_before_identity: "已保留 DMCC 初始化前暂存的 {} 条消息，将在连接成功后按序补发：{}"
+    discarded_identity_changed: "DMCC 连接身份已变更（旧：{}，新：{}），已丢弃 {} 条暂存消息：{}"
     discarded_shutdown: "DMCC 客户端正在关闭，已丢弃 {} 条暂存消息。"
 
 utils:

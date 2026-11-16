@@ -141,6 +141,14 @@
 - 验证：./gradlew clean + ./gradlew build（守护进程）全绿、零编译警告/零 Gradle 弃用警告；临时 JUnit（NicknameSyncHelpersTest 11 例 + LinkEntryJsonTest 4 例，覆盖旧格式迁移/双字段优先/新格式往返与字段顺序/名称优先级）通过后删除，最终只剩 SmokeTest（1 test / 0 failures）。
 - README_CN.md §4.4 无需再改（名称来源描述不变）；用户可见变化：links.json 结构更简洁，启动不再为已有名字的账号查询 Mojang。
 
+## 工作 25 · 2026/11/17 · 修复待发队列的身份判定与丢弃诊断
+- **实测问题**：初次把 SMP 从 single_server 切到 multi_server_client 时，DMCC 初始化失败期间入队的 1 条 SERVER_STARTED 在首次成功连接时被当作“服务端地址已变更”丢弃；同时 single_server 每次 reload 的内部回环端口都是临时端口，导致 reload 保留的队列必然被判定为身份变更而丢弃，与“队列跨 reload 存活”的设计意图矛盾。
+- **修复**：PendingPacketQueue.onClientIdentity 改为接收稳定的身份键；**空身份→首次身份不再视为变更**，初始化前暂存的消息保留并在登录后按序补发（INFO，含类型统计）；之后的身份变更仍按安全策略丢弃，但 WARN 现在带旧/新身份与按类型统计（如 SERVER_STARTED×1, CONSOLE_LOG×2）。身份赋值与队列清空/保留在同一把队列锁内完成，避免与并发入队交错。
+- **single_server 稳定身份**：ClientDMCC 新增 identityKey 构造参数，single_server 传入 "single_server/Internal"（与临时端口无关），reload 不再假性丢弃；multi_server_client 的 4 参数构造仍使用 host:port/serverName 作为身份，行为不变。
+- **文档**：README_CN §9 增加“断线期间的消息暂存”说明（缓存范围、reload/关服语义、身份变化与初始化前暂存的补发规则）；i18n 中英同步更新（新增 kept_before_identity，改写 discarded_identity_changed）。
+- 验证：./gradlew clean + ./gradlew build（守护进程）全绿、零编译警告/零 Gradle 弃用警告；临时 JUnit（身份采用/相同身份/变更丢弃/单服稳定身份）通过后删除，最终只剩 SmokeTest（1 test / 0 failures）。
+- 建议实机测试：① 故意让 DMCC 初始化失败一段时间后再修复连接，日志应出现 kept_before_identity 且随后 drained 补发；② single_server 模式下制造待发消息后 /dmcc reload，不应再出现身份变更警告且消息按序补发；③ 修改 multi_server 地址或 server_name 后重连，应看到带旧/新身份与类型统计的丢弃警告。
+
 ## 发布待办（汇总）
 - 待处理（按用户裁决都先不动）：`.github/ISSUE_TEMPLATE/bug.yml` 的 v2 残留文案；`docs/package.json` 缺 `license` 字段；`README.md`（英文翻译件）与 `README_CN.md` 的同步；配置迁移工具（发布前会提供在线版本，届时新键不再需要手工补）。
 - 已核对无需改动：`update/versions.json` 的 `3.0.0-beta.3` 条目本就是 `"compatibility": ["26.3"]`；存量用户 `config.yml` 补 IPv6 规则按开发者裁决暂不处理。

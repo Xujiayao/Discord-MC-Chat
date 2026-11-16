@@ -9,6 +9,8 @@ import io.netty.channel.ChannelFuture;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -104,24 +106,81 @@ public final class PendingPacketQueue {
 	}
 
 	/**
-	 * Drops the buffer when the configured DMCC server changes, because the buffered packets were produced for
-	 * the old server address.
+	 * Adopts the identity of the DMCC server this client is configured to talk to.
+	 * <p>
+	 * The first identity is not an address change: before it existed there was no other DMCC server that the
+	 * buffered packets could belong to, so the buffer is kept and replayed after login. A later change means
+	 * the client was pointed at a different DMCC server/name, and replaying the old events there would
+	 * misattribute them, so those packets are dropped and reported with their types.
 	 *
-	 * @param host       DMCC server host.
-	 * @param port       DMCC server port.
-	 * @param serverName Logical client name.
+	 * @param identityKey Stable identity of the destination DMCC server; {@code single_server} passes a
+	 *                    transport-independent key because its loopback port is ephemeral on every reload.
 	 */
-	static void onClientIdentity(String host, int port, String serverName) {
-		String newIdentity = host + ":" + port + "/" + serverName;
-		if (newIdentity.equals(identity)) {
-			return;
-		}
-		identity = newIdentity;
+	static void onClientIdentity(String identityKey) {
+		String next = identityKey == null ? "" : identityKey;
+		String previous;
+		int dropped = 0;
+		int kept = 0;
+		String summary = "";
 
-		int dropped = clear();
-		if (dropped > 0) {
-			LOGGER.warn(I18nManager.getDmccTranslation("client.pending_queue.discarded_identity_changed", dropped));
+		synchronized (queue) {
+			previous = identity;
+			if (next.equals(previous)) {
+				return;
+			}
+			identity = next;
+
+			if (previous.isEmpty()) {
+				kept = queue.size();
+				if (kept > 0) {
+					summary = summarizeTypes();
+				}
+			} else {
+				dropped = queue.size();
+				if (dropped > 0) {
+					summary = summarizeTypes();
+					queue.clear();
+					drainedSinceLogin = 0;
+					drainStartedAtMillis = 0;
+				}
+			}
 		}
+
+		if (kept > 0) {
+			LOGGER.info(I18nManager.getDmccTranslation("client.pending_queue.kept_before_identity", kept, summary));
+		} else if (dropped > 0) {
+			LOGGER.warn(I18nManager.getDmccTranslation("client.pending_queue.discarded_identity_changed",
+					previous, next, dropped, summary));
+		}
+	}
+
+	/**
+	 * Summarizes the buffered packets by type for diagnostics. The caller must hold the queue monitor.
+	 */
+	private static String summarizeTypes() {
+		Map<String, Integer> counts = new LinkedHashMap<>();
+		for (Entry entry : queue) {
+			counts.merge(describePacket(entry.packet), 1, Integer::sum);
+		}
+
+		StringBuilder summary = new StringBuilder();
+		counts.forEach((type, count) -> {
+			if (!summary.isEmpty()) {
+				summary.append(", ");
+			}
+			summary.append(type).append('×').append(count);
+		});
+		return summary.toString();
+	}
+
+	private static String describePacket(Packet packet) {
+		if (packet instanceof MinecraftEventPacket event) {
+			return event.type.name();
+		}
+		if (packet instanceof ConsoleLogBatchPacket) {
+			return "CONSOLE_LOG";
+		}
+		return packet.getClass().getSimpleName();
 	}
 
 	/**

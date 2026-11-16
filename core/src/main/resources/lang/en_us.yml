@@ -294,7 +294,8 @@ client:
     drained: "Replayed {} buffered message(s) in order, taking {} ms."
     dropped_full: "The pending message queue is full (limit: {}), dropped the oldest message."
     send_failed: "Failed to replay a buffered message, retrying after the next connection: {}"
-    discarded_identity_changed: "DMCC Server address changed, discarded {} buffered message(s)."
+    kept_before_identity: "Kept {} message(s) buffered before DMCC had a connection identity; they will be replayed in order after login: {}"
+    discarded_identity_changed: "DMCC connection identity changed (old: {}, new: {}); discarded {} buffered message(s): {}"
     discarded_shutdown: "DMCC client is shutting down, discarded {} buffered message(s)."
 
 utils:

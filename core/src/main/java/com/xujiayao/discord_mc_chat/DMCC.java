@@ -113,7 +113,10 @@ public final class DMCC {
 							return false;
 						}
 
-						clientInstance = new ClientDMCC("127.0.0.1", port, internalServerName, internalSharedSecret);
+						// The loopback port is ephemeral on every reload, so it cannot be part of the identity:
+						// otherwise reloads would always look like a server change and drop buffered events.
+						clientInstance = new ClientDMCC("127.0.0.1", port, internalServerName, internalSharedSecret,
+								"single_server/" + internalServerName);
 						if (!clientInstance.start()) {
 							LOGGER.error(I18nManager.getDmccTranslation("main.init.failed"));
 							return false;

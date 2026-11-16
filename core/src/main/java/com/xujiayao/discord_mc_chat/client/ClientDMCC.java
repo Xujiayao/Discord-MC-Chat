@@ -29,13 +29,22 @@ public final class ClientDMCC {
 	 * @param serverName Logical client/server name used in DMCC protocol.
 	 */
 	public ClientDMCC(String host, int port, String serverName, String sharedSecret) {
+		this(host, port, serverName, sharedSecret, host + ":" + port + "/" + serverName);
+	}
+
+	/**
+	 * @param serverName  Logical client/server name used in DMCC protocol.
+	 * @param identityKey Stable identity of the destination DMCC server. single_server passes a
+	 *                    transport-independent key because its loopback port is ephemeral on every reload.
+	 */
+	public ClientDMCC(String host, int port, String serverName, String sharedSecret, String identityKey) {
 		this.host = host;
 		this.port = port;
 		this.serverName = serverName;
 		this.sharedSecret = sharedSecret;
 
 		// Packets buffered for a different DMCC server must not be replayed into this one.
-		PendingPacketQueue.onClientIdentity(host, port, serverName);
+		PendingPacketQueue.onClientIdentity(identityKey);
 	}
 
 	/**
