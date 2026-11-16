@@ -11,7 +11,6 @@ import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Link.RequestP
 import com.xujiayao.discord_mc_chat.server.discord.NicknameSyncManager;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.server.linking.VerificationCodeManager;
-import com.xujiayao.discord_mc_chat.utils.MojangUtils;
 
 import java.util.List;
 
@@ -173,7 +172,7 @@ public final class LinkCommand implements Command {
 			if (!players.isEmpty()) {
 				players.append(", ");
 			}
-			players.append(MojangUtils.resolvePlayerName(entry.minecraftUuid(), entry.offlinePlayerName()));
+			players.append(LinkedAccountManager.resolvePlayerName(entry));
 		}
 		return players.toString();
 	}

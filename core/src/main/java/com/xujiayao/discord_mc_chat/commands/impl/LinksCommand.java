@@ -5,7 +5,6 @@ import com.xujiayao.discord_mc_chat.commands.CommandSender;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
-import com.xujiayao.discord_mc_chat.utils.MojangUtils;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -71,7 +70,7 @@ public final class LinksCommand implements Command {
 
 			for (LinkedAccountManager.LinkEntry link : links) {
 				String time = DATE_FORMATTER.format(Instant.ofEpochMilli(link.linkedAt()));
-				String mcName = MojangUtils.resolvePlayerName(link.minecraftUuid(), link.offlinePlayerName());
+				String mcName = LinkedAccountManager.resolvePlayerName(link);
 				builder.append("\n  - MC: ").append(mcName).append(" (").append(link.minecraftUuid()).append(")");
 				builder.append(" (").append(time).append(")");
 			}

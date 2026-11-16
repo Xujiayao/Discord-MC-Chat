@@ -133,6 +133,14 @@
 - README_CN.md §4.4 已同步名称来源与告警行为；用户可见变化：不再因 Mojang 限流而跳过昵称同步（旧记录在玩家首次进服后也会写入持久化名称）。
 - 建议实机测试：① 重启 Standalone（不先让绑定玩家进服）应不再出现名称解析 WARN；② 绑定玩家改名后进服，昵称应跟随新名字；③ 未绑定且无昵称的高角色成员不再刷层级 WARN，有昵称仍会 WARN；④ 连续 reload 不再触发 Mojang 查询与 429。
 
+## 工作 24 · 2026/11/16 · 合并 links.json 名称字段为 playerName
+- **数据模型合并**：LinkEntry 由 {minecraftUuid, linkedAt, offlinePlayerName, playerName} 合并为 {minecraftUuid, playerName, linkedAt}（playerName 按要求放在中间）。offlinePlayerName 只是历史遗留：v3 离线 UUID 在绑定时记录的名字，与 playerName 语义重合且从不更新。
+- **自动迁移**：load() 改为解析 JsonNode 并迁移旧字段——旧文件只有 offlinePlayerName 时自动填入 playerName，并立即重写一次文件；同时存在两个字段时优先 playerName；缺名字的旧 v4 记录保持 null，继续走 Mojang 兜底。旧文件无需手工迁移。
+- **消费方统一**：/link、/links、Discord 提及别名表不再为已持久化的名字调用 Mojang（改为 LinkedAccountManager.resolvePlayerName(entry)，仅旧记录兜底），顺带减少外部请求与 429 风险；NicknameSyncManager 删除 offlinePlayerName 分支，解析优先级简化为 内存进服名 → playerName → Mojang 兜底；删除 isOfflineUuid(...)。
+- **兼容性提示**：新版 links.json 不再写 offlinePlayerName；回滚到旧版 DMCC 时，离线 UUID 的名称显示会退化为 N/A/UUID（正版 UUID 不受影响，旧版会查 Mojang）。建议不要在使用离线 UUID 绑定时回滚。
+- 验证：./gradlew clean + ./gradlew build（守护进程）全绿、零编译警告/零 Gradle 弃用警告；临时 JUnit（NicknameSyncHelpersTest 11 例 + LinkEntryJsonTest 4 例，覆盖旧格式迁移/双字段优先/新格式往返与字段顺序/名称优先级）通过后删除，最终只剩 SmokeTest（1 test / 0 failures）。
+- README_CN.md §4.4 无需再改（名称来源描述不变）；用户可见变化：links.json 结构更简洁，启动不再为已有名字的账号查询 Mojang。
+
 ## 发布待办（汇总）
 - 待处理（按用户裁决都先不动）：`.github/ISSUE_TEMPLATE/bug.yml` 的 v2 残留文案；`docs/package.json` 缺 `license` 字段；`README.md`（英文翻译件）与 `README_CN.md` 的同步；配置迁移工具（发布前会提供在线版本，届时新键不再需要手工补）。
 - 已核对无需改动：`update/versions.json` 的 `3.0.0-beta.3` 条目本就是 `"compatibility": ["26.3"]`；存量用户 `config.yml` 补 IPv6 规则按开发者裁决暂不处理。

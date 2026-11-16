@@ -507,16 +507,13 @@ public final class NicknameSyncManager {
 				return new PlayerNameResolution(entry.playerName(), null);
 			}
 
-			if (entry.offlinePlayerName() != null && !entry.offlinePlayerName().isBlank()) {
-				return new PlayerNameResolution(entry.offlinePlayerName(), null);
-			}
-
-			MojangUtils.PlayerNameLookup lookup = mojangLookup.apply(uuid, entry.offlinePlayerName());
+			// Only legacy entries that never stored a name reach this fallback.
+			MojangUtils.PlayerNameLookup lookup = mojangLookup.apply(uuid, null);
 			if (lookup != null && lookup.name() != null && !lookup.name().isBlank()) {
 				if (!UNRESOLVED_NAME.equals(lookup.name()) && !lookup.name().equals(uuid)) {
 					return new PlayerNameResolution(lookup.name(), null);
 				}
-				failures.append(uuid).append(": no resolvable player name (offline UUID without a stored name); ");
+				failures.append(uuid).append(": no resolvable player name; ");
 				continue;
 			}
 

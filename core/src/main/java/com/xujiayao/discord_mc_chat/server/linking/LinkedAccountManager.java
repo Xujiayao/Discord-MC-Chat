@@ -3,16 +3,17 @@ package com.xujiayao.discord_mc_chat.server.linking;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
-import tools.jackson.core.type.TypeReference;
+import com.xujiayao.discord_mc_chat.utils.MojangUtils;
+import tools.jackson.databind.JsonNode;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -76,21 +77,22 @@ public final class LinkedAccountManager {
 				return true;
 			}
 
-			Map<String, List<LinkEntry>> loaded;
+			ParsedLinks parsed;
 			try (var reader = Files.newBufferedReader(LINKS_FILE)) {
-				loaded = JSON_MAPPER.readValue(
-						reader,
-						new TypeReference<>() {
-						}
-				);
+				parsed = parseLinks(JSON_MAPPER.readTree(reader));
 			}
 
 			LINKED_ACCOUNTS.clear();
 			UUID_TO_DISCORD.clear();
-			loaded.forEach((discordId, entries) -> {
+			parsed.links().forEach((discordId, entries) -> {
 				LINKED_ACCOUNTS.put(discordId, new ArrayList<>(entries));
 				entries.forEach(entry -> UUID_TO_DISCORD.put(entry.minecraftUuid(), discordId));
 			});
+
+			if (parsed.migrated()) {
+				// Rewrite legacy files once so the next start reads the current format.
+				save();
+			}
 
 			int totalLinks = LINKED_ACCOUNTS.values().stream().mapToInt(List::size).sum();
 			LOGGER.info(I18nManager.getDmccTranslation("linking.manager.loaded", totalLinks));
@@ -99,6 +101,69 @@ public final class LinkedAccountManager {
 			LOGGER.error(I18nManager.getDmccTranslation("linking.manager.load_failed"), e);
 			return false;
 		}
+	}
+
+	/**
+	 * Parses links.json. Files written by older versions had no {@code playerName} and only carried
+	 * {@code offlinePlayerName} for offline-mode UUIDs; that name is migrated into {@code playerName} and
+	 * the legacy key is dropped on the next write.
+	 *
+	 * @param root The parsed JSON document.
+	 * @return The links and whether the file still contained legacy fields and should be rewritten.
+	 */
+	static ParsedLinks parseLinks(JsonNode root) {
+		Map<String, List<LinkEntry>> links = new LinkedHashMap<>();
+		boolean migrated = false;
+
+		if (root == null || !root.isObject()) {
+			return new ParsedLinks(links, false);
+		}
+
+		for (Map.Entry<String, JsonNode> account : root.properties()) {
+			JsonNode entriesNode = account.getValue();
+			if (entriesNode == null || !entriesNode.isArray()) {
+				continue;
+			}
+
+			List<LinkEntry> entries = new ArrayList<>();
+			for (JsonNode node : entriesNode) {
+				String minecraftUuid = node.path("minecraftUuid").asString(null);
+				if (minecraftUuid == null || minecraftUuid.isBlank()) {
+					continue;
+				}
+
+				if (node.has("offlinePlayerName")) {
+					// Both the legacy name and the now-redundant null value are cleaned up by the rewrite.
+					migrated = true;
+				}
+
+				String playerName = node.path("playerName").asString(null);
+				if (playerName == null || playerName.isBlank()) {
+					String legacyName = node.path("offlinePlayerName").asString(null);
+					if (legacyName != null && !legacyName.isBlank()) {
+						playerName = legacyName;
+					}
+				}
+
+				entries.add(new LinkEntry(
+						minecraftUuid,
+						(playerName == null || playerName.isBlank()) ? null : playerName,
+						node.path("linkedAt").asLong()));
+			}
+
+			if (!entries.isEmpty()) {
+				links.put(account.getKey(), entries);
+			}
+		}
+
+		return new ParsedLinks(links, migrated);
+	}
+
+	/**
+	 * @param links    The links parsed from disk.
+	 * @param migrated Whether at least one legacy entry was migrated to the current format.
+	 */
+	record ParsedLinks(Map<String, List<LinkEntry>> links, boolean migrated) {
 	}
 
 	/**
@@ -234,7 +299,7 @@ public final class LinkedAccountManager {
 		}
 
 		LINKED_ACCOUNTS.computeIfAbsent(discordId, _ -> new ArrayList<>())
-				.add(new LinkEntry(minecraftUuid, System.currentTimeMillis(), isOfflineUuid(minecraftUuid) ? minecraftName : null, minecraftName));
+				.add(new LinkEntry(minecraftUuid, minecraftName, System.currentTimeMillis()));
 		UUID_TO_DISCORD.put(minecraftUuid, discordId);
 
 		LOGGER.info(I18nManager.getDmccTranslation("linking.manager.linked", discordName, discordId, minecraftName, minecraftUuid));
@@ -272,7 +337,7 @@ public final class LinkedAccountManager {
 					return;
 				}
 
-				entries.set(i, new LinkEntry(entry.minecraftUuid(), entry.linkedAt(), entry.offlinePlayerName(), playerName));
+				entries.set(i, new LinkEntry(entry.minecraftUuid(), playerName, entry.linkedAt()));
 				save();
 				return;
 			}
@@ -375,13 +440,18 @@ public final class LinkedAccountManager {
 		return Collections.unmodifiableMap(LINKED_ACCOUNTS);
 	}
 
-	private static boolean isOfflineUuid(String uuidString) {
-		try {
-			return UUID.fromString(uuidString).version() == 3;
-		} catch (IllegalArgumentException | NullPointerException _) {
-			// The only failures fromString can produce: a malformed UUID or a null argument
-			return false;
+	/**
+	 * Resolves the stored in-game name of a linked account. Entries written before the name was persisted
+	 * (legacy v4 links that never joined since) fall back to a Mojang lookup.
+	 *
+	 * @param entry The linked account.
+	 * @return The player name, or the raw UUID when it cannot be resolved.
+	 */
+	public static String resolvePlayerName(LinkEntry entry) {
+		if (entry.playerName() != null && !entry.playerName().isBlank()) {
+			return entry.playerName();
 		}
+		return MojangUtils.resolvePlayerName(entry.minecraftUuid(), null);
 	}
 
 	/**
@@ -406,18 +476,16 @@ public final class LinkedAccountManager {
 	/**
 	 * One linked Minecraft account.
 	 *
-	 * @param minecraftUuid    The Minecraft UUID.
-	 * @param linkedAt         Epoch millis of when the link was created.
-	 * @param offlinePlayerName The name captured at link time for offline-mode UUIDs, or null. Kept for
-	 *                          JSON compatibility with pre-existing files.
-	 * @param playerName       The last known in-game name, captured at link time and refreshed on every
-	 *                          join. Missing in files written by older versions, so it is nullable.
+	 * @param minecraftUuid The Minecraft UUID.
+	 * @param playerName    The last known in-game name, captured at link time and refreshed on every
+	 *                      join. Nullable only for legacy entries migrated from files that never stored
+	 *                      a name (the load-time migration fills it from the old offlinePlayerName field).
+	 * @param linkedAt      Epoch millis of when the link was created.
 	 */
 	public record LinkEntry(
 			String minecraftUuid,
-			long linkedAt,
-			String offlinePlayerName,
-			String playerName
+			String playerName,
+			long linkedAt
 	) {
 	}
 }

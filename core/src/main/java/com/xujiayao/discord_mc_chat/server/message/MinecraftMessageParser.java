@@ -6,7 +6,6 @@ import com.xujiayao.discord_mc_chat.network.message.TextSegment;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.server.message.MessageParserCommon.MarkdownState;
-import com.xujiayao.discord_mc_chat.utils.MojangUtils;
 import com.xujiayao.discord_mc_chat.utils.TextSegmentUtils;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -262,7 +261,7 @@ public final class MinecraftMessageParser {
 				putMentionAlias(userByAlias, allMentionByAlias, member.getEffectiveName(), target);
 			}
 			for (LinkedAccountManager.LinkEntry link : entry.getValue()) {
-				String playerName = MojangUtils.resolvePlayerName(link.minecraftUuid(), link.offlinePlayerName());
+				String playerName = LinkedAccountManager.resolvePlayerName(link);
 				if (playerName != null && !playerName.isBlank()) {
 					putMentionAlias(userByAlias, allMentionByAlias, playerName, target);
 				}
