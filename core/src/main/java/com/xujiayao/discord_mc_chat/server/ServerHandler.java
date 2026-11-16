@@ -126,6 +126,18 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, Packet packet) {
+		try {
+			handlePacket(ctx, packet);
+		} catch (Exception e) {
+			// One malformed event (for example an emoji that cannot be parsed) must never tear down the
+			// whole DMCC channel; protocol/decoding errors still go through exceptionCaught().
+			LOGGER.error(I18nManager.getDmccTranslation("server.network.packet_handler_failed",
+					clientName != null ? clientName : "unknown",
+					packet == null ? "null" : packet.getClass().getSimpleName()), e);
+		}
+	}
+
+	private void handlePacket(ChannelHandlerContext ctx, Packet packet) {
 		if (packet instanceof KeepAlivePacket) {
 			// No-op, just resets idle timer
 			return;

@@ -107,6 +107,15 @@
 - 验证：`./gradlew clean` + `./gradlew build`（守护进程）全绿，**零编译警告、零 Gradle 弃用警告**；1 test / 0 failures。
 - `README_CN.md` §1 的 `neo_version` 文本同步为 26.3.0.103；用户可见行为无变化。
 
+## 工作 21 · 2026/11/16 · 修复 Unicode 表情解析崩溃并隔离服务端单包异常
+- **用户可见修复**：① Discord 消息里的 `:heart:`（`❤️`）、`☺️`、`✌🏻`、`❤️‍🔥` 等多码点表情不再抛 `NoSuchElementException`，不会因为一条消息/一个带爱心的玩家名让 DMCC 通道断开重连；② MC 系统消息/玩家名中的 Unicode 字符（MC→MC、overwrite 路径）同样修复；③ Discord reaction 的 Unicode 表情别名解析增加兜底；④ 服务端数据包处理新增异常隔离：单个事件处理异常只记录日志，不再关闭 DMCC 连接（协议/解码异常仍按原逻辑断开）。
+- **根因**：`MessageParserCommon.splitSegmentsByUnicodeEmoji` 用自写的单码点正则拆分，`❤️` 被拆成 `❤` + `VS16`；jemoji 对裸 `❤` 命中 `discordAliases` 为空的 unqualified 条目，`getDiscordAliases().getFirst()` 抛异常。该异常从 `ServerHandler.channelRead0` 逃出，触发 Netty `exceptionCaught` 关闭通道。
+- **实现**：新增 `EmojiUtils.preferredDiscordAlias(...)`（discord→github→slack→原字符兜底，绝不对空列表 `getFirst`）；`splitSegmentsByUnicodeEmoji` 改用 `EmojiManager.extractEmojisInOrderWithIndex(...)` 按完整表情序列切段（VS16、肤色、ZWJ、keycap、旗帜整串保留）；reaction 路径复用兜底；`ServerHandler` 把包处理主体抽到 `handlePacket(...)` 并用 try/catch 隔离，新增 i18n key `server.network.packet_handler_failed`（zh/en 双语齐平）；删除手写 `UNICODE_EMOJI_PATTERN`。
+- **线程**：解析仍全部在 DMCC 服务端网络线程（Netty worker）/JDA 事件线程上完成，未向 Minecraft 主线程新增任何工作；异常隔离也发生在 Netty 线程。
+- 验证：`./gradlew clean` + `./gradlew build`（守护进程）全绿、零编译警告/零 Gradle 弃用警告；**临时 JUnit（EmojiParsingTest，8 例）全部通过后删除**，最终只剩 SmokeTest（1 test / 0 failures）；临时测试覆盖 `❤️`、`☺️`、`✌🏻`、`❤️‍🔥`、`😄`、`💟`、裸 `❤`、混排、`Sted❤ joined the game` 以及 jemoji 全部表情的不抛异常断言。
+- `README_CN.md` 已检查：解析矩阵本就声称支持 Unicode 表情，本次修复使该声称成立，无需改文案。
+- 建议实机测试：Discord 发 `:heart:`/`❤️`/`☺️`/`✌🏻`/`❤️‍🔥`，与 `:smile:`/`:heart_decoration:` 对照；MC 内粘贴 `❤️`（开启 overwrite 或跨服中继）；reaction 用 ❤️；确认不再出现 `NoSuchElementException` 与 DMCC 断线重连。
+
 ## 发布待办（汇总）
 - 待处理（按用户裁决都先不动）：`.github/ISSUE_TEMPLATE/bug.yml` 的 v2 残留文案；`docs/package.json` 缺 `license` 字段；`README.md`（英文翻译件）与 `README_CN.md` 的同步；配置迁移工具（发布前会提供在线版本，届时新键不再需要手工补）。
 - 已核对无需改动：`update/versions.json` 的 `3.0.0-beta.3` 条目本就是 `"compatibility": ["26.3"]`；存量用户 `config.yml` 补 IPv6 规则按开发者裁决暂不处理。

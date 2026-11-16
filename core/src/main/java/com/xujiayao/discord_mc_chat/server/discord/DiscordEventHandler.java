@@ -9,6 +9,7 @@ import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.message.TextSegment;
 import com.xujiayao.discord_mc_chat.network.packets.EventPackets.DiscordRelayPacket;
 import com.xujiayao.discord_mc_chat.server.message.DiscordMessageParser;
+import com.xujiayao.discord_mc_chat.utils.EmojiUtils;
 import com.xujiayao.discord_mc_chat.utils.LogFileUtils;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -25,7 +26,6 @@ import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
-import net.fellbaum.jemoji.EmojiManager;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -432,7 +432,7 @@ final class DiscordEventHandler extends ListenerAdapter {
 
 		EmojiUnion emoji = event.getEmoji();
 		String emojiText = switch (emoji.getType()) {
-			case UNICODE -> EmojiManager.replaceAllEmojis(emoji.getName(), e -> e.getDiscordAliases().getFirst());
+			case UNICODE -> EmojiUtils.preferredDiscordAlias(emoji.getName());
 			case CUSTOM -> ":" + emoji.getName() + ":";
 		};
 

@@ -259,6 +259,7 @@ server:
     client_disconnected_normal: "DMCC 客户端已断开连接：\"{}\""
     client_timeout: "DMCC 客户端已超时，正在断开连接：\"{}\""
     unexpected_packet: "已忽略来自 DMCC 客户端 \"{}\" 的意外数据包：{}"
+    packet_handler_failed: "处理来自 DMCC 客户端 \"{}\" 的数据包 {} 时发生异常。"
     disconnect_reasons:
       single_server_mode: "DMCC 服务端处于 single_server 模式，拒绝任何额外客户端连接。"
       not_whitelisted: "名称 \"{}\" 不在白名单中。"

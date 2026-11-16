@@ -2,8 +2,10 @@ package com.xujiayao.discord_mc_chat.server.message;
 
 import com.xujiayao.discord_mc_chat.config.I18nManager;
 import com.xujiayao.discord_mc_chat.network.message.TextSegment;
+import com.xujiayao.discord_mc_chat.utils.EmojiUtils;
 import com.xujiayao.discord_mc_chat.utils.TextSegmentUtils;
 import net.fellbaum.jemoji.EmojiManager;
+import net.fellbaum.jemoji.IndexedEmoji;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -26,20 +28,6 @@ final class MessageParserCommon {
 	private static final Pattern LINK_TOKEN_PATTERN = Pattern.compile("\\[([^]]+)]\\(<?(https?://[^>\\s)]+)>?\\)");
 	private static final Pattern HEADING_LINE_PATTERN = Pattern.compile("^#{1,6}\\s+\\S.*$");
 	private static final Pattern BARE_URL_PATTERN = Pattern.compile("(https?://[^\\s*|~`<>)\\]]+)");
-	private static final Pattern UNICODE_EMOJI_PATTERN = Pattern.compile(
-			"[\\x{1F600}-\\x{1F64F}]|[\\x{1F300}-\\x{1F5FF}]|[\\x{1F680}-\\x{1F6FF}]|" +
-					"[\\x{1F1E0}-\\x{1F1FF}]|[\\x{2600}-\\x{26FF}]|[\\x{2700}-\\x{27BF}]|" +
-					"[\\x{FE00}-\\x{FE0F}]|[\\x{1F900}-\\x{1F9FF}]|[\\x{1FA00}-\\x{1FA6F}]|" +
-					"[\\x{1FA70}-\\x{1FAFF}]|\\x{200D}|\\x{20E3}|" +
-					"[\\x{231A}-\\x{231B}]|[\\x{23E9}-\\x{23F3}]|[\\x{23F8}-\\x{23FA}]|" +
-					"[\\x{25AA}-\\x{25AB}]|\\x{25B6}|\\x{25C0}|[\\x{25FB}-\\x{25FE}]|" +
-					"[\\x{2614}-\\x{2615}]|[\\x{2648}-\\x{2653}]|\\x{267F}|\\x{2693}|" +
-					"\\x{26A1}|[\\x{26AA}-\\x{26AB}]|[\\x{26BD}-\\x{26BE}]|" +
-					"[\\x{26C4}-\\x{26C5}]|\\x{26CE}|\\x{26D4}|\\x{26EA}|" +
-					"[\\x{26F2}-\\x{26F3}]|\\x{26F5}|\\x{26FA}|\\x{26FD}|" +
-					"\\x{2702}|\\x{2705}|[\\x{2708}-\\x{270D}]|\\x{270F}"
-	);
-
 	private static final String URL_COLOR = "#3366CC";
 
 	// DateTimeFormatter is immutable and thread-safe, so these can be shared across calls.
@@ -80,13 +68,41 @@ final class MessageParserCommon {
 				buildLinkSegment(segment, matcher.group(1), matcher.group(1)));
 	}
 
+	/**
+	 * Splits every segment on the Unicode emoji sequences jemoji knows. Jemoji matches the longest known
+	 * sequence, so variation selectors, skin tones, keycaps and ZWJ sequences stay intact instead of being
+	 * cut into single code points (which used to hit alias-less unqualified variants and throw).
+	 */
 	static List<TextSegment> splitSegmentsByUnicodeEmoji(List<TextSegment> segments) {
-		return splitSegments(segments, UNICODE_EMOJI_PATTERN, (segment, matcher) -> {
-			String alias = EmojiManager.replaceAllEmojis(matcher.group(), emoji -> emoji.getDiscordAliases().getFirst());
-			TextSegment emojiSegment = TextSegmentUtils.copySegment(segment, alias);
-			emojiSegment.color = "yellow";
-			return emojiSegment;
-		});
+		List<TextSegment> out = new ArrayList<>();
+		for (TextSegment segment : segments) {
+			if (segment.clickUrl != null || segment.text == null || segment.text.isEmpty()) {
+				out.add(segment);
+				continue;
+			}
+
+			String text = segment.text;
+			int cursor = 0;
+			for (IndexedEmoji hit : EmojiManager.extractEmojisInOrderWithIndex(text)) {
+				int start = hit.getCharIndex();
+				int end = hit.getEndCharIndex();
+				if (start > cursor) {
+					out.add(TextSegmentUtils.copySegment(segment, text.substring(cursor, start)));
+				}
+
+				TextSegment emojiSegment = TextSegmentUtils.copySegment(segment, EmojiUtils.preferredDiscordAlias(hit.getEmoji()));
+				emojiSegment.color = "yellow";
+				out.add(emojiSegment);
+				cursor = end;
+			}
+
+			if (cursor == 0) {
+				out.add(segment);
+			} else if (cursor < text.length()) {
+				out.add(TextSegmentUtils.copySegment(segment, text.substring(cursor)));
+			}
+		}
+		return out;
 	}
 
 	private static TextSegment buildLinkSegment(TextSegment source, String text, String url) {
