@@ -101,6 +101,12 @@
 - `README_CN.md` 已检查：§1 的 `moddev_version=2.0.148` / `neo_version=26.3.0.102` 仍准确，全文没有写死 Gradle 版本，无需改动。工作 18 条目中的 zipfs 描述已被本工作取代，发布 changelog 以本工作为准。
 - 建议实机测试（构建/打包层改动，预期零行为变化）：① 同一份 `build/Discord-MC-Chat-3.0.0-beta.3.jar` 分别以 Fabric 与 NeoForge 26.3 启动，确认模组列表版本/加载器元数据正常；② 进服后 `/dmcc` 命令可用、Discord 连接与聊天中继正常；③ 如需要，Standalone 模式启动一次，确认 `Main-Class` 与依赖重定位未受影响。
 
+## 工作 20 · 2026/11/16 · 依赖升级（NeoForge 26.3.0.103）
+- **依赖与工具链（不含 docs）**：NeoForge 26.3.0.102 → **26.3.0.103**（2026/11/12 发布的 26.3 稳定线构建，无 `-beta` 后缀）。其余逐项核对均为当前最新正式稳定版，未动：Gradle 9.9.1（`services.gradle.org/versions/current` 仍为 9.9.1 final，wrapper jar 校验和与官方 9.9.1 一致）、Java 25（MC 26.3 的 `javaVersion.majorVersion` 为 25，JDK 25.0.5 为最新 LTS 补丁；JDK 27 虽已 GA 但不适用于 MC 26.3）、Minecraft 26.3（26.4 仅有快照）、Fabric Loader 0.20.1、Fabric Loom `1.19-SNAPSHOT`（最新稳定发布 1.19.4，1.20 仍只有 alpha）、ModDevGradle 2.0.148、Shadow 9.6.1、JDA 6.7.0、slf4j-api 2.0.20、Jackson 3.3.0、OkHttp 5.5.1、Netty 4.2.20.Final、jemoji 2.1.0、JUnit 6.1.3（6.2.0-M1 为里程碑）；CI 四个 Actions 仍是各自最新大版本的浮动标签（`checkout@v7` / `setup-java@v6` / `setup-gradle@v6` / `upload-artifact@v7`）。
+- 本项**不需要改任何源码**；`fabric.mod.json`、`neoforge.mods.toml`、`THIRD-PARTY-LICENSES.txt` 均通过构建期属性展开，无需手改；`docs/` 与 `update/versions.json` 不在本次范围。
+- 验证：`./gradlew clean` + `./gradlew build`（守护进程）全绿，**零编译警告、零 Gradle 弃用警告**；1 test / 0 failures。
+- `README_CN.md` §1 的 `neo_version` 文本同步为 26.3.0.103；用户可见行为无变化。
+
 ## 发布待办（汇总）
 - 待处理（按用户裁决都先不动）：`.github/ISSUE_TEMPLATE/bug.yml` 的 v2 残留文案；`docs/package.json` 缺 `license` 字段；`README.md`（英文翻译件）与 `README_CN.md` 的同步；配置迁移工具（发布前会提供在线版本，届时新键不再需要手工补）。
 - 已核对无需改动：`update/versions.json` 的 `3.0.0-beta.3` 条目本就是 `"compatibility": ["26.3"]`；存量用户 `config.yml` 补 IPv6 规则按开发者裁决暂不处理。
