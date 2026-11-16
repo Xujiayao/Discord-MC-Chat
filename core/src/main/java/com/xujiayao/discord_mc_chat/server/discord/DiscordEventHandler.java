@@ -8,6 +8,7 @@ import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.network.NetworkManager;
 import com.xujiayao.discord_mc_chat.network.message.TextSegment;
 import com.xujiayao.discord_mc_chat.network.packets.EventPackets.DiscordRelayPacket;
+import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
 import com.xujiayao.discord_mc_chat.server.message.DiscordMessageParser;
 import com.xujiayao.discord_mc_chat.utils.EmojiUtils;
 import com.xujiayao.discord_mc_chat.utils.LogFileUtils;
@@ -15,7 +16,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.emoji.EmojiUnion;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
-import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateNicknameEvent;
+import net.dv8tion.jda.api.events.guild.member.GuildMemberUpdateEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
@@ -80,14 +81,22 @@ final class DiscordEventHandler extends ListenerAdapter {
 	@Override
 	public void onGuildMemberJoin(@NotNull GuildMemberJoinEvent event) {
 		// A member joining the guild gets the nickname their linking state asks for
-		NicknameSyncManager.syncForDiscordUser(event.getMember().getId());
+		NicknameSyncManager.onMemberJoined(event.getGuild().getId(), event.getMember().getId());
 	}
 
 	@Override
-	public void onGuildMemberUpdateNickname(@NotNull GuildMemberUpdateNicknameEvent event) {
-		// Renaming is not allowed to break the linking policy: the expected nickname is re-applied,
-		// and an unlinked member loses the nickname again
-		NicknameSyncManager.onNicknameChanged(event.getMember().getId());
+	public void onGuildMemberUpdate(@NotNull GuildMemberUpdateEvent event) {
+		// The generic update event is also fired for members JDA has not cached yet (the nickname-specific
+		// event is not), so a rename can never be missed. Only linked members and members carrying a
+		// nickname are interesting; the sync itself is debounced and does nothing when already correct.
+		Member member = event.getMember();
+		if (member == null) {
+			return;
+		}
+		if (!LinkedAccountManager.getAllLinks().containsKey(member.getId()) && member.getNickname() == null) {
+			return;
+		}
+		NicknameSyncManager.onMemberUpdated(member.getId());
 	}
 
 	@Override

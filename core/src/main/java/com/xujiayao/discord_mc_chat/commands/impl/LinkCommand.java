@@ -136,7 +136,8 @@ public final class LinkCommand implements Command {
 		LinkedAccountManager.LinkResult result = LinkedAccountManager.linkAccount(discordId, discordName, pending.minecraftUuid(), pending.playerName());
 		switch (result) {
 			case SUCCESS -> {
-				// The Discord nickname follows the linking state
+				// The Discord nickname follows the linking state, including the freshest player name
+				NicknameSyncManager.rememberPlayerName(pending.minecraftUuid(), pending.playerName());
 				NicknameSyncManager.syncForDiscordUser(discordId);
 				// A player who was held back on join can be released right away, on every client
 				NetworkManager.broadcastToClients(new CommandPackets.Link.StatePacket(pending.minecraftUuid(), true));

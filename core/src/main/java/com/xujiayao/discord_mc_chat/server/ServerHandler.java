@@ -212,6 +212,8 @@ final class ServerHandler extends SimpleChannelInboundHandler<Packet> {
 				case CommandPackets.Link.RequestPacket p -> {
 					// Always answer: the client decides from the response whether the player has to be
 					// held back, so a join check must never be left unanswered.
+					// Keep the freshest Minecraft name so the Discord nickname follows renames.
+					NicknameSyncManager.rememberPlayerName(p.minecraftUuid, p.playerName);
 					if (LinkedAccountManager.isMinecraftUuidLinked(p.minecraftUuid)) {
 						String discordId = LinkedAccountManager.getDiscordIdByMinecraftUuid(p.minecraftUuid);
 						// The Discord name is only rendered by the explicit command output

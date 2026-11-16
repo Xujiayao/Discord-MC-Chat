@@ -24,6 +24,7 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
@@ -109,7 +110,7 @@ public final class DiscordManager {
 					ExecutorService eventExecutor = Executors.newSingleThreadExecutor(ExecutorServiceUtils.newThreadFactory("DMCC-DiscordEvent"));
 					ExecutorService callbackExecutor = Executors.newCachedThreadPool(ExecutorServiceUtils.newThreadFactory("DMCC-DiscordCallback"));
 					try {
-						jda = JDABuilder.createDefault(token)
+						JDABuilder builder = JDABuilder.createDefault(token)
 								.enableIntents(
 										GatewayIntent.MESSAGE_CONTENT,
 										GatewayIntent.GUILD_MEMBERS,
@@ -118,8 +119,16 @@ public final class DiscordManager {
 								.setMemberCachePolicy(MemberCachePolicy.ALL)
 								.setEventPool(eventExecutor, true)
 								.setCallbackPool(callbackExecutor, true)
-								.addEventListeners(new DiscordEventHandler())
-								.build();
+								.addEventListeners(new DiscordEventHandler());
+
+						// Nickname sync needs every member of every guild. MemberCachePolicy.ALL alone does not
+						// make JDA request member chunks, so the chunking filter has to be enabled explicitly;
+						// it is only paid for when the feature is actually used.
+						if (ConfigManager.getBoolean("account_linking.nickname_sync.enable", false)) {
+							builder.setChunkingFilter(ChunkingFilter.ALL);
+						}
+
+						jda = builder.build();
 
 						jda.awaitReady();
 					} catch (InterruptedException e) {
@@ -200,8 +209,10 @@ public final class DiscordManager {
 
 				LOGGER.info(I18nManager.getDmccTranslation("discord.manager.commands_success"));
 
-				// Reverts the nicknames that were changed while DMCC was offline; the linked accounts
-				// are guaranteed to be loaded by now, so an empty link list really means "unlinked"
+				// Starts the periodic reconciliation and reverts the nicknames that were changed while
+				// DMCC was offline; the linked accounts are guaranteed to be loaded by now, so an empty
+				// link list really means "unlinked".
+				NicknameSyncManager.start();
 				NicknameSyncManager.sweepAll();
 				return true;
 			} catch (Exception e) {

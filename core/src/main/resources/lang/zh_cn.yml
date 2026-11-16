@@ -215,9 +215,14 @@ discord:
   nickname_sync:
     template_invalid: "account_linking.nickname_sync.template 无效，已跳过 Discord 成员昵称同步。"
     missing_permission: "Discord 机器人缺少「管理昵称」权限，已跳过服务器 {} 的成员昵称同步。"
-    cannot_interact: "Discord 机器人无法管理服务器 {} 中权限更高的成员，已跳过这些成员。"
-    update_failed: "同步 Discord 成员 {} 的昵称失败：{}"
-    sweep_done: "Discord 成员昵称同步完成：共检查 {} 个成员，更新了 {} 个昵称。"
+    member_load_failed: "加载服务器 {} 的成员列表失败：{}"
+    members_incomplete: "服务器 {} 的成员缓存可能不完整（{}/{}），昵称同步可能遗漏部分成员。"
+    member_retrieve_failed: "从服务器 {} 获取 Discord 成员信息失败：{}"
+    cannot_manage_member: "无法管理服务器 {} 中角色层级高于机器人的成员，已跳过：{}。"
+    name_unresolved: "无法解析 Minecraft 玩家 {} 的名称，已跳过昵称同步。"
+    updated: "已将 Discord 成员 {} 在服务器 {} 的昵称同步为 \"{}\""
+    update_failed: "同步 Discord 成员 {} 在服务器 {} 的昵称失败：{}"
+    sweep_done: "Discord 成员昵称同步完成：{} 个服务器、{} 个成员，更新 {} 个昵称，跳过 {} 个成员。"
     failed: "Discord 成员昵称同步出错：{}"
   command:
     reply_failed: "无法向 Discord 命令发送者发送回复消息。"

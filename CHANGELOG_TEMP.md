@@ -116,6 +116,15 @@
 - `README_CN.md` 已检查：解析矩阵本就声称支持 Unicode 表情，本次修复使该声称成立，无需改文案。
 - 建议实机测试：Discord 发 `:heart:`/`❤️`/`☺️`/`✌🏻`/`❤️‍🔥`，与 `:smile:`/`:heart_decoration:` 对照；MC 内粘贴 `❤️`（开启 overwrite 或跨服中继）；reaction 用 ❤️；确认不再出现 `NoSuchElementException` 与 DMCC 断线重连。
 
+## 工作 22 · 2026/11/16 · Discord 昵称同步彻底重写（可靠性 + 线程隔离）
+- **用户可见修复**：① 开启 `nickname_sync` 后，启动/`reload` 不再出现“0 个成员被检查”（旧实现从不请求成员分块，大公会成员缓存几乎为空）；② 普通成员绑定后自行修改 Discord 昵称一定会被改回（包括重启 DMCC 后第一次改名——旧实现只监听 `GuildMemberUpdateNicknameEvent`，而 JDA 对未缓存成员只发通用事件）；③ 昵称写入失败/事件遗漏会在 5 分钟校准内自愈；④ 服务器所有者与角色层级不低于机器人的成员会被明确跳过并说明（Discord 限制，原先只有笼统警告）；⑤ MC 玩家改名后，下次进服（或重启 DMCC）昵称即跟随新名字；⑥ 模板超长时按 code point 截断，不会再把 emoji 劈成半个代理对；模板中的换行/控制字符会被清洗。
+- **根因**：`JDABuilder.createDefault(...)` 默认 `ChunkingFilter.NONE`，DMCC 只设了 `MemberCachePolicy.ALL`，JDA 从不请求成员分块；同步只读缓存且缓存未命中静默跳过；JDA 对未缓存成员只触发 `GuildMemberUpdateEvent`；无任何周期补偿；3 秒前缘防抖会吞事件；`MojangUtils` 玩家名缓存进程内永久有效；失败只打一条 WARN 不重试。
+- **实现**：`NicknameSyncManager` 重写为单线程 `DMCC-NicknameSync` 调度器：开启功能时 JDA builder 显式 `setChunkingFilter(ChunkingFilter.ALL)`（仅该功能开启才付启动代价）；启动扫描先检查每个 guild 的成员缓存完整性、必要时异步 `Guild#loadMembers()` 再扫；单用户同步在缓存未命中时回退 `Guild#retrieveMemberById`（10 秒超时 + 60 秒负缓存）；监听通用 `GuildMemberUpdateEvent` 覆盖未缓存成员；每用户 1.5 秒尾缘去抖替代前缘丢弃；每 5 分钟对已绑定用户做一次校准；新增 `rememberPlayerName(...)`，由进服/Link 请求与绑定成功处用包内的当前 MC 名更新（不再受 Mojang 名称永久缓存影响）；模板渲染做控制字符清洗 + 按 code point 截断；所有跳过/失败/汇总均有明确日志（每原因限频一次，扫描结束一条 INFO 汇总）。
+- **线程**：所有成员加载、REST 查询、昵称写入、校准均只跑在专用 `DMCC-NicknameSync` 线程（或 JDA 自己的事件/回调线程），扫描入口只做 `execute` 提交；`rememberPlayerName` 仅是并发 Map 写入。**未向 Minecraft 主线程新增任何工作**，不会造成 `Can't keep up` 的服务器卡顿。
+- 验证：`./gradlew clean` + `./gradlew build`（守护进程）全绿、零编译警告/零 Gradle 弃用警告；**临时 JUnit（NicknameSyncHelpersTest，9 例）全部通过后删除**，最终只剩 SmokeTest（1 test / 0 failures）；覆盖模板渲染/清洗/code point 截断、最新可解析账号选择、Mojang 返回 UUID/`N/A` 视为失败等纯逻辑。
+- `README_CN.md` §4.4 已按实际行为重写（触发时机、启动加载全部成员、5 分钟校准、所有者/高角色成员限制、模板修改需 reload 且 reload 会全量重推、截断与换行清洗）。
+- 建议实机测试：见交付说明中的昵称同步清单。
+
 ## 发布待办（汇总）
 - 待处理（按用户裁决都先不动）：`.github/ISSUE_TEMPLATE/bug.yml` 的 v2 残留文案；`docs/package.json` 缺 `license` 字段；`README.md`（英文翻译件）与 `README_CN.md` 的同步；配置迁移工具（发布前会提供在线版本，届时新键不再需要手工补）。
 - 已核对无需改动：`update/versions.json` 的 `3.0.0-beta.3` 条目本就是 `"compatibility": ["26.3"]`；存量用户 `config.yml` 补 IPv6 规则按开发者裁决暂不处理。
