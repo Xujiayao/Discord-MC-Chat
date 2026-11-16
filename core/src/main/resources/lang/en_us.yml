@@ -220,7 +220,7 @@ discord:
     members_incomplete: "The member cache of guild {} may be incomplete ({} / {}); nickname sync may miss some members."
     member_retrieve_failed: "Failed to retrieve a Discord member of guild {}: {}"
     cannot_manage_member: "The Discord bot cannot manage members with a higher role in guild {} (skipped: {})."
-    name_unresolved: "Cannot resolve the Minecraft player name of {}; nickname sync was skipped."
+    name_unresolved: "Cannot resolve the Minecraft player name of the linked account(s) (Discord member {}, guild {}): {}; skipped for now and will be retried automatically."
     updated: "Synced the nickname of Discord member {} in guild {} to \"{}\""
     update_failed: "Failed to sync the nickname of Discord member {} in guild {}: {}"
     sweep_done: "Discord member nickname sync finished: {} guild(s), {} member(s) checked, {} nickname(s) updated, {} member(s) skipped."

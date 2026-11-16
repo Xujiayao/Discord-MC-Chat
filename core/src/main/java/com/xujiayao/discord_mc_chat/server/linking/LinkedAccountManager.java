@@ -214,7 +214,8 @@ public final class LinkedAccountManager {
 	 * up to account_linking.max_minecraft_accounts_per_discord_user accounts (0 = unlimited).
 	 *
 	 * @param discordName   For logging only, not persisted.
-	 * @param minecraftName For logging only, not persisted.
+	 * @param minecraftName The player name at link time; persisted so nickname sync never depends on a
+	 *                      Mojang lookup for a name that DMCC already knows.
 	 * @return The outcome of the attempt; only {@link LinkResult#SUCCESS} records the link.
 	 */
 	public static synchronized LinkResult linkAccount(String discordId, String discordName, String minecraftUuid, String minecraftName) {
@@ -233,13 +234,49 @@ public final class LinkedAccountManager {
 		}
 
 		LINKED_ACCOUNTS.computeIfAbsent(discordId, _ -> new ArrayList<>())
-				.add(new LinkEntry(minecraftUuid, System.currentTimeMillis(), isOfflineUuid(minecraftUuid) ? minecraftName : null));
+				.add(new LinkEntry(minecraftUuid, System.currentTimeMillis(), isOfflineUuid(minecraftUuid) ? minecraftName : null, minecraftName));
 		UUID_TO_DISCORD.put(minecraftUuid, discordId);
 
 		LOGGER.info(I18nManager.getDmccTranslation("linking.manager.linked", discordName, discordId, minecraftName, minecraftUuid));
 		save();
 		OpSyncManager.syncAll();
 		return LinkResult.SUCCESS;
+	}
+
+	/**
+	 * Updates the remembered in-game name of an existing link. Called on every join so the nickname
+	 * template follows renames and survives a restart without another Mojang lookup.
+	 *
+	 * @param minecraftUuid The linked Minecraft UUID.
+	 * @param playerName    The current player name reported by the DMCC client.
+	 */
+	public static synchronized void updatePlayerName(String minecraftUuid, String playerName) {
+		if (minecraftUuid == null || playerName == null || playerName.isBlank()) {
+			return;
+		}
+
+		String discordId = UUID_TO_DISCORD.get(minecraftUuid);
+		if (discordId == null) {
+			return;
+		}
+
+		List<LinkEntry> entries = LINKED_ACCOUNTS.get(discordId);
+		if (entries == null) {
+			return;
+		}
+
+		for (int i = 0; i < entries.size(); i++) {
+			LinkEntry entry = entries.get(i);
+			if (entry.minecraftUuid().equals(minecraftUuid)) {
+				if (playerName.equals(entry.playerName())) {
+					return;
+				}
+
+				entries.set(i, new LinkEntry(entry.minecraftUuid(), entry.linkedAt(), entry.offlinePlayerName(), playerName));
+				save();
+				return;
+			}
+		}
 	}
 
 	/**
@@ -366,10 +403,21 @@ public final class LinkedAccountManager {
 		LIMIT_REACHED
 	}
 
+	/**
+	 * One linked Minecraft account.
+	 *
+	 * @param minecraftUuid    The Minecraft UUID.
+	 * @param linkedAt         Epoch millis of when the link was created.
+	 * @param offlinePlayerName The name captured at link time for offline-mode UUIDs, or null. Kept for
+	 *                          JSON compatibility with pre-existing files.
+	 * @param playerName       The last known in-game name, captured at link time and refreshed on every
+	 *                          join. Missing in files written by older versions, so it is nullable.
+	 */
 	public record LinkEntry(
 			String minecraftUuid,
 			long linkedAt,
-			String offlinePlayerName
+			String offlinePlayerName,
+			String playerName
 	) {
 	}
 }

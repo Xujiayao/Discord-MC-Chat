@@ -370,30 +370,35 @@ public final class NicknameSyncManager {
 	}
 
 	private static SyncResult syncMember(Guild guild, Member member, String template, boolean announce) {
-		if (!guild.getSelfMember().canInteract(member)) {
-			warnOnce("cannot_manage_member:" + guild.getId() + ":" + member.getId(),
-					"discord.nickname_sync.cannot_manage_member", guild.getName(), member.getEffectiveName());
-			return SyncResult.SKIPPED;
-		}
-
 		List<LinkedAccountManager.LinkEntry> entries = LinkedAccountManager.getLinkEntriesByDiscordId(member.getId());
 		String expected;
 		if (entries.isEmpty()) {
 			// Unlinked members must keep their plain Discord username
 			expected = null;
 		} else {
-			String playerName = resolvePlayerName(entries);
-			if (playerName == null) {
+			PlayerNameResolution playerName = resolvePlayerName(entries);
+			if (playerName.name() == null) {
 				warnOnce("name_unresolved:" + member.getId(), "discord.nickname_sync.name_unresolved",
-						entries.getFirst().minecraftUuid());
+						member.getUser().getName(), guild.getName(), playerName.failure());
 				return SyncResult.SKIPPED;
 			}
 
-			expected = renderNickname(template, playerName, member.getUser().getName());
+			expected = renderNickname(template, playerName.name(), member.getUser().getName());
 			if (expected == null) {
 				warnOnce("template", "discord.nickname_sync.template_invalid");
 				return SyncResult.SKIPPED;
 			}
+		}
+
+		if (Objects.equals(member.getNickname(), expected)) {
+			// Nothing to change: do not warn for members the bot could not manage anyway (e.g. the guild owner)
+			return SyncResult.UNCHANGED;
+		}
+
+		if (!guild.getSelfMember().canInteract(member)) {
+			warnOnce("cannot_manage_member:" + guild.getId() + ":" + member.getId(),
+					"discord.nickname_sync.cannot_manage_member", guild.getName(), member.getUser().getName());
+			return SyncResult.SKIPPED;
 		}
 
 		return applyNickname(guild, member, expected, announce) ? SyncResult.UPDATED : SyncResult.UNCHANGED;
@@ -410,17 +415,17 @@ public final class NicknameSyncManager {
 					_ -> {
 						if (announce) {
 							LOGGER.info(I18nManager.getDmccTranslation("discord.nickname_sync.updated",
-									member.getEffectiveName(), guild.getName(), expected == null ? "" : expected));
+									member.getUser().getName(), guild.getName(), expected == null ? "" : expected));
 						}
 					},
 					error -> warnOnce("update_failed:" + guild.getId() + ":" + member.getId() + ":" + error.getClass().getSimpleName(),
-							"discord.nickname_sync.update_failed", member.getEffectiveName(), guild.getName(),
+							"discord.nickname_sync.update_failed", member.getUser().getName(), guild.getName(),
 							String.valueOf(error.getMessage())));
 		} catch (Exception e) {
 			// Permission/hierarchy can change between the checks above and this call; log once and let the
 			// next trigger or the periodic reconciliation retry instead of aborting the whole scan.
 			warnOnce("update_failed:" + guild.getId() + ":" + member.getId() + ":" + e.getClass().getSimpleName(),
-					"discord.nickname_sync.update_failed", member.getEffectiveName(), guild.getName(), e.toString());
+					"discord.nickname_sync.update_failed", member.getUser().getName(), guild.getName(), e.toString());
 			return false;
 		}
 		return true;
@@ -470,56 +475,63 @@ public final class NicknameSyncManager {
 	 * Picks the player name of the newest linked Minecraft account that can be resolved; an older link is
 	 * used as a fallback when the newest account cannot be resolved, instead of writing a placeholder into
 	 * the nickname. Package-private with injected lookups so the selection is unit-testable.
+	 *
+	 * @return The resolved name, or a failure description that lists every linked account and why it could
+	 * not be resolved.
 	 */
-	static String choosePlayerName(List<LinkedAccountManager.LinkEntry> entries,
-	                               Function<String, String> knownNameLookup,
-	                               BiFunction<String, String, String> mojangLookup) {
+	static PlayerNameResolution choosePlayerName(List<LinkedAccountManager.LinkEntry> entries,
+	                                             Function<String, String> knownNameLookup,
+	                                             BiFunction<String, String, MojangUtils.PlayerNameLookup> mojangLookup) {
 		if (entries == null || entries.isEmpty()) {
-			return null;
+			return new PlayerNameResolution(null, "no linked Minecraft account");
 		}
 
 		List<LinkedAccountManager.LinkEntry> sorted = new ArrayList<>(entries);
 		sorted.sort(Comparator.comparingLong(LinkedAccountManager.LinkEntry::linkedAt).reversed());
+
+		StringBuilder failures = new StringBuilder();
 		for (LinkedAccountManager.LinkEntry entry : sorted) {
-			String name = resolveEntryPlayerName(entry, knownNameLookup, mojangLookup);
-			if (name != null) {
-				return name;
+			if (entry == null || entry.minecraftUuid() == null || entry.minecraftUuid().isBlank()) {
+				failures.append("<empty UUID>: invalid link entry; ");
+				continue;
 			}
+
+			String uuid = entry.minecraftUuid();
+			String knownName = knownNameLookup.apply(uuid);
+			if (knownName != null && !knownName.isBlank()) {
+				return new PlayerNameResolution(knownName, null);
+			}
+
+			// Persisted at link time and refreshed on every join, so a restart does not need a Mojang lookup.
+			if (entry.playerName() != null && !entry.playerName().isBlank()) {
+				return new PlayerNameResolution(entry.playerName(), null);
+			}
+
+			if (entry.offlinePlayerName() != null && !entry.offlinePlayerName().isBlank()) {
+				return new PlayerNameResolution(entry.offlinePlayerName(), null);
+			}
+
+			MojangUtils.PlayerNameLookup lookup = mojangLookup.apply(uuid, entry.offlinePlayerName());
+			if (lookup != null && lookup.name() != null && !lookup.name().isBlank()) {
+				if (!UNRESOLVED_NAME.equals(lookup.name()) && !lookup.name().equals(uuid)) {
+					return new PlayerNameResolution(lookup.name(), null);
+				}
+				failures.append(uuid).append(": no resolvable player name (offline UUID without a stored name); ");
+				continue;
+			}
+
+			String reason = lookup == null ? "empty lookup result" : lookup.failure();
+			if (reason == null || reason.isBlank()) {
+				reason = "unknown failure";
+			}
+			failures.append(uuid).append(": ").append(reason).append("; ");
 		}
-		return null;
+
+		return new PlayerNameResolution(null, failures.toString());
 	}
 
-	private static String resolvePlayerName(List<LinkedAccountManager.LinkEntry> entries) {
-		return choosePlayerName(entries, KNOWN_PLAYER_NAMES::get, MojangUtils::resolvePlayerName);
-	}
-
-	private static String resolveEntryPlayerName(LinkedAccountManager.LinkEntry entry,
-	                                             Function<String, String> knownNameLookup,
-	                                             BiFunction<String, String, String> mojangLookup) {
-		if (entry == null || entry.minecraftUuid() == null || entry.minecraftUuid().isBlank()) {
-			return null;
-		}
-
-		String knownName = knownNameLookup.apply(entry.minecraftUuid());
-		if (knownName != null && !knownName.isBlank()) {
-			return knownName;
-		}
-
-		if (entry.offlinePlayerName() != null && !entry.offlinePlayerName().isBlank()) {
-			return entry.offlinePlayerName();
-		}
-
-		try {
-			String resolved = mojangLookup.apply(entry.minecraftUuid(), entry.offlinePlayerName());
-			if (resolved != null && !resolved.isBlank()
-					&& !resolved.equals(entry.minecraftUuid())
-					&& !UNRESOLVED_NAME.equals(resolved)) {
-				return resolved;
-			}
-		} catch (Exception ignored) {
-			// Treated as an unresolved name: skip this member instead of writing a placeholder nickname.
-		}
-		return null;
+	private static PlayerNameResolution resolvePlayerName(List<LinkedAccountManager.LinkEntry> entries) {
+		return choosePlayerName(entries, KNOWN_PLAYER_NAMES::get, MojangUtils::lookupPlayerName);
 	}
 
 	/**
@@ -667,6 +679,12 @@ public final class NicknameSyncManager {
 			}
 			return executor;
 		}
+	}
+
+	/**
+	 * The outcome of picking a player name for the nickname template; exactly one field is set.
+	 */
+	record PlayerNameResolution(String name, String failure) {
 	}
 
 	private enum SyncResult {

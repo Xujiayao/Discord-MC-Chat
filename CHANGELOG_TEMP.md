@@ -125,6 +125,14 @@
 - `README_CN.md` §4.4 已按实际行为重写（触发时机、启动加载全部成员、5 分钟校准、所有者/高角色成员限制、模板修改需 reload 且 reload 会全量重推、截断与换行清洗）。
 - 建议实机测试：见交付说明中的昵称同步清单。
 
+## 工作 23 · 2026/11/16 · 昵称同步名称来源修复与告警降噪
+- **实测定位（非推断）**：Standalone 启动扫描对正版账号 69ca1318-24ef-4560-b35e-85865d85ab49 的 Mojang 名称查询返回 **HTTP 429**（用户网络正常，属 Mojang 会话服务器侧限流）；此前 22:37 的两次 Cannot resolve 即同一原因，60 秒负缓存导致 reload 后重复出现、恢复后自愈。旧实现每次启动都依赖该外部查询，且 links.json 未保存玩家名（offlinePlayerName 仅对 v3 UUID 落盘）。
+- **修复**：LinkEntry 新增持久化 playerName（绑定成功时写入，之后每次玩家进服由 Link 请求更新；旧 links.json 缺该字段视为 null，自动向后兼容、无需手工迁移）；昵称解析优先级改为 内存进服名 → links.json 持久化名 → 离线 UUID 保存名 → Mojang 查询兜底，正常情况不再发起外部请求；xujiayao 这类“没有昵称可改”的未绑定高角色成员不再产生层级 WARN，只有真正需要改动昵称时才告警。
+- **日志增强（上一轮未提交改动并入本工作）**：Mojang 查询失败现在带出真实原因（HTTP 状态码/异常/负缓存上次原因）；updated/update_failed/cannot_manage_member/name_unresolved 使用稳定的 Discord 用户名而不是可变昵称，避免 Discord member +Xujiayao ... to "+Xujiayao" 这类废话。
+- 验证：./gradlew clean + ./gradlew build（守护进程）全绿、零编译警告/零 Gradle 弃用警告；临时 JUnit（NicknameSyncHelpersTest 12 例 + LinkEntryJsonTest 2 例，覆盖 links.json 旧格式兼容/新格式往返、名称优先级、模板辅助）全部通过后删除，最终只剩 SmokeTest（1 test / 0 failures）。
+- README_CN.md §4.4 已同步名称来源与告警行为；用户可见变化：不再因 Mojang 限流而跳过昵称同步（旧记录在玩家首次进服后也会写入持久化名称）。
+- 建议实机测试：① 重启 Standalone（不先让绑定玩家进服）应不再出现名称解析 WARN；② 绑定玩家改名后进服，昵称应跟随新名字；③ 未绑定且无昵称的高角色成员不再刷层级 WARN，有昵称仍会 WARN；④ 连续 reload 不再触发 Mojang 查询与 429。
+
 ## 发布待办（汇总）
 - 待处理（按用户裁决都先不动）：`.github/ISSUE_TEMPLATE/bug.yml` 的 v2 残留文案；`docs/package.json` 缺 `license` 字段；`README.md`（英文翻译件）与 `README_CN.md` 的同步；配置迁移工具（发布前会提供在线版本，届时新键不再需要手工补）。
 - 已核对无需改动：`update/versions.json` 的 `3.0.0-beta.3` 条目本就是 `"compatibility": ["26.3"]`；存量用户 `config.yml` 补 IPv6 规则按开发者裁决暂不处理。
