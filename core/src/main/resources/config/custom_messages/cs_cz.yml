@@ -1,0 +1,203 @@
+# ==================================================
+# Discord-MC-Chat (DMCC)
+# By Xujiayao
+#
+# Custom Messages file for DMCC version:
+# Do NOT change this value manually!
+version: ${mod_version}
+#
+# Code:     en_us
+# Language: English (US)
+#
+# Discord-MC-Chat Docs:
+# https://dmcc.xujiayao.com/
+#
+# Only edit the items below if you know what you are doing!
+# ==================================================
+
+xxxxx_to_minecraft: # for both discord_to_minecraft and minecraft_to_minecraft
+  mentioned: "{effective_name} tě zmínil!"
+  user_message:
+    - text: "[{server}] "
+      bold: true
+      color: "{server_color}"
+    - text: "<{effective_name}> "
+      bold: false
+      color: "{role_color}"
+    - text: "{message}"
+      bold: false
+      color: "gray"
+  system_message:
+    - text: "[{server}] "
+      bold: true
+      color: "{server_color}"
+    - text: "{message}"
+      bold: false
+      color: "gray"
+
+overwrite: # for source DMCC client only
+  standalone:
+    user_message:
+      - text: "[{server}] "
+        bold: true
+        color: "{server_color}"
+      - text: "<{display_name}> "
+        bold: false
+        color: "{role_color}"
+      - text: "{message}"
+        bold: false
+        color: "white"
+    system_message:
+      - text: "[{server}] "
+        bold: true
+        color: "{server_color}"
+      - text: "{message}"
+        bold: false
+        color: "white"
+  single_server:
+    user_message:
+      - text: "<{display_name}> "
+        bold: false
+        color: "{role_color}"
+      - text: "{message}"
+        bold: false
+        color: "white"
+    system_message:
+      - text: "{message}"
+        bold: false
+        color: "white"
+
+discord_to_minecraft:
+  response: # Original message format when replying to another user's message
+    - text: "    ┌──── "
+      bold: true
+      color: "dark_gray"
+    - text: "<{effective_name}> "
+      bold: false
+      color: "{role_color}"
+    - text: "{message}"
+      bold: false
+      color: "dark_gray"
+  command:
+    - text: "[Discord] "
+      bold: true
+      color: "blue"
+    - text: "{effective_name} "
+      bold: false
+      color: "{role_color}"
+    - text: "provedl příkaz [{command}]!"
+      bold: false
+      color: "gray"
+  reaction: # Reaction message format
+    - text: "[Discord] "
+      bold: true
+      color: "blue"
+    - text: "{effective_name} "
+      bold: false
+      color: "{role_color}"
+    - text: "reagoval "
+      bold: false
+      color: "gray"
+    - text: "{emoji}"
+      bold: false
+      color: "yellow"
+    - text: " na tuto zprávu!"
+      bold: false
+      color: "gray"
+  edit: # Message edit notification format
+    - text: "[Discord] "
+      bold: true
+      color: "blue"
+    - text: "{effective_name} "
+      bold: false
+      color: "{role_color}"
+    - text: "upravil tuto zprávu! Upravený obsah:"
+      bold: false
+      color: "gray"
+  edited_message: # Edited message content format
+    - text: "    └──── "
+      bold: true
+      color: "dark_gray"
+    - text: "<{effective_name}> "
+      bold: false
+      color: "{role_color}"
+    - text: "{message}"
+      bold: false
+      color: "gray"
+  delete: # Message delete notification format
+    - text: "[Discord] "
+      bold: true
+      color: "blue"
+    - text: "Zpráva odeslaná uživatelem "
+      bold: false
+      color: "gray"
+    - text: "{effective_name} "
+      bold: false
+      color: "{role_color}"
+    - text: "byla smazána!"
+      bold: false
+      color: "gray"
+
+# These are for system_messages
+minecraft_to_xxxxx:
+  server:
+    start: ":white_check_mark: **Server byl spuštěn!**"
+    stop: ":octagonal_sign: **Server byl zastaven!**"
+  player:
+    join: ":wave: **{display_name} se připojil na server**"
+    quit: ":cry: **{display_name} opustil server**"
+    die: ":skull: **{death_message}**"
+    advancement:
+      task: ":partying_face: **{display_name} získal úspěch [{title}]**\\n       *{description}*"
+      challenge: ":partying_face: **{display_name} splnil výzvu [{title}]**\\n       *{description}*"
+      goal: ":partying_face: **{display_name} dosáhl cíle [{title}]**\\n       *{description}*"
+    change_game_mode: ":arrows_counterclockwise: **{display_name} změnil herní režim na {mode}**"
+  source:
+    me: ":eyes: **{action}**"
+
+# These are for user_messages
+minecraft_to_discord:
+  user_message:
+    enabled_fake_user_style:
+      standalone:
+        username: "[{server}] {display_name}"
+        content: "{message}"
+      single_server:
+        username: "{display_name}"
+        content: "{message}"
+    disabled_fake_user_style:
+      standalone: "[{server}] <{display_name}> {message}"
+      single_server: "<{display_name}> {message}"
+
+activity:
+  all_servers_offline: "Minecraft (server offline)"
+  at_least_one_server_online: "Minecraft ({online_player_count}/{max_player_count})"
+
+channel_topic_updating:
+  all_servers_offline: ":octagonal_sign: Server offline | Poslední aktualizace: <t:{last_update_time}:f>"
+  at_least_one_server_online:
+    standalone: ":white_check_mark: {online_player_count}/{max_player_count} hráč(ů) online | {players_ever_joined} hráč(ů) se kdy připojilo | {online_server_count} server(ů) online [{online_server_list}] | Server spuštěn <t:{server_started_time}:R> | Poslední aktualizace: <t:{last_update_time}:f>"
+    single_server: ":white_check_mark: {online_player_count}/{max_player_count} hráč(ů) online | {players_ever_joined} hráč(ů) se kdy připojilo | Server spuštěn <t:{server_started_time}:R> | Poslední aktualizace: <t:{last_update_time}:f>"
+
+voice_channels_updating:
+  server_status:
+    all_servers_offline: "Stav: Offline"
+    at_least_one_server_online:
+      standalone: "Stav: {online_server_count} server(ů) online"
+      single_server: "Stav: Online"
+  player_count:
+    all_servers_offline: "Hráči: 0"
+    at_least_one_server_online: "Hráči: {online_player_count}/{max_player_count}"
+
+mspt_monitoring:
+  first_exceeded: ":warning: **Server MSPT ({mspt}) překročil práh ({threshold})! Další kontrola za <t:{next_check_time}:R>.**"
+  still_exceeded: ":warning: **Server MSPT ({mspt}) stále překračuje práh ({threshold})! Další kontrola za <t:{next_check_time}:R>.**"
+  first_recovered: ":white_check_mark: **Server MSPT ({mspt}) se vrátil pod práh ({threshold})!**"
+
+console_forwarding:
+  started:
+    standalone: ":white_check_mark: :satellite: **Začátek přeposílání console logů z {server}!**"
+    single_server: ":white_check_mark: :satellite: **Začátek přeposílání console logů!**"
+  stopped:
+    standalone: ":octagonal_sign: :satellite: **Zastavení přeposílání console logů z {server}!**"
+    single_server: ":octagonal_sign: :satellite: **Zastavení přeposílání console logů!**"
