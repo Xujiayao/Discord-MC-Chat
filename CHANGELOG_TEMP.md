@@ -182,6 +182,13 @@
 - **建议实机测试**：① 新配置下玩家在游戏内发送 @everyone 不再 ping Discord；② `/console` 仍按发送者 DMCC OP 执行对应 MC 权限等级的指令；③ 控制台频道 `execute_messages_from_channel` 注释与实际行为一致。
 - **备注**：`/info` 布局可定制部分按要求留到后续，本 issue 保持 open（提交使用 Related to #344）。
 
+## 工作 31 · 2026/11/18 · Standalone 模式新增 DMCC 控制台频道（#348）
+- **用户可见（Standalone 专属）**：`console_forwarding.channel_for_standalone` 配置后，DMCC 会从进程启动开始 tail 自身 `logs/DMCC_*.log`（含启动历史、堆栈、JDA 等全部 slf4j 日志），以 `DMCC` webhook 身份、沿用控制台转发的脱敏与行内代码块+分批规则转发到该频道，并在转发器启动/停止时发送开始/停止提示；在频道内发送文本等同于在交互式终端输入 DMCC 命令（自动去前导 `/`，支持 `execute <at> <command>` 的整体参数规则），命令执行前会像 console 频道一样回显正在执行 “xxx”...，命令回复与文件结果也以同一 `DMCC` webhook 身份返回。频道设为 `""` 可关闭；频道不可用时会告警一次并禁用至 reload。单服模式不启用该功能（DMCC 日志已随 Minecraft 日志进入 `console_forwarding.channel`）。
+- **实现**：从 `TerminalManager` 抽出共享 `CommandLineParser`（终端与频道复用同一套解析）；`LoggerImpl` 暴露当前日志文件路径；新增 `StandaloneConsoleForwarder`（tail `logs/DMCC_*.log`：1 秒轮询、从文件开头回放、有界缓存、轮转/截断处理、批量发送）；`DiscordManager` 新增 `sendStandaloneConsoleBatch`、`sendStandaloneConsoleStatusMessage`、`isStandaloneConsoleChannel`，日志与结果使用 `DMCC` webhook 身份；新增 `StandaloneConsoleCommandSender`（命令回复/文件也走同一 webhook 身份）；`DiscordEventHandler` 在普通聊天/客户端控制台频道处理之前消费该频道消息，并用 `OpLevelResolver` 顶层 OP 凭据执行；`ServerDMCC` 在 standalone 启动时启动、关服/reload 时停止转发器并发送停止提示。
+- **配置迁移**：standalone 的 beta.1/2/3 配置需手工补 `console_forwarding.channel_for_standalone`（不需要时设为 `""`）。
+- **验证**：`./gradlew clean` + `./gradlew build`（守护进程）全绿、零编译警告/零 Gradle 弃用警告；临时 JUnit（命令行解析 5 例）通过后删除，最终只剩 SmokeTest（1 test / 0 failures）。
+- **建议实机测试**：① standalone 配置频道后，启动历史与实时日志出现在频道（webhook 显示为 `DMCC`），并收到 started 提示；② 在频道内发送 `info`、`reload`（需权限）、错误命令，回复以 `DMCC` webhook 返回；③ 关服/reload 时有 stopped/started 提示且不重复回放；④ 无日志转发循环；⑤ 频道设为 `""` 时关闭，single_server 不受影响。
+
 ## 发布待办（汇总）
 - 待处理（按用户裁决都先不动）：`.github/ISSUE_TEMPLATE/bug.yml` 的 v2 残留文案；`docs/package.json` 缺 `license` 字段；`README.md`（英文翻译件）与 `README_CN.md` 的同步；配置迁移工具（发布前会提供在线版本，届时新键不再需要手工补）。
 - 已核对无需改动：`update/versions.json` 的 `3.0.0-beta.3` 条目本就是 `"compatibility": ["26.3"]`；存量用户 `config.yml` 补 IPv6 规则按开发者裁决暂不处理。

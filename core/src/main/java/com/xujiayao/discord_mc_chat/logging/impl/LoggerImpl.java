@@ -12,6 +12,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
@@ -35,6 +36,12 @@ public final class LoggerImpl extends LegacyAbstractLogger {
 	private static volatile PrintWriter fileWriter;
 	private static volatile boolean fileWriterInitialized = false;
 	private static volatile boolean consoleAnsiEnabled = true;
+
+	/**
+	 * Path of the log file currently written by this JVM; the Standalone console forwarder tails it so the
+	 * Discord channel receives the same lines (including startup history and stack traces) as the console.
+	 */
+	private static volatile Path currentLogFilePath;
 
 	/**
 	 * Format of the per-line log timestamp. {@link DateTimeFormatter} is immutable and thread-safe, so it can
@@ -97,9 +104,11 @@ public final class LoggerImpl extends LegacyAbstractLogger {
 				try {
 					Files.createDirectories(Paths.get("logs"));
 					String fileName = "logs/DMCC_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".log";
+					Path logFilePath = Paths.get(fileName);
 					// UTF-8 instead of the platform default charset, which is not UTF-8 on every platform.
-					fileWriter = new PrintWriter(Files.newBufferedWriter(Paths.get(fileName), StandardCharsets.UTF_8,
+					fileWriter = new PrintWriter(Files.newBufferedWriter(logFilePath, StandardCharsets.UTF_8,
 							StandardOpenOption.CREATE, StandardOpenOption.APPEND), true);
+					currentLogFilePath = logFilePath;
 				} catch (IOException e) {
 					System.err.println("Failed to create log file: " + e.getMessage());
 					e.printStackTrace(System.err);
@@ -128,6 +137,13 @@ public final class LoggerImpl extends LegacyAbstractLogger {
 
 	public static void setConsoleAnsiEnabled(boolean enabled) {
 		consoleAnsiEnabled = enabled;
+	}
+
+	/**
+	 * @return the log file currently written by this JVM, or null before the first line was logged
+	 */
+	public static Path getCurrentLogFilePath() {
+		return currentLogFilePath;
 	}
 
 	// TRACE and DEBUG are intentionally disabled in DMCC: isTraceEnabled()/isDebugEnabled() always

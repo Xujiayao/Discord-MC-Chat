@@ -1,9 +1,11 @@
 package com.xujiayao.discord_mc_chat.server;
 
 import com.xujiayao.discord_mc_chat.config.I18nManager;
+import com.xujiayao.discord_mc_chat.config.ModeManager;
 import com.xujiayao.discord_mc_chat.server.discord.DiscordManager;
 import com.xujiayao.discord_mc_chat.server.discord.MsptMonitor;
 import com.xujiayao.discord_mc_chat.server.linking.LinkedAccountManager;
+import com.xujiayao.discord_mc_chat.standalone.StandaloneConsoleForwarder;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
 
 import java.util.concurrent.ExecutorService;
@@ -56,6 +58,10 @@ public final class ServerDMCC {
 				port = nettyServer.start();
 				MsptMonitor.start();
 
+				if ("standalone".equals(ModeManager.getMode())) {
+					StandaloneConsoleForwarder.start();
+				}
+
 				return port;
 			}).get();
 		} catch (Exception e) {
@@ -65,6 +71,10 @@ public final class ServerDMCC {
 	}
 
 	public void shutdown() {
+		if ("standalone".equals(ModeManager.getMode())) {
+			StandaloneConsoleForwarder.shutdown();
+		}
+
 		if (nettyServer != null) {
 			nettyServer.stop();
 		}

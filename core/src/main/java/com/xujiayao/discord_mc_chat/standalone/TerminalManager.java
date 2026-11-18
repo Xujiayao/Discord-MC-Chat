@@ -1,5 +1,6 @@
 package com.xujiayao.discord_mc_chat.standalone;
 
+import com.xujiayao.discord_mc_chat.commands.CommandLineParser;
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
 import com.xujiayao.discord_mc_chat.commands.LocalCommandSender;
 import com.xujiayao.discord_mc_chat.config.I18nManager;
@@ -46,28 +47,9 @@ public final class TerminalManager {
 						break;
 					}
 
-					String line = scanner.nextLine().trim();
+					CommandLineParser.ParsedCommand parsed = CommandLineParser.parse(scanner.nextLine());
 
-					if (line.startsWith("/")) {
-						line = line.substring(1);
-					}
-
-					String[] parts = line.split("\\s+");
-					String name = parts[0].toLowerCase();
-					String[] args;
-
-					// Special handling for 'execute <at> <dmcc_command...>': the dmcc_command part (everything
-					// after <at>) is treated as a single argument.
-					if ("execute".equals(name) && parts.length >= 3) {
-						String at = parts[1];
-						int atEndIndex = line.indexOf(parts[1], name.length()) + parts[1].length();
-						String command = line.substring(atEndIndex).trim();
-						args = new String[]{at, command};
-					} else {
-						args = parts.length > 1 ? line.substring(line.indexOf(' ') + 1).split("\\s+") : new String[0];
-					}
-
-					CommandManager.execute(new TerminalCommandSender(), name, args);
+					CommandManager.execute(new TerminalCommandSender(), parsed.name(), parsed.args());
 				} catch (IllegalStateException e) {
 					// This can happen if System.in is closed externally, which signals the end.
 					LOGGER.warn(I18nManager.getDmccTranslation("terminal.input_closed"), e);

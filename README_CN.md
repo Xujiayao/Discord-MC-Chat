@@ -166,6 +166,7 @@ DMCC 所有运行模式都基于一个统一的通信模型，该模型包含两
 - 命令回复逐行打印到控制台；若命令返回文件（例如 `log`），文件会被写入 `./config/discord_mc_chat/cache/log`。
 - 终端不支持 `log` 命令（会提示直接访问 `./logs` 目录），因为终端无法接收附件。
 - 启动参数 `--disable-ascii` 可关闭控制台 ANSI 颜色输出。
+- **Discord 控制台频道（`console_forwarding.channel_for_standalone`）**: Standalone 专属。DMCC 会从进程启动开始 tail 自身的 `logs/DMCC_*.log`（含启动历史、堆栈与 JDA 等全部 slf4j 日志），以 `DMCC` 的 webhook 身份、沿用控制台转发的脱敏与行内代码块规则批量转发到该频道，并在转发器启动/停止时发送开始/停止提示；在频道内发送文本等同于在交互式终端输入 DMCC 命令（自动去掉前导 `/`，支持 `execute <at> <command>` 的整体参数规则），命令执行前会像 console 频道一样回显正在执行 “xxx”...，命令回复与文件结果也以同一 `DMCC` webhook 身份返回。频道为空字符串时关闭该功能；该频道必须仅管理员可见，因为任何能在其中发言的人都能执行 DMCC 命令。`single_server` 不需要此功能：DMCC 的日志会与 Minecraft 日志一起出现在 `console_forwarding.channel`。
 
 ## 4. 账户绑定系统 (Account Linking)
 
@@ -408,7 +409,7 @@ DMCC 对配置文件的完整性与一致性做了强校验，力求在启动阶
   本次新增的键共 5 个：`account_linking.require_linking.enable`、`account_linking.require_linking.unlinked_player_action`
   （见 4.4）、`account_linking.max_minecraft_accounts_per_discord_user`（见 4.1）、`account_linking.nickname_sync.enable` 与
   `account_linking.nickname_sync.template`（见 4.4）。
-- **从 beta.1 / beta.2 / beta.3 手工升级**: 本版本尚未提供自动迁移工具，需要手工处理：① 把 `config.yml`、`mode.yml`、`custom_messages/<lang>.yml` 中的 `version` 全部改为 `1`；② 按启动日志报告的缺失键从模板补齐（自 beta.3 起还新增了 IPv6 过滤规则、上述 5 个 account_linking 键；本版本新增的其他键见对应发布说明）；③ 修改后重新启动或 `/dmcc reload`。
+- **从 beta.1 / beta.2 / beta.3 手工升级**: 本版本尚未提供自动迁移工具，需要手工处理：① 把 `config.yml`、`mode.yml`、`custom_messages/<lang>.yml` 中的 `version` 全部改为 `1`；② 按启动日志报告的缺失键从模板补齐（自 beta.3 起还新增了 IPv6 过滤规则、上述 5 个 account_linking 键；standalone 还需补 `console_forwarding.channel_for_standalone`，不需要该功能时设为 `""`；`custom_messages` 还需补 `discord_to_minecraft.forwarded` 模板；本版本新增的其他键见对应发布说明）；③ 修改后重新启动或 `/dmcc reload`。
 - **未修改提醒**: 对必须由用户填写的关键项（`discord.bot.token`、`multi_server.server_name`、
   `multi_server.connection.shared_secret`）以及仍未从模板改动的键给出提醒。
 - **安全相关默认值**: `discord.allow_mentions` 默认只允许 `users`（不允许 @everyone/@role）；`command_permission_levels.console`

@@ -178,6 +178,11 @@ commands:
     title: "账户绑定记录"
     total: "共计：{} 个已绑定 Minecraft 玩家，关联 {} 个 Discord 用户。"
 
+standalone_console:
+  disabled: "无法解析 Standalone DMCC 控制台频道 \"{}\" 或该频道不可用；该频道的控制台转发与命令执行将禁用，直到重新加载 DMCC。"
+  failed: "Standalone DMCC 控制台转发因异常停止：{}"
+  send_failed: "向 Standalone DMCC 控制台频道发送失败，转发已停止；重新加载 DMCC 后将再次尝试。"
+
 main:
   init:
     headless:

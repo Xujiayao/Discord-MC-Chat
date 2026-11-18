@@ -179,6 +179,11 @@ commands:
     title: "Account Linking Records"
     total: "Total: {} linked Minecraft player(s) across {} Discord user(s)."
 
+standalone_console:
+  disabled: "Standalone DMCC console channel \"{}\" could not be resolved or is unavailable; console forwarding and command execution from that channel are disabled until DMCC is reloaded."
+  failed: "Standalone DMCC console forwarding stopped after an error: {}"
+  send_failed: "Standalone DMCC console forwarding stopped because sending to the console channel failed; it will retry after DMCC is reloaded."
+
 main:
   init:
     headless:

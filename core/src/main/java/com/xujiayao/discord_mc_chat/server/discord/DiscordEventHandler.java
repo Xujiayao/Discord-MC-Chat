@@ -1,5 +1,6 @@
 package com.xujiayao.discord_mc_chat.server.discord;
 
+import com.xujiayao.discord_mc_chat.commands.CommandLineParser;
 import com.xujiayao.discord_mc_chat.commands.CommandManager;
 import com.xujiayao.discord_mc_chat.commands.impl.StatsCommand;
 import com.xujiayao.discord_mc_chat.config.ConfigManager;
@@ -318,6 +319,11 @@ final class DiscordEventHandler extends ListenerAdapter {
 			return;
 		}
 
+		if (tryExecuteStandaloneConsoleCommand(event, message)) {
+			cacheMessage(message);
+			return;
+		}
+
 		if (tryExecuteConsoleMessage(event, message)) {
 			cacheMessage(message);
 			return;
@@ -385,6 +391,42 @@ final class DiscordEventHandler extends ListenerAdapter {
 		NetworkManager.broadcastToClients(packet);
 
 		cacheMessage(message);
+	}
+
+	/**
+	 * Handles Standalone DMCC's own console channel: every message is consumed (never relayed to Minecraft),
+	 * and non-blank contents are executed as DMCC commands with the author's resolved OP level.
+	 */
+	private boolean tryExecuteStandaloneConsoleCommand(MessageReceivedEvent event, Message message) {
+		if (!"standalone".equals(ModeManager.getMode())) {
+			return false;
+		}
+		if (!DiscordManager.isStandaloneConsoleChannel(event.getChannel().getId(), event.getChannel().getName())) {
+			return false;
+		}
+		if (event.getAuthor().isBot()) {
+			return true;
+		}
+		if (!ConfigManager.getBoolean("console_forwarding.enable", false)
+				|| !ConfigManager.getBoolean("console_forwarding.execute_messages_from_channel", false)) {
+			return true;
+		}
+
+		String content = message.getContentRaw();
+		if (content.isBlank()) {
+			return true;
+		}
+
+		CommandLineParser.ParsedCommand command = CommandLineParser.parse(content);
+		if (command.name().isBlank()) {
+			return true;
+		}
+
+		int opLevel = OpLevelResolver.resolve(event.getMember(), event.getAuthor());
+		StandaloneConsoleCommandSender sender = new StandaloneConsoleCommandSender(event.getChannel().getId(), opLevel);
+		sender.reply(I18nManager.getDmccTranslation("commands.console.executing_local", content));
+		CommandManager.execute(sender, command.name(), command.args());
+		return true;
 	}
 
 	private boolean tryExecuteConsoleMessage(MessageReceivedEvent event, Message message) {

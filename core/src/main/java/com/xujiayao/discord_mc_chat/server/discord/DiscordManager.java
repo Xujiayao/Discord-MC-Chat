@@ -46,6 +46,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -60,6 +61,16 @@ public final class DiscordManager {
 	private static final int CONSOLE_FORWARDING_CHUNK_LIMIT = 1800;
 	private static final int CONSOLE_FORWARDING_INLINE_LIMIT = 1200;
 
+	/**
+	 * Webhook identity used for the Standalone DMCC console channel (its own console has no client name).
+	 */
+	public static final String STANDALONE_CONSOLE_NAME = "DMCC";
+
+	/**
+	 * Set when a send to the Standalone console channel fails, so the tailer can stop instead of feeding its
+	 * own failure logs back into the channel.
+	 */
+	private static final AtomicBoolean STANDALONE_CONSOLE_SEND_FAILED = new AtomicBoolean(false);
 	private static final long PLAYER_COMMAND_RATE_LIMIT_WINDOW_NANOS = Duration.ofSeconds(10).toNanos();
 	private static final int PLAYER_COMMAND_RATE_LIMIT_MAX_MESSAGES = 10;
 	private static final Object PLAYER_COMMAND_RATE_LIMIT_LOCK = new Object();
@@ -741,6 +752,126 @@ public final class DiscordManager {
 		} catch (Exception e) {
 			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
 		}
+	}
+
+	/**
+	 * Sends Standalone DMCC's own console lines to console_forwarding.channel_for_standalone.
+	 *
+	 * @return false when the configured channel could not be resolved (forwarding should stop until reload)
+	 */
+	public static boolean sendStandaloneConsoleBatch(List<String> lines) {
+		if (!"standalone".equals(ModeManager.getMode()) || lines == null || lines.isEmpty()) {
+			return true;
+		}
+
+		String channelIdentifier = ConfigManager.getString("console_forwarding.channel_for_standalone", "");
+		if (channelIdentifier == null || channelIdentifier.isBlank()) {
+			return true;
+		}
+
+		TextChannel channel = getTextChannel(channelIdentifier);
+		if (channel == null) {
+			return false;
+		}
+
+		StringBuilder batch = new StringBuilder();
+		for (String rawLine : lines) {
+			for (String line : formatConsoleLinePartsForDiscord(rawLine)) {
+				if (!batch.isEmpty() && batch.length() + line.length() + 1 > CONSOLE_FORWARDING_CHUNK_LIMIT) {
+					sendStandaloneConsoleChunk(channel, batch.toString());
+					batch.setLength(0);
+				}
+				if (!batch.isEmpty()) {
+					batch.append("\n");
+				}
+				batch.append(line);
+			}
+		}
+
+		if (!batch.isEmpty()) {
+			sendStandaloneConsoleChunk(channel, batch.toString());
+		}
+
+		return !STANDALONE_CONSOLE_SEND_FAILED.get();
+	}
+
+	private static void sendStandaloneConsoleChunk(TextChannel channel, String chunk) {
+		try {
+			Webhook webhook = getOrCreateWebhook(channel);
+			webhook.sendMessage(chunk)
+					.setUsername(STANDALONE_CONSOLE_NAME)
+					.setAvatarUrl(getClientAvatarUrl(STANDALONE_CONSOLE_NAME))
+					.setAllowedMentions(getAllowedMentions())
+					.queue(null, failure -> {
+						WEBHOOK_CACHE.remove(channel.getId());
+						STANDALONE_CONSOLE_SEND_FAILED.set(true);
+					});
+		} catch (Exception e) {
+			STANDALONE_CONSOLE_SEND_FAILED.set(true);
+		}
+	}
+
+	/**
+	 * @return whether the last Standalone console batch failed to send
+	 */
+	public static boolean hasStandaloneConsoleSendFailed() {
+		return STANDALONE_CONSOLE_SEND_FAILED.get();
+	}
+
+	/**
+	 * Sends the started/stopped notice for the Standalone DMCC console channel.
+	 *
+	 * @return false when the configured channel could not be resolved
+	 */
+	public static boolean sendStandaloneConsoleStatusMessage(boolean started) {
+		if (!"standalone".equals(ModeManager.getMode())
+				|| !ConfigManager.getBoolean("console_forwarding.enable", false)) {
+			return true;
+		}
+
+		if (started) {
+			STANDALONE_CONSOLE_SEND_FAILED.set(false);
+		}
+
+		String channelIdentifier = ConfigManager.getString("console_forwarding.channel_for_standalone", "");
+		if (channelIdentifier == null || channelIdentifier.isBlank()) {
+			return true;
+		}
+
+		if (jda == null || jda.getStatus() == JDA.Status.SHUTTING_DOWN || jda.getStatus() == JDA.Status.SHUTDOWN) {
+			return false;
+		}
+
+		TextChannel channel = getTextChannel(channelIdentifier);
+		if (channel == null) {
+			return false;
+		}
+
+		String message = buildConsoleForwardingStatusMessage(started ? "started" : "stopped", STANDALONE_CONSOLE_NAME);
+		if (message.isBlank()) {
+			return true;
+		}
+
+		try {
+			sendWebhookMessageSync(channel, STANDALONE_CONSOLE_NAME, getClientAvatarUrl(STANDALONE_CONSOLE_NAME), message);
+			return true;
+		} catch (RejectedExecutionException ignored) {
+			return false;
+		} catch (Exception e) {
+			LOGGER.error(I18nManager.getDmccTranslation("discord.manager.broadcast_failed", e.getLocalizedMessage()), e);
+			return false;
+		}
+	}
+
+	/**
+	 * @return whether the given channel is the Standalone DMCC console channel
+	 */
+	public static boolean isStandaloneConsoleChannel(String channelId, String channelName) {
+		if (!"standalone".equals(ModeManager.getMode())) {
+			return false;
+		}
+		String configured = ConfigManager.getString("console_forwarding.channel_for_standalone", "");
+		return configured != null && !configured.isBlank() && matchesChannelIdentifier(configured, channelId, channelName);
 	}
 
 	private static String replacePlaceholders(String template, Map<String, String> placeholders) {
