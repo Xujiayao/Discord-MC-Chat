@@ -156,6 +156,13 @@
 - **验证**：`./gradlew clean` + `./gradlew build`（守护进程）全绿、零编译警告/零 Gradle 弃用警告；临时 JUnit（整数匹配/整数不匹配/旧字符串版本/缺版本/版本资源加载）通过后删除，最终只剩 SmokeTest（1 test / 0 failures）；jar 内 `dmcc_version.txt` 已展开为当前版本，banner 显示正常。
 - **建议实机测试**：① 用 beta.3 配置启动，应报告配置版本不匹配并拒绝加载；② 把三个文件的 version 改为 1、按日志补齐缺失键后启动正常；③ 全新目录首次启动生成的三个文件 version 均为 1。
 
+## 工作 27 · 2026/11/18 · 修复单服控制台消息误读多服配置告警（#347）
+- **用户可见修复**：single_server 模式下在服务器控制台执行 `/say`、`/tell` 时，DMCC 不再输出 `Configuration path not found: multi_server.servers` 告警；控制台来源消息仍以服务器身份正常发送到 Discord（头像回退为 bot 头像）。
+- **根因**：SOURCE_SAY 走 fake-user webhook 路径，玩家 UUID 为空时回退到 `getClientAvatarUrl()`，而该方法无条件读取仅在 standalone 模板中存在的 `multi_server.servers`，ConfigManager 对缺失路径打 WARN。
+- **实现**：`DiscordManager.getClientAvatarUrl` 仅在 standalone 模式读取子服清单，其余模式直接返回 bot 头像。
+- **验证**：`./gradlew clean` + `./gradlew build`（守护进程）全绿、零编译警告/零 Gradle 弃用警告；无新增临时 JUnit；1 test / 0 failures。
+- **建议实机测试**：single_server 控制台分别执行 `say Hi` 与 `tell @a Hi`，确认 Discord 收到消息且日志中不再出现该配置路径告警；standalone 子服头像仍按 `multi_server.servers[].avatar_url` 生效。
+
 ## 发布待办（汇总）
 - 待处理（按用户裁决都先不动）：`.github/ISSUE_TEMPLATE/bug.yml` 的 v2 残留文案；`docs/package.json` 缺 `license` 字段；`README.md`（英文翻译件）与 `README_CN.md` 的同步；配置迁移工具（发布前会提供在线版本，届时新键不再需要手工补）。
 - 已核对无需改动：`update/versions.json` 的 `3.0.0-beta.3` 条目本就是 `"compatibility": ["26.3"]`；存量用户 `config.yml` 补 IPv6 规则按开发者裁决暂不处理。

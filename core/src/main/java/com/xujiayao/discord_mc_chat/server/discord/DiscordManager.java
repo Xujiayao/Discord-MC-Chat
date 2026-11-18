@@ -912,19 +912,18 @@ public final class DiscordManager {
 	}
 
 	private static String getClientAvatarUrl(String clientName) {
-		String avatarUrl = "";
-		JsonNode serversNode = ConfigManager.getConfigNode("multi_server.servers");
-		if (serversNode != null && serversNode.isArray()) {
-			for (JsonNode node : serversNode) {
-				if (clientName.equals(node.path("name").asString())) {
-					avatarUrl = node.path("avatar_url").asString();
+		// multi_server.servers only exists in standalone mode. Reading it in single_server mode would log a
+		// spurious "Configuration path not found" warning for every console-originated message.
+		if ("standalone".equals(ModeManager.getMode())) {
+			for (JsonNode node : ConfigManager.getConfigNode("multi_server.servers")) {
+				String avatarUrl = node.path("avatar_url").asString();
+				if (clientName.equals(node.path("name").asString()) && !avatarUrl.isBlank()) {
+					return avatarUrl;
 				}
 			}
 		}
-		if (avatarUrl == null || avatarUrl.isBlank()) {
-			avatarUrl = jda.getSelfUser().getEffectiveAvatarUrl();
-		}
-		return avatarUrl;
+
+		return jda.getSelfUser().getEffectiveAvatarUrl();
 	}
 
 	public static void sendExecuteResultViaWebhook(String channelIdentifier, String clientName, String message) {
