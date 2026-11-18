@@ -5,6 +5,7 @@ import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.HttpUtils;
 import com.xujiayao.discord_mc_chat.utils.JsonUtils;
 import com.xujiayao.discord_mc_chat.utils.StringUtils;
+import com.xujiayao.discord_mc_chat.utils.TranslationFileUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.Identifier;
@@ -17,8 +18,6 @@ import net.minecraft.server.packs.resources.IoSupplier;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -219,29 +218,8 @@ public final class TranslationManager {
 		if (Files.exists(modsDir) && Files.isDirectory(modsDir)) {
 			try (Stream<Path> modFiles = Files.list(modsDir)) {
 				modFiles.filter(p -> p.toString().endsWith(".jar")).forEach(jarPath -> {
-					try (FileSystem fileSystem = FileSystems.newFileSystem(jarPath, (ClassLoader) null)) {
-						Path assetsRoot = fileSystem.getPath("assets");
-
-						if (!Files.exists(assetsRoot)) {
-							return;
-						}
-
-						try (Stream<Path> namespaces = Files.list(assetsRoot)) {
-							namespaces.filter(Files::isDirectory).forEach(namespaceDir -> {
-								Path langFile = namespaceDir.resolve("lang").resolve(language + ".json");
-
-								if (!Files.exists(langFile)) {
-									return;
-								}
-
-								try (InputStream is = Files.newInputStream(langFile)) {
-									Map<String, String> entries = JsonUtils.toStringMap(is);
-									entries.forEach(target::putIfAbsent);
-								} catch (Exception e) {
-									LOGGER.error(I18nManager.getDmccTranslation("minecraft.translations.mod_load_failed"), e);
-								}
-							});
-						}
+					try {
+						TranslationFileUtils.loadFromZip(jarPath, language).forEach(target::putIfAbsent);
 					} catch (Exception e) {
 						LOGGER.error(I18nManager.getDmccTranslation("minecraft.translations.jar_open_failed"), e);
 					}
@@ -279,6 +257,25 @@ public final class TranslationManager {
 			}
 		} catch (Exception e) {
 			LOGGER.error(I18nManager.getDmccTranslation("minecraft.translations.datapack_load_failed"), e);
+		}
+
+		// Step 4: Scan the server-side resourcepacks directory. Clients may already use a resource pack whose
+		// language files are not part of any selected datapack (e.g. Stellarity RP / the BACAP language pack);
+		// dropping the same archive into ./resourcepacks lets DMCC resolve those keys server-side.
+		Path resourcepacksDir = Path.of("./resourcepacks");
+		if (Files.exists(resourcepacksDir) && Files.isDirectory(resourcepacksDir)) {
+			try (Stream<Path> packFiles = Files.list(resourcepacksDir)) {
+				packFiles.filter(TranslationFileUtils::isTranslationArchive).forEach(packPath -> {
+					try {
+						TranslationFileUtils.loadFromZip(packPath, language).forEach(target::putIfAbsent);
+					} catch (Exception e) {
+						LOGGER.error(I18nManager.getDmccTranslation("minecraft.translations.resourcepack_load_failed",
+								packPath.getFileName().toString()), e);
+					}
+				});
+			} catch (Exception e) {
+				LOGGER.error(I18nManager.getDmccTranslation("minecraft.translations.resourcepacks_scan_failed"), e);
+			}
 		}
 	}
 

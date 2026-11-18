@@ -397,5 +397,7 @@ minecraft:
     jar_open_failed: "Cannot open JAR file."
     mods_scan_failed: "Error scanning mods directory."
     datapack_load_failed: "Failed to load translations from datapack."
+    resourcepack_load_failed: "Failed to load translations from resource pack \"{}\"."
+    resourcepacks_scan_failed: "Error scanning resourcepacks directory."
   events:
     op_sync_unknown_player: "Cannot apply OP level {} to {} because the player is unknown to the name cache."

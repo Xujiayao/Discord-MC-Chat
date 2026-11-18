@@ -75,6 +75,9 @@ Discord-MC-Chat (DMCC) 是一个 Minecraft 模组，旨在为 Discord 和 Minecr
   模板）。此外，系统内置动态翻译拉取机制，自动从官方源获取各语言资产，精准翻译成就、进度与死亡信息。翻译资产优先读取本地缓存，缺失时按需下载；同时会扫描
   `mods/*.jar` 与已启用的数据包以补充模组与数据包翻译，并以 `en_us` 作为兜底。部分数据包/资源包直接以英文文本作为翻译键
   （如 Blaze and Caves），此类键缺失时会按原键替换参数显示（英文），不会在 Discord 中出现 `%1$s` 之类的占位符。
+  此外，DMCC 会扫描服务端 `resourcepacks/` 目录下的 zip/jar 资源包中的 `assets/<namespace>/lang/<language>.json`：
+  当某个数据包/模组的翻译只存在于客户端资源包（如 Stellarity RP、BACAP 语言包）时，可把同一份资源包放到服务端该目录并重启，
+  DMCC 即可在 Discord 中显示对应翻译；使用同时包含 datapack 与 assets/lang 的 mod 版 JAR 时无需此步。
 
 - **提及提醒样式**: 跨平台提及可配置为 `action_bar`、`title` 或 `chat` 三种呈现方式（默认 `title`），并附带提示音；
   `@everyone` / `@here` 会通知所有在线玩家。

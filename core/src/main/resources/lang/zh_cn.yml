@@ -396,5 +396,7 @@ minecraft:
     jar_open_failed: "无法打开 JAR 文件。"
     mods_scan_failed: "扫描模组目录时出错。"
     datapack_load_failed: "无法从数据包加载翻译。"
+    resourcepack_load_failed: "无法从资源包 \"{}\" 加载翻译。"
+    resourcepacks_scan_failed: "扫描 resourcepacks 目录时出错。"
   events:
     op_sync_unknown_player: "无法将 OP 等级 {} 应用到 {}，因为该玩家不在名称缓存中。"

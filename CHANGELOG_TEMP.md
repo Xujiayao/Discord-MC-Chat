@@ -210,6 +210,13 @@
 - **验证**：`./gradlew clean` + `./gradlew build`（守护进程）全绿、零编译警告/零 Gradle 弃用警告；临时 JUnit（`%1$s…%2$s`、`%s`、`%%`、非法格式）通过后删除，最终只剩 SmokeTest（1 test / 0 failures）。
 - **建议实机测试**：安装 Blaze and Caves，完成一个进度，确认 Discord 中的进度播报为正常英文句子与方括号标题；对比官方原版进度播报无变化。
 
+## 工作 35 · 2026/11/18 · 支持从服务端 resourcepacks 目录加载翻译（#338）
+- **用户可见**：新增翻译来源 `./resourcepacks/`（zip/jar），读取其中 `assets/<namespace>/lang/<language>.json`（目标语言后再用 en_us 补缺）。当数据包/模组的翻译只存在于客户端资源包（Stellarity RP、BACAP 语言包等）时，把同一份资源包放到服务端 `resourcepacks/` 目录并重启 DMCC，即可在 Discord 中显示对应翻译；使用同时包含 datapack 与 assets/lang 的 mod 版 JAR 时无需此步。
+- **实现**：新增 core 工具 `TranslationFileUtils`（zip/jar 语言文件读取、损坏文件由调用方容错）；`TranslationManager` 的 mods 扫描改用它，并新增第 4 步扫描 `resourcepacks` 目录；en_us 兜底仍由 `loadAll` 的第二遍扫描覆盖（非 en_us 配置下模组/资源包只带 en_us 时也能显示）。
+- **文档**：README_CN §2.1 说明新增来源与放置方式。
+- **验证**：`./gradlew clean` + `./gradlew build`（守护进程）全绿、零编译警告/零 Gradle 弃用警告；临时 JUnit（语言文件读取/注释容错/无 assets/损坏归档/归档识别）通过后删除，最终只剩 SmokeTest（1 test / 0 failures）。
+- **建议实机测试**：① 把 Stellarity Resource Pack 放入服务端 `resourcepacks/` 并重启，进度标题/描述在 Discord 中正常翻译；② 删除该文件后恢复为原始 key（确认来源确实生效）；③ 普通 mod（自带 assets/lang）翻译行为不变。
+
 ## 发布待办（汇总）
 - 待处理（按用户裁决都先不动）：`.github/ISSUE_TEMPLATE/bug.yml` 的 v2 残留文案；`docs/package.json` 缺 `license` 字段；`README.md`（英文翻译件）与 `README_CN.md` 的同步；配置迁移工具（发布前会提供在线版本，届时新键不再需要手工补）。
 - 已核对无需改动：`update/versions.json` 的 `3.0.0-beta.3` 条目本就是 `"compatibility": ["26.3"]`；存量用户 `config.yml` 补 IPv6 规则按开发者裁决暂不处理。
