@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.entities.messages.MessagePoll;
+import net.dv8tion.jda.api.entities.messages.MessageSnapshot;
 import net.dv8tion.jda.api.entities.sticker.StickerItem;
 import net.fellbaum.jemoji.EmojiManager;
 import tools.jackson.databind.JsonNode;
@@ -145,6 +146,27 @@ public final class DiscordMessageParser {
 		);
 	}
 
+	/**
+	 * Builds the notification line for a forwarded Discord message. The forwarded content itself is rendered
+	 * as a quoted reply by {@link #buildReplySegments(MessageSnapshot)} using the message snapshot.
+	 */
+	public static List<TextSegment> buildForwardedSegments(Message forwardedMessage) {
+		if (forwardedMessage == null) {
+			return List.of();
+		}
+
+		Member member = forwardedMessage.getMember();
+		String effectiveName = member != null ? member.getEffectiveName() : forwardedMessage.getAuthor().getName();
+		String roleColor = getRoleColorHex(member);
+
+		return buildTemplateSegments(
+				customMessageNode("discord_to_minecraft", "forwarded"),
+				text -> replacePlaceholders(text, effectiveName, roleColor),
+				color -> replacePlaceholders(color, effectiveName, roleColor),
+				null
+		);
+	}
+
 	public static List<TextSegment> buildReplySegments(Message referencedMessage) {
 		if (referencedMessage == null) {
 			return null;
@@ -153,6 +175,32 @@ public final class DiscordMessageParser {
 		String refName = refMember != null ? refMember.getEffectiveName() : referencedMessage.getAuthor().getName();
 		String refRoleColor = getRoleColorHex(refMember);
 		return buildReplySegments(refName, refRoleColor, referencedMessage, referencedMessage.getContentRaw());
+	}
+
+	public static List<TextSegment> buildReplySegments(MessageSnapshot snapshot) {
+		if (snapshot == null) {
+			return null;
+		}
+		String refRaw = snapshot.getContentRaw();
+		if (refRaw == null) {
+			return null;
+		}
+		String truncatedRaw = truncateReplyRaw(refRaw);
+		List<TextSegment> refContentSegments = enforceSingleLine(parseMessageContent(snapshot, truncatedRaw));
+		if (refContentSegments.isEmpty()) {
+			return null;
+		}
+		String forwardedAuthor = I18nManager.getDmccTranslation("discord.message_parser.forwarded_author");
+
+		return buildTemplateSegments(
+				customMessageNode("discord_to_minecraft", "response"),
+				text -> text.replace("{effective_name}", forwardedAuthor),
+				color -> color.replace("{role_color}", "gray"),
+				(out, color, bold) -> {
+					TextSegmentUtils.applyDefaultColor(refContentSegments, color);
+					out.addAll(refContentSegments);
+				}
+		);
 	}
 
 	public static List<TextSegment> buildReplySegments(String refName, String refRoleColor, Message contextMessage, String refRaw) {
@@ -315,48 +363,17 @@ public final class DiscordMessageParser {
 
 		// Append attachments
 		if (parseAttachments) {
-			for (Message.Attachment attachment : message.getAttachments()) {
-				if (!segments.isEmpty()) {
-					segments.add(new TextSegment(" "));
-				}
-				String type = "file";
-				if (attachment.isImage()) {
-					type = "image";
-				} else if (attachment.isVideo()) {
-					type = "video";
-				}
-				boolean spoilerAttachment = attachment.isSpoiler() || attachment.getFileName().startsWith("SPOILER_");
-				segments.addAll(buildAttachmentSegments(type, attachment.getFileName(), attachment.getUrl(), spoilerAttachment));
-			}
+			appendAttachments(segments, message.getAttachments());
 		}
 
 		// Append stickers
 		if (parseStickers) {
-			for (StickerItem sticker : message.getStickers()) {
-				if (!segments.isEmpty()) {
-					segments.add(new TextSegment(" "));
-				}
-				segments.add(new TextSegment("<sticker name=[" + sticker.getName() + "]>", false, "yellow"));
-			}
+			appendStickers(segments, message.getStickers());
 		}
 
 		// Append embeds
 		if (parseEmbeds) {
-			for (MessageEmbed embed : message.getEmbeds()) {
-				if (!segments.isEmpty()) {
-					segments.add(new TextSegment(" "));
-				}
-				String title = embed.getTitle() != null ? embed.getTitle() : "";
-				if (title.isEmpty() && embed.getDescription() != null) {
-					title = embed.getDescription();
-					if (title.length() > 50) {
-						title = safeTruncate(title, 50) + "...";
-					}
-				}
-
-				boolean spoilerEmbed = isSpoilerWrappedUrl(raw, embed.getUrl());
-				segments.addAll(buildEmbedSegments(title, embed.getUrl(), spoilerEmbed));
-			}
+			appendEmbeds(segments, message.getEmbeds(), raw);
 		}
 
 		// Append interactive components indicator
@@ -380,6 +397,81 @@ public final class DiscordMessageParser {
 		}
 
 		return segments;
+	}
+
+	public static List<TextSegment> parseMessageContent(MessageSnapshot snapshot, String raw) {
+		List<TextSegment> segments = new ArrayList<>();
+
+		boolean parseAttachments = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.attachments");
+		boolean parseStickers = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.stickers");
+		boolean parseEmbeds = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.embeds");
+		boolean parseComponents = ConfigManager.getBoolean("message_parsing.discord_to_minecraft.components");
+
+		// The snapshot has no guild context, so mentions stay raw text; everything else uses the same rules.
+		if (!raw.isEmpty()) {
+			segments.addAll(parseMessageContentWithoutMessage(raw));
+		}
+
+		if (parseAttachments) {
+			appendAttachments(segments, snapshot.getAttachments());
+		}
+		if (parseStickers) {
+			appendStickers(segments, snapshot.getStickers());
+		}
+		if (parseEmbeds) {
+			appendEmbeds(segments, snapshot.getEmbeds(), raw);
+		}
+		if (parseComponents && !snapshot.getComponents().isEmpty()) {
+			if (!segments.isEmpty()) {
+				segments.add(new TextSegment(" "));
+			}
+			segments.add(new TextSegment("<components>", false, "yellow"));
+		}
+
+		return segments;
+	}
+
+	private static void appendAttachments(List<TextSegment> segments, List<Message.Attachment> attachments) {
+		for (Message.Attachment attachment : attachments) {
+			if (!segments.isEmpty()) {
+				segments.add(new TextSegment(" "));
+			}
+			String type = "file";
+			if (attachment.isImage()) {
+				type = "image";
+			} else if (attachment.isVideo()) {
+				type = "video";
+			}
+			boolean spoilerAttachment = attachment.isSpoiler() || attachment.getFileName().startsWith("SPOILER_");
+			segments.addAll(buildAttachmentSegments(type, attachment.getFileName(), attachment.getUrl(), spoilerAttachment));
+		}
+	}
+
+	private static void appendStickers(List<TextSegment> segments, List<StickerItem> stickers) {
+		for (StickerItem sticker : stickers) {
+			if (!segments.isEmpty()) {
+				segments.add(new TextSegment(" "));
+			}
+			segments.add(new TextSegment("<sticker name=[" + sticker.getName() + "]>", false, "yellow"));
+		}
+	}
+
+	private static void appendEmbeds(List<TextSegment> segments, List<MessageEmbed> embeds, String raw) {
+		for (MessageEmbed embed : embeds) {
+			if (!segments.isEmpty()) {
+				segments.add(new TextSegment(" "));
+			}
+			String title = embed.getTitle() != null ? embed.getTitle() : "";
+			if (title.isEmpty() && embed.getDescription() != null) {
+				title = embed.getDescription();
+				if (title.length() > 50) {
+					title = safeTruncate(title, 50) + "...";
+				}
+			}
+
+			boolean spoilerEmbed = isSpoilerWrappedUrl(raw, embed.getUrl());
+			segments.addAll(buildEmbedSegments(title, embed.getUrl(), spoilerEmbed));
+		}
 	}
 
 	private static List<TextSegment> parseRawContent(String raw, Message message,

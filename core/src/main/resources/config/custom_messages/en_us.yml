@@ -78,6 +78,16 @@ discord_to_minecraft:
     - text: "{message}"
       bold: false
       color: "dark_gray"
+  forwarded: # Forwarded message notification; the forwarded content is quoted above with the response template
+    - text: "[Discord] "
+      bold: true
+      color: "blue"
+    - text: "{effective_name} "
+      bold: false
+      color: "{role_color}"
+    - text: "forwarded this message!"
+      bold: false
+      color: "gray"
   command:
     - text: "[Discord] "
       bold: true

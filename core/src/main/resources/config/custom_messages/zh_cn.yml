@@ -78,6 +78,16 @@ discord_to_minecraft:
     - text: "{message}"
       bold: false
       color: "dark_gray"
+  forwarded: # 转发消息提示；被转发的原消息内容通过 response 模板以引用形式显示
+    - text: "[Discord] "
+      bold: true
+      color: "blue"
+    - text: "{effective_name} "
+      bold: false
+      color: "{role_color}"
+    - text: "转发了一条消息！"
+      bold: false
+      color: "gray"
   command:
     - text: "[Discord] "
       bold: true

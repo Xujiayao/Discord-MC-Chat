@@ -15,7 +15,9 @@ import com.xujiayao.discord_mc_chat.utils.EmojiUtils;
 import com.xujiayao.discord_mc_chat.utils.LogFileUtils;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageReference;
 import net.dv8tion.jda.api.entities.emoji.EmojiUnion;
+import net.dv8tion.jda.api.entities.messages.MessageSnapshot;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberUpdateEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
@@ -345,20 +347,33 @@ final class DiscordEventHandler extends ListenerAdapter {
 			return;
 		}
 
-		List<TextSegment> mainSegments = DiscordMessageParser.buildChatSegments(message);
+		List<TextSegment> mainSegments;
+		List<TextSegment> replySegments = null;
 
-		List<TextSegment> replySegments = DiscordMessageParser.buildReplySegments(message.getReferencedMessage());
-		if (replySegments == null && message.getMessageReference() != null) {
-			CachedMessage cachedRef = messageCache.get(message.getMessageReference().getMessageId());
-			if (cachedRef != null) {
-				replySegments = DiscordMessageParser.buildReplySegments(
-						cachedRef.authorName(),
-						cachedRef.authorRoleColor(),
-						null,
-						cachedRef.contentRaw()
-				);
-				if (cachedRef.replySegments() != null && !cachedRef.replySegments().isEmpty()) {
-					replySegments = cachedRef.replySegments();
+		if (isForwardedMessage(message)) {
+			// A forward's own content is empty; its message snapshots hold the forwarded content. Render the
+			// snapshot as a quoted reply (same response template as Discord replies), then notify who forwarded it.
+			List<MessageSnapshot> snapshots = message.getMessageSnapshots();
+			replySegments = snapshots == null || snapshots.isEmpty()
+					? null
+					: DiscordMessageParser.buildReplySegments(snapshots.getFirst());
+			mainSegments = DiscordMessageParser.buildForwardedSegments(message);
+		} else {
+			mainSegments = DiscordMessageParser.buildChatSegments(message);
+
+			replySegments = DiscordMessageParser.buildReplySegments(message.getReferencedMessage());
+			if (replySegments == null && message.getMessageReference() != null) {
+				CachedMessage cachedRef = messageCache.get(message.getMessageReference().getMessageId());
+				if (cachedRef != null) {
+					replySegments = DiscordMessageParser.buildReplySegments(
+							cachedRef.authorName(),
+							cachedRef.authorRoleColor(),
+							null,
+							cachedRef.contentRaw()
+					);
+					if (cachedRef.replySegments() != null && !cachedRef.replySegments().isEmpty()) {
+						replySegments = cachedRef.replySegments();
+					}
 				}
 			}
 		}
@@ -391,6 +406,11 @@ final class DiscordEventHandler extends ListenerAdapter {
 		NetworkManager.broadcastToClients(packet);
 
 		cacheMessage(message);
+	}
+
+	private static boolean isForwardedMessage(Message message) {
+		MessageReference reference = message.getMessageReference();
+		return reference != null && reference.getType() == MessageReference.MessageReferenceType.FORWARD;
 	}
 
 	/**

@@ -235,6 +235,7 @@ discord:
   message_parser:
     click_to_open_link: "点击打开链接"
     unknown_user: "未知用户"
+    forwarded_author: "已转发"
     relative:
       past: "{}{}前"
       future: "{}{}后"

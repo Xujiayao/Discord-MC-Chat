@@ -189,6 +189,13 @@
 - **验证**：`./gradlew clean` + `./gradlew build`（守护进程）全绿、零编译警告/零 Gradle 弃用警告；临时 JUnit（命令行解析 5 例）通过后删除，最终只剩 SmokeTest（1 test / 0 failures）。
 - **建议实机测试**：① standalone 配置频道后，启动历史与实时日志出现在频道（webhook 显示为 `DMCC`），并收到 started 提示；② 在频道内发送 `info`、`reload`（需权限）、错误命令，回复以 `DMCC` webhook 返回；③ 关服/reload 时有 stopped/started 提示且不重复回放；④ 无日志转发循环；⑤ 频道设为 `""` 时关闭，single_server 不受影响。
 
+## 工作 32 · 2026/11/18 · Discord 转发消息在 Minecraft 中显示来源与内容（#327）
+- **用户可见修复**：Discord 的转发消息此前在 Minecraft 中显示为空白；现在先以引用形式显示被转发的原消息内容（复用 `discord_to_minecraft.response` 模板，附件/embed 等继续走普通消息解析；快照不含原作者，引用行署名取内部翻译，英文 `Forwarded`、中文 `已转发`），再显示一行 `[Discord] {转发者} 转发了一条消息！`（`discord_to_minecraft.forwarded` 模板）；快照缺失时只显示转发通知，不发送空消息。
+- **实现**：`DiscordEventHandler` 识别 `MessageReference.MessageReferenceType.FORWARD`，通过 `Message#getMessageSnapshots()` 取转发快照（`MessageSnapshot`；Discord 的 message snapshot 是 minimal subset，明确不含 `author`；JDA 的 `getReferencedMessage()` 对 forward 为空），把快照交给新增的 `buildReplySegments(MessageSnapshot)` / `parseMessageContent(MessageSnapshot, ...)` 生成引用块（正文/附件/embed/组件复用普通消息的解析逻辑），引用行署名取 `discord.message_parser.forwarded_author`；转发者交给 `buildForwardedSegments` 生成通知行；en_us/zh_cn custom_messages 的 `forwarded` 模板改为通知行。
+- **配置迁移**：beta.1/2/3 的 `custom_messages` 需手工补 `discord_to_minecraft.forwarded`。
+- **验证**：`./gradlew clean` + `./gradlew build`（守护进程）全绿、零编译警告/零 Gradle 弃用警告；无新增临时 JUnit；1 test / 0 failures。
+- **建议实机测试**：转发一条纯文本、一条带图片、一条带 embed 的 Discord 消息，确认 Minecraft 内先显示引用内容、再显示转发者通知；普通回复消息行为不变。
+
 ## 发布待办（汇总）
 - 待处理（按用户裁决都先不动）：`.github/ISSUE_TEMPLATE/bug.yml` 的 v2 残留文案；`docs/package.json` 缺 `license` 字段；`README.md`（英文翻译件）与 `README_CN.md` 的同步；配置迁移工具（发布前会提供在线版本，届时新键不再需要手工补）。
 - 已核对无需改动：`update/versions.json` 的 `3.0.0-beta.3` 条目本就是 `"compatibility": ["26.3"]`；存量用户 `config.yml` 补 IPv6 规则按开发者裁决暂不处理。

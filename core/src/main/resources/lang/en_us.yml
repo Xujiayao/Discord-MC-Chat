@@ -236,6 +236,7 @@ discord:
   message_parser:
     click_to_open_link: "Click to open link"
     unknown_user: "Unknown User"
+    forwarded_author: "Forwarded"
     relative:
       past: "{} {} ago"
       future: "in {} {}"

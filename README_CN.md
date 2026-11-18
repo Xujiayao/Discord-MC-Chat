@@ -63,6 +63,7 @@ Discord-MC-Chat (DMCC) 是一个 Minecraft 模组，旨在为 Discord 和 Minecr
 - **跨子服消息互转**: 在 `standalone + multi_server_client`
   架构下，可将任一子服产生的聊天、指令、事件转发给**其它**子服（`broadcasts.minecraft_to_minecraft.*`，逐事件开关），实现多服玩家"同处一室"的观感。
 
+- **Discord 转发消息**: Discord 的“转发”消息会以“引用原消息 + `[Discord] 转发者 转发了一条消息！` 通知”的形式显示在 Minecraft 中（引用内容复用回复模板，附件/embed 等按普通消息规则解析；快照不含原作者，引用行署名显示为内部翻译的 `Forwarded`/`已转发`），不再显示为空白消息。
 - **伪用户 Webhook 支持**: 可选通过 Webhook 发送 Minecraft 消息，在 Discord 端完美呈现玩家的独立头像与游戏名。头像来源可依次选择：子服清单中的
   `avatar_url`、`discord.webhook.avatar_url` 模板（默认 `https://mc-heads.net/avatar/{player_name}`），或绑定的 Discord 账户头像（
   `account_linking.discord_user_avatar_for_webhooks`）。Webhook 会复用机器人名下已有的同名 Webhook，不存在时自动创建。
@@ -424,7 +425,7 @@ DMCC 对配置文件的完整性与一致性做了强校验，力求在启动阶
 
 - 内置 `en_us` 与 `zh_cn` 内部翻译；遇到不支持的语言会给出提示并引导贡献翻译。
 - 自定义消息文件（`custom_messages/<lang>.yml`）首次运行会从内置模板生成，并按模板校验键结构；允许保留未修改的默认值。
-- `custom_messages` 承载了全部用户可见文案：事件播报模板、覆盖模式模板、Discord 侧事件行、MSPT 告警、控制台转发起止提示、
+- `custom_messages` 承载了全部用户可见文案：事件播报模板、覆盖模式模板、Discord 侧事件行（回复、转发、反应、编辑、删除）、MSPT 告警、控制台转发起止提示、
   频道 Topic 与语音频道名称、Bot 活动文案、Webhook 用户名与内容等。
 
 ### 8.3 消息模板占位符参考
