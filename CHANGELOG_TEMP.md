@@ -169,6 +169,12 @@
 - **验证**：`./gradlew clean` + `./gradlew build`（守护进程）全绿、零编译警告/零 Gradle 弃用警告；临时 JUnit（空白回退 4 例）通过后删除，最终只剩 SmokeTest（1 test / 0 failures）。
 - **建议实机测试**：使用会清空/隐藏 displayname 的模组（如 Styled Nicknames 等）设置空显示名后发言，确认消息出现在 Discord、用户名为 `<>`（standalone 带服务器前缀），游戏内显示与未安装 DMCC 时一致。
 
+## 工作 29 · 2026/11/18 · 配置模板可读性与 /link 默认权限调整（#339）
+- **用户可见（配置模板）**：`command_permission_levels.link` 的默认值由 `0` 改为 `-1`（single_server/standalone 的 Discord `/link`；multi_server_client 的 `link` 只作用于游戏内 `/dmcc link`）。原先的 `0` 假设用户已有 OP 0+——已绑定账户、`role_mappings` 示例中的 `Players` 身分组或管理员身分组；全新用户 OP 为 `-1`，会被 `0` 拒绝，无法完成首次绑定。改为 `-1` 后这类用户可直接使用 `/link <code>`；三个模板的注释同步说明 0 与 -1 的区别。示例值改为明确的占位符（所有 `"in-game-chat"` → `"channel-name-here"`，`"console"` → `"console-channel-name-here"`，user 映射示例改为 `"owner-username-here"`），频道类配置补充“可填名称或 ID”的注释，standalone 的子服控制台频道列表补充说明。
+- **文档**：README_CN §7.1/§7.2 的 `link` 默认权限改为 `-1`，并补充默认值说明。
+- **验证**：`./gradlew clean` + `./gradlew build`（守护进程）全绿、零编译警告/零 Gradle 弃用警告；无新增临时 JUnit；1 test / 0 failures。
+- **建议实机测试**：① 全新生成配置后，未链接的 Discord 用户可直接执行 `/link <自己的验证码>` 完成绑定；② 未链接用户在游戏内执行 `/dmcc link` 不受影响；③ 把 link 手动改回 0 时，未链接用户会被拒绝（可用于确认行为符合预期）。
+
 ## 发布待办（汇总）
 - 待处理（按用户裁决都先不动）：`.github/ISSUE_TEMPLATE/bug.yml` 的 v2 残留文案；`docs/package.json` 缺 `license` 字段；`README.md`（英文翻译件）与 `README_CN.md` 的同步；配置迁移工具（发布前会提供在线版本，届时新键不再需要手工补）。
 - 已核对无需改动：`update/versions.json` 的 `3.0.0-beta.3` 条目本就是 `"compatibility": ["26.3"]`；存量用户 `config.yml` 补 IPv6 规则按开发者裁决暂不处理。

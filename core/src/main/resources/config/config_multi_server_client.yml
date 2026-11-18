@@ -36,7 +36,8 @@ multi_server:
 command_permission_levels:
   help: -1
   info: -1
-  link: 0
+  # This mode runs no Discord bot; /link is only used in-game, where every player has OP 0.
+  link: -1
   log: 4
   reload: 4
   stats: -1

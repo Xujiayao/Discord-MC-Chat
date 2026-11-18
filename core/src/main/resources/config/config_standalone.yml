@@ -49,23 +49,23 @@ broadcasts:
     edit: true
     delete: true
     command: true
-  minecraft_to_discord: # channel name, empty = disable
+  minecraft_to_discord: # channel name or channel ID, empty = disable
     server:
-      started: "in-game-chat"
-      stopped: "in-game-chat"
+      started: "channel-name-here"
+      stopped: "channel-name-here"
     player:
-      join: "in-game-chat"
-      quit: "in-game-chat"
-      chat: "in-game-chat"
-      command: "in-game-chat"
-      die: "in-game-chat"
-      advancement: "in-game-chat"
-      change_game_mode: "in-game-chat"
+      join: "channel-name-here"
+      quit: "channel-name-here"
+      chat: "channel-name-here"
+      command: "channel-name-here"
+      die: "channel-name-here"
+      advancement: "channel-name-here"
+      change_game_mode: "channel-name-here"
     source:
-      say: "in-game-chat"
-      tell_raw: "in-game-chat"
-      msg: "in-game-chat"  # msg / tell / w
-      me: "in-game-chat"
+      say: "channel-name-here"
+      tell_raw: "channel-name-here"
+      msg: "channel-name-here"  # msg / tell / w
+      me: "channel-name-here"
   minecraft_to_minecraft: # For other_dmcc_clients only
     server:
       started: true
@@ -141,7 +141,7 @@ mspt_monitoring:
   enable: true
   interval_seconds: 10
   threshold: 50
-  channel: "in-game-chat"
+  channel: "channel-name-here"  # channel name or channel ID
 
 console_forwarding:
   enable: true
@@ -150,6 +150,7 @@ console_forwarding:
   filter_regex:
     - "\\\\b(?:[0-9]{1,3}\\\\.){3}[0-9]{1,3}\\\\b"  # IPv4 address
     - "(?<![0-9A-Za-z_])(?:(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,7}:(?:[0-9A-Fa-f]{1,4}(?::[0-9A-Fa-f]{1,4}){0,6})?|::(?:[0-9A-Fa-f]{1,4}(?::[0-9A-Fa-f]{1,4}){0,7}))(?::[0-9]{1,5})?(?![0-9A-Za-z_])"  # IPv6 address
+  # One entry per DMCC client server: which Discord channel (name or ID) receives its console logs.
   channels:
     - server: "SMP"
       channel: "console-smp"
@@ -161,7 +162,7 @@ channel_updating:
   channel_topic_updating:
     enable: true
     channels:
-      - "in-game-chat"
+      - "channel-name-here"
       - "console-smp"
       - "console-cmp"
   voice_channel_updating:
@@ -177,9 +178,9 @@ account_linking:
   op_sync:
     # When enabled, DMCC also grants/revokes actual in-game OP permissions for linked players.
     sync_op_level_to_minecraft: false
-    # User-specific mappings (highest priority).
+    # User-specific mappings (highest priority). "user" accepts a Discord username or user ID.
     user_mappings:
-      - user: "xujiayao"
+      - user: "owner-username-here"
         op_level: 4
         server_overrides: # Remove this key if this sub-server does not need to override the OP level above. The list can be empty.
           - server: "SMP"
@@ -243,7 +244,10 @@ command_permission_levels:
   execute: -1
   help: -1
   info: -1
-  link: 0
+  # -1 lets unlinked Discord users run /link <code> to complete their first binding.
+  # 0 assumed users already had OP 0+: a linked account, the "Players" role from the role_mappings
+  # example, or an admin role; a brand-new user has OP -1 and could not start linking.
+  link: -1
   links: 4
   log: 4
   reload: 4
@@ -253,7 +257,7 @@ command_permission_levels:
 
 check_for_updates:
   enable: true
-  channel: "in-game-chat"
+  channel: "channel-name-here"
 
 shutdown:
   graceful_shutdown: true

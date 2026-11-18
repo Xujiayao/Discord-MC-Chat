@@ -327,8 +327,8 @@ DMCC 在 Client 端提供独立的 `whitelist` 代理命令（默认所需权限
 | `execute <at> <command>` | `-1`     | ❌                          | ❌                    | ✅                 | 远程执行中枢，仅 Standalone 存在。负责将请求连同鉴权凭证委托给 Client。                       |
 | `help`                   | `-1`     | ✅                          | ✅                    | ✅                 | 动态显示用户当前有权执行的可用命令。                                                 |
 | `info`                   | `-1`     | ✅ ①                        | ✅                    | ✅                 | 查看状态。Client 只显自身数据，Server 聚合全局数据。                                   |
-| `link`                   | `0`      | ✅                          | ✅                    | ❌                 | Minecraft 端生成或刷新 6 位验证码。                                            |
-| `link [code]`            | `0`      | ❌                          | ✅                    | ✅                 | Discord 端使用验证码完成最终绑定；省略 `code` 时改为回报调用者的当前绑定状态。                    |
+| `link`                   | `-1`     | ✅                          | ✅                    | ❌                 | Minecraft 端生成或刷新 6 位验证码。 |
+| `link [code]`            | `-1`     | ❌                          | ✅                    | ✅                 | Discord 端使用验证码完成最终绑定；省略 `code` 时改为回报调用者的当前绑定状态。                    |
 | `links`                  | `4`      | ❌                          | ✅                    | ✅                 | 管理员查询所有已绑定的账户关系数据。                                                 |
 | `log <file>`             | `4`      | ✅ ①                        | ✅                    | ✅                 | 将指定的后台日志文件以附件形式传输至 Discord，支持自动补全。                                  |
 | `reload`                 | `4`      | ✅                          | ✅                    | ✅                 | 重新加载 DMCC 配置。                                                       |
@@ -341,6 +341,8 @@ DMCC 在 Client 端提供独立的 `whitelist` 代理命令（默认所需权限
 
 > ① `multi_server_client` 模式不运行 Discord 机器人，因此该命令在该模式下**没有原生命令入口**；标记 ✅ 表示它可以由 Standalone 通过
 > `execute <at> <command>` 委托抵达对应子服执行。
+
+> `link` 默认权限为 `-1`，以保证尚未链接的 Discord 用户能完成首次绑定；原先的 `0` 假设用户已通过已绑定账户或映射身分组（如模板示例中的 `Players`）获得 OP 0，将其设为 `0` 时只有这类用户能执行。
 
 > v3 移除了 v2 提供的 `/stop` 快捷指令。若需在 Discord 端关闭 Minecraft 服务器，拥有 4 级权限的管理员请直接使用
 `/console stop` 模拟控制台发起安全停机。
@@ -357,7 +359,7 @@ DMCC 在 Client 端提供独立的 `whitelist` 代理命令（默认所需权限
 | `/dmcc info`                 | `-1`     | 查看本服状态。             |
 | `/dmcc reload`               | `4`      | 重新加载 DMCC 配置。       |
 | `/dmcc stats <type> <stat>`  | `-1`     | 查看统计数据排行。           |
-| `/dmcc link`                 | `0`      | 生成或刷新账户绑定验证码。       |
+| `/dmcc link`                 | `-1`     | 生成或刷新账户绑定验证码。       |
 | `/dmcc unlink`               | `0`      | 解除本玩家的账户绑定。         |
 | `/dmcc update`               | `-1`     | 检查 DMCC 更新。         |
 
