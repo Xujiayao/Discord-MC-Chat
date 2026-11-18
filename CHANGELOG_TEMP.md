@@ -163,6 +163,12 @@
 - **验证**：`./gradlew clean` + `./gradlew build`（守护进程）全绿、零编译警告/零 Gradle 弃用警告；无新增临时 JUnit；1 test / 0 failures。
 - **建议实机测试**：single_server 控制台分别执行 `say Hi` 与 `tell @a Hi`，确认 Discord 收到消息且日志中不再出现该配置路径告警；standalone 子服头像仍按 `multi_server.servers[].avatar_url` 生效。
 
+## 工作 28 · 2026/11/18 · 修复空显示名玩家消息无法发送到 Discord（#304）
+- **用户可见修复**：显示名为空（例如昵称/格式化模组把 nickname 设为纯样式组件）的玩家在游戏内发言时，消息不再因 webhook 用户名为空而发送失败；Discord 中 fake-user 用户名会显示为 `<>`（standalone 带 `[{server}]` 前缀），不再替换成玩家名；游戏内消息仍保持与未安装 DMCC 时一致的原始空显示名。
+- **实现**：Minecraft 侧不再对 `display_name` 占位符做回退（保持原始值，可能为空）；核心侧仅在 fake-user 用户名模板渲染时把为空的 `display_name` 替换为 `<>`，并在最终用户名仍为空时兜底为同一值，避免 Discord 拒绝空用户名。
+- **验证**：`./gradlew clean` + `./gradlew build`（守护进程）全绿、零编译警告/零 Gradle 弃用警告；临时 JUnit（空白回退 4 例）通过后删除，最终只剩 SmokeTest（1 test / 0 failures）。
+- **建议实机测试**：使用会清空/隐藏 displayname 的模组（如 Styled Nicknames 等）设置空显示名后发言，确认消息出现在 Discord、用户名为 `<>`（standalone 带服务器前缀），游戏内显示与未安装 DMCC 时一致。
+
 ## 发布待办（汇总）
 - 待处理（按用户裁决都先不动）：`.github/ISSUE_TEMPLATE/bug.yml` 的 v2 残留文案；`docs/package.json` 缺 `license` 字段；`README.md`（英文翻译件）与 `README_CN.md` 的同步；配置迁移工具（发布前会提供在线版本，届时新键不再需要手工补）。
 - 已核对无需改动：`update/versions.json` 的 `3.0.0-beta.3` 条目本就是 `"compatibility": ["26.3"]`；存量用户 `config.yml` 补 IPv6 规则按开发者裁决暂不处理。

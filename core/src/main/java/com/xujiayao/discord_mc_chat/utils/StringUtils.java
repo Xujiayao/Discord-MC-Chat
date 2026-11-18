@@ -21,6 +21,13 @@ public final class StringUtils {
 	}
 
 	/**
+	 * Returns {@code value} unless it is null or blank, in which case {@code fallback} is returned.
+	 */
+	public static String blankToDefault(String value, String fallback) {
+		return value == null || value.isBlank() ? fallback : value;
+	}
+
+	/**
 	 * Escapes control characters into their literal two-character sequences.
 	 */
 	public static String escape(String s) {

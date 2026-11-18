@@ -34,6 +34,7 @@ import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -58,6 +59,7 @@ public final class DiscordManager {
 
 	private static final int CONSOLE_FORWARDING_CHUNK_LIMIT = 1800;
 	private static final int CONSOLE_FORWARDING_INLINE_LIMIT = 1200;
+
 	private static final long PLAYER_COMMAND_RATE_LIMIT_WINDOW_NANOS = Duration.ofSeconds(10).toNanos();
 	private static final int PLAYER_COMMAND_RATE_LIMIT_MAX_MESSAGES = 10;
 	private static final Object PLAYER_COMMAND_RATE_LIMIT_LOCK = new Object();
@@ -421,7 +423,16 @@ public final class DiscordManager {
 				String usernameTemplate = styleNode.path("username").asString("{display_name}");
 				contentTemplate = styleNode.path("content").asString("{message}");
 
-				String username = replacePlaceholders(usernameTemplate, placeholders);
+				// Language-neutral marker matching the <name> style used in-game.
+				String emptyDisplayName = "<>";
+				Map<String, String> usernamePlaceholders = placeholders;
+				String displayName = placeholders.get("display_name");
+				if (displayName == null || displayName.isBlank()) {
+					usernamePlaceholders = new HashMap<>(placeholders);
+					usernamePlaceholders.put("display_name", emptyDisplayName);
+				}
+				String username = StringUtils.blankToDefault(replacePlaceholders(usernameTemplate, usernamePlaceholders),
+						emptyDisplayName);
 				content = replacePlaceholders(contentTemplate, placeholders);
 
 				String avatarUrl = resolveWebhookAvatarUrl(clientName, placeholders);
