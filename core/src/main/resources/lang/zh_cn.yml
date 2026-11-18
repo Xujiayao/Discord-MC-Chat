@@ -385,7 +385,7 @@ minecraft:
   translations:
     loaded: "已加载 {}/{} 条 Minecraft \"{}\" 翻译。"
     init_failed: "初始化 Minecraft 翻译失败。"
-    key_not_found: "未找到键的翻译：\"{}\"，将按原样返回键。"
+    key_not_found: "未找到键的翻译：\"{}\"，将把原键作为兜底文本。"
     cache_loaded: "已从缓存加载版本 {1} 的 Minecraft \"{0}\" 翻译。"
     cache_read_failed: "读取缓存的 Minecraft 翻译失败，将尝试重新下载。"
     downloading: "正在下载 Minecraft 版本 {1} 的 \"{0}\" 翻译..."

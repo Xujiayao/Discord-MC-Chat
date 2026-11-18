@@ -126,7 +126,11 @@ public final class TranslationManager {
 			if (WARNED_KEYS.add(key)) {
 				LOGGER.warn(I18nManager.getDmccTranslation("minecraft.translations.key_not_found", key));
 			}
-			return key;
+
+			// Some datapacks/resource packs use the English sentence itself as the translation key (e.g. Blaze
+			// and Caves). Minecraft renders the key with its arguments in that case; do the same instead of
+			// showing raw %1$s/%2$s placeholders in Discord.
+			return args == null || args.length == 0 ? key : StringUtils.format(key, args);
 		}
 
 		if (args == null || args.length == 0) {

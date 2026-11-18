@@ -203,6 +203,13 @@
 - **验证**：`./gradlew clean` + `./gradlew build`（守护进程）全绿、零编译警告/零 Gradle 弃用警告；临时 JUnit（纹理哈希提取合法/非法/空/非纹理 URL）通过后删除，最终只剩 SmokeTest（1 test / 0 failures）。
 - **建议实机测试**：① 配 `https://mc-heads.net/avatar/{player_textures}.png` 后，Fabric Tailor/SkinsRestorer 玩家、Geyser/Floodgate 玩家头像正确；② 纯离线无皮肤插件玩家回退玩家名（仍为默认皮肤，属预期）；③ 普通正版玩家头像与之前一致。
 
+## 工作 34 · 2026/11/18 · 修复自定义翻译键缺失时占位符未替换（#331）
+- **用户可见修复**：数据包/资源包以英文文本作为翻译键（如 Blaze and Caves 的进度播报）时，翻译表未命中不再直接返回原始键；DMCC 会按 Minecraft 的方式用参数替换键中的 `%1$s`/`%2$s` 等占位符，Discord 中显示 “xxx has completed the challenge [Name]” 而不是 `%1$s has completed the challenge %2$s%3$s%4$s`。
+- **实现**：`TranslationManager.get(String key, Object... args)` 未命中时保留一次性告警，并在有参数时用 `StringUtils.format` 格式化原键（非法格式回退原键）。官方的 BM 键与已知翻译行为不变。
+- **文档**：README_CN §2.1 翻译段落补充该兜底行为说明。
+- **验证**：`./gradlew clean` + `./gradlew build`（守护进程）全绿、零编译警告/零 Gradle 弃用警告；临时 JUnit（`%1$s…%2$s`、`%s`、`%%`、非法格式）通过后删除，最终只剩 SmokeTest（1 test / 0 failures）。
+- **建议实机测试**：安装 Blaze and Caves，完成一个进度，确认 Discord 中的进度播报为正常英文句子与方括号标题；对比官方原版进度播报无变化。
+
 ## 发布待办（汇总）
 - 待处理（按用户裁决都先不动）：`.github/ISSUE_TEMPLATE/bug.yml` 的 v2 残留文案；`docs/package.json` 缺 `license` 字段；`README.md`（英文翻译件）与 `README_CN.md` 的同步；配置迁移工具（发布前会提供在线版本，届时新键不再需要手工补）。
 - 已核对无需改动：`update/versions.json` 的 `3.0.0-beta.3` 条目本就是 `"compatibility": ["26.3"]`；存量用户 `config.yml` 补 IPv6 规则按开发者裁决暂不处理。

@@ -386,7 +386,7 @@ minecraft:
   translations:
     loaded: "Loaded {}/{} Minecraft \"{}\" translations."
     init_failed: "Failed to initialize Minecraft translations."
-    key_not_found: "Translation not found for key: \"{}\", returning key as-is."
+    key_not_found: "Translation not found for key: \"{}\"; using it as the fallback text."
     cache_loaded: "Loaded Minecraft \"{}\" translations from cache for version {}."
     cache_read_failed: "Failed to read cached Minecraft translations, will attempt to re-download."
     downloading: "Downloading Minecraft \"{}\" translations for version {}..."
