@@ -411,6 +411,8 @@ DMCC 对配置文件的完整性与一致性做了强校验，力求在启动阶
 - **从 beta.1 / beta.2 / beta.3 手工升级**: 本版本尚未提供自动迁移工具，需要手工处理：① 把 `config.yml`、`mode.yml`、`custom_messages/<lang>.yml` 中的 `version` 全部改为 `1`；② 按启动日志报告的缺失键从模板补齐（自 beta.3 起还新增了 IPv6 过滤规则、上述 5 个 account_linking 键；本版本新增的其他键见对应发布说明）；③ 修改后重新启动或 `/dmcc reload`。
 - **未修改提醒**: 对必须由用户填写的关键项（`discord.bot.token`、`multi_server.server_name`、
   `multi_server.connection.shared_secret`）以及仍未从模板改动的键给出提醒。
+- **安全相关默认值**: `discord.allow_mentions` 默认只允许 `users`（不允许 @everyone/@role）；`command_permission_levels.console`
+  默认 `0`，它只决定谁能调用 `/console`，实际执行的 MC 命令权限等于发送者的 DMCC OP 等级；`whitelist` 默认 `0` 是白名单悖论的刻意设计。
 - **模式一致性校验**: 若 `mode.yml`（或运行环境）推导出的模式与 `config.yml` 中记录的模式不一致，会给出明确错误并提示备份、删除旧配置以重新生成。
 - **首次运行生成**: 任意配置文件缺失时会自动从内置模板创建，并提示用户编辑后重载。其中 `mode.yml` 在 Minecraft 环境首次加载时会直接以推荐的
   `single_server` 模式写入（用户无需再手动选择模式），并随即据此生成对应的 `config.yml`，用户只需填写 `discord.bot.token` 等必要项；

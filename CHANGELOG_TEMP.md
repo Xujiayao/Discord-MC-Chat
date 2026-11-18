@@ -175,6 +175,13 @@
 - **验证**：`./gradlew clean` + `./gradlew build`（守护进程）全绿、零编译警告/零 Gradle 弃用警告；无新增临时 JUnit；1 test / 0 failures。
 - **建议实机测试**：① 全新生成配置后，未链接的 Discord 用户可直接执行 `/link <自己的验证码>` 完成绑定；② 未链接用户在游戏内执行 `/dmcc link` 不受影响；③ 把 link 手动改回 0 时，未链接用户会被拒绝（可用于确认行为符合预期）。
 
+## 工作 30 · 2026/11/18 · 配置默认值与注释改进（#344 部分，/info 布局不在本轮）
+- **用户可见（配置模板）**：`discord.allow_mentions` 默认由 everyone/users/roles 改为仅 `users`（注释列出可选值与风险，避免任何玩家在游戏内 @everyone 真的 ping 整个 Discord）；`command_permission_levels.console` 保持 0，但注释说明它只决定调用权限、实际执行的 MC 命令权限等于发送者 DMCC OP 等级；`whitelist` 保持 0 并注释说明白名单悖论设计；补充 `channel_updating.interval_minutes` 限流、`echo_*` 的 source client 语义、`execute_messages_from_channel` 按发送者 DMCC OP 执行的行为说明。
+- **文档**：README_CN §8.1 增加安全相关默认值说明。
+- **验证**：`./gradlew clean` + `./gradlew build`（守护进程）全绿、零编译警告/零 Gradle 弃用警告；无新增临时 JUnit；1 test / 0 failures。
+- **建议实机测试**：① 新配置下玩家在游戏内发送 @everyone 不再 ping Discord；② `/console` 仍按发送者 DMCC OP 执行对应 MC 权限等级的指令；③ 控制台频道 `execute_messages_from_channel` 注释与实际行为一致。
+- **备注**：`/info` 布局可定制部分按要求留到后续，本 issue 保持 open（提交使用 Related to #344）。
+
 ## 发布待办（汇总）
 - 待处理（按用户裁决都先不动）：`.github/ISSUE_TEMPLATE/bug.yml` 的 v2 残留文案；`docs/package.json` 缺 `license` 字段；`README.md`（英文翻译件）与 `README_CN.md` 的同步；配置迁移工具（发布前会提供在线版本，届时新键不再需要手工补）。
 - 已核对无需改动：`update/versions.json` 的 `3.0.0-beta.3` 条目本就是 `"compatibility": ["26.3"]`；存量用户 `config.yml` 补 IPv6 规则按开发者裁决暂不处理。

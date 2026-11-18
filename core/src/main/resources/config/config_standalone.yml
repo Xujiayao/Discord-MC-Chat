@@ -37,10 +37,11 @@ discord:
   webhook:
     enable_fake_user_style: true  # Whether to send player chat messages using fake-user-style webhooks
     avatar_url: "https://mc-heads.net/avatar/{player_name}"
-  allow_mentions: # Mention targets allowed for both webhook and bot messages
-    - "everyone"
+  # Mention targets allowed for both webhook and bot messages.
+  # Valid values: "everyone" (@everyone/@here), "users" (@user) and "roles" (@role).
+  # Only "users" is enabled by default: allowing "everyone"/"roles" would let every Minecraft player ping the whole Discord server.
+  allow_mentions:
     - "users"
-    - "roles"
 
 broadcasts:
   discord_to_minecraft: # true or false
@@ -100,7 +101,9 @@ broadcasts:
     - "/account (.*)"
     - "/auth (.*)"
   # Vanilla does not echo a player's own command input back to that player.
-  # When enabled, DMCC echoes the parsed player.command message back to the source client.
+  # When enabled, DMCC echoes the parsed player.command message back to the "source client" = every player on
+  # this server, including non-ops. The echo is rendered locally and still happens when the event's Discord
+  # channel above is empty.
   # This switch is independent from overwrite_minecraft_source_messages.
   echo_player_command_to_source: true
   echo_player_change_game_mode_to_source: true
@@ -145,6 +148,7 @@ mspt_monitoring:
 
 console_forwarding:
   enable: true
+  # When true, messages in the console channel are executed as Minecraft commands with the sender's DMCC OP.
   execute_messages_from_channel: true
   # Sensitive information regex filters
   filter_regex:
@@ -158,6 +162,9 @@ console_forwarding:
       channel: "console-cmp"
 
 channel_updating:
+  # Discord allows only a few channel topic/voice-channel name edits per 10 minutes. Values below 10 are very
+  # likely to be rate-limited (HTTP 429); a pending rate limit can also delay graceful shutdown while the final
+  # channel update waits for it.
   interval_minutes: 10
   channel_topic_updating:
     enable: true
@@ -240,6 +247,9 @@ account_linking:
 #   Level 4 (owner)
 #     Player or executor can use all the commands, including commands related to server management.
 command_permission_levels:
+  # This is only the permission to invoke /console itself. The Minecraft command always runs with the sender's
+  # resolved DMCC OP level as its command-source permission level, so OP 0 users can only run MC permission 0 commands.
+  # Raise this to 4 if only admins should see and use /console at all.
   console: 0
   execute: -1
   help: -1
