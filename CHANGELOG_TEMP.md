@@ -196,6 +196,13 @@
 - **验证**：`./gradlew clean` + `./gradlew build`（守护进程）全绿、零编译警告/零 Gradle 弃用警告；无新增临时 JUnit；1 test / 0 failures。
 - **建议实机测试**：转发一条纯文本、一条带图片、一条带 embed 的 Discord 消息，确认 Minecraft 内先显示引用内容、再显示转发者通知；普通回复消息行为不变。
 
+## 工作 33 · 2026/11/18 · 恢复 {player_textures} 头像占位符并支持服务端皮肤来源（#328）
+- **用户可见**：`discord.webhook.avatar_url` 重新支持 `{player_textures}`（v2 语义）：从服务端 GameProfile 的 `textures` 属性解析皮肤纹理哈希，可直接交给 mc-heads 等支持 texture ID 的服务；服务端没有纹理数据时回退为玩家名。覆盖 Fabric Tailor、SkinsRestorer 等会更新服务端皮肤的插件/模组，以及 Floodgate 2.0 的 Bedrock 皮肤上传；纯原版离线玩家仍只能得到默认皮肤（服务端无皮肤来源，属于 Minecraft 机制限制）。
+- **实现**：新增 `SkinUtils.extractTextureHash`（Base64 → JSON → SKIN url → 哈希，失败返回空）；Minecraft 侧对玩家来源的用户消息（聊天、指令、/say、/msg、/me）注入 `player_textures`，按 UUID+属性值做有界缓存；无纹理时回退玩家名。控制台来源不注入，继续走 bot 头像。
+- **文档**：配置模板的 avatar_url 注释、README §2.1 与 §8.3 占位符表补充来源、回退与离线模式限制（并说明 Bedrock 建议用 `{player_textures}`，`{player_uuid}` 取决于头像服务是否认识该 UUID）。
+- **验证**：`./gradlew clean` + `./gradlew build`（守护进程）全绿、零编译警告/零 Gradle 弃用警告；临时 JUnit（纹理哈希提取合法/非法/空/非纹理 URL）通过后删除，最终只剩 SmokeTest（1 test / 0 failures）。
+- **建议实机测试**：① 配 `https://mc-heads.net/avatar/{player_textures}.png` 后，Fabric Tailor/SkinsRestorer 玩家、Geyser/Floodgate 玩家头像正确；② 纯离线无皮肤插件玩家回退玩家名（仍为默认皮肤，属预期）；③ 普通正版玩家头像与之前一致。
+
 ## 发布待办（汇总）
 - 待处理（按用户裁决都先不动）：`.github/ISSUE_TEMPLATE/bug.yml` 的 v2 残留文案；`docs/package.json` 缺 `license` 字段；`README.md`（英文翻译件）与 `README_CN.md` 的同步；配置迁移工具（发布前会提供在线版本，届时新键不再需要手工补）。
 - 已核对无需改动：`update/versions.json` 的 `3.0.0-beta.3` 条目本就是 `"compatibility": ["26.3"]`；存量用户 `config.yml` 补 IPv6 规则按开发者裁决暂不处理。

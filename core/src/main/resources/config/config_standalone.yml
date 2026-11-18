@@ -36,6 +36,9 @@ discord:
   # In multi-server mode, webhook is always used to send DMCC client messages.
   webhook:
     enable_fake_user_style: true  # Whether to send player chat messages using fake-user-style webhooks
+    # Avatar URL template for fake-user webhooks. Placeholders: {player_name}, {player_uuid} and {player_textures}.
+    # {player_textures} is the skin texture hash (works with server-side skin plugins such as Fabric Tailor/SkinsRestorer
+    # and Floodgate 2.0's Bedrock skin upload); when the server has no texture data it falls back to {player_name}.
     avatar_url: "https://mc-heads.net/avatar/{player_name}"
   # Mention targets allowed for both webhook and bot messages.
   # Valid values: "everyone" (@everyone/@here), "users" (@user) and "roles" (@role).

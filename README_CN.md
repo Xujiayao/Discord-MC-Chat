@@ -67,6 +67,9 @@ Discord-MC-Chat (DMCC) 是一个 Minecraft 模组，旨在为 Discord 和 Minecr
 - **伪用户 Webhook 支持**: 可选通过 Webhook 发送 Minecraft 消息，在 Discord 端完美呈现玩家的独立头像与游戏名。头像来源可依次选择：子服清单中的
   `avatar_url`、`discord.webhook.avatar_url` 模板（默认 `https://mc-heads.net/avatar/{player_name}`），或绑定的 Discord 账户头像（
   `account_linking.discord_user_avatar_for_webhooks`）。Webhook 会复用机器人名下已有的同名 Webhook，不存在时自动创建。
+  `avatar_url` 支持 `{player_name}`、`{player_uuid}` 与 `{player_textures}`：后者取自服务端 GameProfile 的皮肤纹理哈希，
+  兼容 Fabric Tailor、SkinsRestorer 等会更新服务端皮肤的插件/模组，以及 Floodgate 2.0 的 Bedrock 皮肤上传；服务端没有纹理数据时回退为玩家名，
+  纯原版离线玩家没有纹理来源，只能得到默认皮肤（Bedrock 玩家建议用 `{player_textures}`；`{player_uuid}` 能否显示正确皮肤取决于头像服务是否认识该 UUID）。
 
 - **自定义格式与国际化**: 允许用户高度自定义所有消息的显示格式（基于 YAML
   模板）。此外，系统内置动态翻译拉取机制，自动从官方源获取各语言资产，精准翻译成就、进度与死亡信息。翻译资产优先读取本地缓存，缺失时按需下载；同时会扫描
@@ -437,7 +440,7 @@ DMCC 对配置文件的完整性与一致性做了强校验，力求在启动阶
 |:---------------------------------------------------------------------------------------------------------------------------------|:------------------------|
 | `{message}`                                                                                                                      | 玩家消息内容插入点（会被解析后的富文本替换）  |
 | `{display_name}` / `{effective_name}`                                                                                            | 发言者显示名（含伪用户风格）          |
-| `{player_name}` / `{player_uuid}`                                                                                                | 玩家名与 UUID                |
+| `{player_name}` / `{player_uuid}` / `{player_textures}`                                                                           | 玩家名、UUID 与皮肤纹理哈希（用于 webhook 头像模板等） |
 | `{role_color}`                                                                                                                   | 发言者的 Discord 最高角色颜色     |
 | `{server}` / `{server_color}`                                                                                                    | 子服名称与颜色                 |
 | `{command}` / `{emoji}` / `{action}`                                                                                             | 指令内容 / 表情回应 / `/me` 动作文本 |
@@ -445,7 +448,6 @@ DMCC 对配置文件的完整性与一致性做了强校验，力求在启动阶
 | `{online_player_count}` / `{max_player_count}` / `{players_ever_joined}`                                                         | 在线人数、上限、历史玩家总数          |
 | `{online_server_count}` / `{online_server_list}` / `{server_started_time}` / `{last_update_time}`                                | 频道看板变量                  |
 | `{mspt}` / `{threshold}` / `{next_check_time}`                                                                                   | MSPT 告警                 |
-| `{player_name}`（用于 `discord.webhook.avatar_url`）                                                                                 | Webhook 头像模板            |
 | `{player_name}` / `{effective_name}` / `{discord_name}`（用于 `nickname_sync.template`）                                             | Discord 昵称同步模板          |
 
 ## 9. 网络与安全

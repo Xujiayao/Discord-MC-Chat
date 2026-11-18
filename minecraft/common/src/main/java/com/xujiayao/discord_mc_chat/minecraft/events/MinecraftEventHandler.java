@@ -27,6 +27,7 @@ import com.xujiayao.discord_mc_chat.network.packets.CommandPackets.Link.RequestP
 import com.xujiayao.discord_mc_chat.network.packets.EventPackets.MinecraftEventPacket;
 import com.xujiayao.discord_mc_chat.utils.EnvironmentUtils;
 import com.xujiayao.discord_mc_chat.utils.ExecutorServiceUtils;
+import com.xujiayao.discord_mc_chat.utils.SkinUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.commands.CommandSourceStack;
@@ -76,6 +77,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -90,6 +92,13 @@ import static com.xujiayao.discord_mc_chat.Constants.LOGGER;
 public final class MinecraftEventHandler {
 
 	private static final String DEFAULT_MENTION_STYLE = "title";
+
+	/**
+	 * Resolved avatar identifiers (skin texture hash, or player name when no texture is available) per
+	 * UUID + textures property value. Bounded: dropped as a whole once the cap is reached.
+	 */
+	private static final int MAX_SKIN_HASH_CACHE_ENTRIES = 512;
+	private static final Map<String, String> SKIN_HASH_CACHE = new ConcurrentHashMap<>();
 
 	// Callers are Netty event loop threads, so this bounded wait must stay short; on expiry the
 	// late server-thread result is discarded and no suggestions are returned.
@@ -286,6 +295,7 @@ public final class MinecraftEventHandler {
 					"player_uuid", event.serverPlayer().getStringUUID(),
 					"player_name", event.serverPlayer().getName().getString(),
 					"display_name", event.serverPlayer().getDisplayName().getString(),
+					"player_textures", playerAvatarIdentifier(event.serverPlayer()),
 					"message", TranslationManager.get(event.playerChatMessage().decoratedContent())
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_CHAT, placeholders));
@@ -296,6 +306,7 @@ public final class MinecraftEventHandler {
 					"player_uuid", event.serverPlayer().getStringUUID(),
 					"player_name", event.serverPlayer().getName().getString(),
 					"display_name", event.serverPlayer().getDisplayName().getString(),
+					"player_textures", playerAvatarIdentifier(event.serverPlayer()),
 					"command", "/" + event.command()
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.PLAYER_COMMAND, placeholders));
@@ -306,6 +317,7 @@ public final class MinecraftEventHandler {
 					"player_uuid", event.commandContext().getSource().getEntity() instanceof ServerPlayer player ? player.getStringUUID() : "",
 					"player_name", event.commandContext().getSource().getTextName(),
 					"display_name", event.commandContext().getSource().getDisplayName().getString(),
+					"player_textures", playerAvatarIdentifier(event.commandContext().getSource()),
 					"message", TranslationManager.get(event.playerChatMessage().decoratedContent())
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_SAY, placeholders));
@@ -327,6 +339,7 @@ public final class MinecraftEventHandler {
 					"player_uuid", event.commandContext().getSource().getEntity() instanceof ServerPlayer player ? player.getStringUUID() : "",
 					"player_name", event.commandContext().getSource().getTextName(),
 					"display_name", event.commandContext().getSource().getDisplayName().getString(),
+					"player_textures", playerAvatarIdentifier(event.commandContext().getSource()),
 					"message", TranslationManager.get(event.playerChatMessage().decoratedContent())
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_MSG, placeholders));
@@ -336,6 +349,7 @@ public final class MinecraftEventHandler {
 			Map<String, String> placeholders = Map.of(
 					"player_name", event.commandContext().getSource().getTextName(),
 					"display_name", event.commandContext().getSource().getDisplayName().getString(),
+					"player_textures", playerAvatarIdentifier(event.commandContext().getSource()),
 					"action", TranslationManager.get(event.playerChatMessage().decoratedContent())
 			);
 			NetworkManager.sendPacketToServer(new MinecraftEventPacket(MinecraftEventPacket.MessageType.SOURCE_ME, placeholders));
@@ -977,6 +991,45 @@ public final class MinecraftEventHandler {
 				runtime.totalMemory(),
 				runtime.freeMemory()
 		);
+	}
+
+	/**
+	 * Avatar identifier for webhook URLs: the skin texture hash when the server profile carries one, otherwise
+	 * the plain player name (avatar services accept both; an absent texture is unavoidable in offline mode
+	 * without a server-side skin provider).
+	 */
+	private static String playerAvatarIdentifier(ServerPlayer player) {
+		String hash = skinTextureHash(player);
+		return hash.isEmpty() ? player.getName().getString() : hash;
+	}
+
+	private static String playerAvatarIdentifier(CommandSourceStack source) {
+		return source.getEntity() instanceof ServerPlayer player ? playerAvatarIdentifier(player) : "";
+	}
+
+	private static String skinTextureHash(ServerPlayer player) {
+		try {
+			var textures = player.getGameProfile().properties().get("textures");
+			if (textures == null || textures.isEmpty()) {
+				return "";
+			}
+
+			String texturesValue = textures.iterator().next().value();
+			String cacheKey = player.getStringUUID() + "|" + texturesValue;
+			String cached = SKIN_HASH_CACHE.get(cacheKey);
+			if (cached != null) {
+				return cached;
+			}
+
+			String hash = SkinUtils.extractTextureHash(texturesValue);
+			if (SKIN_HASH_CACHE.size() >= MAX_SKIN_HASH_CACHE_ENTRIES) {
+				SKIN_HASH_CACHE.clear();
+			}
+			SKIN_HASH_CACHE.put(cacheKey, hash);
+			return hash;
+		} catch (Exception ignored) {
+			return "";
+		}
 	}
 
 	private static Component buildComponentFromSegments(List<TextSegment> segments) {
