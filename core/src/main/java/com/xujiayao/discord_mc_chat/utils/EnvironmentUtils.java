@@ -1,11 +1,8 @@
 package com.xujiayao.discord_mc_chat.utils;
 
-import tools.jackson.databind.JsonNode;
-
 import java.io.IOException;
 import java.io.InputStream;
-
-import static com.xujiayao.discord_mc_chat.Constants.YAML_MAPPER;
+import java.nio.charset.StandardCharsets;
 
 /**
  * @author Xujiayao
@@ -78,18 +75,17 @@ public final class EnvironmentUtils {
 	}
 
 	public static String getDmccVersion() {
-		String filePath = "/config/mode.yml";
+		String filePath = "/dmcc_version.txt";
 
-		try (InputStream templateStream = EnvironmentUtils.class.getResourceAsStream(filePath)) {
-			if (templateStream == null) {
+		try (InputStream versionStream = EnvironmentUtils.class.getResourceAsStream(filePath)) {
+			if (versionStream == null) {
 				throw new RuntimeException("File \"" + filePath + "\" not found");
 			}
-			JsonNode templateConfig = YAML_MAPPER.readTree(templateStream);
 
-			String version = templateConfig.path("version").asString();
+			String version = new String(versionStream.readAllBytes(), StandardCharsets.UTF_8).trim();
 
 			if (version.isBlank()) {
-				throw new RuntimeException("Version field not found in template configuration");
+				throw new RuntimeException("Version field not found in \"" + filePath + "\"");
 			}
 
 			return version;

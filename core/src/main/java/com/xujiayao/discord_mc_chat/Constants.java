@@ -21,7 +21,6 @@ public final class Constants {
 
 	public static final Logger LOGGER = new Logger();
 
-	// YAML_MAPPER has to be initialized before VERSION because getDmccVersion() uses it.
 	public static final ObjectMapper YAML_MAPPER = new YAMLMapper.Builder(new YAMLFactory())
 			.enable(YAMLWriteFeature.MINIMIZE_QUOTES)
 			.disable(YAMLWriteFeature.WRITE_DOC_START_MARKER).build();

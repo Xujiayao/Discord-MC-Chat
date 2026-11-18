@@ -2,9 +2,9 @@
 # Discord-MC-Chat (DMCC)
 # By Xujiayao
 #
-# Mode file for DMCC version:
+# Mode file for DMCC configuration version:
 # Do NOT change this value manually!
-version: ${mod_version}
+version: 1
 #
 # Discord-MC-Chat Docs:
 # https://dmcc.xujiayao.com/

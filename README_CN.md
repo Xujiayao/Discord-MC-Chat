@@ -400,12 +400,13 @@ DMCC 在 Client 端提供独立的 `whitelist` 代理命令（默认所需权限
 
 DMCC 对配置文件的完整性与一致性做了强校验，力求在启动阶段就暴露误配置，而不是运行期才报错：
 
-- **模板版本校验**: `config.yml` / `mode.yml` / `custom_messages` 中的 `version` 必须与当前 DMCC 版本一致，否则提示前往文档升级配置。
+- **模板版本校验**: `config.yml` / `mode.yml` / `custom_messages` 各自使用**独立的整数 `version`**（当前均为 `1`），不再跟随 DMCC 版本号；版本不匹配（包括仍为旧版 DMCC 版本字符串）时会拒绝加载。
 - **键完整性校验**: 会逐项比对模板，报告**缺失的键**、**未识别的键**（多余键）与**类型不匹配**的键。
 - **升级时的键补齐**: DMCC 不会自动合并或迁移旧配置。升级后若模板新增了键，启动时会明确报告缺失的键并拒绝加载，按提示从模板手工补齐即可。
   本次新增的键共 5 个：`account_linking.require_linking.enable`、`account_linking.require_linking.unlinked_player_action`
   （见 4.4）、`account_linking.max_minecraft_accounts_per_discord_user`（见 4.1）、`account_linking.nickname_sync.enable` 与
   `account_linking.nickname_sync.template`（见 4.4）。
+- **从 beta.1 / beta.2 / beta.3 手工升级**: 本版本尚未提供自动迁移工具，需要手工处理：① 把 `config.yml`、`mode.yml`、`custom_messages/<lang>.yml` 中的 `version` 全部改为 `1`；② 按启动日志报告的缺失键从模板补齐（自 beta.3 起还新增了 IPv6 过滤规则、上述 5 个 account_linking 键；本版本新增的其他键见对应发布说明）；③ 修改后重新启动或 `/dmcc reload`。
 - **未修改提醒**: 对必须由用户填写的关键项（`discord.bot.token`、`multi_server.server_name`、
   `multi_server.connection.shared_secret`）以及仍未从模板改动的键给出提醒。
 - **模式一致性校验**: 若 `mode.yml`（或运行环境）推导出的模式与 `config.yml` 中记录的模式不一致，会给出明确错误并提示备份、删除旧配置以重新生成。

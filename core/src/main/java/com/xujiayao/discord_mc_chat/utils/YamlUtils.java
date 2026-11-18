@@ -44,11 +44,12 @@ public final class YamlUtils {
 			return false;
 		}
 
-		String configVersion = userConfig.path("version").asString();
-		String templateVersion = templateConfig.path("version").asString();
+		JsonNode configVersion = userConfig.path("version");
+		int expectedVersion = templateConfig.path("version").asInt();
 
-		if (!templateVersion.equals(configVersion)) {
-			LOGGER.error(I18nManager.getDmccTranslation("utils.yaml.version_mismatch", templateVersion, configVersion));
+		if (!configVersion.isInt() || configVersion.asInt() != expectedVersion) {
+			String actualVersion = configVersion.isMissingNode() ? "<missing>" : configVersion.asString();
+			LOGGER.error(I18nManager.getDmccTranslation("utils.yaml.version_mismatch", expectedVersion, actualVersion));
 			LOGGER.error(I18nManager.getDmccTranslation("utils.yaml.upgrade_prompt"));
 			return false;
 		}

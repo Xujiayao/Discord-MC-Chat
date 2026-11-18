@@ -149,6 +149,13 @@
 - 验证：./gradlew clean + ./gradlew build（守护进程）全绿、零编译警告/零 Gradle 弃用警告；临时 JUnit（身份采用/相同身份/变更丢弃/单服稳定身份）通过后删除，最终只剩 SmokeTest（1 test / 0 failures）。
 - 建议实机测试：① 故意让 DMCC 初始化失败一段时间后再修复连接，日志应出现 kept_before_identity 且随后 drained 补发；② single_server 模式下制造待发消息后 /dmcc reload，不应再出现身份变更警告且消息按序补发；③ 修改 multi_server 地址或 server_name 后重连，应看到带旧/新身份与类型统计的丢弃警告。
 
+## 工作 26 · 2026/11/18 · 配置版本改为独立整数并解耦 DMCC 版本来源（#346）
+- **用户可见（破坏性变更）**：`config.yml` / `mode.yml` / `custom_messages/<lang>.yml` 的 `version` 由 DMCC 版本字符串（如 `3.0.0-beta.3`）改为**独立整数**（当前均为 `1`），三个文件分别与各自模板比对；版本不匹配（包括仍为旧版字符串）时拒绝加载。
+- **实现**：`YamlUtils.validate` 版本校验改为整数比较（非整数版本按通用版本不匹配处理）；DMCC 自身版本号不再从 mode.yml 模板读取，新增内部资源 `dmcc_version.txt`（构建期展开 `${mod_version}`），`EnvironmentUtils.getDmccVersion()` 改为读取该资源。
+- **文档**：设计文档 §8.1 更新版本语义与 beta.1/2/3 手工迁移步骤；三个配置模板、mode.yml 与 custom_messages 的头部注释同步改为“configuration version”。
+- **验证**：`./gradlew clean` + `./gradlew build`（守护进程）全绿、零编译警告/零 Gradle 弃用警告；临时 JUnit（整数匹配/整数不匹配/旧字符串版本/缺版本/版本资源加载）通过后删除，最终只剩 SmokeTest（1 test / 0 failures）；jar 内 `dmcc_version.txt` 已展开为当前版本，banner 显示正常。
+- **建议实机测试**：① 用 beta.3 配置启动，应报告配置版本不匹配并拒绝加载；② 把三个文件的 version 改为 1、按日志补齐缺失键后启动正常；③ 全新目录首次启动生成的三个文件 version 均为 1。
+
 ## 发布待办（汇总）
 - 待处理（按用户裁决都先不动）：`.github/ISSUE_TEMPLATE/bug.yml` 的 v2 残留文案；`docs/package.json` 缺 `license` 字段；`README.md`（英文翻译件）与 `README_CN.md` 的同步；配置迁移工具（发布前会提供在线版本，届时新键不再需要手工补）。
 - 已核对无需改动：`update/versions.json` 的 `3.0.0-beta.3` 条目本就是 `"compatibility": ["26.3"]`；存量用户 `config.yml` 补 IPv6 规则按开发者裁决暂不处理。
